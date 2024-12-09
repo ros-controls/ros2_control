@@ -49,7 +49,7 @@ How to register a variable for introspection
        ...
      }
 
-3. By default, The introspection of all the registered variables of the controllers and the hardware components is only activated, when they are active and it is deactivated when the controller or hardware component is deactivated.
+3. By default, the introspection of all the registered variables of the controllers and the hardware components is only activated, when they are active and it is deactivated when the controller or hardware component is deactivated.
 
    .. note::
       If you want to keep the introspection active even when the controller or hardware component is not active, you can do that by calling ``this->enable_introspection(true)`` in the ``on_configure`` and ``on_deactivate`` method of the controller or hardware component after registering the variables.
