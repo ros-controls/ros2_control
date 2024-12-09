@@ -42,22 +42,18 @@ How to register a variable for introspection
      void MyController::on_configure()
      {
        ...
-       // Register the variable for introspection
+       // Register the variable for introspection (disabled by default)
+       // The variable is introspected only when the controller is active and
+       // then deactivated when the controller is deactivated.
        REGISTER_ROS2_CONTROL_INTROSPECTION("my_variable_name", &my_variable_);
+       // Register the variable for introspection that starts with the introspection enabled
+       // So, that the variable starts to be introspected, when the controller is in configured state.
+       // However, once the controller is activated and deactivated, the introspection is disabled.
+       REGISTER_ROS2_CONTROL_INTROSPECTION("my_active_variable", &my_active_variable_, true);
        ...
      }
 
 3. By default, The introspection of all the registered variables of the controllers and the hardware components is only activated, when they are active and it is deactivated when the controller or hardware component is deactivated.
-
-   .. code-block:: cpp
-
-     void MyController::on_configure()
-     {
-       ...
-       // Register the variable for introspection
-       REGISTER_ROS2_CONTROL_INTROSPECTION("my_variable_name", &my_variable_, true);
-       ...
-     }
 
    .. note::
       If you want to keep the introspection active even when the controller or hardware component is not active, you can do that by calling ``this->enable_introspection(true)`` in the ``on_configure`` and ``on_deactivate`` method of the controller or hardware component after registering the variables.
