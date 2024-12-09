@@ -92,7 +92,7 @@ All the registered variables are published over 3 topics: ``~/introspection_data
 - The ``~/introspection_data/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a a variables is registered and unregistered.
 - The ``~/introspection_data/values`` topic publishes the values of the registered variables. This topic contains the values of the variables registered.
 
-The topics ``~/introspection_data/full`` and ``~/introspection_data/values`` are always published on every update cycle asynchronously, provided that there is at least one Subscriber to these topics.
+The topics ``~/introspection_data/full`` and ``~/introspection_data/values`` are always published on every update cycle asynchronously, provided that there is at least one subscriber to these topics.
 
 The topic ``~/introspection_data/full`` can be used to integrate with your custom visualization tools or to track the variables from the command line. The topic ``~/introspection_data/names`` and ``~/introspection_data/values`` are to be used for visualization tools like `PlotJuggler <https://plotjuggler.io/>`_ to visualize the data.
 
