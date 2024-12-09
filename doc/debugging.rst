@@ -94,6 +94,11 @@ All the registered variables are published over 3 topics: ``~/introspection_data
 
 The topics ``~/introspection_data/full`` and ``~/introspection_data/values`` are always published on every update cycle asynchronously, provided that there is at least one Subscriber to these topics.
 
+The topic ``~/introspection_data/full`` can be used to integrate with your custom visualization tools or to track the variables from the command line. The topic ``~/introspection_data/names`` and ``~/introspection_data/values`` are to be used for visualization tools like `PlotJuggler <https://plotjuggler.io/>`_ to visualize the data.
+
+.. note::
+  If you have a high frequency of data, it is recommended to use the ``~/introspection_data/names`` and ``~/introspection_data/values`` topic. So, that the data transferred and stored is minimized.
+
 How to introspect internal variables of controllers and hardware components
 ============================================================================
 
