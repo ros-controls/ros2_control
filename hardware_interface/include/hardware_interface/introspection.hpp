@@ -24,28 +24,10 @@ namespace hardware_interface
 constexpr char DEFAULT_REGISTRY_KEY[] = "ros2_control";
 constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "~/introspection_data";
 
-#define REGISTER_ROS2_CONTROL_INTROSPECTION_2_ARGS(ID, ENTITY)               \
+#define REGISTER_ROS2_CONTROL_INTROSPECTION(ID, ENTITY)                      \
   REGISTER_ENTITY(                                                           \
     hardware_interface::DEFAULT_REGISTRY_KEY, get_name() + "." + ID, ENTITY, \
     &stats_registrations_, false)
-
-#define REGISTER_ROS2_CONTROL_INTROSPECTION_3_ARGS(ID, ENTITY, ENABLE)       \
-  REGISTER_ENTITY(                                                           \
-    hardware_interface::DEFAULT_REGISTRY_KEY, get_name() + "." + ID, ENTITY, \
-    &stats_registrations_, ENABLE)
-
-#ifndef GET_4TH_ARG
-#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
-#endif
-
-#define REGISTER_ROS2_CONTROL_INTROSPECTION_MACRO_CHOOSER(...) \
-  GET_4TH_ARG(                                                 \
-    __VA_ARGS__, REGISTER_ROS2_CONTROL_INTROSPECTION_3_ARGS,   \
-    REGISTER_ROS2_CONTROL_INTROSPECTION_2_ARGS)
-
-#define REGISTER_ROS2_CONTROL_INTROSPECTION(...) \
-  REGISTER_ROS2_CONTROL_INTROSPECTION_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
-
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__INTROSPECTION_HPP_

@@ -46,10 +46,6 @@ How to register a variable for introspection
        // The variable is introspected only when the controller is active and
        // then deactivated when the controller is deactivated.
        REGISTER_ROS2_CONTROL_INTROSPECTION("my_variable_name", &my_variable_);
-       // Register the variable for introspection that starts with the introspection enabled
-       // So, that the variable starts to be introspected, when the controller is in configured state.
-       // However, once the controller is activated and deactivated, the introspection is disabled.
-       REGISTER_ROS2_CONTROL_INTROSPECTION("my_active_variable", &my_active_variable_, true);
        ...
      }
 
