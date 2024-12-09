@@ -93,7 +93,7 @@ public:
    */
   SensorInterface(const SensorInterface & other) = delete;
 
-  SensorInterface(SensorInterface && other) = default;
+  SensorInterface(SensorInterface && other) = delete;
 
   virtual ~SensorInterface() = default;
 

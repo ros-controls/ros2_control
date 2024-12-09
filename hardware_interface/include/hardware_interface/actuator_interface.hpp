@@ -94,7 +94,7 @@ public:
    */
   ActuatorInterface(const ActuatorInterface & other) = delete;
 
-  ActuatorInterface(ActuatorInterface && other) = default;
+  ActuatorInterface(ActuatorInterface && other) = delete;
 
   virtual ~ActuatorInterface() = default;
 
