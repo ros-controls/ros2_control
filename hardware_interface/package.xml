@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
 
+  <depend>backward_ros</depend>
   <depend>control_msgs</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
