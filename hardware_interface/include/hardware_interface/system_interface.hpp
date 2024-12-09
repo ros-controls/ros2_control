@@ -95,7 +95,7 @@ public:
    */
   SystemInterface(const SystemInterface & other) = delete;
 
-  SystemInterface(SystemInterface && other) = default;
+  SystemInterface(SystemInterface && other) = delete;
 
   virtual ~SystemInterface() = default;
 
