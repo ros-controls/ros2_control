@@ -123,6 +123,7 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
     parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
     return CallbackReturn::SUCCESS;
   };
@@ -179,7 +180,8 @@ public:
 
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     state_interfaces.reserve(
-      unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
+      unlisted_interface_descriptions.size() + sensor_state_interfaces_.size() +
+      joint_state_interfaces_.size());
 
     // add InterfaceDescriptions and create StateInterfaces from the descriptions and add to maps.
     for (const auto & description : unlisted_interface_descriptions)
@@ -198,6 +200,14 @@ public:
       auto state_interface = std::make_shared<StateInterface>(descr);
       sensor_states_map_.insert(std::make_pair(name, state_interface));
       sensor_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+
+    for (const auto & [name, descr] : joint_state_interfaces_)
+    {
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      sensor_states_map_.insert(std::make_pair(name, state_interface));
+      joint_states_.push_back(state_interface);
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
 
@@ -274,10 +284,12 @@ public:
 protected:
   HardwareInfo info_;
   // interface names to InterfaceDescription
+  std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
+  std::vector<StateInterface::SharedPtr> joint_states_;
   std::vector<StateInterface::SharedPtr> sensor_states_;
   std::vector<StateInterface::SharedPtr> unlisted_states_;
 

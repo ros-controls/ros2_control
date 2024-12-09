@@ -145,6 +145,6 @@ def generate_load_controller_launch_description(
     controller_params_files = [controller_params_file] if controller_params_file else None
     return generate_controllers_spawner_launch_description(
         controller_names=[controller_name],
-        controller_params_file=controller_params_files,
+        controller_params_files=controller_params_files,
         extra_spawner_args=extra_spawner_args,
     )

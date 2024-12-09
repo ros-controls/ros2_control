@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include <rclcpp/time.hpp>
 #include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
@@ -46,6 +47,9 @@ struct HardwareComponentInfo
 
   /// Component is async
   bool is_async;
+
+  //// read/write rate
+  unsigned int rw_rate;
 
   /// Component current state.
   rclcpp_lifecycle::State state;
