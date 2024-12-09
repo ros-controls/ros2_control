@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
     std::vector<int> cpus = {};
     if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
     {
-      cpus = {cpu_affinity_param.as_int()};
+      cpus = {static_cast<int>(cpu_affinity_param.as_int())};
     }
     else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
     {
