@@ -396,7 +396,7 @@ return_type GenericSystem::prepare_command_mode_switch(
     if (joint_it_found != info_.joints.end())
     {
       const size_t joint_index =
-        static_cast<size_t>(std::distance(info.joints.begin(), joint_it_found));
+        static_cast<size_t>(std::distance(info_.joints.begin(), joint_it_found));
       if (joint_found_in_x_requests_[joint_index] == 0)
       {
         joint_found_in_x_requests_[joint_index] = FOUND_ONCE_FLAG;
@@ -485,7 +485,7 @@ return_type GenericSystem::perform_command_mode_switch(
     if (joint_it_found != info_.joints.end())
     {
       const size_t joint_index =
-        static_cast<size_t>(std::distance(info.joints.begin(), joint_it_found));
+        static_cast<size_t>(std::distance(info_.joints.begin(), joint_it_found));
 
       if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
