@@ -91,7 +91,8 @@ There are two scripts to interact with controller manager from launch files:
 
     $ ros2 run controller_manager spawner -h
     usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--stopped] [--inactive] [-t CONTROLLER_TYPE] [-u]
-                  [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group]
+                  [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
+                  [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
                   controller_names [controller_names ...]
 
     positional arguments:
@@ -112,7 +113,9 @@ There are two scripts to interact with controller manager from launch files:
                             If not provided it should exist in the controller manager namespace
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
-                            Time to wait for the controller manager
+                            Time to wait for the controller manager service to be available
+      --service-call-timeout SERVICE_CALL_TIMEOUT
+                            Time to wait for the service response from the controller manager
       --switch-timeout SWITCH_TIMEOUT
                             Time to wait for a successful state switch of controllers. Useful when switching cannot be performed immediately, e.g.,
                             paused simulations at startup
