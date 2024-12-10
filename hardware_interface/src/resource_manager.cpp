@@ -142,10 +142,7 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
-        component_info.rw_rate =
-          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
-            ? cm_update_rate_
-            : hardware_info.rw_rate;
+        component_info.rw_rate = hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
@@ -1127,7 +1124,13 @@ bool ResourceManager::load_and_initialize_components(
 
   resource_storage_->cm_update_rate_ = update_rate;
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  // Set the update rate for all hardware components
+  for (auto & hw_rate : hardware_info)
+  {
+    hw_rate.rw_rate =
+      (hw_rate.rw_rate == 0 || hw_rate.rw_rate > update_rate) ? update_rate : hw_rate.rw_rate;
+  }
 
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
