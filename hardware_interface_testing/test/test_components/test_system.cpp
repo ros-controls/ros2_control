@@ -17,6 +17,7 @@
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::CommandInterface;
@@ -39,6 +40,14 @@ class TestSystem : public SystemInterface
       return CallbackReturn::ERROR;
     }
 
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "System hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
+      return CallbackReturn::ERROR;
+    }
     return CallbackReturn::SUCCESS;
   }
 
