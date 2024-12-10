@@ -231,12 +231,13 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
  * \param[in] elem XMLElement that has the rw_rate attribute.
  * \return unsigned int specifying the read/write rate.
  */
-unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
+unsigned int parse_rw_rate_attribute(
+  const tinyxml2::XMLElement * elem, const unsigned int cm_update_rate)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
   try
   {
-    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    const int rw_rate = attr ? std::stoi(attr->Value()) : static_cast<int>(cm_update_rate);
     if (rw_rate < 0)
     {
       throw std::runtime_error(
@@ -603,16 +604,18 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
 /**
  * \param[in] ros2_control_it pointer to ros2_control element
  * with information about resource.
+ * \param[in] cm_update_rate The update rate of the controller manager
  * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
 HardwareInfo parse_resource_from_xml(
-  const tinyxml2::XMLElement * ros2_control_it, const std::string & urdf)
+  const tinyxml2::XMLElement * ros2_control_it, const std::string & urdf,
+  const unsigned int cm_update_rate)
 {
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
-  hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
+  hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it, cm_update_rate);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
 
   // Parse everything under ros2_control tag
@@ -833,7 +836,8 @@ void update_interface_limits(
 
 }  // namespace detail
 
-std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
+std::vector<HardwareInfo> parse_control_resources_from_urdf(
+  const std::string & urdf, const unsigned int cm_update_rate)
 {
   // Check if everything OK with URDF string
   if (urdf.empty())
@@ -880,7 +884,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   std::vector<HardwareInfo> hardware_info;
   while (ros2_control_it)
   {
-    hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it, urdf));
+    hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it, urdf, cm_update_rate));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
   }
 

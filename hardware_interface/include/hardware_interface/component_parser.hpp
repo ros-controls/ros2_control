@@ -27,11 +27,13 @@ namespace hardware_interface
 /// Search XML snippet from URDF for information about a control component.
 /**
  * \param[in] urdf string with robot's URDF
+ * \param[in] cm_update_rate The update rate of the controller manager
  * \return vector filled with information about robot's control resources
  * \throws std::runtime_error if a robot attribute or tag is not found
  */
 HARDWARE_INTERFACE_PUBLIC
-std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
+std::vector<HardwareInfo> parse_control_resources_from_urdf(
+  const std::string & urdf, const unsigned int cm_update_rate = 100);
 
 /**
  * \param[in] component_info information about a component (gpio, joint, sensor)
