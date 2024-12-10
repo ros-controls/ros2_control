@@ -179,7 +179,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       }
       MimicJoint mimic_joint;
       mimic_joint.joint_index = i;
-      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
+      mimic_joint.mimicked_joint_index =
+        static_cast<size_t>(std::distance(info_.joints.begin(), mimicked_joint_it));
       auto param_it = joint.parameters.find("multiplier");
       if (param_it != joint.parameters.end())
       {
