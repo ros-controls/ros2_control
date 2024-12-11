@@ -4,3 +4,7 @@
     joint_names: ["joint1"]
     param1: 1.0
     param2: 2.0
+
+wildcard_ctrl_3:
+  ros__parameters:
+    param3: 3.0
