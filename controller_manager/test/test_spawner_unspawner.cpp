@@ -366,6 +366,62 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
     test_file_path);
 }
 
+TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_wildcard_entries.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "wildcard_ctrl_1 wildcard_ctrl_2 -c test_controller_manager --controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0);
+
+  auto verify_ctrl_parameter = [](const auto & ctrl_node)
+  {
+    if (!ctrl_node->has_parameter("joint_names"))
+    {
+      ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+    }
+    ASSERT_THAT(
+      ctrl_node->get_parameter("joint_names").as_string_array(),
+      std::vector<std::string>({"joint1"}));
+
+    if (!ctrl_node->has_parameter("param1"))
+    {
+      ctrl_node->declare_parameter("param1", -10.0);
+    }
+    ASSERT_THAT(ctrl_node->get_parameter("param1").as_double(), 1.0);
+
+    if (!ctrl_node->has_parameter("param2"))
+    {
+      ctrl_node->declare_parameter("param2", -10.0);
+    }
+    ASSERT_THAT(ctrl_node->get_parameter("param2").as_double(), 2.0);
+  };
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(wildcard_ctrl_1.info.name, "wildcard_ctrl_2");
+  ASSERT_EQ(wildcard_ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl_1.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl_1.c->get_node());
+
+  auto wildcard_ctrl_2 = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(wildcard_ctrl_2.info.name, "wildcard_ctrl_1");
+  ASSERT_EQ(wildcard_ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl_2.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl_2.c->get_node());
+}
+
 TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
