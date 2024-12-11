@@ -129,7 +129,7 @@ public:
    * The configuration is used to check if controller can be activated and to claim interfaces from
    * hardware.
    * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::state_interface_ "state_interface_" member.
+   * \ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
    *
    * \returns configuration of state interfaces.
    */
