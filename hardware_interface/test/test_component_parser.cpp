@@ -1361,6 +1361,8 @@ TEST_F(TestComponentParser, successfully_parse_parameter_empty)
 
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "");
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
+  // when not set, rw_rate should be 0
+  EXPECT_EQ(hardware_info.rw_rate, 0u);
 
   // Verify limits parsed from the URDF
   ASSERT_THAT(hardware_info.limits, SizeIs(1));
@@ -1425,6 +1427,8 @@ TEST_F(TestComponentParser, gripper_mimic_true_valid_config)
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+  // when not set, rw_rate should be 0
+  EXPECT_EQ(hw_info[0].rw_rate, 0u);
 }
 
 TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
@@ -1441,6 +1445,8 @@ TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+  // when not set, rw_rate should be 0
+  EXPECT_EQ(hw_info[0].rw_rate, 0u);
 }
 
 TEST_F(TestComponentParser, negative_rw_rates_throws_error)
@@ -1471,6 +1477,38 @@ TEST_F(TestComponentParser, invalid_rw_rates_out_of_range)
     std::string(ros2_control_test_assets::urdf_tail);
   std::vector<hardware_interface::HardwareInfo> hw_info;
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, valid_rw_rate)
+{
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(
+    hw_info = parse_control_resources_from_urdf(
+      ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate));
+  ASSERT_THAT(hw_info, SizeIs(3));
+  EXPECT_EQ(hw_info[0].name, "TestActuatorHardware");
+  EXPECT_EQ(hw_info[0].type, "actuator");
+  EXPECT_EQ(hw_info[0].hardware_plugin_name, "test_actuator");
+  ASSERT_THAT(hw_info[0].joints, SizeIs(1));
+  EXPECT_EQ(hw_info[0].joints[0].name, "joint1");
+  EXPECT_EQ(hw_info[0].rw_rate, 50u);
+
+  EXPECT_EQ(hw_info[1].name, "TestSensorHardware");
+  EXPECT_EQ(hw_info[1].type, "sensor");
+  EXPECT_EQ(hw_info[1].hardware_plugin_name, "test_sensor");
+  ASSERT_THAT(hw_info[1].sensors, SizeIs(1));
+  EXPECT_EQ(hw_info[1].sensors[0].name, "sensor1");
+  EXPECT_EQ(hw_info[1].rw_rate, 20u);
+
+  EXPECT_EQ(hw_info[2].name, "TestSystemHardware");
+  EXPECT_EQ(hw_info[2].type, "system");
+  EXPECT_EQ(hw_info[2].hardware_plugin_name, "test_system");
+  ASSERT_THAT(hw_info[2].joints, SizeIs(2));
+  EXPECT_EQ(hw_info[2].joints[0].name, "joint2");
+  EXPECT_EQ(hw_info[2].joints[1].name, "joint3");
+  ASSERT_THAT(hw_info[2].gpios, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].name, "configuration");
+  EXPECT_EQ(hw_info[2].rw_rate, 25u);
 }
 
 TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
