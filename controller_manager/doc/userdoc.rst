@@ -185,7 +185,7 @@ The parsed controller config file can follow the same conventions as the typical
       ros__parameters:
         joints:
           - joint1
-    
+
     position_trajectory_controller_joint2:
       ros__parameters:
         joints:
