@@ -2367,17 +2367,16 @@ controller_interface::return_type ControllerManager::update(
   update_loop_counter_ %= update_rate_;
 
   // Check for valid time
-  if (
-    !get_clock()->started() &&
-    time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+  if (!get_clock()->started())
   {
-    throw std::runtime_error(
-      "No clock received, and time argument is zero. Check your controller_manager node's "
-      "clock configuration (use_sim_time parameter) and if a valid clock source is "
-      "available. Also pass a proper time argument to the update method.");
-  }
-  else
-  {
+    if (time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+    {
+      throw std::runtime_error(
+        "No clock received, and time argument is zero. Check your controller_manager node's "
+        "clock configuration (use_sim_time parameter) and if a valid clock source is "
+        "available. Also pass a proper time argument to the update method.");
+    }
+
     // this can happen with use_sim_time=true until the /clock is received
     rclcpp::Clock clock = rclcpp::Clock();
     RCLCPP_WARN_THROTTLE(
