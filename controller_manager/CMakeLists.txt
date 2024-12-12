@@ -192,6 +192,9 @@ if(BUILD_TESTING)
   install(FILES test/test_controller_overriding_parameters.yaml
     DESTINATION test)
 
+  install(FILES test/test_controller_spawner_wildcard_entries.yaml
+    DESTINATION test)
+
   ament_add_gmock(
     test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
