@@ -172,3 +172,4 @@ ament_export_libraries(
 )
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})
