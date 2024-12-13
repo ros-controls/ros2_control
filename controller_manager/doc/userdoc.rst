@@ -124,55 +124,75 @@ The parsed controller config file can follow the same conventions as the typical
 
  .. code-block:: yaml
 
-    /**/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+    /**:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
+
+    position_trajectory_controller_joint1:
+      ros__parameters:
+        joints:
+          - joint1
+
+    position_trajectory_controller_joint2:
+      ros__parameters:
+        joints:
+          - joint2
+
+ .. code-block:: yaml
+
+    /**/position_trajectory_controller:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
+
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /rrbot_1/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
 ``unspawner``
 ^^^^^^^^^^^^^^^^
