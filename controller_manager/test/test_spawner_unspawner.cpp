@@ -395,25 +395,19 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
   auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(wildcard_ctrl_1.info.name, "wildcard_ctrl_1");
   ASSERT_EQ(wildcard_ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    wildcard_ctrl_1.c->get_state().id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(wildcard_ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_1.c->get_node(), false);
 
   auto wildcard_ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(wildcard_ctrl_2.info.name, "wildcard_ctrl_2");
   ASSERT_EQ(wildcard_ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    wildcard_ctrl_2.c->get_state().id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(wildcard_ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_2.c->get_node(), false);
 
   auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[2];
   ASSERT_EQ(wildcard_ctrl_3.info.name, "wildcard_ctrl_3");
   ASSERT_EQ(wildcard_ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    wildcard_ctrl_3.c->get_state().id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(wildcard_ctrl_3.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_3.c->get_node(), true);
 }
 
