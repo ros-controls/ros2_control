@@ -82,8 +82,6 @@ public:
     check_and_add_interface(interface_torque_z, 5);
   }
 
-  virtual ~ForceTorqueSensor() = default;
-
   /// Return forces.
   /**
    * Return forces of a FTS.
