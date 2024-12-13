@@ -27,14 +27,19 @@ template <typename MessageReturnType>
 class SemanticComponentInterface
 {
 public:
-  explicit SemanticComponentInterface(const std::string & name, size_t size = 0)
+  SemanticComponentInterface(const std::string & name, std::vector<std::string> interface_names)
+  : name_{name}, interface_names_{interface_names}
   {
-    name_ = name;
+    state_interfaces_.reserve(interface_names.size());
+  }
+
+  explicit SemanticComponentInterface(const std::string & name, size_t size = 0) : name_{name}
+  {
     interface_names_.reserve(size);
     state_interfaces_.reserve(size);
   }
 
-  ~SemanticComponentInterface() = default;
+  virtual ~SemanticComponentInterface() = default;
 
   /// Assign loaned state interfaces from the hardware.
   /**

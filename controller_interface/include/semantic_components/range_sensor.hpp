@@ -26,13 +26,10 @@ namespace semantic_components
 class RangeSensor : public SemanticComponentInterface<sensor_msgs::msg::Range>
 {
 public:
-  explicit RangeSensor(const std::string & name) : SemanticComponentInterface(name, 1)
+  explicit RangeSensor(const std::string & name)
+  : SemanticComponentInterface{name, {{name + "/" + "range"}}}
   {
-    interface_names_.emplace_back(name_ + "/" + "range");
   }
-
-  virtual ~RangeSensor() = default;
-
   /**
    * Return Range reported by a sensor
    *
@@ -47,9 +44,7 @@ public:
    */
   bool get_values_as_message(sensor_msgs::msg::Range & message)
   {
-    // update the message values
     message.range = get_range();
-
     return true;
   }
 };
