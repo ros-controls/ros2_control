@@ -1126,10 +1126,10 @@ bool ResourceManager::load_and_initialize_components(
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   // Set the update rate for all hardware components
-  for (auto & hw_rate : hardware_info)
+  for (auto & hw : hardware_info)
   {
-    hw_rate.rw_rate =
-      (hw_rate.rw_rate == 0 || hw_rate.rw_rate > update_rate) ? update_rate : hw_rate.rw_rate;
+    hw.rw_rate =
+      (hw.rw_rate == 0 || hw.rw_rate > update_rate) ? update_rate : hw.rw_rate;
   }
 
   const std::string system_type = "system";
