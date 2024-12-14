@@ -296,6 +296,7 @@ def get_params_files_with_controller_parameters(
                 f"/{controller_name}" if namespace == "/" else f"{namespace}/{controller_name}"
             )
             WILDCARD_KEY = "/**"
+            ROS_PARAMS_KEY = "ros__parameters"
             parameters = yaml.safe_load(f)
             # check for the parameter in 'controller_name' or 'namespaced_controller' or '/**/namespaced_controller' or '/**/controller_name'
             for key in [
@@ -304,6 +305,8 @@ def get_params_files_with_controller_parameters(
                 f"{WILDCARD_KEY}/{controller_name}",
                 f"{WILDCARD_KEY}{namespaced_controller}",
             ]:
+                if parameter_file in controller_parameter_files:
+                    break
                 if key in parameters:
                     if key == controller_name and namespace != "/":
                         node.get_logger().fatal(
@@ -313,6 +316,8 @@ def get_params_files_with_controller_parameters(
                     controller_parameter_files.append(parameter_file)
 
                 if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                    controller_parameter_files.append(parameter_file)
+                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
     return controller_parameter_files
 
@@ -346,6 +351,8 @@ def get_parameter_from_param_files(
 
                 if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY][key]
+                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                    controller_param_dict = parameters[WILDCARD_KEY]
 
                 if controller_param_dict and (
                     not isinstance(controller_param_dict, dict)
