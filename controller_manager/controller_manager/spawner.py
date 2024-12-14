@@ -254,7 +254,7 @@ def main(args=None):
                     )
                     if not ret.ok:
                         node.get_logger().error(
-                            bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC
+                            f"{bcolors.FAIL}Failed to activate controller : {controller_name}{bcolors.ENDC}"
                         )
                         return 1
 
@@ -279,7 +279,7 @@ def main(args=None):
             )
             if not ret.ok:
                 node.get_logger().error(
-                    bcolors.FAIL + "Failed to activate the parsed controllers list" + bcolors.ENDC
+                    f"{bcolors.FAIL}Failed to activate the parsed controllers list : {controller_names}{bcolors.ENDC}"
                 )
                 return 1
 
