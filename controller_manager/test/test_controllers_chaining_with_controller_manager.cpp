@@ -1177,7 +1177,7 @@ TEST_P(
   switch_test_controllers(
     {DIFF_DRIVE_CONTROLLER, ODOM_PUBLISHER_CONTROLLER, SENSOR_FUSION_CONTROLLER}, {PID_RIGHT_WHEEL},
     test_param.strictness, expected.at(test_param.strictness).future_status,
-    controller_interface::return_type::ERROR);
+    expected.at(test_param.strictness).return_type);
 
   // Preceding controller should stay deactivated and following controller
   // should be deactivated (if BEST_EFFORT)
@@ -1508,7 +1508,8 @@ TEST_P(
 
   switch_test_controllers(
     {DIFF_DRIVE_CONTROLLER}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness,
-    expected.at(test_param.strictness).future_status, controller_interface::return_type::ERROR);
+    expected.at(test_param.strictness).future_status,
+    expected.at(test_param.strictness).return_type);
 
   // Preceding controller should stay deactivated and following controller
   // should be deactivated (if BEST_EFFORT)
