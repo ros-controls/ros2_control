@@ -117,7 +117,9 @@ def service_caller(
                 f"{call_timeout}. (Attempt {attempt+1} of {max_attempts}.)"
             )
         else:
+            node.destroy_client(cli)
             return future.result()
+    node.destroy_client(cli)
     raise RuntimeError(
         f"Could not successfully call service {fully_qualified_service_name} after {max_attempts} attempts."
     )
