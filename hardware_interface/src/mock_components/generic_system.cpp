@@ -723,11 +723,7 @@ void GenericSystem::initialize_storage_vectors(
           if (it2 != component.parameters.end())
           {
             states[index][i] = hardware_interface::stod(it2->second);
-            print_hint = false;
-          }
-          else
-          {
-            print_hint = false;
+            print_hint = true;
           }
         }
       }
