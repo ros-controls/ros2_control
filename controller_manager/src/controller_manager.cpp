@@ -1490,8 +1490,8 @@ controller_interface::return_type ControllerManager::switch_controller(
       controller.info.claimed_interfaces.clear();
     }
     if (
-      std::find(activate_request_.begin(), activate_request_.end(), controller.info.name) !=
-      activate_request_.end())
+      std::find(activate_controllers.begin(), activate_controllers.end(), controller.info.name) !=
+      activate_controllers.end())
     {
       if (!is_controller_active(controller.c))
       {
@@ -1501,8 +1501,9 @@ controller_interface::return_type ControllerManager::switch_controller(
       }
     }
     if (
-      std::find(deactivate_request_.begin(), deactivate_request_.end(), controller.info.name) !=
-      deactivate_request_.end())
+      std::find(
+        deactivate_controllers.begin(), deactivate_controllers.end(), controller.info.name) !=
+      deactivate_controllers.end())
     {
       if (is_controller_active(controller.c))
       {
