@@ -88,6 +88,14 @@ if(BUILD_TESTING)
 
   # Semantic component command interface tests
 
+  ament_add_gmock(test_semantic_component_command_interface
+    test/test_semantic_component_command_interface.cpp
+  )
+  target_link_libraries(test_semantic_component_command_interface
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+
   ament_add_gmock(test_led_rgb_device test/test_led_rgb_device.cpp)
   target_link_libraries(test_led_rgb_device
     controller_interface
