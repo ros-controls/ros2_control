@@ -21,7 +21,6 @@
 #include "controller_interface/helpers.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 
-
 namespace semantic_components
 {
 template <typename MessageInputType>
@@ -102,7 +101,8 @@ public:
 protected:
   std::string name_;
   std::vector<std::string> interface_names_;
-  std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> command_interfaces_;
+  std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
+    command_interfaces_;
 };
 
 }  // namespace semantic_components
