@@ -1,0 +1,110 @@
+// Copyright (c) 2024, Sherpa Mobile Robotics
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
+#define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
+
+#include <string>
+#include <vector>
+
+#include "controller_interface/helpers.hpp"
+#include "hardware_interface/loaned_command_interface.hpp"
+
+
+namespace semantic_components
+{
+template <typename MessageInputType>
+class SemanticComponentCommandInterface
+{
+public:
+  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0)
+  {
+    name_ = name;
+    interface_names_.reserve(size);
+    command_interfaces_.reserve(size);
+  }
+
+  ~SemanticComponentCommandInterface() = default;
+
+  /// Assign loaned command interfaces from the hardware.
+  /**
+   * Assign loaned command interfaces on the controller start.
+   *
+   * \param[in] command_interfaces vector of command interfaces provided by the controller.
+   */
+  bool assign_loaned_command_interfaces(
+    std::vector<hardware_interface::LoanedCommandInterface> & command_interfaces)
+  {
+    return controller_interface::get_ordered_interfaces(
+      command_interfaces, interface_names_, "", command_interfaces_);
+  }
+
+  /// Release loaned command interfaces from the hardware.
+  void release_interfaces() { command_interfaces_.clear(); }
+
+  /// Definition of command interface names for the component.
+  /**
+   * The function should be used in "command_interface_configuration()" of a controller to provide
+   * standardized command interface names semantic component.
+   *
+   * \default Default implementation defined command interfaces as "name/NR" where NR is number
+   * from 0 to size of values;
+   * \return list of strings with command interface names for the semantic component.
+   */
+  virtual std::vector<std::string> get_command_interface_names()
+  {
+    if (interface_names_.empty())
+    {
+      for (auto i = 0u; i < interface_names_.capacity(); ++i)
+      {
+        interface_names_.emplace_back(name_ + "/" + std::to_string(i + 1));
+      }
+    }
+    return interface_names_;
+  }
+
+  /// Return all values.
+  /**
+   * \return true if it gets all the values, else false
+   */
+  bool set_values(const std::vector<double> & values)
+  {
+    // check we have sufficient memory
+    if (values.values() != command_interfaces_.size())
+    {
+      return false;
+    }
+    // set values
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+      command_interfaces_[i].set_value(values[i]);
+    }
+    return true;
+  }
+
+  /// Set values from MessageInputType
+  /**
+   * \return false by default
+   */
+  bool set_values_from_message(const MessageInputType & /* message */) { return false; }
+
+protected:
+  std::string name_;
+  std::vector<std::string> interface_names_;
+  std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> command_interfaces_;
+};
+
+}  // namespace semantic_components
+
+#endif  // SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
