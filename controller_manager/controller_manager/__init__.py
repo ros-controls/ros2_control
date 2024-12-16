@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from .controller_manager_services import (
+    ServiceCallerNode,
     configure_controller,
     list_controller_types,
     list_controllers,
@@ -30,6 +31,7 @@ from .controller_manager_services import (
 )
 
 __all__ = [
+    "ServiceCallerNode",
     "configure_controller",
     "list_controller_types",
     "list_controllers",

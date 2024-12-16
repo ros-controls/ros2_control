@@ -21,6 +21,7 @@ import time
 import warnings
 
 from controller_manager import (
+    ServiceCallerNode,
     configure_controller,
     list_controllers,
     load_controller,
@@ -32,7 +33,6 @@ from controller_manager import (
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
-from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
 
 
@@ -160,7 +160,7 @@ def main(args=None):
             if not os.path.isfile(param_file):
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
-    node = Node("spawner_" + controller_names[0])
+    node = ServiceCallerNode("spawner_" + controller_names[0])
 
     if node.get_namespace() != "/" and args.namespace:
         raise RuntimeError(

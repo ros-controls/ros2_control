@@ -26,6 +26,7 @@ from controller_manager_msgs.srv import (
 )
 
 import rclpy
+from rclpy.node import Node
 import yaml
 from rcl_interfaces.msg import Parameter
 
@@ -53,6 +54,18 @@ class bcolors:
 
 class ServiceNotFoundError(Exception):
     pass
+
+
+class ServiceCallerNode(Node):
+    def __init__(self, node_name: str):
+        super().__init__(node_name)
+        # initialize dictionary to store service clients
+        self.service_clients = {}
+
+    def __del__(self):
+        # destroy all service clients
+        for key in self.service_clients:
+            self.destroy_client(self.service_clients[key])
 
 
 def service_caller(
@@ -92,7 +105,13 @@ def service_caller(
     fully_qualified_service_name = (
         f"{namespace}/{service_name}" if not service_name.startswith("/") else service_name
     )
-    cli = node.create_client(service_type, fully_qualified_service_name)
+
+    if (service_type, fully_qualified_service_name) not in node.service_clients:
+        cli = node.create_client(service_type, fully_qualified_service_name)
+        # save client for next time so we're not creating a new one every time
+        node.service_clients[(service_type, fully_qualified_service_name)] = cli
+    else:
+        cli = node.service_clients[(service_type, fully_qualified_service_name)]
 
     while not cli.service_is_ready():
         node.get_logger().info(
