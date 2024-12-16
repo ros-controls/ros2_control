@@ -61,8 +61,12 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
-    controllers = list_controllers(node, controller_manager, service_timeout).controller
+def is_controller_loaded(
+    node, controller_manager, controller_name, service_timeout=0.0, call_timeout=10.0
+):
+    controllers = list_controllers(
+        node, controller_manager, service_timeout, call_timeout
+    ).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -124,7 +128,7 @@ def main(args=None):
     )
     parser.add_argument(
         "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
+        help="Time to wait for the controller manager service to be available",
         required=False,
         default=0.0,
         type=float,
@@ -136,6 +140,13 @@ def main(args=None):
         " paused simulations at startup",
         required=False,
         default=5.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--service-call-timeout",
+        help="Time to wait for the service response from the controller manager",
+        required=False,
+        default=10.0,
         type=float,
     )
     parser.add_argument(
@@ -152,6 +163,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_files = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
+    service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
 
     if param_files:
@@ -181,7 +193,11 @@ def main(args=None):
     try:
         for controller_name in controller_names:
             if is_controller_loaded(
-                node, controller_manager_name, controller_name, controller_manager_timeout
+                node,
+                controller_manager_name,
+                controller_name,
+                controller_manager_timeout,
+                service_call_timeout,
             ):
                 node.get_logger().warn(
                     bcolors.WARNING
@@ -223,7 +239,13 @@ def main(args=None):
                 )
 
             if not args.load_only:
-                ret = configure_controller(node, controller_manager_name, controller_name)
+                ret = configure_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    service_call_timeout,
+                )
                 if not ret.ok:
                     node.get_logger().error(
                         bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
@@ -239,6 +261,7 @@ def main(args=None):
                         True,
                         True,
                         switch_timeout,
+                        service_call_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -263,6 +286,7 @@ def main(args=None):
                 True,
                 True,
                 switch_timeout,
+                service_call_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -297,6 +321,7 @@ def main(args=None):
                     True,
                     True,
                     switch_timeout,
+                    service_call_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(
