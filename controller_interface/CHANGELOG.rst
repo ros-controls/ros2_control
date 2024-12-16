@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.46.0 (2024-12-16)
+-------------------
+* generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (backport `#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_) (`#1924 <https://github.com/ros-controls/ros2_control/issues/1924>`_)
+* Contributors: mergify[bot]
+
 2.45.0 (2024-12-03)
 -------------------
 

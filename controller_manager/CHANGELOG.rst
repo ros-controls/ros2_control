@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.46.0 (2024-12-16)
+-------------------
+* Add service call timeout argument in spawner (`#1808 <https://github.com/ros-controls/ros2_control/issues/1808>`_) (`#1886 <https://github.com/ros-controls/ros2_control/issues/1886>`_)
+* Fix the spawner to support full wildcard parameter entries (backport `#1933 <https://github.com/ros-controls/ros2_control/issues/1933>`_) (`#1939 <https://github.com/ros-controls/ros2_control/issues/1939>`_)
+* generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)
+* Add documentation on `ros2_control_node` and make lock_memory false by default (backport `#1890 <https://github.com/ros-controls/ros2_control/issues/1890>`_) (`#1895 <https://github.com/ros-controls/ros2_control/issues/1895>`_)
+* [Spawner] Accept parsing multiple `--param-file` arguments to spawner  (backport `#1805 <https://github.com/ros-controls/ros2_control/issues/1805>`_) (`#1894 <https://github.com/ros-controls/ros2_control/issues/1894>`_)
+* Contributors: mergify[bot]
+
 2.45.0 (2024-12-03)
 -------------------
 * Add CM `switch_controller` service timeout as parameter to spawner.py (backport `#1790 <https://github.com/ros-controls/ros2_control/issues/1790>`_) (`#1879 <https://github.com/ros-controls/ros2_control/issues/1879>`_)
