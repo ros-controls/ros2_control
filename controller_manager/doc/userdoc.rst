@@ -127,55 +127,75 @@ The parsed controller config file can follow the same conventions as the typical
 
  .. code-block:: yaml
 
-    /**/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+    /**:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
+
+    position_trajectory_controller_joint1:
+      ros__parameters:
+        joints:
+          - joint1
+
+    position_trajectory_controller_joint2:
+      ros__parameters:
+        joints:
+          - joint2
+
+ .. code-block:: yaml
+
+    /**/position_trajectory_controller:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
+
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /rrbot_1/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
 ``unspawner``
 ^^^^^^^^^^^^^^^^
@@ -264,6 +284,38 @@ The workaround for this is to specify another node name remap rule in the ``Node
 
       auto cm = std::make_shared<controller_manager::ControllerManager>(
         executor, "_target_node_name", "some_optional_namespace", options);
+
+Launching controller_manager with ros2_control_node
+---------------------------------------------------
+
+The controller_manager can be launched with the ros2_control_node executable. The following example shows how to launch the controller_manager with the ros2_control_node executable:
+
+.. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+    )
+
+The ros2_control_node executable uses the following parameters from the ``controller_manager`` node:
+
+lock_memory (optional; bool; default: false for a non-realtime kernel, true for a realtime kernel)
+  Locks the memory of the ``controller_manager`` node at startup to physical RAM in order to avoid page faults
+  and to prevent the node from being swapped out to disk.
+  Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
+  The following command can be used to set the memory locking limit temporarily : ``ulimit -l unlimited``.
+
+cpu_affinity (optional; int; default: -1)
+  Sets the CPU affinity of the ``controller_manager`` node to the specified CPU core.
+  The value of -1 means that the CPU affinity is not set.
+
+thread_priority (optional; int; default: 50)
+  Sets the thread priority of the ``controller_manager`` node to the specified value. The value must be between 0 and 99.
+
+use_sim_time (optional; bool; default: false)
+  Enables the use of simulation time in the ``controller_manager`` node.
 
 Concepts
 -----------

@@ -308,7 +308,7 @@ class DummySystem : public hardware_interface::SystemInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    for (auto i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       position_state_[i] += velocity_command_[0];
       velocity_state_[i] = velocity_command_[0];
@@ -318,7 +318,7 @@ class DummySystem : public hardware_interface::SystemInterface
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    for (auto i = 0ul; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       velocity_state_[i] = 0.0;
     }
@@ -346,7 +346,7 @@ private:
   std::array<double, 3> velocity_state_ = {
     std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN()};
-  std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
+  std::array<double, 3> velocity_command_ = {{0.0, 0.0, 0.0}};
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;
