@@ -27,11 +27,11 @@
 
 class TestableLedDevice : public semantic_components::LEDRgbDevice
 {
-  FRIEND_TEST(TestableLedDevice, validate_all);
+  FRIEND_TEST(LedDeviceTest, validate_all);
 
 public:
   // Use default command interface names
-  explicit TestableLedDevice(const std::string & name) : PoseSensor{name} {}
+  explicit TestableLedDevice(const std::string & name) : LEDRgbDevice{name} {}
 
   virtual ~TestableLedDevice() = default;
 };
@@ -50,8 +50,8 @@ protected:
   const std::vector<std::string> interface_names_ = {"r", "g", "b"};
 
   std::array<double, 3> led_values_ = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
 
   std::unique_ptr<TestableLedDevice> led_device_;
 };

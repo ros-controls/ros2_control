@@ -80,16 +80,17 @@ public:
   bool set_values(const std::vector<double> & values)
   {
     // check we have sufficient memory
-    if (values.values() != command_interfaces_.size())
+    if (values.size() != command_interfaces_.size())
     {
       return false;
     }
     // set values
+    bool all_set = true;
     for (size_t i = 0; i < values.size(); ++i)
     {
-      command_interfaces_[i].set_value(values[i]);
+      all_set &= command_interfaces_[i].get().set_value(values[i]);
     }
-    return true;
+    return all_set;
   }
 
   /// Set values from MessageInputType

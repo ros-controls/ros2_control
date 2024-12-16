@@ -24,7 +24,7 @@
 
 namespace semantic_components
 {
-class LEDRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::ColorRgba>
+class LEDRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::ColorRGBA>
 {
 public:
   /**
@@ -63,10 +63,11 @@ public:
     {
       return false;
     }
-    command_interfaces_[0].set_value(message.r);
-    command_interfaces_[1].set_value(message.g);
-    command_interfaces_[2].set_value(message.b);
-    return true;
+    bool all_set = true;
+    all_set &= command_interfaces_[0].get().set_value(message.r);
+    all_set &= command_interfaces_[1].get().set_value(message.g);
+    all_set &= command_interfaces_[2].get().set_value(message.b);
+    return all_set;
   }
 };
 

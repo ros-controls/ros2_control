@@ -64,20 +64,21 @@ TEST_F(LedDeviceTest, validate_all)
   const std::vector<double> test_led_values_cmd = {0.1, 0.2, 0.3};
   EXPECT_TRUE(led_device_->set_values(test_led_values_cmd));
 
-  EXPECT_TRUE(led_values_[0], test_led_values_cmd[0]);
-  EXPECT_TRUE(led_values_[1], test_led_values_cmd[1]);
-  EXPECT_TRUE(led_values_[2], test_led_values_cmd[2]);
+  EXPECT_EQ(led_values_[0], test_led_values_cmd[0]);
+  EXPECT_EQ(led_values_[1], test_led_values_cmd[1]);
+  EXPECT_EQ(led_values_[2], test_led_values_cmd[2]);
 
   // Validate correct assignment from message
   std_msgs::msg::ColorRGBA temp_message;
-  temp_message.r = test_led_values_cmd[0];
-  temp_message.g = test_led_values_cmd[1];
-  temp_message.b = test_led_values_cmd[2];
+  temp_message.r = static_cast<float>(test_led_values_cmd[0]);
+  temp_message.g = static_cast<float>(test_led_values_cmd[1]);
+  temp_message.b = static_cast<float>(test_led_values_cmd[2]);
   EXPECT_TRUE(led_device_->set_values_from_message(temp_message));
 
-  EXPECT_TRUE(led_values_[0], temp_message.r);
-  EXPECT_TRUE(led_values_[1], temp_message.g);
-  EXPECT_TRUE(led_values_[2], temp_message.b);
+  double float_tolerance = 1e-6;
+  EXPECT_NEAR(led_values_[0], test_led_values_cmd[0], float_tolerance);
+  EXPECT_NEAR(led_values_[1], test_led_values_cmd[1], float_tolerance);
+  EXPECT_NEAR(led_values_[2], test_led_values_cmd[2], float_tolerance);
 
   // Release command interfaces
   led_device_->release_interfaces();
