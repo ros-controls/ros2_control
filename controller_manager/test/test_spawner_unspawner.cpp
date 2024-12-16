@@ -489,7 +489,7 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
       test_file_path),
     256)
     << "Should fail as the ctrl_with_joint1_command_interface and "
-       "ctrl_with_joint2_command_interface are  active";
+       "ctrl_with_joint2_command_interface are active";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
 
