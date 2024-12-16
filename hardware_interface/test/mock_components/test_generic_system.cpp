@@ -574,12 +574,8 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="acceleration">
-        <param name="initial_value">0.0</param>
-      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <joint name="joint2">
       <command_interface name="velocity"/>
@@ -587,12 +583,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="acceleration">
-        <param name="initial_value">0.0</param>
-      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <gpio name="flange_vacuum">
       <command_interface name="vacuum"/>
@@ -613,36 +606,26 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="acceleration">
-        <param name="initial_value">0.0</param>
-      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <joint name="joint2">
       <command_interface name="velocity"/>
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="acceleration">
-        <param name="initial_value">0.0</param>
-      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <joint name="joint3">
       <command_interface name="acceleration"/>
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="acceleration">
-        <param name="initial_value">0.0</param>
-      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <gpio name="flange_vacuum">
       <command_interface name="vacuum"/>
