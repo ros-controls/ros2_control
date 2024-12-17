@@ -1649,9 +1649,11 @@ bool ResourceManager::prepare_command_mode_switch(
   };
 
   const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
+  const bool async_actuators_result = call_prepare_mode_switch(resource_storage_->async_actuators_);
   const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
+  const bool async_systems_result = call_prepare_mode_switch(resource_storage_->async_systems_);
 
-  return actuators_result && systems_result;
+  return actuators_result && async_actuators_result && systems_result && async_systems_result;
 }
 
 // CM API: Called in "update"-thread
@@ -1714,9 +1716,11 @@ bool ResourceManager::perform_command_mode_switch(
   };
 
   const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
+  const bool async_actuators_result = call_perform_mode_switch(resource_storage_->async_actuators_);
   const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
-
-  return actuators_result && systems_result;
+  const bool async_systems_result = call_perform_mode_switch(resource_storage_->async_systems_);
+  
+  return actuators_result && async_actuators_result && systems_result && async_systems_result;
 }
 
 // CM API: Called in "callback/slow"-thread
