@@ -51,7 +51,7 @@ jobs:
       upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
       ref_for_scheduled_build: master
   semi-binary-clang:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@exclude_system_header
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
       ros_distro: jazzy
       ros_repo: testing
