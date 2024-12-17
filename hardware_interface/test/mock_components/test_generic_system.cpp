@@ -56,13 +56,15 @@ protected:
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">1.57</param>
+      <state_interface name="position">
+        <param name="initial_value">1.57</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">0.7854</param>
+      <state_interface name="position">
+        <param name="initial_value">0.7854</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -75,13 +77,15 @@ protected:
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">1.57</param>
+      <state_interface name="position">
+        <param name="initial_value">1.57</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">0.7854</param>
+      <state_interface name="position">
+        <param name="initial_value">0.7854</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -94,14 +98,15 @@ protected:
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">1.57</param>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="acceleration"/>
-      <state_interface name="position"/>
-      <param name="initial_position">0.7854</param>
-      <param name="initial_acceleration">0.8554</param>
+      <state_interface name="position">
+        <param name="initial_value">0.7854</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -115,16 +120,22 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -138,23 +149,28 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">1.55</param>
-      <param name="initial_velocity">0.1</param>
+      <state_interface name="position">
+        <param name="initial_value">1.55</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.1</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">0.65</param>
-      <param name="initial_velocity">0.2</param>
+      <state_interface name="position">
+        <param name="initial_value">0.65</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.2</param>
+      </state_interface>
     </joint>
     <joint name="voltage_output">
       <command_interface name="voltage"/>
-      <state_interface name="voltage"/>
-      <param name="initial_voltage">0.5</param>
+      <state_interface name="voltage">
+        <param name="initial_value">0.5</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -168,14 +184,22 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <sensor name="tcp_force_sensor">
       <state_interface name="fx"/>
@@ -197,14 +221,22 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <sensor name="tcp_force_sensor">
       <state_interface name="fx"/>
@@ -221,19 +253,27 @@ protected:
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_sensor_commands">True</param>
+      <param name="mock_sensor_commands">True</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <sensor name="tcp_force_sensor">
       <state_interface name="fx"/>
@@ -254,9 +294,12 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">1.57</param>
+      <state_interface name="position">
+        <param name="initial_value">1.57</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <param name="mimic">joint1</param>
@@ -282,7 +325,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -290,7 +335,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -306,16 +353,22 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -331,18 +384,24 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
       <state_interface name="actual_position"/>
-      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
       <state_interface name="actual_position"/>
-      <param name="initial_position">2.78</param>
     </joint>
   </ros2_control>
 )";
@@ -361,14 +420,19 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -393,16 +457,22 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -422,21 +492,27 @@ protected:
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_gpio_commands">True</param>
+      <param name="mock_gpio_commands">True</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -571,7 +647,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";

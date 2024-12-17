@@ -725,10 +725,6 @@ void GenericSystem::initialize_storage_vectors(
             states[index][i] = hardware_interface::stod(it2->second);
             print_hint = true;
           }
-          else
-          {
-            print_hint = true;
-          }
         }
       }
     }
