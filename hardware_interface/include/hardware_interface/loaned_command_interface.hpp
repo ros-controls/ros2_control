@@ -81,12 +81,12 @@ public:
     }
   }
 
-  const std::string get_name() const { return command_interface_.get_name(); }
+  const std::string & get_name() const { return command_interface_.get_name(); }
 
   const std::string & get_interface_name() const { return command_interface_.get_interface_name(); }
 
   [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string
+    "Replaced by get_name method, which is semantically more correct")]] const std::string &
   get_full_name() const
   {
     return command_interface_.get_name();
