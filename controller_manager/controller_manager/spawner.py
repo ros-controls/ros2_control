@@ -358,6 +358,7 @@ def main(args=None):
         node.get_logger().fatal(str(err))
         return 1
     finally:
+        node.destroy_node()
         rclpy.shutdown()
 
 

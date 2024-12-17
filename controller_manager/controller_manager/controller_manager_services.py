@@ -55,6 +55,35 @@ class ServiceNotFoundError(Exception):
     pass
 
 
+class SingletonServiceCaller:
+    """
+    Singleton class to call services of controller manager.
+
+    This class is used to create a service client for a given service name.
+    If the service client already exists, it returns the existing client.
+    It is used to avoid creating multiple service clients for the same service name.
+
+    It needs Node object, service type and fully qualified service name to create a service client.
+
+    """
+
+    _clients = {}
+
+    def __new__(cls, node, service_type, fully_qualified_service_name):
+        if (node, fully_qualified_service_name) not in cls._clients:
+            cls._clients[(node, fully_qualified_service_name)] = node.create_client(
+                service_type, fully_qualified_service_name
+            )
+            node.get_logger().debug(
+                f"{bcolors.MAGENTA}Creating a new service client : {fully_qualified_service_name} with node : {node.get_name()}{bcolors.ENDC}"
+            )
+
+        node.get_logger().debug(
+            f"{bcolors.OKBLUE}Returning the existing service client : {fully_qualified_service_name} for node : {node.get_name()}{bcolors.ENDC}"
+        )
+        return cls._clients[(node, fully_qualified_service_name)]
+
+
 def service_caller(
     node,
     service_name,
@@ -88,15 +117,23 @@ def service_caller(
     @return The service response
 
     """
-    cli = node.create_client(service_type, service_name)
+    namespace = "" if node.get_namespace() == "/" else node.get_namespace()
+    fully_qualified_service_name = (
+        f"{namespace}/{service_name}" if not service_name.startswith("/") else service_name
+    )
+    cli = SingletonServiceCaller(node, service_type, fully_qualified_service_name)
 
     while not cli.service_is_ready():
-        node.get_logger().info(f"waiting for service {service_name} to become available...")
+        node.get_logger().info(
+            f"waiting for service {fully_qualified_service_name} to become available..."
+        )
         if service_timeout:
             if not cli.wait_for_service(service_timeout):
-                raise ServiceNotFoundError(f"Could not contact service {service_name}")
+                raise ServiceNotFoundError(
+                    f"Could not contact service {fully_qualified_service_name}"
+                )
         elif not cli.wait_for_service(10.0):
-            node.get_logger().warn(f"Could not contact service {service_name}")
+            node.get_logger().warn(f"Could not contact service {fully_qualified_service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
@@ -105,13 +142,13 @@ def service_caller(
         rclpy.spin_until_future_complete(node, future, timeout_sec=call_timeout)
         if future.result() is None:
             node.get_logger().warning(
-                f"Failed getting a result from calling {service_name} in "
+                f"Failed getting a result from calling {fully_qualified_service_name} in "
                 f"{call_timeout}. (Attempt {attempt+1} of {max_attempts}.)"
             )
         else:
             return future.result()
     raise RuntimeError(
-        f"Could not successfully call service {service_name} after {max_attempts} attempts."
+        f"Could not successfully call service {fully_qualified_service_name} after {max_attempts} attempts."
     )
 
 
