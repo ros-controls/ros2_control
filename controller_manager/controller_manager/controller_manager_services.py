@@ -70,18 +70,18 @@ class SingletonServiceCaller:
     _clients = {}
 
     def __new__(cls, node, service_type, fully_qualified_service_name):
-        if fully_qualified_service_name not in cls._clients:
-            cls._clients[fully_qualified_service_name] = node.create_client(
+        if (node, fully_qualified_service_name) not in cls._clients:
+            cls._clients[(node, fully_qualified_service_name)] = node.create_client(
                 service_type, fully_qualified_service_name
             )
             node.get_logger().debug(
-                f"{bcolors.MAGENTA}Creating a new service client : {fully_qualified_service_name}{bcolors.ENDC}"
+                f"{bcolors.MAGENTA}Creating a new service client : {fully_qualified_service_name} with node : {node.get_name()}{bcolors.ENDC}"
             )
 
         node.get_logger().debug(
-            f"{bcolors.OKBLUE}Returning the existing service client : {fully_qualified_service_name}{bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Returning the existing service client : {fully_qualified_service_name} for node : {node.get_name()}{bcolors.ENDC}"
         )
-        return cls._clients[fully_qualified_service_name]
+        return cls._clients[(node, fully_qualified_service_name)]
 
 
 def service_caller(
