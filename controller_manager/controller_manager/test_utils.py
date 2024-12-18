@@ -46,6 +46,18 @@ def check_node_running(node, node_name, timeout=5.0):
 
 
 def check_controllers_running(node, cnames, namespace="", state="active"):
+    """
+    Check if the specified controllers are running on the given node.
+
+    Args:
+      node (Node): The ROS2 node instance to check for controllers.
+      cnames (list of str): List of controller names to check.
+      namespace (str, optional): The namespace in which to look for controllers. Defaults to "".
+      state (str, optional): The desired state of the controllers. Defaults to "active".
+
+    Raises:
+      AssertionError: If any of the specified controllers are not found or not in the desired state within the timeout period.
+    """
 
     # wait for controller to be loaded before we call the CM services
     found = {cname: False for cname in cnames}  # Define 'found' as a dictionary
@@ -96,6 +108,17 @@ def check_controllers_running(node, cnames, namespace="", state="active"):
 
 
 def check_if_js_published(topic, joint_names):
+    """
+    Check if a JointState message is published on a given topic with the expected joint names.
+
+    Args:
+      topic (str): The name of the topic to check.
+      joint_names (list of str): The expected joint names in the JointState message.
+
+    Raises:
+      AssertionError: If the topic is not found, the number of joints in the message is incorrect,
+              or the joint names do not match the expected names.
+    """
     wait_for_topics = WaitForTopics([(topic, JointState)], timeout=20.0)
     assert wait_for_topics.wait(), f"Topic '{topic}' not found!"
     msgs = wait_for_topics.received_messages(topic)
