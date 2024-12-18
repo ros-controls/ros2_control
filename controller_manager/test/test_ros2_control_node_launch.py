@@ -28,6 +28,7 @@
 #
 # Author: Christoph Froehlich
 
+import pytest
 import unittest
 import os
 
@@ -49,6 +50,7 @@ import threading
 
 
 # Executes the given launch file and checks if all nodes can be started
+@pytest.mark.launch_test
 def generate_test_description():
 
     robot_controllers = os.path.join(
