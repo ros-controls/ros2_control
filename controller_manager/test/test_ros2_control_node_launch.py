@@ -29,10 +29,10 @@
 # Author: Christoph Froehlich
 
 import unittest
+import os
 
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution, Command, FindExecutable
-from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
@@ -51,12 +51,8 @@ import threading
 # Executes the given launch file and checks if all nodes can be started
 def generate_test_description():
 
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackagePrefix("controller_manager"),
-            "test",
-            "test_ros2_control_node.yaml",
-        ]
+    robot_controllers = os.path.join(
+        get_package_prefix("controller_manager"), "test", "test_ros2_control_node.yaml"
     )
 
     control_node = launch_ros.actions.Node(
@@ -65,28 +61,14 @@ def generate_test_description():
         parameters=[robot_controllers],
         output="both",
     )
-    # Get URDF
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("ros2_control_test_assets"),
-                    "urdf",
-                    "test_hardware_components.urdf",
-                ]
-            ),
-        ]
+    # Get URDF, without involving xacro
+    urdf = os.path.join(
+        get_package_share_directory("ros2_control_test_assets"),
+        "urdf",
+        "test_hardware_components.urdf",
     )
-    # why not this?
-    # robot_description_content = PathJoinSubstitution(
-    #     [
-    #         FindPackageShare("ros2_control_test_assets"),
-    #         "urdf",
-    #         "test_hardware_components.urdf",
-    #     ]
-    # )
+    with open(urdf) as infp:
+        robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
 
     robot_state_pub_node = launch_ros.actions.Node(
