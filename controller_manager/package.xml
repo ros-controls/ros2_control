@@ -42,6 +42,7 @@
   <test_depend>robot_state_publisher</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
   <test_depend>sensor_msgs</test_depend>
+  <test_depend>example_interfaces</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
