@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::ActuatorInterface;
@@ -33,6 +34,14 @@ class TestActuator : public ActuatorInterface
 
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
     {
+      return CallbackReturn::ERROR;
+    }
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Actuator hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
     }
 

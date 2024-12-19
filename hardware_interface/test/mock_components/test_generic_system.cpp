@@ -699,9 +699,11 @@ public:
   }
 
   explicit TestableResourceManager(
-    rclcpp::Node & node, const std::string & urdf, bool activate_all = false)
+    rclcpp::Node & node, const std::string & urdf, bool activate_all = false,
+    unsigned int cm_update_rate = 100)
   : hardware_interface::ResourceManager(
-      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
+      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all,
+      cm_update_rate)
   {
   }
 };
@@ -842,14 +844,17 @@ void generic_system_functional_test(
   EXPECT_EQ(
     status_map[component_name].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   configure_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   activate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -935,7 +940,7 @@ void generic_system_error_group_test(
   const std::string & urdf, const std::string component_prefix, bool validate_same_group)
 {
   rclcpp::Node node("test_generic_system");
-  TestableResourceManager rm(node, urdf);
+  TestableResourceManager rm(node, urdf, false, 200u);
   const std::string component1 = component_prefix + "1";
   const std::string component2 = component_prefix + "2";
   // check is hardware is configured
@@ -944,14 +949,17 @@ void generic_system_error_group_test(
   {
     EXPECT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
     configure_components(rm, {component});
     status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
     activate_components(rm, {component});
     status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
   }
 
   // Check initial values

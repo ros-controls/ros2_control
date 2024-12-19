@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"
+#include "rclcpp/logging.hpp"
 
 using hardware_interface::return_type;
 using hardware_interface::SensorInterface;
@@ -31,6 +32,14 @@ class TestSensor : public SensorInterface
     // can only give feedback state for velocity
     if (get_hardware_info().sensors[0].state_interfaces.size() == 2)
     {
+      return CallbackReturn::ERROR;
+    }
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Sensor hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
     }
     return CallbackReturn::SUCCESS;
