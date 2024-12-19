@@ -29,15 +29,14 @@ class PoseSensor : public SemanticComponentInterface<geometry_msgs::msg::Pose>
 public:
   /// Constructor for a standard pose sensor with interface names set based on sensor name.
   explicit PoseSensor(const std::string & name)
-  : SemanticComponentInterface{
-      name,
-      {{name + '/' + "position.x"},
-       {name + '/' + "position.y"},
-       {name + '/' + "position.z"},
-       {name + '/' + "orientation.x"},
-       {name + '/' + "orientation.y"},
-       {name + '/' + "orientation.z"},
-       {name + '/' + "orientation.w"}}}
+  : SemanticComponentInterface(
+      name, {{name + '/' + "position.x"},
+             {name + '/' + "position.y"},
+             {name + '/' + "position.z"},
+             {name + '/' + "orientation.x"},
+             {name + '/' + "orientation.y"},
+             {name + '/' + "orientation.z"},
+             {name + '/' + "orientation.w"}})
   {
   }
   /// Update and return position.

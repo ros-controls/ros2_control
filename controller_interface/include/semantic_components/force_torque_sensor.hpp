@@ -34,14 +34,16 @@ class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::
 {
 public:
   /// Constructor for "standard" 6D FTS
-  explicit ForceTorqueSensor(const std::string & name) : SemanticComponentInterface{name,
-    // If 6D FTS use standard names
-    { {name + "/" + "force.x"},
-      {name + "/" + "force.y"},
-      {name + "/" + "force.z"},
-      {name + "/" + "torque.x"},
-      {name + "/" + "torque.y"},
-      {name + "/" + "torque.z"} }},
+  explicit ForceTorqueSensor(const std::string & name)
+  : SemanticComponentInterface(
+      name,
+      // If 6D FTS use standard names
+      {{name + "/" + "force.x"},
+       {name + "/" + "force.y"},
+       {name + "/" + "force.z"},
+       {name + "/" + "torque.x"},
+       {name + "/" + "torque.y"},
+       {name + "/" + "torque.z"}}),
     existing_axes_{{true, true, true, true, true, true}}
   {
   }

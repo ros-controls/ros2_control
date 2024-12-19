@@ -28,18 +28,17 @@ class IMUSensor : public SemanticComponentInterface<sensor_msgs::msg::Imu>
 {
 public:
   explicit IMUSensor(const std::string & name)
-  : SemanticComponentInterface{
-      name,
-      {{name + "/" + "orientation.x"},
-       {name + "/" + "orientation.y"},
-       {name + "/" + "orientation.z"},
-       {name + "/" + "orientation.w"},
-       {name + "/" + "angular_velocity.x"},
-       {name + "/" + "angular_velocity.y"},
-       {name + "/" + "angular_velocity.z"},
-       {name + "/" + "linear_acceleration.x"},
-       {name + "/" + "linear_acceleration.y"},
-       {name + "/" + "linear_acceleration.z"}}}
+  : SemanticComponentInterface(
+      name, {{name + "/" + "orientation.x"},
+             {name + "/" + "orientation.y"},
+             {name + "/" + "orientation.z"},
+             {name + "/" + "orientation.w"},
+             {name + "/" + "angular_velocity.x"},
+             {name + "/" + "angular_velocity.y"},
+             {name + "/" + "angular_velocity.z"},
+             {name + "/" + "linear_acceleration.x"},
+             {name + "/" + "linear_acceleration.y"},
+             {name + "/" + "linear_acceleration.z"}})
   {
   }
   /// Return orientation.

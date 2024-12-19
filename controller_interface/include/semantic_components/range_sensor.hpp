@@ -27,7 +27,7 @@ class RangeSensor : public SemanticComponentInterface<sensor_msgs::msg::Range>
 {
 public:
   explicit RangeSensor(const std::string & name)
-  : SemanticComponentInterface{name, {{name + "/" + "range"}}}
+  : SemanticComponentInterface(name, {name + "/" + "range"})
   {
   }
   /**

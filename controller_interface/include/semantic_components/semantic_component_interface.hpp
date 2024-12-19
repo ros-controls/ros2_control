@@ -27,13 +27,14 @@ template <typename MessageReturnType>
 class SemanticComponentInterface
 {
 public:
-  SemanticComponentInterface(const std::string & name, std::vector<std::string> interface_names)
-  : name_{name}, interface_names_{interface_names}
+  SemanticComponentInterface(
+    const std::string & name, const std::vector<std::string> & interface_names)
+  : name_(name), interface_names_(interface_names)
   {
     state_interfaces_.reserve(interface_names.size());
   }
 
-  explicit SemanticComponentInterface(const std::string & name, std::size_t size = 0) : name_{name}
+  explicit SemanticComponentInterface(const std::string & name, std::size_t size = 0) : name_(name)
   {
     interface_names_.reserve(size);
     state_interfaces_.reserve(size);
