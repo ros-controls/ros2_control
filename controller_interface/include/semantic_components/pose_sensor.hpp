@@ -46,10 +46,10 @@ public:
    *
    * \return Array of position coordinates.
    */
-  std::array<double, 3> get_position()
+  std::array<double, 3> get_position() const
   {
     std::array<double, 3> position;
-    for (std::size_t i{0}; i < position.size(); ++i)
+    for (auto i = 0u; i < position.size(); ++i)
     {
       position[i] = state_interfaces_[i].get().get_value();
     }
@@ -62,11 +62,11 @@ public:
    *
    * \return Array of orientation coordinates in xyzw convention.
    */
-  std::array<double, 4> get_orientation()
+  std::array<double, 4> get_orientation() const
   {
     std::array<double, 4> orientation;
     const std::size_t interface_offset{3};
-    for (std::size_t i{0}; i < orientation.size(); ++i)
+    for (auto i = 0u; i < orientation.size(); ++i)
     {
       orientation[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
@@ -77,7 +77,7 @@ public:
   /**
    * Fill a pose message with current position and orientation from the state interfaces.
    */
-  bool get_values_as_message(geometry_msgs::msg::Pose & message)
+  bool get_values_as_message(geometry_msgs::msg::Pose & message) const
   {
     const auto [position_x, position_y, position_z] = get_position();
     const auto [orientation_x, orientation_y, orientation_z, orientation_w] = get_orientation();

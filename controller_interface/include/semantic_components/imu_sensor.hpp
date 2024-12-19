@@ -48,10 +48,10 @@ public:
    *
    * \return Array of size 4 with orientation quaternion (x,y,z,w).
    */
-  std::array<double, 4> get_orientation()
+  std::array<double, 4> get_orientation() const
   {
     std::array<double, 4> orientation;
-    for (std::size_t i{0}; i < orientation.size(); ++i)
+    for (auto i = 0u; i < orientation.size(); ++i)
     {
       orientation[i] = state_interfaces_[i].get().get_value();
     }
@@ -64,11 +64,11 @@ public:
    *
    * \return array of size 3 with angular velocity values (x, y, z).
    */
-  std::array<double, 3> get_angular_velocity()
+  std::array<double, 3> get_angular_velocity() const
   {
     std::array<double, 3> angular_velocity;
     const std::size_t interface_offset{4};
-    for (std::size_t i{0}; i < angular_velocity.size(); ++i)
+    for (auto i = 0u; i < angular_velocity.size(); ++i)
     {
       angular_velocity[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
@@ -81,11 +81,11 @@ public:
    *
    * \return array of size 3 with linear acceleration values (x, y, z).
    */
-  std::array<double, 3> get_linear_acceleration()
+  std::array<double, 3> get_linear_acceleration() const
   {
     std::array<double, 3> linear_acceleration;
     const std::size_t interface_offset{7};
-    for (std::size_t i{0}; i < linear_acceleration.size(); ++i)
+    for (auto i = 0u; i < linear_acceleration.size(); ++i)
     {
       linear_acceleration[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
@@ -97,7 +97,7 @@ public:
    * Constructs and return a IMU message from the current values.
    * \return imu message from values;
    */
-  bool get_values_as_message(sensor_msgs::msg::Imu & message)
+  bool get_values_as_message(sensor_msgs::msg::Imu & message) const
   {
     const auto [orientation_x, orientation_y, orientation_z, orientation_w] = get_orientation();
     const auto [angular_velocity_x, angular_velocity_y, angular_velocity_z] =

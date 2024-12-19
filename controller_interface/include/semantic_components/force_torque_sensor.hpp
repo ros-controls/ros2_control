@@ -88,12 +88,12 @@ public:
    *
    * \return array of size 3 with force values (x, y, z).
    */
-  std::array<double, 3> get_forces()
+  std::array<double, 3> get_forces() const
   {
     std::array<double, 3> forces{
       {double_limits::quiet_NaN(), double_limits::quiet_NaN(), double_limits::quiet_NaN()}};
     size_t interface_counter{0};
-    for (size_t i{0}; i < forces.size(); ++i)
+    for (auto i = 0u; i < forces.size(); ++i)
     {
       if (existing_axes_[i])
       {
@@ -110,16 +110,16 @@ public:
    *
    * \return array of size 3 with torque values (x, y, z).
    */
-  std::array<double, 3> get_torques()
+  std::array<double, 3> get_torques() const
   {
     std::array<double, 3> torques{
       {double_limits::quiet_NaN(), double_limits::quiet_NaN(), double_limits::quiet_NaN()}};
     // find out how many force interfaces are being used
     // torque interfaces will be found from the next index onward
-    auto torque_interface_counter{static_cast<size_t>(
-      std::count(existing_axes_.begin(), existing_axes_.begin() + forces_size_, true))};
+    auto torque_interface_counter = static_cast<size_t>(
+      std::count(existing_axes_.begin(), existing_axes_.begin() + forces_size_, true));
 
-    for (size_t i{0}; i < torques.size(); ++i)
+    for (auto i = 0u; i < torques.size(); ++i)
     {
       if (existing_axes_[i + forces_size_])
       {
@@ -138,7 +138,7 @@ public:
    *
    * \return wrench message from values;
    */
-  bool get_values_as_message(geometry_msgs::msg::Wrench & message)
+  bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
     const auto [force_x, force_y, force_z] = get_forces();
     const auto [torque_x, torque_y, torque_z] = get_torques();

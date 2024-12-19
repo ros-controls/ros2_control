@@ -33,7 +33,7 @@ public:
     state_interfaces_.reserve(interface_names.size());
   }
 
-  explicit SemanticComponentInterface(const std::string & name, size_t size = 0) : name_{name}
+  explicit SemanticComponentInterface(const std::string & name, std::size_t size = 0) : name_{name}
   {
     interface_names_.reserve(size);
     state_interfaces_.reserve(size);
