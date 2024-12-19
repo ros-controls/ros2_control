@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="MinimalRobot">
+  <link name="world" />
   <joint name="base_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="world"/>
@@ -46,18 +47,11 @@
     <parent link="link2"/>
     <child link="tool_link"/>
   </joint>
-  <ros2_control name="TestActuatorComponent" type="actuator">
-    <hardware>
-      <plugin>test_robot_hardware/TestSingleJointActuator</plugin>
-    </hardware>
-    <joint name="base_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-    </joint>
-  </ros2_control>
+  <link name="tool_link" />
+
   <ros2_control name="TestSensorComponent" type="sensor">
     <hardware>
-      <plugin>test_robot_hardware/TestForceTorqueSensor</plugin>
+      <plugin>test_hardware_components/TestForceTorqueSensor</plugin>
     </hardware>
     <sensor name="ft_sensor">
       <state_interface name="fx"/>
@@ -68,9 +62,10 @@
       <state_interface name="tz"/>
     </sensor>
   </ros2_control>
+
   <ros2_control name="TestSystemComponent" type="system">
     <hardware>
-      <plugin>test_robot_hardware/TestTwoJointSystem</plugin>
+      <plugin>test_hardware_components/TestTwoJointSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -79,25 +74,6 @@
     <joint name="joint2">
       <command_interface name="position"/>
       <state_interface name="position"/>
-    </joint>
-  </ros2_control>
-  <ros2_control name="TestSystemCommandModes" type="system">
-    <hardware>
-      <plugin>test_robot_hardware/TestSystemCommandModes</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="acceleration"/>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="acceleration"/>
     </joint>
   </ros2_control>
 </robot>
