@@ -36,6 +36,7 @@
   <test_depend>python3-coverage</test_depend>
   <test_depend>hardware_interface_testing</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>example_interfaces</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

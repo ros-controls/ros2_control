@@ -130,6 +130,19 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
     }
     state_iface_cfg_.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   }
+
+  const std::string service_name = get_node()->get_name() + std::string("/set_bool");
+  service_ = get_node()->create_service<example_interfaces::srv::SetBool>(
+    service_name,
+    [this](
+      const std::shared_ptr<example_interfaces::srv::SetBool::Request> request,
+      std::shared_ptr<example_interfaces::srv::SetBool::Response> response)
+    {
+      RCLCPP_INFO_STREAM(
+        get_node()->get_logger(), "Setting response to " << std::boolalpha << request->data);
+      response->success = request->data;
+    });
+
   return CallbackReturn::SUCCESS;
 }
 
