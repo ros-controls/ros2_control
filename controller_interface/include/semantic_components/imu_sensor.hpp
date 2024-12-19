@@ -27,73 +27,68 @@ namespace semantic_components
 class IMUSensor : public SemanticComponentInterface<sensor_msgs::msg::Imu>
 {
 public:
-  explicit IMUSensor(const std::string & name) : SemanticComponentInterface(name, 10)
+  explicit IMUSensor(const std::string & name)
+  : SemanticComponentInterface(
+      name, {{name + "/" + "orientation.x"},
+             {name + "/" + "orientation.y"},
+             {name + "/" + "orientation.z"},
+             {name + "/" + "orientation.w"},
+             {name + "/" + "angular_velocity.x"},
+             {name + "/" + "angular_velocity.y"},
+             {name + "/" + "angular_velocity.z"},
+             {name + "/" + "linear_acceleration.x"},
+             {name + "/" + "linear_acceleration.y"},
+             {name + "/" + "linear_acceleration.z"}})
   {
-    interface_names_.emplace_back(name_ + "/" + "orientation.x");
-    interface_names_.emplace_back(name_ + "/" + "orientation.y");
-    interface_names_.emplace_back(name_ + "/" + "orientation.z");
-    interface_names_.emplace_back(name_ + "/" + "orientation.w");
-    interface_names_.emplace_back(name_ + "/" + "angular_velocity.x");
-    interface_names_.emplace_back(name_ + "/" + "angular_velocity.y");
-    interface_names_.emplace_back(name_ + "/" + "angular_velocity.z");
-    interface_names_.emplace_back(name_ + "/" + "linear_acceleration.x");
-    interface_names_.emplace_back(name_ + "/" + "linear_acceleration.y");
-    interface_names_.emplace_back(name_ + "/" + "linear_acceleration.z");
-
-    // Set default values to NaN
-    orientation_.fill(std::numeric_limits<double>::quiet_NaN());
-    angular_velocity_.fill(std::numeric_limits<double>::quiet_NaN());
-    linear_acceleration_.fill(std::numeric_limits<double>::quiet_NaN());
   }
-
-  virtual ~IMUSensor() = default;
-
   /// Return orientation.
   /**
    * Return orientation reported by an IMU
    *
-   * \return array of size 4 with orientation quaternion (x,y,z,w)
+   * \return Array of size 4 with orientation quaternion (x,y,z,w).
    */
-  std::array<double, 4> get_orientation()
+  std::array<double, 4> get_orientation() const
   {
-    size_t interface_offset = 0;
-    for (size_t i = 0; i < orientation_.size(); ++i)
+    std::array<double, 4> orientation;
+    for (auto i = 0u; i < orientation.size(); ++i)
     {
-      orientation_[i] = state_interfaces_[interface_offset + i].get().get_value();
+      orientation[i] = state_interfaces_[i].get().get_value();
     }
-    return orientation_;
+    return orientation;
   }
 
   /// Return angular velocity.
   /**
    * Return angular velocity reported by an IMU
    *
-   * \return array of size 3 with angular velocity values.
+   * \return array of size 3 with angular velocity values (x, y, z).
    */
-  std::array<double, 3> get_angular_velocity()
+  std::array<double, 3> get_angular_velocity() const
   {
-    size_t interface_offset = orientation_.size();
-    for (size_t i = 0; i < angular_velocity_.size(); ++i)
+    std::array<double, 3> angular_velocity;
+    const std::size_t interface_offset{4};
+    for (auto i = 0u; i < angular_velocity.size(); ++i)
     {
-      angular_velocity_[i] = state_interfaces_[interface_offset + i].get().get_value();
+      angular_velocity[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
-    return angular_velocity_;
+    return angular_velocity;
   }
 
   /// Return linear acceleration.
   /**
    * Return linear acceleration reported by an IMU
    *
-   * \return array of size 3 with linear acceleration values.
+   * \return array of size 3 with linear acceleration values (x, y, z).
    */
-  std::array<double, 3> get_linear_acceleration()
+  std::array<double, 3> get_linear_acceleration() const
   {
-    size_t interface_offset = orientation_.size() + angular_velocity_.size();
-    for (size_t i = 0; i < linear_acceleration_.size(); ++i)
+    std::array<double, 3> linear_acceleration;
+    const std::size_t interface_offset{7};
+    for (auto i = 0u; i < linear_acceleration.size(); ++i)
     {
-      linear_acceleration_[i] = state_interfaces_[interface_offset + i].get().get_value();
+      linear_acceleration[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
-    return linear_acceleration_;
+    return linear_acceleration;
   }
 
   /// Return Imu message with orientation, angular velocity and linear acceleration
@@ -101,36 +96,29 @@ public:
    * Constructs and return a IMU message from the current values.
    * \return imu message from values;
    */
-  bool get_values_as_message(sensor_msgs::msg::Imu & message)
+  bool get_values_as_message(sensor_msgs::msg::Imu & message) const
   {
-    // call get_orientation() and get_angular_velocity()  get_linear_acceleration() to
-    // update with the latest values
-    get_orientation();
-    get_angular_velocity();
-    get_linear_acceleration();
+    const auto [orientation_x, orientation_y, orientation_z, orientation_w] = get_orientation();
+    const auto [angular_velocity_x, angular_velocity_y, angular_velocity_z] =
+      get_angular_velocity();
+    const auto [linear_acceleration_x, linear_acceleration_y, linear_acceleration_z] =
+      get_linear_acceleration();
 
-    // update the message values, covariances unknown
-    message.orientation.x = orientation_[0];
-    message.orientation.y = orientation_[1];
-    message.orientation.z = orientation_[2];
-    message.orientation.w = orientation_[3];
+    message.orientation.x = orientation_x;
+    message.orientation.y = orientation_y;
+    message.orientation.z = orientation_z;
+    message.orientation.w = orientation_w;
 
-    message.angular_velocity.x = angular_velocity_[0];
-    message.angular_velocity.y = angular_velocity_[1];
-    message.angular_velocity.z = angular_velocity_[2];
+    message.angular_velocity.x = angular_velocity_x;
+    message.angular_velocity.y = angular_velocity_y;
+    message.angular_velocity.z = angular_velocity_z;
 
-    message.linear_acceleration.x = linear_acceleration_[0];
-    message.linear_acceleration.y = linear_acceleration_[1];
-    message.linear_acceleration.z = linear_acceleration_[2];
+    message.linear_acceleration.x = linear_acceleration_x;
+    message.linear_acceleration.y = linear_acceleration_y;
+    message.linear_acceleration.z = linear_acceleration_z;
 
     return true;
   }
-
-protected:
-  // Order is: orientation X,Y,Z,W angular velocity X,Y,Z and linear acceleration X,Y,Z
-  std::array<double, 4> orientation_;
-  std::array<double, 3> angular_velocity_;
-  std::array<double, 3> linear_acceleration_;
 };
 
 }  // namespace semantic_components
