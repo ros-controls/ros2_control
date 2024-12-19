@@ -2692,11 +2692,6 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
-void ControllerManager::shutdown_async_controllers_and_components()
-{
-  resource_manager_->shutdown_async_components();
-}
-
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
 {
