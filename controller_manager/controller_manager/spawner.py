@@ -216,7 +216,7 @@ def main(args=None):
                         controller_manager_name,
                         controller_name,
                         "node_options_args",
-                        controller_ros_args.split(),
+                        controller_ros_args.strip("'").split(),
                     ):
                         return 1
                 if param_files:
