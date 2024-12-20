@@ -1,4 +1,4 @@
-// Copyright 2025 Sherpa Mobile Robotics
+// Copyright 2024 Sherpa Mobile Robotics
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -66,7 +66,7 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   hardware_interface::CommandInterface cmd_interface_2{component_name_, "2", &interface_values[1]};
   hardware_interface::CommandInterface cmd_interface_3{component_name_, "3", &interface_values[2]};
 
-  // create local state interface vector
+  // create local command interface vector
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
   temp_command_interfaces.reserve(3);
   // insert the interfaces in jumbled sequence
