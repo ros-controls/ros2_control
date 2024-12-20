@@ -14,7 +14,7 @@ Examples
 The following examples show how to use the different hardware interface types synchronously and asynchronously with ``ros2_control`` URDF.
 They can be combined together within the different hardware component types (system, actuator, sensor) (:ref:`see detailed documentation <overview_hardware_components>`) as follows
 
-For a RRBot with Multimodal gripper and external sensor:
+For a RRBot with multimodal gripper and external sensor:
 
 .. code-block:: xml
 
