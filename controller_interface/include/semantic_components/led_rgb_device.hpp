@@ -24,14 +24,14 @@
 
 namespace semantic_components
 {
-class LEDRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::ColorRGBA>
+class LedRgbDevice  : public SemanticComponentCommandInterface<std_msgs::msg::ColorRGBA>
 {
 public:
   /**
    * Constructor for a LED RGB device with interface names set based on device name.
    * The constructor sets the command interface names to "<name>/r", "<name>/g", "<name>/b".
    */
-  explicit LEDRgbDevice(const std::string & name) : SemanticComponentCommandInterface(name, 3)
+  explicit LedRgbDevice (const std::string & name) : SemanticComponentCommandInterface(name, 3)
   {
     interface_names_.emplace_back(name_ + "/" + "r");
     interface_names_.emplace_back(name_ + "/" + "g");
@@ -42,7 +42,7 @@ public:
    * Constructor for a LED RGB device with custom interface names.
    * The constructor takes the three command interface names for the red, green, and blue channels.
    */
-  explicit LEDRgbDevice(
+  explicit LedRgbDevice (
     const std::string & interface_r, const std::string & interface_g,
     const std::string & interface_b)
   : SemanticComponentCommandInterface("", 3)
@@ -52,7 +52,7 @@ public:
     interface_names_.emplace_back(interface_b);
   }
 
-  virtual ~LEDRgbDevice() = default;
+  virtual ~LedRgbDevice () = default;
 
   /// Set LED states from ColorRGBA message
   bool set_values_from_message(std_msgs::msg::ColorRGBA & message)
