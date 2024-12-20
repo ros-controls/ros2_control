@@ -25,19 +25,19 @@
 
 #include "semantic_components/led_rgb_device.hpp"
 
-class TestableLedDevice : public semantic_components::LedRgbDevice 
+class TestableLedDevice : public semantic_components::LedRgbDevice
 {
   FRIEND_TEST(LedDeviceTest, validate_all);
   FRIEND_TEST(LedDeviceTest, validate_custom_names);
 
 public:
   // Use default command interface names
-  explicit TestableLedDevice(const std::string & name) : LedRgbDevice {name} {}
+  explicit TestableLedDevice(const std::string & name) : LedRgbDevice{name} {}
 
   TestableLedDevice(
     const std::string & interface_r, const std::string & interface_g,
     const std::string & interface_b)
-  : LedRgbDevice {interface_r, interface_g, interface_b}
+  : LedRgbDevice{interface_r, interface_g, interface_b}
   {
   }
 
