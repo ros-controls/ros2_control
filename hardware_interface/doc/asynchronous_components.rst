@@ -7,9 +7,20 @@ Running Hardware Components Asynchronously
 
 The ``ros2_control`` framework allows to run hardware components asynchronously. This is useful when some of the hardware components need to run in a separate thread or executor. For example, a sensor takes longer to read data that affects the periodicity of the  ``controller_manager`` control loop. In this case, the sensor can be run in a separate thread or executor to avoid blocking the control loop.
 
+Parameters
+-----------
+
+The following parameters can be set in the ``ros2_control`` hardware configuration to run the hardware component asynchronously:
+
+* ``is_async``: (optional) If set to ``true``, the hardware component will run asynchronously. Default is ``false``.
+* ``thread_priority``: (optional) The priority of the thread that runs the hardware component. The priority is an integer value between 0 and 99. The default value is 50.
+
+.. note::
+  The thread priority is only used when the hardware component is run asynchronously.
+  When the hardware component is run asynchronously, it uses the FIFO scheduling policy.
 
 Examples
-***********
+---------
 
 The following examples show how to use the different hardware interface types synchronously and asynchronously with ``ros2_control`` URDF.
 They can be combined together within the different hardware component types (system, actuator, sensor) (:ref:`see detailed documentation <overview_hardware_components>`) as follows
