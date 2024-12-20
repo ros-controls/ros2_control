@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.22.0 (2024-12-20)
+-------------------
 * Fixed typo. Added s to state_interfaces\_ (`#1930 <https://github.com/ros-controls/ros2_control/issues/1930>`_)
 * [CI] Add clang job, setup concurrency, use rt_tools humble branch (`#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_)
 * Contributors: Christoph Fröhlich, louietouie

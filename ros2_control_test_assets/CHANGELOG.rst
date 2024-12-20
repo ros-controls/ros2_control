@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.22.0 (2024-12-20)
+-------------------
 * Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
 * Let sensors also export state interfaces of joints (`#1885 <https://github.com/ros-controls/ros2_control/issues/1885>`_)
 * Contributors: Christoph Fröhlich, Sai Kishor Kothakota
