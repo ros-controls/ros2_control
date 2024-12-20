@@ -1052,8 +1052,7 @@ bool ResourceManager::load_and_initialize_components(
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
-    hw.rw_rate =
-      (hw.rw_rate == 0 || hw.rw_rate > update_rate) ? update_rate : hw.rw_rate;
+    hw.rw_rate = (hw.rw_rate == 0 || hw.rw_rate > update_rate) ? update_rate : hw.rw_rate;
   }
 
   const std::string system_type = "system";
