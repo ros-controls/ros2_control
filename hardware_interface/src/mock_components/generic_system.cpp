@@ -144,7 +144,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       custom_interface_with_following_offset_ = it->second;
     }
   }
-  // its extremlly improbably that std::distance results int this value - therefore default
+  // it's extremely improbable that std::distance results in this value - therefore default
   index_custom_interface_with_following_offset_ = std::numeric_limits<size_t>::max();
 
   // Initialize storage for standard interfaces
@@ -179,7 +179,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       }
       MimicJoint mimic_joint;
       mimic_joint.joint_index = i;
-      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
+      mimic_joint.mimicked_joint_index =
+        static_cast<size_t>(std::distance(info_.joints.begin(), mimicked_joint_it));
       auto param_it = joint.parameters.find("multiplier");
       if (param_it != joint.parameters.end())
       {
@@ -210,7 +211,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     if (if_it != other_interfaces_.end())
     {
       index_custom_interface_with_following_offset_ =
-        std::distance(other_interfaces_.begin(), if_it);
+        static_cast<size_t>(std::distance(other_interfaces_.begin(), if_it));
       RCUTILS_LOG_INFO_NAMED(
         "mock_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
         custom_interface_with_following_offset_.c_str(),
@@ -395,7 +396,8 @@ return_type GenericSystem::prepare_command_mode_switch(
 
     if (joint_it_found != info_.joints.end())
     {
-      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+      const size_t joint_index =
+        static_cast<size_t>(std::distance(info_.joints.begin(), joint_it_found));
       if (joint_found_in_x_requests_[joint_index] == 0)
       {
         joint_found_in_x_requests_[joint_index] = FOUND_ONCE_FLAG;
@@ -483,7 +485,8 @@ return_type GenericSystem::perform_command_mode_switch(
 
     if (joint_it_found != info_.joints.end())
     {
-      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+      const size_t joint_index =
+        static_cast<size_t>(std::distance(info_.joints.begin(), joint_it_found));
 
       if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
@@ -594,12 +597,12 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
     else
     {
-      for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
+      for (size_t k = 0; k < joint_states_[POSITION_INTERFACE_INDEX].size(); ++k)
       {
-        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][k]))
         {
-          joint_states_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
-            joint_commands_[POSITION_INTERFACE_INDEX][j] +
+          joint_states_[POSITION_INTERFACE_INDEX][k] =  // apply offset to positions only
+            joint_commands_[POSITION_INTERFACE_INDEX][k] +
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
         }
@@ -673,7 +676,7 @@ bool GenericSystem::get_interface(
   auto it = std::find(interface_list.begin(), interface_list.end(), interface_name);
   if (it != interface_list.end())
   {
-    auto j = std::distance(interface_list.begin(), it);
+    auto j = static_cast<size_t>(std::distance(interface_list.begin(), it));
     interfaces.emplace_back(name, *it, &values[j][vector_index]);
     return true;
   }
@@ -706,7 +709,7 @@ void GenericSystem::initialize_storage_vectors(
       // If interface name is found in the interfaces list
       if (it != interfaces.end())
       {
-        auto index = std::distance(interfaces.begin(), it);
+        auto index = static_cast<size_t>(std::distance(interfaces.begin(), it));
 
         // Check the initial_value param is used
         if (!interface.initial_value.empty())
@@ -720,10 +723,6 @@ void GenericSystem::initialize_storage_vectors(
           if (it2 != component.parameters.end())
           {
             states[index][i] = hardware_interface::stod(it2->second);
-            print_hint = true;
-          }
-          else
-          {
             print_hint = true;
           }
         }

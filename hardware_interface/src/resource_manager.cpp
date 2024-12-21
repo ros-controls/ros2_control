@@ -685,6 +685,7 @@ void ResourceManager::load_urdf(
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   if (load_and_initialize_components)
   {
     for (const auto & individual_hardware_info : hardware_info)
@@ -715,7 +716,6 @@ void ResourceManager::load_urdf(
     validate_storage(hardware_info);
   }
 
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
@@ -1209,6 +1209,7 @@ return_type ResourceManager::set_component_state(
     return false;
   };
 
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   bool found = find_set_component_state(
     std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
     resource_storage_->actuators_);

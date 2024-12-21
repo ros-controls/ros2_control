@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(hardware_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -172,3 +172,4 @@ ament_export_libraries(
 )
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

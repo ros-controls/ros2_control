@@ -20,12 +20,16 @@ from ament_index_python.packages import get_package_share_directory
 from controller_manager.controller_manager_services import (
     configure_controller,
     list_controllers,
+    list_hardware_components,
+    set_hardware_component_state,
     load_controller,
     switch_controllers,
     unload_controller,
 )
+
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import SwitchController
+from lifecycle_msgs.msg import State
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
@@ -60,7 +64,7 @@ class ControllerManager(Plugin):
         # Pop-up that displays controller information
         self._popup_widget = QWidget()
         ui_file = os.path.join(
-            get_package_share_directory("rqt_controller_manager"), "resource", "controller_info.ui"
+            get_package_share_directory("rqt_controller_manager"), "resource", "popup_info.ui"
         )
         loadUi(ui_file, self._popup_widget)
         self._popup_widget.setObjectName("ControllerInfoUi")
@@ -78,7 +82,9 @@ class ControllerManager(Plugin):
         # Initialize members
         self._cm_name = ""  # Name of the selected controller manager's node
         self._controllers = []  # State of each controller
-        self._table_model = None
+        self._hw_components = []  # State of each hw component
+        self._ctrl_table_model = None
+        self._hw_table_model = None
 
         # Store reference to node
         self._node = context.node
@@ -93,16 +99,26 @@ class ControllerManager(Plugin):
         }
 
         # Controllers display
-        table_view = self._widget.table_view
-        table_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
+        ctrl_table_view = self._widget.ctrl_table_view
+        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
+        ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
-        table_view.doubleClicked.connect(self._on_ctrl_info)
+        ctrl_header = ctrl_table_view.horizontalHeader()
+        ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        ctrl_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_header.customContextMenuRequested.connect(self._on_ctrl_header_menu)
 
-        header = table_view.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setContextMenuPolicy(Qt.CustomContextMenu)
-        header.customContextMenuRequested.connect(self._on_header_menu)
+        # Hardware components display
+        hw_table_view = self._widget.hw_table_view
+        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
+        hw_table_view.doubleClicked.connect(self._on_hw_info)
+
+        hw_header = hw_table_view.horizontalHeader()
+        hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        hw_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_header.customContextMenuRequested.connect(self._on_hw_header_menu)
 
         # Timer for controller manager updates
         self._update_cm_list_timer = QTimer(self)
@@ -115,6 +131,12 @@ class ControllerManager(Plugin):
         self._update_ctrl_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_ctrl_list_timer.timeout.connect(self._update_controllers)
         self._update_ctrl_list_timer.start()
+
+        # Timer for running hw components updates
+        self._update_hw_components_list_timer = QTimer(self)
+        self._update_hw_components_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
+        self._update_hw_components_list_timer.timeout.connect(self._update_hw_components)
+        self._update_hw_components_list_timer.start()
 
         # Signal connections
         w = self._widget
@@ -148,6 +170,7 @@ class ControllerManager(Plugin):
 
         if cm_name:
             self._update_controllers()
+            self._update_hw_components()
 
     def _update_controllers(self):
 
@@ -191,20 +214,20 @@ class ControllerManager(Plugin):
             return []
 
     def _show_controllers(self):
-        table_view = self._widget.table_view
-        self._table_model = ControllerTable(self._controllers, self._icons)
-        table_view.setModel(self._table_model)
+        ctrl_table_view = self._widget.ctrl_table_view
+        self._ctrl_table_model = ControllerTable(self._controllers, self._icons)
+        ctrl_table_view.setModel(self._ctrl_table_model)
 
     def _on_ctrl_menu(self, pos):
         # Get data of selected controller
-        row = self._widget.table_view.rowAt(pos.y())
+        row = self._widget.ctrl_table_view.rowAt(pos.y())
         if row < 0:
             return  # Cursor is not under a valid item
 
         ctrl = self._controllers[row]
 
         # Show context menu
-        menu = QMenu(self._widget.table_view)
+        menu = QMenu(self._widget.ctrl_table_view)
         if ctrl.state == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
             action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
@@ -220,7 +243,7 @@ class ControllerManager(Plugin):
             action_configure = menu.addAction(self._icons["inactive"], "Load and Configure")
             action_activate = menu.addAction(self._icons["active"], "Load, Configure and Activate")
 
-        action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
+        action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if ctrl.state == "active":
@@ -238,7 +261,7 @@ class ControllerManager(Plugin):
             if action is action_configure:
                 configure_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_spawn:
-                load_controller(self._node, self._cm_name, ctrl.name)
+                configure_controller(self._node, self._cm_name, ctrl.name)
                 self._activate_controller(ctrl.name)
         else:
             # Assume controller isn't loaded
@@ -254,6 +277,7 @@ class ControllerManager(Plugin):
 
     def _on_ctrl_info(self, index):
         popup = self._popup_widget
+        popup.setWindowTitle("Controller Information")
 
         ctrl = self._controllers[index.row()]
         popup.ctrl_name.setText(ctrl.name)
@@ -272,42 +296,186 @@ class ControllerManager(Plugin):
         popup.move(QCursor.pos())
         popup.show()
 
-    def _on_header_menu(self, pos):
-        header = self._widget.table_view.horizontalHeader()
+    def _on_ctrl_header_menu(self, pos):
+        ctrl_header = self._widget.ctrl_table_view.horizontalHeader()
 
         # Show context menu
-        menu = QMenu(self._widget.table_view)
+        menu = QMenu(self._widget.ctrl_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(header.mapToGlobal(pos))
+        action = menu.exec_(ctrl_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if header.resizeMode(0) == QHeaderView.ResizeToContents:
-                header.setSectionResizeMode(QHeaderView.Interactive)
+            if ctrl_header.resizeMode(0) == QHeaderView.ResizeToContents:
+                ctrl_header.setSectionResizeMode(QHeaderView.Interactive)
             else:
-                header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+
+    def _update_hw_components(self):
+        if not self._cm_name:
+            return
+
+        # Find hw_components associated to the selected controller manager
+        hw_components = self._list_hw_components()
+
+        # Update controller display, if necessary
+        if self._hw_components != hw_components:
+            self._hw_components = hw_components
+            self._show_hw_components()  # NOTE: Model is recomputed from scratch
+
+    def _list_hw_components(self):
+        """
+        List the hw_components associated to a controller manager node.
+
+        @return List of hw_components associated to a controller manager
+        node. Contains both stopped/running hw_components, as returned by
+        the C{list_hardware_components} service
+        @rtype [str]
+        """
+        # Add loaded hw_components first
+        try:
+            hw_components = list_hardware_components(
+                self._node, self._cm_name, 2.0 / self._cm_update_freq
+            ).component
+            return hw_components
+        except RuntimeError as e:
+            print(e)
+            return []
+
+    def _show_hw_components(self):
+        hw_table_view = self._widget.hw_table_view
+        self._hw_table_model = HwComponentTable(self._hw_components, self._icons)
+        hw_table_view.setModel(self._hw_table_model)
+
+    def _on_hw_menu(self, pos):
+        # Get data of selected controller
+        row = self._widget.hw_table_view.rowAt(pos.y())
+        if row < 0:
+            return  # Cursor is not under a valid item
+
+        hw_component = self._hw_components[row]
+
+        # Show context menu
+        menu = QMenu(self._widget.hw_table_view)
+        if hw_component.state.label == "active":
+            action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
+            action_cleanup = menu.addAction(self._icons["finalized"], "Deactivate and Cleanup")
+        elif hw_component.state.label == "inactive":
+            action_activate = menu.addAction(self._icons["active"], "Activate")
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
+        elif hw_component.state.label == "unconfigured":
+            action_configure = menu.addAction(self._icons["inactive"], "Configure")
+            action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
+
+        action = menu.exec_(self._widget.hw_table_view.mapToGlobal(pos))
+
+        # Evaluate user action
+        if hw_component.state.label == "active":
+            if action is action_deactivate:
+                self._set_inactive_hw_component(hw_component.name)
+            elif action is action_cleanup:
+                self._set_unconfigured_hw_component(hw_component.name)
+        elif hw_component.state.label == "inactive":
+            if action is action_activate:
+                self._set_active_hw_component(hw_component.name)
+            elif action is action_cleanup:
+                self._set_unconfigured_hw_component(hw_component.name)
+        elif hw_component.state.label == "unconfigured":
+            if action is action_configure:
+                self._set_inactive_hw_component(hw_component.name)
+            elif action is action_spawn:
+                self._set_active_hw_component(hw_component.name)
+
+    def _on_hw_info(self, index):
+        popup = self._popup_widget
+        popup.setWindowTitle("Hardware Component Info")
+
+        hw_component = self._hw_components[index.row()]
+        popup.ctrl_name.setText(hw_component.name)
+        popup.ctrl_type.setText(hw_component.type)
+
+        res_model = QStandardItemModel()
+        model_root = QStandardItem("Command Interfaces")
+        res_model.appendRow(model_root)
+        for command_interface in hw_component.command_interfaces:
+            hw_iface_item = QStandardItem(command_interface.name)
+            model_root.appendRow(hw_iface_item)
+
+        model_root = QStandardItem("State Interfaces")
+        res_model.appendRow(model_root)
+        for state_interface in hw_component.state_interfaces:
+            hw_iface_item = QStandardItem(state_interface.name)
+            model_root.appendRow(hw_iface_item)
+
+        popup.resource_tree.setModel(res_model)
+        popup.resource_tree.setItemDelegate(FontDelegate(popup.resource_tree))
+        popup.resource_tree.expandAll()
+        popup.move(QCursor.pos())
+        popup.show()
+
+    def _on_hw_header_menu(self, pos):
+        hw_header = self._widget.hw_table_view.horizontalHeader()
+
+        # Show context menu
+        menu = QMenu(self._widget.hw_table_view)
+        action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
+        action = menu.exec_(hw_header.mapToGlobal(pos))
+
+        # Evaluate user action
+        if action is action_toggle_auto_resize:
+            if hw_header.resizeMode(0) == QHeaderView.ResizeToContents:
+                hw_header.setSectionResizeMode(QHeaderView.Interactive)
+            else:
+                hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
     def _activate_controller(self, name):
-        switch_controllers(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            deactivate_controllers=[],
-            activate_controllers=[name],
-            strict=SwitchController.Request.STRICT,
-            activate_asap=False,
-            timeout=0.3,
-        )
+        self._switch_controllers([name], [])
 
     def _deactivate_controller(self, name):
-        switch_controllers(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            deactivate_controllers=[name],
-            activate_controllers=[],
-            strict=SwitchController.Request.STRICT,
-            activate_asap=False,
-            timeout=0.3,
-        )
+        self._switch_controllers([], [name])
+
+    def _switch_controllers(self, activate, deactivate):
+        try:
+            switch_controllers(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                activate_controllers=activate,
+                deactivate_controllers=deactivate,
+                strict=SwitchController.Request.STRICT,
+                activate_asap=False,
+                timeout=0.3,
+            )
+        except Exception as e:
+            print(e)
+
+    def _set_active_hw_component(self, name):
+        active_state = State()
+        active_state.id = State.PRIMARY_STATE_ACTIVE
+        active_state.label = "active"
+        self._set_state_hw_component(name, active_state)
+
+    def _set_inactive_hw_component(self, name):
+        inactive_state = State()
+        inactive_state.id = State.PRIMARY_STATE_INACTIVE
+        inactive_state.label = "inactive"
+        self._set_state_hw_component(name, inactive_state)
+
+    def _set_unconfigured_hw_component(self, name):
+        unconfigure_state = State()
+        unconfigure_state.id = State.PRIMARY_STATE_UNCONFIGURED
+        unconfigure_state.label = "unconfigured"
+        self._set_state_hw_component(name, unconfigure_state)
+
+    def _set_state_hw_component(self, name, state):
+        try:
+            set_hardware_component_state(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                component_name=name,
+                lifecyle_state=state,
+            )
+        except Exception as e:
+            print(e)
 
 
 class ControllerTable(QAbstractTableModel):
@@ -351,6 +519,57 @@ class ControllerTable(QAbstractTableModel):
 
         if role == Qt.DecorationRole and index.column() == 0:
             return self._icons.get(ctrl.state)
+
+        if role == Qt.FontRole and index.column() == 0:
+            bf = QFont()
+            bf.setBold(True)
+            return bf
+
+        if role == Qt.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignCenter
+
+
+class HwComponentTable(QAbstractTableModel):
+    """
+    Model containing hardware component information for tabular display.
+
+    The model allows display of basic read-only information like component
+    name and state.
+    """
+
+    def __init__(self, hw_component_info, icons, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self._data = hw_component_info
+        self._icons = icons
+
+    def rowCount(self, parent):
+        return len(self._data)
+
+    def columnCount(self, parent):
+        return 2
+
+    def headerData(self, col, orientation, role):
+        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+            return None
+        if col == 0:
+            return "component"
+        elif col == 1:
+            return "state"
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        hw_component = self._data[index.row()]
+
+        if role == Qt.DisplayRole:
+            if index.column() == 0:
+                return hw_component.name
+            elif index.column() == 1:
+                return hw_component.state.label or "not loaded"
+
+        if role == Qt.DecorationRole and index.column() == 0:
+            return self._icons.get(hw_component.state.label)
 
         if role == Qt.FontRole and index.column() == 0:
             bf = QFont()

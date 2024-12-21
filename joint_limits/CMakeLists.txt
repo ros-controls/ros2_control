@@ -5,14 +5,25 @@ project(joint_limits)
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra  -Wconversion)
 endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+
+add_library(joint_limits INTERFACE)
+target_compile_features(joint_limits INTERFACE cxx_std_17)
+target_include_directories(joint_limits INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/joint_limits>
+)
+ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(DIRECTORY include/
   DESTINATION include
@@ -42,8 +53,21 @@ if(BUILD_TESTING)
 
 endif()
 
+install(
+  DIRECTORY include/
+  DESTINATION include/joint_limits
+)
+install(TARGETS joint_limits
+  EXPORT export_joint_limits
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   rclcpp
+  rclcpp_lifecycle
 )
 
 ament_export_include_directories(
@@ -51,3 +75,4 @@ ament_export_include_directories(
 )
 
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

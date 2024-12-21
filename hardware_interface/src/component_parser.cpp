@@ -174,7 +174,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
@@ -348,7 +348,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
     component.command_interfaces.back().data_type =
       parse_data_type_attribute(command_interfaces_it);
-    component.command_interfaces.back().size = parse_size_attribute(command_interfaces_it);
+    component.command_interfaces.back().size =
+      static_cast<int>(parse_size_attribute(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -358,7 +359,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   {
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
     component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
-    component.state_interfaces.back().size = parse_size_attribute(state_interfaces_it);
+    component.state_interfaces.back().size =
+      static_cast<int>(parse_size_attribute(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 

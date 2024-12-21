@@ -21,7 +21,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "realtime_tools/thread_priority.hpp"
+#include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
 
@@ -44,14 +44,38 @@ int main(int argc, char ** argv)
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
+  const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
+
+  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
+  if (cpu_affinity >= 0)
+  {
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpu_affinity);
+    if (!affinity_result.first)
+    {
+      RCLCPP_WARN(
+        cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
+    }
+  }
+  const bool has_realtime = realtime_tools::has_realtime_kernel();
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
+  std::string message;
+  if (lock_memory && !realtime_tools::lock_memory(message))
+  {
+    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
+  }
+
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+  const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
+  RCLCPP_INFO(
+    cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
+    thread_priority);
 
   std::thread cm_thread(
-    [cm]()
+    [cm, thread_priority, use_sim_time]()
     {
       if (realtime_tools::has_realtime_kernel())
       {
-        if (!realtime_tools::configure_sched_fifo(kSchedPriority))
+        if (!realtime_tools::configure_sched_fifo(thread_priority))
         {
           RCLCPP_WARN(
             cm->get_logger(),
@@ -64,7 +88,7 @@ int main(int argc, char ** argv)
         {
           RCLCPP_INFO(
             cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-            kSchedPriority);
+            thread_priority);
         }
       }
       else
@@ -99,7 +123,14 @@ int main(int argc, char ** argv)
 
         // wait until we hit the end of the period
         next_iteration_time += period;
-        std::this_thread::sleep_until(next_iteration_time);
+        if (use_sim_time)
+        {
+          cm->get_clock()->sleep_until(current_time + period);
+        }
+        else
+        {
+          std::this_thread::sleep_until(next_iteration_time);
+        }
       }
     });
 

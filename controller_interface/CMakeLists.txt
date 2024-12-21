@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(controller_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -44,6 +44,7 @@ if(BUILD_TESTING)
 
   find_package(hardware_interface REQUIRED)
   find_package(sensor_msgs REQUIRED)
+  find_package(geometry_msgs REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
   target_link_libraries(test_controller_interface ${PROJECT_NAME})
@@ -88,6 +89,13 @@ if(BUILD_TESTING)
     hardware_interface
     sensor_msgs
   )
+
+  ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
+  target_include_directories(test_pose_sensor PRIVATE include)
+  ament_target_dependencies(test_pose_sensor
+    hardware_interface
+    geometry_msgs
+  )
 endif()
 
 ament_export_dependencies(
@@ -102,3 +110,4 @@ ament_export_libraries(
   ${PROJECT_NAME}
 )
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

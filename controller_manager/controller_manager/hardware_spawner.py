@@ -19,6 +19,7 @@ import sys
 from controller_manager import (
     list_hardware_components,
     set_hardware_component_state,
+    bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
@@ -26,19 +27,6 @@ from lifecycle_msgs.msg import State
 import rclpy
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
-
-
-# from https://stackoverflow.com/a/287944
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
 
 
 def first_match(iterable, predicate):
@@ -69,7 +57,7 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def is_hardware_component_loaded(
     node, controller_manager, hardware_component, service_timeout=0.0
 ):
-    components = list_hardware_components(node, hardware_component, service_timeout).component
+    components = list_hardware_components(node, controller_manager, service_timeout).component
     return any(c.name == hardware_component for c in components)
 
 
@@ -79,49 +67,45 @@ def handle_set_component_state_service_call(
     response = set_hardware_component_state(node, controller_manager_name, component, target_state)
     if response.ok and response.state == target_state:
         node.get_logger().info(
-            bcolors.OKGREEN
-            + f"{action} component '{component}'. Hardware now in state: {response.state}."
+            f"{bcolors.OKGREEN}{action} component '{component}'. Hardware now in state: {response.state}.{bcolors.ENDC}"
         )
     elif response.ok and not response.state == target_state:
         node.get_logger().warn(
-            bcolors.WARNING
-            + f"Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'."
+            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'.{bcolors.ENDC}"
         )
     else:
         node.get_logger().warn(
-            bcolors.WARNING
-            + f"Could not {action} component '{component}'. Service call failed. Wrong component name?"
+            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call failed. Wrong component name?{bcolors.ENDC}"
         )
 
 
-def activate_components(node, controller_manager_name, components_to_activate):
+def activate_component(node, controller_manager_name, component_to_activate):
     active_state = State()
     active_state.id = State.PRIMARY_STATE_ACTIVE
     active_state.label = "active"
-    for component in components_to_activate:
-        handle_set_component_state_service_call(
-            node, controller_manager_name, component, active_state, "activated"
-        )
+    handle_set_component_state_service_call(
+        node, controller_manager_name, component_to_activate, active_state, "activated"
+    )
 
 
-def configure_components(node, controller_manager_name, components_to_configure):
+def configure_component(node, controller_manager_name, component_to_configure):
     inactive_state = State()
     inactive_state.id = State.PRIMARY_STATE_INACTIVE
     inactive_state.label = "inactive"
-    for component in components_to_configure:
-        handle_set_component_state_service_call(
-            node, controller_manager_name, component, inactive_state, "configured"
-        )
+    handle_set_component_state_service_call(
+        node, controller_manager_name, component_to_configure, inactive_state, "configured"
+    )
 
 
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
-    activate_or_confiigure_grp = parser.add_mutually_exclusive_group(required=True)
+    activate_or_configure_grp = parser.add_mutually_exclusive_group(required=True)
 
     parser.add_argument(
-        "hardware_component_name",
-        help="The name of the hardware component which should be activated.",
+        "hardware_component_names",
+        help="The name of the hardware components which should be activated.",
+        nargs="+",
     )
     parser.add_argument(
         "-c",
@@ -138,13 +122,13 @@ def main(args=None):
         type=float,
     )
     # add arguments which are mutually exclusive
-    activate_or_confiigure_grp.add_argument(
+    activate_or_configure_grp.add_argument(
         "--activate",
         help="Activates the given components. Note: Components are by default configured before activated. ",
         action="store_true",
         required=False,
     )
-    activate_or_confiigure_grp.add_argument(
+    activate_or_configure_grp.add_argument(
         "--configure",
         help="Configures the given components.",
         action="store_true",
@@ -153,9 +137,9 @@ def main(args=None):
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
+    hardware_components = args.hardware_component_names
     controller_manager_name = args.controller_manager
     controller_manager_timeout = args.controller_manager_timeout
-    hardware_component = [args.hardware_component_name]
     activate = args.activate
     configure = args.configure
 
@@ -168,28 +152,27 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not is_hardware_component_loaded(
-            node, controller_manager_name, hardware_component, controller_manager_timeout
-        ):
-            node.get_logger().warn(
-                bcolors.WARNING
-                + "Hardware Component is not loaded - state can not be changed."
-                + bcolors.ENDC
-            )
-        elif activate:
-            activate_components(node, controller_manager_name, hardware_component)
-        elif configure:
-            configure_components(node, controller_manager_name, hardware_component)
-        else:
-            node.get_logger().error(
-                'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
-            )
-            parser.print_help()
-            return 0
+        for hardware_component in hardware_components:
+            if not is_hardware_component_loaded(
+                node, controller_manager_name, hardware_component, controller_manager_timeout
+            ):
+                node.get_logger().warn(
+                    f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
+                )
+            elif activate:
+                activate_component(node, controller_manager_name, hardware_component)
+            elif configure:
+                configure_component(node, controller_manager_name, hardware_component)
+            else:
+                node.get_logger().error(
+                    f'{bcolors.FAIL}You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag{bcolors.ENDC}'
+                )
+                parser.print_help()
+                return 0
     except KeyboardInterrupt:
         pass
     except ServiceNotFoundError as err:
-        node.get_logger().fatal(str(err))
+        node.get_logger().fatal(f"{bcolors.FAIL}{str(err)}{bcolors.ENDC}")
         return 1
     finally:
         rclpy.shutdown()

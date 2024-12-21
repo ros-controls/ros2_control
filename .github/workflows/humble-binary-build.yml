@@ -32,10 +32,16 @@ on:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on humble branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+
 jobs:
   binary:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
+      fail-fast: false
       matrix:
         ROS_DISTRO: [humble]
         ROS_REPO: [main, testing]

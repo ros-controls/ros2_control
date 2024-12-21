@@ -2,6 +2,23 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.46.0 (2024-12-16)
+-------------------
+* generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (backport `#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_) (`#1924 <https://github.com/ros-controls/ros2_control/issues/1924>`_)
+* [Spawner] Accept parsing multiple `--param-file` arguments to spawner  (backport `#1805 <https://github.com/ros-controls/ros2_control/issues/1805>`_) (`#1894 <https://github.com/ros-controls/ros2_control/issues/1894>`_)
+* Contributors: mergify[bot]
+
+2.45.0 (2024-12-03)
+-------------------
+
+2.44.0 (2024-11-09)
+-------------------
+* Add few warning compiler options to error (backport `#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_) (`#1816 <https://github.com/ros-controls/ros2_control/issues/1816>`_)
+* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_) (`#1815 <https://github.com/ros-controls/ros2_control/issues/1815>`_)
+* Add resources_lock\_ lock_guards to avoid race condition when loading robot_description through topic (backport `#1451 <https://github.com/ros-controls/ros2_control/issues/1451>`_) (`#1599 <https://github.com/ros-controls/ros2_control/issues/1599>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 
