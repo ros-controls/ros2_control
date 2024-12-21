@@ -91,7 +91,7 @@ public:
       return false;
     }
     // insert all the values
-    for (size_t i = 0; i < state_interfaces_.size(); ++i)
+    for (std::size_t i = 0; i < state_interfaces_.size(); ++i)
     {
       values.emplace_back(state_interfaces_[i].get().get_value());
     }

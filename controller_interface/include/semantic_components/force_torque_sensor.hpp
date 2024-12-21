@@ -63,7 +63,8 @@ public:
     const std::string & interface_torque_y, const std::string & interface_torque_z)
   : SemanticComponentInterface("", 6)
   {
-    auto check_and_add_interface = [this](const std::string & interface_name, const size_t index)
+    auto check_and_add_interface =
+      [this](const std::string & interface_name, const std::size_t index)
     {
       if (!interface_name.empty())
       {
@@ -94,7 +95,7 @@ public:
   {
     std::array<double, 3> forces;
     forces.fill(std::numeric_limits<double>::quiet_NaN());
-    size_t interface_counter{0};
+    std::size_t interface_counter{0};
     for (auto i = 0u; i < forces.size(); ++i)
     {
       if (existing_axes_[i])
@@ -119,7 +120,7 @@ public:
 
     // find out how many force interfaces are being used
     // torque interfaces will be found from the next index onward
-    auto torque_interface_counter = static_cast<size_t>(
+    auto torque_interface_counter = static_cast<std::size_t>(
       std::count(existing_axes_.begin(), existing_axes_.begin() + FORCES_SIZE, true));
 
     for (auto i = 0u; i < torques.size(); ++i)
