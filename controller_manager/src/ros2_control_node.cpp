@@ -58,8 +58,8 @@ int main(int argc, char ** argv)
   }
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
-  std::string message;
-  if (lock_memory && !realtime_tools::lock_memory(message))
+  auto [success, message] = realtime_tools::lock_memory();
+  if (lock_memory && !success)
   {
     RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
   }
