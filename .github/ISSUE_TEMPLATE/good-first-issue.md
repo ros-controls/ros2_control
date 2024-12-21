@@ -2,7 +2,7 @@
 name: Good first issue
 about: Create an issue to welcome a new contributor into the community.
 title: ''
-labels: good-first-issue
+labels: ["good first issue"]
 assignees: ''
 
 ---
