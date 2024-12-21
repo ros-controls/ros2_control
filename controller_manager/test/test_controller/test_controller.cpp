@@ -64,7 +64,7 @@ controller_interface::return_type TestController::update(
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_node()->get_logger(), "Setting value of command interface '%s' to %f",
       command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
     command_interfaces_[i].set_value(external_commands_for_testing_[i]);
@@ -77,6 +77,36 @@ CallbackReturn TestController::on_init() { return CallbackReturn::SUCCESS; }
 
 CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  auto ctrl_node = get_node();
+  if (!ctrl_node->has_parameter("command_interfaces"))
+  {
+    ctrl_node->declare_parameter("command_interfaces", std::vector<std::string>({}));
+  }
+  if (!ctrl_node->has_parameter("state_interfaces"))
+  {
+    ctrl_node->declare_parameter("state_interfaces", std::vector<std::string>({}));
+  }
+  const std::vector<std::string> command_interfaces =
+    ctrl_node->get_parameter("command_interfaces").as_string_array();
+  const std::vector<std::string> state_interfaces =
+    ctrl_node->get_parameter("state_interfaces").as_string_array();
+  if (!command_interfaces.empty() || !state_interfaces.empty())
+  {
+    cmd_iface_cfg_.names.clear();
+    state_iface_cfg_.names.clear();
+    for (const auto & cmd_itf : command_interfaces)
+    {
+      cmd_iface_cfg_.names.push_back(cmd_itf);
+    }
+    cmd_iface_cfg_.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+    external_commands_for_testing_.resize(command_interfaces.size(), 0.0);
+    for (const auto & state_itf : state_interfaces)
+    {
+      state_iface_cfg_.names.push_back(state_itf);
+    }
+    state_iface_cfg_.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  }
+
   return CallbackReturn::SUCCESS;
 }
 

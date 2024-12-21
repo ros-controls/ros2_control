@@ -1264,6 +1264,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   to = controllers;
 
   // update the claimed interface controller info
+  auto switch_result = controller_interface::return_type::OK;
   for (auto & controller : to)
   {
     if (is_controller_active(controller.c))
@@ -1284,6 +1285,32 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       controller.info.claimed_interfaces.clear();
     }
+    if (
+      std::find(activate_request_.begin(), activate_request_.end(), controller.info.name) !=
+      activate_request_.end())
+    {
+      if (!is_controller_active(controller.c))
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Could not activate controller : '%s'", controller.info.name.c_str());
+        switch_result = controller_interface::return_type::ERROR;
+      }
+    }
+    /// @note The following is the case of the real controllers that are deactivated and doesn't
+    /// include the chained controllers that are deactivated and activated
+    if (
+      std::find(deactivate_request_.begin(), deactivate_request_.end(), controller.info.name) !=
+        deactivate_request_.end() &&
+      std::find(activate_request_.begin(), activate_request_.end(), controller.info.name) ==
+        activate_request_.end())
+    {
+      if (is_controller_active(controller.c))
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Could not deactivate controller : '%s'", controller.info.name.c_str());
+        switch_result = controller_interface::return_type::ERROR;
+      }
+    }
   }
 
   // switch lists
@@ -1293,8 +1320,10 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   clear_requests();
 
-  RCLCPP_DEBUG(get_logger(), "Successfully switched controllers");
-  return controller_interface::return_type::OK;
+  RCLCPP_DEBUG_EXPRESSION(
+    get_logger(), switch_result == controller_interface::return_type::OK,
+    "Successfully switched controllers");
+  return switch_result;
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_controller_impl(
@@ -1518,6 +1547,7 @@ void ControllerManager::activate_controllers()
           get_logger(),
           "Resource conflict for controller '%s'. Command interface '%s' is already claimed.",
           controller_name.c_str(), command_interface.c_str());
+        command_loans.clear();
         assignment_successful = false;
         break;
       }
@@ -1529,6 +1559,7 @@ void ControllerManager::activate_controllers()
       {
         RCLCPP_ERROR(
           get_logger(), "Can't activate controller '%s': %s", controller_name.c_str(), e.what());
+        command_loans.clear();
         assignment_successful = false;
         break;
       }

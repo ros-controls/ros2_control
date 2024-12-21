@@ -411,6 +411,106 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
   verify_ctrl_parameter(wildcard_ctrl_3.c->get_node(), true);
 }
 
+TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_interfaces.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_command_interface ctrl_with_joint2_command_interface -c "
+      "test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_with_joint2_command_interface = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(ctrl_with_joint2_command_interface.info.name, "ctrl_with_joint2_command_interface");
+  ASSERT_EQ(
+    ctrl_with_joint2_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(
+    ctrl_with_joint2_command_interface.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint2_command_interface.c->command_interface_configuration().names.size(), 1ul);
+  ASSERT_THAT(
+    ctrl_with_joint2_command_interface.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint2/velocity"}));
+
+  auto ctrl_with_joint1_command_interface = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_joint1_command_interface.info.name, "ctrl_with_joint1_command_interface");
+  ASSERT_EQ(
+    ctrl_with_joint1_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(
+    ctrl_with_joint1_command_interface.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint1_command_interface.c->command_interface_configuration().names.size(), 1ul);
+  ASSERT_THAT(
+    ctrl_with_joint1_command_interface.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint1/position"}));
+
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    256)
+    << "Should fail as the ctrl_with_joint1_command_interface and "
+       "ctrl_with_joint2_command_interface are active";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+
+  auto ctrl_with_joint1_and_joint2_command_interfaces = cm_->get_loaded_controllers()[2];
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.info.name,
+    "ctrl_with_joint1_and_joint2_command_interfaces");
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.info.type,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->command_interface_configuration()
+      .names.size(),
+    2ul);
+  ASSERT_THAT(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint1/position", "joint2/velocity"}));
+
+  EXPECT_EQ(call_unspawner("ctrl_with_joint1_command_interface -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    256)
+    << "Should fail as the ctrl_with_joint2_command_interface is still active";
+
+  EXPECT_EQ(call_unspawner("ctrl_with_joint2_command_interface -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0)
+    << "Should pass as the ctrl_with_joint1_command_interface and "
+       "ctrl_with_joint2_command_interface are inactive";
+}
+
 TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
