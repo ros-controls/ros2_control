@@ -91,8 +91,6 @@ public:
 
     return true;
   }
-
-protected:
 };
 
 }  // namespace semantic_components

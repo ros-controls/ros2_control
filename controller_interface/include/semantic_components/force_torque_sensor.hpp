@@ -25,7 +25,7 @@
 
 namespace
 {
-using double_limits = std::numeric_limits<double>;
+constexpr std::size_t FORCES_SIZE = 3;
 }
 
 namespace semantic_components
@@ -44,7 +44,7 @@ public:
        {name + "/" + "torque.x"},
        {name + "/" + "torque.y"},
        {name + "/" + "torque.z"}}),
-    existing_axes_{{true, true, true, true, true, true}}
+    existing_axes_({{true, true, true, true, true, true}})
   {
   }
 
@@ -92,8 +92,8 @@ public:
    */
   std::array<double, 3> get_forces() const
   {
-    std::array<double, 3> forces{
-      {double_limits::quiet_NaN(), double_limits::quiet_NaN(), double_limits::quiet_NaN()}};
+    std::array<double, 3> forces;
+    forces.fill(std::numeric_limits<double>::quiet_NaN());
     size_t interface_counter{0};
     for (auto i = 0u; i < forces.size(); ++i)
     {
@@ -114,16 +114,17 @@ public:
    */
   std::array<double, 3> get_torques() const
   {
-    std::array<double, 3> torques{
-      {double_limits::quiet_NaN(), double_limits::quiet_NaN(), double_limits::quiet_NaN()}};
+    std::array<double, 3> torques;
+    torques.fill(std::numeric_limits<double>::quiet_NaN());
+
     // find out how many force interfaces are being used
     // torque interfaces will be found from the next index onward
     auto torque_interface_counter = static_cast<size_t>(
-      std::count(existing_axes_.begin(), existing_axes_.begin() + forces_size_, true));
+      std::count(existing_axes_.begin(), existing_axes_.begin() + FORCES_SIZE, true));
 
     for (auto i = 0u; i < torques.size(); ++i)
     {
-      if (existing_axes_[i + forces_size_])
+      if (existing_axes_[i + FORCES_SIZE])
       {
         torques[i] = state_interfaces_[torque_interface_counter].get().get_value();
         ++torque_interface_counter;
@@ -158,8 +159,6 @@ public:
 protected:
   /// Vector with existing axes for sensors with less then 6D axes.
   std::array<bool, 6> existing_axes_;
-  const std::size_t forces_size_{3};
-  const std::size_t torque_size_{3};
 };
 
 }  // namespace semantic_components
