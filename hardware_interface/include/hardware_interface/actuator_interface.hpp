@@ -27,6 +27,7 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "hardware_interface/types/trigger_type.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
@@ -546,11 +547,6 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
-  enum class TriggerType
-  {
-    READ,
-    WRITE
-  };
   std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
 };
 
