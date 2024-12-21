@@ -37,3 +37,4 @@ Guidelines and Best Practices
    :titlesonly:
 
    Debugging the Controller Manager and Plugins <debugging.rst>
+   Introspecting Controllers and Hardware Components <introspection.rst>
