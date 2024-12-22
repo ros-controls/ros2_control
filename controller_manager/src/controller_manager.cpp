@@ -2122,7 +2122,7 @@ controller_interface::return_type ControllerManager::update(
 
         if (controller_ret != controller_interface::return_type::OK)
         {
-          RCLCPP_ERROR_ONCE(
+          RCLCPP_ERROR(
             get_logger(), "The update call of the following controller returned an error: '%s'",
             loaded_controller.info.name.c_str());
           ret = controller_ret;
