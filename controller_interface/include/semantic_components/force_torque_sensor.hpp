@@ -23,13 +23,9 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "semantic_components/semantic_component_interface.hpp"
 
-namespace
-{
-constexpr std::size_t FORCES_SIZE = 3;
-}
-
-namespace semantic_components
-{
+ namespace semantic_components
+ {
+ constexpr std::size_t FORCES_SIZE = 3;
 class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
 public:
