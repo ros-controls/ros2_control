@@ -86,7 +86,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       abstract_test_controller1.c->get_state().id());
@@ -190,7 +190,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       abstract_test_controller1.c->get_state().id());
