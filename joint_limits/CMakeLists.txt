@@ -6,6 +6,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
           -Werror=missing-braces)
 endif()
 
+# using this instead of visibility macros
+# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   realtime_tools
@@ -39,10 +43,6 @@ target_include_directories(joint_limiter_interface PUBLIC
   $<INSTALL_INTERFACE:include/joint_limits>
 )
 ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_limiter_interface PRIVATE "JOINT_LIMITS_BUILDING_DLL")
-
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
@@ -53,9 +53,6 @@ target_include_directories(joint_saturation_limiter PUBLIC
   $<INSTALL_INTERFACE:include/joint_limits>
 )
 ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_saturation_limiter PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 

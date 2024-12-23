@@ -16,7 +16,6 @@
 #define TEST_CONTROLLER_FAILED_INIT__TEST_CONTROLLER_FAILED_INIT_HPP_
 
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/visibility_control.h"
 
 namespace test_controller_failed_init
 {
@@ -29,10 +28,8 @@ constexpr char TEST_CONTROLLER_FAILED_INIT_CLASS_NAME[] =
 class TestControllerFailedInit : public controller_interface::ControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestControllerFailedInit();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestControllerFailedInit() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
@@ -54,11 +51,9 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
 };
 
