@@ -58,7 +58,9 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kReadWriteRateAttribute = "rw_rate";
 constexpr const auto kIsAsyncAttribute = "is_async";
+constexpr const auto kThreadPriorityAttribute = "thread_priority";
 
 }  // namespace
 
@@ -186,7 +188,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
@@ -222,6 +224,42 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   return data_type;
 }
 
+/// Parse rw_rate attribute
+/**
+ * Parses an XMLElement and returns the value of the rw_rate attribute.
+ * Defaults to 0 if not specified.
+ *
+ * \param[in] elem XMLElement that has the rw_rate attribute.
+ * \return unsigned int specifying the read/write rate.
+ */
+unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
+  try
+  {
+    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    if (rw_rate < 0)
+    {
+      throw std::runtime_error(
+        "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+        std::to_string(rw_rate) + "\", but expected a positive integer.");
+    }
+    return static_cast<unsigned int>(rw_rate);
+  }
+  catch (const std::invalid_argument & e)
+  {
+    throw std::runtime_error(
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Invalid value : \"" + attr->Value() + "\", expected a positive integer.");
+  }
+  catch (const std::out_of_range & e)
+  {
+    throw std::runtime_error(
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Out of range value : \"" + attr->Value() + "\", expected a positive valid integer.");
+  }
+}
+
 /// Parse is_async attribute
 /**
  * Parses an XMLElement and returns the value of the is_async attribute.
@@ -234,6 +272,35 @@ bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
   return attr ? parse_bool(attr->Value()) : false;
+}
+
+/// Parse thread_priority attribute
+/**
+ * Parses an XMLElement and returns the value of the thread_priority attribute.
+ * Defaults to 50 if not specified.
+ *
+ * \param[in] elem XMLElement that has the thread_priority attribute.
+ * \return positive integer specifying the thread priority.
+ */
+int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
+  if (!attr)
+  {
+    return 50;
+  }
+  std::string s = attr->Value();
+  std::regex int_re("[1-9][0-9]*");
+  if (std::regex_match(s, int_re))
+  {
+    return std::stoi(s);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "Could not parse thread_priority tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+      s + "\", but expected a non-zero positive integer.");
+  }
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -575,7 +642,10 @@ HardwareInfo parse_resource_from_xml(
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
+  hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
+  hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
+                                               : std::numeric_limits<int>::max();
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -885,7 +955,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           {
             throw std::runtime_error("Mimic joint '" + name + "' not found in <ros2_control> tag");
           }
-          return std::distance(hw_info.joints.begin(), it);
+          return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
         };
 
         MimicJoint mimic_joint;

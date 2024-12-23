@@ -16,6 +16,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   realtime_tools
   std_msgs
+  libstatistics_collector
+  generate_parameter_library
 )
 
 find_package(ament_cmake REQUIRED)
@@ -27,6 +29,10 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+generate_parameter_library(controller_manager_parameters
+  src/controller_manager_parameters.yaml
+)
+
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
@@ -34,6 +40,9 @@ target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
+)
+target_link_libraries(controller_manager PUBLIC
+  controller_manager_parameters
 )
 ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
@@ -49,10 +58,12 @@ target_link_libraries(ros2_control_node PRIVATE
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(example_interfaces REQUIRED)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC controller_manager)
+  ament_target_dependencies(test_controller PUBLIC example_interfaces)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
@@ -202,14 +213,17 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_hardware_spawner
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
-    DESTINATION test)
-
-  install(FILES test/test_controller_spawner_with_type.yaml
-  DESTINATION test)
+  install(FILES
+          test/test_controller_spawner_with_type.yaml
+          test/test_controller_overriding_parameters.yaml
+          test/test_controller_spawner_with_fallback_controllers.yaml
+          test/test_controller_spawner_wildcard_entries.yaml
+          test/test_controller_spawner_with_interfaces.yaml
+          DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
@@ -234,7 +248,7 @@ install(
   DESTINATION include/controller_manager
 )
 install(
-  TARGETS controller_manager
+  TARGETS controller_manager controller_manager_parameters
   EXPORT export_controller_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
