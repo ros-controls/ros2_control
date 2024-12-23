@@ -61,10 +61,12 @@ int main(int argc, char ** argv)
 
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
-  auto lock_result = realtime_tools::lock_memory();
-  if (lock_memory && !lock_result.first)
+  if (lock_memory) 
   {
-    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", lock_result.second.c_str());
+    auto lock_result = realtime_tools::lock_memory();
+    if (!lock_result.first) {
+      RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory: '%s'", lock_result.second.c_str());
+    }
   }
 
   rclcpp::Parameter cpu_affinity_param;
