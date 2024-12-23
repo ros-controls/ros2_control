@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
-#include "controller_interface/visibility_control.h"
 #include "hardware_interface/handle.hpp"
 
 namespace controller_interface
@@ -27,10 +26,8 @@ namespace controller_interface
 class ControllerInterface : public controller_interface::ControllerInterfaceBase
 {
 public:
-  CONTROLLER_INTERFACE_PUBLIC
   ControllerInterface();
 
-  CONTROLLER_INTERFACE_PUBLIC
   virtual ~ControllerInterface() = default;
 
   /**
@@ -38,7 +35,6 @@ public:
    *
    * \returns false.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_chainable() const final;
 
   /**
@@ -46,7 +42,6 @@ public:
    *
    * \returns empty list.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> export_state_interfaces() final;
 
   /**
@@ -54,7 +49,6 @@ public:
    *
    * \returns empty list.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces() final;
 
   /**
@@ -62,7 +56,6 @@ public:
    *
    * \returns false.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
 
   /**
@@ -70,7 +63,6 @@ public:
    *
    * \returns false.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_in_chained_mode() const final;
 };
 
