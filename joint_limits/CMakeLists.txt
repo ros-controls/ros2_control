@@ -43,10 +43,6 @@ target_include_directories(joint_limiter_interface PUBLIC
   $<INSTALL_INTERFACE:include/joint_limits>
 )
 ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_limiter_interface PRIVATE "JOINT_LIMITS_BUILDING_DLL")
-
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
@@ -57,9 +53,6 @@ target_include_directories(joint_saturation_limiter PUBLIC
   $<INSTALL_INTERFACE:include/joint_limits>
 )
 ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_saturation_limiter PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
