@@ -52,8 +52,6 @@ public:
     interface_names_.emplace_back(interface_b);
   }
 
-  virtual ~LedRgbDevice() = default;
-
   /// Set LED states from ColorRGBA message
   bool set_values_from_message(std_msgs::msg::ColorRGBA & message)
   {
