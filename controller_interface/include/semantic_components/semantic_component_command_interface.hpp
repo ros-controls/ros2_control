@@ -92,7 +92,7 @@ public:
     }
     // set values
     bool all_set = true;
-    for (size_t i = 0; i < values.size(); ++i)
+    for (auto i = 0u; i < values.size(); ++i)
     {
       all_set &= command_interfaces_[i].get().set_value(values[i]);
     }
