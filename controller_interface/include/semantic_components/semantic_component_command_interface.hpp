@@ -34,7 +34,8 @@ public:
     command_interfaces_.reserve(interface_names.size());
   }
 
-  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0) : name_(name)
+  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0)
+  : name_(name)
   {
     interface_names_.reserve(size);
     command_interfaces_.reserve(size);

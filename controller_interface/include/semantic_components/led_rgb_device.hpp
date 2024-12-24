@@ -33,9 +33,7 @@ public:
    */
   explicit LedRgbDevice(const std::string & name)
   : SemanticComponentCommandInterface(
-    name, {{name_ + "/" + "r"},
-                {name_ + "/" + "g"},
-                {name_ + "/" + "b"}})
+      name, {{name_ + "/" + "r"}, {name_ + "/" + "g"}, {name_ + "/" + "b"}})
   {
   }
 
