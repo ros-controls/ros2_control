@@ -31,11 +31,12 @@ public:
    * Constructor for a LED RGB device with interface names set based on device name.
    * The constructor sets the command interface names to "<name>/r", "<name>/g", "<name>/b".
    */
-  explicit LedRgbDevice(const std::string & name) : SemanticComponentCommandInterface(name, 3)
+  explicit LedRgbDevice(const std::string & name)
+  : SemanticComponentCommandInterface(
+    name, {{name_ + "/" + "r"},
+                {name_ + "/" + "g"},
+                {name_ + "/" + "b"}})
   {
-    interface_names_.emplace_back(name_ + "/" + "r");
-    interface_names_.emplace_back(name_ + "/" + "g");
-    interface_names_.emplace_back(name_ + "/" + "b");
   }
 
   /**
