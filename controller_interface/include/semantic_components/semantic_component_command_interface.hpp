@@ -34,7 +34,7 @@ public:
     command_interfaces_.reserve(size);
   }
 
-  ~SemanticComponentCommandInterface() = default;
+  virtual ~SemanticComponentCommandInterface() = default;
 
   /// Assign loaned command interfaces from the hardware.
   /**
