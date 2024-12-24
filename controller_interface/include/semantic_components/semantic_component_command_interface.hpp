@@ -27,9 +27,15 @@ template <typename MessageInputType>
 class SemanticComponentCommandInterface
 {
 public:
-  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0)
+  SemanticComponentCommandInterface(
+    const std::string & name, const std::vector<std::string> & interface_names)
+  : name_(name), interface_names_(interface_names)
   {
-    name_ = name;
+    command_interfaces_.reserve(interface_names.size());
+  }
+
+  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0) : name_(name)
+  {
     interface_names_.reserve(size);
     command_interfaces_.reserve(size);
   }
