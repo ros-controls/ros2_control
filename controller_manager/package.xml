@@ -30,9 +30,19 @@
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
-  <test_depend>python3-coverage</test_depend>
   <test_depend>hardware_interface_testing</test_depend>
+  <test_depend>launch_testing_ros</test_depend>
+  <test_depend>launch_testing</test_depend>
+  <test_depend>launch</test_depend>
+  <test_depend>python3-coverage</test_depend>
+  <test_depend>rclpy</test_depend>
+  <test_depend>robot_state_publisher</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+<<<<<<< HEAD
+=======
+  <test_depend>sensor_msgs</test_depend>
+  <test_depend>example_interfaces</test_depend>
+>>>>>>> efd4c99 (Move test_utils module from demos repo (#1955))
 
   <export>
     <build_type>ament_cmake</build_type>
