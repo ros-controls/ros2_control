@@ -38,14 +38,14 @@ class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
 {
 public:
   /** \brief Constructor */
-  JOINT_LIMITS_PUBLIC JointSaturationLimiter();
+  JointSaturationLimiter();
 
   /** \brief Destructor */
-  JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
+  ~JointSaturationLimiter();
 
-  JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
+  bool on_init() override { return true; }
 
-  JOINT_LIMITS_PUBLIC bool on_configure(
+  bool on_configure(
     const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/) override
   {
     return true;
@@ -66,7 +66,7 @@ public:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(
+  bool on_enforce(
     trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) override;
@@ -80,7 +80,7 @@ public:
    * \param[in,out] desired_joint_states physical quantity that should be adjusted to obey the
    * limits. \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(std::vector<double> & desired_joint_states) override;
+  bool on_enforce(std::vector<double> & desired_joint_states) override;
 
 private:
   rclcpp::Clock::SharedPtr clock_;
