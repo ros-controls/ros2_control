@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.23.0 (2024-12-29)
+-------------------
 * Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
 * Add asynchronous hardware components documentation (`#1961 <https://github.com/ros-controls/ros2_control/issues/1961>`_)
 * Reuse `TriggerType` enum in hardware components (`#1962 <https://github.com/ros-controls/ros2_control/issues/1962>`_)
