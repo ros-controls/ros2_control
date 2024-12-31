@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.47.0 (2024-12-31)
+-------------------
 * Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_) (`#1971 <https://github.com/ros-controls/ros2_control/issues/1971>`_)
 * Log an error if update() call returns `ERROR` (`#1969 <https://github.com/ros-controls/ros2_control/issues/1969>`_)
 * Fix spawner behaviour on failing controller activation or deactivation (`#1941 <https://github.com/ros-controls/ros2_control/issues/1941>`_) (`#1968 <https://github.com/ros-controls/ros2_control/issues/1968>`_)
