@@ -243,7 +243,7 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
   }
 }
 
-std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
+const std::string & ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
 
 void ControllerInterfaceBase::enable_introspection(bool enable)
 {
