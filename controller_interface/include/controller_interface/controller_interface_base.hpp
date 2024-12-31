@@ -306,7 +306,7 @@ public:
    */
   void wait_for_trigger_update_to_finish();
 
-  const std::string & get_name() const;
+  std::string get_name() const;
 
   /// Enable or disable introspection of the controller.
   /**
