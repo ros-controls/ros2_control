@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_) (`#1971 <https://github.com/ros-controls/ros2_control/issues/1971>`_)
+* Log an error if update() call returns `ERROR` (`#1969 <https://github.com/ros-controls/ros2_control/issues/1969>`_)
+* Fix spawner behaviour on failing controller activation or deactivation (`#1941 <https://github.com/ros-controls/ros2_control/issues/1941>`_) (`#1968 <https://github.com/ros-controls/ros2_control/issues/1968>`_)
+* Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_) (`#1920 <https://github.com/ros-controls/ros2_control/issues/1920>`_)
+* Use singleton approach to store and reuse the service clients (`#1949 <https://github.com/ros-controls/ros2_control/issues/1949>`_) (`#1953 <https://github.com/ros-controls/ros2_control/issues/1953>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 2.46.0 (2024-12-16)
 -------------------
 * Add service call timeout argument in spawner (`#1808 <https://github.com/ros-controls/ros2_control/issues/1808>`_) (`#1886 <https://github.com/ros-controls/ros2_control/issues/1886>`_)

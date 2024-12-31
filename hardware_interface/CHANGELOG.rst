@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the lock_guard placement (`#1960 <https://github.com/ros-controls/ros2_control/issues/1960>`_)
+* Update initial_value parameters of generic_system tests (`#1943 <https://github.com/ros-controls/ros2_control/issues/1943>`_)
+* Contributors: Sai Kishor Kothakota, Sanjeev
+
 2.46.0 (2024-12-16)
 -------------------
 * generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)
