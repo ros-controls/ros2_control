@@ -28,38 +28,31 @@ class PoseSensor : public SemanticComponentInterface<geometry_msgs::msg::Pose>
 {
 public:
   /// Constructor for a standard pose sensor with interface names set based on sensor name.
-  explicit PoseSensor(const std::string & name) : SemanticComponentInterface{name, 7}
+  explicit PoseSensor(const std::string & name)
+  : SemanticComponentInterface(
+      name, {{name + '/' + "position.x"},
+             {name + '/' + "position.y"},
+             {name + '/' + "position.z"},
+             {name + '/' + "orientation.x"},
+             {name + '/' + "orientation.y"},
+             {name + '/' + "orientation.z"},
+             {name + '/' + "orientation.w"}})
   {
-    // Use standard interface names
-    interface_names_.emplace_back(name_ + '/' + "position.x");
-    interface_names_.emplace_back(name_ + '/' + "position.y");
-    interface_names_.emplace_back(name_ + '/' + "position.z");
-    interface_names_.emplace_back(name_ + '/' + "orientation.x");
-    interface_names_.emplace_back(name_ + '/' + "orientation.y");
-    interface_names_.emplace_back(name_ + '/' + "orientation.z");
-    interface_names_.emplace_back(name_ + '/' + "orientation.w");
-
-    // Set all sensor values to default value NaN
-    std::fill(position_.begin(), position_.end(), std::numeric_limits<double>::quiet_NaN());
-    std::fill(orientation_.begin(), orientation_.end(), std::numeric_limits<double>::quiet_NaN());
   }
-
-  virtual ~PoseSensor() = default;
-
   /// Update and return position.
   /*!
    * Update and return current pose position from state interfaces.
    *
    * \return Array of position coordinates.
    */
-  std::array<double, 3> get_position()
+  std::array<double, 3> get_position() const
   {
-    for (size_t i = 0; i < 3; ++i)
+    std::array<double, 3> position;
+    for (auto i = 0u; i < position.size(); ++i)
     {
-      position_[i] = state_interfaces_[i].get().get_value();
+      position[i] = state_interfaces_[i].get().get_value();
     }
-
-    return position_;
+    return position;
   }
 
   /// Update and return orientation
@@ -68,41 +61,36 @@ public:
    *
    * \return Array of orientation coordinates in xyzw convention.
    */
-  std::array<double, 4> get_orientation()
+  std::array<double, 4> get_orientation() const
   {
-    for (size_t i = 3; i < 7; ++i)
+    std::array<double, 4> orientation;
+    const std::size_t interface_offset{3};
+    for (auto i = 0u; i < orientation.size(); ++i)
     {
-      orientation_[i - 3] = state_interfaces_[i].get().get_value();
+      orientation[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
-
-    return orientation_;
+    return orientation;
   }
 
   /// Fill pose message with current values.
   /**
    * Fill a pose message with current position and orientation from the state interfaces.
    */
-  bool get_values_as_message(geometry_msgs::msg::Pose & message)
+  bool get_values_as_message(geometry_msgs::msg::Pose & message) const
   {
-    // Update state from state interfaces
-    get_position();
-    get_orientation();
+    const auto [position_x, position_y, position_z] = get_position();
+    const auto [orientation_x, orientation_y, orientation_z, orientation_w] = get_orientation();
 
-    // Set message values from current state
-    message.position.x = position_[0];
-    message.position.y = position_[1];
-    message.position.z = position_[2];
-    message.orientation.x = orientation_[0];
-    message.orientation.y = orientation_[1];
-    message.orientation.z = orientation_[2];
-    message.orientation.w = orientation_[3];
+    message.position.x = position_x;
+    message.position.y = position_y;
+    message.position.z = position_z;
+    message.orientation.x = orientation_x;
+    message.orientation.y = orientation_y;
+    message.orientation.z = orientation_z;
+    message.orientation.w = orientation_w;
 
     return true;
   }
-
-protected:
-  std::array<double, 3> position_;
-  std::array<double, 4> orientation_;
 };
 
 }  // namespace semantic_components

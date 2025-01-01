@@ -2,6 +2,18 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Semantic components cleanup (`#1940 <https://github.com/ros-controls/ros2_control/issues/1940>`_)
+* Contributors: Bence Magyar, Wiktor Bajor
+
+4.22.0 (2024-12-20)
+-------------------
+* Fixed typo. Added s to state_interfaces\_ (`#1930 <https://github.com/ros-controls/ros2_control/issues/1930>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (`#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_)
+* Contributors: Christoph Fröhlich, louietouie
+
 4.21.0 (2024-12-06)
 -------------------
 * [Diagnostics] Add diagnostics of execution time and periodicity of the controllers and controller_manager (`#1871 <https://github.com/ros-controls/ros2_control/issues/1871>`_)

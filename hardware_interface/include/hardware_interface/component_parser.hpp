@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
@@ -30,7 +29,6 @@ namespace hardware_interface
  * \return vector filled with information about robot's control resources
  * \throws std::runtime_error if a robot attribute or tag is not found
  */
-HARDWARE_INTERFACE_PUBLIC
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
 
 /**
@@ -38,7 +36,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
  * \return vector filled with information about hardware's StateInterfaces for the component
  * which are exported
  */
-HARDWARE_INTERFACE_PUBLIC
 std::vector<InterfaceDescription> parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info);
 
@@ -47,7 +44,6 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
  * \param[out] state_interfaces_map unordered_map filled with information about hardware's
  * StateInterfaces for the component which are exported
  */
-HARDWARE_INTERFACE_PUBLIC
 void parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info,
   std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map);
@@ -57,7 +53,6 @@ void parse_state_interface_descriptions(
  * \return vector filled with information about hardware's CommandInterfaces for the component
  * which are exported
  */
-HARDWARE_INTERFACE_PUBLIC
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info);
 
@@ -66,7 +61,6 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions(
  * \param[out] command_interfaces_map unordered_map filled with information about hardware's
  * CommandInterfaces for the component which are exported
  */
-HARDWARE_INTERFACE_PUBLIC
 void parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info,
   std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map);

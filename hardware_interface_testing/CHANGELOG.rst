@@ -2,6 +2,15 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.23.0 (2024-12-29)
+-------------------
+
+4.22.0 (2024-12-20)
+-------------------
+* Propagate read/write rate to the HardwareInfo properly (`#1928 <https://github.com/ros-controls/ros2_control/issues/1928>`_)
+* Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.21.0 (2024-12-06)
 -------------------
 * [Feature] Choose different read and write rate for the hardware components (`#1570 <https://github.com/ros-controls/ros2_control/issues/1570>`_)

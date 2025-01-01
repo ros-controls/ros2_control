@@ -44,7 +44,7 @@ struct HardwareReadWriteStatus
   std::vector<std::string> failed_hardware_names;
 };
 
-class HARDWARE_INTERFACE_PUBLIC ResourceManager
+class ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
@@ -425,12 +425,6 @@ public:
    */
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
-
-  /// Deletes all async components from the resource storage
-  /**
-   * Needed to join the threads immediately after the control loop is ended.
-   */
-  void shutdown_async_components();
 
   /// Reads all loaded hardware components.
   /**

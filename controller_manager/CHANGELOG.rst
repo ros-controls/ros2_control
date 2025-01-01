@@ -2,6 +2,27 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Move test_utils module from demos repo (`#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_)
+* Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_)
+* Fix spawner behaviour on failing controller activation or deactivation (`#1941 <https://github.com/ros-controls/ros2_control/issues/1941>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Sudip Roy
+
+4.22.0 (2024-12-20)
+-------------------
+* Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
+* Add controller node options args to be able to set controller specific node arguments (`#1713 <https://github.com/ros-controls/ros2_control/issues/1713>`_)
+* Use singleton approach to store and reuse the service clients (`#1949 <https://github.com/ros-controls/ros2_control/issues/1949>`_)
+* Increase the max and min periodicity tolerances to fix flaky tests (`#1937 <https://github.com/ros-controls/ros2_control/issues/1937>`_)
+* Fix the spawner to support full wildcard parameter entries (`#1933 <https://github.com/ros-controls/ros2_control/issues/1933>`_)
+* Suppress unnecessary warnings in clock received validation (`#1935 <https://github.com/ros-controls/ros2_control/issues/1935>`_)
+* Optimize the valid time check in the update loop (`#1923 <https://github.com/ros-controls/ros2_control/issues/1923>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (`#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_)
+* Update CPU affinity parameter to be able to set multiple CPUs (`#1915 <https://github.com/ros-controls/ros2_control/issues/1915>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Takashi Sato
+
 4.21.0 (2024-12-06)
 -------------------
 * Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_)

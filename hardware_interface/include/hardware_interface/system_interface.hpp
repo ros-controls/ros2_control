@@ -28,6 +28,7 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "hardware_interface/types/trigger_type.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
@@ -36,6 +37,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
@@ -114,6 +116,30 @@ public:
     clock_interface_ = clock_interface;
     system_logger_ = logger.get_child("hardware_component.system." + hardware_info.name);
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      async_handler_->init(
+        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        {
+          if (next_trigger_ == TriggerType::READ)
+          {
+            const auto ret = read(time, period);
+            next_trigger_ = TriggerType::WRITE;
+            return ret;
+          }
+          else
+          {
+            const auto ret = write(time, period);
+            next_trigger_ = TriggerType::READ;
+            return ret;
+          }
+        },
+        info_.thread_priority);
+      async_handler_->start_thread();
+    }
     return on_init(hardware_info);
   };
 
@@ -350,6 +376,50 @@ public:
     return return_type::OK;
   }
 
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   * The method is called in the resource_manager's read loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    return_type result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      bool trigger_status = true;
+      if (next_trigger_ == TriggerType::WRITE)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger read called while write async handler call is still pending for hardware "
+          "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger read called while write async trigger is still in progress for hardware "
+          "interface : '%s'. Failed to trigger read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+    }
+    else
+    {
+      result = read(time, period);
+    }
+    return result;
+  }
+
   /// Read the current state values from the actuator.
   /**
    * The data readings from the physical hardware has to be updated
@@ -361,6 +431,49 @@ public:
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
+  /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The physical hardware shall be updated with the latest value from
+   * the exported command interfaces.
+   * The method is called in the resource_manager's write loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_write(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    return_type result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      bool trigger_status = true;
+      if (next_trigger_ == TriggerType::READ)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger write called while read async handler call is still pending for hardware "
+          "interface : '%s'. Skipping write cycle and will wait for a read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger write called while read async trigger is still in progress for hardware "
+          "interface : '%s'. Failed to trigger write cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+    }
+    else
+    {
+      result = write(time, period);
+    }
+    return result;
+  }
 
   /// Write the current command values to the actuator.
   /**
@@ -453,6 +566,7 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
   std::vector<StateInterface::SharedPtr> joint_states_;
@@ -472,6 +586,7 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
+  std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
 };
 
 }  // namespace hardware_interface

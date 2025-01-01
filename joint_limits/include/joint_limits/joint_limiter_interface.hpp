@@ -22,7 +22,6 @@
 
 #include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
-#include "joint_limits/visibility_control.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
@@ -35,9 +34,9 @@ template <typename JointLimitsStateDataType>
 class JointLimiterInterface
 {
 public:
-  JOINT_LIMITS_PUBLIC JointLimiterInterface() = default;
+  JointLimiterInterface() = default;
 
-  JOINT_LIMITS_PUBLIC virtual ~JointLimiterInterface() = default;
+  virtual ~JointLimiterInterface() = default;
 
   /// Initialization of every JointLimiter.
   /**
@@ -52,7 +51,7 @@ public:
    * \param[in] logging_itf node logging interface to log if error happens.
    * \param[in] robot_description_topic string of a topic where robot description is accessible.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names,
     const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
     const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
@@ -164,7 +163,7 @@ public:
    * Wrapper init method that accepts pointer to the Node.
    * For details see other init method.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names, const rclcpp::Node::SharedPtr & node,
     const std::string & robot_description_topic = "/robot_description")
   {
@@ -177,7 +176,7 @@ public:
    * Wrapper init method that accepts pointer to the LifecycleNode.
    * For details see other init method.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names,
     const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
     const std::string & robot_description_topic = "/robot_description")
@@ -187,7 +186,7 @@ public:
       lifecycle_node->get_node_logging_interface(), robot_description_topic);
   }
 
-  JOINT_LIMITS_PUBLIC virtual bool configure(const JointLimitsStateDataType & current_joint_states)
+  virtual bool configure(const JointLimitsStateDataType & current_joint_states)
   {
     return on_configure(current_joint_states);
   }
@@ -201,7 +200,7 @@ public:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool enforce(
+  virtual bool enforce(
     JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
@@ -215,15 +214,14 @@ protected:
    * Implementation-specific initialization of limiter's internal states and libraries.
    * \returns true if initialization was successful, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_init() = 0;
+  virtual bool on_init() = 0;
 
   /** \brief Method is realized by an implementation.
    *
    * Implementation-specific configuration of limiter's internal states and libraries.
    * \returns true if initialization was successful, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_configure(
-    const JointLimitsStateDataType & current_joint_states) = 0;
+  virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
   /** \brief Method is realized by an implementation.
    *
@@ -235,7 +233,7 @@ protected:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_enforce(
+  virtual bool on_enforce(
     JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 

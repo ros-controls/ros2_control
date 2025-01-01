@@ -38,14 +38,14 @@ class JointSaturationLimiter : public JointLimiterInterface<JointLimitsStateData
 {
 public:
   /** \brief Constructor */
-  JOINT_LIMITS_PUBLIC JointSaturationLimiter();
+  JointSaturationLimiter();
 
   /** \brief Destructor */
-  JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
+  ~JointSaturationLimiter();
 
-  JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
+  bool on_init() override { return true; }
 
-  JOINT_LIMITS_PUBLIC bool on_configure(
+  bool on_configure(
     const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
@@ -67,7 +67,7 @@ public:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(
+  bool on_enforce(
     JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
