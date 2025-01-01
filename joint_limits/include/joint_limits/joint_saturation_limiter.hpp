@@ -45,8 +45,7 @@ public:
 
   bool on_init() override { return true; }
 
-  bool on_configure(
-    const JointLimitsStateDataType & current_joint_states) override
+  bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
     return true;

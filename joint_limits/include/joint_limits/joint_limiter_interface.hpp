@@ -134,7 +134,7 @@ public:
   /**
    * Wrapper init method that accepts the joint names and their limits directly
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names,
     const std::vector<joint_limits::JointLimits> & joint_limits,
     const std::vector<joint_limits::SoftJointLimits> & soft_joint_limits,
