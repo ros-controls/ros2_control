@@ -17,7 +17,8 @@
 #ifndef HARDWARE_INTERFACE__INTROSPECTION_HPP_
 #define HARDWARE_INTERFACE__INTROSPECTION_HPP_
 
-#include <pal_statistics/pal_statistics_macros.hpp>
+#include "pal_statistics/pal_statistics_macros.hpp"
+#include "pal_statistics/pal_statistics_utils.hpp"
 
 namespace hardware_interface
 {
@@ -27,7 +28,27 @@ constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "~/introspection_data";
 #define REGISTER_ROS2_CONTROL_INTROSPECTION(ID, ENTITY)                      \
   REGISTER_ENTITY(                                                           \
     hardware_interface::DEFAULT_REGISTRY_KEY, get_name() + "." + ID, ENTITY, \
-    &stats_registrations_, false)
+    &stats_registrations_, false);
+
+#define UNREGISTER_ROS2_CONTROL_INTROSPECTION(ID) \
+  UNREGISTER_ENTITY(DEFAULT_REGISTRY_KEY, get_name() + "." + ID);
+
+#define CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES() CLEAR_ALL_REGISTRIES();
+
+#define INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(node, topic, registry_key) \
+  INITIALIZE_REGISTRY(node, topic, registry_key);
+
+#define START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(registry_key) \
+  START_PUBLISH_THREAD(registry_key);
+
+#define PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(registry_key) \
+  PUBLISH_ASYNC_STATISTICS(registry_key);
+
+#define DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(ID, ENTITY) \
+  REGISTER_ENTITY(DEFAULT_REGISTRY_KEY, ID, ENTITY);
+
+#define DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(ID) \
+  UNREGISTER_ENTITY(DEFAULT_REGISTRY_KEY, ID);
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__INTROSPECTION_HPP_

@@ -284,7 +284,7 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
-ControllerManager::~ControllerManager() { CLEAR_ALL_REGISTRIES(); }
+ControllerManager::~ControllerManager() { CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES(); }
 
 void ControllerManager::init_controller_manager()
 {
@@ -324,10 +324,10 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
-  INITIALIZE_REGISTRY(
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
     this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
     hardware_interface::DEFAULT_REGISTRY_KEY);
-  START_PUBLISH_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
 }
 
 void ControllerManager::initialize_parameters()
@@ -2612,7 +2612,7 @@ controller_interface::return_type ControllerManager::update(
     manage_switch();
   }
 
-  PUBLISH_ASYNC_STATISTICS(hardware_interface::DEFAULT_REGISTRY_KEY);
+  PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
 
   return ret;
 }

@@ -23,10 +23,10 @@
 #include "realtime_tools/async_function_handler.hpp"
 
 #include "hardware_interface/handle.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
-#include "pal_statistics/pal_statistics_utils.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
