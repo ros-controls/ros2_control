@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Semantic components cleanup (`#1940 <https://github.com/ros-controls/ros2_control/issues/1940>`_)
+* Contributors: Bence Magyar, Wiktor Bajor
+
 4.22.0 (2024-12-20)
 -------------------
 * Fixed typo. Added s to state_interfaces\_ (`#1930 <https://github.com/ros-controls/ros2_control/issues/1930>`_)

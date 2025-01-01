@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/visibility_control.h"
 #include "example_interfaces/srv/set_bool.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
@@ -38,37 +37,28 @@ constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_controlle
 class TestController : public controller_interface::ControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestController();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestController() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_init() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<double> get_state_interface_data() const;
 
   void set_external_commands_for_testing(const std::vector<double> & commands);

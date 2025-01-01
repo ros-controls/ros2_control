@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
-#include "controller_interface/visibility_control.h"
 #include "hardware_interface/handle.hpp"
 
 namespace controller_interface
@@ -37,10 +36,8 @@ namespace controller_interface
 class ChainableControllerInterface : public ControllerInterfaceBase
 {
 public:
-  CONTROLLER_INTERFACE_PUBLIC
   ChainableControllerInterface();
 
-  CONTROLLER_INTERFACE_PUBLIC
   virtual ~ChainableControllerInterface() = default;
 
   /**
@@ -52,22 +49,16 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) final;
 
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_chainable() const final;
 
-  CONTROLLER_INTERFACE_PUBLIC
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> export_state_interfaces() final;
 
-  CONTROLLER_INTERFACE_PUBLIC
   std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces() final;
 
-  CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
 
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_in_chained_mode() const final;
 
 protected:

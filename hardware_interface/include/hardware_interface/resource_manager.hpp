@@ -44,7 +44,7 @@ struct HardwareReadWriteStatus
   std::vector<std::string> failed_hardware_names;
 };
 
-class HARDWARE_INTERFACE_PUBLIC ResourceManager
+class ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.

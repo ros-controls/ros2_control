@@ -14,6 +14,10 @@ install(
   DIRECTORY include/
   DESTINATION include/ros2_control_test_assets
 )
+install(
+  FILES urdf/test_hardware_components.urdf
+  DESTINATION share/ros2_control_test_assets/urdf
+)
 install(TARGETS ros2_control_test_assets
   EXPORT export_ros2_control_test_assets
   ARCHIVE DESTINATION lib
