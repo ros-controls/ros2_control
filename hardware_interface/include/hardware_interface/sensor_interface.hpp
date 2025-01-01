@@ -25,6 +25,7 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -92,7 +93,7 @@ public:
    */
   SensorInterface(const SensorInterface & other) = delete;
 
-  SensorInterface(SensorInterface && other) = default;
+  SensorInterface(SensorInterface && other) = delete;
 
   virtual ~SensorInterface() = default;
 
@@ -326,6 +327,22 @@ public:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+  /// Enable or disable introspection of the sensor hardware.
+  /**
+   * \param[in] enable Enable introspection if true, disable otherwise.
+   */
+  void enable_introspection(bool enable)
+  {
+    if (enable)
+    {
+      stats_registrations_.enableAll();
+    }
+    else
+    {
+      stats_registrations_.disableAll();
+    }
+  }
+
 protected:
   HardwareInfo info_;
   // interface names to InterfaceDescription
@@ -346,6 +363,9 @@ private:
   rclcpp::Logger sensor_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> sensor_states_map_;
+
+protected:
+  pal_statistics::RegistrationsRAII stats_registrations_;
 };
 
 }  // namespace hardware_interface
