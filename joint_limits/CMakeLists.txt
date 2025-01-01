@@ -44,14 +44,28 @@ target_include_directories(joint_limiter_interface PUBLIC
 )
 ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_library(joint_limits_helpers SHARED
+  src/joint_limits_helpers.cpp
+)
+target_compile_features(joint_limits_helpers PUBLIC cxx_std_17)
+target_include_directories(joint_limits_helpers PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/joint_limits>
+)
+ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
+  src/joint_range_limiter.cpp
+  src/joint_soft_limiter.cpp
 )
 target_compile_features(joint_saturation_limiter PUBLIC cxx_std_17)
 target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
+target_link_libraries(joint_saturation_limiter PUBLIC joint_limits_helpers)
+
 ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
@@ -91,6 +105,24 @@ if(BUILD_TESTING)
     rclcpp
   )
 
+  ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
+  target_include_directories(test_joint_range_limiter PRIVATE include)
+  target_link_libraries(test_joint_range_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_joint_range_limiter
+    pluginlib
+    rclcpp
+  )
+
+  ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
+  target_include_directories(test_joint_soft_limiter PRIVATE include)
+  target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_joint_soft_limiter
+    pluginlib
+    rclcpp
+  )
+
 endif()
 
 install(
@@ -101,6 +133,7 @@ install(TARGETS
     joint_limits
     joint_limiter_interface
     joint_saturation_limiter
+    joint_limits_helpers
   EXPORT export_joint_limits
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
