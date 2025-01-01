@@ -62,6 +62,8 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      // make sure introspection is disabled on controller cleanup as users may manually enable
+      // it in `on_configure` and `on_deactivate` - see the docs for details
       enable_introspection(false);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
