@@ -18,6 +18,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <utility>
@@ -142,7 +143,9 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
-  [[deprecated("Use bool get_value(double & value) instead to retrieve the value.")]]
+  [[deprecated(
+    "Use std::optional<T> get_value() or T get_value(bool &status) or bool get_value(double & "
+    "value) instead to retrieve the value.")]]
   double get_value() const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
@@ -157,7 +160,32 @@ public:
     // END
   }
 
-  [[nodiscard]] bool get_value(double & value) const
+  template <typename T = double>
+  [[nodiscard]] std::optional<T> get_value() const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return std::nullopt;
+    }
+    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+  }
+
+  template <typename T = double>
+  [[nodiscard]] T get_value(bool & status) const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      status = false;
+      return T();
+    }
+    status = true;
+    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+  }
+
+  template <typename T>
+  [[nodiscard]] bool get_value(T & value) const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
@@ -166,8 +194,7 @@ public:
     }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) set value directly if old functionality is removed
-    THROW_ON_NULLPTR(value_ptr_);
-    value = *value_ptr_;
+    value = value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
     return true;
     // END
   }
