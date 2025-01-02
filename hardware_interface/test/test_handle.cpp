@@ -66,8 +66,7 @@ TEST(TestHandle, name_getters_work)
 TEST(TestHandle, value_methods_throw_for_nullptr)
 {
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
-  double value;
-  EXPECT_ANY_THROW(handle.get_value(value));
+  EXPECT_ANY_THROW(handle.get_value());
   EXPECT_ANY_THROW(bool status = handle.set_value(0.0));
 }
 
