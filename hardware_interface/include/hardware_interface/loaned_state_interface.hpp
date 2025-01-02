@@ -88,9 +88,12 @@ public:
 
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
+  [[deprecated(
+    "Use std::optional<T> get_value() or T get_value(bool &status) or bool get_value(double & "
+    "value) instead to retrieve the value.")]]
   double get_value() const
   {
-    double value;
+    double value = std::numeric_limits<double>::quiet_NaN();
     if (get_value(value))
     {
       return value;
@@ -99,6 +102,49 @@ public:
     {
       return std::numeric_limits<double>::quiet_NaN();
     }
+  }
+
+  template <typename T = double>
+  [[nodiscard]] std::optional<T> get_value(unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    do
+    {
+      ++get_value_statistics_.total_counter;
+      const std::optional<T> data = state_interface_.get_value<T>();
+      if (data.has_value())
+      {
+        return data;
+      }
+      ++get_value_statistics_.failed_counter;
+      ++nr_tries;
+      std::this_thread::yield();
+    } while (nr_tries < max_tries);
+
+    ++get_value_statistics_.timeout_counter;
+    return std::nullopt;
+  }
+
+  template <typename T = double>
+  [[nodiscard]] T get_value(bool & status, unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    do
+    {
+      status = false;
+      ++get_value_statistics_.total_counter;
+      const T data = state_interface_.get_value<T>(status);
+      if (status)
+      {
+        return data;
+      }
+      ++get_value_statistics_.failed_counter;
+      ++nr_tries;
+      std::this_thread::yield();
+    } while (nr_tries < max_tries);
+
+    ++get_value_statistics_.timeout_counter;
+    return T();
   }
 
   template <typename T>
