@@ -350,6 +350,61 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }));
 }
 
+class TestControllerManagerHWManagementSrvsNotLoaded : public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    cm_->set_parameter(rclcpp::Parameter(
+      "hardware_components_initial_state.not_loaded",
+      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(rclcpp::Parameter(
+      "hardware_components_initial_state.inactive",
+      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME, TEST_ACTUATOR_HARDWARE_NAME})));
+
+    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    auto msg = std_msgs::msg::String();
+    msg.data = ros2_control_test_assets::minimal_robot_urdf;
+    cm_->robot_description_callback(msg);
+    
+    SetUpSrvsCMExecutor();
+  }
+};
+
+TEST_F(TestControllerManagerHWManagementSrvsNotLoaded, test_component_not_loaded)
+{
+  // Default status after start:
+  // checks if "configure_components_on_start" and "activate_components_on_start" are correctly read
+
+  // there is not system loaded therefore test should not break having only two members for checking
+  // results
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNKNOWN}),
+    std::vector<std::string>({INACTIVE, INACTIVE, UNKNOWN}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+}
+
 class TestControllerManagerHWManagementSrvsWithoutParams
 : public TestControllerManagerHWManagementSrvs
 {
@@ -392,3 +447,62 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
+
+// BEGIN: Remove at the end of 2023
+class TestControllerManagerHWManagementSrvsOldParameters
+: public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    cm_->set_parameter(
+      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
+    cm_->set_parameter(rclcpp::Parameter(
+      "activate_components_on_start", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
+    cm_->set_parameter(rclcpp::Parameter(
+      "configure_components_on_start", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+
+    std::string robot_description = "";
+    cm_->get_parameter("robot_description", robot_description);
+    if (robot_description.empty())
+    {
+      throw std::runtime_error(
+        "Unable to initialize resource manager, no robot description found.");
+    }
+
+    cm_->init_resource_manager(robot_description);
+
+    SetUpSrvsCMExecutor();
+  }
+};
+
+TEST_F(TestControllerManagerHWManagementSrvsOldParameters, list_hardware_components)
+{
+  // Default status after start:
+  // checks if "configure_components_on_start" and "activate_components_on_start" are correctly read
+
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, INACTIVE, UNCONFIGURED}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+}
+// END: Remove at the end of 2023

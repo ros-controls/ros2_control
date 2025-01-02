@@ -419,6 +419,23 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     *params_ = cm_param_listener_->get_params();
   }
+    
+  // not-loaded
+  for (const auto & component : params_->hardware_components_initial_state.not_loaded)
+  {
+    if (components_to_activate.find(component) == components_to_activate.end())
+    {
+      RCLCPP_WARN(
+        get_logger(), "Hardware component '%s' is unknown, therefore cannot be exclueded from loading.",
+        component.c_str());
+    }
+    else
+    {
+      RCLCPP_INFO(
+        get_logger(), "Excluding component '%s' from loading.", component.c_str());
+      components_to_activate.erase(component);
+    }
+  }
 
   // unconfigured (loaded only)
   set_components_to_state(
@@ -433,7 +450,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
 
   // activate all other components
-  for (const auto & [component, state] : components_to_activate)
+  for (const auto & [component, state] : 
+      )
   {
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
