@@ -32,7 +32,9 @@ TEST(TestHandle, command_interface)
   double value = 1.337;
   CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
+  ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
+  EXPECT_DOUBLE_EQ(interface.get_value(), value);
   EXPECT_NO_THROW(bool status = interface.set_value(0.0));
   bool status;
   EXPECT_DOUBLE_EQ(interface.get_value(status), 0.0);
@@ -64,7 +66,8 @@ TEST(TestHandle, name_getters_work)
 TEST(TestHandle, value_methods_throw_for_nullptr)
 {
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
-  EXPECT_ANY_THROW(handle.get_value<double>());
+  double value;
+  EXPECT_ANY_THROW(handle.get_value(value));
   EXPECT_ANY_THROW(bool status = handle.set_value(0.0));
 }
 

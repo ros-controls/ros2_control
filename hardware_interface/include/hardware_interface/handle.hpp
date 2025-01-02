@@ -168,7 +168,7 @@ public:
     {
       return std::nullopt;
     }
-    return std::get<T>(value_);
+    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
   }
 
   template <typename T = double>
@@ -181,7 +181,7 @@ public:
       return T();
     }
     status = true;
-    return std::get<T>(value_);
+    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
   }
 
   [[nodiscard]] bool get_value(double & value) const
