@@ -184,7 +184,8 @@ public:
     return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
   }
 
-  [[nodiscard]] bool get_value(double & value) const
+  template <typename T>
+  [[nodiscard]] bool get_value(T & value) const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
@@ -193,8 +194,7 @@ public:
     }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) set value directly if old functionality is removed
-    THROW_ON_NULLPTR(value_ptr_);
-    value = *value_ptr_;
+    value = value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
     return true;
     // END
   }
