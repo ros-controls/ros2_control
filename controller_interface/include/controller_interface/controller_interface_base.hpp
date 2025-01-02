@@ -17,15 +17,16 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "controller_interface/visibility_control.h"
+#include "realtime_tools/async_function_handler.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace controller_interface
@@ -58,6 +59,36 @@ struct InterfaceConfiguration
   std::vector<std::string> names = {};
 };
 
+struct ControllerUpdateStats
+{
+  void reset()
+  {
+    total_triggers = 0;
+    failed_triggers = 0;
+  }
+
+  unsigned int total_triggers;
+  unsigned int failed_triggers;
+};
+
+/**
+ * Struct to store the status of the controller update method.
+ * The status contains information if the update was triggered successfully, the result of the
+ * update method and the execution duration of the update method. The status is used to provide
+ * feedback to the controller_manager.
+ * @var successful: true if the update was triggered successfully, false if not.
+ * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
+ * @var execution_time: duration of the execution of the update method.
+ * @var period: period of the update method.
+ */
+struct ControllerUpdateStatus
+{
+  bool successful = true;
+  return_type result = return_type::OK;
+  std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
+  std::optional<rclcpp::Duration> period = std::nullopt;
+};
+
 /**
  * Base interface class  for an controller. The interface may not be used to implement a controller.
  * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
@@ -66,10 +97,8 @@ struct InterfaceConfiguration
 class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-  CONTROLLER_INTERFACE_PUBLIC
   ControllerInterfaceBase() = default;
 
-  CONTROLLER_INTERFACE_PUBLIC
   virtual ~ControllerInterfaceBase() = default;
 
   /// Get configuration for controller's required command interfaces.
@@ -84,7 +113,6 @@ public:
    *
    * \returns configuration of command interfaces.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
   /// Get configuration for controller's required state interfaces.
@@ -97,35 +125,42 @@ public:
    * The configuration is used to check if controller can be activated and to claim interfaces from
    * hardware.
    * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::state_interface_ "state_interface_" member.
+   * \ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
    *
    * \returns configuration of state interfaces.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
-  CONTROLLER_INTERFACE_PUBLIC
-  void assign_interfaces(
+  /// Method that assigns the Loaned interfaces to the controller.
+  /**
+   * Method used by the controller_manager to assign the interfaces to the controller.
+   * \note When this method is overridden, the user has to also implement the `release_interfaces`
+   * method by overriding it to release the interfaces.
+   *
+   * \param[in] command_interfaces vector of command interfaces to be assigned to the controller.
+   * \param[in] state_interfaces vector of state interfaces to be assigned to the controller.
+   */
+  virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
 
-  CONTROLLER_INTERFACE_PUBLIC
-  void release_interfaces();
+  /// Method that releases the Loaned interfaces from the controller.
+  /**
+   * Method used by the controller_manager to release the interfaces from the controller.
+   */
+  virtual void release_interfaces();
 
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
+  return_type init(
+    const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
+    const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
    * Override default implementation for configure of LifecycleNode to get parameters.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & configure();
 
   /// Extending interface with initialization method which is individual for each controller
-  CONTROLLER_INTERFACE_PUBLIC
   virtual CallbackReturn on_init() = 0;
 
   /**
@@ -134,26 +169,60 @@ public:
    * **The method called in the (real-time) control loop.**
    *
    * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
+   * \param[in] period The measured time since the last control loop iteration
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  CONTROLLER_INTERFACE_PUBLIC
+  /**
+   * Trigger update method. This method is used by the controller_manager to trigger the update
+   * method of the controller.
+   * The method is used to trigger the update method of the controller synchronously or
+   * asynchronously, based on the controller configuration.
+   * **The method called in the (real-time) control loop.**
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \returns ControllerUpdateStatus. The status contains information if the update was triggered
+   * successfully, the result of the update method and the execution duration of the update method.
+   */
+  ControllerUpdateStatus trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
+
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
-  CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node() const;
+  std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_state() const;
+  const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   unsigned int get_update_rate() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_async() const;
+
+  const std::string & get_robot_description() const;
+
+  /**
+   * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
+   * of the controller upon loading the controller.
+   *
+   * \note The controller_manager will modify these NodeOptions in case a params file is passed
+   * by the spawner to load the controller parameters or when controllers are loaded in simulation
+   * (see ros2_control#1311, ros2_controllers#698 , ros2_controllers#795,ros2_controllers#966 for
+   * more details)
+   *
+   * @returns NodeOptions required for the configuration of the controller lifecycle node
+   */
+  virtual rclcpp::NodeOptions define_custom_node_options() const
+  {
+    rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+    node_options.enable_logger_service(true);
+#else
+    node_options.allow_undeclared_parameters(true);
+    node_options.automatically_declare_parameters_from_overrides(true);
+#endif
+    return node_options;
+  }
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -184,7 +253,6 @@ public:
    *
    * \returns true is controller is chainable and false if it is not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_chainable() const = 0;
 
   /**
@@ -193,18 +261,26 @@ public:
    *
    * \returns list of command interfaces for preceding controllers.
    */
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
+  virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
+  export_reference_interfaces() = 0;
+
+  /**
+   * Export interfaces for a chainable controller that can be used as state interface by other
+   * controllers.
+   *
+   * \returns list of state interfaces for preceding controllers.
+   */
+  virtual std::vector<hardware_interface::StateInterface::ConstSharedPtr>
+  export_state_interfaces() = 0;
 
   /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
    * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves disabling of subscribers and other external interfaces to avoid potential
-   * concurrency in input commands.
+   * usually involves the usage of the controller's reference interfaces by the other
+   * controllers
    *
    * \returns true if mode is switched successfully and false if not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool set_chained_mode(bool chained_mode) = 0;
 
   /// Get information if a controller is currently in chained mode.
@@ -215,17 +291,31 @@ public:
    *
    * \returns true is controller is in chained mode and false if it is not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
+
+  /**
+   * Method to wait for any running async update cycle to finish after finishing the current cycle.
+   * This is needed to be called before deactivating the controller by the controller_manager, so
+   * that the interfaces still exist when the controller finishes its cycle and then it's exits.
+   *
+   * \note **The method is not real-time safe and shouldn't be called in the control loop.**
+   *
+   * If the controller is running in async mode, the method will wait for the current async update
+   * to finish. If the controller is not running in async mode, the method will do nothing.
+   */
+  void wait_for_trigger_update_to_finish();
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  unsigned int update_rate_ = 0;
-  bool is_async_ = false;
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
+  unsigned int update_rate_ = 0;
+  bool is_async_ = false;
+  std::string urdf_ = "";
+  ControllerUpdateStats trigger_stats_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;

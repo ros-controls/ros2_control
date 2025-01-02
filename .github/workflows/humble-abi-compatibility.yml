@@ -1,20 +1,32 @@
 name: Humble - ABI Compatibility Check
 on:
   workflow_dispatch:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/humble-abi-compatibility.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.humble.repos'
+
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on humble branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
   abi_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ros-industrial/industrial_ci@master
         env:
           ROS_DISTRO: humble
-          ROS_REPO: main
+          ROS_REPO: testing
           ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
           NOT_TEST_BUILD: true

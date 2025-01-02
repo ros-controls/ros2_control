@@ -78,6 +78,16 @@ inline bool interface_list_contains_interface_type(
          interface_type_list.end();
 }
 
+template <typename T>
+void add_element_to_list(std::vector<T> & list, const T & element)
+{
+  if (std::find(list.begin(), list.end(), element) == list.end())
+  {
+    // Only add to the list if it doesn't exist
+    list.push_back(element);
+  }
+}
+
 }  // namespace controller_interface
 
 #endif  // CONTROLLER_INTERFACE__HELPERS_HPP_

@@ -1,28 +1,36 @@
-name: Rolling RHEL Binary Build
+name: RHEL Rolling Semi-Binary Build
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/rolling-rhel-binary-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.jazzy.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on master branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
-  rolling_rhel_binary:
-    name: Rolling RHEL binary build
-    runs-on: ubuntu-latest
-    env:
-      ROS_DISTRO: rolling
-    container: ghcr.io/ros-controls/ros:rolling-rhel
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          path: src/ros2_control
-      - run: |
-          rosdep update
-          rosdep install -iy --from-path src/ros2_control
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          colcon build
-          colcon test
+  rhel_semi_binary_build:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+      skip_packages: rqt_controller_manager

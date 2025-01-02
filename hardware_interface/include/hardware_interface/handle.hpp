@@ -15,54 +15,126 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <utility>
+#include <variant>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
+
+using HANDLE_DATATYPE = std::variant<double>;
+
 /// A handle used to get and set a value on a given interface.
-class ReadOnlyHandle
+class Handle
 {
 public:
-  ReadOnlyHandle(
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
+  Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
-  : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
+  : prefix_name_(prefix_name),
+    interface_name_(interface_name),
+    handle_name_(prefix_name_ + "/" + interface_name_),
+    value_ptr_(value_ptr)
   {
   }
 
-  explicit ReadOnlyHandle(const std::string & interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  explicit Handle(const InterfaceDescription & interface_description)
+  : prefix_name_(interface_description.get_prefix_name()),
+    interface_name_(interface_description.get_interface_name()),
+    handle_name_(interface_description.get_name())
+  {
+    // As soon as multiple datatypes are used in HANDLE_DATATYPE
+    // we need to initialize according the type passed in interface description
+    value_ = std::numeric_limits<double>::quiet_NaN();
+    value_ptr_ = std::get_if<double>(&value_);
+  }
+
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
+  explicit Handle(const std::string & interface_name)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
 
-  explicit ReadOnlyHandle(const char * interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
+  explicit Handle(const char * interface_name)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
 
-  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
+  Handle(const Handle & other) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    prefix_name_ = other.prefix_name_;
+    interface_name_ = other.interface_name_;
+    handle_name_ = other.handle_name_;
+    value_ = other.value_;
+    value_ptr_ = other.value_ptr_;
+  }
 
-  ReadOnlyHandle(ReadOnlyHandle && other) = default;
+  Handle(Handle && other) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    prefix_name_ = std::move(other.prefix_name_);
+    interface_name_ = std::move(other.interface_name_);
+    handle_name_ = std::move(other.handle_name_);
+    value_ = std::move(other.value_);
+    value_ptr_ = std::move(other.value_ptr_);
+  }
 
-  ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
+  Handle & operator=(const Handle & other)
+  {
+    if (this != &other)
+    {
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+      prefix_name_ = other.prefix_name_;
+      interface_name_ = other.interface_name_;
+      handle_name_ = other.handle_name_;
+      value_ = other.value_;
+      value_ptr_ = other.value_ptr_;
+    }
+    return *this;
+  }
 
-  ReadOnlyHandle & operator=(ReadOnlyHandle && other) = default;
+  Handle & operator=(Handle && other)
+  {
+    if (this != &other)
+    {
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+      prefix_name_ = std::move(other.prefix_name_);
+      interface_name_ = std::move(other.interface_name_);
+      handle_name_ = std::move(other.handle_name_);
+      value_ = std::move(other.value_);
+      value_ptr_ = std::move(other.value_ptr_);
+    }
+    return *this;
+  }
 
-  virtual ~ReadOnlyHandle() = default;
+  virtual ~Handle() = default;
 
   /// Returns true if handle references a value.
   inline operator bool() const { return value_ptr_ != nullptr; }
 
-  const std::string get_name() const { return prefix_name_ + "/" + interface_name_; }
+  const std::string & get_name() const { return handle_name_; }
 
   const std::string & get_interface_name() const { return interface_name_; }
 
   [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string
+    "Replaced by get_name method, which is semantically more correct")]] const std::string &
   get_full_name() const
   {
     return get_name();
@@ -70,62 +142,88 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
+  [[deprecated("Use bool get_value(double & value) instead to retrieve the value.")]]
   double get_value() const
   {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) return value_ if old functionality is removed
     THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
+    // END
+  }
+
+  [[nodiscard]] bool get_value(double & value) const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) set value directly if old functionality is removed
+    THROW_ON_NULLPTR(value_ptr_);
+    value = *value_ptr_;
+    return true;
+    // END
+  }
+
+  [[nodiscard]] bool set_value(double value)
+  {
+    std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) set value_ directly if old functionality is removed
+    THROW_ON_NULLPTR(this->value_ptr_);
+    *this->value_ptr_ = value;
+    return true;
+    // END
   }
 
 protected:
   std::string prefix_name_;
   std::string interface_name_;
+  std::string handle_name_;
+  HANDLE_DATATYPE value_;
+  // BEGIN (Handle export change): for backward compatibility
+  // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
+  // END
+  mutable std::shared_mutex handle_mutex_;
 };
 
-class ReadWriteHandle : public ReadOnlyHandle
+class StateInterface : public Handle
 {
 public:
-  ReadWriteHandle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : ReadOnlyHandle(prefix_name, interface_name, value_ptr)
+  explicit StateInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
   {
   }
 
-  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle(interface_name) {}
-
-  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle(interface_name) {}
-
-  ReadWriteHandle(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle(ReadWriteHandle && other) = default;
-
-  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
-
-  virtual ~ReadWriteHandle() = default;
-
-  void set_value(double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
-  }
-};
-
-class StateInterface : public ReadOnlyHandle
-{
-public:
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle::ReadOnlyHandle;
+  using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<StateInterface>;
+  using ConstSharedPtr = std::shared_ptr<const StateInterface>;
 };
 
-class CommandInterface : public ReadWriteHandle
+class CommandInterface : public Handle
 {
 public:
+  explicit CommandInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
+  {
+  }
   /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
@@ -136,7 +234,9 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle::ReadWriteHandle;
+  using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<CommandInterface>;
 };
 
 }  // namespace hardware_interface

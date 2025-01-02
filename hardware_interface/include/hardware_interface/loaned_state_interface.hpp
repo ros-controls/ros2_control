@@ -16,11 +16,13 @@
 #define HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
 
 #include <functional>
+#include <limits>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
-
+#include "rclcpp/logging.hpp"
 namespace hardware_interface
 {
 class LoanedStateInterface
@@ -28,13 +30,25 @@ class LoanedStateInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  explicit LoanedStateInterface(StateInterface & state_interface)
+  [[deprecated("Replaced by the new version using shared_ptr")]] explicit LoanedStateInterface(
+    const StateInterface & state_interface)
   : LoanedStateInterface(state_interface, nullptr)
   {
   }
 
-  LoanedStateInterface(StateInterface & state_interface, Deleter && deleter)
+  [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
+    const StateInterface & state_interface, Deleter && deleter)
   : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
+  {
+  }
+
+  explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface)
+  : LoanedStateInterface(state_interface, nullptr)
+  {
+  }
+
+  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
+  : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -44,13 +58,24 @@ public:
 
   virtual ~LoanedStateInterface()
   {
+    auto logger = rclcpp::get_logger(state_interface_.get_name());
+    RCLCPP_WARN_EXPRESSION(
+      logger,
+      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+      "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
+      "get_value calls",
+      state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
+      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.failed_counter,
+      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.total_counter);
     if (deleter_)
     {
       deleter_();
     }
   }
 
-  const std::string get_name() const { return state_interface_.get_name(); }
+  const std::string & get_name() const { return state_interface_.get_name(); }
 
   const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
 
@@ -63,11 +88,50 @@ public:
 
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
-  double get_value() const { return state_interface_.get_value(); }
+  double get_value() const
+  {
+    double value;
+    if (get_value(value))
+    {
+      return value;
+    }
+    else
+    {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+  }
+
+  template <typename T>
+  [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    ++get_value_statistics_.total_counter;
+    while (!state_interface_.get_value(value))
+    {
+      ++get_value_statistics_.failed_counter;
+      ++nr_tries;
+      if (nr_tries == max_tries)
+      {
+        ++get_value_statistics_.timeout_counter;
+        return false;
+      }
+      std::this_thread::yield();
+    }
+    return true;
+  }
 
 protected:
-  StateInterface & state_interface_;
+  const StateInterface & state_interface_;
   Deleter deleter_;
+
+private:
+  struct HandleRTStatistics
+  {
+    unsigned int total_counter = 0;
+    unsigned int failed_counter = 0;
+    unsigned int timeout_counter = 0;
+  };
+  mutable HandleRTStatistics get_value_statistics_;
 };
 
 }  // namespace hardware_interface

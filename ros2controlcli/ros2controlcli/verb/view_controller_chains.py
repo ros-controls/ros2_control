@@ -195,14 +195,14 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
 
 
 class ViewControllerChainsVerb(VerbExtension):
-    """Generates a diagram of the loaded chained controllers."""
+    """Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
             list_hardware_response = list_hardware_interfaces(node, args.controller_manager)
             parse_response(list_controllers_response, list_hardware_response)

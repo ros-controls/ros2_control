@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/accessor.hpp"
 #include "transmission_interface/exception.hpp"
 #include "transmission_interface/transmission.hpp"
@@ -288,7 +289,7 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
 
     joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0]);
     joint_eff[1].set_value(
-      jr[1] * (act_eff[1].get_value() * ar[1] - act_eff[0].get_value() * ar[0] * jr[0]));
+      jr[1] * (act_eff[1].get_value() * ar[1] - jr[0] * act_eff[0].get_value() * ar[0]));
   }
 }
 

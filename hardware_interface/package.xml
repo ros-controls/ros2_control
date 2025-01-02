@@ -1,20 +1,26 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hardware_interface</name>
-  <version>3.13.0</version>
+  <version>4.23.0</version>
   <description>ros2_control hardware interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
 
+  <depend>backward_ros</depend>
   <depend>control_msgs</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>rcpputils</depend>
+  <depend>realtime_tools</depend>
   <depend>tinyxml2_vendor</depend>
+  <depend>joint_limits</depend>
+  <depend>urdf</depend>
+  <depend>sdformat_urdf</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>

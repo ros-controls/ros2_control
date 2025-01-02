@@ -19,7 +19,7 @@ package_name = "ros2controlcli"
 
 setup(
     name=package_name,
-    version="3.13.0",
+    version="4.23.0",
     packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/" + package_name, ["package.xml"]),
@@ -62,6 +62,8 @@ ROS2 Control command  interface.""",
                 ros2controlcli.verb.reload_controller_libraries:ReloadControllerLibrariesVerb",
             "set_controller_state = \
                 ros2controlcli.verb.set_controller_state:SetControllerStateVerb",
+            "set_hardware_component_state = \
+                ros2controlcli.verb.set_hardware_component_state:SetHardwareComponentStateVerb",
             "switch_controllers = ros2controlcli.verb.switch_controllers:SwitchControllersVerb",
             "unload_controller = ros2controlcli.verb.unload_controller:UnloadControllerVerb",
         ],

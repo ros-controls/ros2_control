@@ -20,7 +20,8 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/visibility_control.h"
+#include "example_interfaces/srv/set_bool.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace test_controller
@@ -30,42 +31,40 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 // indicating the node name under which the controller node
 // is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
+constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
 // corresponds to the name listed within the pluginlib xml
 constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_controller";
 class TestController : public controller_interface::ControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestController();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestController() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_init() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
-  size_t internal_counter = 0;
+  std::vector<double> get_state_interface_data() const;
+
+  void set_external_commands_for_testing(const std::vector<double> & commands);
+
+  rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr service_;
+  unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller
   // is usually destroyed after cleanup
@@ -77,6 +76,7 @@ public:
   // enables external setting of values to command interfaces - used for simulation of hardware
   // errors
   double set_first_command_interface_value_to;
+  rclcpp::Duration update_period_ = rclcpp::Duration::from_seconds(0.);
 };
 
 }  // namespace test_controller

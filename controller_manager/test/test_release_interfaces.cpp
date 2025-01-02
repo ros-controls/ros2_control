@@ -14,11 +14,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -51,10 +49,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_state().id());
+    abstract_test_controller1.c->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller2.c->get_state().id());
+    abstract_test_controller2.c->get_lifecycle_state().id());
 
   {  // Test starting the first controller
     RCLCPP_INFO(cm_->get_logger(), "Starting controller #1");
@@ -69,10 +67,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test starting the second controller when the first is running
@@ -86,13 +84,13 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test stopping controller #1 and starting controller #2
@@ -108,10 +106,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test stopping controller #2 and starting controller #1
@@ -127,10 +125,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test stopping both controllers when only controller #1 is running
@@ -151,10 +149,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test stopping both controllers when only controller #1 is running
@@ -172,10 +170,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test starting both controllers at the same time
@@ -190,12 +188,12 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 }

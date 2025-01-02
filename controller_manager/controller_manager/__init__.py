@@ -23,6 +23,10 @@ from .controller_manager_services import (
     set_hardware_component_state,
     switch_controllers,
     unload_controller,
+    get_parameter_from_param_files,
+    set_controller_parameters,
+    set_controller_parameters_from_param_files,
+    bcolors,
 )
 
 __all__ = [
@@ -36,4 +40,8 @@ __all__ = [
     "set_hardware_component_state",
     "switch_controllers",
     "unload_controller",
+    "get_parameter_from_param_files",
+    "set_controller_parameters",
+    "set_controller_parameters_from_param_files",
+    "bcolors",
 ]

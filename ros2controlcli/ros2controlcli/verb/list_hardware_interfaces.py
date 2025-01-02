@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_hardware_interfaces
-from controller_manager.spawner import bcolors
+from controller_manager import list_hardware_interfaces, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -29,7 +28,7 @@ class ListHardwareInterfacesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             hardware_interfaces = list_hardware_interfaces(node, args.controller_manager)
             command_interfaces = sorted(
                 hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name

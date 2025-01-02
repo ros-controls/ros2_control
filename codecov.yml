@@ -20,6 +20,5 @@ flags:
       - controller_interface
       - controller_manager
       - hardware_interface
-      - joint_limits_interface
-      - test_robot_hardware
+      - joint_limits
       - transmission_interface

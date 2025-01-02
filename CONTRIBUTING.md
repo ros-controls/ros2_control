@@ -21,7 +21,7 @@ Please try to include as much information as you can. Details like these are inc
 
 
 ## Contributing via Pull Requests
-The following guidance should be up-to-date, but the documentation as found [here](https://ros-controls.github.io/control.ros.org/contributing.html#pull-requests) should prove as the final say.
+The following guidance should be up-to-date, but the documentation as found [here](https://control.ros.org/master/doc/contributing/contributing.html#pull-requests) should prove as the final say.
 
 Contributions via pull requests are much appreciated.
 Before sending us a pull request, please ensure that:
@@ -54,7 +54,9 @@ As this project, by default, uses the default GitHub issue labels
 
 
 ## Licensing
-Any contribution that you make to this repository will be under the Apache 2 License, as dictated by that [license]:
+Any contribution that you make to this repository will
+be under the Apache 2 License, as dictated by that
+[license](http://www.apache.org/licenses/LICENSE-2.0.html):
 
 ~~~
 5. Submission of Contributions. Unless You explicitly state otherwise,
@@ -69,4 +71,3 @@ Any contribution that you make to this repository will be under the Apache 2 Lic
 [issues]: https://github.com/ros-controls/ros2_control/issues
 [closed-issues]: https://github.com/ros-controls/ros2_control/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20
 [help-wanted]: https://github.com/ros-controls/ros2_control/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22
-[license]: http://www.apache.org/licenses/LICENSE-2.0.html

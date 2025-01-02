@@ -21,14 +21,15 @@
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
-using std::vector;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::Exception;
 using transmission_interface::JointHandle;
 using transmission_interface::SimpleTransmission;
 
+using testing::DoubleNear;
+
 // Floating-point value comparison threshold
-const double EPS = 1e-6;
+const double EPS = 1e-5;
 
 TEST(PreconditionsTest, ExceptionThrownWithInvalidParameters)
 {
@@ -53,8 +54,8 @@ TEST(PreconditionsTest, AccessorValidation)
 
   EXPECT_EQ(1u, trans.num_actuators());
   EXPECT_EQ(1u, trans.num_joints());
-  EXPECT_EQ(2.0, trans.get_actuator_reduction());
-  EXPECT_EQ(-1.0, trans.get_joint_offset());
+  EXPECT_THAT(2.0, DoubleNear(trans.get_actuator_reduction(), EPS));
+  EXPECT_THAT(-1.0, DoubleNear(trans.get_joint_offset(), EPS));
 }
 
 TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)
@@ -127,7 +128,7 @@ protected:
 
       trans.actuator_to_joint();
       trans.joint_to_actuator();
-      EXPECT_NEAR(ref_val, a_val, EPS);
+      EXPECT_THAT(ref_val, DoubleNear(a_val, EPS));
     }
   }
 };
@@ -187,7 +188,7 @@ TEST_F(WhiteBoxTest, MoveJoint)
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
-    EXPECT_NEAR(10.0, j_val, EPS);
+    EXPECT_THAT(10.0, DoubleNear(j_val, EPS));
   }
 
   // Velocity interface
@@ -197,7 +198,7 @@ TEST_F(WhiteBoxTest, MoveJoint)
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
-    EXPECT_NEAR(0.1, j_val, EPS);
+    EXPECT_THAT(0.1, DoubleNear(j_val, EPS));
   }
 
   // Position interface
@@ -207,7 +208,7 @@ TEST_F(WhiteBoxTest, MoveJoint)
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
-    EXPECT_NEAR(1.1, j_val, EPS);
+    EXPECT_THAT(1.1, DoubleNear(j_val, EPS));
   }
 
   // Mismatched interface is ignored
@@ -221,10 +222,10 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
     trans.configure({joint_handle, joint_handle2}, {actuator_handle});
     trans.actuator_to_joint();
-    EXPECT_NEAR(unique_value, 13.37, EPS);
+    EXPECT_THAT(unique_value, DoubleNear(13.37, EPS));
 
     trans.configure({joint_handle}, {actuator_handle, actuator_handle2});
     trans.actuator_to_joint();
-    EXPECT_NEAR(unique_value, 13.37, EPS);
+    EXPECT_THAT(unique_value, DoubleNear(13.37, EPS));
   }
 }

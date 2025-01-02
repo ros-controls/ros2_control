@@ -32,7 +32,11 @@ namespace mock_components
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-class HARDWARE_INTERFACE_PUBLIC GenericSystem : public hardware_interface::SystemInterface
+static constexpr size_t POSITION_INTERFACE_INDEX = 0;
+static constexpr size_t VELOCITY_INTERFACE_INDEX = 1;
+static constexpr size_t ACCELERATION_INTERFACE_INDEX = 2;
+
+class GenericSystem : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
@@ -40,6 +44,14 @@ public:
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+
+  return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
+
+  return_type perform_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
 
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
@@ -59,16 +71,6 @@ protected:
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
-
-  const size_t POSITION_INTERFACE_INDEX = 0;
-
-  struct MimicJoint
-  {
-    std::size_t joint_index;
-    std::size_t mimicked_joint_index;
-    double multiplier = 1.0;
-  };
-  std::vector<MimicJoint> mimic_joints_;
 
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
@@ -114,6 +116,9 @@ private:
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
   size_t index_custom_interface_with_following_offset_;
+
+  bool calculate_dynamics_;
+  std::vector<size_t> joint_control_mode_;
 
   bool command_propagation_disabled_;
 };

@@ -26,12 +26,14 @@ using std::vector;
 /// \brief Generator of pseudo-random double in the range [min_val, max_val].
 // NOTE: Based on example code available at:
 // http://stackoverflow.com/questions/2860673/initializing-a-c-vector-to-random-values-fast
+// Use a user specified seed instead of system time for deterministic tests
 struct RandomDoubleGenerator
 {
 public:
-  RandomDoubleGenerator(double min_val, double max_val) : min_val_(min_val), max_val_(max_val)
+  RandomDoubleGenerator(double min_val, double max_val, unsigned int seed = 1234)
+  : min_val_(min_val), max_val_(max_val)
   {
-    srand(time(nullptr));
+    srand(seed);
   }
   double operator()()
   {

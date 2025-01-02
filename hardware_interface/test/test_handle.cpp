@@ -14,8 +14,11 @@
 
 #include <gmock/gmock.h>
 #include "hardware_interface/handle.hpp"
+#include "hardware_interface/hardware_info.hpp"
 
 using hardware_interface::CommandInterface;
+using hardware_interface::InterfaceDescription;
+using hardware_interface::InterfaceInfo;
 using hardware_interface::StateInterface;
 
 namespace
@@ -27,9 +30,7 @@ constexpr auto FOO_INTERFACE = "FooInterface";
 TEST(TestHandle, command_interface)
 {
   double value = 1.337;
-  CommandInterface interface {
-    JOINT_NAME, FOO_INTERFACE, &value
-  };
+  CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
   EXPECT_NO_THROW(interface.set_value(0.0));
   EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
@@ -38,9 +39,7 @@ TEST(TestHandle, command_interface)
 TEST(TestHandle, state_interface)
 {
   double value = 1.337;
-  StateInterface interface {
-    JOINT_NAME, FOO_INTERFACE, &value
-  };
+  StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
   // interface.set_value(5);  compiler error, no set_value function
 }
@@ -67,4 +66,32 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   EXPECT_DOUBLE_EQ(handle.get_value(), value);
   EXPECT_NO_THROW(handle.set_value(0.0));
   EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+}
+
+TEST(TestHandle, interface_description_state_interface_name_getters_work)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  StateInterface handle{interface_descr};
+
+  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
+}
+
+TEST(TestHandle, interface_description_command_interface_name_getters_work)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  CommandInterface handle{interface_descr};
+
+  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }

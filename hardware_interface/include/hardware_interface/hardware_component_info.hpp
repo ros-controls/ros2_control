@@ -19,10 +19,10 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
+#include <rclcpp/time.hpp>
 #include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
@@ -39,11 +39,17 @@ struct HardwareComponentInfo
   /// Component "classification": "actuator", "sensor" or "system"
   std::string type;
 
+  /// Component group
+  std::string group;
+
   /// Component pluginlib plugin name.
   std::string plugin_name;
 
   /// Component is async
   bool is_async;
+
+  //// read/write rate
+  unsigned int rw_rate;
 
   /// Component current state.
   rclcpp_lifecycle::State state;

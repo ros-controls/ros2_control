@@ -1,0 +1,6 @@
+controller_name:
+  ros__parameters:
+    parameter_list:
+      parameter1: 20.0
+      parameter2: 23.14
+      parameter3: -52.323
