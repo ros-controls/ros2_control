@@ -15,6 +15,7 @@
 /// \authors Nathan Brooks, Dr. Denis Stogl, Guillaume Walck
 
 #include "joint_limits/joint_saturation_limiter.hpp"
+#include "joint_limits/joint_limits_helpers.hpp"
 
 #include <algorithm>
 
@@ -26,7 +27,7 @@ constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 namespace joint_limits
 {
 template <>
-bool JointSaturationLimiter<JointLimits>::on_enforce(
+bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
@@ -426,52 +427,16 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   return limits_enforced;
 }
 
-template <>
-bool JointSaturationLimiter<JointLimits>::on_enforce(std::vector<double> & desired_joint_states)
-{
-  std::vector<std::string> limited_joints_effort;
-  bool limits_enforced = false;
-
-  bool has_cmd = (desired_joint_states.size() == number_of_joints_);
-  if (!has_cmd)
-  {
-    return false;
-  }
-
-  for (size_t index = 0; index < number_of_joints_; ++index)
-  {
-    if (joint_limits_[index].has_effort_limits)
-    {
-      double max_effort = joint_limits_[index].max_effort;
-      if (std::fabs(desired_joint_states[index]) > max_effort)
-      {
-        desired_joint_states[index] = std::copysign(max_effort, desired_joint_states[index]);
-        limited_joints_effort.emplace_back(joint_names_[index]);
-        limits_enforced = true;
-      }
-    }
-  }
-
-  if (limited_joints_effort.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_joints_effort)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed effort limits, limiting");
-  }
-
-  return limits_enforced;
-}
-
 }  // namespace joint_limits
 
 #include "pluginlib/class_list_macros.hpp"
 
+// typedefs are needed here to avoid issues with macro expansion. ref:
+// https://stackoverflow.com/a/8942986
+using int_map = std::map<int, int>;
+using JointTrajectoryPointSaturationLimiter =
+  joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>;
+using JointTrajectoryPointLimiterInterfaceBase =
+  joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>;
 PLUGINLIB_EXPORT_CLASS(
-  joint_limits::JointSaturationLimiter<joint_limits::JointLimits>,
-  joint_limits::JointLimiterInterface<joint_limits::JointLimits>)
+  JointTrajectoryPointSaturationLimiter, JointTrajectoryPointLimiterInterfaceBase)
