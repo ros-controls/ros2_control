@@ -360,7 +360,9 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller2.c->get_lifecycle_state().id());
 
-  {  // Test starting the first controller
+  {
+     // Test starting the first controller
+     // test_controller1 activation always fails
     RCLCPP_INFO(cm_->get_logger(), "Starting controller #1");
     std::vector<std::string> start_controllers = {controller_name1};
     std::vector<std::string> stop_controllers = {};
@@ -379,8 +381,9 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
       abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
-  {  // Test starting the second controller when the first is running
-    // Fails as they have the same command interface
+  {
+    // Test starting the second controller, interfaces should have been released
+    // test_controller2 always successfully activates
     RCLCPP_INFO(cm_->get_logger(), "Starting controller #2");
     std::vector<std::string> start_controllers = {controller_name2};
     std::vector<std::string> stop_controllers = {};
