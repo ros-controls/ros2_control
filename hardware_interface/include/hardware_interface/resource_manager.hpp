@@ -433,6 +433,14 @@ public:
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
 
+  /**
+   * Enforce the command limits for the position, velocity, effort, and acceleration interfaces.
+   * @note This method is RT-safe
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
+   */
+  bool enforce_command_limits(const rclcpp::Duration & period);
+
   /// Reads all loaded hardware components.
   /**
    * Reads from all active hardware components.
