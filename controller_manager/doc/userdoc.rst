@@ -394,6 +394,6 @@ Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` met
 
 Factors that affect Determinism
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When run under the conditions determined in the above section, the determinism is assured upto the limitations of the hardware and the real-time kernel. However, there are some following situations that can affect the determinism:
+When run under the conditions determined in the above section, the determinism is assured up to the limitations of the hardware and the real-time kernel. However, there are some situations that can affect determinism:
 
 * When a controller fails to activate, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
