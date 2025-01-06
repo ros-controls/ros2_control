@@ -21,8 +21,20 @@
 #include <optional>
 #include <string>
 
+#define DEFINE_LIMIT_STRUCT(limit) \
+  struct limit                     \
+  {                                \
+    double lower_limit;            \
+    double upper_limit;            \
+  };
+
 namespace joint_limits
 {
+
+DEFINE_LIMIT_STRUCT(PositionLimits);
+DEFINE_LIMIT_STRUCT(VelocityLimits);
+DEFINE_LIMIT_STRUCT(EffortLimits);
+DEFINE_LIMIT_STRUCT(AccelerationLimits);
 
 struct JointControlInterfacesData
 {
