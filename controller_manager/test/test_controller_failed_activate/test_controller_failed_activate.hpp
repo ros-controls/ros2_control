@@ -18,7 +18,6 @@
 #include <memory>
 #include <string>
 
-#include "controller_interface/visibility_control.h"
 #include "controller_manager/controller_manager.hpp"
 
 namespace test_controller_failed_activate
@@ -31,10 +30,8 @@ constexpr char TEST_CONTROLLER_COMMAND_INTERFACE[] = "joint2/velocity";
 class TestControllerFailedActivate : public controller_interface::ControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestControllerFailedActivate();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestControllerFailedActivate() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
@@ -50,22 +47,17 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
 };
