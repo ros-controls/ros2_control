@@ -32,6 +32,9 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "joint_limits/joint_limits_helpers.hpp"
+#include "joint_limits/joint_saturation_limiter.hpp"
+#include "joint_limits/joint_soft_limiter.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rclcpp/logging.hpp"
@@ -657,6 +660,130 @@ public:
     }
   }
 
+  void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
+  {
+    for (const auto & hw_info : hardware_infos)
+    {
+      limiters_data_[hw_info.name] = {};
+      for (const auto & [joint_name, limits] : hw_info.limits)
+      {
+        std::vector<joint_limits::SoftJointLimits> soft_limits;
+        const std::vector<joint_limits::JointLimits> hard_limits{limits};
+        joint_limits::JointInterfacesCommandLimiterData data;
+        data.joint_name = joint_name;
+        limiters_data_[hw_info.name].push_back(data);
+        // If the joint limits is found in the softlimits, then extract it
+        if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
+        {
+          soft_limits = {hw_info.soft_limits.at(joint_name)};
+        }
+        std::unique_ptr<
+          joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
+          limits_interface;
+        if (soft_limits.empty())
+        {
+          limits_interface = std::make_unique<
+            joint_limits::JointSaturationLimiter<joint_limits::JointControlInterfacesData>>();
+        }
+        else
+        {
+          limits_interface = std::make_unique<joint_limits::JointSoftLimiter>();
+        }
+        limits_interface->init({joint_name}, hard_limits, soft_limits, nullptr, nullptr);
+        joint_limiters_interface_[hw_info.name].push_back(std::move(limits_interface));
+      }
+    }
+  }
+
+  template <typename T>
+  void update_joint_limiters_state(
+    const std::string & joint_name, const std::map<std::string, T> & interface_map,
+    joint_limits::JointControlInterfacesData & state)
+  {
+    state.joint_name = joint_name;
+    // update the actual state of the limiters
+    if (
+      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
+      interface_map.end())
+    {
+      state.position =
+        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_POSITION)->get_value();
+    }
+    if (
+      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
+      interface_map.end())
+    {
+      state.velocity =
+        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_VELOCITY)->get_value();
+    }
+    if (
+      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_EFFORT) !=
+      interface_map.end())
+    {
+      state.effort =
+        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_EFFORT)->get_value();
+    }
+    if (
+      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
+      interface_map.end())
+    {
+      state.acceleration =
+        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION)->get_value();
+    }
+  }
+
+  template <typename T>
+  void update_joint_limiters_commands(
+    const joint_limits::JointControlInterfacesData & state,
+    std::map<std::string, T> & interface_map)
+  {
+    if (
+      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
+        interface_map.end() &&
+      state.position.has_value())
+    {
+      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_POSITION)
+        ->set_value(state.position.value());
+    }
+    if (
+      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
+        interface_map.end() &&
+      state.velocity.has_value())
+    {
+      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_VELOCITY)
+        ->set_value(state.velocity.value());
+    }
+    if (
+      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_EFFORT) !=
+        interface_map.end() &&
+      state.effort.has_value())
+    {
+      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_EFFORT)
+        ->set_value(state.effort.value());
+    }
+    if (
+      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
+        interface_map.end() &&
+      state.acceleration.has_value())
+    {
+      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_ACCELERATION)
+        ->set_value(state.acceleration.value());
+    }
+  }
+
+  void update_joint_limiters_data()
+  {
+    for (auto & joint_limiter_data : limiters_data_)
+    {
+      for (auto & data : joint_limiter_data.second)
+      {
+        update_joint_limiters_state(data.joint_name, state_interface_map_, data.actual);
+        update_joint_limiters_state(data.joint_name, command_interface_map_, data.command);
+        data.limited = data.command;
+      }
+    }
+  }
+
   std::string add_state_interface(StateInterface::ConstSharedPtr interface)
   {
     auto interface_name = interface->get_name();
@@ -1007,6 +1134,14 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
+  std::unordered_map<std::string, std::vector<joint_limits::JointInterfacesCommandLimiterData>>
+    limiters_data_;
+
+  std::unordered_map<
+    std::string, std::vector<std::unique_ptr<
+                   joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>>>
+    joint_limiters_interface_;
+
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
@@ -1065,6 +1200,7 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->cm_update_rate_ = update_rate;
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  resource_storage_->import_joint_limiters(hardware_info);
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
@@ -1834,6 +1970,22 @@ HardwareReadWriteStatus ResourceManager::write(
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
+
+  // Joint Limiters operations
+  {
+    resource_storage_->update_joint_limiters_data();
+    for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
+    {
+      for (size_t i = 0; i < limiters.size(); i++)
+      {
+        joint_limits::JointInterfacesCommandLimiterData & data =
+          resource_storage_->limiters_data_[hw_name][i];
+        limiters[i]->enforce(data.actual, data.limited, period);
+        resource_storage_->update_joint_limiters_commands(
+          data.limited, resource_storage_->command_interface_map_);
+      }
+    }
+  }
 
   auto write_components = [&](auto & components)
   {
