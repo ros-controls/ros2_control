@@ -176,6 +176,10 @@ void ControllerInterfaceBase::release_interfaces()
 
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() const
 {
+  if (!node_.get())
+  {
+    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
+  }
   return node_->get_current_state();
 }
 
