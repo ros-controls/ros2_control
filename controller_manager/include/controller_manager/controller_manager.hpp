@@ -577,6 +577,7 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+  bool enforce_command_limits_;
 
   controller_manager::MovingAverageStatistics periodicity_stats_;
 

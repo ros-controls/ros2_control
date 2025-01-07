@@ -392,6 +392,11 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
+
+  // Declare the enforce_command_limits parameter such a way that it is enabled by default for
+  // rolling and newer alone
+  enforce_command_limits_ =
+    this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
 }
 
 void ControllerManager::initialize_parameters()
@@ -2673,6 +2678,11 @@ controller_interface::return_type ControllerManager::update(
     {
       activate_controllers(rt_controller_list, cumulative_fallback_controllers);
     }
+  }
+
+  if (enforce_command_limits_)
+  {
+    resource_manager_->enforce_command_limits(period);
   }
 
   // there are controllers to (de)activate
