@@ -517,48 +517,6 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_with_no_maxdec_exp
   }
 }
 
-TEST_F(JointSaturationLimiterTest, when_there_are_effort_limits_expect_them_to_be_applyed)
-{
-  SetupNode("joint_saturation_limiter");
-  Load();
-
-  if (joint_limiter_)
-  {
-    Init();
-    Configure();
-
-    // value not over limit
-    desired_joint_states_.effort[0] = 15.0;
-    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
-
-    // value over limit
-    desired_joint_states_.effort[0] = 21.0;
-    ASSERT_TRUE(joint_limiter_->enforce(desired_joint_states_.effort));
-    ASSERT_EQ(desired_joint_states_.effort[0], 20.0);
-  }
-}
-
-TEST_F(JointSaturationLimiterTest, when_there_are_no_effort_limits_expect_them_not_applyed)
-{
-  SetupNode("joint_saturation_limiter");
-  Load();
-
-  if (joint_limiter_)
-  {
-    Init("foo_joint_no_effort");
-    Configure();
-
-    // value not over limit
-    desired_joint_states_.effort[0] = 15.0;
-    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
-
-    // value over limit
-    desired_joint_states_.effort[0] = 21.0;
-    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
-    ASSERT_EQ(desired_joint_states_.effort[0], 21.0);
-  }
-}
-
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

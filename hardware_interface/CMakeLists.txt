@@ -6,6 +6,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
           -Werror=missing-braces)
 endif()
 
+# using this instead of visibility macros
+# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
@@ -13,6 +17,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   rcpputils
   rcutils
+  realtime_tools
   TinyXML2
   tinyxml2_vendor
   joint_limits
@@ -21,6 +26,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gen_version_h REQUIRED)
+find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -39,9 +45,6 @@ target_include_directories(hardware_interface PUBLIC
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
 ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 add_library(mock_components SHARED
   src/mock_components/generic_system.cpp
@@ -52,9 +55,6 @@ target_include_directories(mock_components PUBLIC
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
 ament_target_dependencies(mock_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(mock_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(
   hardware_interface mock_components_plugin_description.xml)

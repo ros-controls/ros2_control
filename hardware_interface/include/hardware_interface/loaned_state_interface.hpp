@@ -75,7 +75,7 @@ public:
     }
   }
 
-  const std::string get_name() const { return state_interface_.get_name(); }
+  const std::string & get_name() const { return state_interface_.get_name(); }
 
   const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
 

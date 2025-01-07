@@ -20,7 +20,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/visibility_control.h"
 #include "realtime_tools/async_function_handler.hpp"
 
 #include "hardware_interface/handle.hpp"
@@ -71,6 +70,25 @@ struct ControllerUpdateStats
   unsigned int total_triggers;
   unsigned int failed_triggers;
 };
+
+/**
+ * Struct to store the status of the controller update method.
+ * The status contains information if the update was triggered successfully, the result of the
+ * update method and the execution duration of the update method. The status is used to provide
+ * feedback to the controller_manager.
+ * @var successful: true if the update was triggered successfully, false if not.
+ * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
+ * @var execution_time: duration of the execution of the update method.
+ * @var period: period of the update method.
+ */
+struct ControllerUpdateStatus
+{
+  bool successful = true;
+  return_type result = return_type::OK;
+  std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
+  std::optional<rclcpp::Duration> period = std::nullopt;
+};
+
 /**
  * Base interface class  for an controller. The interface may not be used to implement a controller.
  * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
@@ -79,10 +97,8 @@ struct ControllerUpdateStats
 class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-  CONTROLLER_INTERFACE_PUBLIC
   ControllerInterfaceBase() = default;
 
-  CONTROLLER_INTERFACE_PUBLIC
   virtual ~ControllerInterfaceBase() = default;
 
   /// Get configuration for controller's required command interfaces.
@@ -97,7 +113,6 @@ public:
    *
    * \returns configuration of command interfaces.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
   /// Get configuration for controller's required state interfaces.
@@ -110,11 +125,10 @@ public:
    * The configuration is used to check if controller can be activated and to claim interfaces from
    * hardware.
    * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::state_interface_ "state_interface_" member.
+   * \ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
    *
    * \returns configuration of state interfaces.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
   /// Method that assigns the Loaned interfaces to the controller.
@@ -126,7 +140,6 @@ public:
    * \param[in] command_interfaces vector of command interfaces to be assigned to the controller.
    * \param[in] state_interfaces vector of state interfaces to be assigned to the controller.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
@@ -135,10 +148,8 @@ public:
   /**
    * Method used by the controller_manager to release the interfaces from the controller.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual void release_interfaces();
 
-  CONTROLLER_INTERFACE_PUBLIC
   return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
@@ -147,11 +158,9 @@ public:
   /*
    * Override default implementation for configure of LifecycleNode to get parameters.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & configure();
 
   /// Extending interface with initialization method which is individual for each controller
-  CONTROLLER_INTERFACE_PUBLIC
   virtual CallbackReturn on_init() = 0;
 
   /**
@@ -163,7 +172,6 @@ public:
    * \param[in] period The measured time since the last control loop iteration
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /**
@@ -175,30 +183,21 @@ public:
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
-   * \returns A pair with the first element being a boolean indicating if the async callback method
-   * was triggered and the second element being the last return value of the async function. For
-   * more details check the AsyncFunctionHandler implementation in `realtime_tools` package.
+   * \returns ControllerUpdateStatus. The status contains information if the update was triggered
+   * successfully, the result of the update method and the execution duration of the update method.
    */
-  CONTROLLER_INTERFACE_PUBLIC
-  std::pair<bool, return_type> trigger_update(
-    const rclcpp::Time & time, const rclcpp::Duration & period);
+  ControllerUpdateStatus trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
 
-  CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
-  CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   unsigned int get_update_rate() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_async() const;
 
-  CONTROLLER_INTERFACE_PUBLIC
   const std::string & get_robot_description() const;
 
   /**
@@ -212,7 +211,6 @@ public:
    *
    * @returns NodeOptions required for the configuration of the controller lifecycle node
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
     rclcpp::NodeOptions node_options;
@@ -255,7 +253,6 @@ public:
    *
    * \returns true is controller is chainable and false if it is not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_chainable() const = 0;
 
   /**
@@ -264,7 +261,6 @@ public:
    *
    * \returns list of command interfaces for preceding controllers.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
   export_reference_interfaces() = 0;
 
@@ -274,7 +270,6 @@ public:
    *
    * \returns list of state interfaces for preceding controllers.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual std::vector<hardware_interface::StateInterface::ConstSharedPtr>
   export_state_interfaces() = 0;
 
@@ -286,7 +281,6 @@ public:
    *
    * \returns true if mode is switched successfully and false if not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool set_chained_mode(bool chained_mode) = 0;
 
   /// Get information if a controller is currently in chained mode.
@@ -297,7 +291,6 @@ public:
    *
    * \returns true is controller is in chained mode and false if it is not.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
   /**
@@ -310,7 +303,6 @@ public:
    * If the controller is running in async mode, the method will wait for the current async update
    * to finish. If the controller is not running in async mode, the method will do nothing.
    */
-  CONTROLLER_INTERFACE_PUBLIC
   void wait_for_trigger_update_to_finish();
 
 protected:

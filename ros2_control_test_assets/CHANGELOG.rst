@@ -2,6 +2,22 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.23.0 (2024-12-29)
+-------------------
+* Move test_utils module from demos repo (`#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_)
+* Contributors: Christoph Fröhlich
+
+4.22.0 (2024-12-20)
+-------------------
+* Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
+* Let sensors also export state interfaces of joints (`#1885 <https://github.com/ros-controls/ros2_control/issues/1885>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+4.21.0 (2024-12-06)
+-------------------
+* [Feature] Choose different read and write rate for the hardware components (`#1570 <https://github.com/ros-controls/ros2_control/issues/1570>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.20.0 (2024-11-08)
 -------------------
 * Add Support for SDF (`#1763 <https://github.com/ros-controls/ros2_control/issues/1763>`_)

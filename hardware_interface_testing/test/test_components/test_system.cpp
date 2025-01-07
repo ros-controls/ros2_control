@@ -17,6 +17,7 @@
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::CommandInterface;
@@ -39,6 +40,14 @@ class TestSystem : public SystemInterface
       return CallbackReturn::ERROR;
     }
 
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "System hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
+      return CallbackReturn::ERROR;
+    }
     return CallbackReturn::SUCCESS;
   }
 
@@ -104,6 +113,12 @@ class TestSystem : public SystemInterface
     {
       return return_type::DEACTIVATE;
     }
+    // The next line is for the testing purposes. We need value to be changed to
+    // be sure that the feedback from hardware to controllers in the chain is
+    // working as it should. This makes value checks clearer and confirms there
+    // is no "state = command" line or some other mixture of interfaces
+    // somewhere in the test stack.
+    velocity_state_[0] = velocity_command_[0] / 2.0;
     return return_type::OK;
   }
 

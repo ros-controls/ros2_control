@@ -255,6 +255,50 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
   }
 }
 
+TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+
+  cm_->set_parameter(rclcpp::Parameter(
+    "ctrl_with_parameters_and_type.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(
+    rclcpp::Parameter("ctrl_with_parameters_and_type.params_file", test_file_path));
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner("ctrl_with_parameters_and_type --load-only -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
+  ASSERT_THAT(
+    ctrl_with_parameters_and_type.info.parameters_files,
+    std::vector<std::string>({test_file_path}));
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
+  ASSERT_THAT(
+    ctrl_node->get_parameter("joint_names").as_string_array(),
+    std::vector<std::string>({"joint0"}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "position");
+}
+
 TEST_F(TestLoadController, spawner_test_type_in_params_file)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
@@ -278,7 +322,8 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
     ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array()[0],
+    test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(
@@ -290,7 +335,7 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
     chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string_array()[0],
     test_file_path);
 
   EXPECT_EQ(
@@ -308,7 +353,8 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
   ASSERT_EQ(
     ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array()[0],
+    test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
@@ -316,8 +362,179 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
   ASSERT_EQ(
     ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string_array()[0],
     test_file_path);
+}
+
+TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_wildcard_entries.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "wildcard_ctrl_1 wildcard_ctrl_2 wildcard_ctrl_3 -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0);
+
+  auto verify_ctrl_parameter = [](const auto & ctrl_node, bool has_param_3)
+  {
+    if (!ctrl_node->has_parameter("joint_names"))
+    {
+      ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+    }
+    ASSERT_THAT(
+      ctrl_node->get_parameter("joint_names").as_string_array(),
+      std::vector<std::string>({"joint1"}));
+
+    if (!ctrl_node->has_parameter("param1"))
+    {
+      ctrl_node->declare_parameter("param1", -10.0);
+    }
+    ASSERT_THAT(ctrl_node->get_parameter("param1").as_double(), 1.0);
+
+    if (!ctrl_node->has_parameter("param2"))
+    {
+      ctrl_node->declare_parameter("param2", -10.0);
+    }
+    ASSERT_THAT(ctrl_node->get_parameter("param2").as_double(), 2.0);
+
+    if (!ctrl_node->has_parameter("param3"))
+    {
+      ctrl_node->declare_parameter("param3", -10.0);
+    }
+    ASSERT_THAT(ctrl_node->get_parameter("param3").as_double(), has_param_3 ? 3.0 : -10.0);
+  };
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+
+  auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(wildcard_ctrl_3.info.name, "wildcard_ctrl_3");
+  ASSERT_EQ(wildcard_ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl_3.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl_3.c->get_node(), true);
+
+  auto wildcard_ctrl_2 = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(wildcard_ctrl_2.info.name, "wildcard_ctrl_2");
+  ASSERT_EQ(wildcard_ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl_2.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl_2.c->get_node(), false);
+
+  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[2];
+  ASSERT_EQ(wildcard_ctrl_1.info.name, "wildcard_ctrl_1");
+  ASSERT_EQ(wildcard_ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl_1.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl_1.c->get_node(), false);
+}
+
+TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_interfaces.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_command_interface ctrl_with_joint2_command_interface -c "
+      "test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_with_joint2_command_interface = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_joint2_command_interface.info.name, "ctrl_with_joint2_command_interface");
+  ASSERT_EQ(
+    ctrl_with_joint2_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(
+    ctrl_with_joint2_command_interface.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint2_command_interface.c->command_interface_configuration().names.size(), 1ul);
+  ASSERT_THAT(
+    ctrl_with_joint2_command_interface.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint2/velocity"}));
+
+  auto ctrl_with_joint1_command_interface = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(ctrl_with_joint1_command_interface.info.name, "ctrl_with_joint1_command_interface");
+  ASSERT_EQ(
+    ctrl_with_joint1_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(
+    ctrl_with_joint1_command_interface.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint1_command_interface.c->command_interface_configuration().names.size(), 1ul);
+  ASSERT_THAT(
+    ctrl_with_joint1_command_interface.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint1/position"}));
+
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    256)
+    << "Should fail as the ctrl_with_joint1_command_interface and "
+       "ctrl_with_joint2_command_interface are active";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+
+  auto ctrl_with_joint1_and_joint2_command_interfaces = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.info.name,
+    "ctrl_with_joint1_and_joint2_command_interfaces");
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.info.type,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->command_interface_configuration()
+      .names.size(),
+    2ul);
+  ASSERT_THAT(
+    ctrl_with_joint1_and_joint2_command_interfaces.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint1/position", "joint2/velocity"}));
+
+  EXPECT_EQ(call_unspawner("ctrl_with_joint1_command_interface -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    256)
+    << "Should fail as the ctrl_with_joint2_command_interface is still active";
+
+  EXPECT_EQ(call_unspawner("ctrl_with_joint2_command_interface -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0)
+    << "Should pass as the ctrl_with_joint1_command_interface and "
+       "ctrl_with_joint2_command_interface are inactive";
 }
 
 TEST_F(TestLoadController, unload_on_kill)
@@ -357,6 +574,114 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
+{
+  const std::string main_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_spawner_with_type.yaml";
+  const std::string overriding_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_overriding_parameters.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type --load-only -c "
+      "test_controller_manager -p " +
+      main_test_file_path + " -p " + overriding_test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_THAT(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array(),
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
+  ASSERT_THAT(
+    ctrl_with_parameters_and_type.info.parameters_files,
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
+  ASSERT_THAT(
+    ctrl_node->get_parameter("joint_names").as_string_array(),
+    std::vector<std::string>({"joint10"}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "impedance")
+    << "The parameter should be overridden";
+
+  if (!ctrl_node->has_parameter("joint_offset"))
+  {
+    ctrl_node->declare_parameter("joint_offset", -M_PI);
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("joint_offset").as_double(), 0.2);
+}
+
+TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding_reverse)
+{
+  const std::string main_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_overriding_parameters.yaml";
+  const std::string overriding_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_spawner_with_type.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type --load-only -c "
+      "test_controller_manager -p " +
+      main_test_file_path + " -p " + overriding_test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_THAT(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array(),
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
+  ASSERT_THAT(
+    ctrl_with_parameters_and_type.info.parameters_files,
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
+  ASSERT_THAT(
+    ctrl_node->get_parameter("joint_names").as_string_array(),
+    std::vector<std::string>({"joint0"}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "position")
+    << "The parameter should be overridden";
+
+  if (!ctrl_node->has_parameter("joint_offset"))
+  {
+    ctrl_node->declare_parameter("joint_offset", -M_PI);
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("joint_offset").as_double(), 0.2);
+}
+
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
@@ -377,7 +702,7 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
     ASSERT_EQ(
       ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-    ASSERT_EQ(cm_->get_parameter("ctrl_1.params_file").as_string(), test_file_path);
+    ASSERT_EQ(cm_->get_parameter("ctrl_1.params_file").as_string_array()[0], test_file_path);
   }
 
   // Try to spawn now the controller with fallback controllers inside the yaml
@@ -392,7 +717,7 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
     ASSERT_EQ(
       ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-    ASSERT_EQ(cm_->get_parameter("ctrl_1.params_file").as_string(), test_file_path);
+    ASSERT_EQ(cm_->get_parameter("ctrl_1.params_file").as_string_array()[0], test_file_path);
 
     auto ctrl_2 = cm_->get_loaded_controllers()[1];
     ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
@@ -401,7 +726,7 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
       ctrl_2.info.fallback_controllers_names, testing::ElementsAre("ctrl_6", "ctrl_7", "ctrl_8"));
     ASSERT_EQ(
       ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-    ASSERT_EQ(cm_->get_parameter("ctrl_2.params_file").as_string(), test_file_path);
+    ASSERT_EQ(cm_->get_parameter("ctrl_2.params_file").as_string_array()[0], test_file_path);
 
     auto ctrl_3 = cm_->get_loaded_controllers()[2];
     ASSERT_EQ(ctrl_3.info.name, "ctrl_3");
@@ -409,7 +734,7 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_THAT(ctrl_3.info.fallback_controllers_names, testing::ElementsAre("ctrl_9"));
     ASSERT_EQ(
       ctrl_3.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-    ASSERT_EQ(cm_->get_parameter("ctrl_3.params_file").as_string(), test_file_path);
+    ASSERT_EQ(cm_->get_parameter("ctrl_3.params_file").as_string_array()[0], test_file_path);
   }
 }
 
@@ -437,6 +762,45 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
     ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_EQ(ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
+}
+
+TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
+{
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  // Now as the controller is active, we can call check for the service
+  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("set_bool_client");
+  auto set_bool_service = node->create_client<example_interfaces::srv::SetBool>("/set_bool");
+  ASSERT_FALSE(set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_FALSE(set_bool_service->service_is_ready());
+  // Now check the service availability in the controller namespace
+  auto ctrl_1_set_bool_service =
+    node->create_client<example_interfaces::srv::SetBool>("/ctrl_1/set_bool");
+  ASSERT_TRUE(ctrl_1_set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_TRUE(ctrl_1_set_bool_service->service_is_ready());
+
+  // Now test the remapping of the service name with the controller_ros_args
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_2 -c test_controller_manager --controller-ros-args '-r /ctrl_2/set_bool:=/set_bool'"),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  // Now as the controller is active, we can call check for the remapped service
+  ASSERT_TRUE(set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_TRUE(set_bool_service->service_is_ready());
+  // Now check the service availability in the controller namespace
+  auto ctrl_2_set_bool_service =
+    node->create_client<example_interfaces::srv::SetBool>("/ctrl_2/set_bool");
+  ASSERT_FALSE(ctrl_2_set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_FALSE(ctrl_2_set_bool_service->service_is_ready());
 }
 
 class TestLoadControllerWithoutRobotDescription
@@ -695,7 +1059,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
     ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter(ctrl_with_parameters_and_type.info.name + ".params_file").as_string(),
+    cm_->get_parameter(ctrl_with_parameters_and_type.info.name + ".params_file")
+      .as_string_array()[0],
     test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
@@ -708,7 +1073,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
     chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter(chain_ctrl_with_parameters_and_type.info.name + ".params_file").as_string(),
+    cm_->get_parameter(chain_ctrl_with_parameters_and_type.info.name + ".params_file")
+      .as_string_array()[0],
     test_file_path);
 
   EXPECT_EQ(
@@ -725,14 +1091,16 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
     ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  ASSERT_EQ(cm_->get_parameter(ctrl_1.info.name + ".params_file").as_string(), test_file_path);
+  ASSERT_EQ(
+    cm_->get_parameter(ctrl_1.info.name + ".params_file").as_string_array()[0], test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "ns_chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
     ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  ASSERT_EQ(cm_->get_parameter(ctrl_2.info.name + ".params_file").as_string(), test_file_path);
+  ASSERT_EQ(
+    cm_->get_parameter(ctrl_2.info.name + ".params_file").as_string_array()[0], test_file_path);
 }
 
 TEST_F(
@@ -781,7 +1149,8 @@ TEST_F(
     ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter(ctrl_with_parameters_and_type.info.name + ".params_file").as_string(),
+    cm_->get_parameter(ctrl_with_parameters_and_type.info.name + ".params_file")
+      .as_string_array()[0],
     test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
@@ -794,7 +1163,8 @@ TEST_F(
     chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
-    cm_->get_parameter(chain_ctrl_with_parameters_and_type.info.name + ".params_file").as_string(),
+    cm_->get_parameter(chain_ctrl_with_parameters_and_type.info.name + ".params_file")
+      .as_string_array()[0],
     test_file_path);
 
   EXPECT_EQ(
@@ -812,14 +1182,16 @@ TEST_F(
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
     ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  ASSERT_EQ(cm_->get_parameter(ctrl_1.info.name + ".params_file").as_string(), test_file_path);
+  ASSERT_EQ(
+    cm_->get_parameter(ctrl_1.info.name + ".params_file").as_string_array()[0], test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "ns_chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
     ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  ASSERT_EQ(cm_->get_parameter(ctrl_2.info.name + ".params_file").as_string(), test_file_path);
+  ASSERT_EQ(
+    cm_->get_parameter(ctrl_2.info.name + ".params_file").as_string_array()[0], test_file_path);
 }
 
 TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_with_wildcard_entries_in_params_file)
@@ -927,4 +1299,139 @@ TEST_F(
   ASSERT_EQ(
     ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+}
+
+TEST_F(TestLoadController, spawner_test_parsing_multiple_params_file)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string fallback_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_spawner_with_fallback_controllers.yaml";
+
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type ctrl_2 ctrl_1 "
+      "--load-only -c "
+      "test_controller_manager -p " +
+      test_file_path + " -p" + fallback_test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 4ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  auto params_file_info =
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], test_file_path);
+
+  auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.type,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info =
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], test_file_path);
+
+  auto ctrl_2 = cm_->get_loaded_controllers()[2];
+  ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
+  ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info = cm_->get_parameter("ctrl_2.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], fallback_test_file_path);
+
+  auto ctrl_1 = cm_->get_loaded_controllers()[3];
+  ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
+  ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info = cm_->get_parameter("ctrl_1.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], fallback_test_file_path);
+}
+
+TEST_F(TestLoadController, spawner_test_parsing_same_params_file_multiple_times)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string fallback_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_spawner_with_fallback_controllers.yaml";
+
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type ctrl_2 ctrl_1 "
+      "--load-only -c "
+      "test_controller_manager -p " +
+      test_file_path + " -p" + fallback_test_file_path + " -p" + fallback_test_file_path + " -p" +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 4ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  auto params_file_info =
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], test_file_path);
+
+  auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.type,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info =
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], test_file_path);
+
+  auto ctrl_2 = cm_->get_loaded_controllers()[2];
+  ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
+  ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info = cm_->get_parameter("ctrl_2.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], fallback_test_file_path);
+
+  auto ctrl_1 = cm_->get_loaded_controllers()[3];
+  ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
+  ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  params_file_info = cm_->get_parameter("ctrl_1.params_file").as_string_array();
+  ASSERT_EQ(params_file_info.size(), 1ul);
+  ASSERT_EQ(params_file_info[0], fallback_test_file_path);
 }

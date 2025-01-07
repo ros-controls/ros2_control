@@ -34,6 +34,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
@@ -111,6 +112,16 @@ public:
     clock_interface_ = clock_interface;
     sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      read_async_handler_->init(
+        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2),
+        info_.thread_priority);
+      read_async_handler_->start_thread();
+    }
     return on_init(hardware_info);
   };
 
@@ -123,6 +134,7 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
     parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
     return CallbackReturn::SUCCESS;
   };
@@ -179,7 +191,8 @@ public:
 
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     state_interfaces.reserve(
-      unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
+      unlisted_interface_descriptions.size() + sensor_state_interfaces_.size() +
+      joint_state_interfaces_.size());
 
     // add InterfaceDescriptions and create StateInterfaces from the descriptions and add to maps.
     for (const auto & description : unlisted_interface_descriptions)
@@ -201,7 +214,49 @@ public:
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
 
+    for (const auto & [name, descr] : joint_state_interfaces_)
+    {
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      sensor_states_map_.insert(std::make_pair(name, state_interface));
+      joint_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+
     return state_interfaces;
+  }
+
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    return_type result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      bool trigger_status = true;
+      std::tie(trigger_status, result) = read_async_handler_->trigger_async_callback(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger read called while read async handler is still in progress for hardware "
+          "interface : '%s'. Failed to trigger read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+    }
+    else
+    {
+      result = read(time, period);
+    }
+    return result;
   }
 
   /// Read the current state values from the actuator.
@@ -274,14 +329,17 @@ public:
 protected:
   HardwareInfo info_;
   // interface names to InterfaceDescription
+  std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
+  std::vector<StateInterface::SharedPtr> joint_states_;
   std::vector<StateInterface::SharedPtr> sensor_states_;
   std::vector<StateInterface::SharedPtr> unlisted_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
