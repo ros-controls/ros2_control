@@ -20,7 +20,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rclcpp/version.h"
+#if RCLCPP_VERSION_GTE(29, 0, 0)
+#include "urdf/model.hpp"
+#else
 #include "urdf/model.h"
+#endif
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
