@@ -288,6 +288,32 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
     actual_state_.position = expected_pos;
   }
 
+  // More generic test case to mock a slow system
+  soft_limits.k_position = 0.5;
+  soft_limits.max_position = 2.0;
+  soft_limits.min_position = -2.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  actual_state_.position = -0.1;
+  for (auto i = 0; i < 10000; i++)
+  {
+    SCOPED_TRACE(
+      "Testing for iteration: " + std::to_string(i) +
+      " for desired position: " + std::to_string(desired_state_.position.value()) +
+      " and actual position : " + std::to_string(actual_state_.position.value()) +
+      " for the joint limits : " + limits.to_string());
+    desired_state_.position = 4.0;
+    const double delta_pos = std::min(
+      (soft_limits.max_position - actual_state_.position.value()) * soft_limits.k_position,
+      limits.max_velocity * period.seconds());
+    const double expected_pos = actual_state_.position.value() + delta_pos;
+    ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
+    actual_state_.position = expected_pos / 1.27;
+  }
+
   // Now test when there are no position limits and soft limits, then the desired position is not
   // saturated
   limits = joint_limits::JointLimits();
