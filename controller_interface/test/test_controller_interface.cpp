@@ -54,6 +54,7 @@ TEST(TestableControllerInterface, init)
   controller.configure();
   ASSERT_EQ(controller.get_update_rate(), 10u);
 
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -80,6 +81,8 @@ TEST(TestableControllerInterface, setting_negative_update_rate_in_configure)
   // The configure should fail and the update rate should stay the same
   ASSERT_EQ(controller.configure().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(controller.get_update_rate(), 1000u);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -149,6 +152,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   ASSERT_EQ(controller.get_update_rate(), 623u);
 
   executor->cancel();
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -166,8 +170,8 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
     controller.init(TEST_CONTROLLER_NAME, "", 100.0, "", node_options),
     controller_interface::return_type::ERROR);
 
-  controller.get_node()->shutdown();
-
+  ASSERT_EQ(
+    controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
@@ -185,8 +189,8 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
     controller.init(TEST_CONTROLLER_NAME, "", 50.0, "", node_options),
     controller_interface::return_type::ERROR);
 
-  controller.get_node()->shutdown();
-
+  ASSERT_EQ(
+    controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
