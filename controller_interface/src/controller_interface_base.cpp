@@ -22,6 +22,18 @@
 
 namespace controller_interface
 {
+ControllerInterfaceBase::~ControllerInterfaceBase()
+{
+  // check if node is initialized and we still have a valid context
+  if (node_.get() && rclcpp::ok())
+  {
+    RCLCPP_DEBUG(
+      get_node()->get_logger(),
+      "Calling shutdown transition of controller '%s' due to destruction.", get_node()->get_name());
+    node_->shutdown();
+  }
+}
+
 return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
