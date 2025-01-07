@@ -162,6 +162,7 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   soft_limits.max_position = 1.5;
   soft_limits.min_position = -1.5;
   ASSERT_TRUE(Init(limits, soft_limits));
+  actual_state_.position = 0.0;
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
@@ -170,6 +171,7 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   soft_limits.min_position = -0.75;
   ASSERT_TRUE(Init(limits, soft_limits));
   desired_state_.position = 2.0;
+  actual_state_ = {};
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
   desired_state_.position = -3.0;
@@ -1021,9 +1023,13 @@ TEST_F(JointSoftLimiterTest, check_all_desired_references_limiting)
   // Desired position and velocity affected due to the acceleration limits
   test_limit_enforcing(0.5, 0.0, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
   test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, -6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.0, 0.5, 0.5, 0.5, true);
+  // If the actual position doesn't change, the desired position should not change
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.2, 0.0, 6.0, 0.0, 0.0, 0.0, 1.7, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.5, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.5, 0.0, -6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.5, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(2.0, 0.5, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
