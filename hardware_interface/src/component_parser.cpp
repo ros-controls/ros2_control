@@ -22,9 +22,9 @@
 
 #include "rclcpp/version.h"
 #if RCLCPP_VERSION_GTE(29, 0, 0)
-#include "urdf/model.hpp"  
+#include "urdf/model.hpp"
 #else
-#include "urdf/model.h"  
+#include "urdf/model.h"
 #endif
 
 #include "hardware_interface/component_parser.hpp"
