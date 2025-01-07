@@ -88,6 +88,7 @@ controller_manager
 * The ``--service-call-timeout`` was added as parameter to the helper scripts ``spawner.py``. Useful when the CPU load is high at startup and the service call does not return immediately (`#1808 <https://github.com/ros-controls/ros2_control/pull/1808>`_).
 * The ``cpu_affinity`` parameter can now accept of types ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
 * A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
+* A new parameter ``enforce_command_limits```is introduced to be able to enable and disable the enforcement of the command limits (`#1989 <https:://github.com/ros-controls/ros2_control/pull/1989>`_).
 
 hardware_interface
 ******************
