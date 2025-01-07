@@ -165,7 +165,7 @@ TEST(ControllerWithOption, init_without_overrides)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller.define_custom_node_options()),
     controller_interface::return_type::ERROR);
   // checks that the node options have been updated
@@ -175,6 +175,5 @@ TEST(ControllerWithOption, init_without_overrides)
   // checks that no parameter has been declared from overrides
   EXPECT_EQ(controller.params.size(), 0u);
 
-  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
