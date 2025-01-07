@@ -698,38 +698,32 @@ public:
   template <typename T>
   void update_joint_limiters_data(
     const std::string & joint_name, const std::map<std::string, T> & interface_map,
-    joint_limits::JointControlInterfacesData & data, bool is_command = false)
+    joint_limits::JointControlInterfacesData & data, bool is_command_itf = false)
   {
     data.joint_name = joint_name;
+
+    const auto fill_interface_data =
+      [&](const std::string & interface_type, std::optional<double> & value)
+    {
+      const std::string interface_name = joint_name + "/" + interface_type;
+      if (interface_map.find(interface_name) != interface_map.end())
+      {
+        // If the command interface is not claimed, then the value is not set
+        if (is_command_itf && !claimed_command_interface_map_.at(interface_name))
+        {
+          value = std::nullopt;
+        }
+        else
+        {
+          value = interface_map.at(interface_name)->get_value();
+        }
+      }
+    };
     // update the actual data of the limiters
-    if (
-      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-      interface_map.end())
-    {
-      data.position =
-        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_POSITION)->get_value();
-    }
-    if (
-      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-      interface_map.end())
-    {
-      data.velocity =
-        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_VELOCITY)->get_value();
-    }
-    if (
-      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_EFFORT) !=
-      interface_map.end())
-    {
-      data.effort =
-        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_EFFORT)->get_value();
-    }
-    if (
-      interface_map.find(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-      interface_map.end())
-    {
-      data.acceleration =
-        interface_map.at(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION)->get_value();
-    }
+    fill_interface_data(hardware_interface::HW_IF_POSITION, data.position);
+    fill_interface_data(hardware_interface::HW_IF_VELOCITY, data.velocity);
+    fill_interface_data(hardware_interface::HW_IF_EFFORT, data.effort);
+    fill_interface_data(hardware_interface::HW_IF_ACCELERATION, data.acceleration);
   }
 
   template <typename T>
@@ -737,38 +731,20 @@ public:
     const joint_limits::JointControlInterfacesData & state,
     std::map<std::string, T> & interface_map)
   {
-    if (
-      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-        interface_map.end() &&
-      state.position.has_value())
+    const auto set_interface_command =
+      [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_POSITION)
-        ->set_value(state.position.value());
-    }
-    if (
-      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-        interface_map.end() &&
-      state.velocity.has_value())
-    {
-      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_VELOCITY)
-        ->set_value(state.velocity.value());
-    }
-    if (
-      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_EFFORT) !=
-        interface_map.end() &&
-      state.effort.has_value())
-    {
-      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_EFFORT)
-        ->set_value(state.effort.value());
-    }
-    if (
-      interface_map.find(state.joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-        interface_map.end() &&
-      state.acceleration.has_value())
-    {
-      interface_map.at(state.joint_name + "/" + hardware_interface::HW_IF_ACCELERATION)
-        ->set_value(state.acceleration.value());
-    }
+      const std::string interface_name = state.joint_name + "/" + interface_type;
+      if (interface_map.find(interface_name) != interface_map.end() && data.has_value())
+      {
+        interface_map.at(interface_name)->set_value(data.value());
+      }
+    };
+    // update the command data of the limiters
+    set_interface_command(hardware_interface::HW_IF_POSITION, state.position);
+    set_interface_command(hardware_interface::HW_IF_VELOCITY, state.velocity);
+    set_interface_command(hardware_interface::HW_IF_EFFORT, state.effort);
+    set_interface_command(hardware_interface::HW_IF_ACCELERATION, state.acceleration);
   }
 
   void update_joint_limiters_data()
@@ -778,7 +754,7 @@ public:
       for (auto & data : joint_limiter_data.second)
       {
         update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
-        update_joint_limiters_data(data.joint_name, command_interface_map_, data.command);
+        update_joint_limiters_data(data.joint_name, command_interface_map_, data.command, true);
         data.limited = data.command;
       }
     }
