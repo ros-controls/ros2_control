@@ -21,11 +21,15 @@
 #include <optional>
 #include <string>
 
-#define DEFINE_LIMIT_STRUCT(limit) \
-  struct limit                     \
-  {                                \
-    double lower_limit;            \
-    double upper_limit;            \
+#define DEFINE_LIMIT_STRUCT(LimitType)                       \
+  struct LimitType                                           \
+  {                                                          \
+    LimitType(double minimum_value, double maximum_value)    \
+    : lower_limit(minimum_value), upper_limit(maximum_value) \
+    {                                                        \
+    }                                                        \
+    double lower_limit;                                      \
+    double upper_limit;                                      \
   };
 
 namespace joint_limits

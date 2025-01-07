@@ -41,7 +41,7 @@ PositionLimits compute_position_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
   const std::optional<double> & prev_command_pos, double dt)
 {
-  PositionLimits pos_limits({limits.min_position, limits.max_position});
+  PositionLimits pos_limits(limits.min_position, limits.max_position);
   if (limits.has_velocity_limits)
   {
     const double act_vel_abs = act_vel.has_value() ? std::fabs(act_vel.value()) : 0.0;
@@ -64,7 +64,7 @@ VelocityLimits compute_velocity_limits(
 {
   const double max_vel =
     limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
-  VelocityLimits vel_limits({-max_vel, max_vel});
+  VelocityLimits vel_limits(-max_vel, max_vel);
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
@@ -88,7 +88,7 @@ VelocityLimits compute_velocity_limits(
           "further into bounds with vel %.5f: '%s'. Joint velocity limits will be "
           "restrictred to zero.",
           actual_pos, limits.min_position, limits.max_position, desired_vel, joint_name.c_str());
-        vel_limits = {0.0, 0.0};
+        vel_limits = VelocityLimits(0.0, 0.0);
       }
       // If the joint reports a position way out of bounds, then it would mean something is
       // extremely wrong, so no velocity command should be allowed as it might damage the robot
@@ -101,7 +101,7 @@ VelocityLimits compute_velocity_limits(
           "Joint position is out of bounds for the joint : '%s'. Joint velocity limits will be "
           "restricted to zero.",
           joint_name.c_str());
-        vel_limits = {0.0, 0.0};
+        vel_limits = VelocityLimits(0.0, 0.0);
       }
     }
   }
@@ -121,7 +121,7 @@ EffortLimits compute_effort_limits(
 {
   const double max_effort =
     limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::infinity();
-  EffortLimits eff_limits({-max_effort, max_effort});
+  EffortLimits eff_limits(-max_effort, max_effort);
   if (limits.has_position_limits && act_pos.has_value() && act_vel.has_value())
   {
     if ((act_pos.value() <= limits.min_position) && (act_vel.value() <= 0.0))
@@ -152,8 +152,8 @@ AccelerationLimits compute_acceleration_limits(
   const joint_limits::JointLimits & limits, double desired_acceleration,
   std::optional<double> actual_velocity)
 {
-  AccelerationLimits acc_or_dec_limits{
-    -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()};
+  AccelerationLimits acc_or_dec_limits(
+    -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
   if (
     limits.has_deceleration_limits &&
     ((desired_acceleration < 0 && actual_velocity && actual_velocity.value() > 0) ||
