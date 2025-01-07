@@ -166,6 +166,8 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
     controller.init(TEST_CONTROLLER_NAME, "", 100.0, "", node_options),
     controller_interface::return_type::ERROR);
 
+  controller.get_node()->shutdown();
+
   rclcpp::shutdown();
 }
 
@@ -182,6 +184,8 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
   ASSERT_EQ(
     controller.init(TEST_CONTROLLER_NAME, "", 50.0, "", node_options),
     controller_interface::return_type::ERROR);
+
+  controller.get_node()->shutdown();
 
   rclcpp::shutdown();
 }

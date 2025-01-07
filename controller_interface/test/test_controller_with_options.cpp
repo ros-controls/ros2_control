@@ -166,5 +166,7 @@ TEST(ControllerWithOption, init_without_overrides)
   EXPECT_TRUE(node_options.automatically_declare_parameters_from_overrides());
   // checks that no parameter has been declared from overrides
   EXPECT_EQ(controller.params.size(), 0u);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
