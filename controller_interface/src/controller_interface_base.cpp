@@ -30,13 +30,10 @@ ControllerInterfaceBase::~ControllerInterfaceBase()
     get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
     rclcpp::ok())
   {
-    {
-      RCLCPP_DEBUG(
-        get_node()->get_logger(),
-        "Calling shutdown transition of controller '%s' due to destruction.",
-        get_node()->get_name());
-      node_->shutdown();
-    }
+    RCLCPP_DEBUG(
+      get_node()->get_logger(),
+      "Calling shutdown transition of controller '%s' due to destruction.", get_node()->get_name());
+    node_->shutdown();
   }
 }
 
