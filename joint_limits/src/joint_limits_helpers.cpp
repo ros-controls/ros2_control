@@ -54,19 +54,6 @@ PositionLimits compute_position_limits(
       act_pos.has_value() ? act_pos.value() : prev_command_pos.value();
     pos_limits.lower_limit = std::max(position_reference - delta_pos, pos_limits.lower_limit);
     pos_limits.upper_limit = std::min(position_reference + delta_pos, pos_limits.upper_limit);
-    RCLCPP_ERROR_EXPRESSION(
-      rclcpp::get_logger("joint_limiter_interface"),
-      act_pos.has_value(), "Joint position limits computed based on the actual position : [%.5f, "
-                            "%.5f].", position_reference, prev_command_pos.value());
-    RCLCPP_ERROR_EXPRESSION(
-      rclcpp::get_logger("joint_limiter_interface"),
-      !act_pos.has_value(), "Didn't use the actual position to compute the limits.: [%.5f, "
-                            "%.5f].", position_reference, prev_command_pos.value());
-    RCLCPP_ERROR_EXPRESSION(
-      rclcpp::get_logger("joint_limiter_interface"),
-      act_pos.has_value() || prev_command_pos.has_value(),
-      "Joint position limits computed based on velocity limits: [%.5f, %.5f].",
-      pos_limits.lower_limit, pos_limits.upper_limit);
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
