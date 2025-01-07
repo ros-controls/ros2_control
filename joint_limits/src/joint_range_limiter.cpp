@@ -43,7 +43,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_init()
 
 template <>
 bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
-  JointControlInterfacesData & actual, JointControlInterfacesData & desired,
+  const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
   bool limits_enforced = false;

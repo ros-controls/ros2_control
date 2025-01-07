@@ -19,7 +19,7 @@ namespace joint_limits
 {
 
 bool JointSoftLimiter::on_enforce(
-  JointControlInterfacesData & actual, JointControlInterfacesData & desired,
+  const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
   bool limits_enforced = false;
