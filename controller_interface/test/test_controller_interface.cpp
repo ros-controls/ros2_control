@@ -36,10 +36,11 @@ TEST(TestableControllerInterface, init)
   rclcpp::init(argc, argv);
 
   TestableControllerInterface controller;
+  const TestableControllerInterface & const_controller = controller;
 
   // try to get node when not initialized
   ASSERT_THROW(controller.get_node(), std::runtime_error);
-  ASSERT_THROW(const auto node = controller.get_node(), std::runtime_error);
+  ASSERT_THROW(const_controller.get_node(), std::runtime_error);
   ASSERT_THROW(controller.get_lifecycle_state(), std::runtime_error);
 
   // initialize, create node
@@ -48,7 +49,7 @@ TEST(TestableControllerInterface, init)
     controller.init(TEST_CONTROLLER_NAME, "", 10.0, "", node_options),
     controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
-  ASSERT_NO_THROW(const auto node = controller.get_node());
+  ASSERT_NO_THROW(const_controller.get_node());
   ASSERT_NO_THROW(controller.get_lifecycle_state());
 
   // update_rate is set to controller_manager's rate
