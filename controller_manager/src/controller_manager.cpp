@@ -2322,6 +2322,10 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (periodicity_stats_.GetCount() >= 100)
+  {
+    periodicity_stats_.Reset();
+  }
   periodicity_stats_.AddMeasurement(1.0 / period.seconds());
   auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -3347,6 +3351,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   const std::string periodicity_stat_name = "periodicity";
   const auto cm_stats = periodicity_stats_.GetStatistics();
   stat.add("update_rate", std::to_string(get_update_rate()));
+  stat.add(periodicity_stat_name + ".sample_count", std::to_string(cm_stats.sample_count));
   stat.add(periodicity_stat_name + ".average", std::to_string(cm_stats.average));
   stat.add(
     periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));
