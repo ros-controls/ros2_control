@@ -696,38 +696,38 @@ public:
   }
 
   template <typename T>
-  void update_joint_limiters_state(
+  void update_joint_limiters_data(
     const std::string & joint_name, const std::map<std::string, T> & interface_map,
-    joint_limits::JointControlInterfacesData & state)
+    joint_limits::JointControlInterfacesData & data, bool is_command = false)
   {
-    state.joint_name = joint_name;
-    // update the actual state of the limiters
+    data.joint_name = joint_name;
+    // update the actual data of the limiters
     if (
       interface_map.find(joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
       interface_map.end())
     {
-      state.position =
+      data.position =
         interface_map.at(joint_name + "/" + hardware_interface::HW_IF_POSITION)->get_value();
     }
     if (
       interface_map.find(joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
       interface_map.end())
     {
-      state.velocity =
+      data.velocity =
         interface_map.at(joint_name + "/" + hardware_interface::HW_IF_VELOCITY)->get_value();
     }
     if (
       interface_map.find(joint_name + "/" + hardware_interface::HW_IF_EFFORT) !=
       interface_map.end())
     {
-      state.effort =
+      data.effort =
         interface_map.at(joint_name + "/" + hardware_interface::HW_IF_EFFORT)->get_value();
     }
     if (
       interface_map.find(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
       interface_map.end())
     {
-      state.acceleration =
+      data.acceleration =
         interface_map.at(joint_name + "/" + hardware_interface::HW_IF_ACCELERATION)->get_value();
     }
   }
@@ -777,8 +777,8 @@ public:
     {
       for (auto & data : joint_limiter_data.second)
       {
-        update_joint_limiters_state(data.joint_name, state_interface_map_, data.actual);
-        update_joint_limiters_state(data.joint_name, command_interface_map_, data.command);
+        update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
+        update_joint_limiters_data(data.joint_name, command_interface_map_, data.command);
         data.limited = data.command;
       }
     }
