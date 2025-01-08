@@ -68,7 +68,7 @@ class TestControllerManagerWithTestableCM
 public:
   TestControllerManagerWithTestableCM()
   : ControllerManagerFixture<TestableControllerManager>(
-      ros2_control_test_assets::minimal_robot_urdf_continuous_no_limits)
+      ros2_control_test_assets::minimal_robot_urdf_no_limits)
   {
   }
 
