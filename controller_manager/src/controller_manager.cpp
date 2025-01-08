@@ -397,6 +397,8 @@ void ControllerManager::init_controller_manager()
   // rolling and newer alone
   enforce_command_limits_ =
     this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), enforce_command_limits_, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
