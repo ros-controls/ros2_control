@@ -103,6 +103,12 @@ class TestControllerChainingWithControllerManager
   public testing::WithParamInterface<Strictness>
 {
 public:
+  TestControllerChainingWithControllerManager()
+  : ControllerManagerFixture<TestableControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf_no_limits)
+  {
+  }
+
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
