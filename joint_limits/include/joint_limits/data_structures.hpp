@@ -17,19 +17,20 @@
 #ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
 #define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 
-#define DEFINE_LIMIT_STRUCT(LimitType)                       \
-  struct LimitType                                           \
-  {                                                          \
-    LimitType(double minimum_value, double maximum_value)    \
-    : lower_limit(minimum_value), upper_limit(maximum_value) \
-    {                                                        \
-    }                                                        \
-    double lower_limit;                                      \
-    double upper_limit;                                      \
+#define DEFINE_LIMIT_STRUCT(LimitType)                             \
+  struct LimitType                                                 \
+  {                                                                \
+    LimitType(double minimum_value, double maximum_value)          \
+    : lower_limit(minimum_value), upper_limit(maximum_value)       \
+    {                                                              \
+    }                                                              \
+    double lower_limit = -std::numeric_limits<double>::infinity(); \
+    double upper_limit = std::numeric_limits<double>::infinity();  \
   };
 
 namespace joint_limits
