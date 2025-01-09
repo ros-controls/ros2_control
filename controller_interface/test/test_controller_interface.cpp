@@ -36,9 +36,12 @@ TEST(TestableControllerInterface, init)
   rclcpp::init(argc, argv);
 
   TestableControllerInterface controller;
+  const TestableControllerInterface & const_controller = controller;
 
   // try to get node when not initialized
   ASSERT_THROW(controller.get_node(), std::runtime_error);
+  ASSERT_THROW(const_controller.get_node(), std::runtime_error);
+  ASSERT_THROW(controller.get_lifecycle_state(), std::runtime_error);
 
   // initialize, create node
   const auto node_options = controller.define_custom_node_options();
@@ -46,6 +49,8 @@ TEST(TestableControllerInterface, init)
     controller.init(TEST_CONTROLLER_NAME, "", 10.0, "", node_options),
     controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
+  ASSERT_NO_THROW(const_controller.get_node());
+  ASSERT_NO_THROW(controller.get_lifecycle_state());
 
   // update_rate is set to controller_manager's rate
   ASSERT_EQ(controller.get_update_rate(), 10u);
@@ -54,6 +59,7 @@ TEST(TestableControllerInterface, init)
   controller.configure();
   ASSERT_EQ(controller.get_update_rate(), 10u);
 
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -80,6 +86,8 @@ TEST(TestableControllerInterface, setting_negative_update_rate_in_configure)
   // The configure should fail and the update rate should stay the same
   ASSERT_EQ(controller.configure().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(controller.get_update_rate(), 1000u);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -149,6 +157,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   ASSERT_EQ(controller.get_update_rate(), 623u);
 
   executor->cancel();
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -166,6 +175,8 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
     controller.init(TEST_CONTROLLER_NAME, "", 100.0, "", node_options),
     controller_interface::return_type::ERROR);
 
+  ASSERT_EQ(
+    controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
@@ -183,6 +194,8 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
     controller.init(TEST_CONTROLLER_NAME, "", 50.0, "", node_options),
     controller_interface::return_type::ERROR);
 
+  ASSERT_EQ(
+    controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
