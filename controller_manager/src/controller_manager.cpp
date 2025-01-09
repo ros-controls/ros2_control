@@ -431,8 +431,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     }
     else
     {
-      RCLCPP_INFO(
-        get_logger(), "Excluding component '%s' from loading.", component.c_str());
+      RCLCPP_INFO(get_logger(), "Excluding component '%s' from loading.", component.c_str());
       components_to_activate.erase(component);
     }
   }
