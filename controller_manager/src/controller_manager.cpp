@@ -419,14 +419,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     *params_ = cm_param_listener_->get_params();
   }
-    
   // not-loaded
   for (const auto & component : params_->hardware_components_initial_state.not_loaded)
   {
     if (components_to_activate.find(component) == components_to_activate.end())
     {
       RCLCPP_WARN(
-        get_logger(), "Hardware component '%s' is unknown, therefore cannot be exclueded from loading.",
+        get_logger(),
+        "Hardware component '%s' is unknown, therefore cannot be exclueded from loading.",
         component.c_str());
     }
     else
