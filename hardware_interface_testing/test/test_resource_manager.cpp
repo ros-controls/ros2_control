@@ -2165,6 +2165,7 @@ public:
   {
     rm = std::make_shared<TestableResourceManager>(
       node_, ros2_control_test_assets::minimal_robot_urdf, false);
+    rm->import_joint_limiters(ros2_control_test_assets::minimal_robot_urdf);
     activate_components(*rm);
 
     cm_update_rate_ = 100u;  // The default value inside

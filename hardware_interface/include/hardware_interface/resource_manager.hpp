@@ -90,6 +90,12 @@ public:
     const std::string & urdf, const unsigned int update_rate = 100);
 
   /**
+   * @brief Import joint limiters from the URDF.
+   * @param urdf string containing the URDF.
+   */
+  void import_joint_limiters(const std::string & urdf);
+
+  /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
    * this returns true. We want to permit to loading the urdf later on, but we currently don't want
    * to permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
