@@ -255,7 +255,8 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+  cm_node_options_(options),
+  robot_description_(urdf)
 {
   initialize_parameters();
   resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
