@@ -336,6 +336,7 @@ void ControllerManager::init_controller_manager()
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
+    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
   else
@@ -440,6 +441,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       get_logger(),
       "Resource Manager has been successfully initialized. Starting Controller Manager "
       "services...");
+    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
 }

@@ -1176,7 +1176,6 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->cm_update_rate_ = update_rate;
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  resource_storage_->import_joint_limiters(hardware_info);
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
@@ -1249,6 +1248,12 @@ bool ResourceManager::load_and_initialize_components(
   }
 
   return components_are_loaded_and_initialized_;
+}
+
+void ResourceManager::import_joint_limiters(const std::string & urdf)
+{
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  resource_storage_->import_joint_limiters(hardware_info);
 }
 
 bool ResourceManager::are_components_initialized() const
