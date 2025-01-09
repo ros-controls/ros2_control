@@ -2322,7 +2322,9 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  if (periodicity_stats_.GetCount() >= 100)
+  if (
+    periodicity_stats_.GetCount() >=
+    params_->diagnostics.threshold.controller_manager.periodicity.window_size)
   {
     periodicity_stats_.Reset();
   }
@@ -2503,11 +2505,23 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {
+            if (
+              loaded_controller.execution_time_statistics->GetCount() >=
+              params_->diagnostics.threshold.controllers.periodicity.window_size)
+            {
+              loaded_controller.execution_time_statistics->Reset();
+            }
             loaded_controller.execution_time_statistics->AddMeasurement(
               static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
+            if (
+              loaded_controller.periodicity_statistics->GetCount() >=
+              params_->diagnostics.threshold.controllers.periodicity.window_size)
+            {
+              loaded_controller.periodicity_statistics->Reset();
+            }
             loaded_controller.periodicity_statistics->AddMeasurement(
               1.0 / trigger_result.period.value().seconds());
           }
