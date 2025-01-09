@@ -1118,6 +1118,8 @@ public:
                    joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>>>
     joint_limiters_interface_;
 
+  std::string robot_description_;
+
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
@@ -1138,6 +1140,7 @@ ResourceManager::ResourceManager(
   const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
+  resource_storage_->robot_description_ = urdf;
   load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
@@ -1157,6 +1160,7 @@ bool ResourceManager::load_and_initialize_components(
 {
   components_are_loaded_and_initialized_ = true;
 
+  resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
@@ -2056,7 +2060,10 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
   return resource_storage_->state_interface_map_.find(key) !=
          resource_storage_->state_interface_map_.end();
 }
-
+const std::string & ResourceManager::get_urdf() const
+{
+  return resource_storage_->robot_description_;
+}
 // END: "used only in tests and locally"
 
 rclcpp::Logger ResourceManager::get_logger() const { return resource_storage_->get_logger(); }

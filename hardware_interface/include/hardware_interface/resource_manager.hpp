@@ -471,6 +471,8 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
+  const std::string & get_urdf() const;
+
 protected:
   /// Gets the logger for the resource manager
   /**
