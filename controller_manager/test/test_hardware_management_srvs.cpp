@@ -356,10 +356,10 @@ public:
   void SetUp() override
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
     run_updater_ = false;
 
+    SetUpSrvsCMExecutor();
     cm_->set_parameter(rclcpp::Parameter(
       "hardware_components_initial_state.not_loaded",
       std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
@@ -367,14 +367,10 @@ public:
       "hardware_components_initial_state.inactive",
       std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME, TEST_ACTUATOR_HARDWARE_NAME})));
 
-    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
-    run_updater_ = false;
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     auto msg = std_msgs::msg::String();
     msg.data = ros2_control_test_assets::minimal_robot_urdf;
     cm_->robot_description_callback(msg);
-    
-    SetUpSrvsCMExecutor();
   }
 };
 
