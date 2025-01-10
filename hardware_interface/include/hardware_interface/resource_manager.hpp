@@ -483,7 +483,7 @@ private:
   /**
    * \param[in] hardware_info vector of hardware parsed from URDF that storage is validated against.
    * \param[in] dont_load_components list of component names that should not be loaded and therefore
-   * should be skiped during validation.
+   * should be skipped during validation.
    * \return true if storage is consistent with URDF, false otherwise.
    */
   bool validate_storage(

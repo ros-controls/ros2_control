@@ -374,7 +374,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     *params_ = cm_param_listener_->get_params();
   }
 
-  if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_, params_->hardware_components_initial_state.not_loaded))
+  if (!resource_manager_->load_and_initialize_components(
+        robot_description, update_rate_, params_->hardware_components_initial_state.not_loaded))
   {
     RCLCPP_WARN(
       get_logger(),
