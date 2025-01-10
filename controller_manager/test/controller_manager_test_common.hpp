@@ -253,10 +253,4 @@ public:
   ControllerManagerFixture<CtrlMgr> * cmf_;
 };
 
-class ControllerMock : public controller_interface::ControllerInterface
-{
-public:
-  MOCK_METHOD0(update, controller_interface::return_type(void));
-};
-
 #endif  // CONTROLLER_MANAGER_TEST_COMMON_HPP_
