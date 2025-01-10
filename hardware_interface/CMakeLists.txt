@@ -52,6 +52,7 @@ target_include_directories(
   PUBLIC
   include
 )
+<<<<<<< HEAD
 target_link_libraries(
   mock_components
   ${PROJECT_NAME}
@@ -65,6 +66,10 @@ ament_target_dependencies(
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(mock_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+=======
+target_link_libraries(mock_components PUBLIC hardware_interface)
+ament_target_dependencies(mock_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+>>>>>>> d501f1b (Add missing link of mock_components to hardware_interface (#1992))
 
 pluginlib_export_plugin_description_file(
   ${PROJECT_NAME} mock_components_plugin_description.xml)
