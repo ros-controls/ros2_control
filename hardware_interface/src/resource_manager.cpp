@@ -1042,7 +1042,8 @@ ResourceManager::ResourceManager(
 
 // CM API: Called in "callback/slow"-thread
 bool ResourceManager::load_and_initialize_components(
-  const std::string & urdf, const unsigned int update_rate)
+  const std::string & urdf, const unsigned int update_rate,
+  const std::vector<std::string> & dont_load_components)
 {
   components_are_loaded_and_initialized_ = true;
 
@@ -1062,6 +1063,16 @@ bool ResourceManager::load_and_initialize_components(
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
+    const auto find_if = std::find(
+      dont_load_components.begin(), dont_load_components.end(), individual_hardware_info.name);
+    if (find_if != dont_load_components.end())
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Skipping loading for hardware with name %s.",
+        individual_hardware_info.name.c_str());
+      continue;
+    }
+
     // Check for identical names
     if (
       resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
@@ -1105,7 +1116,8 @@ bool ResourceManager::load_and_initialize_components(
     }
   }
 
-  if (components_are_loaded_and_initialized_ && validate_storage(hardware_info))
+  if (
+    components_are_loaded_and_initialized_ && validate_storage(hardware_info, dont_load_components))
   {
     std::lock_guard<std::recursive_mutex> guard(resources_lock_);
     read_write_status.failed_hardware_names.reserve(
@@ -1932,13 +1944,21 @@ rclcpp::Clock::SharedPtr ResourceManager::get_clock() const
 // BEGIN: private methods
 
 bool ResourceManager::validate_storage(
-  const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
+  const std::vector<hardware_interface::HardwareInfo> & hardware_info,
+  const std::vector<std::string> & dont_load_components) const
 {
   std::vector<std::string> missing_state_keys = {};
   std::vector<std::string> missing_command_keys = {};
 
   for (const auto & hardware : hardware_info)
   {
+    const auto find_if =
+      std::find(dont_load_components.begin(), dont_load_components.end(), hardware.name);
+    if (find_if != dont_load_components.end())
+    {
+      continue;
+    }
+
     for (const auto & joint : hardware.joints)
     {
       for (const auto & state_interface : joint.state_interfaces)

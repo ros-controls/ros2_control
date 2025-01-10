@@ -382,7 +382,7 @@ TEST_F(TestControllerManagerHWManagementSrvsNotLoaded, test_component_not_loaded
   // there is not system loaded therefore test should not break having only two members for checking
   // results
   list_hardware_components_and_check(
-    // actuator, sensor, system
+    // actuator, sensor, system (not existing)
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
        LFC_STATE::PRIMARY_STATE_UNKNOWN}),

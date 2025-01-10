@@ -84,10 +84,12 @@ public:
    *
    * \param[in] urdf string containing the URDF.
    * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
+   * \param[in] dont_load_components list of component names that should be excluded from loading
    * \returns false if URDF validation has failed.
    */
   virtual bool load_and_initialize_components(
-    const std::string & urdf, const unsigned int update_rate = 100);
+    const std::string & urdf, const unsigned int update_rate = 100,
+    const std::vector<std::string> & dont_load_components = std::vector<std::string>());
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
@@ -477,7 +479,16 @@ protected:
   mutable std::recursive_mutex resources_lock_;
 
 private:
-  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  /// Validates if all interfaces are exported as defined in URDF.
+  /**
+   * \param[in] hardware_info vector of hardware parsed from URDF that storage is validated against.
+   * \param[in] dont_load_components list of component names that should not be loaded and therefore
+   * should be skiped during validation.
+   * \return true if storage is consistent with URDF, false otherwise.
+   */
+  bool validate_storage(
+    const std::vector<hardware_interface::HardwareInfo> & hardware_info,
+    const std::vector<std::string> & dont_load_components) const;
 
   void release_command_interface(const std::string & key);
 
