@@ -54,6 +54,8 @@ public:
 
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
+
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
@@ -69,6 +71,7 @@ public:
   // Variable where we store when cleanup was called, pointer because the controller
   // is usually destroyed after cleanup
   size_t * cleanup_calls = nullptr;
+  size_t * should_down_calls = nullptr;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
 

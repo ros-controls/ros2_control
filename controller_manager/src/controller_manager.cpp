@@ -702,7 +702,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   if (is_controller_inactive(*controller.c))
   {
     RCLCPP_DEBUG(
-      get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
+      get_logger(), "Controller '%s' is shut-down before unloading!", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
     shutdown_controller(controller);
