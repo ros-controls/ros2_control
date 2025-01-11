@@ -318,6 +318,13 @@ private:
   void initialize_parameters();
 
   /**
+   * Call shutdown and move given controller to the finalized state.
+   *
+   * \param[in] controller controller to be shutdown.
+   */
+  void shutdown_controller(controller_manager::ControllerSpec & controller) const;
+
+  /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
    * and "control loop" threads.
    */
