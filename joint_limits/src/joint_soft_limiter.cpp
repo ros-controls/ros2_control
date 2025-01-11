@@ -158,8 +158,8 @@ bool JointSoftLimiter::on_enforce(
       pos_low = std::clamp(position + soft_min_vel * dt_seconds, pos_low, pos_high);
       pos_high = std::clamp(position + soft_max_vel * dt_seconds, pos_low, pos_high);
     }
-    pos_low = std::max(pos_low, position_limits.first);
-    pos_high = std::min(pos_high, position_limits.second);
+    pos_low = std::max(pos_low, position_limits.lower_limit);
+    pos_high = std::min(pos_high, position_limits.upper_limit);
 
     limits_enforced = is_limited(desired.position.value(), pos_low, pos_high);
     desired.position = std::clamp(desired.position.value(), pos_low, pos_high);
@@ -179,8 +179,8 @@ bool JointSoftLimiter::on_enforce(
         std::min(actual.velocity.value() + hard_limits.max_acceleration * dt_seconds, soft_max_vel);
     }
 
-    soft_min_vel = std::max(soft_min_vel, velocity_limits.first);
-    soft_max_vel = std::min(soft_max_vel, velocity_limits.second);
+    soft_min_vel = std::max(soft_min_vel, velocity_limits.lower_limit);
+    soft_max_vel = std::min(soft_max_vel, velocity_limits.upper_limit);
 
     limits_enforced =
       is_limited(desired.velocity.value(), soft_min_vel, soft_max_vel) || limits_enforced;
@@ -192,8 +192,8 @@ bool JointSoftLimiter::on_enforce(
     const auto effort_limits =
       compute_effort_limits(hard_limits, actual.position, actual.velocity, dt_seconds);
 
-    double soft_min_eff = effort_limits.first;
-    double soft_max_eff = effort_limits.second;
+    double soft_min_eff = effort_limits.lower_limit;
+    double soft_max_eff = effort_limits.upper_limit;
 
     if (
       hard_limits.has_effort_limits && std::isfinite(soft_joint_limits.k_velocity) &&
@@ -207,8 +207,8 @@ bool JointSoftLimiter::on_enforce(
         -soft_joint_limits.k_velocity * (actual.velocity.value() - soft_max_vel),
         -hard_limits.max_effort, hard_limits.max_effort);
 
-      soft_min_eff = std::max(soft_min_eff, effort_limits.first);
-      soft_max_eff = std::min(soft_max_eff, effort_limits.second);
+      soft_min_eff = std::max(soft_min_eff, effort_limits.lower_limit);
+      soft_max_eff = std::min(soft_max_eff, effort_limits.upper_limit);
     }
 
     limits_enforced =
@@ -221,8 +221,10 @@ bool JointSoftLimiter::on_enforce(
     const auto limits =
       compute_acceleration_limits(hard_limits, desired.acceleration.value(), actual.velocity);
     limits_enforced =
-      is_limited(desired.acceleration.value(), limits.first, limits.second) || limits_enforced;
-    desired.acceleration = std::clamp(desired.acceleration.value(), limits.first, limits.second);
+      is_limited(desired.acceleration.value(), limits.lower_limit, limits.upper_limit) ||
+      limits_enforced;
+    desired.acceleration =
+      std::clamp(desired.acceleration.value(), limits.lower_limit, limits.upper_limit);
   }
 
   if (desired.has_jerk())

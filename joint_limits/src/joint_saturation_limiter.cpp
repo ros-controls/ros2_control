@@ -15,7 +15,6 @@
 /// \authors Nathan Brooks, Dr. Denis Stogl, Guillaume Walck
 
 #include "joint_limits/joint_saturation_limiter.hpp"
-#include "joint_limits/joint_limits_helpers.hpp"
 
 #include <algorithm>
 
