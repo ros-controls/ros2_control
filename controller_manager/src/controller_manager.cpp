@@ -58,6 +58,13 @@ static const rmw_qos_profile_t qos_services = {
   false};
 #endif
 
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBase & controller)
+{
+  return controller.get_lifecycle_state().id() ==
+         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+}
+
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
   return controller.get_lifecycle_state().id() ==
@@ -699,7 +706,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
-  if (is_controller_inactive(*controller.c))
+  if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
@@ -724,28 +731,30 @@ controller_interface::return_type ControllerManager::unload_controller(
 }
 
 void ControllerManager::shutdown_controller(controller_manager::ControllerSpec & controller) const
-try
 {
-  const auto new_state = controller.c->get_node()->shutdown();
-  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  try
   {
-    RCLCPP_WARN(
-      get_logger(), "Failed to shutdown the controller '%s' before unloading!",
+    const auto new_state = controller.c->get_node()->shutdown();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to shutdown the controller '%s' before unloading!",
+        controller.info.name.c_str());
+    }
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
+      typeid(e).name(), controller.info.name.c_str(), e.what());
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to shutdown the controller '%s' before unloading",
       controller.info.name.c_str());
   }
-}
-catch (const std::exception & e)
-{
-  RCLCPP_ERROR(
-    get_logger(),
-    "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
-    typeid(e).name(), controller.info.name.c_str(), e.what());
-}
-catch (...)
-{
-  RCLCPP_ERROR(
-    get_logger(), "Failed to shutdown the controller '%s' before unloading",
-    controller.info.name.c_str());
 }
 
 std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const

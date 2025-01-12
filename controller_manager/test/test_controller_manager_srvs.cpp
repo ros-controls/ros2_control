@@ -491,7 +491,7 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
@@ -526,7 +526,7 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   auto result = call_service_and_wait(*unload_client, unload_request, srv_executor, true);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 
