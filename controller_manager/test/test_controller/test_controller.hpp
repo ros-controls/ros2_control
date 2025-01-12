@@ -68,10 +68,10 @@ public:
   rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr service_;
   unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
-  // Variable where we store when cleanup was called, pointer because the controller
-  // is usually destroyed after cleanup
+  // Variable where we store when shutdown was called, pointer because the controller
+  // is usually destroyed after shutdown
   size_t * cleanup_calls = nullptr;
-  size_t * should_down_calls = nullptr;
+  size_t * shutdown_calls = nullptr;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
 

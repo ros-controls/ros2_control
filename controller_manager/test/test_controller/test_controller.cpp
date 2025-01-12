@@ -162,9 +162,9 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
 
 CallbackReturn TestController::on_shutdown(const rclcpp_lifecycle::State &)
 {
-  if (should_down_calls)
+  if (shutdown_calls)
   {
-    (*should_down_calls)++;
+    (*shutdown_calls)++;
   }
   return CallbackReturn::SUCCESS;
 }

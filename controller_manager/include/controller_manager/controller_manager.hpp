@@ -318,7 +318,7 @@ private:
   void initialize_parameters();
 
   /**
-   * Call shutdown and move given controller to the finalized state.
+   * Call shutdown to change the given controller lifecycle node to the finalized state.
    *
    * \param[in] controller controller to be shutdown.
    */

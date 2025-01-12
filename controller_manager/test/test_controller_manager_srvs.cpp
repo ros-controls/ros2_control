@@ -395,14 +395,14 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
-  size_t should_down_calls = 0;
-  test_controller->should_down_calls = &should_down_calls;
+  size_t shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_EQ(should_down_calls, 1u);
+  ASSERT_EQ(shutdown_calls, 1u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();
@@ -428,8 +428,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
     << "Controller manager should still have have a copy of "
        "this shared ptr, no unloading was performed";
 
-  should_down_calls = 0;
-  test_controller->should_down_calls = &should_down_calls;
+  shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   // Force stop active controller
@@ -439,7 +439,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
 
   ASSERT_EQ(test_controller_weak.use_count(), 0)
     << "No more references to the controller after reloading.";
-  ASSERT_EQ(should_down_calls, 1u)
+  ASSERT_EQ(shutdown_calls, 1u)
     << "Controller should have been stopped and cleaned up with force_kill = true";
 }
 
