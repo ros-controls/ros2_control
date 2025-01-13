@@ -83,7 +83,8 @@ public:
 
   /// Return all values.
   /**
-   * \return true if it gets all the values, else false
+   * \return true if it gets all the values, else false (i.e., invalid size or if the method
+   * ``hardware_interface::LoanedCommandInterface::set_value`` fails).
    */
   bool set_values(const std::vector<double> & values)
   {
