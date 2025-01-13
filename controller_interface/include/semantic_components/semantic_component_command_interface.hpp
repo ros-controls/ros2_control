@@ -105,7 +105,7 @@ public:
   /**
    * \return false by default
    */
-  bool set_values_from_message(const MessageInputType & /* message */) { return false; }
+  virtual bool set_values_from_message(const MessageInputType & /* message */) { return false; }
 
 protected:
   std::string name_;
