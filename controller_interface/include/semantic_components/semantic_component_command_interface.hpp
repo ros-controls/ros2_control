@@ -31,6 +31,7 @@ public:
     const std::string & name, const std::vector<std::string> & interface_names)
   : name_(name), interface_names_(interface_names)
   {
+    assert(interface_names.size() > 0);
     command_interfaces_.reserve(interface_names.size());
   }
 
