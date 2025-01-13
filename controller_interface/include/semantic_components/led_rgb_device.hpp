@@ -15,7 +15,6 @@
 #ifndef SEMANTIC_COMPONENTS__LED_RGB_DEVICE_HPP_
 #define SEMANTIC_COMPONENTS__LED_RGB_DEVICE_HPP_
 
-#include <limits>
 #include <string>
 #include <vector>
 
