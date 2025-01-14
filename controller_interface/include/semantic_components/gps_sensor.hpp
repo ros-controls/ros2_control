@@ -42,7 +42,6 @@ public:
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
       interface_names_.emplace_back(name + "/" + "longitude_covariance");
       interface_names_.emplace_back(name + "/" + "altitude_covariance");
-      covariance_.fill(0.0);
     }
   }
 
@@ -118,11 +117,7 @@ public:
   }
 
 private:
-  struct Empty
-  {
-  };
-  using CovarianceArray = std::conditional_t<use_covariance, std::array<double, 9>, Empty>;
-  CovarianceArray covariance_;
+  std::array<double, 9> covariance_{{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
 };
 
 }  // namespace semantic_components
