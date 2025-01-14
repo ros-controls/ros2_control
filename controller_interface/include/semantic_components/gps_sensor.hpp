@@ -58,7 +58,10 @@ public:
    *
    * \return Service
    */
-  int8_t get_service() const { return static_cast<int8_t>(state_interfaces_[1].get().get_value()); }
+  uint16_t get_service() const
+  {
+    return static_cast<uint16_t>(state_interfaces_[1].get().get_value());
+  }
 
   /**
    * Return latitude reported by a GPS
