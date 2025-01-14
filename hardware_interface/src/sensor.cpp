@@ -261,7 +261,7 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_read(time, period);
+    result = impl_->trigger_read(time, period).result;
     if (result == return_type::ERROR)
     {
       error();

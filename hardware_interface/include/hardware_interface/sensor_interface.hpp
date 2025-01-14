@@ -236,13 +236,16 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  HardwareComponentCycleStatus trigger_read(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    return_type result = return_type::ERROR;
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
     if (info_.is_async)
     {
       bool trigger_status = true;
-      std::tie(trigger_status, result) = read_async_handler_->trigger_async_callback(time, period);
+      std::tie(trigger_status, status.result) =
+        read_async_handler_->trigger_async_callback(time, period);
       if (!trigger_status)
       {
         RCLCPP_WARN(
@@ -250,14 +253,15 @@ public:
           "Trigger read called while read async handler is still in progress for hardware "
           "interface : '%s'. Failed to trigger read cycle!",
           info_.name.c_str());
-        return return_type::OK;
+        status.result = return_type::OK;
+        return status;
       }
     }
     else
     {
-      result = read(time, period);
+      status.result = read(time, period);
     }
-    return result;
+    return status;
   }
 
   /// Read the current state values from the actuator.
