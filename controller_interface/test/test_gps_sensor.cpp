@@ -41,7 +41,8 @@ struct GPSSensorTest : public testing::Test
   const std::array<std::string, 4> gps_interface_names{
     {"status", "latitude", "longitude", "altitude"}};
   std::array<double, 4> gps_states{};
-  semantic_components::GPSSensor sut{gps_sensor_name};
+  static constexpr bool use_covariance{false};
+  semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
@@ -65,7 +66,7 @@ TEST_F(
 
 TEST_F(
   GPSSensorTest,
-  status_latitude_longitude_altitude_should_be_equal_to_corepending_values_in_state_interface)
+  status_latitude_longitude_altitude_should_be_equal_to_corresponding_values_in_state_interface)
 {
   EXPECT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(gps_states.at(0), sut.get_status());
@@ -129,7 +130,8 @@ struct GPSSensorWithCovarianceTest : public testing::Test
     {"status", "latitude", "longitude", "altitude", "latitude_covariance", "longitude_covariance",
      "altitude_covariance"}};
   std::array<double, 7> gps_states{};
-  semantic_components::GPSSensorWithCovariance sut{gps_sensor_name};
+  static constexpr bool use_covariance{true};
+  semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
@@ -161,7 +163,7 @@ TEST_F(
 
 TEST_F(
   GPSSensorWithCovarianceTest,
-  status_latitude_longitude_altitude_should_be_equal_to_corepending_values_in_state_interface)
+  status_latitude_longitude_altitude_should_be_equal_to_corresponding_values_in_state_interface)
 {
   EXPECT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(gps_states.at(0), sut.get_status());

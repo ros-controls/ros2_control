@@ -23,6 +23,8 @@
 
 namespace semantic_components
 {
+
+template <bool use_covariance>
 class GPSSensor : public SemanticComponentInterface<sensor_msgs::msg::NavSatFix>
 {
 public:
@@ -33,6 +35,12 @@ public:
              {name + "/" + "longitude"},
              {name + "/" + "altitude"}})
   {
+    if constexpr (use_covariance)
+    {
+      interface_names_.emplace_back(name + "/" + "latitude_covariance");
+      interface_names_.emplace_back(name + "/" + "longitude_covariance");
+      interface_names_.emplace_back(name + "/" + "altitude_covariance");
+    }
   }
 
   /**
@@ -40,75 +48,58 @@ public:
    *
    * \return Latitude.
    */
-  int8_t get_status() { return static_cast<int8_t>(state_interfaces_[0].get().get_value()); }
+  int8_t get_status() const { return static_cast<int8_t>(state_interfaces_[0].get().get_value()); }
 
   /**
    * Return latitude reported by a GPS
    *
    * \return Latitude.
    */
-  double get_latitude() { return state_interfaces_[1].get().get_value(); }
+  double get_latitude() const { return state_interfaces_[1].get().get_value(); }
 
   /**
    * Return longitude reported by a GPS
    *
    * \return Longitude.
    */
-  double get_longitude() { return state_interfaces_[2].get().get_value(); }
+  double get_longitude() const { return state_interfaces_[2].get().get_value(); }
 
   /**
    * Return altitude reported by a GPS
    *
    * \return Altitude.
    */
-  double get_altitude() { return state_interfaces_[3].get().get_value(); }
-
-  /**
-   * Fills a NavSatFix message from the current values.
-   */
-  virtual bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
-  {
-    message.status.status = get_status();
-    message.latitude = get_latitude();
-    message.longitude = get_longitude();
-    message.altitude = get_altitude();
-
-    return true;
-  }
-};
-
-class GPSSensorWithCovariance : public GPSSensor
-{
-public:
-  explicit GPSSensorWithCovariance(const std::string & name) : GPSSensor(name)
-  {
-    interface_names_.emplace_back(name + "/" + "latitude_covariance");
-    interface_names_.emplace_back(name + "/" + "longitude_covariance");
-    interface_names_.emplace_back(name + "/" + "altitude_covariance");
-  }
+  double get_altitude() const { return state_interfaces_[3].get().get_value(); }
 
   /**
    * Return covariance reported by a GPS.
    *
    * \return Covariance array.
    */
-  std::array<double, 9> get_covariance()
+  template <typename U = void, typename = std::enable_if_t<use_covariance, U>>
+  std::array<double, 9> get_covariance() const
   {
-    return std::array<double, 9>(
-      {{state_interfaces_[4].get().get_value(), 0.0, 0.0, 0.0,
-        state_interfaces_[5].get().get_value(), 0.0, 0.0, 0.0,
-        state_interfaces_[6].get().get_value()}});
+    return {
+      {state_interfaces_[4].get().get_value(), 0.0, 0.0, 0.0,
+       state_interfaces_[5].get().get_value(), 0.0, 0.0, 0.0,
+       state_interfaces_[6].get().get_value()}};
   }
 
   /**
-   * Fills a NavSatFix message with the current values,
-   * including the diagonal elements of the position covariance.
-   * \return true
+   * Fills a NavSatFix message from the current values.
    */
-  bool get_values_as_message(sensor_msgs::msg::NavSatFix & message) override
+  bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
   {
-    GPSSensor::get_values_as_message(message);
-    message.position_covariance = get_covariance();
+    message.status.status = get_status();
+    message.latitude = get_latitude();
+    message.longitude = get_longitude();
+    message.altitude = get_altitude();
+
+    if constexpr (use_covariance)
+    {
+      message.position_covariance = get_covariance();
+    }
+
     return true;
   }
 };
