@@ -32,27 +32,30 @@ struct GPSSensorTest : public testing::Test
       std::back_inserter(full_interface_names),
       [this](const auto & interface_name) { return gps_sensor_name + '/' + interface_name; });
     state_interface.emplace_back(gps_state);
+    state_interface.emplace_back(gps_service);
     state_interface.emplace_back(latitude);
     state_interface.emplace_back(longitude);
     state_interface.emplace_back(altitude);
   }
 
   const std::string gps_sensor_name{"gps_sensor"};
-  const std::array<std::string, 4> gps_interface_names{
-    {"status", "latitude", "longitude", "altitude"}};
-  std::array<double, 4> gps_states{};
+  const std::array<std::string, 5> gps_interface_names{
+    {"status", "service", "latitude", "longitude", "altitude"}};
+  std::array<double, 5> gps_states{};
   static constexpr bool use_covariance{false};
   semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
     gps_sensor_name, gps_interface_names.at(0), &gps_states.at(0)};
-  hardware_interface::StateInterface latitude{
+  hardware_interface::StateInterface gps_service{
     gps_sensor_name, gps_interface_names.at(1), &gps_states.at(1)};
-  hardware_interface::StateInterface longitude{
+  hardware_interface::StateInterface latitude{
     gps_sensor_name, gps_interface_names.at(2), &gps_states.at(2)};
-  hardware_interface::StateInterface altitude{
+  hardware_interface::StateInterface longitude{
     gps_sensor_name, gps_interface_names.at(3), &gps_states.at(3)};
+  hardware_interface::StateInterface altitude{
+    gps_sensor_name, gps_interface_names.at(4), &gps_states.at(4)};
   std::vector<hardware_interface::LoanedStateInterface> state_interface;
 };
 
@@ -70,19 +73,22 @@ TEST_F(
 {
   EXPECT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(gps_states.at(0), sut.get_status());
-  EXPECT_DOUBLE_EQ(gps_states.at(1), sut.get_latitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_longitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_altitude());
+  EXPECT_EQ(gps_states.at(1), sut.get_service());
+  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_latitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_longitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(4), sut.get_altitude());
 
   gps_states.at(0) = 1.0;
-  gps_states.at(1) = 2.0;
-  gps_states.at(2) = 3.0;
-  gps_states.at(3) = 4.0;
+  gps_states.at(1) = 3.0;
+  gps_states.at(2) = 2.0;
+  gps_states.at(3) = 3.0;
+  gps_states.at(4) = 4.0;
 
   EXPECT_EQ(gps_states.at(0), sut.get_status());
-  EXPECT_DOUBLE_EQ(gps_states.at(1), sut.get_latitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_longitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_altitude());
+  EXPECT_EQ(gps_states.at(1), sut.get_service());
+  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_latitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_longitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(4), sut.get_altitude());
 }
 
 TEST_F(GPSSensorTest, should_fill_gps_nav_sat_fix_msg_with_value_from_state_interface)
@@ -92,20 +98,23 @@ TEST_F(GPSSensorTest, should_fill_gps_nav_sat_fix_msg_with_value_from_state_inte
   sensor_msgs::msg::NavSatFix message;
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(gps_states.at(0), message.status.status);
-  EXPECT_DOUBLE_EQ(gps_states.at(1), message.latitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(2), message.longitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(3), message.altitude);
+  EXPECT_EQ(gps_states.at(1), message.status.service);
+  EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
 
   gps_states.at(0) = 1.0;
-  gps_states.at(1) = 2.0;
-  gps_states.at(2) = 3.0;
-  gps_states.at(3) = 4.0;
+  gps_states.at(1) = 3.0;
+  gps_states.at(2) = 2.0;
+  gps_states.at(3) = 3.0;
+  gps_states.at(4) = 4.0;
 
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(gps_states.at(0), message.status.status);
-  EXPECT_DOUBLE_EQ(gps_states.at(1), message.latitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(2), message.longitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(3), message.altitude);
+  EXPECT_EQ(gps_states.at(1), message.status.service);
+  EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
 }
 
 struct GPSSensorWithCovarianceTest : public testing::Test
@@ -117,6 +126,7 @@ struct GPSSensorWithCovarianceTest : public testing::Test
       std::back_inserter(full_interface_names),
       [this](const auto & interface_name) { return gps_sensor_name + '/' + interface_name; });
     state_interface.emplace_back(gps_state);
+    state_interface.emplace_back(gps_service);
     state_interface.emplace_back(latitude);
     state_interface.emplace_back(longitude);
     state_interface.emplace_back(altitude);
@@ -126,28 +136,30 @@ struct GPSSensorWithCovarianceTest : public testing::Test
   }
 
   const std::string gps_sensor_name{"gps_sensor"};
-  const std::array<std::string, 7> gps_interface_names{
-    {"status", "latitude", "longitude", "altitude", "latitude_covariance", "longitude_covariance",
-     "altitude_covariance"}};
-  std::array<double, 7> gps_states{};
+  const std::array<std::string, 8> gps_interface_names{
+    {"status", "service", "latitude", "longitude", "altitude", "latitude_covariance",
+     "longitude_covariance", "altitude_covariance"}};
+  std::array<double, 8> gps_states{};
   static constexpr bool use_covariance{true};
   semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
     gps_sensor_name, gps_interface_names.at(0), &gps_states.at(0)};
-  hardware_interface::StateInterface latitude{
+  hardware_interface::StateInterface gps_service{
     gps_sensor_name, gps_interface_names.at(1), &gps_states.at(1)};
-  hardware_interface::StateInterface longitude{
+  hardware_interface::StateInterface latitude{
     gps_sensor_name, gps_interface_names.at(2), &gps_states.at(2)};
-  hardware_interface::StateInterface altitude{
+  hardware_interface::StateInterface longitude{
     gps_sensor_name, gps_interface_names.at(3), &gps_states.at(3)};
-  hardware_interface::StateInterface latitude_covariance{
+  hardware_interface::StateInterface altitude{
     gps_sensor_name, gps_interface_names.at(4), &gps_states.at(4)};
-  hardware_interface::StateInterface longitude_covariance{
+  hardware_interface::StateInterface latitude_covariance{
     gps_sensor_name, gps_interface_names.at(5), &gps_states.at(5)};
-  hardware_interface::StateInterface altitude_covariance{
+  hardware_interface::StateInterface longitude_covariance{
     gps_sensor_name, gps_interface_names.at(6), &gps_states.at(6)};
+  hardware_interface::StateInterface altitude_covariance{
+    gps_sensor_name, gps_interface_names.at(7), &gps_states.at(7)};
   std::vector<hardware_interface::LoanedStateInterface> state_interface;
 };
 
@@ -167,24 +179,27 @@ TEST_F(
 {
   EXPECT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(gps_states.at(0), sut.get_status());
-  EXPECT_DOUBLE_EQ(gps_states.at(1), sut.get_latitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_longitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_altitude());
+  EXPECT_EQ(gps_states.at(1), sut.get_service());
+  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_latitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_longitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(4), sut.get_altitude());
   EXPECT_THAT(
     sut.get_covariance(), testing::ElementsAreArray({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}));
 
   gps_states.at(0) = 1.0;
-  gps_states.at(1) = 2.0;
-  gps_states.at(2) = 3.0;
-  gps_states.at(3) = 4.0;
-  gps_states.at(4) = 0.5;
-  gps_states.at(5) = 0.2;
-  gps_states.at(6) = 0.7;
+  gps_states.at(1) = 3.0;
+  gps_states.at(2) = 2.0;
+  gps_states.at(3) = 3.0;
+  gps_states.at(4) = 4.0;
+  gps_states.at(5) = 0.5;
+  gps_states.at(6) = 0.2;
+  gps_states.at(7) = 0.7;
 
   EXPECT_EQ(gps_states.at(0), sut.get_status());
-  EXPECT_DOUBLE_EQ(gps_states.at(1), sut.get_latitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_longitude());
-  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_altitude());
+  EXPECT_EQ(gps_states.at(1), sut.get_service());
+  EXPECT_DOUBLE_EQ(gps_states.at(2), sut.get_latitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(3), sut.get_longitude());
+  EXPECT_DOUBLE_EQ(gps_states.at(4), sut.get_altitude());
   EXPECT_THAT(
     sut.get_covariance(), testing::ElementsAreArray({0.5, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.7}));
 }
@@ -195,26 +210,29 @@ TEST_F(GPSSensorWithCovarianceTest, should_fill_gps_nav_sat_fix_msg_with_value_f
   sensor_msgs::msg::NavSatFix message;
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(gps_states.at(0), message.status.status);
-  EXPECT_DOUBLE_EQ(gps_states.at(1), message.latitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(2), message.longitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(3), message.altitude);
+  EXPECT_EQ(gps_states.at(1), message.status.service);
+  EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
   EXPECT_THAT(
     message.position_covariance,
     testing::ElementsAreArray({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}));
 
   gps_states.at(0) = 1.0;
   gps_states.at(1) = 2.0;
-  gps_states.at(2) = 3.0;
-  gps_states.at(3) = 4.0;
-  gps_states.at(4) = 0.5;
-  gps_states.at(5) = 0.2;
-  gps_states.at(6) = 0.7;
+  gps_states.at(2) = 2.0;
+  gps_states.at(3) = 3.0;
+  gps_states.at(4) = 4.0;
+  gps_states.at(5) = 0.5;
+  gps_states.at(6) = 0.2;
+  gps_states.at(7) = 0.7;
 
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(gps_states.at(0), message.status.status);
-  EXPECT_DOUBLE_EQ(gps_states.at(1), message.latitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(2), message.longitude);
-  EXPECT_DOUBLE_EQ(gps_states.at(3), message.altitude);
+  EXPECT_EQ(gps_states.at(1), message.status.service);
+  EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
   EXPECT_THAT(
     message.position_covariance,
     testing::ElementsAreArray({0.5, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.7}));

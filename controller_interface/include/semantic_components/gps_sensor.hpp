@@ -15,6 +15,7 @@
 #ifndef SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ public:
   explicit GPSSensor(const std::string & name)
   : SemanticComponentInterface(
       name, {{name + "/" + "status"},
+             {name + "/" + "service"},
              {name + "/" + "latitude"},
              {name + "/" + "longitude"},
              {name + "/" + "altitude"}})
@@ -40,36 +42,44 @@ public:
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
       interface_names_.emplace_back(name + "/" + "longitude_covariance");
       interface_names_.emplace_back(name + "/" + "altitude_covariance");
+      covariance_.fill(0.0);
     }
   }
 
   /**
    * Return GPS's status e.g. fix/no_fix
    *
-   * \return Latitude.
+   * \return Status
    */
   int8_t get_status() const { return static_cast<int8_t>(state_interfaces_[0].get().get_value()); }
+
+  /**
+   * Return service used by GPS e.g. fix/no_fix
+   *
+   * \return Service
+   */
+  int8_t get_service() const { return static_cast<int8_t>(state_interfaces_[1].get().get_value()); }
 
   /**
    * Return latitude reported by a GPS
    *
    * \return Latitude.
    */
-  double get_latitude() const { return state_interfaces_[1].get().get_value(); }
+  double get_latitude() const { return state_interfaces_[2].get().get_value(); }
 
   /**
    * Return longitude reported by a GPS
    *
    * \return Longitude.
    */
-  double get_longitude() const { return state_interfaces_[2].get().get_value(); }
+  double get_longitude() const { return state_interfaces_[3].get().get_value(); }
 
   /**
    * Return altitude reported by a GPS
    *
    * \return Altitude.
    */
-  double get_altitude() const { return state_interfaces_[3].get().get_value(); }
+  double get_altitude() const { return state_interfaces_[4].get().get_value(); }
 
   /**
    * Return covariance reported by a GPS.
@@ -77,12 +87,12 @@ public:
    * \return Covariance array.
    */
   template <typename U = void, typename = std::enable_if_t<use_covariance, U>>
-  std::array<double, 9> get_covariance() const
+  const std::array<double, 9> & get_covariance()
   {
-    return {
-      {state_interfaces_[4].get().get_value(), 0.0, 0.0, 0.0,
-       state_interfaces_[5].get().get_value(), 0.0, 0.0, 0.0,
-       state_interfaces_[6].get().get_value()}};
+    covariance_[0] = state_interfaces_[5].get().get_value();
+    covariance_[4] = state_interfaces_[6].get().get_value();
+    covariance_[8] = state_interfaces_[7].get().get_value();
+    return covariance_;
   }
 
   /**
@@ -91,6 +101,7 @@ public:
   bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
   {
     message.status.status = get_status();
+    message.status.service = get_service();
     message.latitude = get_latitude();
     message.longitude = get_longitude();
     message.altitude = get_altitude();
@@ -102,6 +113,13 @@ public:
 
     return true;
   }
+
+private:
+  struct Empty
+  {
+  };
+  using CovarianceArray = std::conditional_t<use_covariance, std::array<double, 9>, Empty>;
+  CovarianceArray covariance_;
 };
 
 }  // namespace semantic_components
