@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.24.0 (2025-01-13)
+-------------------
+* Add missing link of mock_components to hardware_interface (`#1992 <https://github.com/ros-controls/ros2_control/issues/1992>`_)
+* Using urdf/model.hpp for rolling (`#1978 <https://github.com/ros-controls/ros2_control/issues/1978>`_)
+* Remove visibility include from docs (`#1975 <https://github.com/ros-controls/ros2_control/issues/1975>`_)
+* Contributors: Christoph Fröhlich, Silvio Traversaro, verma nakul
+
 4.23.0 (2024-12-29)
 -------------------
 * Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
