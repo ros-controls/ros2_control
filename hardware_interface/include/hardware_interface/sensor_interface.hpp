@@ -243,10 +243,20 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      bool trigger_status = true;
-      std::tie(trigger_status, status.result) =
-        read_async_handler_->trigger_async_callback(time, period);
-      if (!trigger_status)
+      const rclcpp::Time last_trigger_time = read_async_handler_->get_current_callback_time();
+      const auto result = read_async_handler_->trigger_async_callback(time, period);
+      status.successful = result.first;
+      status.result = result.second;
+      const auto execution_time = read_async_handler_->get_last_execution_time();
+      if (execution_time.count() > 0)
+      {
+        status.execution_time = execution_time;
+      }
+      if (last_trigger_time.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
+      {
+        status.period = time - last_trigger_time;
+      }
+      if (!status.successful)
       {
         RCLCPP_WARN(
           get_logger(),
@@ -259,7 +269,12 @@ public:
     }
     else
     {
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
       status.result = read(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
+      status.period = period;
     }
     return status;
   }
