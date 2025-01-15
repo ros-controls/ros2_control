@@ -49,7 +49,7 @@ bool is_limited(double value, double min, double max);
  */
 PositionLimits compute_position_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
-  const std::optional<double> & prev_command_pos, double dt);
+  const std::optional<double> & act_pos, const std::optional<double> & prev_command_pos, double dt);
 
 /**
  * @brief Computes the velocity limits based on the position and acceleration limits.

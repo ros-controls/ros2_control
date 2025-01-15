@@ -54,6 +54,9 @@ public:
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
+    const rclcpp_lifecycle::State & previous_state) override;
 };
 
 }  // namespace test_controller_with_interfaces
