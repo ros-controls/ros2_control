@@ -114,8 +114,8 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   {
     const auto limits =
       compute_position_limits(joint_limits, actual.velocity, prev_command_.position, dt_seconds);
-    limits_enforced = is_limited(desired.position.value(), limits.first, limits.second);
-    desired.position = std::clamp(desired.position.value(), limits.first, limits.second);
+    limits_enforced = is_limited(desired.position.value(), limits.lower_limit, limits.upper_limit);
+    desired.position = std::clamp(desired.position.value(), limits.lower_limit, limits.upper_limit);
   }
 
   if (desired.has_velocity())
@@ -124,8 +124,9 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
       joint_name, joint_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
       dt_seconds);
     limits_enforced =
-      is_limited(desired.velocity.value(), limits.first, limits.second) || limits_enforced;
-    desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
+      is_limited(desired.velocity.value(), limits.lower_limit, limits.upper_limit) ||
+      limits_enforced;
+    desired.velocity = std::clamp(desired.velocity.value(), limits.lower_limit, limits.upper_limit);
   }
 
   if (desired.has_effort())
@@ -133,8 +134,8 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
     const auto limits =
       compute_effort_limits(joint_limits, actual.position, actual.velocity, dt_seconds);
     limits_enforced =
-      is_limited(desired.effort.value(), limits.first, limits.second) || limits_enforced;
-    desired.effort = std::clamp(desired.effort.value(), limits.first, limits.second);
+      is_limited(desired.effort.value(), limits.lower_limit, limits.upper_limit) || limits_enforced;
+    desired.effort = std::clamp(desired.effort.value(), limits.lower_limit, limits.upper_limit);
   }
 
   if (desired.has_acceleration())
@@ -142,8 +143,10 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
     const auto limits =
       compute_acceleration_limits(joint_limits, desired.acceleration.value(), actual.velocity);
     limits_enforced =
-      is_limited(desired.acceleration.value(), limits.first, limits.second) || limits_enforced;
-    desired.acceleration = std::clamp(desired.acceleration.value(), limits.first, limits.second);
+      is_limited(desired.acceleration.value(), limits.lower_limit, limits.upper_limit) ||
+      limits_enforced;
+    desired.acceleration =
+      std::clamp(desired.acceleration.value(), limits.lower_limit, limits.upper_limit);
   }
 
   if (desired.has_jerk())
