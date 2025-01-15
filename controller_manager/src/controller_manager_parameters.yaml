@@ -134,3 +134,74 @@ controller_manager:
                 gt<>: 0.0,
               }
             }
+      hardware_components:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the hardware component read/write loop. If the mean error exceeds this threshold, a warning diagnostic will be published. This diagnostics will be published only for the asynchronous hardware component, because any affect to the synchronous hardware components will be reflected directly in the controller manager's periodicity.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the hardware component read/write loop. If the mean error exceeds this threshold, an error diagnostic will be published. This diagnostics will be published only for the asynchronous hardware component, because any affect to the synchronous hardware components will be reflected directly in the controller manager's periodicity.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the hardware component read/write loop. If the standard deviation exceeds this threshold, a warning diagnostic will be published. This diagnostics will be published only for the asynchronous hardware component, because any affect to the synchronous hardware components will be reflected directly in the controller manager's periodicity.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the hardware component read/write loop. If the standard deviation exceeds this threshold, an error diagnostic will be published. This diagnostics will be published only for the asynchronous hardware component, because any affect to the synchronous hardware components will be reflected directly in the controller manager's periodicity.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+        execution_time:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 1000.0,
+              description: "The warning threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period cycle to execute it's update cycle",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 2000.0,
+              description: "The error threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, an error diagnostic will be published. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period cycle to execute it's update cycle",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 100.0,
+              description: "The warning threshold for the standard deviation of the controller's update cycle execution time. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 200.0,
+              description: "The error threshold for the standard deviation of the controller's update cycle execution time. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
