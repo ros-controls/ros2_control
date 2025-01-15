@@ -37,7 +37,7 @@ public:
 
   void update_statistics(std::shared_ptr<MovingAverageStatistics> & statistics)
   {
-    std::unique_lock<realtime_tools::prio_inherit_recursive_mutex> lock(mutex_);
+    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
     statistics_data.average = statistics->Average();
     statistics_data.min = statistics->Min();
     statistics_data.max = statistics->Max();
@@ -57,13 +57,13 @@ public:
 
   const StatisticData & get_statistics() const
   {
-    std::unique_lock<realtime_tools::prio_inherit_recursive_mutex> lock(mutex_);
+    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
     return statistics_data;
   }
 
 private:
   StatisticData statistics_data;
-  mutable realtime_tools::prio_inherit_recursive_mutex mutex_;
+  mutable realtime_tools::prio_inherit_mutex mutex_;
 };
 }  // namespace ros2_control
 
