@@ -297,6 +297,16 @@ const rclcpp::Time & Actuator::get_last_read_time() const { return last_read_cyc
 
 const rclcpp::Time & Actuator::get_last_write_time() const { return last_write_cycle_time_; }
 
+const HardwareComponentStatisticsCollector & Actuator::get_read_statistics() const
+{
+  return read_statistics_;
+}
+
+const HardwareComponentStatisticsCollector & Actuator::get_write_statistics() const
+{
+  return write_statistics_;
+}
+
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))

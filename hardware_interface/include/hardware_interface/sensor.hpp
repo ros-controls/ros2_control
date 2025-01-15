@@ -71,6 +71,8 @@ public:
 
   const rclcpp::Time & get_last_read_time() const;
 
+  const HardwareComponentStatisticsCollector & get_read_statistics() const;
+
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   return_type write(const rclcpp::Time &, const rclcpp::Duration &) { return return_type::OK; }
