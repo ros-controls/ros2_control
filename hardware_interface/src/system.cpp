@@ -141,6 +141,8 @@ const rclcpp_lifecycle::State & System::shutdown()
 const rclcpp_lifecycle::State & System::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  read_statistics_.reset_statistics();
+  write_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
@@ -159,8 +161,6 @@ const rclcpp_lifecycle::State & System::activate()
         break;
     }
   }
-  read_statistics_->reset_statistics();
-  write_statistics_->reset_statistics();
   return impl_->get_lifecycle_state();
 }
 
@@ -311,9 +311,19 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
     {
       error();
     }
+    if (trigger_result.successful && trigger_result.execution_time.has_value())
+    {
+      read_statistics_.execution_time->AddMeasurement(
+        static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+    }
+    if (trigger_result.successful && trigger_result.period.has_value())
+    {
+      read_statistics_.periodicity->AddMeasurement(1.0 / trigger_result.period.value().seconds());
+    }
     last_read_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return trigger_result.result;
+  return return_type::OK;
 }
 
 return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -332,9 +342,19 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
     {
       error();
     }
+    if (trigger_result.successful && trigger_result.execution_time.has_value())
+    {
+      write_statistics_.execution_time->AddMeasurement(
+        static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+    }
+    if (trigger_result.successful && trigger_result.period.has_value())
+    {
+      write_statistics_.periodicity->AddMeasurement(1.0 / trigger_result.period.value().seconds());
+    }
     last_write_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return trigger_result.result;
+  return return_type::OK;
 }
 
 std::recursive_mutex & System::get_mutex() { return system_mutex_; }
