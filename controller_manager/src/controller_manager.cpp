@@ -28,6 +28,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+<<<<<<< HEAD
+=======
+#include "controller_manager/controller_manager_parameters.hpp"
+
+>>>>>>> f8c03cc (Update path of GPL (#1994))
 namespace  // utility
 {
 static constexpr const char * kControllerInterfaceNamespace = "controller_interface";
