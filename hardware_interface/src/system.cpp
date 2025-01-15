@@ -159,6 +159,8 @@ const rclcpp_lifecycle::State & System::activate()
         break;
     }
   }
+  read_statistics_->reset_statistics();
+  write_statistics_->reset_statistics();
   return impl_->get_lifecycle_state();
 }
 
@@ -300,19 +302,18 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
     last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_read(time, period).result;
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
     last_read_cycle_time_ = time;
   }
-  return result;
+  return trigger_result.result;
 }
 
 return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -322,19 +323,18 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
     last_write_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_write(time, period).result;
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_write(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
     last_write_cycle_time_ = time;
   }
-  return result;
+  return trigger_result.result;
 }
 
 std::recursive_mutex & System::get_mutex() { return system_mutex_; }
