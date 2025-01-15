@@ -35,15 +35,18 @@ struct MovingAverageStatisticsData
 public:
   MovingAverageStatisticsData() { reset(); }
 
-  void update_statistics(std::shared_ptr<MovingAverageStatistics> & statistics)
+  void update_statistics(const std::shared_ptr<MovingAverageStatistics> & statistics)
   {
     std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
-    statistics_data.average = statistics->Average();
-    statistics_data.min = statistics->Min();
-    statistics_data.max = statistics->Max();
-    statistics_data.standard_deviation = statistics->StandardDeviation();
-    statistics_data.sample_count = statistics->GetCount();
-    statistics_data = statistics->GetStatistics();
+    if (statistics->GetCount() > 0)
+    {
+      statistics_data.average = statistics->Average();
+      statistics_data.min = statistics->Min();
+      statistics_data.max = statistics->Max();
+      statistics_data.standard_deviation = statistics->StandardDeviation();
+      statistics_data.sample_count = statistics->GetCount();
+      statistics_data = statistics->GetStatistics();
+    }
   }
 
   void reset()
