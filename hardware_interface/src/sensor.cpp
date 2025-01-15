@@ -250,6 +250,11 @@ const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
 
 const rclcpp::Time & Sensor::get_last_read_time() const { return last_read_cycle_time_; }
 
+const HardwareComponentStatisticsCollector & Sensor::get_read_statistics() const
+{
+  return read_statistics_;
+}
+
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
