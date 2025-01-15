@@ -23,52 +23,16 @@
 #include <string>
 #include <vector>
 
-#include <rclcpp/time.hpp>
-#include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/state.hpp"
-#include "realtime_tools/mutex.hpp"
 
+#include "hardware_interface/types/statistics_types.hpp"
 namespace hardware_interface
 {
-using MovingAverageStatistics =
-  libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
-using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
-
-struct MovingAverageStatisticsData
+struct HardwareComponentStatisticsData
 {
-public:
-  MovingAverageStatisticsData() { statistics = std::make_unique<MovingAverageStatistics>(); }
-
-  void add_measurement(double measurement)
-  {
-    std::unique_lock<realtime_tools::prio_inherit_recursive_mutex> lock(mutex_);
-    statistics->AddMeasurement(measurement);
-    statistics_data = statistics->GetStatistics();
-  }
-
-  void reset()
-  {
-    statistics->Reset();
-    statistics_data = StatisticData();
-  }
-
-  const StatisticData & get_statistics() const
-  {
-    std::unique_lock<realtime_tools::prio_inherit_recursive_mutex> lock(mutex_);
-    return statistics_data;
-  }
-
-private:
-  std::unique_ptr<MovingAverageStatistics> statistics = nullptr;
-  StatisticData statistics_data;
-  mutable realtime_tools::prio_inherit_recursive_mutex mutex_;
-};
-
-struct HardwareComponentStatistics
-{
-  MovingAverageStatisticsData execution_time;
-  MovingAverageStatisticsData periodicity;
+  ros2_control::MovingAverageStatisticsData execution_time;
+  ros2_control::MovingAverageStatisticsData periodicity;
 };
 /// Hardware Component Information
 /**
@@ -104,10 +68,10 @@ struct HardwareComponentInfo
   std::vector<std::string> command_interfaces;
 
   /// Read cycle statistics of the component.
-  std::shared_ptr<HardwareComponentStatistics> read_statistics = nullptr;
+  std::shared_ptr<HardwareComponentStatisticsData> read_statistics = nullptr;
 
   /// Write cycle statistics of the component.
-  std::shared_ptr<HardwareComponentStatistics> write_statistics = nullptr;
+  std::shared_ptr<HardwareComponentStatisticsData> write_statistics = nullptr;
 };
 
 }  // namespace hardware_interface
