@@ -140,6 +140,7 @@ const rclcpp_lifecycle::State & Sensor::shutdown()
 const rclcpp_lifecycle::State & Sensor::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  read_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_lifecycle_state()))

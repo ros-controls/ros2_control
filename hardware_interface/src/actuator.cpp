@@ -143,6 +143,8 @@ const rclcpp_lifecycle::State & Actuator::shutdown()
 const rclcpp_lifecycle::State & Actuator::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  read_statistics_.reset_statistics();
+  write_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
