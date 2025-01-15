@@ -1468,7 +1468,8 @@ void ResourceManager::import_component(
 }
 
 // CM API: Called in "callback/slow"-thread
-std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
+const std::unordered_map<std::string, HardwareComponentInfo> &
+ResourceManager::get_components_status()
 {
   auto loop_and_get_state = [&](auto & container)
   {
