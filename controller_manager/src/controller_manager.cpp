@@ -466,6 +466,9 @@ void ControllerManager::init_services()
   best_effort_callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
+  controller_manager_status_publisher_ =
+    create_publisher<controller_manager_msgs::msg::ControllerManagerStatus>(
+      "~/activity", rclcpp::QoS(1).transient_local());
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
     qos_services, best_effort_callback_group_);
@@ -1546,6 +1549,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   // clear unused list
   rt_controllers_wrapper_.get_unused_list(guard).clear();
 
+  publish_activity();
   clear_requests();
 
   RCLCPP_DEBUG_EXPRESSION(
@@ -3152,6 +3156,38 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
     }
   }
   return controller_interface::return_type::OK;
+}
+
+void ControllerManager::publish_activity()
+{
+  controller_manager_msgs::msg::ControllerManagerStatus status_msg;
+  status_msg.header.stamp = get_clock()->now();
+  {
+    // lock controllers
+    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    const std::vector<ControllerSpec> & controllers =
+      rt_controllers_wrapper_.get_updated_list(guard);
+    for (const auto & controller : controllers)
+    {
+      controller_manager_msgs::msg::LifecycleInfo lifecycle_info;
+      lifecycle_info.name = controller.info.name;
+      lifecycle_info.state.id = controller.c->get_lifecycle_state().id();
+      lifecycle_info.state.label = controller.c->get_lifecycle_state().label();
+      status_msg.controllers.push_back(lifecycle_info);
+    }
+  }
+  {
+    const auto hw_components_info = resource_manager_->get_components_status();
+    for (const auto & [component_name, component_info] : hw_components_info)
+    {
+      controller_manager_msgs::msg::LifecycleInfo lifecycle_info;
+      lifecycle_info.name = component_name;
+      lifecycle_info.state.id = component_info.state.id();
+      lifecycle_info.state.label = component_info.state.label();
+      status_msg.hardware_components.push_back(lifecycle_info);
+    }
+  }
+  controller_manager_status_publisher_->publish(status_msg);
 }
 
 void ControllerManager::controller_activity_diagnostic_callback(

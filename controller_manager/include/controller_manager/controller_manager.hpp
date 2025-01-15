@@ -27,6 +27,7 @@
 #include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
+#include "controller_manager_msgs/msg/controller_manager_status.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -424,6 +425,13 @@ private:
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
 
+  /**
+   * @brief Method to publish the state of the controller manager.
+   * The state includes the list of controllers and the list of hardware interfaces along with
+   * their states.
+   */
+  void publish_activity();
+
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   void hardware_components_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
@@ -537,6 +545,8 @@ private:
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
+  rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerStatus>::SharedPtr
+    controller_manager_status_publisher_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
