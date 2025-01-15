@@ -256,19 +256,28 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_read(time, period).result;
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
+    if (trigger_result.successful && trigger_result.execution_time.has_value())
+    {
+      read_statistics_.execution_time->AddMeasurement(
+        static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+    }
+    if (trigger_result.successful && trigger_result.period.has_value())
+    {
+      read_statistics_.periodicity->AddMeasurement(1.0 / trigger_result.period.value().seconds());
+    }
     last_read_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 std::recursive_mutex & Sensor::get_mutex() { return sensors_mutex_; }
