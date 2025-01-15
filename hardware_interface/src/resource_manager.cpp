@@ -144,12 +144,12 @@ public:
         component_info.rw_rate = hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
-        component_info.read_statistics = std::make_shared<HardwareComponentStatistics>();
+        component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
 
         // if the type of the hardware is sensor then don't initialize the write statistics
         if (hardware_info.type != "sensor")
         {
-          component_info.write_statistics = std::make_shared<HardwareComponentStatistics>();
+          component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
         }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
