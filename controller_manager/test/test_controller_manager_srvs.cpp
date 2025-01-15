@@ -395,14 +395,14 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
-  cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
+  size_t shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_EQ(cleanup_calls, 1u);
+  ASSERT_EQ(shutdown_calls, 1u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();
@@ -428,8 +428,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
     << "Controller manager should still have have a copy of "
        "this shared ptr, no unloading was performed";
 
-  cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
+  shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   // Force stop active controller
@@ -439,7 +439,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
 
   ASSERT_EQ(test_controller_weak.use_count(), 0)
     << "No more references to the controller after reloading.";
-  ASSERT_EQ(cleanup_calls, 1u)
+  ASSERT_EQ(shutdown_calls, 1u)
     << "Controller should have been stopped and cleaned up with force_kill = true";
 }
 
@@ -491,7 +491,7 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
@@ -526,7 +526,7 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   auto result = call_service_and_wait(*unload_client, unload_request, srv_executor, true);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 
@@ -578,7 +578,7 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   ASSERT_TRUE(call_service_and_wait(*unload_client, unload_request, srv_executor, true)->ok);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
