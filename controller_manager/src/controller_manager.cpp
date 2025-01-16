@@ -3533,12 +3533,17 @@ void ControllerManager::hardware_components_diagnostic_callback(
         }
       };
 
+      // For components : {actuator, sensor and system}
       update_stats(
         component_name, component_info.read_statistics, read_cycle_suffix, level, component_info,
         params_);
-      update_stats(
-        component_name, component_info.write_statistics, write_cycle_suffix, level, component_info,
-        params_);
+      // For components : {actuator and system}
+      if (component_info.write_statistics)
+      {
+        update_stats(
+          component_name, component_info.write_statistics, write_cycle_suffix, level,
+          component_info, params_);
+      }
     }
   }
 
