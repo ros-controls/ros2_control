@@ -162,6 +162,7 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   soft_limits.max_position = 1.5;
   soft_limits.min_position = -1.5;
   ASSERT_TRUE(Init(limits, soft_limits));
+  actual_state_.position = 0.0;
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
@@ -170,6 +171,7 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   soft_limits.min_position = -0.75;
   ASSERT_TRUE(Init(limits, soft_limits));
   desired_state_.position = 2.0;
+  actual_state_ = {};
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
   desired_state_.position = -3.0;
@@ -284,6 +286,32 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
     ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
     EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
     actual_state_.position = expected_pos;
+  }
+
+  // More generic test case to mock a slow system
+  soft_limits.k_position = 0.5;
+  soft_limits.max_position = 2.0;
+  soft_limits.min_position = -2.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  actual_state_.position = -0.1;
+  for (auto i = 0; i < 10000; i++)
+  {
+    SCOPED_TRACE(
+      "Testing for iteration: " + std::to_string(i) +
+      " for desired position: " + std::to_string(desired_state_.position.value()) +
+      " and actual position : " + std::to_string(actual_state_.position.value()) +
+      " for the joint limits : " + limits.to_string());
+    desired_state_.position = 4.0;
+    const double delta_pos = std::min(
+      (soft_limits.max_position - actual_state_.position.value()) * soft_limits.k_position,
+      limits.max_velocity * period.seconds());
+    const double expected_pos = actual_state_.position.value() + delta_pos;
+    ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
+    actual_state_.position = expected_pos / 1.27;
   }
 
   // Now test when there are no position limits and soft limits, then the desired position is not
@@ -1021,9 +1049,13 @@ TEST_F(JointSoftLimiterTest, check_all_desired_references_limiting)
   // Desired position and velocity affected due to the acceleration limits
   test_limit_enforcing(0.5, 0.0, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
   test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, -6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.0, 0.5, 0.5, 0.5, true);
+  // If the actual position doesn't change, the desired position should not change
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.2, 0.0, 6.0, 0.0, 0.0, 0.0, 1.7, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.5, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.5, 0.0, -6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.5, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(2.0, 0.5, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
