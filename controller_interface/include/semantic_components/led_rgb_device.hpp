@@ -54,12 +54,12 @@ public:
 
   /**
    * Set the values of the LED RGB device from a ColorRGBA message.
-   * 
+   *
    * \details Sets the values of the red, green, and blue channels from the message.
    * If any of the values are out of the range [0, 1], the function fails and returns false.
-   * 
+   *
    * \param[in] message ColorRGBA message
-   * 
+   *
    * \return true if all values were set, false otherwise
    */
   virtual bool set_values_from_message(const std_msgs::msg::ColorRGBA & message)
