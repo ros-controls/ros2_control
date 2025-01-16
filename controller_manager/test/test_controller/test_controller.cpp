@@ -178,7 +178,7 @@ std::vector<double> TestController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value());
+    state_intr_data.push_back(interface.get_value<double>().value());
   }
   return state_intr_data;
 }
