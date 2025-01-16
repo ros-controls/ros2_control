@@ -297,12 +297,12 @@ const rclcpp::Time & System::get_last_write_time() const { return last_write_cyc
 
 const HardwareComponentStatisticsCollector & System::get_read_statistics() const
 {
-  return read_statistics_;
+  return !impl_->get_hardware_info().is_async ? read_statistics_ : write_statistics_;
 }
 
 const HardwareComponentStatisticsCollector & System::get_write_statistics() const
 {
-  return write_statistics_;
+  return !impl_->get_hardware_info().is_async ? write_statistics_ : read_statistics_;
 }
 
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
