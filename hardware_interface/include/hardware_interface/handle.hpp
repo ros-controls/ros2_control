@@ -171,19 +171,6 @@ public:
     return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
   }
 
-  template <typename T = double>
-  [[nodiscard]] T get_value(bool & status) const
-  {
-    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
-    if (!lock.owns_lock())
-    {
-      status = false;
-      return T();
-    }
-    status = true;
-    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
-  }
-
   template <typename T>
   [[nodiscard]] bool get_value(T & value) const
   {

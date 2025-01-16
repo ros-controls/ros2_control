@@ -150,28 +150,6 @@ public:
     return std::nullopt;
   }
 
-  template <typename T = double>
-  [[nodiscard]] T get_value(bool & status, unsigned int max_tries = 10) const
-  {
-    unsigned int nr_tries = 0;
-    do
-    {
-      status = false;
-      ++get_value_statistics_.total_counter;
-      const T data = command_interface_.get_value<T>(status);
-      if (status)
-      {
-        return data;
-      }
-      ++get_value_statistics_.failed_counter;
-      ++nr_tries;
-      std::this_thread::yield();
-    } while (nr_tries < max_tries);
-
-    ++get_value_statistics_.timeout_counter;
-    return T();
-  }
-
   template <typename T>
   [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
   {

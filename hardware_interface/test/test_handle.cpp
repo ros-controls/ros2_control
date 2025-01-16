@@ -36,9 +36,6 @@ TEST(TestHandle, command_interface)
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
   EXPECT_NO_THROW(bool status = interface.set_value(0.0));
-  bool status;
-  EXPECT_DOUBLE_EQ(interface.get_value(status), 0.0);
-  ASSERT_TRUE(status);
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), 0.0);
 }
@@ -47,9 +44,6 @@ TEST(TestHandle, state_interface)
 {
   double value = 1.337;
   StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
-  bool status = false;
-  EXPECT_DOUBLE_EQ(interface.get_value(status), value);
-  ASSERT_TRUE(status);
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   // interface.set_value(5);  compiler error, no set_value function
@@ -74,12 +68,8 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
 {
   double value = 1.337;
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
-  bool status;
-  EXPECT_DOUBLE_EQ(handle.get_value(status), value);
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-  EXPECT_DOUBLE_EQ(handle.get_value(status), value);
-  ASSERT_TRUE(status);
   EXPECT_NO_THROW(bool status_set = handle.set_value(0.0));
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
