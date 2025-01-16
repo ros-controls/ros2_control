@@ -765,7 +765,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ("joint1", command_interfaces[0]->get_prefix_name());
 
   double velocity_value = 1.0;
-  (void)command_interfaces[0]->set_value(velocity_value);  // velocity
+  ASSERT_TRUE(command_interfaces[0]->set_value(velocity_value));  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
 
   // Noting should change because it is UNCONFIGURED
@@ -887,7 +887,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   double velocity_value = 1.0;
   auto ci_joint1_vel =
     test_components::vector_contains(command_interfaces, "joint1/velocity").second;
-  (void)command_interfaces[ci_joint1_vel]->set_value(velocity_value);  // velocity
+  ASSERT_TRUE(command_interfaces[ci_joint1_vel]->set_value(velocity_value));  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
 
   // Noting should change because it is UNCONFIGURED
@@ -1145,9 +1145,9 @@ TEST(TestComponentInterfaces, dummy_system)
   EXPECT_EQ("joint3", command_interfaces[2]->get_prefix_name());
 
   double velocity_value = 1.0;
-  (void)command_interfaces[0]->set_value(velocity_value);  // velocity
-  (void)command_interfaces[1]->set_value(velocity_value);  // velocity
-  (void)command_interfaces[2]->set_value(velocity_value);  // velocity
+  ASSERT_TRUE(command_interfaces[0]->set_value(velocity_value));  // velocity
+  ASSERT_TRUE(command_interfaces[1]->set_value(velocity_value));  // velocity
+  ASSERT_TRUE(command_interfaces[2]->set_value(velocity_value));  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
 
   // Noting should change because it is UNCONFIGURED
@@ -1347,9 +1347,9 @@ TEST(TestComponentInterfaces, dummy_system_default)
   auto ci_joint3_vel =
     test_components::vector_contains(command_interfaces, "joint3/velocity").second;
   double velocity_value = 1.0;
-  (void)command_interfaces[ci_joint1_vel]->set_value(velocity_value);  // velocity
-  (void)command_interfaces[ci_joint2_vel]->set_value(velocity_value);  // velocity
-  (void)command_interfaces[ci_joint3_vel]->set_value(velocity_value);  // velocity
+  ASSERT_TRUE(command_interfaces[ci_joint1_vel]->set_value(velocity_value));  // velocity
+  ASSERT_TRUE(command_interfaces[ci_joint2_vel]->set_value(velocity_value));  // velocity
+  ASSERT_TRUE(command_interfaces[ci_joint3_vel]->set_value(velocity_value));  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
 
   // Noting should change because it is UNCONFIGURED

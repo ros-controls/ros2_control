@@ -168,7 +168,11 @@ public:
     {
       return std::nullopt;
     }
-    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+    THROW_ON_NULLPTR(this->value_ptr_);
+    // TODO(saikishor): uncomment the following line when HANDLE_DATATYPE is used with multiple
+    // datatypes and remove the line below it.
+    // return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+    return *value_ptr_;
   }
 
   template <typename T>

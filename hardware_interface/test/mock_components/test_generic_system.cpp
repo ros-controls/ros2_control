@@ -877,10 +877,10 @@ void generic_system_functional_test(
   ASSERT_TRUE(std::isnan(j2v_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j1v_c.set_value(0.22);
-  (void)j2p_c.set_value(0.33);
-  (void)j2v_c.set_value(0.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
   ASSERT_EQ(3.45, j1p_s.get_value<double>().value());
@@ -915,10 +915,10 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value<double>().value());
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.55);
-  (void)j1v_c.set_value(0.66);
-  (void)j2p_c.set_value(0.77);
-  (void)j2v_c.set_value(0.88);
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
   ASSERT_EQ(0.11 + offset, j1p_s.get_value<double>().value());
@@ -983,10 +983,10 @@ void generic_system_error_group_test(
   ASSERT_TRUE(std::isnan(j2v_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j1v_c.set_value(0.22);
-  (void)j2p_c.set_value(0.33);
-  (void)j2v_c.set_value(0.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
   ASSERT_EQ(3.45, j1p_s.get_value<double>().value());
@@ -1021,10 +1021,10 @@ void generic_system_error_group_test(
   ASSERT_EQ(0.44, j2v_c.get_value<double>().value());
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.55);
-  (void)j1v_c.set_value(0.66);
-  (void)j2p_c.set_value(0.77);
-  (void)j2v_c.set_value(0.88);
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
   ASSERT_EQ(0.11, j1p_s.get_value<double>().value());
@@ -1037,8 +1037,8 @@ void generic_system_error_group_test(
   ASSERT_EQ(0.88, j2v_c.get_value<double>().value());
 
   // Error testing
-  (void)j1p_c.set_value(std::numeric_limits<double>::infinity());
-  (void)j1v_c.set_value(std::numeric_limits<double>::infinity());
+  ASSERT_TRUE(j1p_c.set_value(std::numeric_limits<double>::infinity()));
+  ASSERT_TRUE(j1v_c.set_value(std::numeric_limits<double>::infinity()));
   // read() should now bring error in the first component
   auto read_result = rm.read(TIME, PERIOD);
   ASSERT_FALSE(read_result.ok);
@@ -1075,8 +1075,8 @@ void generic_system_error_group_test(
   }
 
   // Error should be recoverable only after reactivating the hardware component
-  (void)j1p_c.set_value(0.0);
-  (void)j1v_c.set_value(0.0);
+  ASSERT_TRUE(j1p_c.set_value(0.0));
+  ASSERT_TRUE(j1v_c.set_value(0.0));
   ASSERT_FALSE(rm.read(TIME, PERIOD).ok);
 
   // Now it should be recoverable
@@ -1164,9 +1164,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   ASSERT_TRUE(std::isnan(vo_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j2p_c.set_value(0.33);
-  (void)vo_c.set_value(0.99);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(vo_c.set_value(0.99));
 
   // State values should not be changed
   ASSERT_EQ(1.55, j1p_s.get_value<double>().value());
@@ -1259,8 +1259,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_TRUE(std::isnan(j2p_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j2p_c.set_value(0.33);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
 
   // State values should not be changed
   ASSERT_EQ(0.0, j1p_s.get_value<double>().value());
@@ -1366,12 +1366,12 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   EXPECT_TRUE(std::isnan(sty_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j2p_c.set_value(0.33);
-  (void)sfx_c.set_value(1.11);
-  (void)sfy_c.set_value(2.22);
-  (void)stx_c.set_value(3.33);
-  (void)sty_c.set_value(4.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(sfx_c.set_value(1.11));
+  ASSERT_TRUE(sfy_c.set_value(2.22));
+  ASSERT_TRUE(stx_c.set_value(3.33));
+  ASSERT_TRUE(sty_c.set_value(4.44));
 
   // State values should not be changed
   ASSERT_EQ(0.0, j1p_s.get_value<double>().value());
@@ -1476,8 +1476,8 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   ASSERT_TRUE(std::isnan(j1v_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j1v_c.set_value(0.05);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.05));
 
   // State values should not be changed
   ASSERT_EQ(1.57, j1p_s.get_value<double>().value());
@@ -1587,10 +1587,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_TRUE(std::isnan(j2v_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j1v_c.set_value(0.22);
-  (void)j2p_c.set_value(0.33);
-  (void)j2v_c.set_value(0.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
   ASSERT_EQ(3.45, j1p_s.get_value<double>().value());
@@ -1627,10 +1627,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.44, j2v_c.get_value<double>().value());
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.55);
-  (void)j1v_c.set_value(0.66);
-  (void)j2p_c.set_value(0.77);
-  (void)j2v_c.set_value(0.88);
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
   ASSERT_EQ(0.11, j1p_s.get_value<double>().value());
@@ -1711,8 +1711,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   ASSERT_TRUE(std::isnan(gpio2_vac_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)gpio1_a_o1_c.set_value(0.111);
-  (void)gpio2_vac_c.set_value(0.222);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.111));
+  ASSERT_TRUE(gpio2_vac_c.set_value(0.222));
 
   // State values should not be changed
   ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value<double>().value()));
@@ -1735,8 +1735,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   ASSERT_EQ(0.222, gpio2_vac_c.get_value<double>().value());
 
   // set some new values in commands
-  (void)gpio1_a_o1_c.set_value(0.333);
-  (void)gpio2_vac_c.set_value(0.444);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.333));
+  ASSERT_TRUE(gpio2_vac_c.set_value(0.444));
 
   // state values should not be changed
   ASSERT_EQ(0.111, gpio1_a_o1_s.get_value<double>().value());
@@ -1817,10 +1817,10 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   EXPECT_TRUE(std::isnan(gpio2_vac_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)gpio1_a_o1_c.set_value(0.11);
-  (void)gpio1_a_i1_c.set_value(0.33);
-  (void)gpio1_a_i2_c.set_value(1.11);
-  (void)gpio2_vac_c.set_value(2.22);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.11));
+  ASSERT_TRUE(gpio1_a_i1_c.set_value(0.33));
+  ASSERT_TRUE(gpio1_a_i2_c.set_value(1.11));
+  ASSERT_TRUE(gpio2_vac_c.set_value(2.22));
 
   // State values should not be changed
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value<double>().value()));
@@ -1989,8 +1989,8 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
     true);
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
-  (void)j2a_c.set_value(3.5);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2a_c.set_value(3.5));
 
   // State values should not be changed
   EXPECT_EQ(3.45, j1p_s.get_value<double>().value());
@@ -2061,8 +2061,8 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(rm.perform_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
 
   // set some new values in commands
-  (void)j1v_c.set_value(0.5);
-  (void)j2v_c.set_value(2.0);
+  ASSERT_TRUE(j1v_c.set_value(0.5));
+  ASSERT_TRUE(j2v_c.set_value(2.0));
 
   // State values should not be changed
   EXPECT_EQ(0.11, j1p_s.get_value<double>().value());
@@ -2143,7 +2143,7 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   ASSERT_TRUE(std::isnan(j1p_c.get_value<double>().value()));
 
   // set some new values in commands
-  (void)j1p_c.set_value(0.11);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
 
   // State values should not be changed
   ASSERT_EQ(3.45, j1p_s.get_value<double>().value());
