@@ -71,7 +71,7 @@ controller_interface::return_type TestController::update(
   // set value to hardware to produce and test different behaviors there
   if (!std::isnan(set_first_command_interface_value_to))
   {
-    command_interfaces_[0].set_value(set_first_command_interface_value_to);
+    (void)command_interfaces_[0].set_value(set_first_command_interface_value_to);
     // reset to be easier to test
     set_first_command_interface_value_to = std::numeric_limits<double>::quiet_NaN();
   }
@@ -90,7 +90,7 @@ controller_interface::return_type TestController::update(
       RCLCPP_DEBUG(
         get_node()->get_logger(), "Setting value of command interface '%s' to %f",
         command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
-      command_interfaces_[i].set_value(external_commands_for_testing_[i]);
+      (void)command_interfaces_[i].set_value(external_commands_for_testing_[i]);
     }
   }
 

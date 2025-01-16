@@ -130,7 +130,7 @@ TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
   EXPECT_FALSE(controller.is_in_chained_mode());
 
   // Success setting chained mode
-  reference_interfaces[0]->set_value(0.0);
+  (void)reference_interfaces[0]->set_value(0.0);
 
   EXPECT_TRUE(controller.set_chained_mode(true));
   EXPECT_TRUE(controller.is_in_chained_mode());

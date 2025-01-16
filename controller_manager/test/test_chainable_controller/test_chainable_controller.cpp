@@ -101,7 +101,7 @@ controller_interface::return_type TestChainableController::update_and_write_comm
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
   {
-    command_interfaces_[i].set_value(
+    (void)command_interfaces_[i].set_value(
       reference_interfaces_[i] - state_interfaces_[i].get_value<double>().value());
   }
   // If there is a command interface then integrate and set it to the exported state interface data
