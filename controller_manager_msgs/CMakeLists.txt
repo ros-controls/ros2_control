@@ -12,7 +12,7 @@ set(msg_files
   msg/ChainConnection.msg
   msg/HardwareComponentState.msg
   msg/HardwareInterface.msg
-  msg/LifecycleInfo.msg
+  msg/NamedLifecycleState.msg
   msg/ControllerManagerStatus.msg
 )
 set(srv_files

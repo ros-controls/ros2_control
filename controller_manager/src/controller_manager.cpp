@@ -3169,7 +3169,7 @@ void ControllerManager::publish_activity()
       rt_controllers_wrapper_.get_updated_list(guard);
     for (const auto & controller : controllers)
     {
-      controller_manager_msgs::msg::LifecycleInfo lifecycle_info;
+      controller_manager_msgs::msg::NamedLifecycleState lifecycle_info;
       lifecycle_info.name = controller.info.name;
       lifecycle_info.state.id = controller.c->get_lifecycle_state().id();
       lifecycle_info.state.label = controller.c->get_lifecycle_state().label();
@@ -3180,7 +3180,7 @@ void ControllerManager::publish_activity()
     const auto hw_components_info = resource_manager_->get_components_status();
     for (const auto & [component_name, component_info] : hw_components_info)
     {
-      controller_manager_msgs::msg::LifecycleInfo lifecycle_info;
+      controller_manager_msgs::msg::NamedLifecycleState lifecycle_info;
       lifecycle_info.name = component_name;
       lifecycle_info.state.id = component_info.state.id();
       lifecycle_info.state.label = component_info.state.label();

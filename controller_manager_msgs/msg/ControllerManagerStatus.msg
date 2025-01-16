@@ -4,7 +4,7 @@
 std_msgs/Header header
 
 # The current state of the controllers
-LifecycleInfo[] controllers
+NamedLifecycleState[] controllers
 
 # The current state of the hardware components
-LifecycleInfo[] hardware_components
+NamedLifecycleState[] hardware_components
