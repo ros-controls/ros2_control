@@ -62,7 +62,7 @@ public:
    *
    * \return true if all values were set, false otherwise
    */
-  virtual bool set_values_from_message(const std_msgs::msg::ColorRGBA & message)
+  virtual bool set_values_from_message(const std_msgs::msg::ColorRGBA & message) override
   {
     if (
       message.r < 0 || message.r > 1 || message.g < 0 || message.g > 1 || message.b < 0 ||
