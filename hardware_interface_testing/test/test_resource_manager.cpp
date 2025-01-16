@@ -1846,6 +1846,45 @@ public:
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
+
+      if (test_for_changing_values)
+      {
+        auto status_map = rm->get_components_status();
+        auto check_periodicity = [&](const std::string & component_name, unsigned int rate)
+        {
+          if (i > (cm_update_rate_ / rate))
+          {
+            EXPECT_LT(
+              status_map[component_name].read_statistics->execution_time.get_statistics().average,
+              100);
+            EXPECT_LT(
+              status_map[component_name].read_statistics->periodicity.get_statistics().average,
+              1.2 * rate);
+            EXPECT_THAT(
+              status_map[component_name].read_statistics->periodicity.get_statistics().min,
+              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+            EXPECT_THAT(
+              status_map[component_name].read_statistics->periodicity.get_statistics().max,
+              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+
+            EXPECT_LT(
+              status_map[component_name].write_statistics->execution_time.get_statistics().average,
+              100);
+            EXPECT_LT(
+              status_map[component_name].write_statistics->periodicity.get_statistics().average,
+              1.2 * rate);
+            EXPECT_THAT(
+              status_map[component_name].write_statistics->periodicity.get_statistics().min,
+              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+            EXPECT_THAT(
+              status_map[component_name].write_statistics->periodicity.get_statistics().max,
+              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+          }
+        };
+
+        check_periodicity(TEST_ACTUATOR_HARDWARE_NAME, actuator_rw_rate_);
+        check_periodicity(TEST_SYSTEM_HARDWARE_NAME, system_rw_rate_);
+      }
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
     }
