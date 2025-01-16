@@ -33,7 +33,11 @@ struct MovingAverageStatisticsData
   using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
 
 public:
-  MovingAverageStatisticsData() { reset(); }
+  MovingAverageStatisticsData()
+  {
+    reset();
+    reset_statistics_sample_count_ = std::numeric_limits<unsigned int>::max();
+  }
 
   void update_statistics(const std::shared_ptr<MovingAverageStatistics> & statistics)
   {
@@ -47,6 +51,16 @@ public:
       statistics_data.sample_count = statistics->GetCount();
       statistics_data = statistics->GetStatistics();
     }
+    if (statistics->GetCount() >= reset_statistics_sample_count_)
+    {
+      statistics->Reset();
+    }
+  }
+
+  void set_reset_statistics_sample_count(unsigned int reset_sample_count)
+  {
+    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
+    reset_statistics_sample_count_ = reset_sample_count;
   }
 
   void reset()
@@ -66,6 +80,7 @@ public:
 
 private:
   StatisticData statistics_data;
+  unsigned int reset_statistics_sample_count_ = std::numeric_limits<unsigned int>::max();
   mutable realtime_tools::prio_inherit_mutex mutex_;
 };
 }  // namespace ros2_control
