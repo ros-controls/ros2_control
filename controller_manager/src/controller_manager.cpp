@@ -3388,8 +3388,20 @@ void ControllerManager::controller_activity_diagnostic_callback(
 void ControllerManager::hardware_components_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  if (!is_resource_manager_initialized())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
+    return;
+  }
+
   bool all_active = true;
   bool atleast_one_hw_active = false;
+  const std::string read_cycle_suffix = ".read_cycle";
+  const std::string write_cycle_suffix = ".write_cycle";
+  const std::string periodicity_suffix = ".periodicity";
+  const std::string exec_time_suffix = ".execution_time";
+  const std::string state_suffix = ".state";
   const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
@@ -3403,30 +3415,115 @@ void ControllerManager::hardware_components_diagnostic_callback(
       atleast_one_hw_active = true;
     }
   }
-  if (!is_resource_manager_initialized())
-  {
-    stat.summary(
-      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
-  }
-  else if (hw_components_info.empty())
+  if (hw_components_info.empty())
   {
     stat.summary(
       diagnostic_msgs::msg::DiagnosticStatus::ERROR, "No hardware components are loaded!");
+    return;
   }
-  else
+  else if (!atleast_one_hw_active)
   {
-    if (!atleast_one_hw_active)
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::WARN, "No hardware components are currently active");
+    return;
+  }
+
+  stat.summary(
+    diagnostic_msgs::msg::DiagnosticStatus::OK,
+    all_active ? "All hardware components are active" : "Not all hardware components are active");
+
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
+  auto make_stats_string =
+    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
+  {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+        << statistics_data.max << "] " << measurement_unit
+        << ", StdDev: " << statistics_data.standard_deviation;
+    return oss.str();
+  };
+
+  // Variable to define the overall status of the controller diagnostics
+  auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  std::vector<std::string> high_exec_time_hw;
+  std::vector<std::string> bad_periodicity_async_hw;
+
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    stat.add(component_name + state_suffix, component_info.state.label());
+    const bool is_async = component_info.is_async;
+    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::WARN,
-        "No hardware components are currently active");
+      all_active = false;
     }
     else
     {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::OK, all_active
-                                                      ? "All hardware components are active"
-                                                      : "Not all hardware components are active");
+      atleast_one_hw_active = true;
+    }
+    if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      const auto periodicity_stats = component_info.read_statistics->periodicity.get_statistics();
+      const auto exec_time_stats = component_info.read_statistics->execution_time.get_statistics();
+      stat.add(component_name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
+      if (is_async)
+      {
+        stat.add(
+          component_name + periodicity_suffix,
+          make_stats_string(periodicity_stats, "Hz") +
+            " -> Desired : " + std::to_string(component_info.rw_rate) + " Hz");
+        const double periodicity_error =
+          std::abs(periodicity_stats.average - static_cast<double>(component_info.rw_rate));
+        if (
+          periodicity_error >
+            params_->diagnostics.threshold.hardware_components.periodicity.mean_error.error ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.hardware_components.periodicity.standard_deviation.error)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+          add_element_to_list(bad_periodicity_async_hw, component_name);
+        }
+        else if (
+          periodicity_error >
+            params_->diagnostics.threshold.hardware_components.periodicity.mean_error.warn ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.hardware_components.periodicity.standard_deviation.warn)
+        {
+          if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+          {
+            level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+          }
+          add_element_to_list(bad_periodicity_async_hw, component_name);
+        }
+      }
+      const double max_exp_exec_time =
+        is_async ? 1.e6 / static_cast<double>(component_info.rw_rate) : 0.0;
+      if (
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.hardware_components.execution_time.mean_error.error ||
+        exec_time_stats.standard_deviation > params_->diagnostics.threshold.hardware_components
+                                               .execution_time.standard_deviation.error)
+      {
+        level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+        high_exec_time_hw.push_back(component_name);
+      }
+      else if (
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.hardware_components.execution_time.mean_error.warn ||
+        exec_time_stats.standard_deviation >
+          params_->diagnostics.threshold.hardware_components.execution_time.standard_deviation.warn)
+      {
+        if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+        }
+        high_exec_time_hw.push_back(component_name);
+      }
     }
   }
 }
