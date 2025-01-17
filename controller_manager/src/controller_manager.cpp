@@ -512,6 +512,8 @@ void ControllerManager::init_services()
       "~/set_hardware_component_state",
       std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
       qos_services, best_effort_callback_group_);
+  rt_controllers_wrapper_.set_on_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
@@ -1549,7 +1551,6 @@ controller_interface::return_type ControllerManager::switch_controller(
   // clear unused list
   rt_controllers_wrapper_.get_unused_list(guard).clear();
 
-  publish_activity();
   clear_requests();
 
   RCLCPP_DEBUG_EXPRESSION(
@@ -2711,6 +2712,17 @@ void ControllerManager::RTControllerListWrapper::switch_updated_list(
   int former_current_controllers_list_ = updated_controllers_index_;
   updated_controllers_index_ = get_other_list(former_current_controllers_list_);
   wait_until_rt_not_using(former_current_controllers_list_);
+  if (switch_callback_)
+  {
+    switch_callback_();
+  }
+}
+
+void ControllerManager::RTControllerListWrapper::set_on_switch_callback(
+  std::function<void()> callback)
+{
+  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  switch_callback_ = callback;
 }
 
 int ControllerManager::RTControllerListWrapper::get_other_list(int index) const

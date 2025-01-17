@@ -516,6 +516,12 @@ private:
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
 
+    /// A method to register a callback to be called when the list is switched
+    /**
+     * \param[in] callback Callback to be called when the list is switched
+     */
+    void set_on_switch_callback(std::function<void()> callback);
+
     // Mutex protecting the controllers list
     // must be acquired before using any list other than the "used by rt"
     mutable std::recursive_mutex controllers_lock_;
@@ -537,6 +543,8 @@ private:
     int updated_controllers_index_ = 0;
     /// The index of the controllers list being used in the real-time thread.
     int used_by_realtime_controllers_index_ = -1;
+
+    std::function<void()> switch_callback_ = nullptr;
   };
 
   RTControllerListWrapper rt_controllers_wrapper_;
