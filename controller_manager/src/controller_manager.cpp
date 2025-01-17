@@ -293,6 +293,14 @@ ControllerManager::ControllerManager(
 
 void ControllerManager::init_controller_manager()
 {
+  controller_manager_status_publisher_ =
+    create_publisher<controller_manager_msgs::msg::ControllerManagerStatus>(
+      "~/activity", rclcpp::QoS(1).transient_local());
+  rt_controllers_wrapper_.set_on_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
+
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
@@ -466,9 +474,6 @@ void ControllerManager::init_services()
   best_effort_callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
-  controller_manager_status_publisher_ =
-    create_publisher<controller_manager_msgs::msg::ControllerManagerStatus>(
-      "~/activity", rclcpp::QoS(1).transient_local());
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
     qos_services, best_effort_callback_group_);
@@ -512,8 +517,6 @@ void ControllerManager::init_services()
       "~/set_hardware_component_state",
       std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
       qos_services, best_effort_callback_group_);
-  rt_controllers_wrapper_.set_on_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
