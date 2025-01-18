@@ -13,7 +13,7 @@ set(msg_files
   msg/HardwareComponentState.msg
   msg/HardwareInterface.msg
   msg/NamedLifecycleState.msg
-  msg/ControllerManagerStatus.msg
+  msg/ControllerManagerActivity.msg
 )
 set(srv_files
   srv/ConfigureController.srv

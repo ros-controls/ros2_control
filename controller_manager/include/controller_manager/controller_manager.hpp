@@ -27,7 +27,7 @@
 #include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
-#include "controller_manager_msgs/msg/controller_manager_status.hpp"
+#include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -553,8 +553,8 @@ private:
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
-  rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerStatus>::SharedPtr
-    controller_manager_status_publisher_;
+  rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerActivity>::SharedPtr
+    controller_manager_activity_publisher_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr

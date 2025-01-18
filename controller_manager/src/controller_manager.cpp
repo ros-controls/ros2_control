@@ -293,8 +293,8 @@ ControllerManager::ControllerManager(
 
 void ControllerManager::init_controller_manager()
 {
-  controller_manager_status_publisher_ =
-    create_publisher<controller_manager_msgs::msg::ControllerManagerStatus>(
+  controller_manager_activity_publisher_ =
+    create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
       "~/activity", rclcpp::QoS(1).transient_local());
   rt_controllers_wrapper_.set_on_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
@@ -3175,7 +3175,7 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
 
 void ControllerManager::publish_activity()
 {
-  controller_manager_msgs::msg::ControllerManagerStatus status_msg;
+  controller_manager_msgs::msg::ControllerManagerActivity status_msg;
   status_msg.header.stamp = get_clock()->now();
   {
     // lock controllers
@@ -3202,7 +3202,7 @@ void ControllerManager::publish_activity()
       status_msg.hardware_components.push_back(lifecycle_info);
     }
   }
-  controller_manager_status_publisher_->publish(status_msg);
+  controller_manager_activity_publisher_->publish(status_msg);
 }
 
 void ControllerManager::controller_activity_diagnostic_callback(

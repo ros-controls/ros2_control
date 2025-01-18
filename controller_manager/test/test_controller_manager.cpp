@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
-#include "controller_manager_msgs/msg/controller_manager_status.hpp"
+#include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/executor.hpp"
@@ -34,15 +34,15 @@ class TestControllerManagerWithStrictness
 {
 public:
   void get_cm_status_message(
-    const std::string & topic, controller_manager_msgs::msg::ControllerManagerStatus & cm_msg)
+    const std::string & topic, controller_manager_msgs::msg::ControllerManagerActivity & cm_msg)
   {
-    controller_manager_msgs::msg::ControllerManagerStatus::SharedPtr received_msg;
+    controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr received_msg;
     rclcpp::Node test_node("test_node");
     auto subs_callback =
-      [&](const controller_manager_msgs::msg::ControllerManagerStatus::SharedPtr msg)
+      [&](const controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr msg)
     { received_msg = msg; };
     auto subscription =
-      test_node.create_subscription<controller_manager_msgs::msg::ControllerManagerStatus>(
+      test_node.create_subscription<controller_manager_msgs::msg::ControllerManagerActivity>(
         topic, rclcpp::QoS(1).transient_local(), subs_callback);
 
     rclcpp::executors::SingleThreadedExecutor executor;
@@ -109,7 +109,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   auto test_controller2 = std::make_shared<test_controller::TestController>();
 
   // Check for the hardware component and no controllers
-  controller_manager_msgs::msg::ControllerManagerStatus cm_msg;
+  controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
   const std::string cm_activity_topic =
     std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
   get_cm_status_message(cm_activity_topic, cm_msg);
