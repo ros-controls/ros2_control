@@ -3470,6 +3470,10 @@ void ControllerManager::hardware_components_diagnostic_callback(
           const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
           const auto & params)
       {
+        if (!statistics)
+        {
+          return;
+        }
         const bool is_async = comp_info.is_async;
         const std::string periodicity_suffix = ".periodicity";
         const std::string exec_time_suffix = ".execution_time";
@@ -3538,12 +3542,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
         component_name, component_info.read_statistics, read_cycle_suffix, level, component_info,
         params_);
       // For components : {actuator and system}
-      if (component_info.write_statistics)
-      {
-        update_stats(
-          component_name, component_info.write_statistics, write_cycle_suffix, level,
-          component_info, params_);
-      }
+      update_stats(
+        component_name, component_info.write_statistics, write_cycle_suffix, level, component_info,
+        params_);
     }
   }
 
