@@ -175,7 +175,7 @@ controller_manager:
             warn: {
               type: double,
               default_value: 1000.0,
-              description: "The warning threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published. The ``mean_error`` for a synchronous hardware component will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous hardware component will be computed against its desired read/write period, as the hardware component can take a maximum of the desired period cycle to execute it's cycle",
+              description: "The warning threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published. The ``mean_error`` for a synchronous hardware component will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous hardware component will be computed against its desired read/write period, as the hardware component can take a maximum of the desired period cycle to execute its cycle",
               validation: {
                 gt<>: 0.0,
               }
