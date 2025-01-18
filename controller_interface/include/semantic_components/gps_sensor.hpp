@@ -17,7 +17,6 @@
 
 #include <array>
 #include <string>
-#include <vector>
 
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
@@ -25,7 +24,13 @@
 namespace semantic_components
 {
 
-template <bool use_covariance>
+enum class GPSSensorOption
+{
+  WithCovariance,
+  WithoutCovariance
+};
+
+template <GPSSensorOption sensor_option>
 class GPSSensor : public SemanticComponentInterface<sensor_msgs::msg::NavSatFix>
 {
 public:
@@ -37,7 +42,7 @@ public:
              {name + "/" + "longitude"},
              {name + "/" + "altitude"}})
   {
-    if constexpr (use_covariance)
+    if constexpr (sensor_option == GPSSensorOption::WithCovariance)
     {
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
       interface_names_.emplace_back(name + "/" + "longitude_covariance");
@@ -88,7 +93,9 @@ public:
    *
    * \return Covariance array.
    */
-  template <typename U = void, typename = std::enable_if_t<use_covariance, U>>
+  template <
+    typename U = void,
+    typename = std::enable_if_t<sensor_option == GPSSensorOption::WithCovariance, U>>
   const std::array<double, 9> & get_covariance()
   {
     covariance_[0] = state_interfaces_[5].get().get_value();
@@ -108,7 +115,7 @@ public:
     message.longitude = get_longitude();
     message.altitude = get_altitude();
 
-    if constexpr (use_covariance)
+    if constexpr (sensor_option == GPSSensorOption::WithCovariance)
     {
       message.position_covariance = get_covariance();
     }

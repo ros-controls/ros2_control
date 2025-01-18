@@ -16,8 +16,8 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <array>
-#include <iterator>
 #include <string>
+#include <vector>
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "semantic_components/gps_sensor.hpp"
@@ -42,8 +42,8 @@ struct GPSSensorTest : public testing::Test
   const std::array<std::string, 5> gps_interface_names{
     {"status", "service", "latitude", "longitude", "altitude"}};
   std::array<double, 5> gps_states{};
-  static constexpr bool use_covariance{false};
-  semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
+  semantic_components::GPSSensor<semantic_components::GPSSensorOption::WithoutCovariance> sut{
+    gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
@@ -140,8 +140,8 @@ struct GPSSensorWithCovarianceTest : public testing::Test
     {"status", "service", "latitude", "longitude", "altitude", "latitude_covariance",
      "longitude_covariance", "altitude_covariance"}};
   std::array<double, 8> gps_states{};
-  static constexpr bool use_covariance{true};
-  semantic_components::GPSSensor<use_covariance> sut{gps_sensor_name};
+  semantic_components::GPSSensor<semantic_components::GPSSensorOption::WithCovariance> sut{
+    gps_sensor_name};
   std::vector<std::string> full_interface_names;
 
   hardware_interface::StateInterface gps_state{
