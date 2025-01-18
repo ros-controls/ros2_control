@@ -581,9 +581,9 @@ public:
         }
         break;
     }
-    if (component_state_switch_callback_)
+    if (on_component_state_switch_callback_)
     {
-      component_state_switch_callback_();
+      on_component_state_switch_callback_();
     }
 
     return result;
@@ -1011,7 +1011,7 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
-  std::function<void()> component_state_switch_callback_ = nullptr;
+  std::function<void()> on_component_state_switch_callback_ = nullptr;
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
@@ -1928,7 +1928,7 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 
 void ResourceManager::set_on_component_state_switch_callback(std::function<void()> callback)
 {
-  resource_storage_->component_state_switch_callback_ = callback;
+  resource_storage_->on_component_state_switch_callback_ = callback;
 }
 
 // END: "used only in tests and locally"
