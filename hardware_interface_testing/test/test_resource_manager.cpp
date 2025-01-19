@@ -2007,6 +2007,7 @@ public:
     rm = std::make_shared<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
     activate_components(*rm);
 
+    time = node_.get_clock()->now();
     auto status_map = rm->get_components_status();
     EXPECT_EQ(
       status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -2030,6 +2031,42 @@ public:
     state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[1]));
     state_itfs.push_back(rm->claim_state_interface(TEST_SYSTEM_HARDWARE_STATE_INTERFACES[1]));
 
+    auto check_statistics_for_nan = [&](const std::string & component_name)
+    {
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].read_statistics->periodicity.get_statistics().average));
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].write_statistics->periodicity.get_statistics().average));
+
+      EXPECT_TRUE(
+        std::isnan(status_map[component_name].read_statistics->periodicity.get_statistics().min));
+      EXPECT_TRUE(
+        std::isnan(status_map[component_name].write_statistics->periodicity.get_statistics().min));
+
+      EXPECT_TRUE(
+        std::isnan(status_map[component_name].read_statistics->periodicity.get_statistics().max));
+      EXPECT_TRUE(
+        std::isnan(status_map[component_name].write_statistics->periodicity.get_statistics().max));
+
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].read_statistics->execution_time.get_statistics().average));
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].write_statistics->execution_time.get_statistics().average));
+
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].read_statistics->execution_time.get_statistics().min));
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].write_statistics->execution_time.get_statistics().min));
+
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].read_statistics->execution_time.get_statistics().max));
+      EXPECT_TRUE(std::isnan(
+        status_map[component_name].write_statistics->execution_time.get_statistics().max));
+    };
+
+    check_statistics_for_nan(TEST_ACTUATOR_HARDWARE_NAME);
+    check_statistics_for_nan(TEST_SYSTEM_HARDWARE_NAME);
+
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
     {
@@ -2044,7 +2081,8 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
-    time = time + duration;
+    node_.get_clock()->sleep_until(time + duration);
+    time = node_.get_clock()->now();
     check_if_interface_available(true, true);
   }
 
@@ -2099,7 +2137,58 @@ public:
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
-      time = time + duration;
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
+    }
+
+    auto status_map = rm->get_components_status();
+    auto check_periodicity = [&](const std::string & component_name, unsigned int rate)
+    {
+      EXPECT_LT(
+        status_map[component_name].read_statistics->periodicity.get_statistics().average,
+        1.2 * rate);
+      EXPECT_THAT(
+        status_map[component_name].read_statistics->periodicity.get_statistics().min,
+        testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+      EXPECT_THAT(
+        status_map[component_name].read_statistics->periodicity.get_statistics().max,
+        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+
+      EXPECT_LT(
+        status_map[component_name].write_statistics->periodicity.get_statistics().average,
+        1.2 * rate);
+      EXPECT_THAT(
+        status_map[component_name].write_statistics->periodicity.get_statistics().min,
+        testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+      EXPECT_THAT(
+        status_map[component_name].write_statistics->periodicity.get_statistics().max,
+        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+    };
+
+    if (check_for_updated_values)
+    {
+      check_periodicity(TEST_ACTUATOR_HARDWARE_NAME, 100u);
+      check_periodicity(TEST_SYSTEM_HARDWARE_NAME, 100u);
+      EXPECT_LT(
+        status_map[TEST_ACTUATOR_HARDWARE_NAME]
+          .read_statistics->execution_time.get_statistics()
+          .average,
+        100);
+      EXPECT_LT(
+        status_map[TEST_ACTUATOR_HARDWARE_NAME]
+          .write_statistics->execution_time.get_statistics()
+          .average,
+        100);
+      EXPECT_LT(
+        status_map[TEST_SYSTEM_HARDWARE_NAME]
+          .read_statistics->execution_time.get_statistics()
+          .average,
+        100);
+      EXPECT_LT(
+        status_map[TEST_SYSTEM_HARDWARE_NAME]
+          .write_statistics->execution_time.get_statistics()
+          .average,
+        100);
     }
   }
 
