@@ -34,6 +34,10 @@ template <GPSSensorOption sensor_option>
 class GPSSensor : public SemanticComponentInterface<sensor_msgs::msg::NavSatFix>
 {
 public:
+  static_assert(
+    sensor_option == GPSSensorOption::WithCovariance ||
+      sensor_option == GPSSensorOption::WithoutCovariance,
+    "Invalid GPSSensorOption");
   explicit GPSSensor(const std::string & name)
   : SemanticComponentInterface(
       name, {{name + "/" + "status"},
@@ -42,10 +46,6 @@ public:
              {name + "/" + "longitude"},
              {name + "/" + "altitude"}})
   {
-    static_assert(
-      sensor_option == GPSSensorOption::WithCovariance ||
-        sensor_option == GPSSensorOption::WithoutCovariance,
-      "Invalid GPSSensorOption");
     if constexpr (sensor_option == GPSSensorOption::WithCovariance)
     {
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
