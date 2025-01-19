@@ -41,8 +41,8 @@ Actuator::Actuator(Actuator && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.actuators_mutex_);
   impl_ = std::move(other.impl_);
-  last_read_cycle_time_ = other.last_read_cycle_time_;
-  last_write_cycle_time_ = other.last_write_cycle_time_;
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
 const rclcpp_lifecycle::State & Actuator::initialize(
@@ -55,8 +55,6 @@ const rclcpp_lifecycle::State & Actuator::initialize(
     switch (impl_->init(actuator_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
-        last_read_cycle_time_ = clock_interface->get_clock()->now();
-        last_write_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -143,6 +141,8 @@ const rclcpp_lifecycle::State & Actuator::shutdown()
 const rclcpp_lifecycle::State & Actuator::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   read_statistics_.reset_statistics();
   write_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
@@ -323,16 +323,20 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
     {
       error();
     }
-    if (trigger_result.successful && trigger_result.execution_time.has_value())
+    if (trigger_result.successful)
     {
-      read_statistics_.execution_time->AddMeasurement(
-        static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+      if (trigger_result.execution_time.has_value())
+      {
+        read_statistics_.execution_time->AddMeasurement(
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+      }
+      if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
+      {
+        read_statistics_.periodicity->AddMeasurement(
+          1.0 / (time - last_read_cycle_time_).seconds());
+      }
+      last_read_cycle_time_ = time;
     }
-    if (trigger_result.successful && trigger_result.period.has_value())
-    {
-      read_statistics_.periodicity->AddMeasurement(1.0 / trigger_result.period.value().seconds());
-    }
-    last_read_cycle_time_ = time;
     return trigger_result.result;
   }
   return return_type::OK;
@@ -354,16 +358,20 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
     {
       error();
     }
-    if (trigger_result.successful && trigger_result.execution_time.has_value())
+    if (trigger_result.successful)
     {
-      write_statistics_.execution_time->AddMeasurement(
-        static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+      if (trigger_result.execution_time.has_value())
+      {
+        write_statistics_.execution_time->AddMeasurement(
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+      }
+      if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
+      {
+        write_statistics_.periodicity->AddMeasurement(
+          1.0 / (time - last_write_cycle_time_).seconds());
+      }
+      last_write_cycle_time_ = time;
     }
-    if (trigger_result.successful && trigger_result.period.has_value())
-    {
-      write_statistics_.periodicity->AddMeasurement(1.0 / trigger_result.period.value().seconds());
-    }
-    last_write_cycle_time_ = time;
     return trigger_result.result;
   }
   return return_type::OK;
