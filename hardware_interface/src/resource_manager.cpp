@@ -1011,6 +1011,7 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
+  /// The callback to be called when a component state is switched
   std::function<void()> on_component_state_switch_callback_ = nullptr;
 
   // Update rate of the controller manager, and the clock interface of its node
