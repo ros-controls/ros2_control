@@ -42,6 +42,10 @@ public:
              {name + "/" + "longitude"},
              {name + "/" + "altitude"}})
   {
+    static_assert(
+      sensor_option == GPSSensorOption::WithCovariance ||
+        sensor_option == GPSSensorOption::WithoutCovariance,
+      "Invalid GPSSensorOption");
     if constexpr (sensor_option == GPSSensorOption::WithCovariance)
     {
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
