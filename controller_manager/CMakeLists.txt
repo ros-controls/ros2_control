@@ -201,6 +201,9 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  target_compile_definitions(
+    test_spawner_unspawner
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
   ament_add_gmock(test_hardware_spawner
     test/test_hardware_spawner.cpp
@@ -211,14 +214,6 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
-
-  install(FILES
-          test/test_controller_spawner_with_type.yaml
-          test/test_controller_overriding_parameters.yaml
-          test/test_controller_spawner_with_fallback_controllers.yaml
-          test/test_controller_spawner_wildcard_entries.yaml
-          test/test_controller_spawner_with_interfaces.yaml
-          DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
