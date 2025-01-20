@@ -243,7 +243,6 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      const rclcpp::Time last_trigger_time = read_async_handler_->get_current_callback_time();
       const auto result = read_async_handler_->trigger_async_callback(time, period);
       status.successful = result.first;
       status.result = result.second;
@@ -251,10 +250,6 @@ public:
       if (execution_time.count() > 0)
       {
         status.execution_time = execution_time;
-      }
-      if (last_trigger_time.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
-      {
-        status.period = time - last_trigger_time;
       }
       if (!status.successful)
       {
@@ -274,7 +269,6 @@ public:
       status.result = read(time, period);
       status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now() - start_time);
-      status.period = period;
     }
     return status;
   }
