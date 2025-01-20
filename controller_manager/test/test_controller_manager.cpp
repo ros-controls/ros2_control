@@ -43,7 +43,7 @@ public:
     { received_msg = msg; };
     auto subscription =
       test_node.create_subscription<controller_manager_msgs::msg::ControllerManagerActivity>(
-        topic, rclcpp::QoS(1).transient_local(), subs_callback);
+        topic, rclcpp::QoS(1).reliable().transient_local(), subs_callback);
 
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(test_node.get_node_base_interface());

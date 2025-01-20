@@ -295,7 +295,7 @@ void ControllerManager::init_controller_manager()
 {
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
-      "~/activity", rclcpp::QoS(1).transient_local());
+      "~/activity", rclcpp::QoS(1).reliable().transient_local());
   rt_controllers_wrapper_.set_on_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
   resource_manager_->set_on_component_state_switch_callback(
