@@ -26,9 +26,13 @@
 
 namespace ros2_control
 {
-struct MovingAverageStatisticsData
+/**
+ * @brief Data structure to store the statistics of a moving average. The data is protected by a
+ * mutex and the data can be updated and retrieved.
+ */
+class MovingAverageStatisticsData
 {
-  using MovingAverageStatistics =
+  using MovingAverageStatisticsCollector =
     libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
   using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
 
@@ -39,7 +43,11 @@ public:
     reset_statistics_sample_count_ = std::numeric_limits<unsigned int>::max();
   }
 
-  void update_statistics(const std::shared_ptr<MovingAverageStatistics> & statistics)
+  /**
+   * @brief Update the statistics data with the new statistics data.
+   * @param statistics statistics collector to update the current statistics data.
+   */
+  void update_statistics(const std::shared_ptr<MovingAverageStatisticsCollector> & statistics)
   {
     std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
     if (statistics->GetCount() > 0)
@@ -57,6 +65,10 @@ public:
     }
   }
 
+  /**
+   * @brief Set the number of samples to reset the statistics.
+   * @param reset_sample_count number of samples to reset the statistics.
+   */
   void set_reset_statistics_sample_count(unsigned int reset_sample_count)
   {
     std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
@@ -72,6 +84,10 @@ public:
     statistics_data.sample_count = 0;
   }
 
+  /**
+   * @brief Get the statistics data.
+   * @return statistics data.
+   */
   const StatisticData & get_statistics() const
   {
     std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
@@ -79,33 +95,46 @@ public:
   }
 
 private:
+  /// Statistics data
   StatisticData statistics_data;
+  /// Number of samples to reset the statistics
   unsigned int reset_statistics_sample_count_ = std::numeric_limits<unsigned int>::max();
+  /// Mutex to protect the statistics data
   mutable realtime_tools::prio_inherit_mutex mutex_;
 };
 }  // namespace ros2_control
 
 namespace hardware_interface
 {
+/**
+ * @brief Data structure with two moving average statistics collectors. One for the execution time
+ * and the other for the periodicity.
+ */
 struct HardwareComponentStatisticsCollector
 {
   HardwareComponentStatisticsCollector()
   {
-    execution_time = std::make_shared<MovingAverageStatistics>();
-    periodicity = std::make_shared<MovingAverageStatistics>();
+    execution_time = std::make_shared<MovingAverageStatisticsCollector>();
+    periodicity = std::make_shared<MovingAverageStatisticsCollector>();
   }
 
-  using MovingAverageStatistics =
+  using MovingAverageStatisticsCollector =
     libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
 
+  /**
+   * @brief Resets the internal statistics of the execution time and periodicity statistics
+   * collectors.
+   */
   void reset_statistics()
   {
     execution_time->Reset();
     periodicity->Reset();
   }
 
-  std::shared_ptr<MovingAverageStatistics> execution_time = nullptr;
-  std::shared_ptr<MovingAverageStatistics> periodicity = nullptr;
+  /// Execution time statistics collector
+  std::shared_ptr<MovingAverageStatisticsCollector> execution_time = nullptr;
+  /// Periodicity statistics collector
+  std::shared_ptr<MovingAverageStatisticsCollector> periodicity = nullptr;
 };
 }  // namespace hardware_interface
 
