@@ -38,14 +38,12 @@ enum class return_type : std::uint8_t
  * @var successful: true if it was triggered successfully, false if not.
  * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
  * @var execution_time: duration of the execution of the update method.
- * @var period: period of the update method.
  */
 struct HardwareComponentCycleStatus
 {
   bool successful = true;
   return_type result = return_type::OK;
   std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
-  std::optional<rclcpp::Duration> period = std::nullopt;
 };
 
 }  // namespace hardware_interface
