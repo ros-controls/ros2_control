@@ -11,7 +11,6 @@ endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-  ament_index_cpp
   controller_interface
   controller_manager_msgs
   diagnostic_updater
