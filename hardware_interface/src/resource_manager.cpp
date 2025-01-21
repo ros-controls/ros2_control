@@ -671,7 +671,7 @@ public:
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
         joint_limits::JointInterfacesCommandLimiterData data;
         data.joint_name = joint_name;
-        limiters_data_[hw_info.name].push_back(data);
+        limiters_data_[hw_info.name].insert({joint_name, data});
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
@@ -690,7 +690,7 @@ public:
           limits_interface = std::make_unique<joint_limits::JointSoftLimiter>();
         }
         limits_interface->init({joint_name}, hard_limits, soft_limits, nullptr, nullptr);
-        joint_limiters_interface_[hw_info.name].push_back(std::move(limits_interface));
+        joint_limiters_interface_[hw_info.name].insert({joint_name, std::move(limits_interface)});
       }
     }
   }
@@ -751,7 +751,7 @@ public:
   {
     for (auto & joint_limiter_data : limiters_data_)
     {
-      for (auto & data : joint_limiter_data.second)
+      for (auto & [joint_name, data] : joint_limiter_data.second)
       {
         update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
         update_joint_limiters_data(data.joint_name, command_interface_map_, data.command, true);
@@ -1110,12 +1110,14 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
-  std::unordered_map<std::string, std::vector<joint_limits::JointInterfacesCommandLimiterData>>
+  std::unordered_map<
+    std::string, std::unordered_map<std::string, joint_limits::JointInterfacesCommandLimiterData>>
     limiters_data_;
 
   std::unordered_map<
-    std::string, std::vector<std::unique_ptr<
-                   joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>>>
+    std::string, std::unordered_map<
+                   std::string, std::unique_ptr<joint_limits::JointLimiterInterface<
+                                  joint_limits::JointControlInterfacesData>>>>
     joint_limiters_interface_;
 
   std::string robot_description_;
@@ -1871,11 +1873,11 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   resource_storage_->update_joint_limiters_data();
   for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
   {
-    for (size_t i = 0; i < limiters.size(); i++)
+    for (const auto & [joint_name, limiter] : limiters)
     {
       joint_limits::JointInterfacesCommandLimiterData & data =
-        resource_storage_->limiters_data_[hw_name][i];
-      enforce_result |= limiters[i]->enforce(data.actual, data.limited, period);
+        resource_storage_->limiters_data_[hw_name][joint_name];
+      enforce_result |= limiter->enforce(data.actual, data.limited, period);
       resource_storage_->update_joint_limiters_commands(
         data.limited, resource_storage_->command_interface_map_);
     }
