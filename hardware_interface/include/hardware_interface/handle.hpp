@@ -29,7 +29,7 @@
 namespace hardware_interface
 {
 
-using HANDLE_DATATYPE = std::variant<double>;
+using HANDLE_DATATYPE = std::variant<std::monostate, double>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -45,6 +45,7 @@ public:
     handle_name_(prefix_name_ + "/" + interface_name_),
     value_ptr_(value_ptr)
   {
+    value_ = std::monostate{};
   }
 
   explicit Handle(const InterfaceDescription & interface_description)
@@ -80,7 +81,14 @@ public:
     interface_name_ = other.interface_name_;
     handle_name_ = other.handle_name_;
     value_ = other.value_;
-    value_ptr_ = other.value_ptr_;
+    if (std::holds_alternative<std::monostate>(value_))
+    {
+      value_ptr_ = other.value_ptr_;
+    }
+    else
+    {
+      value_ptr_ = std::get_if<double>(&value_);
+    }
   }
 
   Handle(Handle && other) noexcept
@@ -104,7 +112,14 @@ public:
       interface_name_ = other.interface_name_;
       handle_name_ = other.handle_name_;
       value_ = other.value_;
-      value_ptr_ = other.value_ptr_;
+      if (std::holds_alternative<std::monostate>(value_))
+      {
+        value_ptr_ = other.value_ptr_;
+      }
+      else
+      {
+        value_ptr_ = std::get_if<double>(&value_);
+      }
     }
     return *this;
   }
