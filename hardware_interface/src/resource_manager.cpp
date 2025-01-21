@@ -728,23 +728,23 @@ public:
 
   template <typename T>
   void update_joint_limiters_commands(
-    const joint_limits::JointControlInterfacesData & state,
+    const joint_limits::JointControlInterfacesData & limited_command,
     std::map<std::string, T> & interface_map)
   {
     const auto set_interface_command =
       [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      const std::string interface_name = state.joint_name + "/" + interface_type;
-      if (interface_map.find(interface_name) != interface_map.end() && data.has_value())
+      const std::string interface_name = limited_command.joint_name + "/" + interface_type;
+      if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
         interface_map.at(interface_name)->set_value(data.value());
       }
     };
     // update the command data of the limiters
-    set_interface_command(hardware_interface::HW_IF_POSITION, state.position);
-    set_interface_command(hardware_interface::HW_IF_VELOCITY, state.velocity);
-    set_interface_command(hardware_interface::HW_IF_EFFORT, state.effort);
-    set_interface_command(hardware_interface::HW_IF_ACCELERATION, state.acceleration);
+    set_interface_command(hardware_interface::HW_IF_POSITION, limited_command.position);
+    set_interface_command(hardware_interface::HW_IF_VELOCITY, limited_command.velocity);
+    set_interface_command(hardware_interface::HW_IF_EFFORT, limited_command.effort);
+    set_interface_command(hardware_interface::HW_IF_ACCELERATION, limited_command.acceleration);
   }
 
   void update_joint_limiters_data(joint_limits::JointInterfacesCommandLimiterData & data)
