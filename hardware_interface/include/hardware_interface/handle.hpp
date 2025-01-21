@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -72,69 +73,22 @@ public:
   {
   }
 
-  Handle(const Handle & other) noexcept
-  {
-    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-    prefix_name_ = other.prefix_name_;
-    interface_name_ = other.interface_name_;
-    handle_name_ = other.handle_name_;
-    value_ = other.value_;
-    if (std::holds_alternative<std::monostate>(value_))
-    {
-      value_ptr_ = other.value_ptr_;
-    }
-    else
-    {
-      value_ptr_ = std::get_if<double>(&value_);
-    }
-  }
-
-  Handle(Handle && other) noexcept
-  {
-    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-    prefix_name_ = std::move(other.prefix_name_);
-    interface_name_ = std::move(other.interface_name_);
-    handle_name_ = std::move(other.handle_name_);
-    value_ = std::move(other.value_);
-    value_ptr_ = std::move(other.value_ptr_);
-  }
+  Handle(const Handle & other) noexcept { copy(other); }
 
   Handle & operator=(const Handle & other)
   {
     if (this != &other)
     {
-      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-      prefix_name_ = other.prefix_name_;
-      interface_name_ = other.interface_name_;
-      handle_name_ = other.handle_name_;
-      value_ = other.value_;
-      if (std::holds_alternative<std::monostate>(value_))
-      {
-        value_ptr_ = other.value_ptr_;
-      }
-      else
-      {
-        value_ptr_ = std::get_if<double>(&value_);
-      }
+      copy(other);
     }
     return *this;
   }
 
+  Handle(Handle && other) noexcept { swap(*this, other); }
+
   Handle & operator=(Handle && other)
   {
-    if (this != &other)
-    {
-      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-      prefix_name_ = std::move(other.prefix_name_);
-      interface_name_ = std::move(other.interface_name_);
-      handle_name_ = std::move(other.handle_name_);
-      value_ = std::move(other.value_);
-      value_ptr_ = std::move(other.value_ptr_);
-    }
+    swap(*this, other);
     return *this;
   }
 
@@ -199,6 +153,36 @@ public:
     *this->value_ptr_ = value;
     return true;
     // END
+  }
+
+private:
+  void copy(const Handle & other) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    prefix_name_ = other.prefix_name_;
+    interface_name_ = other.interface_name_;
+    handle_name_ = other.handle_name_;
+    value_ = other.value_;
+    if (std::holds_alternative<std::monostate>(value_))
+    {
+      value_ptr_ = other.value_ptr_;
+    }
+    else
+    {
+      value_ptr_ = std::get_if<double>(&value_);
+    }
+  }
+
+  void swap(Handle & first, Handle & second) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(first.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(second.handle_mutex_);
+    std::swap(first.prefix_name_, second.prefix_name_);
+    std::swap(first.interface_name_, second.interface_name_);
+    std::swap(first.handle_name_, second.handle_name_);
+    std::swap(first.value_, second.value_);
+    std::swap(first.value_ptr_, second.value_ptr_);
   }
 
 protected:
