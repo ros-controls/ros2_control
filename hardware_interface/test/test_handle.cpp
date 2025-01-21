@@ -99,11 +99,13 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
 TEST(TestHandle, copy_constructor)
 {
   double value = 1.337;
-  hardware_interface::Handle interface{JOINT_NAME, FOO_INTERFACE, &value};
-  hardware_interface::Handle copy(interface);
+  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
+  hardware_interface::Handle copy(handle);
   EXPECT_DOUBLE_EQ(copy.get_value(), value);
+  EXPECT_DOUBLE_EQ(handle.get_value(), value);
   EXPECT_NO_THROW(copy.set_value(0.0));
   EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
 }
 
 TEST(TesHandle, move_constructor)
@@ -126,8 +128,10 @@ TEST(TestHandle, copy_assignment)
   EXPECT_DOUBLE_EQ(handle.get_value(), value);
   copy = handle;
   EXPECT_DOUBLE_EQ(copy.get_value(), value);
+  EXPECT_DOUBLE_EQ(handle.get_value(), value);
   EXPECT_NO_THROW(copy.set_value(0.0));
   EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
 }
 
 TEST(TestHandle, move_assignment)
