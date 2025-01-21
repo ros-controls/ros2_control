@@ -95,3 +95,51 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }
+
+TEST(TestHandle, copy_constructor)
+{
+  double value = 1.337;
+  hardware_interface::Handle interface{JOINT_NAME, FOO_INTERFACE, &value};
+  hardware_interface::Handle copy(interface);
+  EXPECT_DOUBLE_EQ(copy.get_value(), value);
+  EXPECT_NO_THROW(copy.set_value(0.0));
+  EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+}
+
+TEST(TesHandle, move_constructor)
+{
+  double value = 1.337;
+  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
+  hardware_interface::Handle moved{std::move(handle)};
+  EXPECT_DOUBLE_EQ(moved.get_value(), value);
+  EXPECT_NO_THROW(moved.set_value(0.0));
+  EXPECT_DOUBLE_EQ(moved.get_value(), 0.0);
+}
+
+TEST(TestHandle, copy_assignment)
+{
+  double value = 1.337;
+  double value_2 = 2.337;
+  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
+  hardware_interface::Handle copy{JOINT_NAME, "random", &value_2};
+  EXPECT_DOUBLE_EQ(copy.get_value(), value_2);
+  EXPECT_DOUBLE_EQ(handle.get_value(), value);
+  copy = handle;
+  EXPECT_DOUBLE_EQ(copy.get_value(), value);
+  EXPECT_NO_THROW(copy.set_value(0.0));
+  EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+}
+
+TEST(TestHandle, move_assignment)
+{
+  double value = 1.337;
+  double value_2 = 2.337;
+  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
+  hardware_interface::Handle moved{JOINT_NAME, "random", &value_2};
+  EXPECT_DOUBLE_EQ(moved.get_value(), value_2);
+  EXPECT_DOUBLE_EQ(handle.get_value(), value);
+  moved = std::move(handle);
+  EXPECT_DOUBLE_EQ(moved.get_value(), value);
+  EXPECT_NO_THROW(moved.set_value(0.0));
+  EXPECT_DOUBLE_EQ(moved.get_value(), 0.0);
+}
