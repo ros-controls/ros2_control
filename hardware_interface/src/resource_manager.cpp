@@ -747,17 +747,11 @@ public:
     set_interface_command(hardware_interface::HW_IF_ACCELERATION, state.acceleration);
   }
 
-  void update_joint_limiters_data()
+  void update_joint_limiters_data(joint_limits::JointInterfacesCommandLimiterData & data)
   {
-    for (auto & joint_limiter_data : limiters_data_)
-    {
-      for (auto & [joint_name, data] : joint_limiter_data.second)
-      {
-        update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
-        update_joint_limiters_data(data.joint_name, command_interface_map_, data.command, true);
-        data.limited = data.command;
-      }
-    }
+    update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
+    update_joint_limiters_data(data.joint_name, command_interface_map_, data.command, true);
+    data.limited = data.command;
   }
 
   std::string add_state_interface(StateInterface::ConstSharedPtr interface)
@@ -1870,13 +1864,13 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 {
   bool enforce_result = false;
   // Joint Limiters operations
-  resource_storage_->update_joint_limiters_data();
   for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
       joint_limits::JointInterfacesCommandLimiterData & data =
         resource_storage_->limiters_data_[hw_name][joint_name];
+      resource_storage_->update_joint_limiters_data(data);
       enforce_result |= limiter->enforce(data.actual, data.limited, period);
       resource_storage_->update_joint_limiters_commands(
         data.limited, resource_storage_->command_interface_map_);
