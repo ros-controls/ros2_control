@@ -98,14 +98,38 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
 
 TEST(TestHandle, copy_constructor)
 {
-  double value = 1.337;
-  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  hardware_interface::Handle copy(handle);
-  EXPECT_DOUBLE_EQ(copy.get_value(), value);
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  EXPECT_NO_THROW(copy.set_value(0.0));
-  EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+  {
+    double value = 1.337;
+    hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
+    hardware_interface::Handle copy(handle);
+    EXPECT_DOUBLE_EQ(copy.get_value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_NO_THROW(copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+  }
+  {
+    double value = 1.337;
+    InterfaceInfo info;
+    info.name = FOO_INTERFACE;
+    info.data_type = "double";
+    InterfaceDescription itf_descr{JOINT_NAME, info};
+    hardware_interface::Handle handle{itf_descr};
+    EXPECT_TRUE(std::isnan(handle.get_value()));
+    handle.set_value(value);
+    hardware_interface::Handle copy(handle);
+    EXPECT_EQ(copy.get_name(), handle.get_name());
+    EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
+    EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
+    EXPECT_DOUBLE_EQ(copy.get_value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_NO_THROW(copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_NO_THROW(copy.set_value(0.52));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.52);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+  }
 }
 
 TEST(TesHandle, move_constructor)
@@ -120,18 +144,45 @@ TEST(TesHandle, move_constructor)
 
 TEST(TestHandle, copy_assignment)
 {
-  double value = 1.337;
-  double value_2 = 2.337;
-  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  hardware_interface::Handle copy{JOINT_NAME, "random", &value_2};
-  EXPECT_DOUBLE_EQ(copy.get_value(), value_2);
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  copy = handle;
-  EXPECT_DOUBLE_EQ(copy.get_value(), value);
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  EXPECT_NO_THROW(copy.set_value(0.0));
-  EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+  {
+    double value_1 = 1.337;
+    double value_2 = 2.337;
+    hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value_1};
+    hardware_interface::Handle copy{JOINT_NAME, "random", &value_2};
+    EXPECT_DOUBLE_EQ(copy.get_value(), value_2);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value_1);
+    copy = handle;
+    EXPECT_DOUBLE_EQ(copy.get_value(), value_1);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value_1);
+    EXPECT_NO_THROW(copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(value_1, 0.0);
+    EXPECT_DOUBLE_EQ(value_2, 2.337);
+  }
+
+  {
+    double value = 1.337;
+    InterfaceInfo info;
+    info.name = FOO_INTERFACE;
+    info.data_type = "double";
+    InterfaceDescription itf_descr{JOINT_NAME, info};
+    hardware_interface::Handle handle{itf_descr};
+    EXPECT_TRUE(std::isnan(handle.get_value()));
+    handle.set_value(value);
+    hardware_interface::Handle copy = handle;
+    EXPECT_EQ(copy.get_name(), handle.get_name());
+    EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
+    EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
+    EXPECT_DOUBLE_EQ(copy.get_value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_NO_THROW(copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_NO_THROW(copy.set_value(0.52));
+    EXPECT_DOUBLE_EQ(copy.get_value(), 0.52);
+    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+  }
 }
 
 TEST(TestHandle, move_assignment)
