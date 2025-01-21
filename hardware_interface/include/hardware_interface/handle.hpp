@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -140,7 +141,7 @@ public:
     // END
   }
 
-  [[nodiscard]] bool set_value(double value)
+  [[nodiscard]] virtual bool set_value(double value)
   {
     std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
@@ -232,9 +233,32 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
+  void set_on_set_command_limiter(std::function<void()> on_set_command_limiter)
+  {
+    on_set_command_limiter_ = on_set_command_limiter;
+  }
+
+  /// A setter for the value of the command interface that triggers the limiter.
+  /**
+   * @param value The value to be set.
+   * @return True if the value was set successfully, false otherwise.
+   */
+  [[nodiscard]] bool set_value(double value) final
+  {
+    bool result = Handle::set_value(value);
+    if (result && on_set_command_limiter_)
+    {
+      on_set_command_limiter_();
+    }
+    return result;
+  }
+
   using Handle::Handle;
 
   using SharedPtr = std::shared_ptr<CommandInterface>;
+
+private:
+  std::function<void()> on_set_command_limiter_ = nullptr;
 };
 
 }  // namespace hardware_interface
