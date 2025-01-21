@@ -45,7 +45,6 @@ public:
     handle_name_(prefix_name_ + "/" + interface_name_),
     value_ptr_(value_ptr)
   {
-    value_ = std::monostate{};
   }
 
   explicit Handle(const InterfaceDescription & interface_description)
@@ -206,7 +205,7 @@ protected:
   std::string prefix_name_;
   std::string interface_name_;
   std::string handle_name_;
-  HANDLE_DATATYPE value_;
+  HANDLE_DATATYPE value_ = std::monostate{};
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
