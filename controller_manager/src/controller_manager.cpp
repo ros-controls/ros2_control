@@ -291,6 +291,27 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
+ControllerManager::~ControllerManager()
+{
+  RCLCPP_INFO(get_logger(), "Shutting down controller manager.");
+  // Shutdown all controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> controllers_list = rt_controllers_wrapper_.get_updated_list(guard);
+  for (auto & controller : controllers_list)
+  {
+    if (is_controller_active(controller.c))
+    {
+      controller.c->get_node()->deactivate();
+    }
+    if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
+    {
+      shutdown_controller(controller);
+    }
+    executor_->remove_node(controller.c->get_node()->get_node_base_interface());
+  }
+  resource_manager_.reset();
+}
+
 void ControllerManager::init_controller_manager()
 {
   // Get parameters needed for RT "update" loop to work

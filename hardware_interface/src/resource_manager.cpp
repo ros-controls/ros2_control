@@ -1019,7 +1019,16 @@ ResourceManager::ResourceManager(
 {
 }
 
-ResourceManager::~ResourceManager() = default;
+ResourceManager::~ResourceManager()
+{
+  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  for (auto const & hw_info : resource_storage_->hardware_info_map_)
+  {
+    rclcpp_lifecycle::State finalized_state(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+    set_component_state(hw_info.first, finalized_state);
+  }
+}
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
