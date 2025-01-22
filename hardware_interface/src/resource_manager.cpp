@@ -664,14 +664,13 @@ public:
   {
     for (const auto & hw_info : hardware_infos)
     {
-      limiters_data_[hw_info.name] = {};
       for (const auto & [joint_name, limits] : hw_info.limits)
       {
         std::vector<joint_limits::SoftJointLimits> soft_limits;
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
         joint_limits::JointInterfacesCommandLimiterData data;
         data.joint_name = joint_name;
-        limiters_data_[hw_info.name].insert({joint_name, data});
+        limiters_data_.insert({joint_name, data});
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
@@ -1104,9 +1103,7 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
-  std::unordered_map<
-    std::string, std::unordered_map<std::string, joint_limits::JointInterfacesCommandLimiterData>>
-    limiters_data_;
+  std::unordered_map<std::string, joint_limits::JointInterfacesCommandLimiterData> limiters_data_;
 
   std::unordered_map<
     std::string, std::unordered_map<
@@ -1869,7 +1866,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
     for (const auto & [joint_name, limiter] : limiters)
     {
       joint_limits::JointInterfacesCommandLimiterData & data =
-        resource_storage_->limiters_data_[hw_name][joint_name];
+        resource_storage_->limiters_data_[joint_name];
       resource_storage_->update_joint_limiters_data(data);
       enforce_result |= limiter->enforce(data.actual, data.limited, period);
       resource_storage_->update_joint_limiters_commands(
