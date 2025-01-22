@@ -233,7 +233,7 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  void set_on_set_command_limiter(std::function<void()> on_set_command_limiter)
+  void set_on_set_command_limiter(std::function<bool()> on_set_command_limiter)
   {
     on_set_command_limiter_ = on_set_command_limiter;
   }
@@ -248,17 +248,20 @@ public:
     bool result = Handle::set_value(value);
     if (result && on_set_command_limiter_)
     {
-      on_set_command_limiter_();
+      is_command_limited_ = on_set_command_limiter_();
     }
     return result;
   }
+
+  const bool & is_limited() const { return is_command_limited_; }
 
   using Handle::Handle;
 
   using SharedPtr = std::shared_ptr<CommandInterface>;
 
 private:
-  std::function<void()> on_set_command_limiter_ = nullptr;
+  bool is_command_limited_ = false;
+  std::function<bool()> on_set_command_limiter_ = nullptr;
 };
 
 }  // namespace hardware_interface
