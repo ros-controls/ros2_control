@@ -753,6 +753,29 @@ public:
     data.limited = data.command;
   }
 
+  /// enforce the command limits for a specific joint
+  /**
+   * @param joint_name name of the joint to enforce the command limits
+   * @param period time period of the command
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
+   */
+  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  {
+    bool enforce_result = false;
+    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    {
+      if (limiters.find(joint_name) != limiters.end())
+      {
+        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+        update_joint_limiters_data(data);
+        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
+        update_joint_limiters_commands(data.limited, command_interface_map_);
+      }
+    }
+    return enforce_result;
+  }
+
   std::string add_state_interface(StateInterface::ConstSharedPtr interface)
   {
     auto interface_name = interface->get_name();
@@ -1865,12 +1888,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
-      joint_limits::JointInterfacesCommandLimiterData & data =
-        resource_storage_->limiters_data_[joint_name];
-      resource_storage_->update_joint_limiters_data(data);
-      enforce_result |= limiter->enforce(data.actual, data.limited, period);
-      resource_storage_->update_joint_limiters_commands(
-        data.limited, resource_storage_->command_interface_map_);
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
     }
   }
   return enforce_result;
