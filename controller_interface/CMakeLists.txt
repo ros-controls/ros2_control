@@ -86,6 +86,11 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_pose_sensor
     geometry_msgs
   )
+  ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
+  target_link_libraries(test_gps_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+  )
 
   # Semantic component command interface tests
 
