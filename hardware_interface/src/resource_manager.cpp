@@ -874,6 +874,7 @@ public:
     for (const auto & interface : interfaces)
     {
       auto key = interface->get_name();
+      bind_command_limiter_to_interface(interface);
       insert_command_interface(interface);
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
@@ -882,6 +883,34 @@ public:
       available_command_interfaces_.capacity() + interface_names.size());
 
     return interface_names;
+  }
+
+  /// Binds the command limiter enforcement to the command interfaces.
+  /**
+   * Binds the enforcement of the command limits to the command interfaces. The enforcement is
+   * triggered by the command interfaces when the command is set.
+   * If the interface prefix is a joint name, then the limit enforcement callback is added to the
+   * command interface.
+   *
+   * \param[interface] command interface to bind the enforcement.
+   */
+  void bind_command_limiter_to_interface(CommandInterface::SharedPtr interface)
+  {
+    if (interface)
+    {
+      for (auto & [hw_name, limiters] : joint_limiters_interface_)
+      {
+        // If the prefix is a joint name, then bind the limiter to the command interface
+        if (limiters.find(interface->get_prefix_name()) != limiters.end())
+        {
+          const rclcpp::Duration desired_period =
+            rclcpp::Duration::from_seconds(1.0 / cm_update_rate_);
+          interface->set_on_set_command_limiter(std::bind(
+            &ResourceStorage::enforce_command_limits, this, interface->get_prefix_name(),
+            desired_period));
+        }
+      }
+    }
   }
 
   /// Removes command interfaces from internal storage.
