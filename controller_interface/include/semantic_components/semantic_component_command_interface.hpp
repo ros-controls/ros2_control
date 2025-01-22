@@ -104,9 +104,9 @@ public:
 
   /// Set values from MessageInputType
   /**
-   * \return false by default
+   * \return True if all values were set successfully, false otherwise.
    */
-  virtual bool set_values_from_message(const MessageInputType & /* message */) { return false; }
+  virtual bool set_values_from_message(const MessageInputType & /* message */) = 0;
 
 protected:
   std::string name_;

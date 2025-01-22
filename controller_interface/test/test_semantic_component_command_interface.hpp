@@ -54,6 +54,13 @@ public:
 
   virtual ~TestableSemanticCommandInterface() = default;
 
+  // We are not testing the implementation of the function, so we simply return false.
+  // Note that set_values_from_message is a pure virtual function, hence the need for this
+  bool set_values_from_message(const geometry_msgs::msg::Pose & /* message */) override
+  {
+    return false;
+  }
+
   std::string test_name_ = "TestSemanticCommandInterface";
 };
 
