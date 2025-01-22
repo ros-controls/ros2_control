@@ -43,11 +43,8 @@ public:
   explicit LedRgbDevice(
     const std::string & interface_r, const std::string & interface_g,
     const std::string & interface_b)
-  : SemanticComponentCommandInterface("", 3)
+  : SemanticComponentCommandInterface("", {{interface_r}, {interface_g}, {interface_b}})
   {
-    interface_names_.emplace_back(interface_r);
-    interface_names_.emplace_back(interface_g);
-    interface_names_.emplace_back(interface_b);
   }
 
   /// Set LED states from ColorRGBA message

@@ -35,13 +35,6 @@ public:
     command_interfaces_.reserve(interface_names.size());
   }
 
-  explicit SemanticComponentCommandInterface(const std::string & name, size_t size = 0)
-  : name_(name)
-  {
-    interface_names_.reserve(size);
-    command_interfaces_.reserve(size);
-  }
-
   virtual ~SemanticComponentCommandInterface() = default;
 
   /// Assign loaned command interfaces from the hardware.
@@ -69,15 +62,9 @@ public:
    * from 0 to size of values;
    * \return list of strings with command interface names for the semantic component.
    */
-  virtual const std::vector<std::string> & get_command_interface_names()
+  const std::vector<std::string> & get_command_interface_names() const
   {
-    if (interface_names_.empty())
-    {
-      for (auto i = 0u; i < interface_names_.capacity(); ++i)
-      {
-        interface_names_.emplace_back(name_ + "/" + std::to_string(i + 1));
-      }
-    }
+    assert(!interface_names_.empty());
     return interface_names_;
   }
 

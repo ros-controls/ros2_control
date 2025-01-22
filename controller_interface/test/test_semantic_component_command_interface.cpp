@@ -24,35 +24,11 @@
 
 void SemanticCommandInterfaceTest::TearDown() { semantic_component_.reset(nullptr); }
 
-TEST_F(SemanticCommandInterfaceTest, validate_default_names)
-{
-  // create 'test_component' with 5 interfaces using default naming
-  // e.g. test_component_1, test_component_2 so on...
-  semantic_component_ = std::make_unique<TestableSemanticCommandInterface>(component_name_, size_);
-
-  // validate the component name
-  ASSERT_EQ(semantic_component_->name_, component_name_);
-
-  // validate the space reserved for interface_names_ and state_interfaces_
-  // Note : Using capacity() for command_interfaces_ as no such interfaces are defined yet
-  ASSERT_EQ(semantic_component_->interface_names_.capacity(), size_);
-  ASSERT_EQ(semantic_component_->command_interfaces_.capacity(), size_);
-
-  // validate the interface_names_
-  std::vector<std::string> interface_names = semantic_component_->get_command_interface_names();
-  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
-
-  ASSERT_EQ(interface_names.size(), size_);
-  ASSERT_EQ(interface_names[0], component_name_ + "/1");
-  ASSERT_EQ(interface_names[1], component_name_ + "/2");
-  ASSERT_EQ(interface_names[2], component_name_ + "/3");
-}
-
 TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
 {
   // create 'test_component' with 3 interfaces using default naming
   // e.g. test_component_1, test_component_2 so on...
-  semantic_component_ = std::make_unique<TestableSemanticCommandInterface>(component_name_, size_);
+  semantic_component_ = std::make_unique<TestableSemanticCommandInterface>(component_name_);
 
   // generate the interface_names_
   std::vector<std::string> interface_names = semantic_component_->get_command_interface_names();
@@ -98,30 +74,4 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   ASSERT_TRUE(std::equal(
     semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
     interface_names.begin(), interface_names.end()));
-}
-
-TEST_F(SemanticCommandInterfaceTest, validate_custom_names)
-{
-  // create a component with 5 interfaces using custom naming
-  // as defined in the constructor
-  semantic_component_ = std::make_unique<TestableSemanticCommandInterface>(size_);
-
-  // validate the component name
-  ASSERT_EQ(semantic_component_->name_, semantic_component_->test_name_);
-
-  // validate the space reserved for interface_names_ and command_interfaces_
-  // Note : Using capacity() for command_interfaces_ as no such interfaces are defined yet
-  ASSERT_EQ(semantic_component_->interface_names_.capacity(), size_);
-  ASSERT_EQ(semantic_component_->command_interfaces_.capacity(), size_);
-
-  // validate the interface_names_
-  std::vector<std::string> interface_names = semantic_component_->get_command_interface_names();
-  ASSERT_TRUE(std::equal(
-    semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
-    interface_names.begin(), interface_names.end()));
-
-  ASSERT_EQ(interface_names.size(), size_);
-  ASSERT_EQ(interface_names[0], semantic_component_->test_name_ + "/i5");
-  ASSERT_EQ(interface_names[1], semantic_component_->test_name_ + "/i6");
-  ASSERT_EQ(interface_names[2], semantic_component_->test_name_ + "/i7");
 }

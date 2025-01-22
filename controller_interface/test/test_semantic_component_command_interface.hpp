@@ -30,26 +30,13 @@
 class TestableSemanticCommandInterface
 : public semantic_components::SemanticComponentCommandInterface<geometry_msgs::msg::Pose>
 {
-  FRIEND_TEST(SemanticCommandInterfaceTest, validate_default_names);
   FRIEND_TEST(SemanticCommandInterfaceTest, validate_custom_names);
   FRIEND_TEST(SemanticCommandInterfaceTest, validate_command_interfaces);
 
 public:
-  // Use generation of interface names
-  explicit TestableSemanticCommandInterface(const std::string & name, size_t size)
-  : SemanticComponentCommandInterface<geometry_msgs::msg::Pose>(name, size)
+  explicit TestableSemanticCommandInterface(const std::string & name)
+  : SemanticComponentCommandInterface(name, {name + "/1", name + "/2", name + "/3"})
   {
-  }
-  // Use custom interface names
-  explicit TestableSemanticCommandInterface(size_t size)
-  : SemanticComponentCommandInterface("TestSemanticCommandInterface", size)
-  {
-    // generate the interface_names_
-    for (auto i = 0u; i < size; ++i)
-    {
-      interface_names_.emplace_back(
-        std::string("TestSemanticCommandInterface") + "/i" + std::to_string(i + 5));
-    }
   }
 
   virtual ~TestableSemanticCommandInterface() = default;
