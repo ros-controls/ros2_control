@@ -301,14 +301,22 @@ ControllerManager::~ControllerManager()
   {
     if (is_controller_active(controller.c))
     {
+      RCLCPP_INFO(
+        get_logger(), "Deactivating controller '%s'", controller.c->get_node()->get_name());
       controller.c->get_node()->deactivate();
+      controller.c->release_interfaces();
     }
     if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
     {
+      RCLCPP_INFO(
+        get_logger(), "Shutting down controller '%s'", controller.c->get_node()->get_name());
       shutdown_controller(controller);
     }
     executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   }
+  diagnostics_updater_.removeByName("Controllers Activity");
+  diagnostics_updater_.removeByName("Hardware Components Activity");
+  diagnostics_updater_.removeByName("Controller Manager Activity");
   resource_manager_.reset();
 }
 
