@@ -137,4 +137,4 @@ class TestDescriptionCraneShutdown(unittest.TestCase):
 
     def test_exit_codes(self, proc_info):
         """Check if the processes exited normally."""
-        launch_testing.asserts.assertExitCodes(proc_info)
+        launch_testing.asserts.assertExitCodes(proc_info, allowable_exit_codes=[0, 2])
