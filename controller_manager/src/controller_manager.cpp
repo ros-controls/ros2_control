@@ -377,7 +377,10 @@ void ControllerManager::init_controller_manager()
       [this]()
       {
         RCLCPP_INFO(get_logger(), "Shutdown request received....");
-        executor_->remove_node(this->get_node_base_interface());
+        if (this->get_node_base_interface()->get_associated_with_executor_atomic().load())
+        {
+          executor_->remove_node(this->get_node_base_interface());
+        }
         executor_->cancel();
         if (!this->shutdown_controllers())
         {
