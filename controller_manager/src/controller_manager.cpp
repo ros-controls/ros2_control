@@ -291,12 +291,13 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
-ControllerManager::~ControllerManager()
+bool ControllerManager::shutdown_controllers()
 {
-  RCLCPP_INFO(get_logger(), "Shutting down controller manager.");
+  RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
   // Shutdown all controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> controllers_list = rt_controllers_wrapper_.get_updated_list(guard);
+  bool ctrls_shutdown_status = true;
   for (auto & controller : controllers_list)
   {
     if (is_controller_active(controller.c))
@@ -312,12 +313,12 @@ ControllerManager::~ControllerManager()
         get_logger(), "Shutting down controller '%s'", controller.c->get_node()->get_name());
       shutdown_controller(controller);
     }
+    ctrls_shutdown_status &=
+      (controller.c->get_node()->get_current_state().id() ==
+       lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
     executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   }
-  diagnostics_updater_.removeByName("Controllers Activity");
-  diagnostics_updater_.removeByName("Hardware Components Activity");
-  diagnostics_updater_.removeByName("Controller Manager Activity");
-  resource_manager_.reset();
+  return ctrls_shutdown_status;
 }
 
 void ControllerManager::init_controller_manager()

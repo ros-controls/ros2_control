@@ -80,11 +80,13 @@ public:
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  /// Controller manager destructor
+  virtual ~ControllerManager() = default;
+
+  /// Shutdown all controllers in the controller manager.
   /**
-   * @note It is expected that the controller manager is destroyed after the RT thread is stopped.
+   * \return true if all controllers are successfully shutdown, false otherwise.
    */
-  virtual ~ControllerManager();
+  bool shutdown_controllers();
 
   void robot_description_callback(const std_msgs::msg::String & msg);
 
