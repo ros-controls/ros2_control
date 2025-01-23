@@ -1745,6 +1745,7 @@ HardwareReadWriteStatus ResourceManager::read(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      const std::string component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
@@ -1800,7 +1801,9 @@ HardwareReadWriteStatus ResourceManager::read(
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        resource_storage_->deactivate_hardware(component);
+        rclcpp_lifecycle::State inactive_state(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component.get_name(), inactive_state);
       }
       // If desired: automatic re-activation. We could add a flag for this...
       // else
@@ -1831,27 +1834,27 @@ HardwareReadWriteStatus ResourceManager::write(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      const std::string component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
           get_logger(), "Skipping write() call for the component '%s' since it is locked",
-          component.get_name().c_str());
+          component_name.c_str());
         continue;
       }
       auto ret_val = return_type::OK;
       try
       {
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
+          resource_storage_->hardware_info_map_[component_name].rw_rate == 0 ||
+          resource_storage_->hardware_info_map_[component_name].rw_rate ==
             resource_storage_->cm_update_rate_)
         {
           ret_val = component.write(time, period);
         }
         else
         {
-          const double write_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
+          const double write_rate = resource_storage_->hardware_info_map_[component_name].rw_rate;
           const auto current_time = resource_storage_->get_clock()->now();
           const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
           if (actual_period.seconds() * write_rate >= 0.99)
@@ -1867,26 +1870,28 @@ HardwareReadWriteStatus ResourceManager::write(
       {
         RCLCPP_ERROR(
           get_logger(), "Exception of type : %s thrown during write of the component '%s': %s",
-          typeid(e).name(), component.get_name().c_str(), e.what());
+          typeid(e).name(), component_name.c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
       {
         RCLCPP_ERROR(
           get_logger(), "Unknown exception thrown during write of the component '%s'",
-          component.get_name().c_str());
+          component_name.c_str());
         ret_val = return_type::ERROR;
       }
       if (ret_val == return_type::ERROR)
       {
         component.error();
         read_write_status.ok = false;
-        read_write_status.failed_hardware_names.push_back(component.get_name());
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+        read_write_status.failed_hardware_names.push_back(component_name);
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        resource_storage_->deactivate_hardware(component);
+        rclcpp_lifecycle::State inactive_state(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component.get_name(), inactive_state);
       }
     }
   };
