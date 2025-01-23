@@ -359,6 +359,24 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+
+  // Add on_shutdown callback to stop the controller manager
+  this->get_node_base_interface()->get_context()->add_pre_shutdown_callback(
+    [this]()
+    {
+      RCLCPP_INFO(get_logger(), "Shutdown request received....");
+      executor_->remove_node(this->get_node_base_interface());
+      executor_->cancel();
+      if (!this->shutdown_controllers())
+      {
+        RCLCPP_ERROR(get_logger(), "Failed shutting down the controllers.");
+      }
+      if (!resource_manager_->shutdown_components())
+      {
+        RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
+      }
+      RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
+    });
 }
 
 void ControllerManager::initialize_parameters()
