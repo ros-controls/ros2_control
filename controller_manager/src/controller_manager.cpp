@@ -291,6 +291,16 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
+ControllerManager::~ControllerManager()
+{
+  if (preshutdown_cb_handle_)
+  {
+    rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+    context->remove_pre_shutdown_callback(*(preshutdown_cb_handle_.get()));
+    preshutdown_cb_handle_.reset();
+  }
+}
+
 bool ControllerManager::shutdown_controllers()
 {
   RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
@@ -361,22 +371,24 @@ void ControllerManager::init_controller_manager()
     &ControllerManager::controller_manager_diagnostic_callback);
 
   // Add on_shutdown callback to stop the controller manager
-  this->get_node_base_interface()->get_context()->add_pre_shutdown_callback(
-    [this]()
-    {
-      RCLCPP_INFO(get_logger(), "Shutdown request received....");
-      executor_->remove_node(this->get_node_base_interface());
-      executor_->cancel();
-      if (!this->shutdown_controllers())
+  rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+  preshutdown_cb_handle_ =
+    std::make_unique<rclcpp::PreShutdownCallbackHandle>(context->add_pre_shutdown_callback(
+      [this]()
       {
-        RCLCPP_ERROR(get_logger(), "Failed shutting down the controllers.");
-      }
-      if (!resource_manager_->shutdown_components())
-      {
-        RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
-      }
-      RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
-    });
+        RCLCPP_INFO(get_logger(), "Shutdown request received....");
+        executor_->remove_node(this->get_node_base_interface());
+        executor_->cancel();
+        if (!this->shutdown_controllers())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down the controllers.");
+        }
+        if (!resource_manager_->shutdown_components())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
+        }
+        RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
+      }));
 }
 
 void ControllerManager::initialize_parameters()

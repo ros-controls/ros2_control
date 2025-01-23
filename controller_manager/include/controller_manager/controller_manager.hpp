@@ -80,7 +80,7 @@ public:
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  virtual ~ControllerManager() = default;
+  virtual ~ControllerManager();
 
   /// Shutdown all controllers in the controller manager.
   /**
@@ -537,6 +537,7 @@ private:
     int used_by_realtime_controllers_index_ = -1;
   };
 
+  std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
   std::vector<std::string> ordered_controllers_names_;
