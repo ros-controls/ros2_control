@@ -117,7 +117,7 @@ int main(int argc, char ** argv)
     thread_priority);
 
   cm_thread = std::thread(
-    [&cm, thread_priority, use_sim_time]()
+    [thread_priority, use_sim_time]()
     {
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
