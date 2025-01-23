@@ -14,7 +14,6 @@
 
 #include <errno.h>
 #include <chrono>
-#include <csignal>
 #include <memory>
 #include <string>
 #include <thread>
@@ -34,25 +33,9 @@ int const kSchedPriority = 50;
 
 }  // namespace
 
-std::shared_ptr<controller_manager::ControllerManager> cm;
-bool shutdown_requested = false;
-std::thread cm_thread;
-
 int main(int argc, char ** argv)
 {
-  rclcpp::init(argc, argv, rclcpp::InitOptions(), rclcpp::SignalHandlerOptions::None);
-
-  signal(
-    SIGINT,
-    [](int signum)
-    {
-      RCLCPP_INFO(rclcpp::get_logger("controller_manager"), "Ctrl-C caught. Exiting.");
-      shutdown_requested = true;
-      cm_thread.join();
-      cm.reset();
-      rclcpp::shutdown();
-      exit(signum);
-    });
+  rclcpp::init(argc, argv);
 
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
@@ -71,7 +54,7 @@ int main(int argc, char ** argv)
   }
   cm_node_options.arguments(node_arguments);
 
-  cm = std::make_shared<controller_manager::ControllerManager>(
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
@@ -116,8 +99,8 @@ int main(int argc, char ** argv)
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
-  cm_thread = std::thread(
-    [thread_priority, use_sim_time]()
+  std::thread cm_thread(
+    [cm, thread_priority, use_sim_time]()
     {
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
@@ -144,7 +127,7 @@ int main(int argc, char ** argv)
       // for calculating the measured period of the loop
       rclcpp::Time previous_time = cm->now() - period;
 
-      while (rclcpp::ok() && !shutdown_requested)
+      while (rclcpp::ok())
       {
         // calculate measured period
         auto const current_time = cm->now();
