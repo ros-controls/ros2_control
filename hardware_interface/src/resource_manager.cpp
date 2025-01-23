@@ -573,7 +573,7 @@ public:
             result = shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_ACTIVE:
-            result = shutdown_hardware(hardware);
+            result = deactivate_hardware(hardware) && shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = true;
@@ -1019,16 +1019,7 @@ ResourceManager::ResourceManager(
 {
 }
 
-ResourceManager::~ResourceManager()
-{
-  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
-  for (auto const & hw_info : resource_storage_->hardware_info_map_)
-  {
-    rclcpp_lifecycle::State finalized_state(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
-    set_component_state(hw_info.first, finalized_state);
-  }
-}
+ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
@@ -1047,6 +1038,22 @@ ResourceManager::ResourceManager(
       set_component_state(hw_info.first, state);
     }
   }
+}
+
+bool ResourceManager::shutdown_components()
+{
+  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  bool shutdown_status = true;
+  for (auto const & hw_info : resource_storage_->hardware_info_map_)
+  {
+    rclcpp_lifecycle::State finalized_state(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+    if (set_component_state(hw_info.first, finalized_state) != return_type::OK)
+    {
+      shutdown_status = false;
+    }
+  }
+  return shutdown_status;
 }
 
 // CM API: Called in "callback/slow"-thread
