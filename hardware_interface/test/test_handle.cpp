@@ -68,6 +68,41 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
 }
 
+TEST(TestHandle, test_command_interface_limiter_on_set)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  CommandInterface handle{interface_descr};
+  handle.set_value(1.0);
+  EXPECT_DOUBLE_EQ(handle.get_value(), 1.0);
+  ASSERT_FALSE(handle.is_limited());
+
+  handle.set_on_set_command_limiter(
+    [&handle]()
+    {
+      if (handle.get_value() > 10.0)
+      {
+        handle.set_value(10.0);
+        return true;
+      }
+      return false;
+    });
+  for (int i = 0; i < 10; i++)
+  {
+    handle.set_value(i);
+    EXPECT_DOUBLE_EQ(handle.get_value(), i);
+    ASSERT_FALSE(handle.is_limited());
+  }
+  for (int i = 11; i < 20; i++)
+  {
+    handle.set_value(i);
+    EXPECT_DOUBLE_EQ(handle.get_value(), 10.0);
+    ASSERT_TRUE(handle.is_limited());
+  }
+}
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
 {
   const std::string POSITION_INTERFACE = "position";
