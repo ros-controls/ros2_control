@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
+#include <thread>
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 
@@ -104,6 +105,75 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
     ASSERT_TRUE(handle.is_limited());
   }
 }
+
+TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  CommandInterface handle{interface_descr};
+  handle.set_value(121.0);
+  ASSERT_DOUBLE_EQ(handle.get_value(), 121.0);
+
+  handle.set_on_set_command_limiter(
+    [&handle]() -> bool
+    {
+      double value;
+      if (handle.get_value(value))
+      {
+        if (value > 100.0)
+        {
+          while(!handle.set_value(100.0))
+          {
+            RCLCPP_ERROR(rclcpp::get_logger("test_handle"), "Failed to set value 100, which limits : %f. Unable to clamp the interface", value);
+            std::this_thread::yield();
+          }
+          return true;
+        }
+      }
+      else
+      {
+        RCLCPP_ERROR(rclcpp::get_logger("test_handle"), "Failed to get value. Unable to clamp the interface");
+      }
+      return false;
+    });
+
+  handle.set_limited_value(121.0);
+  ASSERT_DOUBLE_EQ(handle.get_value(), 100.0);
+
+  std::atomic_bool done(false);
+  std::thread checking_thread(
+    [&handle, &done]()
+    {
+      while (!done)
+      {
+        double value;
+        if (handle.get_value(value))
+        {
+          EXPECT_DOUBLE_EQ(value, 100.0);
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+    });
+  std::thread modifier_thread(
+    [&handle, &done]()
+    {
+      for (int i = 100; i < 100000; i++)
+      {
+        handle.set_limited_value(i);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+      done = true;
+    });
+
+  modifier_thread.join();
+  done = true;
+  checking_thread.join();
+  EXPECT_DOUBLE_EQ(handle.get_value(), 100.0);
+}
+
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
 {
   const std::string POSITION_INTERFACE = "position";

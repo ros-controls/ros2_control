@@ -115,7 +115,8 @@ public:
   double get_value() const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
-    if (!lock.owns_lock())
+    std::unique_lock<std::recursive_mutex> value_lock(value_mutex_, std::try_to_lock);
+    if (!lock.owns_lock() || !value_lock.owns_lock())
     {
       return std::numeric_limits<double>::quiet_NaN();
     }
@@ -129,7 +130,8 @@ public:
   [[nodiscard]] bool get_value(double & value) const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
-    if (!lock.owns_lock())
+    std::unique_lock<std::recursive_mutex> value_lock(value_mutex_, std::try_to_lock);
+    if (!lock.owns_lock() || !value_lock.owns_lock())
     {
       return false;
     }
@@ -141,10 +143,11 @@ public:
     // END
   }
 
-  [[nodiscard]] virtual bool set_value(double value)
+  [[nodiscard]] bool set_value(double value)
   {
     std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
-    if (!lock.owns_lock())
+    std::unique_lock<std::recursive_mutex> value_lock(value_mutex_, std::try_to_lock);
+    if (!lock.owns_lock() || !value_lock.owns_lock())
     {
       return false;
     }
@@ -196,6 +199,7 @@ protected:
   double * value_ptr_;
   // END
   mutable std::shared_mutex handle_mutex_;
+  mutable std::recursive_mutex value_mutex_;
 };
 
 class StateInterface : public Handle
@@ -245,7 +249,8 @@ public:
    */
   [[nodiscard]] bool set_limited_value(double value)
   {
-    bool result = Handle::set_value(value);
+    std::lock_guard<std::recursive_mutex> value_lock(value_mutex_);
+    bool result = set_value(value);
     if (result && on_set_command_limiter_)
     {
       is_command_limited_ = on_set_command_limiter_();
