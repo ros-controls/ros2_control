@@ -243,7 +243,7 @@ public:
    * @param value The value to be set.
    * @return True if the value was set successfully, false otherwise.
    */
-  [[nodiscard]] bool set_value(double value) final
+  [[nodiscard]] bool set_limited_value(double value)
   {
     bool result = Handle::set_value(value);
     if (result && on_set_command_limiter_)

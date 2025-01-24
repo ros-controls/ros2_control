@@ -92,13 +92,14 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
     });
   for (int i = 0; i < 10; i++)
   {
-    handle.set_value(i);
+    handle.set_limited_value(i);
     EXPECT_DOUBLE_EQ(handle.get_value(), i);
     ASSERT_FALSE(handle.is_limited());
   }
+
   for (int i = 11; i < 20; i++)
   {
-    handle.set_value(i);
+    handle.set_limited_value(i);
     EXPECT_DOUBLE_EQ(handle.get_value(), 10.0);
     ASSERT_TRUE(handle.is_limited());
   }
