@@ -332,6 +332,12 @@ protected:
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
+  /**
+   * Method to stop the async handler thread. This method is called before the controller cleanup,
+   * error and shutdown lifecycle transitions.
+   */
+  void stop_async_handler_thread();
+
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   unsigned int update_rate_ = 0;

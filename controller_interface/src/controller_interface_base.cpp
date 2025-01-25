@@ -86,10 +86,7 @@ return_type ControllerInterfaceBase::init(
       // make sure introspection is disabled on controller cleanup as users may manually enable
       // it in `on_configure` and `on_deactivate` - see the docs for details
       enable_introspection(false);
-      if (is_async() && async_handler_ && async_handler_->is_running())
-      {
-        async_handler_->stop_thread();
-      }
+      this->stop_async_handler_thread();
       return on_cleanup(previous_state);
     });
 
@@ -114,10 +111,18 @@ return_type ControllerInterfaceBase::init(
     });
 
   node_->register_on_shutdown(
-    std::bind(&ControllerInterfaceBase::on_shutdown, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      return on_shutdown(previous_state);
+    });
 
   node_->register_on_error(
-    std::bind(&ControllerInterfaceBase::on_error, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      return on_error(previous_state);
+    });
 
   return return_type::OK;
 }
@@ -282,6 +287,14 @@ void ControllerInterfaceBase::prepare_for_deactivation()
 {
   skip_async_triggers_.store(true);
   this->wait_for_trigger_update_to_finish();
+}
+
+void ControllerInterfaceBase::stop_async_handler_thread()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_thread();
+  }
 }
 
 std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
