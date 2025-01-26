@@ -1533,7 +1533,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       std::bind(controller_name_compare, std::placeholders::_1, controller));
     if (controller_it != controllers.end())
     {
-      controller_it->c->wait_for_trigger_update_to_finish();
+      controller_it->c->prepare_for_deactivation();
     }
   }
 
