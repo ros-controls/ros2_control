@@ -114,14 +114,18 @@ return_type ControllerInterfaceBase::init(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       this->stop_async_handler_thread();
-      return on_shutdown(previous_state);
+      auto transition_state_status = on_shutdown(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
     });
 
   node_->register_on_error(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       this->stop_async_handler_thread();
-      return on_error(previous_state);
+      auto transition_state_status = on_error(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
     });
 
   return return_type::OK;
