@@ -67,7 +67,7 @@ public:
    * \returns true if limits are enforced, otherwise false.
    */
   bool on_enforce(
-    JointLimitsStateDataType & current_joint_states,
+    const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
 protected:

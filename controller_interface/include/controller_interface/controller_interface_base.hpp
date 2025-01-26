@@ -99,7 +99,7 @@ class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::Lifecy
 public:
   ControllerInterfaceBase() = default;
 
-  virtual ~ControllerInterfaceBase() = default;
+  virtual ~ControllerInterfaceBase();
 
   /// Get configuration for controller's required command interfaces.
   /**

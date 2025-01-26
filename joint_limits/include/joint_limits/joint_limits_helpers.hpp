@@ -20,6 +20,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limits.hpp"
 
 namespace joint_limits
@@ -46,9 +47,9 @@ bool is_limited(double value, double min, double max);
  * @param dt The time step.
  * @return The position limits, first is the lower limit and second is the upper limit.
  */
-std::pair<double, double> compute_position_limits(
+PositionLimits compute_position_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
-  const std::optional<double> & prev_command_pos, double dt);
+  const std::optional<double> & act_pos, const std::optional<double> & prev_command_pos, double dt);
 
 /**
  * @brief Computes the velocity limits based on the position and acceleration limits.
@@ -59,7 +60,7 @@ std::pair<double, double> compute_position_limits(
  * @param dt The time step.
  * @return The velocity limits, first is the lower limit and second is the upper limit.
  */
-std::pair<double, double> compute_velocity_limits(
+VelocityLimits compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
   const double & desired_vel, const std::optional<double> & act_pos,
   const std::optional<double> & prev_command_vel, double dt);
@@ -72,7 +73,7 @@ std::pair<double, double> compute_velocity_limits(
  * @param dt The time step.
  * @return The effort limits, first is the lower limit and second is the upper limit.
  */
-std::pair<double, double> compute_effort_limits(
+EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
   const std::optional<double> & act_vel, double /*dt*/);
 
@@ -84,7 +85,7 @@ std::pair<double, double> compute_effort_limits(
  * @param actual_velocity The actual velocity of the joint.
  * @return The acceleration limits, first is the lower limit and second is the upper limit.
  */
-std::pair<double, double> compute_acceleration_limits(
+AccelerationLimits compute_acceleration_limits(
   const JointLimits & limits, double desired_acceleration, std::optional<double> actual_velocity);
 
 }  // namespace joint_limits

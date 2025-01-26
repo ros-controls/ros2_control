@@ -54,6 +54,8 @@ public:
 
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
+
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
@@ -66,9 +68,10 @@ public:
   rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr service_;
   unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
-  // Variable where we store when cleanup was called, pointer because the controller
-  // is usually destroyed after cleanup
+  // Variable where we store when shutdown was called, pointer because the controller
+  // is usually destroyed after shutdown
   size_t * cleanup_calls = nullptr;
+  size_t * shutdown_calls = nullptr;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
 

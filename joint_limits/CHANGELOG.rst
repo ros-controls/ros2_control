@@ -2,6 +2,13 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.24.0 (2025-01-13)
+-------------------
+* Return strong type for joint_limits helpers (`#1981 <https://github.com/ros-controls/ros2_control/issues/1981>`_)
+* Trigger shutdown transition in destructor (`#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_)
+* Add joint limiter interface plugins to enforce limits defined in the URDF (`#1526 <https://github.com/ros-controls/ros2_control/issues/1526>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Wiktor Bajor
+
 4.23.0 (2024-12-29)
 -------------------
 * Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)

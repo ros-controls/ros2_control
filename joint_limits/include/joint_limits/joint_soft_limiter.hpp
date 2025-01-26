@@ -46,7 +46,7 @@ public:
   }
 
   bool on_enforce(
-    JointControlInterfacesData & actual, JointControlInterfacesData & desired,
+    const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
     const rclcpp::Duration & dt) override;
 
   bool has_soft_position_limits(const joint_limits::SoftJointLimits & soft_joint_limits)

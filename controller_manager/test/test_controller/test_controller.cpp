@@ -160,6 +160,15 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
   return CallbackReturn::SUCCESS;
 }
 
+CallbackReturn TestController::on_shutdown(const rclcpp_lifecycle::State &)
+{
+  if (shutdown_calls)
+  {
+    (*shutdown_calls)++;
+  }
+  return CallbackReturn::SUCCESS;
+}
+
 void TestController::set_command_interface_configuration(
   const controller_interface::InterfaceConfiguration & cfg)
 {

@@ -84,7 +84,7 @@ Parameters
 
 
 Handling Multiple Controller Managers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 

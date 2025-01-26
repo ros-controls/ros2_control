@@ -45,6 +45,12 @@ TestControllerWithInterfaces::on_cleanup(const rclcpp_lifecycle::State & /*previ
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestControllerWithInterfaces::on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
 }  // namespace test_controller_with_interfaces
 
 #include "pluginlib/class_list_macros.hpp"

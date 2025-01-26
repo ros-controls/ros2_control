@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include "ament_index_cpp/get_package_prefix.hpp"
 
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
 {
@@ -41,7 +40,7 @@ TEST(ControllerWithOption, init_with_overrides)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller.define_custom_node_options()),
     controller_interface::return_type::OK);
   // checks that the node options have been updated
@@ -54,6 +53,8 @@ TEST(ControllerWithOption, init_with_overrides)
   EXPECT_EQ(controller.params["parameter1"], 1.);
   EXPECT_EQ(controller.params["parameter2"], 2.);
   EXPECT_EQ(controller.params["parameter3"], 3.);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -68,7 +69,7 @@ TEST(ControllerWithOption, init_with_node_options_arguments_parameters)
   controller_node_options.arguments(
     {"--ros-args", "-p", "parameter_list.parameter1:=1.", "-p", "parameter_list.parameter2:=2.",
      "-p", "parameter_list.parameter3:=3."});
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller_node_options),
     controller_interface::return_type::OK);
   // checks that the node options have been updated
@@ -81,6 +82,8 @@ TEST(ControllerWithOption, init_with_node_options_arguments_parameters)
   EXPECT_EQ(controller.params["parameter1"], 1.);
   EXPECT_EQ(controller.params["parameter2"], 2.);
   EXPECT_EQ(controller.params["parameter3"], 3.);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -91,12 +94,12 @@ TEST(ControllerWithOption, init_with_node_options_arguments_parameters_file)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  const std::string params_file_path = ament_index_cpp::get_package_prefix("controller_interface") +
-                                       "/test/test_controller_node_options.yaml";
+  const std::string params_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_node_options.yaml");
   std::cerr << params_file_path << std::endl;
   auto controller_node_options = controller.define_custom_node_options();
   controller_node_options.arguments({"--ros-args", "--params-file", params_file_path});
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller_node_options),
     controller_interface::return_type::OK);
   // checks that the node options have been updated
@@ -112,6 +115,8 @@ TEST(ControllerWithOption, init_with_node_options_arguments_parameters_file)
   bool use_sim_time(true);
   controller.get_node()->get_parameter_or("use_sim_time", use_sim_time, false);
   ASSERT_FALSE(use_sim_time);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -123,14 +128,14 @@ TEST(
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  const std::string params_file_path = ament_index_cpp::get_package_prefix("controller_interface") +
-                                       "/test/test_controller_node_options.yaml";
+  const std::string params_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_node_options.yaml");
   std::cerr << params_file_path << std::endl;
   auto controller_node_options = controller.define_custom_node_options();
   controller_node_options.arguments(
     {"--ros-args", "--params-file", params_file_path, "-p", "parameter_list.parameter1:=562.785",
      "-p", "use_sim_time:=true"});
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller_node_options),
     controller_interface::return_type::OK);
   // checks that the node options have been updated
@@ -146,6 +151,8 @@ TEST(
   bool use_sim_time(false);
   controller.get_node()->get_parameter_or("use_sim_time", use_sim_time, false);
   ASSERT_TRUE(use_sim_time);
+
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -157,7 +164,7 @@ TEST(ControllerWithOption, init_without_overrides)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  EXPECT_EQ(
+  ASSERT_EQ(
     controller.init("controller_name", "", 50.0, "", controller.define_custom_node_options()),
     controller_interface::return_type::ERROR);
   // checks that the node options have been updated
@@ -166,5 +173,6 @@ TEST(ControllerWithOption, init_without_overrides)
   EXPECT_TRUE(node_options.automatically_declare_parameters_from_overrides());
   // checks that no parameter has been declared from overrides
   EXPECT_EQ(controller.params.size(), 0u);
+
   rclcpp::shutdown();
 }

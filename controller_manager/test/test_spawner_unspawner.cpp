@@ -257,8 +257,8 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
 
 TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   cm_->set_parameter(rclcpp::Parameter(
     "ctrl_with_parameters_and_type.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
@@ -301,8 +301,8 @@ TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
 
 TEST_F(TestLoadController, spawner_test_type_in_params_file)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -368,8 +368,8 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
 
 TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_wildcard_entries.yaml";
+  const std::string test_file_path = std::string(PARAMETERS_FILE_PATH) +
+                                     std::string("test_controller_spawner_wildcard_entries.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -439,8 +439,8 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
 
 TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_interfaces.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_interfaces.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -577,11 +577,9 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 {
   const std::string main_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_spawner_with_type.yaml";
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
   const std::string overriding_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_overriding_parameters.yaml";
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_overriding_parameters.yaml");
 
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(
@@ -631,11 +629,9 @@ TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding_reverse)
 {
   const std::string main_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_overriding_parameters.yaml";
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_overriding_parameters.yaml");
   const std::string overriding_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_spawner_with_type.yaml";
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(
@@ -684,8 +680,9 @@ TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding_reverse)
 
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_fallback_controllers.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) +
+    std::string("test_controller_spawner_with_fallback_controllers.yaml");
 
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
@@ -1031,8 +1028,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
 
 TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -1106,8 +1103,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
 TEST_F(
   TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file_deprecated_namespace_arg)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -1196,8 +1193,8 @@ TEST_F(
 
 TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_with_wildcard_entries_in_params_file)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -1263,8 +1260,8 @@ TEST_F(
   TestLoadControllerWithNamespacedCM,
   spawner_test_fail_namespaced_controllers_with_non_wildcard_entries)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
 
   ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
@@ -1303,11 +1300,11 @@ TEST_F(
 
 TEST_F(TestLoadController, spawner_test_parsing_multiple_params_file)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
   const std::string fallback_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_spawner_with_fallback_controllers.yaml";
+    std::string(PARAMETERS_FILE_PATH) +
+    std::string("test_controller_spawner_with_fallback_controllers.yaml");
 
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
@@ -1370,11 +1367,11 @@ TEST_F(TestLoadController, spawner_test_parsing_multiple_params_file)
 
 TEST_F(TestLoadController, spawner_test_parsing_same_params_file_multiple_times)
 {
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_type.yaml";
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
   const std::string fallback_test_file_path =
-    ament_index_cpp::get_package_prefix("controller_manager") +
-    "/test/test_controller_spawner_with_fallback_controllers.yaml";
+    std::string(PARAMETERS_FILE_PATH) +
+    std::string("test_controller_spawner_with_fallback_controllers.yaml");
 
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));

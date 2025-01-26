@@ -201,7 +201,7 @@ public:
    * \returns true if limits are enforced, otherwise false.
    */
   virtual bool enforce(
-    JointLimitsStateDataType & current_joint_states,
+    const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
     joint_limits_ = *(updated_limits_.readFromRT());
@@ -234,7 +234,7 @@ protected:
    * \returns true if limits are enforced, otherwise false.
    */
   virtual bool on_enforce(
-    JointLimitsStateDataType & current_joint_states,
+    const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
   /** \brief Checks if the logging interface is set.

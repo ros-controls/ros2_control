@@ -45,11 +45,12 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
-  install(FILES test/test_controller_node_options.yaml
-      DESTINATION test)
   target_link_libraries(test_controller_with_options
     controller_interface
   )
+  target_compile_definitions(
+    test_controller_with_options
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
   ament_add_gmock(test_chainable_controller_interface test/test_chainable_controller_interface.cpp)
   target_link_libraries(test_chainable_controller_interface
@@ -85,6 +86,12 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(test_pose_sensor
     geometry_msgs
+  )
+
+  ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
+  target_link_libraries(test_gps_sensor
+    controller_interface
+    hardware_interface::hardware_interface
   )
 endif()
 

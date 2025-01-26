@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.24.0 (2025-01-13)
+-------------------
+* [CM] Remove obsolete ControllerMock from the tests (`#1990 <https://github.com/ros-controls/ros2_control/issues/1990>`_)
+* Initialize robot description in ControllerManager (`#1983 <https://github.com/ros-controls/ros2_control/issues/1983>`_)
+* Contributors: Dominic Reber, Wiktor Bajor
+
 4.23.0 (2024-12-29)
 -------------------
 * Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
