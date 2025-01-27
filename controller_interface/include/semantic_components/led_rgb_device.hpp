@@ -28,22 +28,19 @@ class LedRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::Col
 public:
   /**
    * Constructor for a LED RGB device with interface names set based on device name.
-   * The constructor sets the command interface names to "<name>/r", "<name>/g", "<name>/b".
+   * The constructor sets the command interface names to "<name>/interface_r",
+   * "<name>/interface_g", "<name>/interface_b".
+   *
+   * \param[in] name name of the LED device, used as a prefix for the command interface names
+   * \param[in] interface_r name of the command interface for the red channel
+   * \param[in] interface_g name of the command interface for the green channel
+   * \param[in] interface_b name of the command interface for the blue channel
    */
-  explicit LedRgbDevice(const std::string & name)
-  : SemanticComponentCommandInterface(
-      name, {{name + "/" + "r"}, {name + "/" + "g"}, {name + "/" + "b"}})
-  {
-  }
-
-  /**
-   * Constructor for a LED RGB device with custom interface names.
-   * The constructor takes the three command interface names for the red, green, and blue channels.
-   */
-  explicit LedRgbDevice(
-    const std::string & interface_r, const std::string & interface_g,
+  LedRgbDevice(
+    const std::string & name, const std::string & interface_r, const std::string & interface_g,
     const std::string & interface_b)
-  : SemanticComponentCommandInterface("", {{interface_r}, {interface_g}, {interface_b}})
+  : SemanticComponentCommandInterface(
+      name, {{name + "/" + interface_r}, {name + "/" + interface_g}, {name + "/" + interface_b}})
   {
   }
 

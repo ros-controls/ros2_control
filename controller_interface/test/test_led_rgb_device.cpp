@@ -28,7 +28,8 @@ void LedDeviceTest::TearDown() { led_device_.reset(nullptr); }
 TEST_F(LedDeviceTest, validate_all)
 {
   // Create device
-  led_device_ = std::make_unique<TestableLedDevice>(device_name_);
+  led_device_ = std::make_unique<TestableLedDevice>(
+    device_name_, interface_names_[0], interface_names_[1], interface_names_[2]);
   EXPECT_EQ(led_device_->name_, device_name_);
 
   // Validate reserved space for interface_names_ and command_interfaces_
@@ -83,23 +84,4 @@ TEST_F(LedDeviceTest, validate_all)
   // Release command interfaces
   led_device_->release_interfaces();
   ASSERT_EQ(led_device_->command_interfaces_.size(), 0);
-}
-
-TEST_F(LedDeviceTest, validate_custom_names)
-{
-  std::string interface_name_r = "led/custom_r";
-  std::string interface_name_g = "led/custom_g";
-  std::string interface_name_b = "led/custom_b";
-  // Create device
-  led_device_ =
-    std::make_unique<TestableLedDevice>(interface_name_r, interface_name_g, interface_name_b);
-  EXPECT_EQ(led_device_->name_, "");
-
-  EXPECT_EQ(led_device_->interface_names_.size(), size_);
-  EXPECT_EQ(led_device_->command_interfaces_.capacity(), size_);
-
-  // Validate custom interface_names_
-  EXPECT_EQ(led_device_->interface_names_[0], interface_name_r);
-  EXPECT_EQ(led_device_->interface_names_[1], interface_name_g);
-  EXPECT_EQ(led_device_->interface_names_[2], interface_name_b);
 }
