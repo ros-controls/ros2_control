@@ -62,10 +62,7 @@ public:
    * from 0 to size of values;
    * \return list of strings with command interface names for the semantic component.
    */
-  const std::vector<std::string> & get_command_interface_names() const
-  {
-    return interface_names_;
-  }
+  const std::vector<std::string> & get_command_interface_names() const { return interface_names_; }
 
   /// Return all values.
   /**
