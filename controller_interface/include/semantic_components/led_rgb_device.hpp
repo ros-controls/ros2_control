@@ -36,7 +36,7 @@ public:
    * \param[in] interface_g name of the command interface for the green channel
    * \param[in] interface_b name of the command interface for the blue channel
    */
-  LedRgbDevice(
+  explicit LedRgbDevice(
     const std::string & name, const std::string & interface_r, const std::string & interface_g,
     const std::string & interface_b)
   : SemanticComponentCommandInterface(
