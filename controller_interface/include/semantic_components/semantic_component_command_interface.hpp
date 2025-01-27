@@ -64,7 +64,6 @@ public:
    */
   const std::vector<std::string> & get_command_interface_names() const
   {
-    assert(!interface_names_.empty());
     return interface_names_;
   }
 
