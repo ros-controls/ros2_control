@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include "ament_index_cpp/get_package_prefix.hpp"
 
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
 {
@@ -95,8 +94,8 @@ TEST(ControllerWithOption, init_with_node_options_arguments_parameters_file)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  const std::string params_file_path = ament_index_cpp::get_package_prefix("controller_interface") +
-                                       "/test/test_controller_node_options.yaml";
+  const std::string params_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_node_options.yaml");
   std::cerr << params_file_path << std::endl;
   auto controller_node_options = controller.define_custom_node_options();
   controller_node_options.arguments({"--ros-args", "--params-file", params_file_path});
@@ -129,8 +128,8 @@ TEST(
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  const std::string params_file_path = ament_index_cpp::get_package_prefix("controller_interface") +
-                                       "/test/test_controller_node_options.yaml";
+  const std::string params_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_node_options.yaml");
   std::cerr << params_file_path << std::endl;
   auto controller_node_options = controller.define_custom_node_options();
   controller_node_options.arguments(
