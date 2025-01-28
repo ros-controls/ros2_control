@@ -125,13 +125,13 @@ public:
           if (next_trigger_ == TriggerType::READ)
           {
             const auto ret = read(time, period);
-            next_trigger_ = TriggerType::WRITE;
+            next_trigger_.store(TriggerType::WRITE, std::memory_order_release);
             return ret;
           }
           else
           {
             const auto ret = write(time, period);
-            next_trigger_ = TriggerType::READ;
+            next_trigger_.store(TriggerType::READ, std::memory_order_release);
             return ret;
           }
         },
@@ -366,7 +366,7 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      if (next_trigger_ == TriggerType::WRITE)
+      if (next_trigger_.load(std::memory_order_acquire) == TriggerType::WRITE)
       {
         RCLCPP_WARN(
           get_logger(),
@@ -435,7 +435,7 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      if (next_trigger_ == TriggerType::READ)
+      if (next_trigger_.load(std::memory_order_acquire) == TriggerType::READ)
       {
         RCLCPP_WARN(
           get_logger(),
