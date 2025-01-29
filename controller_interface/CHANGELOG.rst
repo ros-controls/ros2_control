@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.25.0 (2025-01-29)
+-------------------
+* Use `target_compile_definitions` instead of installing test files (`#2009 <https://github.com/ros-controls/ros2_control/issues/2009>`_)
+* Add GPS semantic component (`#2000 <https://github.com/ros-controls/ros2_control/issues/2000>`_)
+* Contributors: Sai Kishor Kothakota, Wiktor Bajor
+
 4.24.0 (2025-01-13)
 -------------------
 * Trigger shutdown transition in destructor (`#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_)

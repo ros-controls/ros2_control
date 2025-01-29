@@ -21,12 +21,6 @@ concurrency:
 
 jobs:
   abi_check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ros-industrial/industrial_ci@master
-        env:
-          ROS_DISTRO: jazzy
-          ROS_REPO: testing
-          ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
-          NOT_TEST_BUILD: true
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
+    with:
+      ros_distro: jazzy
