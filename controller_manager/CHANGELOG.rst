@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.25.0 (2025-01-29)
+-------------------
+* Handle SIGINT properly in the controller manager (`#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_)
+* Fix the initial wrong periodicity reported by controller_manager (`#2018 <https://github.com/ros-controls/ros2_control/issues/2018>`_)
+* Use `target_compile_definitions` instead of installing test files (`#2009 <https://github.com/ros-controls/ros2_control/issues/2009>`_)
+* Fix a heading level (`#2007 <https://github.com/ros-controls/ros2_control/issues/2007>`_)
+* Update path of GPL (`#1994 <https://github.com/ros-controls/ros2_control/issues/1994>`_)
+* Fix: on_shutdown callback of controllers never get executed (`#1995 <https://github.com/ros-controls/ros2_control/issues/1995>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Wiktor Bajor
+
 4.24.0 (2025-01-13)
 -------------------
 * [CM] Remove obsolete ControllerMock from the tests (`#1990 <https://github.com/ros-controls/ros2_control/issues/1990>`_)

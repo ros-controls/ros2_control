@@ -82,6 +82,12 @@ public:
 
   virtual ~ControllerManager();
 
+  /// Shutdown all controllers in the controller manager.
+  /**
+   * \return true if all controllers are successfully shutdown, false otherwise.
+   */
+  bool shutdown_controllers();
+
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   void init_resource_manager(const std::string & robot_description);
@@ -531,6 +537,7 @@ private:
     int used_by_realtime_controllers_index_ = -1;
   };
 
+  std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
   std::vector<std::string> ordered_controllers_names_;
