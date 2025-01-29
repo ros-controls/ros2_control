@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   abi_check:
+<<<<<<< HEAD
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,3 +31,8 @@ jobs:
           ROS_REPO: main
           ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
           NOT_TEST_BUILD: true
+=======
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
+    with:
+      ros_distro: humble
+>>>>>>> 82621a1 (Use ABI workflow from ros2_control_ci (#2022))
