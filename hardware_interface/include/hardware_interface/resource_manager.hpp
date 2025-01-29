@@ -70,6 +70,13 @@ public:
 
   ~ResourceManager();
 
+  /// Shutdown all hardware components, irrespective of their state.
+  /**
+   * The method is called when the controller manager is being shutdown.
+   * @return true if all hardware components are successfully shutdown, false otherwise.
+   */
+  bool shutdown_components();
+
   /// Load resources from on a given URDF.
   /**
    * The resource manager can be post initialized with a given URDF.

@@ -80,10 +80,14 @@ public:
     const std::string & namespace_ = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  CONTROLLER_MANAGER_PUBLIC
-  virtual ~ControllerManager() = default;
+  virtual ~ControllerManager();
 
-  CONTROLLER_MANAGER_PUBLIC
+  /// Shutdown all controllers in the controller manager.
+  /**
+   * \return true if all controllers are successfully shutdown, false otherwise.
+   */
+  bool shutdown_controllers();
+
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   CONTROLLER_MANAGER_PUBLIC
@@ -475,6 +479,7 @@ private:
     int used_by_realtime_controllers_index_ = -1;
   };
 
+  std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
