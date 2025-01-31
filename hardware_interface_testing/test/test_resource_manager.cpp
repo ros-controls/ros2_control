@@ -2118,7 +2118,6 @@ public:
       auto [ok, failed_hardware_names] = rm->read(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       // The values are computations exactly within the test_components
       if (check_for_updated_values)
       {
@@ -2134,7 +2133,6 @@ public:
       ASSERT_NEAR(
         state_itfs[1].get_optional().value(), prev_system_state_value, system_increment / 2.0);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
@@ -2149,7 +2147,7 @@ public:
         1.2 * rate);
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().max,
         testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
@@ -2159,7 +2157,7 @@ public:
         1.2 * rate);
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().max,
         testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
@@ -2167,28 +2165,30 @@ public:
 
     if (check_for_updated_values)
     {
-      check_periodicity(TEST_ACTUATOR_HARDWARE_NAME, 100u);
-      check_periodicity(TEST_SYSTEM_HARDWARE_NAME, 100u);
+      const unsigned int rw_rate = 100u;
+      const double expec_execution_time = (1.e6 / (3 * rw_rate)) + 200.0;
+      check_periodicity(TEST_ACTUATOR_HARDWARE_NAME, rw_rate);
+      check_periodicity(TEST_SYSTEM_HARDWARE_NAME, rw_rate);
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        100);
+        expec_execution_time);
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        100);
+        expec_execution_time);
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        100);
+        expec_execution_time);
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        100);
+        expec_execution_time);
     }
   }
 

@@ -122,18 +122,25 @@ public:
       async_handler_->init(
         [this](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
-          if (next_trigger_ == TriggerType::READ)
+          const auto read_start_time = std::chrono::steady_clock::now();
+          const auto ret_read = read(time, period);
+          const auto read_end_time = std::chrono::steady_clock::now();
+          read_return_info_.store(ret_read, std::memory_order_release);
+          read_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
+            std::memory_order_release);
+          if (ret_read != return_type::OK)
           {
-            const auto ret = read(time, period);
-            next_trigger_.store(TriggerType::WRITE, std::memory_order_release);
-            return ret;
+            return ret_read;
           }
-          else
-          {
-            const auto ret = write(time, period);
-            next_trigger_.store(TriggerType::READ, std::memory_order_release);
-            return ret;
-          }
+          const auto write_start_time = std::chrono::steady_clock::now();
+          const auto ret_write = write(time, period);
+          const auto write_end_time = std::chrono::steady_clock::now();
+          write_return_info_.store(ret_write, std::memory_order_release);
+          write_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
+            std::memory_order_release);
+          return ret_write;
         },
         info_.thread_priority);
       async_handler_->start_thread();
@@ -366,30 +373,20 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      if (next_trigger_.load(std::memory_order_acquire) == TriggerType::WRITE)
+      status.result = read_return_info_.load(std::memory_order_acquire);
+      const auto read_exec_time = read_execution_time_.load(std::memory_order_acquire);
+      if (read_exec_time.count() > 0)
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger read called while write async handler call is still pending for hardware "
-          "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
-          info_.name.c_str());
-        status.result = return_type::OK;
-        return status;
+        status.execution_time = read_exec_time;
       }
       const auto result = async_handler_->trigger_async_callback(time, period);
       status.successful = result.first;
-      status.result = result.second;
-      const auto execution_time = async_handler_->get_last_execution_time();
-      if (execution_time.count() > 0)
-      {
-        status.execution_time = execution_time;
-      }
       if (!status.successful)
       {
         RCLCPP_WARN(
           get_logger(),
-          "Trigger read called while write async trigger is still in progress for hardware "
-          "interface : '%s'. Failed to trigger read cycle!",
+          "Trigger read/write called while the previous async trigger is still in progress for "
+          "hardware interface : '%s'. Failed to trigger read/write cycle!",
           info_.name.c_str());
         status.result = return_type::OK;
         return status;
@@ -435,34 +432,13 @@ public:
     status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      if (next_trigger_.load(std::memory_order_acquire) == TriggerType::READ)
+      status.successful = true;
+      const auto write_exec_time = write_execution_time_.load(std::memory_order_acquire);
+      if (write_exec_time.count() > 0)
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger write called while read async handler call is still pending for hardware "
-          "interface : '%s'. Skipping write cycle and will wait for a read cycle!",
-          info_.name.c_str());
-        status.result = return_type::OK;
-        return status;
+        status.execution_time = write_exec_time;
       }
-      const auto result = async_handler_->trigger_async_callback(time, period);
-      status.successful = result.first;
-      status.result = result.second;
-      const auto execution_time = async_handler_->get_last_execution_time();
-      if (execution_time.count() > 0)
-      {
-        status.execution_time = execution_time;
-      }
-      if (!status.successful)
-      {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger write called while read async trigger is still in progress for hardware "
-          "interface : '%s'. Failed to trigger write cycle!",
-          info_.name.c_str());
-        status.result = return_type::OK;
-        return status;
-      }
+      status.result = write_return_info_.load(std::memory_order_acquire);
     }
     else
     {
@@ -592,7 +568,10 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
-  std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
+  std::atomic<return_type> read_return_info_;
+  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
+  std::atomic<return_type> write_return_info_;
+  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
