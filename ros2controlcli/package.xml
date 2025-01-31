@@ -19,8 +19,7 @@
   <depend>controller_manager</depend>
   <depend>controller_manager_msgs</depend>
   <exec_depend>rosidl_runtime_py</exec_depend>
-  <exec_depend>python-graphviz-pip</exec_depend>
-  <exec_depend>graphviz</exec_depend>
+  <exec_depend>python3-graphviz</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
