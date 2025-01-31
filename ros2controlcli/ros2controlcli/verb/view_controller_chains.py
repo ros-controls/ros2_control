@@ -29,14 +29,14 @@ def make_controller_node(
     controller_name,
     state_interfaces,
     command_interfaces,
-    input_controllers,
-    output_controllers,
+    input_chain_connections,
+    output_chain_connections,
     port_map,
 ):
     state_interfaces = sorted(list(state_interfaces))
     command_interfaces = sorted(list(command_interfaces))
-    input_controllers = sorted(list(input_controllers))
-    output_controllers = sorted(list(output_controllers))
+    input_chain_connections = sorted(list(input_chain_connections))
+    output_chain_connections = sorted(list(output_chain_connections))
 
     inputs_str = ""
     for ind, state_interface in enumerate(state_interfaces):
@@ -47,7 +47,7 @@ def make_controller_node(
             "state_end_" + state_interface, state_interface, deliminator
         )
 
-    for ind, input_controller in enumerate(input_controllers):
+    for ind, input_controller in enumerate(input_chain_connections):
         deliminator = "|"
         if ind == len(input_controller) - 1:
             deliminator = ""
@@ -65,7 +65,7 @@ def make_controller_node(
             "command_start_" + command_interface, command_interface, deliminator
         )
 
-    for ind, output_controller in enumerate(output_controllers):
+    for ind, output_controller in enumerate(output_chain_connections):
         deliminator = "|"
         if ind == len(output_controller) - 1:
             deliminator = ""
