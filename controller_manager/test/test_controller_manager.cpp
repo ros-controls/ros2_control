@@ -228,7 +228,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
 
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(1, test_controller.use_count());
 }
@@ -429,7 +429,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
 
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
   EXPECT_EQ(1, test_controller.use_count());
 }

@@ -39,7 +39,7 @@ bool is_limited(double value, double min, double max) { return value < min || va
 
 PositionLimits compute_position_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
-  const std::optional<double> & prev_command_pos, double dt)
+  const std::optional<double> & act_pos, const std::optional<double> & prev_command_pos, double dt)
 {
   PositionLimits pos_limits(limits.min_position, limits.max_position);
   if (limits.has_velocity_limits)
@@ -50,8 +50,10 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    pos_limits.lower_limit = std::max(prev_command_pos.value() - delta_pos, pos_limits.lower_limit);
-    pos_limits.upper_limit = std::min(prev_command_pos.value() + delta_pos, pos_limits.upper_limit);
+    const double position_reference =
+      act_pos.has_value() ? act_pos.value() : prev_command_pos.value();
+    pos_limits.lower_limit = std::max(position_reference - delta_pos, pos_limits.lower_limit);
+    pos_limits.upper_limit = std::min(position_reference + delta_pos, pos_limits.upper_limit);
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
