@@ -21,7 +21,7 @@ from ros2cli.verb import VerbExtension
 
 from ros2controlcli.api import add_controller_mgr_parsers
 
-import pygraphviz as pgz
+import graphviz
 
 
 def make_controller_node(
@@ -73,7 +73,7 @@ def make_controller_node(
             "controller_start_" + output_controller, output_controller, deliminator
         )
 
-    s.add_node(controller_name, label=f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
+    s.node(controller_name, f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
 
 
 def make_command_node(s, command_interfaces):
@@ -87,9 +87,7 @@ def make_command_node(s, command_interfaces):
             "command_end_" + command_interface, command_interface, deliminator
         )
 
-    s.add_node(
-        "command_interfaces", label="{}|{{{{{}}}}}".format("command_interfaces", outputs_str)
-    )
+    s.node("command_interfaces", "{}|{{{{{}}}}}".format("command_interfaces", outputs_str))
 
 
 def make_state_node(s, state_interfaces):
@@ -103,7 +101,7 @@ def make_state_node(s, state_interfaces):
             "state_start_" + state_interface, state_interface, deliminator
         )
 
-    s.add_node("state_interfaces", label="{}|{{{{{}}}}}".format("state_interfaces", inputs_str))
+    s.node("state_interfaces", "{}|{{{{{}}}}}".format("state_interfaces", inputs_str))
 
 
 def show_graph(
@@ -115,9 +113,11 @@ def show_graph(
     state_interfaces,
     visualize,
 ):
-    s = pgz.AGraph(name="g", strict=False, directed=True, rankdir="LR")
-    s.node_attr["shape"] = "record"
-    s.node_attr["style"] = "rounded"
+    s = graphviz.Digraph(
+        "g",
+        filename="/tmp/controller_diagram.gv",
+        node_attr={"shape": "record", "style": "rounded"},
+    )
     port_map = dict()
     # get all controller names
     controller_names = set()
@@ -142,27 +142,28 @@ def show_graph(
 
     for controller_name in controller_names:
         for connection in output_chain_connections[controller_name]:
-            s.add_edge(
+            s.edge(
                 "{}:{}".format(controller_name, "controller_start_" + connection),
                 "{}:{}".format(
                     port_map["controller_end_" + connection], "controller_end_" + connection
                 ),
             )
         for state_connection in state_connections[controller_name]:
-            s.add_edge(
+            s.edge(
                 "{}:{}".format("state_interfaces", "state_start_" + state_connection),
                 "{}:{}".format(controller_name, "state_end_" + state_connection),
             )
         for command_connection in command_connections[controller_name]:
-            s.add_edge(
+            s.edge(
                 "{}:{}".format(controller_name, "command_start_" + command_connection),
                 "{}:{}".format("command_interfaces", "command_end_" + command_connection),
             )
 
-    s.graph_attr.update(ranksep="2")
-    s.layout(prog="dot")
+    s.attr(ranksep="2")
+    s.attr(rankdir="LR")
+    s.render(view=False)
     if visualize:
-        s.draw("/tmp/controller_diagram.gv.pdf", format="pdf")
+        s.view()
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
@@ -205,5 +206,5 @@ class ViewControllerChainsVerb(VerbExtension):
         with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
             list_hardware_response = list_hardware_interfaces(node, args.controller_manager)
-            parse_response(list_controllers_response, list_hardware_response)
+            parse_response(list_controllers_response, list_hardware_response, visualize=False)
             return 0
