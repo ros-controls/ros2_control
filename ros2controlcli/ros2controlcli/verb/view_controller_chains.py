@@ -161,9 +161,10 @@ def show_graph(
 
     s.attr(ranksep="2")
     s.attr(rankdir="LR")
-    s.render(view=False)
     if visualize:
         s.view()
+    else:
+        s.render(filename="controller_diagram", view=False, cleanup=True)
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
@@ -196,15 +197,22 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
 
 
 class ViewControllerChainsVerb(VerbExtension):
-    """Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf."""
+    """Generates a diagram of the loaded chained controllers."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
+        parser.add_argument(
+            "--save",
+            action="store_true",
+            help="Save PDF to controller_diagram.pdf instead of viewing image",
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
         with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
             list_hardware_response = list_hardware_interfaces(node, args.controller_manager)
-            parse_response(list_controllers_response, list_hardware_response, visualize=False)
+            parse_response(
+                list_controllers_response, list_hardware_response, visualize=not args.save
+            )
             return 0
