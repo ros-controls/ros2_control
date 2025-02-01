@@ -43,7 +43,7 @@ def make_controller_node(
         if ind == len(state_interface) - 1:
             deliminator = ""
         inputs_str += "<{}> {} {} ".format(
-            "state_end_" + state_interface, state_interface, deliminator
+            "state_end_" + state_interface, state_interface + " (state)", deliminator
         )
 
     for ind, input_controller in enumerate(input_chain_connections):
@@ -51,7 +51,7 @@ def make_controller_node(
         if ind == len(input_controller) - 1:
             deliminator = ""
         inputs_str += "<{}> {} {} ".format(
-            "controller_end_" + input_controller, input_controller, deliminator
+            "controller_end_" + input_controller, input_controller + " (exp ref)", deliminator
         )
         port_map["controller_end_" + input_controller] = controller_name
 
@@ -61,7 +61,7 @@ def make_controller_node(
         if ind == len(command_interface) - 1:
             deliminator = ""
         outputs_str += "<{}> {} {} ".format(
-            "command_start_" + command_interface, command_interface, deliminator
+            "command_start_" + command_interface, command_interface + " (cmd)", deliminator
         )
 
     for ind, output_controller in enumerate(output_chain_connections):
@@ -69,7 +69,9 @@ def make_controller_node(
         if ind == len(output_controller) - 1:
             deliminator = ""
         outputs_str += "<{}> {} {} ".format(
-            "controller_start_" + output_controller, output_controller, deliminator
+            "controller_start_" + output_controller,
+            output_controller + " (exp state)",
+            deliminator,
         )
 
     s.node(controller_name, f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
@@ -86,7 +88,7 @@ def make_command_node(s, command_interfaces):
             "command_end_" + command_interface, command_interface, deliminator
         )
 
-    s.node("command_interfaces", "{}|{{{{{}}}}}".format("command_interfaces", outputs_str))
+    s.node("command_interfaces", "{}|{{{{{}}}}}".format("hw command_interfaces", outputs_str))
 
 
 def make_state_node(s, state_interfaces):
@@ -100,7 +102,7 @@ def make_state_node(s, state_interfaces):
             "state_start_" + state_interface, state_interface, deliminator
         )
 
-    s.node("state_interfaces", "{}|{{{{{}}}}}".format("state_interfaces", inputs_str))
+    s.node("state_interfaces", "{}|{{{{{}}}}}".format("hw state_interfaces", inputs_str))
 
 
 def show_graph(
