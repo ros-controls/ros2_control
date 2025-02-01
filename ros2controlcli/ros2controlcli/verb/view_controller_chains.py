@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_controllers
-from controller_manager import list_hardware_interfaces
+from controller_manager import list_controllers, list_hardware_components
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -168,8 +167,12 @@ def show_graph(
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
-    command_interfaces = {x.name for x in list_hardware_response.command_interfaces}
-    state_interfaces = {x.name for x in list_hardware_response.state_interfaces}
+    command_interfaces = {
+        x.name for hw in list_hardware_response.component for x in hw.command_interfaces
+    }
+    state_interfaces = {
+        x.name for hw in list_hardware_response.component for x in hw.state_interfaces
+    }
     command_connections = dict()
     state_connections = dict()
     input_chain_connections = {x.name: set() for x in list_controllers_response.controller}
@@ -211,7 +214,7 @@ class ViewControllerChainsVerb(VerbExtension):
     def main(self, *, args):
         with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
-            list_hardware_response = list_hardware_interfaces(node, args.controller_manager)
+            list_hardware_response = list_hardware_components(node, args.controller_manager)
             parse_response(
                 list_controllers_response, list_hardware_response, visualize=not args.save
             )
