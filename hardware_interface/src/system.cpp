@@ -145,6 +145,7 @@ const rclcpp_lifecycle::State & System::activate()
   write_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->prepare_for_activation();
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
