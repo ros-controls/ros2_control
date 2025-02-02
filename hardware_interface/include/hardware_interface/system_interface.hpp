@@ -607,9 +607,9 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
-  std::atomic<return_type> read_return_info_;
+  std::atomic<return_type> read_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
-  std::atomic<return_type> write_return_info_;
+  std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
 
 protected:
