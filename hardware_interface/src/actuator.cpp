@@ -299,12 +299,12 @@ const rclcpp::Time & Actuator::get_last_write_time() const { return last_write_c
 
 const HardwareComponentStatisticsCollector & Actuator::get_read_statistics() const
 {
-  return !impl_->get_hardware_info().is_async ? read_statistics_ : write_statistics_;
+  return read_statistics_;
 }
 
 const HardwareComponentStatisticsCollector & Actuator::get_write_statistics() const
 {
-  return !impl_->get_hardware_info().is_async ? write_statistics_ : read_statistics_;
+  return write_statistics_;
 }
 
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
