@@ -1885,10 +1885,11 @@ public:
         {
           if (i > (cm_update_rate_ / rate))
           {
-            const double expec_execution_time = (1.e6 / (3 * rate)) + 200.0;
+            const double expec_read_execution_time = (1.e6 / (3 * rate)) + 200.0;
+            const double expec_write_execution_time = (1.e6 / (6 * rate)) + 200.0;
             EXPECT_LT(
               status_map[component_name].read_statistics->execution_time.get_statistics().average,
-              expec_execution_time);
+              expec_read_execution_time);
             EXPECT_LT(
               status_map[component_name].read_statistics->periodicity.get_statistics().average,
               1.2 * rate);
@@ -1901,7 +1902,7 @@ public:
 
             EXPECT_LT(
               status_map[component_name].write_statistics->execution_time.get_statistics().average,
-              expec_execution_time);
+              expec_write_execution_time);
             EXPECT_LT(
               status_map[component_name].write_statistics->periodicity.get_statistics().average,
               1.2 * rate);
@@ -2292,29 +2293,30 @@ public:
     if (check_for_updated_values)
     {
       const unsigned int rw_rate = 100u;
-      const double expec_execution_time = (1.e6 / (3 * rw_rate)) + 200.0;
+      const double expec_read_execution_time = (1.e6 / (3 * rw_rate)) + 200.0;
+      const double expec_write_execution_time = (1.e6 / (6 * rw_rate)) + 200.0;
       check_periodicity(TEST_ACTUATOR_HARDWARE_NAME, rw_rate);
       check_periodicity(TEST_SYSTEM_HARDWARE_NAME, rw_rate);
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_execution_time);
+        expec_read_execution_time);
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_execution_time);
+        expec_write_execution_time);
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_execution_time);
+        expec_read_execution_time);
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_execution_time);
+        expec_write_execution_time);
     }
   }
 

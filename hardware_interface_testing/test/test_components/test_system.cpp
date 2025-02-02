@@ -132,7 +132,7 @@ class TestSystem : public SystemInterface
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
-        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
+        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
     }
     // simulate error on write
     if (velocity_command_[0] == test_constants::WRITE_FAIL_VALUE)
