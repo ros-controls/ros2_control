@@ -556,6 +556,18 @@ public:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+  /// Prepare for the activation of the hardware.
+  /**
+   * This method is called before the hardware is activated by the resource manager.
+   */
+  void prepare_for_activation()
+  {
+    read_return_info_.store(return_type::OK, std::memory_order_release);
+    read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+    write_return_info_.store(return_type::OK, std::memory_order_release);
+    write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  }
+
   /// Enable or disable introspection of the hardware.
   /**
    * \param[in] enable Enable introspection if true, disable otherwise.
