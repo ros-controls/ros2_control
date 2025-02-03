@@ -89,7 +89,7 @@ enforce_command_limits (optional; bool; default: ``false`` for Jazzy and earlier
 
 
 Handling Multiple Controller Managers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 

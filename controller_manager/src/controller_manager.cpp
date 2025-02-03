@@ -28,7 +28,7 @@
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
-#include "controller_manager_parameters.hpp"
+#include "controller_manager/controller_manager_parameters.hpp"
 
 namespace  // utility
 {
@@ -57,6 +57,13 @@ static const rmw_qos_profile_t qos_services = {
   RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
   false};
 #endif
+
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBase & controller)
+{
+  return controller.get_lifecycle_state().id() ==
+         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+}
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
@@ -285,6 +292,46 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
+ControllerManager::~ControllerManager()
+{
+  if (preshutdown_cb_handle_)
+  {
+    rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+    context->remove_pre_shutdown_callback(*(preshutdown_cb_handle_.get()));
+    preshutdown_cb_handle_.reset();
+  }
+}
+
+bool ControllerManager::shutdown_controllers()
+{
+  RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
+  // Shutdown all controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> controllers_list = rt_controllers_wrapper_.get_updated_list(guard);
+  bool ctrls_shutdown_status = true;
+  for (auto & controller : controllers_list)
+  {
+    if (is_controller_active(controller.c))
+    {
+      RCLCPP_INFO(
+        get_logger(), "Deactivating controller '%s'", controller.c->get_node()->get_name());
+      controller.c->get_node()->deactivate();
+      controller.c->release_interfaces();
+    }
+    if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
+    {
+      RCLCPP_INFO(
+        get_logger(), "Shutting down controller '%s'", controller.c->get_node()->get_name());
+      shutdown_controller(controller);
+    }
+    ctrls_shutdown_status &=
+      (controller.c->get_node()->get_current_state().id() ==
+       lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    executor_->remove_node(controller.c->get_node()->get_node_base_interface());
+  }
+  return ctrls_shutdown_status;
+}
+
 void ControllerManager::init_controller_manager()
 {
   // Get parameters needed for RT "update" loop to work
@@ -331,6 +378,29 @@ void ControllerManager::init_controller_manager()
     this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
   RCLCPP_INFO_EXPRESSION(
     get_logger(), enforce_command_limits_, "Enforcing command limits is enabled...");
+
+  // Add on_shutdown callback to stop the controller manager
+  rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+  preshutdown_cb_handle_ =
+    std::make_unique<rclcpp::PreShutdownCallbackHandle>(context->add_pre_shutdown_callback(
+      [this]()
+      {
+        RCLCPP_INFO(get_logger(), "Shutdown request received....");
+        if (this->get_node_base_interface()->get_associated_with_executor_atomic().load())
+        {
+          executor_->remove_node(this->get_node_base_interface());
+        }
+        executor_->cancel();
+        if (!this->shutdown_controllers())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down the controllers.");
+        }
+        if (!resource_manager_->shutdown_components())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
+        }
+        RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
+      }));
 }
 
 void ControllerManager::initialize_parameters()
@@ -705,39 +775,17 @@ controller_interface::return_type ControllerManager::unload_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  RCLCPP_DEBUG(get_logger(), "Shutdown controller");
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
-  if (is_controller_inactive(*controller.c))
+  if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
   {
     RCLCPP_DEBUG(
-      get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
+      get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    try
-    {
-      const auto new_state = controller.c->get_node()->cleanup();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-      {
-        RCLCPP_WARN(
-          get_logger(), "Failed to clean-up the controller '%s' before unloading!",
-          controller_name.c_str());
-      }
-    }
-    catch (const std::exception & e)
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Caught exception of type : %s while cleaning up the controller '%s' before unloading: %s",
-        typeid(e).name(), controller_name.c_str(), e.what());
-    }
-    catch (...)
-    {
-      RCLCPP_ERROR(
-        get_logger(), "Failed to clean-up the controller '%s' before unloading",
-        controller_name.c_str());
-    }
+    shutdown_controller(controller);
   }
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
@@ -753,6 +801,33 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
 
   return controller_interface::return_type::OK;
+}
+
+void ControllerManager::shutdown_controller(controller_manager::ControllerSpec & controller) const
+{
+  try
+  {
+    const auto new_state = controller.c->get_node()->shutdown();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to shutdown the controller '%s' before unloading!",
+        controller.info.name.c_str());
+    }
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
+      typeid(e).name(), controller.info.name.c_str(), e.what());
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to shutdown the controller '%s' before unloading",
+      controller.info.name.c_str());
+  }
 }
 
 std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
