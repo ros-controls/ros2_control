@@ -54,8 +54,6 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
-  std::string get_name() const override { return "DummyActuatorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -95,8 +93,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
-  std::string get_name() const override { return "DummySensorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -118,8 +114,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
-  std::string get_name() const override { return "DummySystemDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
