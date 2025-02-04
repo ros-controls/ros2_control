@@ -139,6 +139,6 @@ That's it! Enjoy writing great controllers!
 Useful External References
 ---------------------------
 
-- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_
+- `Templates and scripts for generating controllers shell <https://rtw.b-robotized.com/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_
 
-  .. NOTE:: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.
+  .. NOTE:: The script is currently only recommended to use with Foxy and Humble, not compatible with the API from Jazzy and onwards.
