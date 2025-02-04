@@ -1,4 +1,4 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/different_update_rates_userdoc.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/asynchronous_components.rst
 
 .. _asynchronous_components:
 
