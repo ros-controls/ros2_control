@@ -72,9 +72,9 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 
-  std::string get_name() const;
+  const std::string & get_name() const;
 
-  std::string get_group_name() const;
+  const std::string & get_group_name() const;
 
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
