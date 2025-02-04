@@ -93,6 +93,21 @@ int main(int argc, char ** argv)
     }
   }
 
+  const double overrun_wait_time =
+    cm->get_parameter_or<double>("overrun_wait_period", (0.1 / cm->get_update_rate()));
+  if (overrun_wait_time < 0.0)
+  {
+    RCLCPP_ERROR(
+      cm->get_logger(),
+      "The parsed overrun_wait_period should be a positive value. The parsed value is %f.",
+      overrun_wait_time);
+    return 1;
+  }
+  RCLCPP_WARN_EXPRESSION(
+    cm->get_logger(), overrun_wait_time > (1.0 / cm->get_update_rate()),
+    "The parsed overrun_wait_period is larger than the period of the controller manager.");
+  const std::chrono::nanoseconds overrun_wait_period(static_cast<int>(overrun_wait_time * 1e9));
+
   // wait for the clock to be available
   cm->get_clock()->wait_until_started();
   cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
@@ -104,7 +119,7 @@ int main(int argc, char ** argv)
     thread_priority);
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time]()
+    [cm, thread_priority, use_sim_time, overrun_wait_period]()
     {
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
@@ -153,6 +168,18 @@ int main(int argc, char ** argv)
         }
         else
         {
+          const std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+            time_now{std::chrono::nanoseconds(cm->now().nanoseconds())};
+          if (next_iteration_time < time_now)
+          {
+            RCLCPP_WARN(
+              cm->get_logger(),
+              "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
+              "took %f ms.",
+              cm->get_update_rate(),
+              static_cast<double>((time_now - next_iteration_time).count()) / 1e6);
+            next_iteration_time = time_now + overrun_wait_period;
+          }
           std::this_thread::sleep_until(next_iteration_time);
         }
       }
