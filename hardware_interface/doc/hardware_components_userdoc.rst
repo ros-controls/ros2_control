@@ -18,6 +18,7 @@ Guidelines and Best Practices
    Writing a Hardware Component <writing_new_hardware_component.rst>
    Different Update Rates <different_update_rates_userdoc.rst>
    Asynchronous Execution <asynchronous_components.rst>
+   Semantic Components <semantic_components.rst>
 
 
 Handling of errors that happen during read() and write() calls
