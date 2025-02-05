@@ -361,10 +361,6 @@ cpu_affinity (optional; int (or) int_array;)
 thread_priority (optional; int; default: 50)
   Sets the thread priority of the ``controller_manager`` node to the specified value. The value must be between 0 and 99.
 
-overrun_wait_period (optional; double; default: 10% of the control period)
-  Sets the time to wait for the control loop to catch up after an overrun.
-  Overrun is triggered when the control loop takes longer than the control period to execute.
-
 use_sim_time (optional; bool; default: false)
   Enables the use of simulation time in the ``controller_manager`` node.
 
