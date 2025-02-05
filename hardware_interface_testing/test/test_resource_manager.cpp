@@ -2186,6 +2186,7 @@ public:
 
     state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[1]));
     state_itfs.push_back(rm->claim_state_interface(TEST_SYSTEM_HARDWARE_STATE_INTERFACES[1]));
+    state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[0]));
 
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
@@ -2278,7 +2279,9 @@ public:
       // enforcing limits
       rm->enforce_command_limits(duration);
 
-      EXPECT_EQ(claimed_itfs[0].get_value(), 0.0);
+      ASSERT_NEAR(state_itfs[2].get_value(), 5.05, 0.00001);
+      // it is limited to the M_PI as the actual position is outside the range
+      EXPECT_NEAR(claimed_itfs[0].get_value(), M_PI, 0.00001);
       EXPECT_EQ(claimed_itfs[1].get_value(), 0.0);
 
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
@@ -2290,19 +2293,34 @@ public:
       auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
       EXPECT_TRUE(read_ok);
       EXPECT_TRUE(failed_hardware_names_read.empty());
+
+      ASSERT_NEAR(state_itfs[0].get_value(), M_PI_2, 0.00001);
+      ASSERT_EQ(state_itfs[1].get_value(), 0.0);
+    }
+
+    // Reset the position state interface of actuator to zero
+    {
+      ASSERT_GT(state_itfs[2].get_value(), 5.05);
+      claimed_itfs[0].set_value(test_constants::RESET_STATE_INTERFACES_VALUE);
+      auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
+      EXPECT_TRUE(read_ok);
+      EXPECT_TRUE(failed_hardware_names_read.empty());
+      ASSERT_EQ(state_itfs[2].get_value(), 0.0);
+      claimed_itfs[0].set_value(0.0);
+      claimed_itfs[1].set_value(0.0);
     }
 
     double new_state_value_1 = state_itfs[0].get_value();
     double new_state_value_2 = state_itfs[1].get_value();
     // Now loop and see that the joint limits are being enforced progressively
-    for (size_t i = 1; i < 300; i++)
+    for (size_t i = 1; i < 2000; i++)
     {
       // let's amplify the limit enforce period, to test more rapidly. It would work with 0.01s as
       // well
       const rclcpp::Duration enforce_period =
         rclcpp::Duration::from_seconds(duration.seconds() * 10.0);
 
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      auto [ok, failed_hardware_names] = rm->read(time, enforce_period);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
@@ -2319,9 +2337,9 @@ public:
 
       // the joint limits value is same as in the parsed URDF
       const double velocity_joint_1 = 0.2;
-      EXPECT_NEAR(
+      ASSERT_NEAR(
         claimed_itfs[0].get_value(),
-        std::min((velocity_joint_1 * (enforce_period.seconds() * static_cast<double>(i))), M_PI),
+        std::min(state_itfs[2].get_value() + (velocity_joint_1 * enforce_period.seconds()), M_PI),
         1.0e-8)
         << "This should be progressively increasing as it is a position limit for iteration : "
         << i;
@@ -2332,7 +2350,7 @@ public:
       new_state_value_1 = claimed_itfs[0].get_value() / 2.0;
       new_state_value_2 = claimed_itfs[1].get_value() / 2.0;
 
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, enforce_period);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
