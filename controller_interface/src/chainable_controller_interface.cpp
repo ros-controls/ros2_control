@@ -57,11 +57,11 @@ ChainableControllerInterface::export_state_interfaces()
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
   {
-    if (interface.get_prefix_name().find(get_node()->get_name()) == std::string::npos)
+    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
       std::string error_msg =
         "The prefix of the interface '" + interface.get_prefix_name() +
-        "' should contain the controller's name '" + get_node()->get_name() +
+        "' should begin with the controller's name '" + get_node()->get_name() +
         "'. This is mandatory for state interfaces. No state interface will be exported. Please "
         "correct and recompile the controller with name '" +
         get_node()->get_name() + "' and try again.";
@@ -137,10 +137,11 @@ ChainableControllerInterface::export_reference_interfaces()
   const auto ref_interface_size = reference_interfaces.size();
   for (auto & interface : reference_interfaces)
   {
-    if (interface.get_prefix_name().find(get_node()->get_name()) == std::string::npos)
+    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
       std::string error_msg = "The prefix of the interface '" + interface.get_prefix_name() +
-                              "' should contain the controller's name '" + get_node()->get_name() +
+                              "' should begin with the controller's name '" +
+                              get_node()->get_name() +
                               "'. This is mandatory for reference interfaces. Please correct and "
                               "recompile the controller with name '" +
                               get_node()->get_name() + "' and try again.";
