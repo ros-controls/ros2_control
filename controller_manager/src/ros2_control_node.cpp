@@ -156,16 +156,14 @@ int main(int argc, char ** argv)
             std::chrono::nanoseconds(cm->now().nanoseconds())};
           if (next_iteration_time < time_now)
           {
-            const int overrun_count = static_cast<int>(std::ceil(
-              static_cast<double>(time_now.time_since_epoch().count()) /
-              static_cast<double>(next_iteration_time.time_since_epoch().count())));
+            const double time_diff = static_cast<double>((time_now - next_iteration_time).count());
+            const double cm_period = 1.0 / static_cast<double>(cm->get_update_rate());
+            const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
             RCLCPP_WARN(
               cm->get_logger(),
               "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
               "took %f ms (missed cycles : %d).",
-              cm->get_update_rate(),
-              static_cast<double>((time_now - next_iteration_time).count() + period.count()) / 1e6,
-              overrun_count + 1);
+              cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
             next_iteration_time += (overrun_count * period);
           }
           std::this_thread::sleep_until(next_iteration_time);
