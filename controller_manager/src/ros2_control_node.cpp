@@ -130,7 +130,7 @@ int main(int argc, char ** argv)
       std::this_thread::sleep_for(period);
 
       auto const cm_now = std::chrono::nanoseconds(cm->now().nanoseconds());
-      std::chrono::steady_clock::time_point next_iteration_time{cm_now};
+      std::chrono::system_clock::time_point next_iteration_time{cm_now};
 
       while (rclcpp::ok())
       {
@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
         }
         else
         {
-          const std::chrono::steady_clock::time_point time_now{
+          const std::chrono::system_clock::time_point time_now{
             std::chrono::nanoseconds(cm->now().nanoseconds())};
           if (next_iteration_time < time_now)
           {
