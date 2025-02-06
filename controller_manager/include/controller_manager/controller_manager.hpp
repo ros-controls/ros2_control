@@ -80,14 +80,17 @@ public:
     const std::string & namespace_ = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
+  CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerManager();
 
   /// Shutdown all controllers in the controller manager.
   /**
    * \return true if all controllers are successfully shutdown, false otherwise.
    */
+  CONTROLLER_MANAGER_PUBLIC
   bool shutdown_controllers();
 
+  CONTROLLER_MANAGER_PUBLIC
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   CONTROLLER_MANAGER_PUBLIC
