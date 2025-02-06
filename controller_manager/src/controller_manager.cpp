@@ -48,6 +48,12 @@ static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
   RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
   false};
 
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBase & controller)
+{
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+}
+
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
@@ -352,7 +358,7 @@ bool ControllerManager::shutdown_controllers()
     {
       RCLCPP_INFO(
         get_logger(), "Shutting down controller '%s'", controller.c->get_node()->get_name());
-      shutdown_controller(controller);
+      controller.c->get_node()->shutdown();
     }
     ctrls_shutdown_status &=
       (controller.c->get_node()->get_current_state().id() ==
