@@ -82,14 +82,15 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
   ASSERT_FALSE(handle.is_limited());
 
   handle.set_on_set_command_limiter(
-    [&handle]()
+    [](double value, bool & is_limited) -> double
     {
-      if (handle.get_value() > 10.0)
+      is_limited = false;
+      if (value > 10.0)
       {
-        handle.set_value(10.0);
-        return true;
+        is_limited = true;
+        return 10.0;
       }
-      return false;
+      return value;
     });
   for (int i = 0; i < 10; i++)
   {
@@ -118,26 +119,15 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
   ASSERT_DOUBLE_EQ(handle.get_value(), 121.0);
 
   handle.set_on_set_command_limiter(
-    [&handle]() -> bool
+    [](double value, bool & is_limited) -> double
     {
-      double value;
-      if (handle.get_value(value))
+      is_limited = false;
+      if (std::abs(value) > 100.0)
       {
-        if (value > 100.0)
-        {
-          while(!handle.set_value(100.0))
-          {
-            RCLCPP_ERROR(rclcpp::get_logger("test_handle"), "Failed to set value 100, which limits : %f. Unable to clamp the interface", value);
-            std::this_thread::yield();
-          }
-          return true;
-        }
+        is_limited = true;
+        return std::copysign(100.0, value);
       }
-      else
-      {
-        RCLCPP_ERROR(rclcpp::get_logger("test_handle"), "Failed to get value. Unable to clamp the interface");
-      }
-      return false;
+      return value;
     });
 
   handle.set_limited_value(121.0);

@@ -233,7 +233,7 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  void set_on_set_command_limiter(std::function<bool()> on_set_command_limiter)
+  void set_on_set_command_limiter(std::function<double(double, bool &)> on_set_command_limiter)
   {
     on_set_command_limiter_ = on_set_command_limiter;
   }
@@ -245,12 +245,7 @@ public:
    */
   [[nodiscard]] bool set_limited_value(double value)
   {
-    bool result = set_value(value);
-    if (result && on_set_command_limiter_)
-    {
-      is_command_limited_ = on_set_command_limiter_();
-    }
-    return result;
+    return set_value(on_set_command_limiter_(value, is_command_limited_));
   }
 
   const bool & is_limited() const { return is_command_limited_; }
@@ -261,7 +256,12 @@ public:
 
 private:
   bool is_command_limited_ = false;
-  std::function<bool()> on_set_command_limiter_ = nullptr;
+  std::function<double(double, bool &)> on_set_command_limiter_ =
+    [](double value, bool & is_limited)
+  {
+    is_limited = false;
+    return value;
+  };
 };
 
 }  // namespace hardware_interface

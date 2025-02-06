@@ -903,11 +903,63 @@ public:
         // If the prefix is a joint name, then bind the limiter to the command interface
         if (limiters.find(interface->get_prefix_name()) != limiters.end())
         {
+          const std::string & joint_name = interface->get_prefix_name();
           const rclcpp::Duration desired_period =
             rclcpp::Duration::from_seconds(1.0 / cm_update_rate_);
-          interface->set_on_set_command_limiter(std::bind(
-            &ResourceStorage::enforce_command_limits, this, interface->get_prefix_name(),
-            desired_period));
+          const auto limiter_fn = [&](double value, bool & is_limited) -> double
+          {
+            is_limited = false;
+            joint_limits::JointInterfacesCommandLimiterData data;
+            data.joint_name = joint_name;
+            update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
+            if (interface->get_interface_name() == hardware_interface::HW_IF_POSITION)
+            {
+              data.command.position = value;
+            }
+            else if (interface->get_interface_name() == hardware_interface::HW_IF_VELOCITY)
+            {
+              data.command.velocity = value;
+            }
+            else if (interface->get_interface_name() == hardware_interface::HW_IF_EFFORT)
+            {
+              data.command.effort = value;
+            }
+            else if (interface->get_interface_name() == hardware_interface::HW_IF_ACCELERATION)
+            {
+              data.command.acceleration = value;
+            }
+            data.limited = data.command;
+            is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
+            if (
+              interface->get_interface_name() == hardware_interface::HW_IF_POSITION &&
+              data.limited.position.has_value())
+            {
+              return data.limited.position.value();
+            }
+            else if (
+              interface->get_interface_name() == hardware_interface::HW_IF_VELOCITY &&
+              data.limited.velocity.has_value())
+            {
+              return data.limited.velocity.value();
+            }
+            else if (
+              interface->get_interface_name() == hardware_interface::HW_IF_EFFORT &&
+              data.limited.effort.has_value())
+            {
+              return data.limited.effort.value();
+            }
+            else if (
+              interface->get_interface_name() == hardware_interface::HW_IF_ACCELERATION &&
+              data.limited.acceleration.has_value())
+            {
+              return data.limited.acceleration.value();
+            }
+            else
+            {
+              return value;
+            }
+          };
+          interface->set_on_set_command_limiter(limiter_fn);
         }
       }
     }
