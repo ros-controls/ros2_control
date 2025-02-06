@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
     executor, manager_node_name, "", cm_node_options);
   RCLCPP_INFO(
     cm->get_logger(), "Starting controller manager using %s clock",
-    has_realtime ? "STEADY" : "ROS");
+    cm->get_clock()->get_clock_type() == RCL_STEADY_TIME ? "STEADY" : "ROS");
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
