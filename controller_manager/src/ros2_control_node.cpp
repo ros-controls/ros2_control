@@ -53,13 +53,18 @@ int main(int argc, char ** argv)
     node_arguments.push_back(argv[i]);
   }
   cm_node_options.arguments(node_arguments);
+  const bool has_realtime = realtime_tools::has_realtime_kernel();
+  const auto cm_clock_type = has_realtime ? RCL_STEADY_TIME : RCL_ROS_TIME;
+  cm_node_options.clock_type(cm_clock_type);
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
+  RCLCPP_INFO(
+    cm->get_logger(), "Starting controller manager using %s clock",
+    has_realtime ? "STEADY" : "ROS");
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
-  const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   if (lock_memory)
   {
@@ -129,8 +134,7 @@ int main(int argc, char ** argv)
       rclcpp::Time previous_time = cm->now();
       std::this_thread::sleep_for(period);
 
-      auto const cm_now = std::chrono::nanoseconds(cm->now().nanoseconds());
-      std::chrono::system_clock::time_point next_iteration_time{cm_now};
+      std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
 
       while (rclcpp::ok())
       {
@@ -145,18 +149,21 @@ int main(int argc, char ** argv)
         cm->write(cm->now(), measured_period);
 
         // wait until we hit the end of the period
-        next_iteration_time += period;
         if (use_sim_time)
         {
           cm->get_clock()->sleep_until(current_time + period);
         }
         else
         {
-          const auto time_now = cm->now().nanoseconds();
-          if (next_iteration_time.time_since_epoch().count() < time_now)
+          next_iteration_time += period;
+          const auto time_now = std::chrono::steady_clock::now();
+          if (next_iteration_time < time_now)
           {
             const double time_diff =
-              static_cast<double>((time_now - next_iteration_time.time_since_epoch().count())) / 1.e6;
+              static_cast<double>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(time_now - next_iteration_time)
+                  .count()) /
+              1.e6;
             const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
             const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
             RCLCPP_WARN(
