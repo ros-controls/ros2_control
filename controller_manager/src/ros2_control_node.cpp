@@ -20,7 +20,6 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/executors.hpp"
-#include "rclcpp/version.h"
 #include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
@@ -54,19 +53,13 @@ int main(int argc, char ** argv)
     node_arguments.push_back(argv[i]);
   }
   cm_node_options.arguments(node_arguments);
-  const bool has_realtime = realtime_tools::has_realtime_kernel();
-  const auto cm_clock_type = has_realtime ? RCL_STEADY_TIME : RCL_ROS_TIME;
-#if RCLCPP_VERSION_MAJOR >= 18
-  cm_node_options.clock_type(cm_clock_type);
-#endif
+
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
-  RCLCPP_INFO(
-    cm->get_logger(), "Starting controller manager using %s clock",
-    cm->get_clock()->get_clock_type() == RCL_STEADY_TIME ? "STEADY" : "ROS");
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
+  const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   if (lock_memory)
   {
