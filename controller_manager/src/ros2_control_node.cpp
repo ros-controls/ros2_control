@@ -20,6 +20,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/executors.hpp"
+#include "rclcpp/version.h"
 #include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
@@ -55,13 +56,16 @@ int main(int argc, char ** argv)
   cm_node_options.arguments(node_arguments);
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const auto cm_clock_type = has_realtime ? RCL_STEADY_TIME : RCL_ROS_TIME;
+#if RCLCPP_VERSION_MAJOR >= 18
   cm_node_options.clock_type(cm_clock_type);
-
+#endif
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
+  const auto cm_clock =
+    (RCLCPP_VERSION_MAJOR >= 18) ? cm->get_clock() : std::make_shared<rclcpp::Clock>(cm_clock_type);
   RCLCPP_INFO(
     cm->get_logger(), "Starting controller manager using %s clock",
-    cm->get_clock()->get_clock_type() == RCL_STEADY_TIME ? "STEADY" : "ROS");
+    cm_clock->get_clock_type() == RCL_STEADY_TIME ? "STEADY" : "ROS");
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
@@ -99,8 +103,8 @@ int main(int argc, char ** argv)
   }
 
   // wait for the clock to be available
-  cm->get_clock()->wait_until_started();
-  cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
+  cm_clock->wait_until_started();
+  cm_clock->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
@@ -109,7 +113,7 @@ int main(int argc, char ** argv)
     thread_priority);
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time]()
+    [cm, cm_clock, thread_priority, use_sim_time]()
     {
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
@@ -131,7 +135,7 @@ int main(int argc, char ** argv)
       auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
 
       // for calculating the measured period of the loop
-      rclcpp::Time previous_time = cm->now();
+      rclcpp::Time previous_time = cm_clock->now();
       std::this_thread::sleep_for(period);
 
       std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
@@ -139,19 +143,19 @@ int main(int argc, char ** argv)
       while (rclcpp::ok())
       {
         // calculate measured period
-        auto const current_time = cm->now();
+        auto const current_time = cm_clock->now();
         auto const measured_period = current_time - previous_time;
         previous_time = current_time;
 
         // execute update loop
-        cm->read(cm->now(), measured_period);
-        cm->update(cm->now(), measured_period);
-        cm->write(cm->now(), measured_period);
+        cm->read(cm_clock->now(), measured_period);
+        cm->update(cm_clock->now(), measured_period);
+        cm->write(cm_clock->now(), measured_period);
 
         // wait until we hit the end of the period
         if (use_sim_time)
         {
-          cm->get_clock()->sleep_until(current_time + period);
+          cm_clock->sleep_until(current_time + period);
         }
         else
         {
