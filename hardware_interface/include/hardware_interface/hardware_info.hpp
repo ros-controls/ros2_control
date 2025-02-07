@@ -158,11 +158,11 @@ struct InterfaceDescription
    */
   std::string interface_name;
 
-  std::string get_prefix_name() const { return prefix_name; }
+  const std::string & get_prefix_name() const { return prefix_name; }
 
-  std::string get_interface_name() const { return interface_info.name; }
+  const std::string & get_interface_name() const { return interface_info.name; }
 
-  std::string get_name() const { return interface_name; }
+  const std::string & get_name() const { return interface_name; }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
