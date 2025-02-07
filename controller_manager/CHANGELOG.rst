@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Handle SIGINT properly in the controller manager (backport `#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_) (`#2040 <https://github.com/ros-controls/ros2_control/issues/2040>`_)
+* [CM] Remove obsolete ControllerMock from the tests (`#1990 <https://github.com/ros-controls/ros2_control/issues/1990>`_) (`#1991 <https://github.com/ros-controls/ros2_control/issues/1991>`_)
+* Contributors: mergify[bot]
+
 2.47.0 (2024-12-31)
 -------------------
 * Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_) (`#1971 <https://github.com/ros-controls/ros2_control/issues/1971>`_)
