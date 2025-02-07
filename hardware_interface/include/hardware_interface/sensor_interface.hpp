@@ -106,10 +106,9 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
-    clock_interface_ = clock_interface;
+    sensor_clock_ = clock;
     sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
     info_ = hardware_info;
     if (info_.is_async)
@@ -318,7 +317,7 @@ public:
   /**
    * \return clock of the SensorInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return sensor_clock_; }
 
   /// Get the hardware info of the SensorInterface.
   /**
@@ -342,7 +341,7 @@ protected:
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr sensor_clock_;
   rclcpp::Logger sensor_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> sensor_states_map_;

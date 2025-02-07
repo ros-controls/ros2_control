@@ -110,10 +110,9 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
-    clock_interface_ = clock_interface;
+    system_clock_ = clock;
     system_logger_ = logger.get_child("hardware_component.system." + hardware_info.name);
     info_ = hardware_info;
     if (info_.is_async)
@@ -543,7 +542,7 @@ public:
   /**
    * \return clock of the SystemInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return system_clock_; }
 
   /// Get the hardware info of the SystemInterface.
   /**
@@ -581,7 +580,7 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr system_clock_;
   rclcpp::Logger system_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;

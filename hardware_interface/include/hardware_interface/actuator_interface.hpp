@@ -107,10 +107,9 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
-    clock_interface_ = clock_interface;
+    actuator_clock_ = clock;
     actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
     info_ = hardware_info;
     if (info_.is_async)
@@ -514,7 +513,7 @@ public:
   /**
    * \return clock of the ActuatorInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return actuator_clock_; }
 
   /// Get the hardware info of the ActuatorInterface.
   /**
@@ -542,7 +541,7 @@ protected:
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr actuator_clock_;
   rclcpp::Logger actuator_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;

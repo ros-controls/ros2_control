@@ -49,14 +49,20 @@ const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  return this->initialize(actuator_info, logger, clock_interface->get_clock());
+}
+
+const rclcpp_lifecycle::State & Actuator::initialize(
+  const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+{
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(actuator_info, logger, clock_interface))
+    switch (impl_->init(actuator_info, logger, clock))
     {
       case CallbackReturn::SUCCESS:
-        last_read_cycle_time_ = clock_interface->get_clock()->now();
-        last_write_cycle_time_ = clock_interface->get_clock()->now();
+        last_read_cycle_time_ = clock->now();
+        last_write_cycle_time_ = clock->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
