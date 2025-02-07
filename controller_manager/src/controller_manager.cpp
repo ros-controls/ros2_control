@@ -48,6 +48,12 @@ static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
   RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
   false};
 
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBase & controller)
+{
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+}
+
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
@@ -322,6 +328,46 @@ ControllerManager::ControllerManager(
   }
 }
 
+ControllerManager::~ControllerManager()
+{
+  if (preshutdown_cb_handle_)
+  {
+    rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+    context->remove_pre_shutdown_callback(*(preshutdown_cb_handle_.get()));
+    preshutdown_cb_handle_.reset();
+  }
+}
+
+bool ControllerManager::shutdown_controllers()
+{
+  RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
+  // Shutdown all controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> controllers_list = rt_controllers_wrapper_.get_updated_list(guard);
+  bool ctrls_shutdown_status = true;
+  for (auto & controller : controllers_list)
+  {
+    if (is_controller_active(controller.c))
+    {
+      RCLCPP_INFO(
+        get_logger(), "Deactivating controller '%s'", controller.c->get_node()->get_name());
+      controller.c->get_node()->deactivate();
+      controller.c->release_interfaces();
+    }
+    if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
+    {
+      RCLCPP_INFO(
+        get_logger(), "Shutting down controller '%s'", controller.c->get_node()->get_name());
+      controller.c->get_node()->shutdown();
+    }
+    ctrls_shutdown_status &=
+      (controller.c->get_node()->get_current_state().id() ==
+       lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    executor_->remove_node(controller.c->get_node()->get_node_base_interface());
+  }
+  return ctrls_shutdown_status;
+}
+
 void ControllerManager::subscribe_to_robot_description_topic()
 {
   // set QoS to transient local to get messages that have already been published
@@ -529,6 +575,29 @@ void ControllerManager::init_services()
       "~/set_hardware_component_state",
       std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
       rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+
+  // Add on_shutdown callback to stop the controller manager
+  rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
+  preshutdown_cb_handle_ =
+    std::make_unique<rclcpp::PreShutdownCallbackHandle>(context->add_pre_shutdown_callback(
+      [this]()
+      {
+        RCLCPP_INFO(get_logger(), "Shutdown request received....");
+        if (this->get_node_base_interface()->get_associated_with_executor_atomic().load())
+        {
+          executor_->remove_node(this->get_node_base_interface());
+        }
+        executor_->cancel();
+        if (!this->shutdown_controllers())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down the controllers.");
+        }
+        if (!resource_manager_->shutdown_components())
+        {
+          RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
+        }
+        RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
+      }));
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
