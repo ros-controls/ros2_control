@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.26.0 (2025-02-07)
+-------------------
 * add a semantic command interface to "semantic_components" (`#1945 <https://github.com/ros-controls/ros2_control/issues/1945>`_)
 * Contributors: Thibault Poignonec
 
