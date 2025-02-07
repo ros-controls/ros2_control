@@ -277,9 +277,9 @@ return_type Actuator::perform_command_mode_switch(
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-std::string Actuator::get_name() const { return impl_->get_name(); }
+const std::string & Actuator::get_name() const { return impl_->get_name(); }
 
-std::string Actuator::get_group_name() const { return impl_->get_group_name(); }
+const std::string & Actuator::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & Actuator::get_lifecycle_state() const
 {
