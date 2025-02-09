@@ -210,6 +210,19 @@ public:
    */
   unsigned int get_update_rate() const;
 
+  /// Get the trigger clock of the controller manager.
+  /**
+   * Get the trigger clock of the controller manager.
+   * The method is used to get the clock that is used for triggering the controllers and the
+   * hardware components.
+   *
+   * @note When the use_sim_time parameter is set to true, the clock will be the ROS clock.
+   * Otherwise, the clock will be the Steady Clock.
+   *
+   * \returns trigger clock of the controller manager.
+   */
+  rclcpp::Clock::SharedPtr get_trigger_clock() const;
+
 protected:
   void init_services();
 
@@ -537,6 +550,7 @@ private:
     int used_by_realtime_controllers_index_ = -1;
   };
 
+  rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
