@@ -405,6 +405,9 @@ void ControllerManager::initialize_parameters()
     const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
     trigger_clock_ =
       use_sim_time.as_bool() ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    RCLCPP_INFO(
+      get_logger(), "Using %s clock for triggering controller manager cycles.",
+      trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
   }
   catch (const std::exception & e)
   {
