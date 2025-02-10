@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.26.0 (2025-02-07)
+-------------------
+
 4.25.0 (2025-01-29)
 -------------------
 * Define _USE_MATH_DEFINES in joint_soft_limiter.cpp to ensure that M_PI is defined (`#2001 <https://github.com/ros-controls/ros2_control/issues/2001>`_)
