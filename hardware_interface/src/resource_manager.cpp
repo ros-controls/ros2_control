@@ -1784,6 +1784,12 @@ HardwareReadWriteStatus ResourceManager::read(
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
+  // This is needed while we load and initialize the components
+  std::unique_lock<std::recursive_mutex> resource_guard(resources_lock_, std::try_to_lock);
+  if (!resource_guard.owns_lock())
+  {
+    return read_write_status;
+  }
   auto read_components = [&](auto & components)
   {
     for (auto & component : components)
@@ -1870,6 +1876,12 @@ HardwareReadWriteStatus ResourceManager::write(
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
+  // This is needed while we load and initialize the components
+  std::unique_lock<std::recursive_mutex> resource_guard(resources_lock_, std::try_to_lock);
+  if (!resource_guard.owns_lock())
+  {
+    return read_write_status;
+  }
   auto write_components = [&](auto & components)
   {
     for (auto & component : components)
