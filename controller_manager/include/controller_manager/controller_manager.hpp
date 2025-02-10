@@ -216,8 +216,8 @@ public:
    * The method is used to get the clock that is used for triggering the controllers and the
    * hardware components.
    *
-   * @note When the use_sim_time parameter is set to true, the clock will be the ROS clock.
-   * Otherwise, the clock will be the Steady Clock.
+   * @note When the controller manager is used with real-time kernel, the trigger clock should be
+   * monotonic and not affected by the system time changes. Otherwise, the clock should be ROS Clock
    *
    * \returns trigger clock of the controller manager.
    */
