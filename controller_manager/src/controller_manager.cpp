@@ -402,9 +402,9 @@ void ControllerManager::initialize_parameters()
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
-    const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-    trigger_clock_ =
-      use_sim_time.as_bool() ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    trigger_clock_ = realtime_tools::has_realtime_kernel()
+                       ? this->get_clock()
+                       : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     RCLCPP_INFO(
       get_logger(), "Using %s clock for triggering controller manager cycles.",
       trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
