@@ -403,8 +403,8 @@ void ControllerManager::initialize_parameters()
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
     trigger_clock_ = realtime_tools::has_realtime_kernel()
-                       ? this->get_clock()
-                       : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+                       ? std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME)
+                       : this->get_clock();
     RCLCPP_INFO(
       get_logger(), "Using %s clock for triggering controller manager cycles.",
       trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
