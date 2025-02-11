@@ -444,43 +444,62 @@ def set_controller_parameters(
 
 
 def set_controller_parameters_from_param_files(
-    node, controller_manager_name: str, controller_name: str, parameter_files: list, namespace=None
+    node, controller_manager_name: str, controller_name: str, parameter_files: list, param_file_remote: bool, controller_to_type: dict[str, str], namespace=None
 ):
     spawner_namespace = namespace if namespace else node.get_namespace()
-    controller_parameter_files = get_params_files_with_controller_parameters(
-        node, controller_name, spawner_namespace, parameter_files
-    )
-    if controller_parameter_files:
-        set_controller_parameters(
+
+    if param_file_remote:
+        print(f"setting params_file = {parameter_files}")
+        if not set_controller_parameters(
             node,
             controller_manager_name,
             controller_name,
             "params_file",
-            controller_parameter_files,
-        )
-
-        controller_type = get_parameter_from_param_files(
-            node, controller_name, spawner_namespace, controller_parameter_files, "type"
-        )
+            parameter_files,
+        ):
+            return False
+        
+        controller_type = controller_to_type.get(controller_name)
+        print(f"setting type = {controller_type}")
         if controller_type and not set_controller_parameters(
             node, controller_manager_name, controller_name, "type", controller_type
         ):
             return False
-
-        fallback_controllers = get_parameter_from_param_files(
-            node,
-            controller_name,
-            spawner_namespace,
-            controller_parameter_files,
-            "fallback_controllers",
+    else:
+        controller_parameter_files = get_params_files_with_controller_parameters(
+            node, controller_name, spawner_namespace, parameter_files
         )
-        if fallback_controllers:
-            if not set_controller_parameters(
+        if controller_parameter_files:
+            set_controller_parameters(
                 node,
                 controller_manager_name,
                 controller_name,
-                "fallback_controllers",
-                fallback_controllers,
+                "params_file",
+                controller_parameter_files,
+            )
+
+            controller_type = get_parameter_from_param_files(
+                node, controller_name, spawner_namespace, controller_parameter_files, "type"
+            )
+            if controller_type and not set_controller_parameters(
+                node, controller_manager_name, controller_name, "type", controller_type
             ):
                 return False
+
+            fallback_controllers = get_parameter_from_param_files(
+                node,
+                controller_name,
+                spawner_namespace,
+                controller_parameter_files,
+                "fallback_controllers",
+            )
+            if fallback_controllers:
+                if not set_controller_parameters(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    "fallback_controllers",
+                    fallback_controllers,
+                ):
+                    return False
     return True
