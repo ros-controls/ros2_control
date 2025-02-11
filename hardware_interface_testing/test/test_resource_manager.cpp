@@ -2297,7 +2297,7 @@ public:
     // Now loop and see that the joint limits are being enforced progressively
     for (size_t i = 1; i < 300; i++)
     {
-      // let's amplifiy the limit enforce period, to test more rapidly. It would work with 0.01s as
+      // let's amplify the limit enforce period, to test more rapidly. It would work with 0.01s as
       // well
       const rclcpp::Duration enforce_period =
         rclcpp::Duration::from_seconds(duration.seconds() * 10.0);
