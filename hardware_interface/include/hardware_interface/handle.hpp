@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <limits>
 #include <memory>
