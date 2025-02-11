@@ -1,6 +1,9 @@
 name: Humble Source Build
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - humble
   push:
     branches:
       - humble
@@ -22,6 +25,6 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: humble
-      ref: humble
+      ref: fix/source
       ros2_repo_branch: humble
       os_name: ubuntu-22.04
