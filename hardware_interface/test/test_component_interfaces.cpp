@@ -101,8 +101,6 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  std::string get_name() const override { return "DummyActuator"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -193,8 +191,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::string get_name() const override { return "DummyActuatorDefault"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -276,8 +272,6 @@ class DummySensor : public hardware_interface::SensorInterface
     return state_interfaces;
   }
 
-  std::string get_name() const override { return "DummySensor"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -337,8 +331,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::string get_name() const override { return "DummySensorDefault"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -396,8 +388,6 @@ class DummySensorJointDefault : public hardware_interface::SensorInterface
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
-
-  std::string get_name() const override { return "DummySensorJointDefault"; }
 
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
@@ -501,8 +491,6 @@ class DummySystem : public hardware_interface::SystemInterface
 
     return command_interfaces;
   }
-
-  std::string get_name() const override { return "DummySystem"; }
 
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
@@ -608,8 +596,6 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::string get_name() const override { return "DummySystemDefault"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -686,8 +672,6 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
     // We hardcode the info
     return CallbackReturn::SUCCESS;
   }
-
-  std::string get_name() const override { return "DummySystemPreparePerform"; }
 
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override

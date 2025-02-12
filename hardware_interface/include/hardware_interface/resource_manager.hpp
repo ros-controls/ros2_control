@@ -44,7 +44,7 @@ struct HardwareReadWriteStatus
   std::vector<std::string> failed_hardware_names;
 };
 
-class HARDWARE_INTERFACE_PUBLIC ResourceManager
+class ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
@@ -75,6 +75,13 @@ public:
   ResourceManager(const ResourceManager &) = delete;
 
   virtual ~ResourceManager();
+
+  /// Shutdown all hardware components, irrespective of their state.
+  /**
+   * The method is called when the controller manager is being shutdown.
+   * @return true if all hardware components are successfully shutdown, false otherwise.
+   */
+  bool shutdown_components();
 
   /// Load resources from on a given URDF.
   /**

@@ -2,6 +2,20 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+* Move test_utils module from demos repo (`#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_)
+* Contributors: Christoph Fröhlich
+
 4.22.0 (2024-12-20)
 -------------------
 * Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)

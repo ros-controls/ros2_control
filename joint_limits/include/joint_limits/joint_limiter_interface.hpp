@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
-#include "joint_limits/visibility_control.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
@@ -29,15 +29,14 @@
 
 namespace joint_limits
 {
-using JointLimitsStateDataType = trajectory_msgs::msg::JointTrajectoryPoint;
 
-template <typename LimitsType>
+template <typename JointLimitsStateDataType>
 class JointLimiterInterface
 {
 public:
-  JOINT_LIMITS_PUBLIC JointLimiterInterface() = default;
+  JointLimiterInterface() = default;
 
-  JOINT_LIMITS_PUBLIC virtual ~JointLimiterInterface() = default;
+  virtual ~JointLimiterInterface() = default;
 
   /// Initialization of every JointLimiter.
   /**
@@ -52,7 +51,7 @@ public:
    * \param[in] logging_itf node logging interface to log if error happens.
    * \param[in] robot_description_topic string of a topic where robot description is accessible.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names,
     const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
     const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
@@ -69,55 +68,58 @@ public:
     // TODO(destogl): get limits from URDF
 
     // Initialize and get joint limits from parameter server
-    for (size_t i = 0; i < number_of_joints_; ++i)
+    if (has_parameter_interface())
     {
-      if (!declare_parameters(joint_names[i], node_param_itf_, node_logging_itf_))
-      {
-        RCLCPP_ERROR(
-          node_logging_itf_->get_logger(),
-          "JointLimiter: Joint '%s': parameter declaration has failed", joint_names[i].c_str());
-        result = false;
-        break;
-      }
-      if (!get_joint_limits(joint_names[i], node_param_itf_, node_logging_itf_, joint_limits_[i]))
-      {
-        RCLCPP_ERROR(
-          node_logging_itf_->get_logger(),
-          "JointLimiter: Joint '%s': getting parameters has failed", joint_names[i].c_str());
-        result = false;
-        break;
-      }
-      RCLCPP_INFO(
-        node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
-        joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
-    }
-    updated_limits_.writeFromNonRT(joint_limits_);
-
-    auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
-    {
-      rcl_interfaces::msg::SetParametersResult set_parameters_result;
-      set_parameters_result.successful = true;
-
-      std::vector<LimitsType> updated_joint_limits = joint_limits_;
-      bool changed = false;
-
       for (size_t i = 0; i < number_of_joints_; ++i)
       {
-        changed |= joint_limits::check_for_limits_update(
-          joint_names_[i], parameters, node_logging_itf_, updated_joint_limits[i]);
+        if (!declare_parameters(joint_names[i], node_param_itf_, node_logging_itf_))
+        {
+          RCLCPP_ERROR(
+            node_logging_itf_->get_logger(),
+            "JointLimiter: Joint '%s': parameter declaration has failed", joint_names[i].c_str());
+          result = false;
+          break;
+        }
+        if (!get_joint_limits(joint_names[i], node_param_itf_, node_logging_itf_, joint_limits_[i]))
+        {
+          RCLCPP_ERROR(
+            node_logging_itf_->get_logger(),
+            "JointLimiter: Joint '%s': getting parameters has failed", joint_names[i].c_str());
+          result = false;
+          break;
+        }
+        RCLCPP_INFO(
+          node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
+          joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
       }
+      updated_limits_.writeFromNonRT(joint_limits_);
 
-      if (changed)
+      auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
       {
-        updated_limits_.writeFromNonRT(updated_joint_limits);
-        RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
-      }
+        rcl_interfaces::msg::SetParametersResult set_parameters_result;
+        set_parameters_result.successful = true;
 
-      return set_parameters_result;
-    };
+        std::vector<joint_limits::JointLimits> updated_joint_limits = joint_limits_;
+        bool changed = false;
 
-    parameter_callback_ =
-      node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
+        for (size_t i = 0; i < number_of_joints_; ++i)
+        {
+          changed |= joint_limits::check_for_limits_update(
+            joint_names_[i], parameters, node_logging_itf_, updated_joint_limits[i]);
+        }
+
+        if (changed)
+        {
+          updated_limits_.writeFromNonRT(updated_joint_limits);
+          RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
+        }
+
+        return set_parameters_result;
+      };
+
+      parameter_callback_ =
+        node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
+    }
 
     if (result)
     {
@@ -130,10 +132,38 @@ public:
   }
 
   /**
+   * Wrapper init method that accepts the joint names and their limits directly
+   */
+  virtual bool init(
+    const std::vector<std::string> & joint_names,
+    const std::vector<joint_limits::JointLimits> & joint_limits,
+    const std::vector<joint_limits::SoftJointLimits> & soft_joint_limits,
+    const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+    const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
+  {
+    number_of_joints_ = joint_names.size();
+    joint_names_ = joint_names;
+    joint_limits_ = joint_limits;
+    soft_joint_limits_ = soft_joint_limits;
+    node_param_itf_ = param_itf;
+    node_logging_itf_ = logging_itf;
+    updated_limits_.writeFromNonRT(joint_limits_);
+
+    if ((number_of_joints_ != joint_limits_.size()) && has_logging_interface())
+    {
+      RCLCPP_ERROR(
+        node_logging_itf_->get_logger(),
+        "JointLimiter: Number of joint names and limits do not match: %zu != %zu",
+        number_of_joints_, joint_limits_.size());
+    }
+    return (number_of_joints_ == joint_limits_.size()) && on_init();
+  }
+
+  /**
    * Wrapper init method that accepts pointer to the Node.
    * For details see other init method.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names, const rclcpp::Node::SharedPtr & node,
     const std::string & robot_description_topic = "/robot_description")
   {
@@ -146,7 +176,7 @@ public:
    * Wrapper init method that accepts pointer to the LifecycleNode.
    * For details see other init method.
    */
-  JOINT_LIMITS_PUBLIC virtual bool init(
+  virtual bool init(
     const std::vector<std::string> & joint_names,
     const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
     const std::string & robot_description_topic = "/robot_description")
@@ -156,7 +186,7 @@ public:
       lifecycle_node->get_node_logging_interface(), robot_description_topic);
   }
 
-  JOINT_LIMITS_PUBLIC virtual bool configure(const JointLimitsStateDataType & current_joint_states)
+  virtual bool configure(const JointLimitsStateDataType & current_joint_states)
   {
     return on_configure(current_joint_states);
   }
@@ -170,25 +200,12 @@ public:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool enforce(
-    JointLimitsStateDataType & current_joint_states,
+  virtual bool enforce(
+    const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
     joint_limits_ = *(updated_limits_.readFromRT());
     return on_enforce(current_joint_states, desired_joint_states, dt);
-  }
-
-  /** \brief Enforce joint limits to desired joint state for single physical quantity.
-   *
-   * Generic enforce method that calls implementation-specific `on_enforce` method.
-   *
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \returns true if limits are enforced, otherwise false.
-   */
-  JOINT_LIMITS_PUBLIC virtual bool enforce(std::vector<double> & desired_joint_states)
-  {
-    joint_limits_ = *(updated_limits_.readFromRT());
-    return on_enforce(desired_joint_states);
   }
 
 protected:
@@ -197,15 +214,14 @@ protected:
    * Implementation-specific initialization of limiter's internal states and libraries.
    * \returns true if initialization was successful, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_init() = 0;
+  virtual bool on_init() = 0;
 
   /** \brief Method is realized by an implementation.
    *
    * Implementation-specific configuration of limiter's internal states and libraries.
    * \returns true if initialization was successful, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_configure(
-    const JointLimitsStateDataType & current_joint_states) = 0;
+  virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
   /** \brief Method is realized by an implementation.
    *
@@ -217,31 +233,36 @@ protected:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_enforce(
-    JointLimitsStateDataType & current_joint_states,
+  virtual bool on_enforce(
+    const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
-  /** \brief Method is realized by an implementation.
+  /** \brief Checks if the logging interface is set.
+   * \returns true if the logging interface is available, otherwise false.
    *
-   * Filter-specific implementation of the joint limits enforce algorithm for single physical
-   * quantity.
-   * This method might use "effort" limits since they are often used as wild-card.
-   * Check the documentation of the exact implementation for more details.
-   *
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \returns true if limits are enforced, otherwise false.
+   * \note this way of interfacing would be useful for instances where the logging interface is not
+   * available, for example in the ResourceManager or ResourceStorage classes.
    */
-  JOINT_LIMITS_PUBLIC virtual bool on_enforce(std::vector<double> & desired_joint_states) = 0;
+  bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
+
+  /** \brief Checks if the parameter interface is set.
+   * \returns true if the parameter interface is available, otherwise false.
+   *
+   * * \note this way of interfacing would be useful for instances where the logging interface is
+   * not available, for example in the ResourceManager or ResourceStorage classes.
+   */
+  bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
 
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
-  std::vector<LimitsType> joint_limits_;
+  std::vector<joint_limits::JointLimits> joint_limits_;
+  std::vector<joint_limits::SoftJointLimits> soft_joint_limits_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_itf_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_itf_;
 
 private:
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_;
-  realtime_tools::RealtimeBuffer<std::vector<LimitsType>> updated_limits_;
+  realtime_tools::RealtimeBuffer<std::vector<joint_limits::JointLimits>> updated_limits_;
 };
 
 }  // namespace joint_limits

@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
-#include "controller_manager/visibility_control.h"
 #include "rclcpp/subscription.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
 #include "semantic_components/imu_sensor.hpp"
@@ -40,32 +39,24 @@ constexpr double CONTROLLER_DT = 0.001;
 class TestChainableController : public controller_interface::ChainableControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestChainableController();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestChainableController() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_init() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
 
   controller_interface::return_type update_reference_from_subscribers(
@@ -75,23 +66,17 @@ public:
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
   // Testing-relevant methods
-  CONTROLLER_MANAGER_PUBLIC
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_reference_interface_names(const std::vector<std::string> & reference_interface_names);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_exported_state_interface_names(const std::vector<std::string> & state_interface_names);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_imu_sensor_name(const std::string & name);
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<double> get_state_interface_data() const;
 
   size_t internal_counter;

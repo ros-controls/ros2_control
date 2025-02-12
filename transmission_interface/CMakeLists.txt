@@ -6,6 +6,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
           -Werror=missing-braces)
 endif()
 
+# using this instead of visibility macros
+# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
