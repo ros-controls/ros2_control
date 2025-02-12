@@ -215,6 +215,44 @@ void get_active_controllers_using_command_interfaces_of_controller(
   }
 }
 
+void extract_command_interfaces_for_controller(
+  const controller_manager::ControllerSpec & ctrl,
+  const hardware_interface::ResourceManager & resource_manager,
+  std::vector<std::string> & request_interface_list)
+{
+  auto command_interface_config = ctrl.c->command_interface_configuration();
+  std::vector<std::string> command_interface_names = {};
+  if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+  {
+    command_interface_names = resource_manager.available_command_interfaces();
+  }
+  if (
+    command_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+  {
+    command_interface_names = command_interface_config.names;
+  }
+  request_interface_list.insert(
+    request_interface_list.end(), command_interface_names.begin(), command_interface_names.end());
+}
+
+void get_controller_list_command_interfaces(
+  const std::vector<std::string> & controllers_list,
+  const std::vector<controller_manager::ControllerSpec> & controllers_spec,
+  const hardware_interface::ResourceManager & resource_manager,
+  std::vector<std::string> & request_interface_list)
+{
+  for (const auto & controller_name : controllers_list)
+  {
+    auto found_it = std::find_if(
+      controllers_spec.begin(), controllers_spec.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (found_it != controllers_spec.end())
+    {
+      extract_command_interfaces_for_controller(
+        *found_it, resource_manager, request_interface_list);
+    }
+  }
+}
 }  // namespace
 
 namespace controller_manager
@@ -1418,33 +1456,15 @@ controller_interface::return_type ControllerManager::switch_controller(
       activate_request_.erase(activate_list_it);
     }
 
-    const auto extract_interfaces_for_controller =
-      [this](const ControllerSpec ctrl, std::vector<std::string> & request_interface_list)
-    {
-      auto command_interface_config = ctrl.c->command_interface_configuration();
-      std::vector<std::string> command_interface_names = {};
-      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
-      {
-        command_interface_names = resource_manager_->available_command_interfaces();
-      }
-      if (
-        command_interface_config.type ==
-        controller_interface::interface_configuration_type::INDIVIDUAL)
-      {
-        command_interface_names = command_interface_config.names;
-      }
-      request_interface_list.insert(
-        request_interface_list.end(), command_interface_names.begin(),
-        command_interface_names.end());
-    };
-
     if (in_activate_list)
     {
-      extract_interfaces_for_controller(controller, activate_command_interface_request_);
+      extract_command_interfaces_for_controller(
+        controller, *resource_manager_, activate_command_interface_request_);
     }
     if (in_deactivate_list)
     {
-      extract_interfaces_for_controller(controller, deactivate_command_interface_request_);
+      extract_command_interfaces_for_controller(
+        controller, *resource_manager_, deactivate_command_interface_request_);
     }
 
     // cache mapping between hardware and controllers for stopping when read/write error happens
@@ -2674,6 +2694,26 @@ controller_interface::return_type ControllerManager::update(
       }
       RCLCPP_ERROR(
         get_logger(), "Activating fallback controllers : [ %s]", controllers_string.c_str());
+    }
+    std::vector<std::string> failed_controller_interfaces, fallback_controller_interfaces;
+    failed_controller_interfaces.reserve(500);
+    get_controller_list_command_interfaces(
+      failed_controllers_list, rt_controller_list, *resource_manager_,
+      failed_controller_interfaces);
+    get_controller_list_command_interfaces(
+      cumulative_fallback_controllers, rt_controller_list, *resource_manager_,
+      fallback_controller_interfaces);
+    if (!failed_controller_interfaces.empty())
+    {
+      if (!(resource_manager_->prepare_command_mode_switch(
+              fallback_controller_interfaces, failed_controller_interfaces) &&
+            resource_manager_->perform_command_mode_switch(
+              fallback_controller_interfaces, failed_controller_interfaces)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Error while attempting mode switch when deactivating controllers in update cycle!");
+      }
     }
     deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
     if (!cumulative_fallback_controllers.empty())
