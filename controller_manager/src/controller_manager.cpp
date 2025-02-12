@@ -22,6 +22,7 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
@@ -331,6 +332,7 @@ ControllerManager::ControllerManager(
 
 ControllerManager::~ControllerManager()
 {
+  CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES();
   if (preshutdown_cb_handle_)
   {
     rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
@@ -407,6 +409,11 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+    this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+    hardware_interface::DEFAULT_REGISTRY_KEY);
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
 
   // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
@@ -2720,6 +2727,8 @@ controller_interface::return_type ControllerManager::update(
   {
     manage_switch();
   }
+
+  PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
 
   return ret;
 }

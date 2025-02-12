@@ -25,6 +25,7 @@
 #include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -203,6 +204,24 @@ public:
   {
   }
 
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
+    }
+  }
+
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
@@ -229,6 +248,24 @@ public:
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;
+
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
+    }
+  }
 
   using Handle::Handle;
 

@@ -27,6 +27,7 @@ For details see the controller_manager section.
 * The ``assign_interfaces`` and ``release_interfaces`` methods are now virtual, so that the user can override them to store the interfaces into custom variable types, so that the user can have the flexibility to take the ownership of the loaned interfaces to the controller (`#1743 <https://github.com/ros-controls/ros2_control/pull/1743>`_)
 * The new ``PoseSensor`` semantic component provides a standard interface for hardware providing cartesian poses (`#1775 <https://github.com/ros-controls/ros2_control/pull/1775>`_)
 * The controllers now support the fallback controllers (a list of controllers that will be activated, when the spawned controllers fails by throwing an exception or returning ``return_type::ERROR`` during the ``update`` cycle) (`#1789 <https://github.com/ros-controls/ros2_control/pull/1789>`_)
+* The controllers can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
 * A new ``SemanticComponentCommandInterface`` semantic component provides capabilities analogous to the ``SemanticComponentInterface``, but for write-only devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
 * The new semantic command interface ``LedRgbDevice`` provides standard (command) interfaces for 3-channel LED devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
 
@@ -87,6 +88,7 @@ controller_manager
 * The ``ros2_control_node`` node has a new ``cpu_affinity`` parameter to bind the process to a specific CPU core. By default, this is not enabled. (`#1852 <https://github.com/ros-controls/ros2_control/pull/1852>`_).
 * The ``--service-call-timeout`` was added as parameter to the helper scripts ``spawner.py``. Useful when the CPU load is high at startup and the service call does not return immediately (`#1808 <https://github.com/ros-controls/ros2_control/pull/1808>`_).
 * The ``cpu_affinity`` parameter can now accept of types ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
+* The ``pal_statistics`` is now integrated into the controller_manager, so that the controllers, hardware components and the controller_manager can be easily introspected and monitored using the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_).
 * A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
 
 hardware_interface
@@ -161,6 +163,7 @@ hardware_interface
 * With (`#1421 <https://github.com/ros-controls/ros2_control/pull/1421>`_) a key-value storage is added to InterfaceInfo. This allows to define extra params with per Command-/StateInterface in the ``.ros2_control.xacro`` file.
 * With (`#1763 <https://github.com/ros-controls/ros2_control/pull/1763>`_) parsing for SDF published to ``robot_description`` topic is now also supported.
 * With (`#1567 <https://github.com/ros-controls/ros2_control/pull/1567>`_) all the Hardware components now have a fully functional asynchronous functionality, by simply adding ``is_async`` tag to the ros2_control tag in the URDF. This will allow the hardware components to run in a separate thread, and the controller manager will be able to run the controllers in parallel with the hardware components.
+* The hardware components can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
 
 joint_limits
 ************

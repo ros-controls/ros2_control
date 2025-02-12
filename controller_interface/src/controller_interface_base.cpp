@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
@@ -82,6 +83,9 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      // make sure introspection is disabled on controller cleanup as users may manually enable
+      // it in `on_configure` and `on_deactivate` - see the docs for details
+      enable_introspection(false);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         async_handler_->stop_thread();
@@ -92,6 +96,7 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      enable_introspection(true);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
@@ -101,7 +106,11 @@ return_type ControllerInterfaceBase::init(
     });
 
   node_->register_on_deactivate(
-    std::bind(&ControllerInterfaceBase::on_deactivate, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      enable_introspection(false);
+      return on_deactivate(previous_state);
+    });
 
   node_->register_on_shutdown(
     std::bind(&ControllerInterfaceBase::on_shutdown, this, std::placeholders::_1));
@@ -158,6 +167,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       thread_priority);
     async_handler_->start_thread();
   }
+  REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
   trigger_stats_.reset();
 
   return get_node()->configure();
@@ -258,4 +269,19 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
     async_handler_->wait_for_trigger_cycle_to_finish();
   }
 }
+
+std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
+
+void ControllerInterfaceBase::enable_introspection(bool enable)
+{
+  if (enable)
+  {
+    stats_registrations_.enableAll();
+  }
+  else
+  {
+    stats_registrations_.disableAll();
+  }
+}
+
 }  // namespace controller_interface
