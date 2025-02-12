@@ -82,16 +82,14 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
-      if (is_async() && async_handler_ && async_handler_->is_running())
-      {
-        async_handler_->stop_thread();
-      }
+      this->stop_async_handler_thread();
       return on_cleanup(previous_state);
     });
 
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      skip_async_triggers_.store(false);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
@@ -104,10 +102,22 @@ return_type ControllerInterfaceBase::init(
     std::bind(&ControllerInterfaceBase::on_deactivate, this, std::placeholders::_1));
 
   node_->register_on_shutdown(
-    std::bind(&ControllerInterfaceBase::on_shutdown, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_shutdown(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   node_->register_on_error(
-    std::bind(&ControllerInterfaceBase::on_error, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_error(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   return return_type::OK;
 }
@@ -193,6 +203,13 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   trigger_stats_.total_triggers++;
   if (is_async())
   {
+    if (skip_async_triggers_.load())
+    {
+      // Skip further async triggers if the controller is being deactivated
+      status.successful = false;
+      status.result = return_type::OK;
+      return status;
+    }
     const rclcpp::Time last_trigger_time = async_handler_->get_current_callback_time();
     const auto result = async_handler_->trigger_async_callback(time, period);
     if (!result.first)
@@ -258,4 +275,19 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
     async_handler_->wait_for_trigger_cycle_to_finish();
   }
 }
+
+void ControllerInterfaceBase::prepare_for_deactivation()
+{
+  skip_async_triggers_.store(true);
+  this->wait_for_trigger_update_to_finish();
+}
+
+void ControllerInterfaceBase::stop_async_handler_thread()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_thread();
+  }
+}
+
 }  // namespace controller_interface
