@@ -87,11 +87,29 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_pose_sensor
     geometry_msgs
   )
-
   ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
   target_link_libraries(test_gps_sensor
     controller_interface
     hardware_interface::hardware_interface
+  )
+
+  # Semantic component command interface tests
+
+  ament_add_gmock(test_semantic_component_command_interface
+    test/test_semantic_component_command_interface.cpp
+  )
+  target_link_libraries(test_semantic_component_command_interface
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+
+  ament_add_gmock(test_led_rgb_device test/test_led_rgb_device.cpp)
+  target_link_libraries(test_led_rgb_device
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+  ament_target_dependencies(test_led_rgb_device
+    std_msgs
   )
 endif()
 

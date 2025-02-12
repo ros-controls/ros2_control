@@ -62,9 +62,9 @@ public:
 
   std::vector<StateInterface::ConstSharedPtr> export_state_interfaces();
 
-  std::string get_name() const;
+  const std::string & get_name() const;
 
-  std::string get_group_name() const;
+  const std::string & get_group_name() const;
 
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
 

@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.26.0 (2025-02-07)
+-------------------
+* Slightly increase timeout of test_spawner_unspawner (`#2037 <https://github.com/ros-controls/ros2_control/issues/2037>`_)
+* Contributors: Christoph Fröhlich
+
 4.25.0 (2025-01-29)
 -------------------
 * Handle SIGINT properly in the controller manager (`#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_)

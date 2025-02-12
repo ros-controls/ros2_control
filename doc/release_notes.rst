@@ -28,6 +28,8 @@ For details see the controller_manager section.
 * The new ``PoseSensor`` semantic component provides a standard interface for hardware providing cartesian poses (`#1775 <https://github.com/ros-controls/ros2_control/pull/1775>`_)
 * The controllers now support the fallback controllers (a list of controllers that will be activated, when the spawned controllers fails by throwing an exception or returning ``return_type::ERROR`` during the ``update`` cycle) (`#1789 <https://github.com/ros-controls/ros2_control/pull/1789>`_)
 * The controllers can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
+* A new ``SemanticComponentCommandInterface`` semantic component provides capabilities analogous to the ``SemanticComponentInterface``, but for write-only devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
+* The new semantic command interface ``LedRgbDevice`` provides standard (command) interfaces for 3-channel LED devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
 
 controller_manager
 ******************
