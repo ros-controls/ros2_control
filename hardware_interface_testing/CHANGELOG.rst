@@ -2,6 +2,14 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.26.0 (2025-02-07)
+-------------------
+* Fix memory leak in the ros2_control (`#2033 <https://github.com/ros-controls/ros2_control/issues/2033>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.25.0 (2025-01-29)
+-------------------
+
 4.24.0 (2025-01-13)
 -------------------
 

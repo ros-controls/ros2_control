@@ -233,9 +233,9 @@ std::vector<StateInterface::ConstSharedPtr> Sensor::export_state_interfaces()
   // END: for backward compatibility
 }
 
-std::string Sensor::get_name() const { return impl_->get_name(); }
+const std::string & Sensor::get_name() const { return impl_->get_name(); }
 
-std::string Sensor::get_group_name() const { return impl_->get_group_name(); }
+const std::string & Sensor::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
 {

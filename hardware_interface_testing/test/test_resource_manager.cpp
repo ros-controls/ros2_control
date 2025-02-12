@@ -371,8 +371,6 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  std::string get_name() const override { return "ExternalComponent"; }
-
   hardware_interface::return_type read(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
