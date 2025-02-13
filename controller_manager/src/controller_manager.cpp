@@ -217,14 +217,14 @@ void get_active_controllers_using_command_interfaces_of_controller(
 
 void extract_command_interfaces_for_controller(
   const controller_manager::ControllerSpec & ctrl,
-  const hardware_interface::ResourceManager & resource_manager,
+  const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
   std::vector<std::string> & request_interface_list)
 {
   auto command_interface_config = ctrl.c->command_interface_configuration();
   std::vector<std::string> command_interface_names = {};
   if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
   {
-    command_interface_names = resource_manager.available_command_interfaces();
+    command_interface_names = resource_manager->available_command_interfaces();
   }
   if (
     command_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
@@ -238,7 +238,7 @@ void extract_command_interfaces_for_controller(
 void get_controller_list_command_interfaces(
   const std::vector<std::string> & controllers_list,
   const std::vector<controller_manager::ControllerSpec> & controllers_spec,
-  const hardware_interface::ResourceManager & resource_manager,
+  const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
   std::vector<std::string> & request_interface_list)
 {
   for (const auto & controller_name : controllers_list)
@@ -1459,12 +1459,12 @@ controller_interface::return_type ControllerManager::switch_controller(
     if (in_activate_list)
     {
       extract_command_interfaces_for_controller(
-        controller, *resource_manager_, activate_command_interface_request_);
+        controller, resource_manager_, activate_command_interface_request_);
     }
     if (in_deactivate_list)
     {
       extract_command_interfaces_for_controller(
-        controller, *resource_manager_, deactivate_command_interface_request_);
+        controller, resource_manager_, deactivate_command_interface_request_);
     }
 
     // cache mapping between hardware and controllers for stopping when read/write error happens
@@ -2671,10 +2671,10 @@ controller_interface::return_type ControllerManager::update(
     rt_buffer_.interfaces_to_start.clear();
     rt_buffer_.interfaces_to_stop.clear();
     get_controller_list_command_interfaces(
-      rt_buffer_.deactivate_controllers_list, rt_controller_list, *resource_manager_,
+      rt_buffer_.deactivate_controllers_list, rt_controller_list, resource_manager_,
       rt_buffer_.interfaces_to_stop);
     get_controller_list_command_interfaces(
-      rt_buffer_.fallback_controllers_list, rt_controller_list, *resource_manager_,
+      rt_buffer_.fallback_controllers_list, rt_controller_list, resource_manager_,
       rt_buffer_.interfaces_to_start);
     if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
     {
