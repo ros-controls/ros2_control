@@ -104,6 +104,7 @@ const rclcpp_lifecycle::State & Actuator::configure()
 const rclcpp_lifecycle::State & Actuator::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
@@ -125,6 +126,7 @@ const rclcpp_lifecycle::State & Actuator::cleanup()
 const rclcpp_lifecycle::State & Actuator::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -152,6 +154,7 @@ const rclcpp_lifecycle::State & Actuator::activate()
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
+        impl_->enable_introspection(true);
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
@@ -170,6 +173,7 @@ const rclcpp_lifecycle::State & Actuator::activate()
 const rclcpp_lifecycle::State & Actuator::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
@@ -193,6 +197,7 @@ const rclcpp_lifecycle::State & Actuator::deactivate()
 const rclcpp_lifecycle::State & Actuator::error()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)

@@ -624,6 +624,7 @@ public:
         command_interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    command_interface->registerIntrospection();
   }
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -681,6 +682,7 @@ public:
         interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    interface->registerIntrospection();
     return interface_name;
   }
   /// Adds exported state interfaces into internal storage.
@@ -728,6 +730,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      state_interface_map_[interface]->unregisterIntrospection();
       state_interface_map_.erase(interface);
     }
   }
@@ -788,6 +791,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      command_interface_map_[interface]->unregisterIntrospection();
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
     }

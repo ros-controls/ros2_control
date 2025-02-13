@@ -25,6 +25,7 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -96,7 +97,7 @@ public:
    */
   SystemInterface(const SystemInterface & other) = delete;
 
-  SystemInterface(SystemInterface && other) = default;
+  SystemInterface(SystemInterface && other) = delete;
 
   virtual ~SystemInterface() = default;
 
@@ -567,6 +568,22 @@ public:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+  /// Enable or disable introspection of the hardware.
+  /**
+   * \param[in] enable Enable introspection if true, disable otherwise.
+   */
+  void enable_introspection(bool enable)
+  {
+    if (enable)
+    {
+      stats_registrations_.enableAll();
+    }
+    else
+    {
+      stats_registrations_.disableAll();
+    }
+  }
+
 protected:
   HardwareInfo info_;
   // interface names to InterfaceDescription
@@ -603,6 +620,9 @@ private:
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
   std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
+
+protected:
+  pal_statistics::RegistrationsRAII stats_registrations_;
 };
 
 }  // namespace hardware_interface
