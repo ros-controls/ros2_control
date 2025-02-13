@@ -2666,20 +2666,22 @@ controller_interface::return_type ControllerManager::update(
       rt_buffer_.activate_controllers_using_interfaces_list.end(),
       [this](const std::string & controller)
       { add_element_to_list(rt_buffer_.deactivate_controllers_list, controller); });
-    std::vector<std::string> failed_controller_interfaces, fallback_controller_interfaces;
-    failed_controller_interfaces.reserve(500);
+
+    // Retrieve the interfaces to start and stop from the hardware end
+    rt_buffer_.interfaces_to_start.clear();
+    rt_buffer_.interfaces_to_stop.clear();
     get_controller_list_command_interfaces(
       rt_buffer_.deactivate_controllers_list, rt_controller_list, *resource_manager_,
-      failed_controller_interfaces);
+      rt_buffer_.interfaces_to_stop);
     get_controller_list_command_interfaces(
       rt_buffer_.fallback_controllers_list, rt_controller_list, *resource_manager_,
-      fallback_controller_interfaces);
-    if (!failed_controller_interfaces.empty())
+      rt_buffer_.interfaces_to_start);
+    if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
     {
       if (!(resource_manager_->prepare_command_mode_switch(
-              fallback_controller_interfaces, failed_controller_interfaces) &&
+              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop) &&
             resource_manager_->perform_command_mode_switch(
-              fallback_controller_interfaces, failed_controller_interfaces)))
+              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
       {
         RCLCPP_ERROR(
           get_logger(),

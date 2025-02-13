@@ -612,6 +612,8 @@ private:
       deactivate_controllers_list.reserve(1000);
       activate_controllers_using_interfaces_list.reserve(1000);
       fallback_controllers_list.reserve(1000);
+      interfaces_to_start.reserve(1000);
+      interfaces_to_stop.reserve(1000);
       concatenated_string.reserve(5000);
     }
 
@@ -633,6 +635,8 @@ private:
     std::vector<std::string> deactivate_controllers_list;
     std::vector<std::string> activate_controllers_using_interfaces_list;
     std::vector<std::string> fallback_controllers_list;
+    std::vector<std::string> interfaces_to_start;
+    std::vector<std::string> interfaces_to_stop;
     std::string concatenated_string;
   };
   RTBufferVariables rt_buffer_;
