@@ -12,15 +12,16 @@
 
   <depend>backward_ros</depend>
   <depend>control_msgs</depend>
+  <depend>joint_limits</depend>
   <depend>lifecycle_msgs</depend>
+  <depend>pal_statistics</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>rcpputils</depend>
   <depend>realtime_tools</depend>
-  <depend>tinyxml2_vendor</depend>
-  <depend>joint_limits</depend>
-  <depend>urdf</depend>
   <depend>sdformat_urdf</depend>
+  <depend>tinyxml2_vendor</depend>
+  <depend>urdf</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>
