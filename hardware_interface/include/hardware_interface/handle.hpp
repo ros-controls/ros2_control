@@ -26,6 +26,7 @@
 #include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -177,8 +178,7 @@ public:
 private:
   void copy(const Handle & other) noexcept
   {
-    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    std::scoped_lock lock(other.handle_mutex_, handle_mutex_);
     prefix_name_ = other.prefix_name_;
     interface_name_ = other.interface_name_;
     handle_name_ = other.handle_name_;
@@ -195,8 +195,7 @@ private:
 
   void swap(Handle & first, Handle & second) noexcept
   {
-    std::unique_lock<std::shared_mutex> lock(first.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(second.handle_mutex_);
+    std::scoped_lock lock(first.handle_mutex_, second.handle_mutex_);
     std::swap(first.prefix_name_, second.prefix_name_);
     std::swap(first.interface_name_, second.interface_name_);
     std::swap(first.handle_name_, second.handle_name_);
@@ -222,6 +221,24 @@ public:
   explicit StateInterface(const InterfaceDescription & interface_description)
   : Handle(interface_description)
   {
+  }
+
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
+    }
   }
 
   StateInterface(const StateInterface & other) = default;
@@ -250,6 +267,24 @@ public:
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;
+
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
+    }
+  }
 
   using Handle::Handle;
 
