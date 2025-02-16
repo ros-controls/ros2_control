@@ -158,7 +158,8 @@ public:
     // END
   }
 
-  [[nodiscard]] bool set_value(double value)
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value)
   {
     std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())

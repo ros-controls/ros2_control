@@ -95,7 +95,7 @@ public:
   const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
 
   template <typename T>
-  [[nodiscard]] bool set_value(T value, unsigned int max_tries = 10)
+  [[nodiscard]] bool set_value(const T & value, unsigned int max_tries = 10)
   {
     unsigned int nr_tries = 0;
     ++set_value_statistics_.total_counter;
