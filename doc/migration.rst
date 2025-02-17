@@ -78,10 +78,9 @@ hardware_interface
 * A new ``get_value`` that returns a ``std::optional`` was added to the ``CommandInterface`` and ``StateInterface``. This can be used to check if the value is available or not. (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_)
 
 Adaption of Command-/StateInterfaces
-* The handles for ``Command-/StateInterfaces`` have new set/get methods to access the values.
-
 ***************************************
 
+* The handles for ``Command-/StateInterfaces`` have new set/get methods to access the values.
 * ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` methods based on the interfaces defined in the ``ros2_control`` XML-tag, which get parsed and the ``InterfaceDescription`` is created accordingly (check the `hardware_info.hpp <https://github.com/ros-controls/ros2_control/tree/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/hardware_info.hpp>`__). The memory is now allocated in the handle itself.
 
 Access to Command-/StateInterfaces
