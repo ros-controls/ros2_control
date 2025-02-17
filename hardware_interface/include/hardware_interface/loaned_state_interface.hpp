@@ -104,6 +104,20 @@ public:
     }
   }
 
+  /**
+   * @brief Get the value of the state interface.
+   * @tparam T The type of the value to be retrieved.
+   * @return The value of the state interface if it accessed successfully, std::nullopt otherwise.
+   * @param max_tries The maximum number of tries to get the value.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to access the value, the handle returns std::nullopt. If the
+   * operation is successful, the value is returned.
+   * @note The method will try to get the value max_tries times before returning std::nullopt. The
+   * method will yield the thread between tries. If the value is retrieved successfully, the method
+   * returns the value immediately.
+   */
   template <typename T = double>
   [[nodiscard]] std::optional<T> get_value(unsigned int max_tries = 10) const
   {
@@ -125,6 +139,21 @@ public:
     return std::nullopt;
   }
 
+  /**
+   * @brief Get the value of the state interface.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The value of the state interface.
+   * @param max_tries The maximum number of tries to get the value.
+   * @return true if the value is accessed successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to access the value, the handle returns false. If the operation is successful,
+   * the value is updated and returns true.
+   * @note The method will try to get the value max_tries times before returning false. The method
+   * will yield the thread between tries. If the value is retrieved successfully, the method updates
+   * the value and returns true immediately.
+   */
   template <typename T>
   [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
   {

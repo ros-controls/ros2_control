@@ -129,6 +129,16 @@ public:
     // END
   }
 
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @return The value of the handle if it accessed successfully, std::nullopt otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to access the value, the handle returns std::nullopt. If the operation is
+   * successful, the value is returned.
+   */
   template <typename T = double>
   [[nodiscard]] std::optional<T> get_value() const
   {
@@ -144,6 +154,17 @@ public:
     // END
   }
 
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The value of the handle.
+   * @return true if the value is accessed successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to access the value, the handle returns false. If the operation is successful,
+   * the value is updated and returns true.
+   */
   template <typename T>
   [[nodiscard]] bool get_value(T & value) const
   {
@@ -159,6 +180,17 @@ public:
     // END
   }
 
+  /**
+   * @brief Set the value of the handle.
+   * @tparam T The type of the value to be set.
+   * @param value The value to be set.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to set the value, the handle returns false. If the operation is successful, the
+   * handle is updated and returns true.
+   */
   template <typename T>
   [[nodiscard]] bool set_value(const T & value)
   {
