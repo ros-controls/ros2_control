@@ -377,7 +377,7 @@ public:
   /**
    * \return map of hardware names and their status.
    */
-  std::unordered_map<std::string, HardwareComponentInfo> get_components_status();
+  const std::unordered_map<std::string, HardwareComponentInfo> & get_components_status();
 
   /// Prepare the hardware components for a new command interface mode
   /**
