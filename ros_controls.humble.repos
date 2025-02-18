@@ -15,3 +15,11 @@ repositories:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
     version: humble
+  ros-controls/control_toolbox:
+    type: git
+    url: https://github.com/ros-controls/control_toolbox.git
+    version: humble
+  ros-controls/kinematics_interface:
+    type: git
+    url: https://github.com/ros-controls/kinematics_interface.git
+    version: humble
