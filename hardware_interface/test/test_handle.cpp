@@ -35,7 +35,7 @@ TEST(TestHandle, command_interface)
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
-  EXPECT_NO_THROW({ interface.set_value(0.0) });
+  EXPECT_NO_THROW({ interface.set_value(0.0); });
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), 0.0);
 }
@@ -70,7 +70,7 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-  EXPECT_NO_THROW((void)handle.set_value(0.0));
+  EXPECT_NO_THROW({ handle.set_value(0.0); });
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
 }
@@ -111,7 +111,7 @@ TEST(TestHandle, copy_constructor)
     hardware_interface::Handle copy(handle);
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
   }
@@ -130,10 +130,10 @@ TEST(TestHandle, copy_constructor)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-    EXPECT_NO_THROW((void)copy.set_value(0.52));
+    EXPECT_NO_THROW({ copy.set_value(0.52); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   }
@@ -145,7 +145,7 @@ TEST(TesHandle, move_constructor)
   hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
   hardware_interface::Handle moved{std::move(handle)};
   EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), value);
-  EXPECT_NO_THROW((void)moved.set_value(0.0));
+  EXPECT_NO_THROW({ moved.set_value(0.0); });
   EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), 0.0);
 }
 
@@ -161,7 +161,7 @@ TEST(TestHandle, copy_assignment)
     copy = handle;
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value_1);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value_1);
-    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(value_1, 0.0);
@@ -183,10 +183,10 @@ TEST(TestHandle, copy_assignment)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-    EXPECT_NO_THROW((void)copy.set_value(0.52));
+    EXPECT_NO_THROW({ copy.set_value(0.52); });
     EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   }
@@ -202,6 +202,6 @@ TEST(TestHandle, move_assignment)
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   moved = std::move(handle);
   EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), value);
-  EXPECT_NO_THROW((void)moved.set_value(0.0));
+  EXPECT_NO_THROW({ moved.set_value(0.0); });
   EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), 0.0);
 }
