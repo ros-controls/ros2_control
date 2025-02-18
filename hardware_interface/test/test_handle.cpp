@@ -31,16 +31,21 @@ TEST(TestHandle, command_interface)
 {
   double value = 1.337;
   CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(interface.get_value(), value);
-  EXPECT_NO_THROW(interface.set_value(0.0));
-  EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
+  EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
+  ASSERT_TRUE(interface.get_value<double>().has_value());
+  EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
+  EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
+  EXPECT_NO_THROW(bool status = interface.set_value(0.0));
+  ASSERT_TRUE(interface.get_value<double>().has_value());
+  EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), 0.0);
 }
 
 TEST(TestHandle, state_interface)
 {
   double value = 1.337;
   StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(interface.get_value(), value);
+  ASSERT_TRUE(interface.get_value<double>().has_value());
+  EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   // interface.set_value(5);  compiler error, no set_value function
 }
 
@@ -55,17 +60,19 @@ TEST(TestHandle, name_getters_work)
 TEST(TestHandle, value_methods_throw_for_nullptr)
 {
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
-  EXPECT_ANY_THROW(handle.get_value());
-  EXPECT_ANY_THROW(handle.set_value(0.0));
+  EXPECT_ANY_THROW(handle.get_value<double>().value());
+  EXPECT_ANY_THROW(bool status = handle.set_value(0.0));
 }
 
 TEST(TestHandle, value_methods_work_on_non_nullptr)
 {
   double value = 1.337;
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  EXPECT_NO_THROW(handle.set_value(0.0));
-  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+  ASSERT_TRUE(handle.get_value<double>().has_value());
+  EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+  EXPECT_NO_THROW(bool status_set = handle.set_value(0.0));
+  ASSERT_TRUE(handle.get_value<double>().has_value());
+  EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
 }
 
 TEST(TestHandle, interface_description_state_interface_name_getters_work)

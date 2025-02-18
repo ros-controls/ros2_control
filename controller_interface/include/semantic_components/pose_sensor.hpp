@@ -50,7 +50,7 @@ public:
     std::array<double, 3> position;
     for (auto i = 0u; i < position.size(); ++i)
     {
-      position[i] = state_interfaces_[i].get().get_value();
+      position[i] = state_interfaces_[i].get().get_value<double>().value();
     }
     return position;
   }
@@ -67,7 +67,7 @@ public:
     const std::size_t interface_offset{3};
     for (auto i = 0u; i < orientation.size(); ++i)
     {
-      orientation[i] = state_interfaces_[interface_offset + i].get().get_value();
+      orientation[i] = state_interfaces_[interface_offset + i].get().get_value<double>().value();
     }
     return orientation;
   }
