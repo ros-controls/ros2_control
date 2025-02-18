@@ -35,7 +35,7 @@ TEST(TestHandle, command_interface)
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
-  EXPECT_NO_THROW((void)interface.set_value(0.0));
+  EXPECT_NO_THROW({ interface.set_value(0.0) });
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), 0.0);
 }
