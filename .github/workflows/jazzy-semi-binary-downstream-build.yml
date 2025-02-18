@@ -41,7 +41,9 @@ jobs:
       ros_distro: jazzy
       ros_repo: testing
       ref_for_scheduled_build: master
-      upstream_workspace: ros2_control.jazzy.repos
+      upstream_workspace: | # build also the ros2_control packages
+        ros2_control.jazzy.repos
+        ros_controls.jazzy.repos
       # we don't test this repository, we just build it
       not_test_build: true
       # we don't test the downstream packages, which are outside of our organization

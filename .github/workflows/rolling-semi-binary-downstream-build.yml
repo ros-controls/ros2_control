@@ -49,7 +49,9 @@ jobs:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       ref_for_scheduled_build: master
-      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      upstream_workspace: | # build also the ros2_control packages
+        ros2_control.${{ matrix.ROS_DISTRO }}.repos
+        ros_controls.${{ matrix.ROS_DISTRO }}.repos
       # we don't test this repository, we just build it
       not_test_build: true
       # we don't test the downstream packages, which are outside of our organization
