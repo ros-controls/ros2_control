@@ -164,6 +164,7 @@ hardware_interface
 * With (`#1763 <https://github.com/ros-controls/ros2_control/pull/1763>`_) parsing for SDF published to ``robot_description`` topic is now also supported.
 * With (`#1567 <https://github.com/ros-controls/ros2_control/pull/1567>`_) all the Hardware components now have a fully functional asynchronous functionality, by simply adding ``is_async`` tag to the ros2_control tag in the URDF. This will allow the hardware components to run in a separate thread, and the controller manager will be able to run the controllers in parallel with the hardware components.
 * The hardware components can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
+* Added new ``get_value`` method that returns ``std::optional`` of the templated type, and this can be used to check if the value is available or not (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_)
 
 joint_limits
 ************
