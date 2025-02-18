@@ -35,7 +35,7 @@ TEST(TestHandle, command_interface)
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), value);
-  EXPECT_NO_THROW(bool status = interface.set_value(0.0));
+  EXPECT_NO_THROW((void)interface.set_value(0.0));
   ASSERT_TRUE(interface.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(interface.get_value<double>().value(), 0.0);
 }
@@ -70,7 +70,7 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
-  EXPECT_NO_THROW(bool status_set = handle.set_value(0.0));
+  EXPECT_NO_THROW((void)handle.set_value(0.0));
   ASSERT_TRUE(handle.get_value<double>().has_value());
   EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
 }
@@ -109,11 +109,11 @@ TEST(TestHandle, copy_constructor)
     double value = 1.337;
     hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
     hardware_interface::Handle copy(handle);
-    EXPECT_DOUBLE_EQ(copy.get_value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
-    EXPECT_NO_THROW(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
   }
   {
     double value = 1.337;
@@ -122,20 +122,20 @@ TEST(TestHandle, copy_constructor)
     info.data_type = "double";
     InterfaceDescription itf_descr{JOINT_NAME, info};
     hardware_interface::Handle handle{itf_descr};
-    EXPECT_TRUE(std::isnan(handle.get_value()));
-    handle.set_value(value);
+    EXPECT_TRUE(std::isnan(handle.get_value<double>().value()));
+    ASSERT_TRUE(handle.set_value(value));
     hardware_interface::Handle copy(handle);
     EXPECT_EQ(copy.get_name(), handle.get_name());
     EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
-    EXPECT_DOUBLE_EQ(copy.get_value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
-    EXPECT_NO_THROW(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
-    EXPECT_NO_THROW(copy.set_value(0.52));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.52);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+    EXPECT_NO_THROW((void)copy.set_value(0.52));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.52);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   }
 }
 
@@ -144,9 +144,9 @@ TEST(TesHandle, move_constructor)
   double value = 1.337;
   hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
   hardware_interface::Handle moved{std::move(handle)};
-  EXPECT_DOUBLE_EQ(moved.get_value(), value);
-  EXPECT_NO_THROW(moved.set_value(0.0));
-  EXPECT_DOUBLE_EQ(moved.get_value(), 0.0);
+  EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), value);
+  EXPECT_NO_THROW((void)moved.set_value(0.0));
+  EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), 0.0);
 }
 
 TEST(TestHandle, copy_assignment)
@@ -156,14 +156,14 @@ TEST(TestHandle, copy_assignment)
     double value_2 = 2.337;
     hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value_1};
     hardware_interface::Handle copy{JOINT_NAME, "random", &value_2};
-    EXPECT_DOUBLE_EQ(copy.get_value(), value_2);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value_1);
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value_2);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value_1);
     copy = handle;
-    EXPECT_DOUBLE_EQ(copy.get_value(), value_1);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value_1);
-    EXPECT_NO_THROW(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value_1);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value_1);
+    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), 0.0);
     EXPECT_DOUBLE_EQ(value_1, 0.0);
     EXPECT_DOUBLE_EQ(value_2, 2.337);
   }
@@ -175,20 +175,20 @@ TEST(TestHandle, copy_assignment)
     info.data_type = "double";
     InterfaceDescription itf_descr{JOINT_NAME, info};
     hardware_interface::Handle handle{itf_descr};
-    EXPECT_TRUE(std::isnan(handle.get_value()));
-    handle.set_value(value);
+    EXPECT_TRUE(std::isnan(handle.get_value<double>().value()));
+    ASSERT_TRUE(handle.set_value(value));
     hardware_interface::Handle copy = handle;
     EXPECT_EQ(copy.get_name(), handle.get_name());
     EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
-    EXPECT_DOUBLE_EQ(copy.get_value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
-    EXPECT_NO_THROW(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
-    EXPECT_NO_THROW(copy.set_value(0.52));
-    EXPECT_DOUBLE_EQ(copy.get_value(), 0.52);
-    EXPECT_DOUBLE_EQ(handle.get_value(), value);
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), value);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+    EXPECT_NO_THROW((void)copy.set_value(0.0));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
+    EXPECT_NO_THROW((void)copy.set_value(0.52));
+    EXPECT_DOUBLE_EQ(copy.get_value<double>().value(), 0.52);
+    EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   }
 }
 
@@ -198,10 +198,10 @@ TEST(TestHandle, move_assignment)
   double value_2 = 2.337;
   hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
   hardware_interface::Handle moved{JOINT_NAME, "random", &value_2};
-  EXPECT_DOUBLE_EQ(moved.get_value(), value_2);
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
+  EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), value_2);
+  EXPECT_DOUBLE_EQ(handle.get_value<double>().value(), value);
   moved = std::move(handle);
-  EXPECT_DOUBLE_EQ(moved.get_value(), value);
-  EXPECT_NO_THROW(moved.set_value(0.0));
-  EXPECT_DOUBLE_EQ(moved.get_value(), 0.0);
+  EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), value);
+  EXPECT_NO_THROW((void)moved.set_value(0.0));
+  EXPECT_DOUBLE_EQ(moved.get_value<double>().value(), 0.0);
 }
