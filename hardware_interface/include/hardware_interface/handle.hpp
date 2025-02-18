@@ -257,17 +257,17 @@ public:
 
   void registerIntrospection() const
   {
-    if (std::holds_alternative<double>(value_))
+    if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (std::holds_alternative<double>(value_))
+    if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -302,17 +302,17 @@ public:
 
   void registerIntrospection() const
   {
-    if (std::holds_alternative<double>(value_))
+    if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
+      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (std::holds_alternative<double>(value_))
+    if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
     }
