@@ -61,7 +61,7 @@ public:
    */
   int8_t get_status() const
   {
-    return static_cast<int8_t>(state_interfaces_[0].get().get_value<double>().value());
+    return static_cast<int8_t>(state_interfaces_[0].get().template get_value<double>().value());
   }
 
   /**
@@ -71,7 +71,7 @@ public:
    */
   uint16_t get_service() const
   {
-    return static_cast<uint16_t>(state_interfaces_[1].get().get_value<double>().value());
+    return static_cast<uint16_t>(state_interfaces_[1].get().template get_value<double>().value());
   }
 
   /**
@@ -79,21 +79,30 @@ public:
    *
    * \return Latitude.
    */
-  double get_latitude() const { return state_interfaces_[2].get().get_value<double>().value(); }
+  double get_latitude() const
+  {
+    return state_interfaces_[2].get().template get_value<double>().value();
+  }
 
   /**
    * Return longitude reported by a GPS
    *
    * \return Longitude.
    */
-  double get_longitude() const { return state_interfaces_[3].get().get_value<double>().value(); }
+  double get_longitude() const
+  {
+    return state_interfaces_[3].get().template get_value<double>().value();
+  }
 
   /**
    * Return altitude reported by a GPS
    *
    * \return Altitude.
    */
-  double get_altitude() const { return state_interfaces_[4].get().get_value<double>().value(); }
+  double get_altitude() const
+  {
+    return state_interfaces_[4].get().template get_value<double>().value();
+  }
 
   /**
    * Return covariance reported by a GPS.
@@ -105,9 +114,9 @@ public:
     typename = std::enable_if_t<sensor_option == GPSSensorOption::WithCovariance, U>>
   const std::array<double, 9> & get_covariance()
   {
-    covariance_[0] = state_interfaces_[5].get().get_value<double>().value();
-    covariance_[4] = state_interfaces_[6].get().get_value<double>().value();
-    covariance_[8] = state_interfaces_[7].get().get_value<double>().value();
+    covariance_[0] = state_interfaces_[5].get().template get_value<double>().value();
+    covariance_[4] = state_interfaces_[6].get().template get_value<double>().value();
+    covariance_[8] = state_interfaces_[7].get().template get_value<double>().value();
     return covariance_;
   }
 
