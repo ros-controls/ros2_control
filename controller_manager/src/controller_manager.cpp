@@ -2618,6 +2618,8 @@ controller_interface::return_type ControllerManager::update(
     {
       activate_controllers(rt_controller_list, cumulative_fallback_controllers);
     }
+    // To publish the activity of the failing controllers and the fallback controllers
+    publish_activity();
   }
 
   // there are controllers to (de)activate
