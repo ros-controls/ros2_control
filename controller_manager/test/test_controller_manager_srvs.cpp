@@ -1967,7 +1967,7 @@ TEST_F(TestControllerManagerSrvs, activate_chained_controllers_all_at_once)
   RCLCPP_ERROR(srv_node->get_logger(), "Check successful!");
 }
 
-TEST_F(TestControllerManagerSrvs, switch_controller_failure_cases)
+TEST_F(TestControllerManagerSrvs, switch_controller_failure_behaviour_on_unknown_controller)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
@@ -2043,9 +2043,41 @@ TEST_F(TestControllerManagerSrvs, switch_controller_failure_cases)
       rclcpp::Duration(0, 0)),
     controller_interface::return_type::ERROR);
 
-  cm_->switch_controller(
-    {test_controller::TEST_CONTROLLER_NAME}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  // Now with best effort, it should work even though the unknown controller is not known
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"}, {},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  // Now let's deactivate the controller and by having unknown controller in the activate list
+  // it should fail
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
