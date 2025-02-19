@@ -52,7 +52,7 @@ public:
     std::array<double, 4> orientation;
     for (auto i = 0u; i < orientation.size(); ++i)
     {
-      orientation[i] = state_interfaces_[i].get().get_value<double>().value();
+      orientation[i] = state_interfaces_[i].get().get_optional().value();
     }
     return orientation;
   }
@@ -69,8 +69,7 @@ public:
     const std::size_t interface_offset{4};
     for (auto i = 0u; i < angular_velocity.size(); ++i)
     {
-      angular_velocity[i] =
-        state_interfaces_[interface_offset + i].get().get_value<double>().value();
+      angular_velocity[i] = state_interfaces_[interface_offset + i].get().get_optional().value();
     }
     return angular_velocity;
   }
@@ -87,8 +86,7 @@ public:
     const std::size_t interface_offset{7};
     for (auto i = 0u; i < linear_acceleration.size(); ++i)
     {
-      linear_acceleration[i] =
-        state_interfaces_[interface_offset + i].get().get_value<double>().value();
+      linear_acceleration[i] = state_interfaces_[interface_offset + i].get().get_optional().value();
     }
     return linear_acceleration;
   }

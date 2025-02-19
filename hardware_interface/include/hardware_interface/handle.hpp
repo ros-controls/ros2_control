@@ -140,7 +140,7 @@ public:
    * successful, the value is returned.
    */
   template <typename T = double>
-  [[nodiscard]] std::optional<T> get_value() const
+  [[nodiscard]] std::optional<T> get_optional() const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
