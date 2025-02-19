@@ -45,6 +45,14 @@ Alternatives to the standard kernel include
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
 
+Publishers
+-----------
+
+~/activity [controller_manager_msgs::msg::ControllerManagerActivity]
+  A topic that is published every time there is a change of state of the controllers or hardware components managed by the controller manager.
+  The message contains the list of the controllers and the hardware components that are managed by the controller manager along with their lifecycle states.
+  The topic is published using the "transient local" quality of service, so subscribers should also be "transient local".
+
 Subscribers
 -----------
 
