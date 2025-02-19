@@ -45,7 +45,7 @@ jobs:
       # we don't test target_workspace, we just build it
       not_test_build: true
       # we don't test the downstream packages, which are outside of our organization
-      downstream_workspace: | # build also the ros2_control packages
-        downstream.jazzy.repos
+      downstream_workspace: | # build also the ros_controls packages
         ros_controls.jazzy.repos
+        downstream.jazzy.repos
       not_test_downstream: true
