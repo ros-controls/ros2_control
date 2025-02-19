@@ -30,7 +30,7 @@ jobs:
       ros_repo: testing
       ref_for_scheduled_build: humble
       upstream_workspace: ros2_control.humble.repos
-      # we don't test this repository, we just build it
+      # we don't test target_workspace, we just build it
       not_test_build: true
       # we test the downstream packages, which are part of our organization
       downstream_workspace: ros_controls.humble.repos
@@ -42,8 +42,10 @@ jobs:
       ros_repo: testing
       ref_for_scheduled_build: humble
       upstream_workspace: ros2_control.humble.repos
-      # we don't test this repository, we just build it
+      # we don't test target_workspace, we just build it
       not_test_build: true
       # we don't test the downstream packages, which are outside of our organization
-      downstream_workspace: downstream.humble.repos
+      downstream_workspace: | # build also the ros2_control packages
+        ros_controls.humble.repos
+        downstream.humble.repos
       not_test_downstream: true
