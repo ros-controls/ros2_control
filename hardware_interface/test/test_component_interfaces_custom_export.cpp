@@ -54,8 +54,6 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
-  std::string get_name() const override { return "DummyActuatorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -95,8 +93,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
-  std::string get_name() const override { return "DummySensorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -118,8 +114,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
-  std::string get_name() const override { return "DummySystemDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -250,7 +244,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
     EXPECT_EQ("sens1/voltage", state_interfaces[position]->get_name());
     EXPECT_EQ("voltage", state_interfaces[position]->get_interface_name());
     EXPECT_EQ("sens1", state_interfaces[position]->get_prefix_name());
-    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
+    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value<double>().value()));
   }
   {
     auto [contains, position] =

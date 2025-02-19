@@ -187,13 +187,14 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_release_interfaces
     controller_manager
+    test_controller
     test_controller_with_interfaces
     ros2_control_test_assets::ros2_control_test_assets
   )
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
-    TIMEOUT 120
+    TIMEOUT 180
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager

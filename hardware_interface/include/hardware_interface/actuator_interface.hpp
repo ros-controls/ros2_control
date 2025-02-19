@@ -25,6 +25,7 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "hardware_interface/types/trigger_type.hpp"
@@ -93,7 +94,7 @@ public:
    */
   ActuatorInterface(const ActuatorInterface & other) = delete;
 
-  ActuatorInterface(ActuatorInterface && other) = default;
+  ActuatorInterface(ActuatorInterface && other) = delete;
 
   virtual ~ActuatorInterface() = default;
 
@@ -461,13 +462,13 @@ public:
   /**
    * \return name.
    */
-  virtual std::string get_name() const { return info_.name; }
+  const std::string & get_name() const { return info_.name; }
 
   /// Get name of the actuator hardware group to which it belongs to.
   /**
    * \return group name.
    */
-  virtual std::string get_group_name() const { return info_.group; }
+  const std::string & get_group_name() const { return info_.group; }
 
   /// Get life-cycle state of the actuator hardware.
   /**
@@ -522,6 +523,22 @@ public:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+  /// Enable or disable introspection of the hardware.
+  /**
+   * \param[in] enable Enable introspection if true, disable otherwise.
+   */
+  void enable_introspection(bool enable)
+  {
+    if (enable)
+    {
+      stats_registrations_.enableAll();
+    }
+    else
+    {
+      stats_registrations_.disableAll();
+    }
+  }
+
 protected:
   HardwareInfo info_;
   // interface names to InterfaceDescription
@@ -548,6 +565,9 @@ private:
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
   std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
+
+protected:
+  pal_statistics::RegistrationsRAII stats_registrations_;
 };
 
 }  // namespace hardware_interface

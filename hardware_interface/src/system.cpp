@@ -96,6 +96,7 @@ const rclcpp_lifecycle::State & System::configure()
 const rclcpp_lifecycle::State & System::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
@@ -117,6 +118,7 @@ const rclcpp_lifecycle::State & System::cleanup()
 const rclcpp_lifecycle::State & System::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -144,6 +146,7 @@ const rclcpp_lifecycle::State & System::activate()
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
+        impl_->enable_introspection(true);
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
@@ -162,6 +165,7 @@ const rclcpp_lifecycle::State & System::activate()
 const rclcpp_lifecycle::State & System::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
@@ -185,6 +189,7 @@ const rclcpp_lifecycle::State & System::deactivate()
 const rclcpp_lifecycle::State & System::error()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
@@ -275,9 +280,9 @@ return_type System::perform_command_mode_switch(
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-std::string System::get_name() const { return impl_->get_name(); }
+const std::string & System::get_name() const { return impl_->get_name(); }
 
-std::string System::get_group_name() const { return impl_->get_group_name(); }
+const std::string & System::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & System::get_lifecycle_state() const
 {

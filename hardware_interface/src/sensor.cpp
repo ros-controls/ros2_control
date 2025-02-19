@@ -95,6 +95,7 @@ const rclcpp_lifecycle::State & Sensor::configure()
 const rclcpp_lifecycle::State & Sensor::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
@@ -116,6 +117,7 @@ const rclcpp_lifecycle::State & Sensor::cleanup()
 const rclcpp_lifecycle::State & Sensor::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -143,6 +145,7 @@ const rclcpp_lifecycle::State & Sensor::activate()
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
+        impl_->enable_introspection(true);
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
@@ -161,6 +164,7 @@ const rclcpp_lifecycle::State & Sensor::activate()
 const rclcpp_lifecycle::State & Sensor::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
@@ -184,6 +188,7 @@ const rclcpp_lifecycle::State & Sensor::deactivate()
 const rclcpp_lifecycle::State & Sensor::error()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
@@ -233,9 +238,9 @@ std::vector<StateInterface::ConstSharedPtr> Sensor::export_state_interfaces()
   // END: for backward compatibility
 }
 
-std::string Sensor::get_name() const { return impl_->get_name(); }
+const std::string & Sensor::get_name() const { return impl_->get_name(); }
 
-std::string Sensor::get_group_name() const { return impl_->get_group_name(); }
+const std::string & Sensor::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
 {

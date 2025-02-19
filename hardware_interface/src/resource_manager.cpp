@@ -573,7 +573,7 @@ public:
             result = shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_ACTIVE:
-            result = shutdown_hardware(hardware);
+            result = deactivate_hardware(hardware) && shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = true;
@@ -615,6 +615,7 @@ public:
         command_interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    command_interface->registerIntrospection();
   }
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -672,6 +673,7 @@ public:
         interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    interface->registerIntrospection();
     return interface_name;
   }
   /// Adds exported state interfaces into internal storage.
@@ -719,6 +721,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      state_interface_map_[interface]->unregisterIntrospection();
       state_interface_map_.erase(interface);
     }
   }
@@ -779,6 +782,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      command_interface_map_[interface]->unregisterIntrospection();
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
     }
@@ -1045,6 +1049,22 @@ ResourceManager::ResourceManager(
       set_component_state(hw_info.first, state);
     }
   }
+}
+
+bool ResourceManager::shutdown_components()
+{
+  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  bool shutdown_status = true;
+  for (auto const & hw_info : resource_storage_->hardware_info_map_)
+  {
+    rclcpp_lifecycle::State finalized_state(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+    if (set_component_state(hw_info.first, finalized_state) != return_type::OK)
+    {
+      shutdown_status = false;
+    }
+  }
+  return shutdown_status;
 }
 
 // CM API: Called in "callback/slow"-thread

@@ -1,8 +1,4 @@
 repositories:
-  ros-controls/gazebo_ros2_control:
-    type: git
-    url: https://github.com/ros-controls/gazebo_ros2_control.git
-    version: humble
   ros-controls/gz_ros2_control:
     type: git
     url: https://github.com/ros-controls/gz_ros2_control.git
@@ -14,4 +10,12 @@ repositories:
   ros-controls/ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
+    version: humble
+  ros-controls/control_toolbox:
+    type: git
+    url: https://github.com/ros-controls/control_toolbox.git
+    version: humble
+  ros-controls/kinematics_interface:
+    type: git
+    url: https://github.com/ros-controls/kinematics_interface.git
     version: humble
