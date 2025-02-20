@@ -32,7 +32,7 @@
 namespace hardware_interface
 {
 
-using HANDLE_DATATYPE = std::variant<std::monostate, double>;
+using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -57,8 +57,22 @@ public:
   {
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
-    value_ = std::numeric_limits<double>::quiet_NaN();
-    value_ptr_ = std::get_if<double>(&value_);
+    if (interface_description.get_data_type() == HandleDataType::DOUBLE)
+    {
+      value_ = std::numeric_limits<double>::quiet_NaN();
+      value_ptr_ = std::get_if<double>(&value_);
+    }
+    else if (interface_description.get_data_type() == HandleDataType::BOOL)
+    {
+      value_ptr_ = nullptr;
+      value_ = false;
+    }
+    else
+    {
+      throw std::runtime_error(
+        "Invalid data type : '" + interface_description.interface_info.data_type +
+        "' for interface : " + interface_description.get_name());
+    }
   }
 
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
@@ -147,9 +161,13 @@ public:
     {
       return std::nullopt;
     }
-    THROW_ON_NULLPTR(this->value_ptr_);
     // BEGIN (Handle export change): for backward compatibility
     // TODO(saikishor) return value_ if old functionality is removed
+    if constexpr (std::is_same_v<T, double>)
+    {
+      // If the template is of type double, check if the value_ptr_ is not nullptr
+      THROW_ON_NULLPTR(value_ptr_);
+    }
     return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
     // END
   }
@@ -201,8 +219,19 @@ public:
     }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) set value_ directly if old functionality is removed
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
+    if constexpr (std::is_same_v<T, double>)
+    {
+      // If the template is of type double, check if the value_ptr_ is not nullptr
+      THROW_ON_NULLPTR(value_ptr_);
+    }
+    if (value_ptr_ != nullptr)
+    {
+      *value_ptr_ = value;
+    }
+    else
+    {
+      value_ = value;
+    }
     return true;
     // END
   }
