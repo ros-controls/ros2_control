@@ -16,6 +16,7 @@
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 
 #include <array>
+#include <limits>
 #include <string>
 
 #include "semantic_components/semantic_component_interface.hpp"
@@ -61,7 +62,12 @@ public:
    */
   int8_t get_status() const
   {
-    return static_cast<int8_t>(state_interfaces_[0].get().get_optional().value());
+    const auto data = state_interfaces_[0].get().get_optional();
+    if (data.has_value())
+    {
+      return static_cast<int8_t>(data.value());
+    }
+    return std::numeric_limits<int8_t>::max();
   }
 
   /**
@@ -71,7 +77,12 @@ public:
    */
   uint16_t get_service() const
   {
-    return static_cast<uint16_t>(state_interfaces_[1].get().get_optional().value());
+    const auto data = state_interfaces_[1].get().get_optional();
+    if (data.has_value())
+    {
+      return static_cast<uint16_t>(data.value());
+    }
+    return std::numeric_limits<uint16_t>::max();
   }
 
   /**
@@ -79,21 +90,45 @@ public:
    *
    * \return Latitude.
    */
-  double get_latitude() const { return state_interfaces_[2].get().get_optional().value(); }
+  double get_latitude() const
+  {
+    const auto data = state_interfaces_[2].get().get_optional();
+    if (data.has_value())
+    {
+      return data.value();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
   /**
    * Return longitude reported by a GPS
    *
    * \return Longitude.
    */
-  double get_longitude() const { return state_interfaces_[3].get().get_optional().value(); }
+  double get_longitude() const
+  {
+    const auto data = state_interfaces_[3].get().get_optional();
+    if (data.has_value())
+    {
+      return data.value();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
   /**
    * Return altitude reported by a GPS
    *
    * \return Altitude.
    */
-  double get_altitude() const { return state_interfaces_[4].get().get_optional().value(); }
+  double get_altitude() const
+  {
+    const auto data = state_interfaces_[4].get().get_optional();
+    if (data.has_value())
+    {
+      return data.value();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
   /**
    * Return covariance reported by a GPS.
@@ -105,9 +140,21 @@ public:
     typename = std::enable_if_t<sensor_option == GPSSensorOption::WithCovariance, U>>
   const std::array<double, 9> & get_covariance()
   {
-    covariance_[0] = state_interfaces_[5].get().get_optional().value();
-    covariance_[4] = state_interfaces_[6].get().get_optional().value();
-    covariance_[8] = state_interfaces_[7].get().get_optional().value();
+    const auto data_1 = state_interfaces_[5].get().get_optional();
+    const auto data_2 = state_interfaces_[6].get().get_optional();
+    const auto data_3 = state_interfaces_[7].get().get_optional();
+    if (data_1.has_value())
+    {
+      covariance_[0] = data_1.value();
+    }
+    if (data_2.has_value())
+    {
+      covariance_[4] = data_2.value();
+    }
+    if (data_3.has_value())
+    {
+      covariance_[8] = data_3.value();
+    }
     return covariance_;
   }
 
