@@ -113,7 +113,7 @@ public:
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   [[deprecated(
-    "Use std::optional<T> get_value() or bool get_value(double & "
+    "Use std::optional<T> get_optional() or bool get_value(double & "
     "value) instead to retrieve the value.")]]
   double get_value() const
   {
