@@ -84,6 +84,7 @@ TEST(TestHandle, interface_description_state_interface_name_getters_work)
   InterfaceDescription interface_descr(JOINT_NAME_1, info);
   StateInterface handle{interface_descr};
 
+  ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, interface_descr.get_data_type());
   EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
@@ -99,6 +100,7 @@ TEST(TestHandle, interface_description_bool_data_type)
   InterfaceDescription interface_descr(itf_name, info);
   StateInterface handle{interface_descr};
 
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, interface_descr.get_data_type());
   EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
   EXPECT_EQ(handle.get_interface_name(), collision_interface);
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
@@ -108,6 +110,19 @@ TEST(TestHandle, interface_description_bool_data_type)
   ASSERT_TRUE(handle.get_value<bool>().value());
   EXPECT_NO_THROW({ handle.set_value(false); });
   ASSERT_FALSE(handle.get_value<bool>().value());
+}
+
+TEST(TestHandle, interface_description_unknown_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "unknown";
+  InterfaceDescription interface_descr(itf_name, info);
+
+  ASSERT_EQ(hardware_interface::HandleDataType::UNKNOWN, interface_descr.get_data_type());
+  EXPECT_ANY_THROW({ StateInterface handle{interface_descr}; }) << "Unknown data type should throw";
 }
 
 TEST(TestHandle, interface_description_command_interface_name_getters_work)
