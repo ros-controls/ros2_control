@@ -89,7 +89,7 @@ public:
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
   [[deprecated(
-    "Use std::optional<T> get_value() or bool get_value(double & "
+    "Use std::optional<T> get_optional() or bool get_value(double & "
     "value) instead to retrieve the value.")]]
   double get_value() const
   {
@@ -119,13 +119,13 @@ public:
    * returns the value immediately.
    */
   template <typename T = double>
-  [[nodiscard]] std::optional<T> get_value(unsigned int max_tries = 10) const
+  [[nodiscard]] std::optional<T> get_optional(unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
     do
     {
       ++get_value_statistics_.total_counter;
-      const std::optional<T> data = state_interface_.get_value<T>();
+      const std::optional<T> data = state_interface_.get_optional<T>();
       if (data.has_value())
       {
         return data;

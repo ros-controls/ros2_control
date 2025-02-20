@@ -52,8 +52,7 @@ TEST_F(ChainableControllerInterfaceTest, export_state_interfaces)
   EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
 
-  EXPECT_EQ(
-    exported_state_interfaces[0]->get_value<double>().value(), EXPORTED_STATE_INTERFACE_VALUE);
+  EXPECT_EQ(exported_state_interfaces[0]->get_optional().value(), EXPORTED_STATE_INTERFACE_VALUE);
 }
 
 TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
@@ -73,7 +72,7 @@ TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
   EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf");
 
-  EXPECT_EQ(reference_interfaces[0]->get_value<double>().value(), INTERFACE_VALUE);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
 }
 
 TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
@@ -121,7 +120,7 @@ TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
   EXPECT_FALSE(controller.is_in_chained_mode());
 
   // Fail setting chained mode
-  EXPECT_EQ(reference_interfaces[0]->get_value<double>().value(), INTERFACE_VALUE);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
 
   EXPECT_FALSE(controller.set_chained_mode(true));
   EXPECT_FALSE(controller.is_in_chained_mode());
@@ -135,7 +134,7 @@ TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
   EXPECT_TRUE(controller.set_chained_mode(true));
   EXPECT_TRUE(controller.is_in_chained_mode());
   EXPECT_EQ(
-    exported_state_interfaces[0]->get_value<double>().value(),
+    exported_state_interfaces[0]->get_optional().value(),
     EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE);
 
   controller.configure();
