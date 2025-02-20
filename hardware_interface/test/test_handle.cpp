@@ -89,6 +89,27 @@ TEST(TestHandle, interface_description_state_interface_name_getters_work)
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }
 
+TEST(TestHandle, interface_description_bool_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "bool";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_value<bool>(); });
+  ASSERT_FALSE(handle.get_value<bool>().value()) << "Default value should be false";
+  EXPECT_NO_THROW({ handle.set_value(true); });
+  ASSERT_TRUE(handle.get_value<bool>().value());
+  EXPECT_NO_THROW({ handle.set_value(false); });
+  ASSERT_FALSE(handle.get_value<bool>().value());
+}
+
 TEST(TestHandle, interface_description_command_interface_name_getters_work)
 {
   const std::string POSITION_INTERFACE = "position";
