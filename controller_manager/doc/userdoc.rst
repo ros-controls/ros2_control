@@ -28,10 +28,10 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
     @realtime soft rtprio 99
     @realtime soft priority 99
-    @realtime soft memlock 102400
+    @realtime soft memlock unlimited
     @realtime hard rtprio 99
     @realtime hard priority 99
-    @realtime hard memlock 102400
+    @realtime hard memlock unlimited
 
 The limits will be applied after you log out and in again.
 
