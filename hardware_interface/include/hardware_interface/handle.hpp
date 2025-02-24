@@ -43,6 +43,15 @@ std::string get_data_type_name(const hardware_interface::HandleDataType & data_t
       return "unknown";
   }
 }
+
+template <typename T>
+std::string get_type_name()
+{
+  int status = 0;
+  std::unique_ptr<char[], void (*)(void *)> res{
+    abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status), std::free};
+  return (status == 0) ? res.get() : typeid(T).name();
+}
 }  // namespace
 
 namespace hardware_interface
@@ -193,8 +202,8 @@ public:
     catch (const std::bad_variant_access & err)
     {
       throw std::runtime_error(
-        "Invalid data type : '" + std::string(typeid(T).name()) + "' access for interface : " +
-        get_name() + " expected : '" + get_data_type_name(data_type_) + "'");
+        "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+        " expected : '" + get_data_type_name(data_type_) + "'");
     }
     // END
   }
@@ -236,8 +245,8 @@ public:
       catch (const std::bad_variant_access & err)
       {
         throw std::runtime_error(
-          "Invalid data type : '" + std::string(typeid(T).name()) + "' access for interface : " +
-          get_name() + " expected : '" + get_data_type_name(data_type_) + "'");
+          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+          " expected : '" + get_data_type_name(data_type_) + "'");
       }
     }
     // END
@@ -275,8 +284,8 @@ public:
       if (!std::holds_alternative<T>(value_))
       {
         throw std::runtime_error(
-          "Invalid data type : '" + std::string(typeid(T).name()) + "' access for interface : " +
-          get_name() + " expected : '" + get_data_type_name(data_type_) + "'");
+          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+          " expected : '" + get_data_type_name(data_type_) + "'");
       }
       value_ = value;
     }
