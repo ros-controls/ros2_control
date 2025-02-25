@@ -240,7 +240,6 @@ public:
       try
       {
         value = std::get<T>(value_);
-        return true;
       }
       catch (const std::bad_variant_access & err)
       {
@@ -249,6 +248,7 @@ public:
           " expected : '" + get_data_type_name(data_type_) + "'");
       }
     }
+    return true;
     // END
   }
 
