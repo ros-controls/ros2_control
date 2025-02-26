@@ -89,10 +89,10 @@ TEST(TestHandle, interface_description_state_interface_name_getters_work)
   EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
-  EXPECT_NO_THROW({ handle.get_value<double>(); });
-  ASSERT_TRUE(handle.get_value<double>().has_value());
+  EXPECT_NO_THROW({ handle.get_optional<double>(); });
+  ASSERT_TRUE(handle.get_optional<double>().has_value());
 
-  ASSERT_THROW({ handle.get_value<bool>(); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<bool>(); }, std::runtime_error);
   ASSERT_THROW({ handle.set_value(true); }, std::runtime_error);
 }
 
@@ -111,17 +111,17 @@ TEST(TestHandle, interface_description_bool_data_type)
   EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
   EXPECT_EQ(handle.get_interface_name(), collision_interface);
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
-  EXPECT_NO_THROW({ handle.get_value<bool>(); });
-  ASSERT_FALSE(handle.get_value<bool>().value()) << "Default value should be false";
+  EXPECT_NO_THROW({ handle.get_optional<bool>(); });
+  ASSERT_FALSE(handle.get_optional<bool>().value()) << "Default value should be false";
   EXPECT_NO_THROW({ handle.set_value(true); });
-  ASSERT_TRUE(handle.get_value<bool>().value());
+  ASSERT_TRUE(handle.get_optional<bool>().value());
   EXPECT_NO_THROW({ handle.set_value(false); });
-  ASSERT_FALSE(handle.get_value<bool>().value());
+  ASSERT_FALSE(handle.get_optional<bool>().value());
 
   // Test the assertions
   ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ handle.set_value(0.0); }, std::runtime_error);
-  ASSERT_THROW({ handle.get_value<double>(); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
