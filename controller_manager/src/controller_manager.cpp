@@ -373,6 +373,14 @@ bool ControllerManager::shutdown_controllers()
 
 void ControllerManager::init_controller_manager()
 {
+  controller_manager_activity_publisher_ =
+    create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
+      "~/activity", rclcpp::QoS(1).reliable().transient_local());
+  rt_controllers_wrapper_.set_on_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
+
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
@@ -2695,6 +2703,8 @@ controller_interface::return_type ControllerManager::update(
     {
       activate_controllers(rt_controller_list, rt_buffer_.fallback_controllers_list);
     }
+    // To publish the activity of the failing controllers and the fallback controllers
+    publish_activity();
   }
 
   // there are controllers to (de)activate
@@ -2784,6 +2794,17 @@ void ControllerManager::RTControllerListWrapper::switch_updated_list(
   int former_current_controllers_list_ = updated_controllers_index_;
   updated_controllers_index_ = get_other_list(former_current_controllers_list_);
   wait_until_rt_not_using(former_current_controllers_list_);
+  if (on_switch_callback_)
+  {
+    on_switch_callback_();
+  }
+}
+
+void ControllerManager::RTControllerListWrapper::set_on_switch_callback(
+  std::function<void()> callback)
+{
+  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  on_switch_callback_ = callback;
 }
 
 int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
@@ -3229,6 +3250,38 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
     }
   }
   return controller_interface::return_type::OK;
+}
+
+void ControllerManager::publish_activity()
+{
+  controller_manager_msgs::msg::ControllerManagerActivity status_msg;
+  status_msg.header.stamp = get_clock()->now();
+  {
+    // lock controllers
+    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    const std::vector<ControllerSpec> & controllers =
+      rt_controllers_wrapper_.get_updated_list(guard);
+    for (const auto & controller : controllers)
+    {
+      controller_manager_msgs::msg::NamedLifecycleState lifecycle_info;
+      lifecycle_info.name = controller.info.name;
+      lifecycle_info.state.id = controller.c->get_lifecycle_state().id();
+      lifecycle_info.state.label = controller.c->get_lifecycle_state().label();
+      status_msg.controllers.push_back(lifecycle_info);
+    }
+  }
+  {
+    const auto hw_components_info = resource_manager_->get_components_status();
+    for (const auto & [component_name, component_info] : hw_components_info)
+    {
+      controller_manager_msgs::msg::NamedLifecycleState lifecycle_info;
+      lifecycle_info.name = component_name;
+      lifecycle_info.state.id = component_info.state.id();
+      lifecycle_info.state.label = component_info.state.label();
+      status_msg.hardware_components.push_back(lifecycle_info);
+    }
+  }
+  controller_manager_activity_publisher_->publish(status_msg);
 }
 
 void ControllerManager::controller_activity_diagnostic_callback(
