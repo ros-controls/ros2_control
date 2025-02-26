@@ -42,7 +42,11 @@ TEST(TestHandle, command_interface)
   ASSERT_TRUE(interface.get_optional().has_value());
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
+<<<<<<< HEAD
   EXPECT_NO_THROW({ std::ignore = interface.set_value(0.0); });
+=======
+  EXPECT_NO_THROW({ interface.set_value(0.0); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   ASSERT_TRUE(interface.get_optional().has_value());
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), 0.0);
 }
@@ -70,9 +74,15 @@ TEST(TestHandle, name_getters_work)
 
 TEST(TestHandle, value_methods_throw_for_nullptr)
 {
+<<<<<<< HEAD
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, nullptr};
   EXPECT_ANY_THROW(handle.get_optional().value());
   EXPECT_ANY_THROW(std::ignore = handle.set_value(0.0));
+=======
+  CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
+  EXPECT_ANY_THROW(handle.get_optional().value());
+  EXPECT_ANY_THROW(bool status = handle.set_value(0.0));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 }
 
 #pragma GCC diagnostic push
@@ -83,6 +93,7 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
   ASSERT_TRUE(handle.get_optional().has_value());
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+<<<<<<< HEAD
   EXPECT_NO_THROW({ std::ignore = handle.set_value(0.0); });
   ASSERT_TRUE(handle.get_optional().has_value());
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
@@ -183,6 +194,11 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
   done = true;
   checking_thread.join();
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 100.0);
+=======
+  EXPECT_NO_THROW({ handle.set_value(0.0); });
+  ASSERT_TRUE(handle.get_optional().has_value());
+  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 }
 
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
@@ -321,7 +337,11 @@ TEST(TestHandle, copy_constructor)
     hardware_interface::Handle copy(handle);
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+<<<<<<< HEAD
     ASSERT_TRUE(copy.set_value(0.0));
+=======
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
   }
@@ -340,10 +360,17 @@ TEST(TestHandle, copy_constructor)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+<<<<<<< HEAD
     ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
     ASSERT_TRUE(copy.set_value(0.52));
+=======
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+    EXPECT_NO_THROW({ copy.set_value(0.52); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   }
@@ -355,7 +382,11 @@ TEST(TesHandle, move_constructor)
   hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
   hardware_interface::Handle moved{std::move(handle)};
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
+<<<<<<< HEAD
   ASSERT_TRUE(moved.set_value(0.0));
+=======
+  EXPECT_NO_THROW({ moved.set_value(0.0); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
 }
 
@@ -371,7 +402,11 @@ TEST(TestHandle, copy_assignment)
     copy = handle;
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value_1);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value_1);
+<<<<<<< HEAD
     ASSERT_TRUE(copy.set_value(0.0));
+=======
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(value_1, 0.0);
@@ -393,10 +428,17 @@ TEST(TestHandle, copy_assignment)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+<<<<<<< HEAD
     ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
     ASSERT_TRUE(copy.set_value(0.52));
+=======
+    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
+    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
+    EXPECT_NO_THROW({ copy.set_value(0.52); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   }
@@ -412,7 +454,11 @@ TEST(TestHandle, move_assignment)
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   moved = std::move(handle);
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
+<<<<<<< HEAD
   ASSERT_TRUE(moved.set_value(0.0));
+=======
+  EXPECT_NO_THROW({ moved.set_value(0.0); });
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
 }
 #pragma GCC diagnostic pop
