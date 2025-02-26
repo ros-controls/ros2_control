@@ -1187,6 +1187,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    auto result = controller_interface::return_type::OK;
 
     // list all controllers to (de)activate
     for (const auto & controller : controller_list)
@@ -1203,6 +1204,10 @@ controller_interface::return_type ControllerManager::switch_controller(
           get_logger(),
           "Could not '%s' controller with name '%s' because no controller with this name exists",
           action.c_str(), controller.c_str());
+        // For the BEST_EFFORT switch, if there are more controllers that are in the list, this is
+        // not a critical error
+        result = request_list.empty() ? controller_interface::return_type::ERROR
+                                      : controller_interface::return_type::OK;
         if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
         {
           RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
@@ -1211,6 +1216,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       }
       else
       {
+        result = controller_interface::return_type::OK;
         RCLCPP_DEBUG(
           get_logger(), "Found controller '%s' that needs to be %sed in list of controllers",
           controller.c_str(), action.c_str());
@@ -1220,7 +1226,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(
       get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
 
-    return controller_interface::return_type::OK;
+    return result;
   };
 
   // list all controllers to deactivate (check if all controllers exist)

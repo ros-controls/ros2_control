@@ -2034,3 +2034,129 @@ TEST_F(TestControllerManagerSrvs, activate_chained_controllers_all_at_once)
 
   RCLCPP_ERROR(srv_node->get_logger(), "Check successful!");
 }
+
+TEST_F(TestControllerManagerSrvs, switch_controller_failure_behaviour_on_unknown_controller)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+
+  auto test_controller = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint2/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity", "joint2/position"}};
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
+  ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
+
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+
+  // Switch to an unknown controller and see if it is working
+  // It should fail if the controller doesn't exist at all
+  for (const auto & strictness :
+       {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+        controller_manager_msgs::srv::SwitchController::Request::STRICT})
+  {
+    SCOPED_TRACE("Switching to unknown controller with strictness: " + std::to_string(strictness));
+    ASSERT_EQ(
+      cm_->switch_controller({"unknown_controller"}, {}, strictness, true, rclcpp::Duration(0, 0)),
+      controller_interface::return_type::ERROR);
+    ASSERT_EQ(
+      cm_->switch_controller({}, {"unknown_controller"}, strictness, true, rclcpp::Duration(0, 0)),
+      controller_interface::return_type::ERROR);
+  }
+
+  // now test with strict along with our known controller. It should fail as the unknown controller
+  // is not known
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+
+  // Now with best effort, it should work even though the unknown controller is not known
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"}, {},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  // Now let's deactivate the controller and by having unknown controller in the activate list
+  // it should fail
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+}
