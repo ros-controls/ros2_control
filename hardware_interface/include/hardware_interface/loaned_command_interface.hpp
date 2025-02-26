@@ -129,8 +129,8 @@ public:
   }
 
   [[deprecated(
-    "Use std::optional<T> get_optional() or bool get_value(double & "
-    "value) instead to retrieve the value.")]]
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
     double value = std::numeric_limits<double>::quiet_NaN();
@@ -195,7 +195,10 @@ public:
    * true immediately.
    */
   template <typename T>
-  [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
+  get_value(T & value, unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
     ++get_value_statistics_.total_counter;
