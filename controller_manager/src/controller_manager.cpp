@@ -2427,6 +2427,12 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (
+    periodicity_stats_.GetCount() >=
+    params_->diagnostics.threshold.controller_manager.periodicity.window_size)
+  {
+    periodicity_stats_.Reset();
+  }
   periodicity_stats_.AddMeasurement(1.0 / period.seconds());
   auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -2594,11 +2600,23 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {
+            if (
+              loaded_controller.execution_time_statistics->GetCount() >=
+              params_->diagnostics.threshold.controllers.periodicity.window_size)
+            {
+              loaded_controller.execution_time_statistics->Reset();
+            }
             loaded_controller.execution_time_statistics->AddMeasurement(
               static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
+            if (
+              loaded_controller.periodicity_statistics->GetCount() >=
+              params_->diagnostics.threshold.controllers.periodicity.window_size)
+            {
+              loaded_controller.periodicity_statistics->Reset();
+            }
             loaded_controller.periodicity_statistics->AddMeasurement(
               1.0 / trigger_result.period.value().seconds());
           }
@@ -3437,6 +3455,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   const std::string periodicity_stat_name = "periodicity";
   const auto cm_stats = periodicity_stats_.GetStatistics();
   stat.add("update_rate", std::to_string(get_update_rate()));
+  stat.add(periodicity_stat_name + ".sample_count", std::to_string(cm_stats.sample_count));
   stat.add(periodicity_stat_name + ".average", std::to_string(cm_stats.average));
   stat.add(
     periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));

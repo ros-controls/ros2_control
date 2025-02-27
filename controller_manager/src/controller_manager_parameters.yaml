@@ -29,6 +29,11 @@ controller_manager:
     threshold:
       controller_manager:
         periodicity:
+          window_size: {
+            type: int,
+            default_value: -1,
+            description: "The number of samples to consider for the mean. The diagnostics will be computed over the last `window_size` samples. -1 means that all samples will be considered.",
+          }
           mean_error:
             warn: {
               type: double,
@@ -65,6 +70,11 @@ controller_manager:
             }
       controllers:
         periodicity:
+          window_size: {
+            type: int,
+            default_value: -1,
+            description: "The number of samples to consider for the mean. The diagnostics will be computed over the last `window_size` samples. -1 means that all samples will be considered.",
+          }
           mean_error:
             warn: {
               type: double,
