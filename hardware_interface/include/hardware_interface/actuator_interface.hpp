@@ -122,18 +122,25 @@ public:
       async_handler_->init(
         [this](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
-          if (next_trigger_ == TriggerType::READ)
+          const auto read_start_time = std::chrono::steady_clock::now();
+          const auto ret_read = read(time, period);
+          const auto read_end_time = std::chrono::steady_clock::now();
+          read_return_info_.store(ret_read, std::memory_order_release);
+          read_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
+            std::memory_order_release);
+          if (ret_read != return_type::OK)
           {
-            const auto ret = read(time, period);
-            next_trigger_ = TriggerType::WRITE;
-            return ret;
+            return ret_read;
           }
-          else
-          {
-            const auto ret = write(time, period);
-            next_trigger_ = TriggerType::READ;
-            return ret;
-          }
+          const auto write_start_time = std::chrono::steady_clock::now();
+          const auto ret_write = write(time, period);
+          const auto write_end_time = std::chrono::steady_clock::now();
+          write_return_info_.store(ret_write, std::memory_order_release);
+          write_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
+            std::memory_order_release);
+          return ret_write;
         },
         info_.thread_priority);
       async_handler_->start_thread();
@@ -359,37 +366,41 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  HardwareComponentCycleStatus trigger_read(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    return_type result = return_type::ERROR;
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      bool trigger_status = true;
-      if (next_trigger_ == TriggerType::WRITE)
+      status.result = read_return_info_.load(std::memory_order_acquire);
+      const auto read_exec_time = read_execution_time_.load(std::memory_order_acquire);
+      if (read_exec_time.count() > 0)
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger read called while write async handler call is still pending for hardware "
-          "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
-          info_.name.c_str());
-        return return_type::OK;
+        status.execution_time = read_exec_time;
       }
-      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
-      if (!trigger_status)
+      const auto result = async_handler_->trigger_async_callback(time, period);
+      status.successful = result.first;
+      if (!status.successful)
       {
         RCLCPP_WARN(
           get_logger(),
-          "Trigger read called while write async trigger is still in progress for hardware "
-          "interface : '%s'. Failed to trigger read cycle!",
+          "Trigger read/write called while the previous async trigger is still in progress for "
+          "hardware interface : '%s'. Failed to trigger read/write cycle!",
           info_.name.c_str());
-        return return_type::OK;
+        status.result = return_type::OK;
+        return status;
       }
     }
     else
     {
-      result = read(time, period);
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
+      status.result = read(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
     }
-    return result;
+    return status;
   }
 
   /// Read the current state values from the actuator.
@@ -414,37 +425,30 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  return_type trigger_write(const rclcpp::Time & time, const rclcpp::Duration & period)
+  HardwareComponentCycleStatus trigger_write(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    return_type result = return_type::ERROR;
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      bool trigger_status = true;
-      if (next_trigger_ == TriggerType::READ)
+      status.successful = true;
+      const auto write_exec_time = write_execution_time_.load(std::memory_order_acquire);
+      if (write_exec_time.count() > 0)
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger write called while read async handler call is still pending for hardware "
-          "interface : '%s'. Skipping write cycle and will wait for a read cycle!",
-          info_.name.c_str());
-        return return_type::OK;
+        status.execution_time = write_exec_time;
       }
-      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
-      if (!trigger_status)
-      {
-        RCLCPP_WARN(
-          get_logger(),
-          "Trigger write called while read async trigger is still in progress for hardware "
-          "interface : '%s'. Failed to trigger write cycle!",
-          info_.name.c_str());
-        return return_type::OK;
-      }
+      status.result = write_return_info_.load(std::memory_order_acquire);
     }
     else
     {
-      result = write(time, period);
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
+      status.result = write(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
     }
-    return result;
+    return status;
   }
 
   /// Write the current command values to the actuator.
@@ -523,6 +527,18 @@ public:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+  /// Prepare for the activation of the hardware.
+  /**
+   * This method is called before the hardware is activated by the resource manager.
+   */
+  void prepare_for_activation()
+  {
+    read_return_info_.store(return_type::OK, std::memory_order_release);
+    read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+    write_return_info_.store(return_type::OK, std::memory_order_release);
+    write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  }
+
   /// Enable or disable introspection of the hardware.
   /**
    * \param[in] enable Enable introspection if true, disable otherwise.
@@ -564,7 +580,10 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
-  std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
+  std::atomic<return_type> read_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
+  std::atomic<return_type> write_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
