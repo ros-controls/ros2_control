@@ -350,6 +350,57 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }));
 }
 
+class TestControllerManagerHWManagementSrvsNotLoaded : public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    SetUpSrvsCMExecutor();
+    cm_->set_parameter(rclcpp::Parameter(
+      "hardware_components_initial_state.not_loaded",
+      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(rclcpp::Parameter(
+      "hardware_components_initial_state.inactive",
+      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME, TEST_ACTUATOR_HARDWARE_NAME})));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    auto msg = std_msgs::msg::String();
+    msg.data = ros2_control_test_assets::minimal_robot_urdf;
+    cm_->robot_description_callback(msg);
+  }
+};
+
+TEST_F(TestControllerManagerHWManagementSrvsNotLoaded, test_component_not_loaded)
+{
+  // Default status after start:
+  // checks if "configure_components_on_start" and "activate_components_on_start" are correctly read
+
+  // there is not system loaded therefore test should not break having only two members for checking
+  // results
+  list_hardware_components_and_check(
+    // actuator, sensor, system (not existing)
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNKNOWN}),
+    std::vector<std::string>({INACTIVE, INACTIVE, UNKNOWN}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+}
+
 class TestControllerManagerHWManagementSrvsWithoutParams
 : public TestControllerManagerHWManagementSrvs
 {
