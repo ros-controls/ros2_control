@@ -113,8 +113,8 @@ public:
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   [[deprecated(
-    "Use std::optional<T> get_optional() or bool get_value(double & "
-    "value) instead to retrieve the value.")]]
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
@@ -166,7 +166,10 @@ public:
    * the value is updated and returns true.
    */
   template <typename T>
-  [[nodiscard]] bool get_value(T & value) const
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
+  get_value(T & value) const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
