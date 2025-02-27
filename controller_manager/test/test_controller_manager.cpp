@@ -391,6 +391,17 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
     testing::AllOf(testing::Gt(0.6 * exp_period), testing::Lt((1.4 * exp_period))));
   size_t last_internal_counter = test_controller->internal_counter;
 
+  {
+    ControllerManagerRunner cm_runner(this);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  }
+  ASSERT_THAT(
+    test_controller->internal_counter,
+    testing::AllOf(
+      testing::Ge(last_internal_counter + 18), testing::Le(last_internal_counter + 21)))
+    << "As the sleep is 1 sec and the controller rate is 20Hz, we should have approx. 20 updates";
+
+  last_internal_counter = test_controller->internal_counter;
   // Stop controller, will take effect at the end of the update function
   start_controllers = {};
   stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
@@ -426,6 +437,215 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   ASSERT_EQ(std::future_status::timeout, unload_future.wait_for(std::chrono::milliseconds(100)))
     << "unload_controller should be blocking until next update cycle";
   ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    test_controller->get_lifecycle_state().id());
+  EXPECT_EQ(1, test_controller.use_count());
+}
+
+TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rate)
+{
+  const auto test_param = GetParam();
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller2 = std::make_shared<test_controller::TestController>();
+  constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller2, TEST_CONTROLLER2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_controller.use_count());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg2;
+  cmd_itfs_cfg2.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg2.names.push_back(interface);
+  }
+  test_controller2->set_command_interface_configuration(cmd_itfs_cfg2);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg2;
+  state_itfs_cfg2.type = controller_interface::interface_configuration_type::ALL;
+  test_controller2->set_state_interface_configuration(state_itfs_cfg2);
+
+  // Check if namespace is set correctly
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller Manager namespace is '%s'",
+    cm_->get_namespace());
+  EXPECT_STREQ(cm_->get_namespace(), "/");
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller 1 namespace is '%s'",
+    test_controller->get_node()->get_namespace());
+  EXPECT_STREQ(test_controller->get_node()->get_namespace(), "/");
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller 2 namespace is '%s'",
+    test_controller2->get_node()->get_namespace());
+  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/");
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter)
+    << "Update should not reach an unconfigured controller";
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+
+  // configure controller
+  rclcpp::Parameter is_async_parameter("is_async", rclcpp::ParameterValue(true));
+  test_controller->get_node()->set_parameter(is_async_parameter);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+    cm_->configure_controller(TEST_CONTROLLER2_NAME);
+  }
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+  EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // Start controller, will take effect at the end of the update function
+  std::vector<std::string> start_controllers = {"fake_controller", TEST_CONTROLLER2_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(test_param.expected_return, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_GE(test_controller2->internal_counter, test_param.expected_counter);
+
+  // Start the real test controller, will take effect at the end of the update function
+  start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  stop_controllers = {};
+  switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_GE(test_controller->internal_counter, 1u);
+  auto current_counter = test_controller->internal_counter;
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
+  EXPECT_EQ(test_controller->internal_counter, current_counter + 1u);
+  EXPECT_NEAR(test_controller->update_period_.seconds(), 0.01, 0.008);
+
+  const double exp_period = (cm_->get_clock()->now() - time_).seconds();
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(test_controller->internal_counter, current_counter + 1u);
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
+  EXPECT_EQ(test_controller->internal_counter, current_counter + 2u);
+  EXPECT_THAT(
+    test_controller->update_period_.seconds(),
+    testing::AllOf(testing::Gt(0.6 * exp_period), testing::Lt((1.4 * exp_period))));
+  size_t last_internal_counter = test_controller->internal_counter;
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  }
+  ASSERT_THAT(
+    test_controller->internal_counter,
+    testing::AllOf(
+      testing::Ge(last_internal_counter + cm_->get_update_rate() - 3),
+      testing::Le(last_internal_counter + cm_->get_update_rate() + 1)))
+    << "As the sleep is 1 sec and the controller rate is 100Hz, we should have approx. 100 updates";
+
+  // Sleep for 2 cycles to allow for any changes
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  last_internal_counter = test_controller->internal_counter;
+  {
+    ControllerManagerRunner cm_runner(this);
+    // Stop controller, will take effect at the end of the update function
+    start_controllers = {};
+    stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
+    switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
+
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(last_internal_counter + 1, test_controller->internal_counter)
+      << "Controller is stopped at the end of update, it should finish it's active cycle";
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+  auto unload_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
+    test_controller::TEST_CONTROLLER_NAME);
+
+  ASSERT_EQ(std::future_status::timeout, unload_future.wait_for(std::chrono::milliseconds(100)))
+    << "unload_controller should be blocking until next update cycle";
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
 
   EXPECT_EQ(
