@@ -76,7 +76,7 @@ public:
     {
       pass_robot_description_to_cm_and_rm(robot_description_);
     }
-    time_ = rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type());
+    time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());
   }
 
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }
