@@ -1118,14 +1118,14 @@ void ControllerManager::clear_requests()
 controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & activate_controllers,
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
-  const rclcpp::Duration & timeout)
+  const rclcpp::Duration & timeout, std::string & message)
 {
   if (!is_resource_manager_initialized())
   {
-    RCLCPP_ERROR(
-      get_logger(),
+    message =
       "Resource Manager is not initialized yet! Please provide robot description on "
-      "'robot_description' topic before trying to switch controllers.");
+      "'robot_description' topic before trying to switch controllers.";
+    RCLCPP_ERROR(get_logger(), "%s", message.c_str());
     return controller_interface::return_type::ERROR;
   }
 
@@ -1188,10 +1188,10 @@ controller_interface::return_type ControllerManager::switch_controller(
     get_logger(), !deactivate_list.empty(), "Deactivating controllers: [ %s]",
     deactivate_list.c_str());
 
-  const auto list_controllers = [this, strictness](
-                                  const std::vector<std::string> & controller_list,
-                                  std::vector<std::string> & request_list,
-                                  const std::string & action)
+  const auto list_controllers =
+    [this, strictness](
+      const std::vector<std::string> & controller_list, std::vector<std::string> & request_list,
+      const std::string & action, std::string & msg) -> controller_interface::return_type
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -1208,16 +1208,17 @@ controller_interface::return_type ControllerManager::switch_controller(
 
       if (found_it == updated_controllers.end())
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Could not '%s' controller with name '%s' because no controller with this name exists",
-          action.c_str(), controller.c_str());
+        const std::string error_msg = "Could not " + action + " controller with name '" +
+                                      controller + "' because no controller with this name exists";
+        msg += error_msg + "\n";
+        RCLCPP_WARN(get_logger(), "%s", error_msg.c_str());
         // For the BEST_EFFORT switch, if there are more controllers that are in the list, this is
         // not a critical error
         result = request_list.empty() ? controller_interface::return_type::ERROR
                                       : controller_interface::return_type::OK;
         if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
         {
+          msg = error_msg;
           RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
           return controller_interface::return_type::ERROR;
         }
@@ -1238,7 +1239,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   };
 
   // list all controllers to deactivate (check if all controllers exist)
-  auto ret = list_controllers(deactivate_controllers, deactivate_request_, "deactivate");
+  auto ret = list_controllers(deactivate_controllers, deactivate_request_, "deactivate", message);
   if (ret != controller_interface::return_type::OK)
   {
     deactivate_request_.clear();
@@ -1246,13 +1247,15 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   // list all controllers to activate (check if all controllers exist)
-  ret = list_controllers(activate_controllers, activate_request_, "activate");
+  ret = list_controllers(activate_controllers, activate_request_, "activate", message);
   if (ret != controller_interface::return_type::OK)
   {
     deactivate_request_.clear();
     activate_request_.clear();
     return ret;
   }
+  // If it is a best effort switch, we can remove the controllers log that could not be activated
+  message.clear();
 
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -1274,11 +1277,10 @@ controller_interface::return_type ControllerManager::switch_controller(
     // if controller is not inactive then do not do any following-controllers checks
     if (!is_controller_inactive(controller_it->c))
     {
-      RCLCPP_WARN(
-        get_logger(),
-        "Controller with name '%s' is not inactive so its following "
-        "controllers do not have to be checked, because it cannot be activated.",
-        controller_it->info.name.c_str());
+      message = "Controller with name '" + controller_it->info.name +
+                "' is not inactive so its following controllers do not have to be checked, because "
+                "it cannot be activated.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
     else
@@ -2271,10 +2273,10 @@ void ControllerManager::switch_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "switching service locked");
 
-  response->ok =
-    switch_controller(
-      request->activate_controllers, request->deactivate_controllers, request->strictness,
-      request->activate_asap, request->timeout) == controller_interface::return_type::OK;
+  response->ok = switch_controller(
+                   request->activate_controllers, request->deactivate_controllers,
+                   request->strictness, request->activate_asap, request->timeout,
+                   response->message) == controller_interface::return_type::OK;
 
   RCLCPP_DEBUG(get_logger(), "switching service finished");
 }

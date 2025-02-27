@@ -144,13 +144,17 @@ public:
    * \param[in] activate_controllers is a list of controllers to activate.
    * \param[in] deactivate_controllers is a list of controllers to deactivate.
    * \param[in] set level of strictness (BEST_EFFORT or STRICT)
+   * \param[in] activate_asap flag to activate controllers as soon as possible.
+   * \param[in] timeout to wait for the controllers to be switched.
+   * \param[out] message describing the result of the switch.
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   controller_interface::return_type switch_controller(
     const std::vector<std::string> & activate_controllers,
     const std::vector<std::string> & deactivate_controllers, int strictness,
     bool activate_asap = kWaitForAllResources,
-    const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
+    const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout),
+    std::string & message);
 
   /// Read values to state interfaces.
   /**
