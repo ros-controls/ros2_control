@@ -144,6 +144,13 @@ public:
         component_info.rw_rate = hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
+        component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
+
+        // if the type of the hardware is sensor then don't initialize the write statistics
+        if (hardware_info.type != "sensor")
+        {
+          component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
+        }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
         hw_group_state_.insert(std::make_pair(component_info.group, return_type::OK));
@@ -1461,7 +1468,8 @@ void ResourceManager::import_component(
 }
 
 // CM API: Called in "callback/slow"-thread
-std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
+const std::unordered_map<std::string, HardwareComponentInfo> &
+ResourceManager::get_components_status()
 {
   auto loop_and_get_state = [&](auto & container)
   {
@@ -1768,23 +1776,35 @@ HardwareReadWriteStatus ResourceManager::read(
       auto ret_val = return_type::OK;
       try
       {
+        auto & hardware_component_info =
+          resource_storage_->hardware_info_map_[component.get_name()];
+        const auto current_time = resource_storage_->get_clock()->now();
+        // const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
-            resource_storage_->cm_update_rate_)
+          hardware_component_info.rw_rate == 0 ||
+          hardware_component_info.rw_rate == resource_storage_->cm_update_rate_)
         {
-          ret_val = component.read(time, period);
+          ret_val = component.read(current_time, period);
         }
         else
         {
-          const double read_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
-          const auto current_time = resource_storage_->get_clock()->now();
-          const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
+          const double read_rate = hardware_component_info.rw_rate;
+          const rclcpp::Duration actual_period =
+            component.get_last_read_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
+              ? current_time - component.get_last_read_time()
+              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(read_rate));
           if (actual_period.seconds() * read_rate >= 0.99)
           {
             ret_val = component.read(current_time, actual_period);
           }
+        }
+        if (hardware_component_info.read_statistics)
+        {
+          const auto & read_statistics_collector = component.get_read_statistics();
+          hardware_component_info.read_statistics->execution_time.update_statistics(
+            read_statistics_collector.execution_time);
+          hardware_component_info.read_statistics->periodicity.update_statistics(
+            read_statistics_collector.periodicity);
         }
         const auto component_group = component.get_group_name();
         ret_val =
@@ -1854,23 +1874,34 @@ HardwareReadWriteStatus ResourceManager::write(
       auto ret_val = return_type::OK;
       try
       {
+        auto & hardware_component_info =
+          resource_storage_->hardware_info_map_[component.get_name()];
+        const auto current_time = resource_storage_->get_clock()->now();
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
-            resource_storage_->cm_update_rate_)
+          hardware_component_info.rw_rate == 0 ||
+          hardware_component_info.rw_rate == resource_storage_->cm_update_rate_)
         {
-          ret_val = component.write(time, period);
+          ret_val = component.write(current_time, period);
         }
         else
         {
-          const double write_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
-          const auto current_time = resource_storage_->get_clock()->now();
-          const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
+          const double write_rate = hardware_component_info.rw_rate;
+          const rclcpp::Duration actual_period =
+            component.get_last_write_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
+              ? current_time - component.get_last_write_time()
+              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(write_rate));
           if (actual_period.seconds() * write_rate >= 0.99)
           {
             ret_val = component.write(current_time, actual_period);
           }
+        }
+        if (hardware_component_info.write_statistics)
+        {
+          const auto & write_statistics_collector = component.get_write_statistics();
+          hardware_component_info.write_statistics->execution_time.update_statistics(
+            write_statistics_collector.execution_time);
+          hardware_component_info.write_statistics->periodicity.update_statistics(
+            write_statistics_collector.periodicity);
         }
         const auto component_group = component.get_group_name();
         ret_val =

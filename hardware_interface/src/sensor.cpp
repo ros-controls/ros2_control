@@ -40,7 +40,7 @@ Sensor::Sensor(Sensor && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.sensors_mutex_);
   impl_ = std::move(other.impl_);
-  last_read_cycle_time_ = other.last_read_cycle_time_;
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
@@ -53,7 +53,6 @@ const rclcpp_lifecycle::State & Sensor::initialize(
     switch (impl_->init(sensor_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
-        last_read_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -140,6 +139,8 @@ const rclcpp_lifecycle::State & Sensor::shutdown()
 const rclcpp_lifecycle::State & Sensor::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  read_statistics_.reset_statistics();
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
@@ -249,6 +250,11 @@ const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
 
 const rclcpp::Time & Sensor::get_last_read_time() const { return last_read_cycle_time_; }
 
+const HardwareComponentStatisticsCollector & Sensor::get_read_statistics() const
+{
+  return read_statistics_;
+}
+
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
@@ -256,19 +262,32 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_read(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
-    last_read_cycle_time_ = time;
+    if (trigger_result.successful)
+    {
+      if (trigger_result.execution_time.has_value())
+      {
+        read_statistics_.execution_time->AddMeasurement(
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+      }
+      if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
+      {
+        read_statistics_.periodicity->AddMeasurement(
+          1.0 / (time - last_read_cycle_time_).seconds());
+      }
+      last_read_cycle_time_ = time;
+    }
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 std::recursive_mutex & Sensor::get_mutex() { return sensors_mutex_; }
