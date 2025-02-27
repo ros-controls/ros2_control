@@ -41,7 +41,7 @@ struct InterfaceInfo
   /// (Optional) Initial value of the interface.
   std::string initial_value;
   /// (Optional) The datatype of the interface, e.g. "bool", "int".
-  std::string data_type;
+  std::string data_type = "double";
   /// (Optional) If the handle is an array, the size of the array.
   int size;
   /// (Optional) enable or disable the limits for the command interfaces
@@ -131,6 +131,16 @@ struct TransmissionInfo
 };
 
 /**
+ * Hardware handles supported types
+ */
+enum class HandleDataType
+{
+  UNKNOWN,
+  DOUBLE,
+  BOOL
+};
+
+/**
  * This structure stores information about an interface for a specific hardware which should be
  * instantiated internally.
  */
@@ -163,6 +173,22 @@ struct InterfaceDescription
   const std::string & get_interface_name() const { return interface_info.name; }
 
   const std::string & get_name() const { return interface_name; }
+
+  HandleDataType get_data_type() const
+  {
+    if (interface_info.data_type == "double")
+    {
+      return HandleDataType::DOUBLE;
+    }
+    else if (interface_info.data_type == "bool")
+    {
+      return HandleDataType::BOOL;
+    }
+    else
+    {
+      return HandleDataType::UNKNOWN;
+    }
+  }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
