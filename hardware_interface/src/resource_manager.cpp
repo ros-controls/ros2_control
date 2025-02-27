@@ -1772,7 +1772,6 @@ HardwareReadWriteStatus ResourceManager::read(
         auto & hardware_component_info =
           resource_storage_->hardware_info_map_[component.get_name()];
         const auto current_time = resource_storage_->get_clock()->now();
-        // const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
         if (
           hardware_component_info.rw_rate == 0 ||
           hardware_component_info.rw_rate == resource_storage_->cm_update_rate_)
