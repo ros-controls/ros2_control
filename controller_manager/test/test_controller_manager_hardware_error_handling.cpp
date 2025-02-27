@@ -66,6 +66,12 @@ class TestControllerManagerWithTestableCM
   public testing::WithParamInterface<Strictness>
 {
 public:
+  TestControllerManagerWithTestableCM()
+  : ControllerManagerFixture<TestableControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf_no_limits)
+  {
+  }
+
   void SetupAndConfigureControllers(int strictness)
   {
     test_controller_actuator = std::make_shared<test_controller::TestController>();
