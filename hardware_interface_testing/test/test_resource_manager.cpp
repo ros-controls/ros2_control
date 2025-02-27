@@ -1854,25 +1854,26 @@ public:
       {
         // check it is either the previous value or the new one
         EXPECT_THAT(
-          state_itfs[0].get_optional(), testing::AnyOf(
-                                          testing::DoubleEq(prev_act_state_value),
-                                          testing::DoubleEq(prev_act_state_value + 5.0)));
+          state_itfs[0].get_optional().value(), testing::AnyOf(
+                                                  testing::DoubleEq(prev_act_state_value),
+                                                  testing::DoubleEq(prev_act_state_value + 5.0)));
       }
       else
       {
-        ASSERT_EQ(state_itfs[0].get_optional(), prev_act_state_value);
+        ASSERT_EQ(state_itfs[0].get_optional().value(), prev_act_state_value);
       }
       if (system_is_async_)
       {
         // check it is either the previous value or the new one
         EXPECT_THAT(
-          state_itfs[1].get_optional(), testing::AnyOf(
-                                          testing::DoubleEq(prev_system_state_value),
-                                          testing::DoubleEq(prev_system_state_value + 10.0)));
+          state_itfs[1].get_optional().value(),
+          testing::AnyOf(
+            testing::DoubleEq(prev_system_state_value),
+            testing::DoubleEq(prev_system_state_value + 10.0)));
       }
       else
       {
-        ASSERT_EQ(state_itfs[1].get_optional(), prev_system_state_value);
+        ASSERT_EQ(state_itfs[1].get_optional().value(), prev_system_state_value);
       }
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
