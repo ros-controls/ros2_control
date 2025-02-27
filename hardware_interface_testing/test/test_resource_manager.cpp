@@ -1855,8 +1855,8 @@ public:
         // check it is either the previous value or the new one
         EXPECT_THAT(
           state_itfs[0].get_optional(), testing::AnyOf(
-                                       testing::DoubleEq(prev_act_state_value),
-                                       testing::DoubleEq(prev_act_state_value + 5.0)));
+                                          testing::DoubleEq(prev_act_state_value),
+                                          testing::DoubleEq(prev_act_state_value + 5.0)));
       }
       else
       {
@@ -1867,8 +1867,8 @@ public:
         // check it is either the previous value or the new one
         EXPECT_THAT(
           state_itfs[1].get_optional(), testing::AnyOf(
-                                       testing::DoubleEq(prev_system_state_value),
-                                       testing::DoubleEq(prev_system_state_value + 10.0)));
+                                          testing::DoubleEq(prev_system_state_value),
+                                          testing::DoubleEq(prev_system_state_value + 10.0)));
       }
       else
       {
