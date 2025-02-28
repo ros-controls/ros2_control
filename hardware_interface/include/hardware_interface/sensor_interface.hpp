@@ -39,6 +39,9 @@
 
 namespace hardware_interface
 {
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
 /**
  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
@@ -69,9 +72,6 @@ namespace hardware_interface
  * ACTIVE (on_activate):
  *   States can be read.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:

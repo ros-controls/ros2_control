@@ -40,6 +40,9 @@
 
 namespace hardware_interface
 {
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /// Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
 /**
  * The typical examples are conveyors or motors.
@@ -63,22 +66,24 @@ namespace hardware_interface
  *   Communication with the hardware is started and it is configured.
  *   States can be read and command interfaces are available.
  *
- *   TODO(anyone): Implement https://github.com/ros-controls/ros2_control/issues/931
- *      States can be read and non-movement hardware interfaces commanded.
- *      Hardware interfaces for movement will NOT be available.
- *      Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
- *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
  *   Allocated memory is cleaned up.
  *
  * ACTIVE (on_activate):
  *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces for movement are available and have to be accepted.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   Command interfaces available.
+ *
+ * \todo
+ * Implement
+ *  * https://github.com/ros-controls/ros2_control/issues/931
+ *  * https://github.com/ros-controls/roadmap/pull/51/files
+ *  * this means in INACTIVE state:
+ *      * States can be read and non-movement hardware interfaces commanded.
+ *      * Hardware interfaces for movement will NOT be available.
+ *      * Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and
+ * HW_IF_EFFORT.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
