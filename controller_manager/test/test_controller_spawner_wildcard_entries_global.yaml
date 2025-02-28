@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    joint_names: ["joint1"]
+    param1: 1.0
+    param2: 2.0
+
+wildcard_ctrl:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    param3: 3.0
