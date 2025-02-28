@@ -64,9 +64,12 @@ namespace hardware_interface
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and non-movement hardware interfaces commanded.
- *   Hardware interfaces for movement will NOT be available.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read and command interfaces are available.
+ *
+ *   TODO(anyone): Implement https://github.com/ros-controls/ros2_control/issues/931
+ *      States can be read and non-movement hardware interfaces commanded.
+ *      Hardware interfaces for movement will NOT be available.
+ *      Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
