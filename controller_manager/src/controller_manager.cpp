@@ -3288,7 +3288,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
       const auto exec_time_stats = controllers[i].execution_time_statistics->GetStatistics();
       stat.add(
         controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
-      if (is_async)
+      const bool publish_periodicity_stats =
+        is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
+      if (publish_periodicity_stats)
       {
         stat.add(
           controllers[i].info.name + periodicity_suffix,
@@ -3482,7 +3484,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
         stat.add(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
-        if (is_async)
+        const bool publish_periodicity_stats =
+          is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
+        if (publish_periodicity_stats)
         {
           stat.add(
             comp_name + statistics_type_suffix + periodicity_suffix,
