@@ -24,5 +24,6 @@ constexpr double READ_FAIL_VALUE = 28282828.0;
 constexpr double WRITE_FAIL_VALUE = 23232323.0;
 constexpr double READ_DEACTIVATE_VALUE = 29292929.0;
 constexpr double WRITE_DEACTIVATE_VALUE = 24242424.0;
+constexpr double RESET_STATE_INTERFACES_VALUE = 82937364.0;
 }  // namespace test_constants
 #endif  // ROS2_CONTROL_TEST_ASSETS__TEST_HARDWARE_INTERFACE_CONSTANTS_HPP_

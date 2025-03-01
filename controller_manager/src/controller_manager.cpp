@@ -324,7 +324,8 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+  cm_node_options_(options),
+  robot_description_(resource_manager_->get_urdf())
 {
   initialize_parameters();
   init_controller_manager();
@@ -376,6 +377,7 @@ void ControllerManager::init_controller_manager()
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
+    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
   else
@@ -437,6 +439,13 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
+
+  // Declare the enforce_command_limits parameter such a way that it is enabled by default for
+  // rolling and newer alone
+  enforce_command_limits_ =
+    this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), enforce_command_limits_, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -478,6 +487,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       get_logger(),
       "Resource Manager has been successfully initialized. Starting Controller Manager "
       "services...");
+    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
 }
@@ -2695,6 +2705,11 @@ controller_interface::return_type ControllerManager::update(
     {
       activate_controllers(rt_controller_list, rt_buffer_.fallback_controllers_list);
     }
+  }
+
+  if (enforce_command_limits_)
+  {
+    resource_manager_->enforce_command_limits(period);
   }
 
   // there are controllers to (de)activate
