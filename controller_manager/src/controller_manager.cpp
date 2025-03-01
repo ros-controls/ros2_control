@@ -3485,7 +3485,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
         const bool publish_periodicity_stats =
-          is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
+          is_async || comp_info.rw_rate != this->get_update_rate());
         if (publish_periodicity_stats)
         {
           stat.add(
