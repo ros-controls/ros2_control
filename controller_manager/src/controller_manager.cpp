@@ -3356,8 +3356,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
       high_exec_time_controllers_string.append(" ");
     }
     stat.mergeSummary(
-      level, "\nHigh execution jitter or mean error : [ " +
-               high_exec_time_controllers_string + "]");
+      level,
+      "\nHigh execution jitter or mean error : [ " + high_exec_time_controllers_string + "]");
   }
   if (!bad_periodicity_async_controllers.empty())
   {
