@@ -15,6 +15,7 @@
 #ifndef SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 
+#include <algorithm>
 #include <limits>
 #include <string>
 #include <vector>
@@ -25,7 +26,6 @@
 
 namespace semantic_components
 {
-constexpr std::size_t FORCES_SIZE = 3;
 class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
 public:
@@ -42,6 +42,7 @@ public:
        {name + "/" + "torque.z"}}),
     existing_axes_({{true, true, true, true, true, true}})
   {
+    data_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
   /// Constructor for 6D FTS with custom interface names.
@@ -59,6 +60,7 @@ public:
     const std::string & interface_torque_y, const std::string & interface_torque_z)
   : SemanticComponentInterface("", 6)
   {
+    data_.fill(std::numeric_limits<double>::quiet_NaN());
     auto check_and_add_interface =
       [this](const std::string & interface_name, const std::size_t index)
     {
@@ -89,17 +91,9 @@ public:
    */
   std::array<double, 3> get_forces() const
   {
+    update_data_from_interfaces();
     std::array<double, 3> forces;
-    forces.fill(std::numeric_limits<double>::quiet_NaN());
-    std::size_t interface_counter{0};
-    for (auto i = 0u; i < forces.size(); ++i)
-    {
-      if (existing_axes_[i])
-      {
-        forces[i] = state_interfaces_[interface_counter].get().get_value();
-        ++interface_counter;
-      }
-    }
+    std::copy(data_.begin(), data_.begin() + 3, forces.begin());
     return forces;
   }
 
@@ -111,22 +105,9 @@ public:
    */
   std::array<double, 3> get_torques() const
   {
+    update_data_from_interfaces();
     std::array<double, 3> torques;
-    torques.fill(std::numeric_limits<double>::quiet_NaN());
-
-    // find out how many force interfaces are being used
-    // torque interfaces will be found from the next index onward
-    auto torque_interface_counter = static_cast<std::size_t>(
-      std::count(existing_axes_.begin(), existing_axes_.begin() + FORCES_SIZE, true));
-
-    for (auto i = 0u; i < torques.size(); ++i)
-    {
-      if (existing_axes_[i + FORCES_SIZE])
-      {
-        torques[i] = state_interfaces_[torque_interface_counter].get().get_value();
-        ++torque_interface_counter;
-      }
-    }
+    std::copy(data_.begin() + 3, data_.end(), torques.begin());
     return torques;
   }
 
@@ -140,20 +121,43 @@ public:
    */
   bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
-    const auto [force_x, force_y, force_z] = get_forces();
-    const auto [torque_x, torque_y, torque_z] = get_torques();
-
-    message.force.x = force_x;
-    message.force.y = force_y;
-    message.force.z = force_z;
-    message.torque.x = torque_x;
-    message.torque.y = torque_y;
-    message.torque.z = torque_z;
+    update_data_from_interfaces();
+    message.force.x = data_[0];
+    message.force.y = data_[1];
+    message.force.z = data_[2];
+    message.torque.x = data_[3];
+    message.torque.y = data_[4];
+    message.torque.z = data_[5];
 
     return true;
   }
 
 protected:
+  /**
+   * @brief Update the data from the state interfaces.
+   * @note The method is thread-safe and non-blocking.
+   * @note This method might return stale data if the data is not updated. This is to ensure that
+   * the data from the sensor is not discontinuous.
+   */
+  void update_data_from_interfaces() const
+  {
+    std::size_t interface_counter{0};
+    for (auto i = 0u; i < data_.size(); ++i)
+    {
+      if (existing_axes_[i])
+      {
+        const auto data = state_interfaces_[interface_counter].get().get_optional();
+        if (data.has_value())
+        {
+          data_[i] = data.value();
+        }
+        ++interface_counter;
+      }
+    }
+  }
+
+  /// Array to store the data of the FT sensors
+  mutable std::array<double, 6> data_;
   /// Vector with existing axes for sensors with less then 6D axes.
   std::array<bool, 6> existing_axes_;
 };

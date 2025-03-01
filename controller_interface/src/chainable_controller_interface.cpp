@@ -53,6 +53,9 @@ ChainableControllerInterface::export_state_interfaces()
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
   ordered_exported_state_interfaces_.reserve(state_interfaces.size());
   exported_state_interface_names_.reserve(state_interfaces.size());
+  exported_state_interfaces_.clear();
+  exported_state_interface_names_.clear();
+  ordered_exported_state_interfaces_.clear();
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
@@ -117,6 +120,9 @@ ChainableControllerInterface::export_reference_interfaces()
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
   exported_reference_interface_names_.reserve(reference_interfaces.size());
   ordered_exported_reference_interfaces_.reserve(reference_interfaces.size());
+  exported_reference_interfaces_.clear();
+  exported_reference_interface_names_.clear();
+  ordered_exported_reference_interfaces_.clear();
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces

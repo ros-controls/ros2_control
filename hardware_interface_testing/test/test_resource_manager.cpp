@@ -1284,13 +1284,13 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     EXPECT_TRUE(rm.command_interface_is_claimed(FULL_REFERENCE_INTERFACE_NAMES[2]));
 
     // access interface value
-    EXPECT_EQ(claimed_itf1.get_value(), 1.0);
-    EXPECT_EQ(claimed_itf3.get_value(), 3.0);
+    EXPECT_EQ(claimed_itf1.get_optional().value(), 1.0);
+    EXPECT_EQ(claimed_itf3.get_optional().value(), 3.0);
 
     claimed_itf1.set_value(11.1);
     claimed_itf3.set_value(33.3);
-    EXPECT_EQ(claimed_itf1.get_value(), 11.1);
-    EXPECT_EQ(claimed_itf3.get_value(), 33.3);
+    EXPECT_EQ(claimed_itf1.get_optional().value(), 11.1);
+    EXPECT_EQ(claimed_itf3.get_optional().value(), 33.3);
 
     EXPECT_EQ(reference_interface_values[0], 11.1);
     EXPECT_EQ(reference_interface_values[1], 2.0);
@@ -1819,8 +1819,8 @@ public:
 
   void check_read_and_write_cycles(bool test_for_changing_values)
   {
-    double prev_act_state_value = state_itfs[0].get_value();
-    double prev_system_state_value = state_itfs[1].get_value();
+    double prev_act_state_value = state_itfs[0].get_optional().value();
+    double prev_system_state_value = state_itfs[1].get_optional().value();
 
     for (size_t i = 1; i < 100; i++)
     {
@@ -1830,19 +1830,19 @@ public:
       if (i % (cm_update_rate_ / system_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
-        prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
-        claimed_itfs[1].set_value(claimed_itfs[1].get_value() + 20.0);
+        prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
+        claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + 20.0);
       }
       if (i % (cm_update_rate_ / actuator_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
-        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
-        claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
+        prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
+        claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + 10.0);
       }
       // Even though we skip some read and write iterations, the state interfaces should be the same
       // as previous updated one until the next cycle
-      ASSERT_EQ(state_itfs[0].get_value(), prev_act_state_value);
-      ASSERT_EQ(state_itfs[1].get_value(), prev_system_state_value);
+      ASSERT_EQ(state_itfs[0].get_optional().value(), prev_act_state_value);
+      ASSERT_EQ(state_itfs[1].get_optional().value(), prev_system_state_value);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
@@ -2032,8 +2032,8 @@ public:
 
   void check_read_and_write_cycles(bool check_for_updated_values)
   {
-    double prev_act_state_value = state_itfs[0].get_value();
-    double prev_system_state_value = state_itfs[1].get_value();
+    double prev_act_state_value = state_itfs[0].get_optional().value();
+    double prev_system_state_value = state_itfs[1].get_optional().value();
     const double actuator_increment = 10.0;
     const double system_increment = 20.0;
     for (size_t i = 1; i < 100; i++)
@@ -2045,15 +2045,17 @@ public:
       // The values are computations exactly within the test_components
       if (check_for_updated_values)
       {
-        prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
-        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
+        prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
+        prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
       }
-      claimed_itfs[0].set_value(claimed_itfs[0].get_value() + actuator_increment);
-      claimed_itfs[1].set_value(claimed_itfs[1].get_value() + system_increment);
+      claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + actuator_increment);
+      claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + system_increment);
       // This is needed to account for any missing hits to the read and write cycles as the tests
       // are going to be run on a non-RT operating system
-      ASSERT_NEAR(state_itfs[0].get_value(), prev_act_state_value, actuator_increment / 2.0);
-      ASSERT_NEAR(state_itfs[1].get_value(), prev_system_state_value, system_increment / 2.0);
+      ASSERT_NEAR(
+        state_itfs[0].get_optional().value(), prev_act_state_value, actuator_increment / 2.0);
+      ASSERT_NEAR(
+        state_itfs[1].get_optional().value(), prev_system_state_value, system_increment / 2.0);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       EXPECT_TRUE(ok_write);

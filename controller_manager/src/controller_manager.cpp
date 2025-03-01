@@ -817,14 +817,11 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   RCLCPP_DEBUG(get_logger(), "Shutdown controller");
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
-  // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-  // cleaning-up controllers?
+  cleanup_controller_exported_interfaces(controller);
   if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
-    // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-    // cleaning-up controllers?
     shutdown_controller(controller);
   }
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
@@ -913,10 +910,9 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-    // cleaning-up controllers?
     try
     {
+      cleanup_controller_exported_interfaces(*found_it);
       new_state = controller->get_node()->cleanup();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
       {
@@ -1196,6 +1192,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    auto result = controller_interface::return_type::OK;
 
     // list all controllers to (de)activate
     for (const auto & controller : controller_list)
@@ -1212,6 +1209,10 @@ controller_interface::return_type ControllerManager::switch_controller(
           get_logger(),
           "Could not '%s' controller with name '%s' because no controller with this name exists",
           action.c_str(), controller.c_str());
+        // For the BEST_EFFORT switch, if there are more controllers that are in the list, this is
+        // not a critical error
+        result = request_list.empty() ? controller_interface::return_type::ERROR
+                                      : controller_interface::return_type::OK;
         if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
         {
           RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
@@ -1220,6 +1221,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       }
       else
       {
+        result = controller_interface::return_type::OK;
         RCLCPP_DEBUG(
           get_logger(), "Found controller '%s' that needs to be %sed in list of controllers",
           controller.c_str(), action.c_str());
@@ -1229,7 +1231,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(
       get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
 
-    return controller_interface::return_type::OK;
+    return result;
   };
 
   // list all controllers to deactivate (check if all controllers exist)
@@ -3239,7 +3241,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
   bool atleast_one_hw_active = false;
-  const auto hw_components_info = resource_manager_->get_components_status();
+  const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -3361,7 +3363,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
     }
     stat.mergeSummary(
       level,
-      "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
+      "\nHigh execution jitter or mean error : [ " + high_exec_time_controllers_string + "]");
   }
   if (!bad_periodicity_async_controllers.empty())
   {
@@ -3372,8 +3374,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
       bad_periodicity_async_controllers_string.append(" ");
     }
     stat.mergeSummary(
-      level,
-      "\nControllers with bad periodicity : [ " + bad_periodicity_async_controllers_string + "]");
+      level, "\nHigh periodicity jitter or mean error : [ " +
+               bad_periodicity_async_controllers_string + "]");
   }
 
   if (!atleast_one_hw_active)
@@ -3394,7 +3396,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
 {
   bool all_active = true;
   bool atleast_one_hw_active = false;
-  const auto hw_components_info = resource_manager_->get_components_status();
+  const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     stat.add(component_name, component_info.state.label());
@@ -3572,7 +3574,9 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
   for (const std::string & arg : cm_node_options_.arguments())
   {
-    if (arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos)
+    if (
+      arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
+      arg.find("robot_description") != std::string::npos)
     {
       if (
         node_options_arguments.back() == RCL_REMAP_FLAG ||
@@ -3646,6 +3650,18 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   controller_node_options.use_global_arguments(false);
   return controller_node_options;
+}
+
+void ControllerManager::cleanup_controller_exported_interfaces(const ControllerSpec & controller)
+{
+  if (is_controller_inactive(controller.c) && controller.c->is_chainable())
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Removing controller '%s' exported interfaces from resource manager.",
+      controller.info.name.c_str());
+    resource_manager_->remove_controller_exported_state_interfaces(controller.info.name);
+    resource_manager_->remove_controller_reference_interfaces(controller.info.name);
+  }
 }
 
 }  // namespace controller_manager
