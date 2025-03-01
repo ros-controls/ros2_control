@@ -27,7 +27,24 @@ TEST(UtilsTest, AccessorTest)
   const std::string NAME = "joint";
   double joint_value = 0.0;
   const JointHandle joint_handle(NAME, HW_IF_POSITION, &joint_value);
-  const std::vector<JointHandle> joint_handles = {joint_handle};
+  const std::vector<JointHandle::SharedPtr> joint_handles = {
+    std::make_shared<JointHandle>(joint_handle)};
+
+  ASSERT_EQ(transmission_interface::get_names(joint_handles), std::vector<std::string>{NAME});
+  ASSERT_EQ(
+    transmission_interface::get_ordered_handles(joint_handles, {NAME}, HW_IF_POSITION),
+    joint_handles);
+}
+
+TEST(UtilsTest, AccessorTestSharedPtr)
+{
+  const std::string NAME = "joint";
+  double joint_value = 0.0;
+  hardware_interface::InterfaceInfo interface_info;
+  interface_info.name = HW_IF_POSITION;
+  const JointHandle::SharedPtr joint_handle =
+    std::make_shared<JointHandle>(hardware_interface::InterfaceDescription(NAME, interface_info));
+  const std::vector<JointHandle::SharedPtr> joint_handles = {joint_handle};
 
   ASSERT_EQ(transmission_interface::get_names(joint_handles), std::vector<std::string>{NAME});
   ASSERT_EQ(
