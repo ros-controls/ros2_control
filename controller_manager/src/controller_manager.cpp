@@ -3561,8 +3561,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
       high_exec_time_hw_string.append(" ");
     }
     stat.mergeSummary(
-      level,
-      "\nHardware Components with high execution time : [ " + high_exec_time_hw_string + "]");
+      level, "\nHigh execution jitter or mean error : [ " + high_exec_time_hw_string + "]");
   }
   if (!bad_periodicity_async_hw.empty())
   {
@@ -3574,7 +3573,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
     }
     stat.mergeSummary(
       level,
-      "\nHardware Components with bad periodicity : [ " + bad_periodicity_async_hw_string + "]");
+      "\nHigh periodicity jitter or mean error : [ " + bad_periodicity_async_hw_string + "]");
   }
 }
 
