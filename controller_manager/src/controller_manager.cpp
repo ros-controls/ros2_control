@@ -3568,7 +3568,9 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
   for (const std::string & arg : cm_node_options_.arguments())
   {
-    if (arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos)
+    if (
+      arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
+      arg.find("robot_description") != std::string::npos)
     {
       if (
         node_options_arguments.back() == RCL_REMAP_FLAG ||
