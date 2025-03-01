@@ -31,8 +31,12 @@
 
 namespace hardware_interface
 {
-/// Virtual Class to implement when integrating a complex system into ros2_control.
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /**
+ * @brief Virtual Class to implement when integrating a complex system into ros2_control.
+ *
  * The common examples for these types of hardware are multi-joint systems with or without sensors
  * such as industrial or humanoid robots.
  *
@@ -49,13 +53,14 @@ namespace hardware_interface
  *
  * UNCONFIGURED (on_init, on_cleanup):
  *   Hardware is initialized but communication is not started and therefore no interface is
- * available.
+ *available.
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and non-movement hardware interfaces commanded.
- *   Hardware interfaces for movement will NOT be available.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read and command interfaces are available.
+ *
+ *    As of now, it is left to the hardware component implementation to continue using the command
+ *received from the ``CommandInterfaces`` or to skip them completely.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
@@ -63,11 +68,18 @@ namespace hardware_interface
  *
  * ACTIVE (on_activate):
  *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces for movement are available and have to be accepted.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   Command interfaces available.
+ *
+ * \todo
+ * Implement
+ *  * https://github.com/ros-controls/ros2_control/issues/931
+ *  * https://github.com/ros-controls/roadmap/pull/51/files
+ *  * this means in INACTIVE state:
+ *      * States can be read and non-movement hardware interfaces commanded.
+ *      * Hardware interfaces for movement will NOT be available.
+ *      * Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and
+ *HW_IF_EFFORT.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 class SystemInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
