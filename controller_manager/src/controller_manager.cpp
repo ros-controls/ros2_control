@@ -3357,7 +3357,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
     }
     stat.mergeSummary(
       level,
-      "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
+      "\nHigh execution jitter or mean error : [ " + high_exec_time_controllers_string + "]");
   }
   if (!bad_periodicity_async_controllers.empty())
   {
@@ -3368,8 +3368,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
       bad_periodicity_async_controllers_string.append(" ");
     }
     stat.mergeSummary(
-      level,
-      "\nControllers with bad periodicity : [ " + bad_periodicity_async_controllers_string + "]");
+      level, "\nHigh periodicity jitter or mean error : [ " +
+               bad_periodicity_async_controllers_string + "]");
   }
 
   if (!atleast_one_hw_active)
