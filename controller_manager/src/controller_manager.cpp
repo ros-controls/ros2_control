@@ -3235,7 +3235,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
   bool atleast_one_hw_active = false;
-  const auto hw_components_info = resource_manager_->get_components_status();
+  const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -3390,7 +3390,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
 {
   bool all_active = true;
   bool atleast_one_hw_active = false;
-  const auto hw_components_info = resource_manager_->get_components_status();
+  const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     stat.add(component_name, component_info.state.label());
