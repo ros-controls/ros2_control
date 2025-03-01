@@ -52,6 +52,9 @@ public:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
 
+  /// Default constructor for the Resource Manager.
+  explicit ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger);
+
   /// Constructor for the Resource Manager.
   /**
    * The implementation loads the specified urdf and initializes the
@@ -64,12 +67,32 @@ public:
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
    * of async components.
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
-   * used for triggering async components.
+   * used for triggering async components and different read/write component rates.
+   * \param[in] logger_interface reference to the logger interface of the CM node for logging.
    */
   explicit ResourceManager(
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
+    bool activate_all = false, const unsigned int update_rate = 100);
+
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation loads the specified urdf and initializes the
+   * hardware components listed within as well as populate their respective
+   * state and command interfaces.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] activate_all boolean argument indicating if all resources should be immediately
+   * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock reference to the clock of the CM node for getting time used for triggering
+   * async components and different read/write component rates.
+   * \param[in] logger logger of the CM node for logging.
+   */
+  explicit ResourceManager(
+    const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
     bool activate_all = false, const unsigned int update_rate = 100);
 
   ResourceManager(const ResourceManager &) = delete;
