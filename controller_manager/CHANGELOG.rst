@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.27.0 (2025-03-01)
+-------------------
 * [HW Components] Add fix for async hardware components improper rate (`#2076 <https://github.com/ros-controls/ros2_control/issues/2076>`_)
 * [CM] Skip `robot_description` topic remapping for controllers (`#2082 <https://github.com/ros-controls/ros2_control/issues/2082>`_)
 * [Spawner] Fix case with wildcard AND explicit controller in the same file (`#2080 <https://github.com/ros-controls/ros2_control/issues/2080>`_)
