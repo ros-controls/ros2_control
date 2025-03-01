@@ -111,6 +111,11 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
+    }
     // simulate error on read
     if (velocity_command_ == test_constants::READ_FAIL_VALUE)
     {
@@ -135,6 +140,11 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
+    }
     // simulate error on write
     if (velocity_command_ == test_constants::WRITE_FAIL_VALUE)
     {

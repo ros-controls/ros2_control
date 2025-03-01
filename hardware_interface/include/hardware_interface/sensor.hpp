@@ -23,6 +23,7 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/statistics_types.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
@@ -70,6 +71,8 @@ public:
 
   const rclcpp::Time & get_last_read_time() const;
 
+  const HardwareComponentStatisticsCollector & get_read_statistics() const;
+
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   return_type write(const rclcpp::Time &, const rclcpp::Duration &) { return return_type::OK; }
@@ -81,6 +84,8 @@ private:
   mutable std::recursive_mutex sensors_mutex_;
   // Last read cycle time
   rclcpp::Time last_read_cycle_time_;
+  // Component statistics
+  HardwareComponentStatisticsCollector read_statistics_;
 };
 
 }  // namespace hardware_interface
