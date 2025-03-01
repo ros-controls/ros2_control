@@ -2,6 +2,16 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.27.0 (2025-03-01)
+-------------------
+* [Handle] Use `get_optional` instead of `get_value<double>` (`#2061 <https://github.com/ros-controls/ros2_control/issues/2061>`_)
+* Cleanup chainable controller exported interfaces to allow reconfiguring  (`#2073 <https://github.com/ros-controls/ros2_control/issues/2073>`_)
+* Use new `get_value` API for newly added tests and semantic components (`#2055 <https://github.com/ros-controls/ros2_control/issues/2055>`_)
+* Add new `get_value` API for Handles and Interfaces (`#1976 <https://github.com/ros-controls/ros2_control/issues/1976>`_)
+* Integrate pal_statistics for introspection of controllers, hardware components and more (`#1918 <https://github.com/ros-controls/ros2_control/issues/1918>`_)
+* [ControllerInterface] Improve the prefix name check for the chainable controllers (`#2038 <https://github.com/ros-controls/ros2_control/issues/2038>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.26.0 (2025-02-07)
 -------------------
 * add a semantic command interface to "semantic_components" (`#1945 <https://github.com/ros-controls/ros2_control/issues/1945>`_)
