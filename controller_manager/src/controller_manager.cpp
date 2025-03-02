@@ -3467,7 +3467,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       auto update_stats =
-        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string](
+        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string, this](
           const std::string & comp_name, const auto & statistics,
           const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
           const auto & params)
@@ -3485,7 +3485,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
         const bool publish_periodicity_stats =
-          is_async || comp_info.rw_rate != this->get_update_rate());
+          is_async || (comp_info.rw_rate != this->get_update_rate());
         if (publish_periodicity_stats)
         {
           stat.add(
