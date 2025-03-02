@@ -1285,7 +1285,8 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
     else
     {
-      status = check_following_controllers_for_activate(controllers, strictness, controller_it);
+      status =
+        check_following_controllers_for_activate(controllers, strictness, controller_it, message);
     }
 
     if (status == controller_interface::return_type::OK)
@@ -2893,7 +2894,7 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
 
 controller_interface::return_type ControllerManager::check_following_controllers_for_activate(
   const std::vector<ControllerSpec> & controllers, int strictness,
-  const ControllersListIterator controller_it)
+  const ControllersListIterator controller_it, std::string & message)
 {
   // we assume that the controller exists is checked in advance
   RCLCPP_DEBUG(
@@ -2932,11 +2933,11 @@ controller_interface::return_type ControllerManager::check_following_controllers
     // check if following controller is chainable
     if (!following_ctrl_it->c->is_chainable())
     {
-      RCLCPP_WARN(
-        get_logger(),
-        "No state/reference interface '%s' exist, since the following controller with name "
-        "'%s' is not chainable.",
-        ctrl_itf_name.c_str(), following_ctrl_it->info.name.c_str());
+      message = "No state/reference interface from controller : '" + ctrl_itf_name +
+                "' exist, since the following "
+                "controller with name '" +
+                following_ctrl_it->info.name + "' is not chainable.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
 
@@ -2948,9 +2949,9 @@ controller_interface::return_type ControllerManager::check_following_controllers
           deactivate_request_.begin(), deactivate_request_.end(), following_ctrl_it->info.name) !=
         deactivate_request_.end())
       {
-        RCLCPP_WARN(
-          get_logger(), "The following controller with name '%s' will be deactivated.",
-          following_ctrl_it->info.name.c_str());
+        message = "The following controller with name '" + following_ctrl_it->info.name +
+                  "' is currently active but it is requested to be deactivated.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
     }
@@ -2959,17 +2960,17 @@ controller_interface::return_type ControllerManager::check_following_controllers
       std::find(activate_request_.begin(), activate_request_.end(), following_ctrl_it->info.name) ==
       activate_request_.end())
     {
-      RCLCPP_WARN(
-        get_logger(),
-        "The following controller with name '%s' is not active and will not be activated.",
-        following_ctrl_it->info.name.c_str());
+      message = "The following controller with name '" + following_ctrl_it->info.name +
+                "' is currently inactive and it is not requested to be activated.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
 
     // Trigger recursion to check all the following controllers only if they are OK, add this
     // controller update chained mode requests
     if (
-      check_following_controllers_for_activate(controllers, strictness, following_ctrl_it) ==
+      check_following_controllers_for_activate(
+        controllers, strictness, following_ctrl_it, message) ==
       controller_interface::return_type::ERROR)
     {
       return controller_interface::return_type::ERROR;

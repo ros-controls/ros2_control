@@ -369,6 +369,7 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controller_it iterator to the controller for which the following controllers are
+   * \param[out] message describing the result of the check.
    * checked.
    *
    * \returns return_type::OK if all following controllers pass the checks, otherwise
@@ -376,7 +377,7 @@ private:
    */
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it);
+    const ControllersListIterator controller_it, std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
