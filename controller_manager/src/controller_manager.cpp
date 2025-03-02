@@ -1118,6 +1118,16 @@ void ControllerManager::clear_requests()
 controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & activate_controllers,
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
+  const rclcpp::Duration & timeout)
+{
+  std::string message;
+  return switch_controller_cb(
+    activate_controllers, deactivate_controllers, strictness, activate_asap, timeout, message);
+}
+
+controller_interface::return_type ControllerManager::switch_controller_cb(
+  const std::vector<std::string> & activate_controllers,
+  const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout, std::string & message)
 {
   if (!is_resource_manager_initialized())
@@ -2274,7 +2284,7 @@ void ControllerManager::switch_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "switching service locked");
 
-  response->ok = switch_controller(
+  response->ok = switch_controller_cb(
                    request->activate_controllers, request->deactivate_controllers,
                    request->strictness, request->activate_asap, request->timeout,
                    response->message) == controller_interface::return_type::OK;
