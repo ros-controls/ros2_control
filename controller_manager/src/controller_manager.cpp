@@ -1427,7 +1427,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       std::find(activate_request_.begin(), activate_request_.end(), controller.info.name);
     bool in_activate_list = activate_list_it != activate_request_.end();
 
-    auto handle_conflict = [&, &message](const std::string & msg)
+    auto handle_conflict = [&](const std::string & msg)
     {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
