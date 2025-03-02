@@ -46,51 +46,41 @@ namespace hardware_interface
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 /**
- * @brief Virtual Class to implement when integrating a complex system into ros2_control.
+ * @brief Virtual class to implement when integrating a complex system into ros2_control.
  *
- * The common examples for these types of hardware are multi-joint systems with or without sensors
- * such as industrial or humanoid robots.
+ * This class is typically used for multi-joint systems with or without sensors, such as industrial or humanoid robots.
  *
- * Methods return values have type
- * rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn with the following
- * meaning:
+ * Methods return values of type 
+ * `rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn` with the following meanings:
  *
- * \returns CallbackReturn::SUCCESS method execution was successful.
- * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
- * \returns CallbackReturn::ERROR critical error has happened that should be managed in
- * "on_error" method.
+ * @returns `CallbackReturn::SUCCESS` - Method execution was successful.
+ * @returns `CallbackReturn::FAILURE` - Method execution failed, but can be called again.
+ * @returns `CallbackReturn::ERROR` - A critical error occurred and should be handled in the `on_error` method.
  *
- * The hardware ends after each method in a state with the following meaning:
+ * Hardware states after each method execution:
  *
- * UNCONFIGURED (on_init, on_cleanup):
- *   Hardware is initialized but communication is not started and therefore no interface is
- *available.
+ * - **UNCONFIGURED** (on_init, on_cleanup):  
+ *   Hardware is initialized but communication is not started, so no interfaces are available.
  *
- * INACTIVE (on_configure, on_deactivate):
- *   Communication with the hardware is started and it is configured.
- *   States can be read and command interfaces are available.
+ * - **INACTIVE** (on_configure, on_deactivate):  
+ *   Communication with the hardware is started and configured. States can be read, and command interfaces are available.  
+ *   Hardware components can choose to continue using commands from the `CommandInterfaces` or skip them.
  *
- *    As of now, it is left to the hardware component implementation to continue using the command
- *received from the ``CommandInterfaces`` or to skip them completely.
+ * - **FINALIZED** (on_shutdown):  
+ *   Hardware interface is ready for unloading/destruction, and memory is cleaned up.
  *
- * FINALIZED (on_shutdown):
- *   Hardware interface is ready for unloading/destruction.
- *   Allocated memory is cleaned up.
+ * - **ACTIVE** (on_activate):  
+ *   Power circuits of hardware are active, and hardware can be moved (e.g., brakes are disabled). Command interfaces are available.
  *
- * ACTIVE (on_activate):
- *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces available.
- *
- * \todo
- * Implement
+ * @todo
+ * Implement the following:
  *  * https://github.com/ros-controls/ros2_control/issues/931
  *  * https://github.com/ros-controls/roadmap/pull/51/files
- *  * this means in INACTIVE state:
- *      * States can be read and non-movement hardware interfaces commanded.
- *      * Hardware interfaces for movement will NOT be available.
- *      * Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and
- *HW_IF_EFFORT.
+ *  * In the **INACTIVE** state:
+ *      * States can be read, and non-movement hardware interfaces can be commanded.
+ *      * Hardware interfaces for movement (e.g., `HW_IF_POSITION`, `HW_IF_VELOCITY`, `HW_IF_ACCELERATION`, and `HW_IF_EFFORT`) will NOT be available.
  */
+
 
 class SystemInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
@@ -102,26 +92,30 @@ public:
   {
   }
 
-  /// SystemInterface copy constructor is actively deleted.
-  /**
-   * Hardware interfaces are having a unique ownership and thus can't be copied in order to avoid
-   * failed or simultaneous access to hardware.
-   */
+  /// SystemInterface copy constructor is deleted.
+/**
+ * @brief Prevents copying of the SystemInterface to ensure unique ownership of hardware interfaces.
+ *
+ * Hardware interfaces are designed with unique ownership to avoid issues with failed or simultaneous access to hardware.
+ */
+
   SystemInterface(const SystemInterface & other) = delete;
 
   SystemInterface(SystemInterface && other) = delete;
 
   virtual ~SystemInterface() = default;
 
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] clock_interface pointer to the clock interface.
-   * \param[in] logger_interface pointer to the logger interface.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
+/// Initializes the hardware interface from data parsed from the robot's URDF, clock, and logger interfaces.
+/**
+ * @brief Sets up the hardware interface using data from the URDF, clock, and logger interfaces.
+ *
+ * @param[in] hardware_info Structure containing data from the URDF.
+ * @param[in] clock_interface Pointer to the clock interface.
+ * @param[in] logger_interface Pointer to the logger interface.
+ * @return `CallbackReturn::SUCCESS` if the required data are provided and can be parsed successfully.
+ * @return `CallbackReturn::ERROR` if any error occurs or if required data are missing.
+ */
+
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
@@ -163,12 +157,15 @@ public:
     return on_init(hardware_info);
   };
 
-  /// Initialization of the hardware interface from data parsed from the robot's URDF.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
+ /// Initializes the hardware interface from data parsed from the robot's URDF.
+/**
+ * @brief Sets up the hardware interface using data from the URDF.
+ *
+ * @param[in] hardware_info Structure containing data from the URDF.
+ * @return `CallbackReturn::SUCCESS` if the required data are provided and can be parsed successfully.
+ * @return `CallbackReturn::ERROR` if any error occurs or if required data are missing.
+ */
+
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
@@ -181,17 +178,18 @@ public:
   };
 
   /// Exports all state interfaces for this hardware interface.
-  /**
-   * Old way of exporting the StateInterfaces. If a empty vector is returned then
-   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
-   * then the exporting of the StateInterfaces is only done with this function and the ownership is
-   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
-   * be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
+/**
+ * @brief Exports state interfaces for the hardware interface, either using the old method or a custom vector.
+ *
+ * If an empty vector is returned, the `on_export_state_interfaces()` method is called. If a vector with `StateInterfaces` is returned,
+ * the export process is handled by this function, and ownership of the state interfaces is transferred to the resource manager.
+ * Once ownership is transferred, methods like `set_command(...)`, `get_command(...)`, and others can no longer be used.
+ *
+ * @note Ownership of the state interfaces is transferred to the caller.
+ *
+ * @return A vector of state interfaces.
+ */
+
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled "
@@ -272,17 +270,18 @@ public:
   }
 
   /// Exports all command interfaces for this hardware interface.
-  /**
-   * Old way of exporting the CommandInterfaces. If a empty vector is returned then
-   * the on_export_command_interfaces() method is called. If a vector with CommandInterfaces is
-   * returned then the exporting of the CommandInterfaces is only done with this function and the
-   * ownership is transferred to the resource manager. The set_command(...), get_command(...), ...,
-   * can then not be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
+/**
+ * @brief Exports command interfaces for the hardware interface, either using the old method or a custom vector.
+ *
+ * If an empty vector is returned, the `on_export_command_interfaces()` method is called. If a vector with `CommandInterfaces` is returned,
+ * the export process is handled by this function, and ownership of the command interfaces is transferred to the resource manager.
+ * Once ownership is transferred, methods like `set_command(...)`, `get_command(...)`, and others can no longer be used.
+ *
+ * @note Ownership of the command interfaces is transferred to the caller.
+ *
+ * @return A vector of command interfaces.
+ */
+
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
     "Exporting is "
@@ -357,19 +356,22 @@ public:
     return command_interfaces;
   }
 
-  /// Prepare for a new command interface switch.
-  /**
-   * Prepare for any mode-switching required by the new command interface combination.
-   *
-   * \note This is a non-realtime evaluation of whether a set of command interface claims are
-   * possible, and call to start preparing data structures for the upcoming switch that will occur.
-   * \note All starting and stopping interface keys are passed to all components, so the function
-   * should return return_type::OK by default when given interface keys not relevant for this
-   * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
-   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfaces
-   * stopping. \return return_type::OK if the new command interface combination can be prepared, or
-   * if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
-   */
+ /// Prepare for a new command interface switch.
+/**
+ * @brief Prepares the system for any mode-switching required by the new command interface combination.
+ *
+ * This is a non-realtime evaluation to determine if the new set of command interface claims are possible.
+ * It also starts preparing the data structures for the upcoming switch.
+ *
+ * @note This is a non-realtime process. All starting and stopping interface keys are passed to all components, 
+ * so the function should return `return_type::OK` by default if the interface keys are not relevant for the component.
+ *
+ * @param[in] start_interfaces A vector of string identifiers for the command interfaces starting.
+ * @param[in] stop_interfaces A vector of string identifiers for the command interfaces stopping.
+ * @return `return_type::OK` if the new command interface combination can be prepared, or if the interface key is not relevant to this system.
+ * @return `return_type::ERROR` if preparation cannot proceed.
+ */
+
   virtual return_type prepare_command_mode_switch(
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/)
@@ -377,18 +379,22 @@ public:
     return return_type::OK;
   }
 
-  // Perform switching to the new command interface.
-  /**
-   * Perform the mode-switching for the new command interface combination.
-   *
-   * \note This is part of the realtime update loop, and should be fast.
-   * \note All starting and stopping interface keys are passed to all components, so the function
-   * should return return_type::OK by default when given interface keys not relevant for this
-   * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
-   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfaces
-   * stopping. \return return_type::OK if the new command interface combination can be switched to,
-   * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
-   */
+ /// Perform switching to the new command interface.
+/**
+ * @brief Performs mode-switching for the new command interface combination.
+ *
+ * This operation is part of the real-time update loop and should be executed quickly.
+ *
+ * @note All starting and stopping interface keys are passed to all components, so the function should return 
+ * `return_type::OK` by default if the interface keys are not relevant for the component.
+ *
+ * @param[in] start_interfaces A vector of string identifiers for the command interfaces starting.
+ * @param[in] stop_interfaces A vector of string identifiers for the command interfaces stopping.
+ * @return `return_type::OK` if the new command interface combination can be switched to, or if the interface key 
+ *         is not relevant to this system.
+ * @return `return_type::ERROR` if the switching cannot proceed.
+ */
+
   virtual return_type perform_command_mode_switch(
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/)
@@ -396,17 +402,18 @@ public:
     return return_type::OK;
   }
 
-  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
-  /**
-   * The data readings from the physical hardware has to be updated
-   * and reflected accordingly in the exported state interfaces.
-   * That is, the data pointed by the interfaces shall be updated.
-   * The method is called in the resource_manager's read loop
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo.
+/**
+ * @brief Updates data readings from the physical hardware and reflects them in the exported state interfaces.
+ *
+ * The data pointed to by the interfaces is updated with the latest readings. This method is called within 
+ * the resource manager's read loop.
+ *
+ * @param[in] time The time at the start of this control loop iteration.
+ * @param[in] period The measured time taken by the last control loop iteration.
+ * @return `return_type::OK` if the read was successful, `return_type::ERROR` otherwise.
+ */
+
   HardwareComponentCycleStatus trigger_read(
     const rclcpp::Time & time, const rclcpp::Duration & period)
   {
@@ -444,28 +451,30 @@ public:
     return status;
   }
 
-  /// Read the current state values from the actuator.
-  /**
-   * The data readings from the physical hardware has to be updated
-   * and reflected accordingly in the exported state interfaces.
-   * That is, the data pointed by the interfaces shall be updated.
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+ /// Read the current state values from the actuator.
+/**
+ * @brief Updates the data readings from the physical actuator and reflects them in the exported state interfaces.
+ *
+ * The data pointed to by the interfaces is updated with the current state values.
+ *
+ * @param[in] time The time at the start of this control loop iteration.
+ * @param[in] period The measured time taken by the last control loop iteration.
+ * @return `return_type::OK` if the read was successful, `return_type::ERROR` otherwise.
+ */
+
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo
-  /**
-   * The physical hardware shall be updated with the latest value from
-   * the exported command interfaces.
-   * The method is called in the resource_manager's write loop
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+  /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo.
+/**
+ * @brief Updates the physical hardware with the latest values from the exported command interfaces.
+ *
+ * This method is called in the resource manager's write loop to reflect the most recent commands.
+ *
+ * @param[in] time The time at the start of this control loop iteration.
+ * @param[in] period The measured time taken by the last control loop iteration.
+ * @return `return_type::OK` if the write was successful, `return_type::ERROR` otherwise.
+ */
+
   HardwareComponentCycleStatus trigger_write(
     const rclcpp::Time & time, const rclcpp::Duration & period)
   {
@@ -492,38 +501,49 @@ public:
     return status;
   }
 
-  /// Write the current command values to the actuator.
-  /**
-   * The physical hardware shall be updated with the latest value from
-   * the exported command interfaces.
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+ /// Write the current command values to the actuator.
+/**
+ * @brief Updates the physical actuator with the latest command values from the exported command interfaces.
+ *
+ * The hardware is updated with the most recent command values to ensure the actuator performs as expected.
+ *
+ * @param[in] time The time at the start of this control loop iteration.
+ * @param[in] period The measured time taken by the last control loop iteration.
+ * @return `return_type::OK` if the write was successful, `return_type::ERROR` otherwise.
+ */
+
   virtual return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Get name of the actuator hardware.
-  /**
-   * \return name.
-   */
+ /// Get name of the actuator hardware.
+/**
+ * @brief Retrieves the name of the actuator hardware.
+ *
+ * @return The name of the actuator hardware.
+ */
+
   const std::string & get_name() const { return info_.name; }
 
-  /// Get name of the actuator hardware group to which it belongs to.
-  /**
-   * \return group name.
-   */
+  /// Get name of the actuator hardware group to which it belongs.
+/**
+ * @brief Retrieves the name of the actuator hardware group.
+ *
+ * @return The name of the actuator hardware group.
+ */
+
   const std::string & get_group_name() const { return info_.group; }
 
   /// Get life-cycle state of the actuator hardware.
-  /**
-   * \return state.
-   */
+/**
+ * @brief Retrieves the life-cycle state of the actuator hardware.
+ *
+ * @return The current life-cycle state of the actuator hardware.
+ */
+
   const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the actuator hardware.
   /**
-   * \return state.
+   * @return state.
    */
   void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
   {
@@ -551,27 +571,34 @@ public:
   }
 
   /// Get the logger of the SystemInterface.
-  /**
-   * \return logger of the SystemInterface.
-   */
+/**
+ * @brief Retrieves the logger associated with the SystemInterface.
+ *
+ * @return The logger of the SystemInterface.
+ */
+
   rclcpp::Logger get_logger() const { return system_logger_; }
 
   /// Get the clock of the SystemInterface.
   /**
-   * \return clock of the SystemInterface.
+   * @return clock of the SystemInterface.
    */
   rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
   /// Get the hardware info of the SystemInterface.
   /**
-   * \return hardware info of the SystemInterface.
+   * @return hardware info of the SystemInterface.
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
   /// Prepare for the activation of the hardware.
-  /**
-   * This method is called before the hardware is activated by the resource manager.
-   */
+/**
+ * @brief Prepares the hardware for activation by the resource manager.
+ *
+ * This method is called before the hardware is activated, allowing for any necessary setup or
+ * configuration before the hardware begins active operation.
+ */
+
   void prepare_for_activation()
   {
     read_return_info_.store(return_type::OK, std::memory_order_release);

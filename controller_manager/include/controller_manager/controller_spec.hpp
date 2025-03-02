@@ -31,12 +31,13 @@ namespace controller_manager
 
 using MovingAverageStatistics =
   libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
-/// Controller Specification
 /**
- * This struct contains both a pointer to a given controller, \ref c, as well
- * as information about the controller, \ref info.
+ * @brief Controller specification.
  *
+ * This struct contains both a pointer to a given controller (`c`) and  
+ * information about the controller (`info`).
  */
+
 struct ControllerSpec
 {
   ControllerSpec()

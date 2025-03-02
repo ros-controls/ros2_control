@@ -23,8 +23,12 @@ namespace hardware_interface
 {
 /// Controller Information
 /**
- * This struct contains information about a given controller.
+ * @brief Holds details about a specific controller.
+ *
+ * This struct stores essential information related to a controller,
+ * including its configuration, status, and relevant parameters.
  */
+
 struct ControllerInfo
 {
   /// Controller name.

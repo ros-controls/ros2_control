@@ -23,7 +23,7 @@
 namespace transmission_interface
 {
 /**
- * \brief Class for loading a simple transmission instance from configuration data.
+ * @brief Class for loading a simple transmission instance from configuration data.
  */
 class SimpleTransmissionLoader : public TransmissionLoader
 {

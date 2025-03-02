@@ -45,15 +45,22 @@ public:
     data_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
-  /// Constructor for 6D FTS with custom interface names.
   /**
-   * Constructor for 6D FTS with custom interface names or FTS with less then six measurement axes,
-   * e.g., 1D and 2D force load cells.
-   * For non existing axes interface is empty string, i.e., ("");
-   *
-   * The name should be in the following order:
-   *   force X, force Y, force Z, torque X, torque Y, torque Z.
-   */
+ * @brief Constructor for a 6D Force-Torque Sensor (FTS) with custom interface names.
+ *
+ * Initializes a 6D FTS with custom interface names or an FTS with fewer than six 
+ * measurement axes (e.g., 1D or 2D force load cells).  
+ * For non-existing axes, the corresponding interface should be an empty string (`""`).
+ *
+ * The names should be provided in the following order:  
+ * - Force X  
+ * - Force Y  
+ * - Force Z  
+ * - Torque X  
+ * - Torque Y  
+ * - Torque Z  
+ */
+
   ForceTorqueSensor(
     const std::string & interface_force_x, const std::string & interface_force_y,
     const std::string & interface_force_z, const std::string & interface_torque_x,
@@ -83,12 +90,14 @@ public:
     check_and_add_interface(interface_torque_z, 5);
   }
 
-  /// Return forces.
   /**
-   * Return forces of a FTS.
-   *
-   * \return array of size 3 with force values (x, y, z).
-   */
+ * @brief Retrieve force values from the Force-Torque Sensor (FTS).
+ *
+ * Returns the measured forces along the X, Y, and Z axes.
+ *
+ * @return An array of size 3 containing force values in the order: [X, Y, Z].
+ */
+
   std::array<double, 3> get_forces() const
   {
     update_data_from_interfaces();
@@ -97,12 +106,14 @@ public:
     return forces;
   }
 
-  /// Return torque.
-  /**
-   * Return torques of a FTS.
-   *
-   * \return array of size 3 with torque values (x, y, z).
-   */
+ /**
+ * @brief Retrieve torque values from the Force-Torque Sensor (FTS).
+ *
+ * Returns the measured torques around the X, Y, and Z axes.
+ *
+ * @return An array of size 3 containing torque values in the order: [X, Y, Z].
+ */
+
   std::array<double, 3> get_torques() const
   {
     update_data_from_interfaces();
@@ -111,14 +122,21 @@ public:
     return torques;
   }
 
-  /// Return Wrench message with forces and torques.
   /**
-   * Constructs and return a wrench message from the current values.
-   * The method assumes that the interface names on the construction are in the following order:
-   *   force X, force Y, force Z, torque X, torque Y, torque Z.
-   *
-   * \return wrench message from values;
-   */
+ * @brief Construct and return a Wrench message with forces and torques.
+ *
+ * Creates a Wrench message using the current force and torque values.  
+ * The method assumes that the interface names provided during construction follow this order:  
+ * - Force X  
+ * - Force Y  
+ * - Force Z  
+ * - Torque X  
+ * - Torque Y  
+ * - Torque Z  
+ *
+ * @return A Wrench message containing the current force and torque values.
+ */
+
   bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
     update_data_from_interfaces();

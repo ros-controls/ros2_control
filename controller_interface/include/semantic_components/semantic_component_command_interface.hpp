@@ -37,12 +37,14 @@ public:
 
   virtual ~SemanticComponentCommandInterface() = default;
 
-  /// Assign loaned command interfaces from the hardware.
   /**
-   * Assign loaned command interfaces on the controller start.
-   *
-   * \param[in] command_interfaces vector of command interfaces provided by the controller.
-   */
+ * @brief Assign loaned command interfaces from the hardware.
+ *
+ * Assigns the provided loaned command interfaces when the controller starts.
+ *
+ * @param[in] command_interfaces A vector of command interfaces provided to the controller.
+ */
+
   bool assign_loaned_command_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> & command_interfaces)
   {
@@ -53,22 +55,28 @@ public:
   /// Release loaned command interfaces from the hardware.
   void release_interfaces() { command_interfaces_.clear(); }
 
-  /// Definition of command interface names for the component.
   /**
-   * The function should be used in "command_interface_configuration()" of a controller to provide
-   * standardized command interface names semantic component.
-   *
-   * \default Default implementation defined command interfaces as "name/NR" where NR is number
-   * from 0 to size of values;
-   * \return list of strings with command interface names for the semantic component.
-   */
+ * @brief Define command interface names for the component.
+ *
+ * This function should be used in `command_interface_configuration()` of a controller 
+ * to provide standardized command interface names for a semantic component.
+ *
+ * @note The default implementation defines command interfaces as `"name/NR"`, 
+ * where `NR` is a number from 0 to the size of the values.
+ *
+ * @return A list of strings containing the command interface names for the semantic component.
+ */
+
   const std::vector<std::string> & get_command_interface_names() const { return interface_names_; }
 
-  /// Return all values.
   /**
-   * \return true if it gets all the values, else false (i.e., invalid size or if the method
-   * ``hardware_interface::LoanedCommandInterface::set_value`` fails).
-   */
+ * @brief Retrieve all values.
+ *
+ * @return true if all values are successfully retrieved, false otherwise 
+ * (e.g., due to invalid size or failure of 
+ * `hardware_interface::LoanedCommandInterface::set_value`).
+ */
+
   bool set_values(const std::vector<double> & values)
   {
     // check we have sufficient memory
@@ -85,10 +93,12 @@ public:
     return all_set;
   }
 
-  /// Set values from MessageInputType
-  /**
-   * \return True if all values were set successfully, false otherwise.
-   */
+ /**
+ * @brief Set values from MessageInputType.
+ *
+ * @return true if all values were set successfully, false otherwise.
+ */
+
   virtual bool set_values_from_message(const MessageInputType & /* message */) = 0;
 
 protected:

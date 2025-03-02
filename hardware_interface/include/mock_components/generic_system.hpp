@@ -61,13 +61,15 @@ public:
   }
 
 protected:
-  /// Use standard interfaces for joints because they are relevant for dynamic behavior
-  /**
-   * By splitting the standard interfaces from other type, the users are able to inherit this
-   * class and simply create small "simulation" with desired dynamic behavior.
-   * The advantage over using Gazebo is that enables "quick & dirty" tests of robot's URDF and
-   * controllers.
-   */
+  /// Use standard interfaces for joints because they are relevant for dynamic behavior.
+/**
+ * @brief Uses standard interfaces for joints to facilitate dynamic behavior.
+ *
+ * By separating standard interfaces from others, this approach allows users to inherit this
+ * class and quickly create simulations with desired dynamic behavior. The advantage over using
+ * Gazebo is that it enables "quick & dirty" tests of the robot's URDF and controllers.
+ */
+
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};

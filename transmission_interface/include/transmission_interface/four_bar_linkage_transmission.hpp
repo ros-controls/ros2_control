@@ -128,7 +128,7 @@ public:
 
   /// Transform variables from actuator to joint space.
   /**
-   * \pre Actuator and joint vectors must have size 2 and point to valid data.
+   * @pre Actuator and joint vectors must have size 2 and point to valid data.
    *  To call this method it is not required that all other data vectors contain valid data, and can
    * even remain empty.
    */
