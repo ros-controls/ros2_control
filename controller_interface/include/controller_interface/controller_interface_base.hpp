@@ -40,12 +40,15 @@ enum class return_type : std::uint8_t
   ERROR = 1,
 };
 
-/// Indicating which interfaces are to be claimed.
 /**
- * One might either claim all available command/state interfaces,
- * specifying a set of individual interfaces,
- * or none at all.
+ * @brief Indicate which interfaces are to be claimed.
+ *
+ * A controller may choose to:
+ * - Claim all available command/state interfaces.
+ * - Specify a set of individual interfaces to be claimed.
+ * - Claim no interfaces at all.
  */
+
 enum class interface_configuration_type : std::uint8_t
 {
   ALL = 0,
@@ -102,63 +105,80 @@ public:
 
   virtual ~ControllerInterfaceBase();
 
-  /// Get configuration for controller's required command interfaces.
   /**
-   * Method used by the controller_manager to get the set of command interfaces used by the
-   * controller. Each controller can use individual method to determine interface names that in
-   * simples case have the following format: `<joint>/<interface>`. The method is called only in
-   * `inactive` or `active` state, i.e., `on_configure` has to be called first. The configuration is
-   * used to check if controller can be activated and to claim interfaces from hardware. The claimed
-   * interfaces are populated in the \ref ControllerInterfaceBase::command_interfaces_
-   * "command_interfaces_" member.
-   *
-   * \returns configuration of command interfaces.
-   */
+ * @brief Retrieve the configuration for the controller's required command interfaces.
+ *
+ * This method is used by the `controller_manager` to obtain the set of command interfaces 
+ * utilized by the controller. Each controller may use its own method to determine interface 
+ * names, which in the simplest case follow the format: `<joint>/<interface>`. 
+ *
+ * This method is called only when the controller is in the `inactive` or `active` state, 
+ * meaning `on_configure` must be called first. The configuration is used to verify whether 
+ * the controller can be activated and to claim interfaces from the hardware. 
+ *
+ * The claimed interfaces are populated in the 
+ * `ControllerInterfaceBase::command_interfaces_` member.
+ *
+ * @return Configuration of command interfaces.
+ */
+
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
-  /// Get configuration for controller's required state interfaces.
   /**
-   * Method used by the controller_manager to get the set of state interface used by the controller.
-   * Each controller can use individual method to determine interface names that in simples case
-   * have the following format: `<joint>/<interface>`.
-   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
-   * called first.
-   * The configuration is used to check if controller can be activated and to claim interfaces from
-   * hardware.
-   * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
-   *
-   * \returns configuration of state interfaces.
-   */
+ * @brief Retrieve the configuration for the controller's required state interfaces.
+ *
+ * This method is used by the `controller_manager` to obtain the set of state interfaces 
+ * utilized by the controller. Each controller may use its own method to determine interface 
+ * names, which in the simplest case follow the format: `<joint>/<interface>`. 
+ *
+ * This method is called only when the controller is in the `inactive` or `active` state, 
+ * meaning `on_configure` must be called first. The configuration is used to verify whether 
+ * the controller can be activated and to claim interfaces from the hardware. 
+ *
+ * The claimed interfaces are populated in the 
+ * `ControllerInterfaceBase::state_interfaces_` member.
+ *
+ * @return Configuration of state interfaces.
+ */
+
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
-  /// Method that assigns the Loaned interfaces to the controller.
   /**
-   * Method used by the controller_manager to assign the interfaces to the controller.
-   * \note When this method is overridden, the user has to also implement the `release_interfaces`
-   * method by overriding it to release the interfaces.
-   *
-   * \param[in] command_interfaces vector of command interfaces to be assigned to the controller.
-   * \param[in] state_interfaces vector of state interfaces to be assigned to the controller.
-   */
+ * @brief Assign loaned interfaces to the controller.
+ *
+ * This method is used by the `controller_manager` to assign command and state interfaces 
+ * to the controller.
+ *
+ * @note When overriding this method, the user must also override the `release_interfaces` 
+ *       method to properly release the assigned interfaces.
+ *
+ * @param[in] command_interfaces Vector of command interfaces to be assigned to the controller.
+ * @param[in] state_interfaces Vector of state interfaces to be assigned to the controller.
+ */
+
   virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
 
-  /// Method that releases the Loaned interfaces from the controller.
-  /**
-   * Method used by the controller_manager to release the interfaces from the controller.
-   */
+ /**
+ * @brief Release loaned interfaces from the controller.
+ *
+ * This method is used by the `controller_manager` to release the interfaces assigned 
+ * to the controller.
+ */
+
   virtual void release_interfaces();
 
   return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
 
-  /// Custom configure method to read additional parameters for controller-nodes
-  /*
-   * Override default implementation for configure of LifecycleNode to get parameters.
-   */
+  /**
+ * @brief Custom configure method to read additional parameters for controller nodes.
+ *
+ * Overrides the default `LifecycleNode` configuration method to retrieve parameters.
+ */
+
   const rclcpp_lifecycle::State & configure();
 
   /// Extending interface with initialization method which is individual for each controller
@@ -225,13 +245,16 @@ public:
     return node_options;
   }
 
-  /// Declare and initialize a parameter with a type.
   /**
-   *
-   * Wrapper function for templated node's declare_parameter() which checks if
-   * parameter is already declared.
-   * For use in all components that inherit from ControllerInterfaceBase
-   */
+ * @brief Declare and initialize a parameter with a specified type.
+ *
+ * Wrapper function for the templated `declare_parameter()` method of the node, 
+ * which checks if the parameter is already declared.
+ *
+ * This function is intended for use in all components that inherit from 
+ * `ControllerInterfaceBase`.
+ */
+
   template <typename ParameterT>
   auto auto_declare(const std::string & name, const ParameterT & default_value)
   {
@@ -248,12 +271,14 @@ public:
   // Methods for chainable controller types with default values so we can put all controllers into
   // one list in Controller Manager
 
-  /// Get information if a controller is chainable.
   /**
-   * Get information if a controller is chainable.
-   *
-   * \returns true is controller is chainable and false if it is not.
-   */
+ * @brief Check whether the controller is chainable.
+ *
+ * Determines if the controller supports chaining with other controllers.
+ *
+ * @return `true` if the controller is chainable, `false` otherwise.
+ */
+
   virtual bool is_chainable() const = 0;
 
   /**
@@ -284,14 +309,16 @@ public:
    */
   virtual bool set_chained_mode(bool chained_mode) = 0;
 
-  /// Get information if a controller is currently in chained mode.
   /**
-   * Get information about controller if it is currently used in chained mode. In chained mode only
-   * internal interfaces are available and all subscribers are expected to be disabled. This
-   * prevents concurrent writing to controller's inputs from multiple sources.
-   *
-   * \returns true is controller is in chained mode and false if it is not.
-   */
+ * @brief Check whether the controller is currently in chained mode.
+ *
+ * Determines if the controller is operating in chained mode. In this mode, only internal 
+ * interfaces are available, and all subscribers are expected to be disabled. This prevents 
+ * concurrent writing to the controller's inputs from multiple sources.
+ *
+ * @return `true` if the controller is in chained mode, `false` otherwise.
+ */
+
   virtual bool is_in_chained_mode() const = 0;
 
   /**
@@ -308,10 +335,14 @@ public:
 
   std::string get_name() const;
 
-  /// Enable or disable introspection of the controller.
-  /**
-   * \param[in] enable Enable introspection if true, disable otherwise.
-   */
+ /**
+ * @brief Enable or disable introspection of the controller.
+ *
+ * Controls whether introspection is enabled for the controller.
+ *
+ * @param[in] enable Set to `true` to enable introspection, `false` to disable it.
+ */
+
   void enable_introspection(bool enable);
 
 protected:

@@ -672,17 +672,19 @@ public:
     interface->registerIntrospection();
     return interface_name;
   }
-  /// Adds exported state interfaces into internal storage.
   /**
-   * Adds state interfaces to the internal storage. State interfaces exported from hardware or
-   * chainable controllers are moved to the map with name-interface pairs and available list's
-   * size is increased to reserve storage when interface change theirs status in real-time
-   * control loop.
-   *
-   * \param[interfaces] list of state interface to add into storage.
-   * \returns list of interface names that are added into internal storage. The output is used to
-   * avoid additional iterations to cache interface names, e.g., for initializing info structures.
-   */
+ * @brief Adds exported state interfaces into internal storage.
+ *
+ * This method moves state interfaces exported from hardware or chainable controllers
+ * into an internal storage map with name-interface pairs. Additionally, it increases 
+ * the available list's size to reserve storage for real-time control loop updates.
+ *
+ * @param[in] interfaces List of state interfaces to add into storage.
+ * @return A list of interface names that have been added to internal storage. 
+ *         This output helps avoid extra iterations for caching interface names, 
+ *         such as when initializing info structures.
+ */
+
   std::vector<std::string> add_state_interfaces(
     std::vector<StateInterface::ConstSharedPtr> & interfaces)
   {
@@ -707,12 +709,15 @@ public:
     return interface_names;
   }
 
-  /// Removes state interfaces from internal storage.
   /**
-   * State interface are removed from the maps with theirs storage and their claimed status.
-   *
-   * \param[interface_names] list of state interface names to remove from storage.
-   */
+ * @brief Removes state interfaces from internal storage.
+ *
+ * This method removes state interfaces from internal storage maps, including their 
+ * allocated storage and claimed status.
+ *
+ * @param[in] interface_names List of state interface names to remove from storage.
+ */
+
   void remove_state_interfaces(const std::vector<std::string> & interface_names)
   {
     for (const auto & interface : interface_names)
@@ -722,17 +727,20 @@ public:
     }
   }
 
-  /// Adds exported command interfaces into internal storage.
   /**
-   * Add command interfaces to the internal storage. Command interfaces exported from hardware or
-   * chainable controllers are moved to the map with name-interface pairs, the interface names are
-   * added to the claimed map and available list's size is increased to reserve storage when
-   * interface change theirs status in real-time control loop.
-   *
-   * \param[interfaces] list of command interface to add into storage.
-   * \returns list of interface names that are added into internal storage. The output is used to
-   * avoid additional iterations to cache interface names, e.g., for initializing info structures.
-   */
+ * @brief Adds exported command interfaces into internal storage.
+ *
+ * This method moves command interfaces exported from hardware or chainable controllers 
+ * into an internal storage map with name-interface pairs. Additionally, it adds the 
+ * interface names to the claimed map and increases the available list's size to reserve 
+ * storage for real-time control loop updates.
+ *
+ * @param[in] interfaces List of command interfaces to add into storage.
+ * @return A list of interface names that have been added to internal storage. 
+ *         This output helps avoid extra iterations for caching interface names, 
+ *         such as when initializing info structures.
+ */
+
   std::vector<std::string> add_command_interfaces(std::vector<CommandInterface> & interfaces)
   {
     std::vector<std::string> interface_names;
@@ -768,12 +776,15 @@ public:
     return interface_names;
   }
 
-  /// Removes command interfaces from internal storage.
-  /**
-   * Command interface are removed from the maps with theirs storage and their claimed status.
-   *
-   * \param[interface_names] list of command interface names to remove from storage.
-   */
+ /**
+ * @brief Removes command interfaces from internal storage.
+ *
+ * This method removes command interfaces from internal storage maps, including their 
+ * allocated storage and claimed status.
+ *
+ * @param[in] interface_names List of command interface names to remove from storage.
+ */
+
   void remove_command_interfaces(const std::vector<std::string> & interface_names)
   {
     for (const auto & interface : interface_names)
@@ -962,16 +973,21 @@ public:
     return hw_group_state_.at(group_name);
   }
 
-  /// Gets the logger for the resource storage
   /**
-   * \return logger of the resource storage
-   */
+ * @brief Gets the logger for the resource storage.
+ *
+ * This method retrieves the logger instance associated with the resource storage.
+ *
+ * @return The logger of the resource storage.
+ */
+
   const rclcpp::Logger & get_logger() const { return rm_logger_; }
 
-  /// Gets the clock for the resource storage
   /**
-   * \return clock of the resource storage
-   */
+ * @brief Gets the clock for the resource storage.
+ * @return The clock of the resource storage.
+ */
+
   rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
   // hardware plugins

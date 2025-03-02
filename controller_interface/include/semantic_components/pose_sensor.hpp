@@ -40,12 +40,14 @@ public:
              {name + '/' + "orientation.w"}})
   {
   }
-  /// Update and return position.
-  /*!
-   * Update and return current pose position from state interfaces.
-   *
-   * \return Array of position coordinates.
-   */
+  /**
+ * @brief Update and retrieve the current position.
+ *
+ * Updates the current pose position using state interfaces and returns the position coordinates.
+ *
+ * @return An array containing the current position coordinates.
+ */
+
   std::array<double, 3> get_position() const
   {
     update_data_from_interfaces();
@@ -54,12 +56,14 @@ public:
     return position;
   }
 
-  /// Update and return orientation
-  /*!
-   * Update and return current pose orientation from state interfaces.
-   *
-   * \return Array of orientation coordinates in xyzw convention.
-   */
+  /**
+ * @brief Update and retrieve the current orientation.
+ *
+ * Updates the current pose orientation using state interfaces and returns the orientation coordinates.
+ *
+ * @return An array containing the orientation coordinates in XYZW convention.
+ */
+
   std::array<double, 4> get_orientation() const
   {
     update_data_from_interfaces();
@@ -68,10 +72,12 @@ public:
     return orientation;
   }
 
-  /// Fill pose message with current values.
   /**
-   * Fill a pose message with current position and orientation from the state interfaces.
-   */
+ * @brief Populate a pose message with the current values.
+ *
+ * Fills a pose message using the current position and orientation obtained from state interfaces.
+ */
+
   bool get_values_as_message(geometry_msgs::msg::Pose & message) const
   {
     update_data_from_interfaces();

@@ -42,36 +42,31 @@ namespace hardware_interface
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-/// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
+/// Virtual class for integrating a stand-alone sensor into ros2_control.
 /**
- * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
+ * @brief Base class for standalone sensor integration in ros2_control.
  *
- * Methods return values have type
- * rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn with the following
- * meaning:
+ * Typical examples include Force-Torque Sensors (FTS) and Inertial Measurement Units (IMU).
  *
- * \returns CallbackReturn::SUCCESS method execution was successful.
- * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
- * \returns CallbackReturn::ERROR critical error has happened that should be managed in
- * "on_error" method.
+ * Methods return values of type 
+ * `rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn` with the following meanings:
  *
- * The hardware ends after each method in a state with the following meaning:
+ * @returns `CallbackReturn::SUCCESS` - Method executed successfully.
+ * @returns `CallbackReturn::FAILURE` - Execution failed but can be retried.
+ * @returns `CallbackReturn::ERROR` - Critical error requiring handling in `on_error`.
  *
- * UNCONFIGURED (on_init, on_cleanup):
- *   Hardware is initialized but communication is not started and therefore no interface is
- * available.
+ * Hardware states after each method execution:
  *
- * INACTIVE (on_configure, on_deactivate):
- *   Communication with the hardware is started and it is configured.
- *   States can be read.
- *
- * FINALIZED (on_shutdown):
- *   Hardware interface is ready for unloading/destruction.
- *   Allocated memory is cleaned up.
- *
- * ACTIVE (on_activate):
+ * - **UNCONFIGURED** (on_init, on_cleanup):  
+ *   Hardware is initialized but not communicating; no interfaces are available.
+ * - **INACTIVE** (on_configure, on_deactivate):  
+ *   Communication is established, hardware is configured, and states can be read.
+ * - **FINALIZED** (on_shutdown):  
+ *   Hardware interface is ready for unloading; allocated memory is cleaned up.
+ * - **ACTIVE** (on_activate):  
  *   States can be read.
  */
+
 class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
@@ -82,26 +77,31 @@ public:
   {
   }
 
-  /// SensorInterface copy constructor is actively deleted.
-  /**
-   * Hardware interfaces are having a unique ownership and thus can't be copied in order to avoid
-   * failed or simultaneous access to hardware.
-   */
+ /// Deleted copy constructor for SensorInterface.
+/**
+ * @brief Prevents copying of SensorInterface to ensure unique ownership.
+ *
+ * Hardware interfaces require unique ownership to prevent failed or simultaneous 
+ * access to hardware resources.
+ */
+
   SensorInterface(const SensorInterface & other) = delete;
 
   SensorInterface(SensorInterface && other) = delete;
 
   virtual ~SensorInterface() = default;
 
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] clock_interface pointer to the clock interface.
-   * \param[in] logger_interface pointer to the logger interface.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
+  /// Initializes the hardware interface using data from the robot's URDF, clock, and logger.
+/**
+ * @brief Sets up the hardware interface with parsed URDF data and system interfaces.
+ *
+ * @param[in] hardware_info Structure containing data from the URDF.
+ * @param[in] clock_interface Pointer to the clock interface.
+ * @param[in] logger_interface Pointer to the logger interface.
+ * @return `CallbackReturn::SUCCESS` if initialization succeeds.
+ * @return `CallbackReturn::ERROR` if data is missing or an error occurs.
+ */
+
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
@@ -122,12 +122,15 @@ public:
     return on_init(hardware_info);
   };
 
-  /// Initialization of the hardware interface from data parsed from the robot's URDF.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
+  /// Initializes the hardware interface from parsed robot URDF data.
+/**
+ * @brief Sets up the hardware interface using the provided URDF data.
+ *
+ * @param[in] hardware_info Structure containing data from the URDF.
+ * @return `CallbackReturn::SUCCESS` if data is successfully parsed and available.
+ * @return `CallbackReturn::ERROR` if data is missing or an error occurs.
+ */
+
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
@@ -135,19 +138,20 @@ public:
     parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
     return CallbackReturn::SUCCESS;
   };
+/// Exports all state interfaces for this hardware interface.
+/**
+ * @brief Exports state interfaces, either via return value or through `on_export_state_interfaces()`.
+ *
+ * If an empty vector is returned, the `on_export_state_interfaces()` method is invoked.
+ * If a vector with state interfaces is returned, the state interfaces are exported directly,
+ * and ownership is transferred to the resource manager. Afterward, functions like `set_command(...)`, 
+ * `get_command(...)`, etc., cannot be used.
+ *
+ * @note Ownership of the state interfaces is transferred to the caller.
+ *
+ * @return A vector of state interfaces.
+ */
 
-  /// Exports all state interfaces for this hardware interface.
-  /**
-   * Old way of exporting the StateInterfaces. If a empty vector is returned then
-   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
-   * then the exporting of the StateInterfaces is only done with this function and the ownership is
-   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
-   * be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled "
@@ -160,12 +164,16 @@ public:
     return {};
   }
 
-  /**
-   * Override this method to export custom StateInterfaces which are not defined in the URDF file.
-   * Those interfaces will be added to the unlisted_state_interfaces_ map.
-   *
-   * \return vector of descriptions to the unlisted StateInterfaces
-   */
+/// Override to export custom StateInterfaces not defined in the URDF.
+/**
+ * @brief Adds custom StateInterfaces to the unlisted_state_interfaces_ map.
+ *
+ * Override this method to export additional StateInterfaces that are not defined in the URDF file.
+ * These interfaces will be added to the `unlisted_state_interfaces_` map.
+ *
+ * @return A vector of descriptions for the unlisted StateInterfaces.
+ */
+
   virtual std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions()
   {
@@ -173,13 +181,16 @@ public:
     return {};
   }
 
-  /**
-   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
-   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
-   * assigned here and resides in the sensor_interface.
-   *
-   * \return vector of shared pointers to the created and stored StateInterfaces
-   */
+/// Default implementation for exporting StateInterfaces.
+/**
+ * @brief Creates and stores StateInterfaces based on the InterfaceDescription.
+ *
+ * This default implementation generates the StateInterfaces and assigns the memory used by the controllers
+ * and hardware to reside in the `sensor_interface`.
+ *
+ * @return A vector of shared pointers to the created and stored StateInterfaces.
+ */
+
   virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
   {
     // import the unlisted interfaces
@@ -222,16 +233,18 @@ public:
     return state_interfaces;
   }
 
-  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
-  /**
-   * The data readings from the physical hardware has to be updated
-   * and reflected accordingly in the exported state interfaces.
-   * That is, the data pointed by the interfaces shall be updated.
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+/// Triggers the read method synchronously or asynchronously based on HardwareInfo.
+/**
+ * @brief Updates the state interfaces with the latest data from the physical hardware.
+ *
+ * The data readings from the hardware must be updated and reflected in the exported state interfaces.
+ * Specifically, the data pointed to by the interfaces will be updated.
+ *
+ * @param[in] time The time at the start of the control loop iteration.
+ * @param[in] period The duration of the last control loop iteration.
+ * @return `return_type::OK` if the read was successful, `return_type::ERROR` otherwise.
+ */
+
   HardwareComponentCycleStatus trigger_read(
     const rclcpp::Time & time, const rclcpp::Duration & period)
   {
@@ -269,34 +282,45 @@ public:
     return status;
   }
 
-  /// Read the current state values from the actuator.
-  /**
-   * The data readings from the physical hardware has to be updated
-   * and reflected accordingly in the exported state interfaces.
-   * That is, the data pointed by the interfaces shall be updated.
-   *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
-   */
+ /// Reads the current state values from the actuator.
+/**
+ * @brief Updates the state interfaces with the latest data from the actuator.
+ *
+ * The data readings from the physical hardware must be updated and reflected in the exported state interfaces.
+ * Specifically, the data pointed to by the interfaces will be updated.
+ *
+ * @param[in] time The time at the start of the control loop iteration.
+ * @param[in] period The duration of the last control loop iteration.
+ * @return `return_type::OK` if the read was successful, `return_type::ERROR` otherwise.
+ */
+
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Get name of the actuator hardware.
-  /**
-   * \return name.
-   */
+ /// Gets the name of the actuator hardware.
+/**
+ * @brief Retrieves the name of the actuator hardware.
+ *
+ * @return The name of the actuator hardware.
+ */
+
   const std::string & get_name() const { return info_.name; }
 
-  /// Get name of the actuator hardware group to which it belongs to.
-  /**
-   * \return group name.
-   */
+  /// Gets the name of the actuator hardware group.
+/**
+ * @brief Retrieves the name of the hardware group to which the actuator belongs.
+ *
+ * @return The name of the actuator hardware group.
+ */
+
   const std::string & get_group_name() const { return info_.group; }
 
-  /// Get life-cycle state of the actuator hardware.
-  /**
-   * \return state.
-   */
+ /// Gets the lifecycle state of the actuator hardware.
+/**
+ * @brief Retrieves the lifecycle state of the actuator hardware.
+ *
+ * @return The lifecycle state of the actuator hardware.
+ */
+
   const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the actuator hardware.
@@ -318,28 +342,40 @@ public:
     return sensor_states_map_.at(interface_name)->get_value();
   }
 
-  /// Get the logger of the SensorInterface.
-  /**
-   * \return logger of the SensorInterface.
-   */
+ /// Gets the logger of the SensorInterface.
+/**
+ * @brief Retrieves the logger instance associated with the SensorInterface.
+ *
+ * @return The logger of the SensorInterface.
+ */
+
   rclcpp::Logger get_logger() const { return sensor_logger_; }
 
-  /// Get the clock of the SensorInterface.
-  /**
-   * \return clock of the SensorInterface.
-   */
+  /// Gets the clock of the SensorInterface.
+/**
+ * @brief Retrieves the clock instance associated with the SensorInterface.
+ *
+ * @return The clock of the SensorInterface.
+ */
+
   rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
-  /// Get the hardware info of the SensorInterface.
-  /**
-   * \return hardware info of the SensorInterface.
-   */
+/// Gets the hardware info of the SensorInterface.
+/**
+ * @brief Retrieves the hardware information associated with the SensorInterface.
+ *
+ * @return The hardware info of the SensorInterface.
+ */
+
   const HardwareInfo & get_hardware_info() const { return info_; }
 
-  /// Enable or disable introspection of the sensor hardware.
-  /**
-   * \param[in] enable Enable introspection if true, disable otherwise.
-   */
+  /// Enables or disables introspection of the sensor hardware.
+/**
+ * @brief Controls the introspection of the sensor hardware.
+ *
+ * @param[in] enable `true` to enable introspection, `false` to disable it.
+ */
+
   void enable_introspection(bool enable)
   {
     if (enable)

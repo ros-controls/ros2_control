@@ -82,10 +82,12 @@ public:
 
   virtual ~ControllerManager();
 
-  /// Shutdown all controllers in the controller manager.
   /**
-   * \return true if all controllers are successfully shutdown, false otherwise.
-   */
+ * @brief Shutdown all controllers in the controller manager.
+ *
+ * @return `true` if all controllers are successfully shut down, `false` otherwise.
+ */
+
   bool shutdown_controllers();
 
   void robot_description_callback(const std_msgs::msg::String & msg);
@@ -95,12 +97,16 @@ public:
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
-  /// load_controller loads a controller by name, the type must be defined in the parameter server.
-  /**
-   * \param[in] controller_name as a string.
-   * \return controller
-   * \see Documentation in controller_manager_msgs/LoadController.srv
-   */
+ /**
+ * @brief Load a controller by name.
+ *
+ * The controller type must be defined in the parameter server.
+ *
+ * @param[in] controller_name Name of the controller as a string.
+ * @return Loaded controller.
+ * @see Documentation in controller_manager_msgs/LoadController.srv
+ */
+
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name);
 
@@ -130,84 +136,107 @@ public:
     return add_controller_impl(controller_spec);
   }
 
-  /// configure_controller Configure controller by name calling their "configure" method.
   /**
-   * \param[in] controller_name as a string.
-   * \return configure controller response
-   * \see Documentation in controller_manager_msgs/ConfigureController.srv
-   */
+ * @brief Configure a controller by name.
+ *
+ * Calls the "configure" method of the specified controller.
+ *
+ * @param[in] controller_name Name of the controller as a string.
+ * @return Response of the configure controller operation.
+ * @see Documentation in controller_manager_msgs/ConfigureController.srv
+ */
+
   controller_interface::return_type configure_controller(const std::string & controller_name);
 
-  /// switch_controller Deactivates some controllers and activates others.
-  /**
-   * \param[in] activate_controllers is a list of controllers to activate.
-   * \param[in] deactivate_controllers is a list of controllers to deactivate.
-   * \param[in] set level of strictness (BEST_EFFORT or STRICT)
-   * \see Documentation in controller_manager_msgs/SwitchController.srv
-   */
+ /**
+ * @brief Switch controllers by deactivating some and activating others.
+ *
+ * This method deactivates a list of specified controllers and activates another list of controllers.
+ *
+ * @param[in] activate_controllers List of controllers to activate.
+ * @param[in] deactivate_controllers List of controllers to deactivate.
+ * @param[in] strictness Level of strictness (BEST_EFFORT or STRICT).
+ * @see Documentation in controller_manager_msgs/SwitchController.srv
+ */
+
   controller_interface::return_type switch_controller(
     const std::vector<std::string> & activate_controllers,
     const std::vector<std::string> & deactivate_controllers, int strictness,
     bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
-  /// Read values to state interfaces.
-  /**
-   * Read current values from hardware to state interfaces.
-   * **The method called in the (real-time) control loop.**
-   *
-   * \param[in]  time    The time at the start of this control loop iteration
-   * \param[in]  period  The measured period of the last control loop iteration
-   */
+/**
+ * @brief Read current values from hardware to state interfaces.
+ *
+ * This method is called during the real-time control loop to update state interfaces with 
+ * the latest values from the hardware.
+ *
+ * @param[in] time The time at the start of the current control loop iteration.
+ * @param[in] period The measured duration of the last control loop iteration.
+ */
+
   void read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
-  /// Run update on controllers
-  /**
-   * Call update of all controllers.
-   * **The method called in the (real-time) control loop.**
-   *
-   * \param[in]  time    The time at the start of this control loop iteration
-   * \param[in]  period  The measured period of the last control loop iteration
-   */
+ /**
+ * @brief Execute update on all controllers.
+ *
+ * Calls the update method for all controllers during the real-time control loop.
+ *
+ * @param[in] time The time at the start of the current control loop iteration.
+ * @param[in] period The measured duration of the last control loop iteration.
+ */
+
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period);
 
-  /// Write values from command interfaces.
   /**
-   * Write values from command interface into hardware.
-   * **The method called in the (real-time) control loop.**
-   *
-   * \param[in]  time    The time at the start of this control loop iteration
-   * \param[in]  period  The measured period of the last control loop iteration
-   */
+ * @brief Write values from command interfaces to hardware.
+ *
+ * Transfers values from the command interfaces to the hardware during the real-time control loop.
+ *
+ * @param[in] time The time at the start of the current control loop iteration.
+ * @param[in] period The measured duration of the last control loop iteration.
+ */
+
   void write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
-  /// Deterministic (real-time safe) callback group, e.g., update function.
-  /**
-   * Deterministic (real-time safe) callback group for the update function. Default behavior
-   * is read hardware, update controller and finally write new values to the hardware.
-   */
+ /**
+ * @brief Deterministic (real-time safe) callback group for the update function.
+ *
+ * This callback group ensures real-time safe execution for the update function. The default 
+ * behavior follows a structured sequence:
+ * 1. Read values from the hardware.
+ * 2. Update the controller.
+ * 3. Write new values back to the hardware.
+ */
+
   // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  /// Interface for external components to check if Resource Manager is initialized.
-  /**
-   * Checks if components in Resource Manager are loaded and initialized.
-   * \returns true if they are initialized, false otherwise.
-   */
+ /**
+ * @brief Checks if the Resource Manager is initialized.
+ *
+ * This method allows external components to verify whether all components 
+ * in the Resource Manager have been successfully loaded and initialized.
+ *
+ * @return true if the Resource Manager is initialized, false otherwise.
+ */
+
   bool is_resource_manager_initialized() const
   {
     return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
-  /// Update rate of the main control loop in the controller manager.
-  /**
-   * Update rate of the main control loop in the controller manager.
-   * The method is used for per-controller update rate support.
-   *
-   * \returns update rate of the controller manager.
-   */
+ /**
+ * @brief Gets the update rate of the main control loop in the controller manager.
+ *
+ * This method retrieves the update rate of the main control loop, which is 
+ * used to support per-controller update rates.
+ *
+ * @return The update rate of the controller manager.
+ */
+
   unsigned int get_update_rate() const;
 
 protected:
@@ -218,52 +247,64 @@ protected:
 
   void manage_switch();
 
-  /// Deactivate chosen controllers from real-time controller list.
   /**
-   * Deactivate controllers with names \p controllers_to_deactivate from list \p rt_controller_list.
-   * The controller list will be iterated as many times as there are controller names.
-   *
-   * \param[in] rt_controller_list controllers in the real-time list.
-   * \param[in] controllers_to_deactivate names of the controller that have to be deactivated.
-   */
+ * @brief Deactivates selected controllers from the real-time controller list.
+ *
+ * This method deactivates controllers specified in \p controllers_to_deactivate 
+ * from the given \p rt_controller_list. The controller list will be iterated as 
+ * many times as there are controller names.
+ *
+ * @param[in] rt_controller_list List of controllers in the real-time system.
+ * @param[in] controllers_to_deactivate Names of controllers to be deactivated.
+ */
+
   void deactivate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_deactivate);
 
-  /**
-   * Switch chained mode for all the controllers with respect to the following cases:
-   * - a preceding controller is getting activated --> switch controller to chained mode;
-   * - all preceding controllers are deactivated --> switch controller from chained mode.
-   *
-   * \param[in] chained_mode_switch_list list of controller to switch chained mode.
-   * \param[in] to_chained_mode flag if controller should be switched *to* or *from* chained mode.
-   */
+ /**
+ * @brief Switches chained mode for all controllers based on activation state.
+ *
+ * This method updates the chained mode of controllers according to the following conditions:
+ * - A preceding controller is being activated → switch the controller *to* chained mode.
+ * - All preceding controllers are deactivated → switch the controller *from* chained mode.
+ *
+ * @param[in] chained_mode_switch_list List of controllers to switch chained mode.
+ * @param[in] to_chained_mode Flag indicating whether to switch *to* (`true`) or *from* (`false`) chained mode.
+ */
+
   void switch_chained_mode(
     const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
-  /// Activate chosen controllers from real-time controller list.
   /**
-   * Activate controllers with names \p controllers_to_activate from list \p rt_controller_list.
-   * The controller list will be iterated as many times as there are controller names.
-   *
-   * \param[in] rt_controller_list controllers in the real-time list.
-   * \param[in] controllers_to_activate names of the controller that have to be activated.
-   */
+ * @brief Activates selected controllers from the real-time controller list.
+ *
+ * This method activates controllers specified in \p controllers_to_activate from the 
+ * given \p rt_controller_list. The controller list will be iterated as many times as 
+ * there are controller names to ensure proper activation.
+ *
+ * @param[in] rt_controller_list List of controllers in the real-time system.
+ * @param[in] controllers_to_activate Names of the controllers that should be activated.
+ */
+
   void activate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_activate);
 
-  /// Activate chosen controllers from real-time controller list.
-  /**
-   * Activate controllers with names \p controllers_to_activate from list \p rt_controller_list.
-   * The controller list will be iterated as many times as there are controller names.
-   *
-   * *NOTE*: There is currently not difference to `activate_controllers` method.
-   * Check https://github.com/ros-controls/ros2_control/issues/263 for more information.
-   *
-   * \param[in] rt_controller_list controllers in the real-time list.
-   * \param[in] controllers_to_activate names of the controller that have to be activated.
-   */
+ /**
+ * @brief Activates the specified controllers from the real-time controller list.
+ *
+ * This method activates controllers listed in \p controllers_to_activate from the provided 
+ * \p rt_controller_list. The controller list is iterated as many times as there are 
+ * controller names to ensure activation.
+ *
+ * @note Currently, this method behaves identically to `activate_controllers`.
+ *       See <https://github.com/ros-controls/ros2_control/issues/263> for details.
+ *
+ * @param[in] rt_controller_list List of controllers in the real-time system.
+ * @param[in] controllers_to_activate Names of the controllers to activate.
+ */
+
   void activate_controllers_asap(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_activate);
@@ -344,66 +385,76 @@ private:
    */
   void propagate_deactivation_of_chained_mode(const std::vector<ControllerSpec> & controllers);
 
-  /// Check if all the following controllers will be in active state and in the chained mode
-  /// after controllers' switch.
   /**
-   * Check recursively that all following controllers of the @controller_it
-   * - are already active,
-   * - will not be deactivated,
-   * - or will be activated.
-   * The following controllers are added to the request to switch in the chained mode or removed
-   * from the request to switch from the chained mode.
-   *
-   * For each controller the whole chain of following controllers is checked.
-   *
-   * NOTE: The automatically adding of following controller into activate list is not implemented
-   * yet.
-   *
-   * \param[in] controllers list with controllers.
-   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
-   * controllers will be automatically added to the activate request list if they are not in the
-   * deactivate request.
-   * \param[in] controller_it iterator to the controller for which the following controllers are
-   * checked.
-   *
-   * \returns return_type::OK if all following controllers pass the checks, otherwise
-   * return_type::ERROR.
-   */
+ * @brief Checks the activation state and chained mode of subsequent controllers.
+ *
+ * Validates that all controllers following \p controller_it:
+ * - Are already active,
+ * - Will not be deactivated,
+ * - Or will be activated.
+ *
+ * If necessary, subsequent controllers are added to or removed from the request 
+ * to switch in/out of chained mode. The entire chain of controllers is verified.
+ *
+ * @note Automatic addition of subsequent controllers to the activation list 
+ *       is not yet implemented.
+ *
+ * @param[in] controllers List of controllers.
+ * @param[in] strictness If `"MANIPULATE_CONTROLLERS_CHAIN"`, subsequent controllers 
+ *                       are automatically added to the activation request unless 
+ *                       already in the deactivation request.
+ * @param[in] controller_it Iterator to the controller whose subsequent controllers 
+ *                          are being checked.
+ *
+ * @return `return_type::OK` if all checks pass, otherwise `return_type::ERROR`.
+ */
+
+
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
-   * Check that all preceding controllers of the @controller_it
-   * - are inactive,
-   * - will be deactivated,
-   * - and will not be activated.
-   *
-   * NOTE: The automatically adding of preceding controllers into deactivate list is not implemented
-   * yet.
-   *
-   * \param[in] controllers list with controllers.
-   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all preceding
-   * controllers will be automatically added to the deactivate request list.
-   * \param[in] controller_it iterator to the controller for which the preceding controllers are
-   * checked.
-   *
-   * \returns return_type::OK if all preceding controllers pass the checks, otherwise
-   * return_type::ERROR.
-   */
+ * @brief Validate that all preceding controllers will be inactive after a controllers' switch.
+ *
+ * This method checks whether all controllers preceding \p controller_it:
+ * - Are currently inactive,
+ * - Will be deactivated,
+ * - And will not be activated.
+ *
+ * If any of these conditions are not met, the validation fails.
+ *
+ * @note Automatic addition of preceding controllers to the deactivation request list 
+ *       is not yet implemented.
+ *
+ * @param[in] controllers List of controllers.
+ * @param[in] strictness If set to `"MANIPULATE_CONTROLLERS_CHAIN"`, all preceding controllers 
+ *                       will be automatically added to the deactivation request list.
+ * @param[in] controller_it Iterator pointing to the controller whose preceding controllers 
+ *                          are being checked.
+ *
+ * @return `return_type::OK` if all preceding controllers pass the checks, otherwise 
+ *         `return_type::ERROR`.
+ */
+
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
   /// Checks if the fallback controllers of the given controllers are in the right
-  /// state, so they can be activated immediately
   /**
-   * \param[in] controllers is a list of controllers to activate.
-   * \param[in] controller_it is the iterator pointing to the controller to be activated.
-   * \return return_type::OK if all fallback controllers are in the right state, otherwise
-   * return_type::ERROR.
-   */
+ * @brief Ensure that fallback controllers are in the correct state for immediate activation.
+ *
+ * This function checks whether all fallback controllers are in a state that allows 
+ * them to be activated immediately.
+ *
+ * @param[in] controllers List of controllers to activate.
+ * @param[in] controller_it Iterator pointing to the specific controller to be activated.
+ *
+ * @return `return_type::OK` if all fallback controllers are in the correct state, 
+ *         otherwise `return_type::ERROR`.
+ */
+
   controller_interface::return_type check_fallback_controllers_state_pre_activation(
     const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
 
@@ -462,11 +513,14 @@ private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>
     chainable_loader_;
 
-  /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
-   * Best effort (non real-time safe) callback group for callbacks that can possibly break
-   * real-time requirements, for example, service callbacks.
-   */
+ * @brief Best-effort (non real-time safe) callback group.
+ *
+ * This callback group is intended for operations that do not meet real-time 
+ * constraints. It is suitable for tasks that may introduce delays or 
+ * unpredictability, such as service callbacks.
+ */
+
   rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
 
   /**
@@ -485,12 +539,17 @@ private:
     // *INDENT-OFF*
   public:
     // *INDENT-ON*
-    /// update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
     /**
-     * \warning Should only be called by the RT thread, no one should modify the
-     * updated list while it's being used
-     * \return reference to the updated list
-     */
+ * @brief Updates and retrieves the real-time usage list.
+ *
+ * This function replaces the "used by RT" list with the "updated" list.
+ *
+ * @warning This function should only be called by the real-time (RT) thread.
+ * Modifying the updated list while it is being used may lead to unpredictable behavior.
+ *
+ * @return Reference to the updated list.
+ */
+
     std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
 
     /**
@@ -504,12 +563,14 @@ private:
     std::vector<ControllerSpec> & get_unused_list(
       const std::lock_guard<std::recursive_mutex> & guard);
 
-    /// get_updated_list Returns a const reference to the most updated list.
     /**
-     * \warning May or may not being used by the realtime thread, read-only reference for safety
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
-     * rt list
-     */
+ * @brief Retrieves a constant reference to the most recently updated list.
+ *
+ * This function returns a read-only reference to the latest updated list.
+ *
+ * @warning The list may or may not be currently used by the real-time (RT) thread.
+ * Ensure that it is only accesse
+
     const std::vector<ControllerSpec> & get_updated_list(
       const std::lock_guard<std::recursive_mutex> & guard) const;
 
