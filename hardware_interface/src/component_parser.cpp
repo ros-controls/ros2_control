@@ -219,7 +219,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   return size;
 }
 
-//**
+/**
 * @brief Parses the data_type attribute from an XML element.
 *
 * This method retrieves the value of the data_type attribute from the given XML element.
