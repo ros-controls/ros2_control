@@ -407,13 +407,14 @@ private:
    * controllers will be automatically added to the deactivate request list.
    * \param[in] controller_it iterator to the controller for which the preceding controllers are
    * checked.
+   * \param[out] message describing the result of the check.
    *
    * \returns return_type::OK if all preceding controllers pass the checks, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it);
+    const ControllersListIterator controller_it, std::string & message);
 
   /// Checks if the fallback controllers of the given controllers are in the right
   /// state, so they can be activated immediately
