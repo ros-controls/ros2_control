@@ -1384,10 +1384,12 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   // Check after the check if the activate and deactivate list is empty or not
   if (activate_request_.empty() && deactivate_request_.empty())
   {
+    message = "After checking the controllers, no controllers need to be activated or deactivated.";
     RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
     clear_requests();
     return controller_interface::return_type::OK;
   }
+  message.clear();
 
   for (const auto & controller : controllers)
   {
@@ -1425,10 +1427,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       std::find(activate_request_.begin(), activate_request_.end(), controller.info.name);
     bool in_activate_list = activate_list_it != activate_request_.end();
 
-    auto handle_conflict = [&](const std::string & msg)
+    auto handle_conflict = [&, &message](const std::string & msg)
     {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
+        message = msg;
         RCLCPP_ERROR(get_logger(), "%s", msg.c_str());
         deactivate_request_.clear();
         deactivate_command_interface_request_.clear();
@@ -1535,6 +1538,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   if (activate_request_.empty() && deactivate_request_.empty())
   {
+    message = "After checking the controllers, no controllers need to be activated or deactivated.";
     RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
     clear_requests();
     return controller_interface::return_type::OK;
@@ -1569,9 +1573,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     if (!resource_manager_->prepare_command_mode_switch(
           activate_command_interface_request_, deactivate_command_interface_request_))
     {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Could not switch controllers since prepare command mode switch was rejected.");
+      message = "Could not switch controllers since prepare command mode switch was rejected.";
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       clear_requests();
       return controller_interface::return_type::ERROR;
     }
@@ -1596,9 +1599,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   if (!switch_params_.cv.wait_for(
         switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
-    RCLCPP_ERROR(
-      get_logger(), "Switch controller timed out after %f seconds!",
-      static_cast<double>(switch_params_.timeout.count()) / 1e9);
+    message = "Switch controller timed out after " +
+              std::to_string(static_cast<double>(switch_params_.timeout.count()) / 1e9) +
+              " seconds!";
+    RCLCPP_ERROR(get_logger(), "%s", message.c_str());
     clear_requests();
     return controller_interface::return_type::ERROR;
   }
@@ -1608,7 +1612,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   to = controllers;
 
   // update the claimed interface controller info
+  message.clear();
   auto switch_result = controller_interface::return_type::OK;
+  std::string unable_to_activate_controllers("");
+  std::string unable_to_deactivate_controllers("");
   for (auto & controller : to)
   {
     if (is_controller_active(controller.c))
@@ -1635,6 +1642,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     {
       if (!is_controller_active(controller.c))
       {
+        unable_to_activate_controllers += controller.info.name + " ";
         RCLCPP_ERROR(
           get_logger(), "Could not activate controller : '%s'", controller.info.name.c_str());
         switch_result = controller_interface::return_type::ERROR;
@@ -1650,11 +1658,29 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     {
       if (is_controller_active(controller.c))
       {
+        unable_to_deactivate_controllers += controller.info.name + " ";
         RCLCPP_ERROR(
           get_logger(), "Could not deactivate controller : '%s'", controller.info.name.c_str());
         switch_result = controller_interface::return_type::ERROR;
       }
     }
+  }
+  if (switch_result != controller_interface::return_type::OK)
+  {
+    message = "Failed switching controllers.... ";
+    if (!unable_to_activate_controllers.empty())
+    {
+      message += "\nUnable to activate controllers: [ " + unable_to_activate_controllers + "]. ";
+    }
+    if (!unable_to_deactivate_controllers.empty())
+    {
+      message +=
+        "\nUnable to deactivate controllers: [ " + unable_to_deactivate_controllers + "]. ";
+    }
+  }
+  else
+  {
+    message = "Successfully switched controllers!";
   }
 
   // switch lists
