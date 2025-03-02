@@ -1312,6 +1312,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         activate_request_.erase(ctrl_it);
+        message.clear();
         --ctrl_it;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
@@ -1342,7 +1343,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
+      status = check_preceeding_controllers_for_deactivate(
+        controllers, strictness, controller_it, message);
     }
 
     if (status != controller_interface::return_type::OK)
@@ -1358,6 +1360,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         deactivate_request_.erase(ctrl_it);
+        message.clear();
         --ctrl_it;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
@@ -3020,7 +3023,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
 
 controller_interface::return_type ControllerManager::check_preceeding_controllers_for_deactivate(
   const std::vector<ControllerSpec> & controllers, int /*strictness*/,
-  const ControllersListIterator controller_it)
+  const ControllersListIterator controller_it, std::string & message)
 {
   // if not chainable no need for any checks
   if (!controller_it->c->is_chainable())
@@ -3053,11 +3056,10 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
         std::find(activate_request_.begin(), activate_request_.end(), preceeding_controller) !=
           activate_request_.end())
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Could not deactivate controller with name '%s' because "
-          "preceding controller with name '%s' is inactive and will be activated.",
-          controller_it->info.name.c_str(), preceeding_controller.c_str());
+        message = "Unable to deactivate controller with name '" + controller_it->info.name +
+                  "' because preceding controller with name '" + preceeding_controller +
+                  "' is inactive and will be activated.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
       if (
@@ -3065,11 +3067,10 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
         std::find(deactivate_request_.begin(), deactivate_request_.end(), preceeding_controller) ==
           deactivate_request_.end())
       {
-        RCLCPP_WARN(
-          get_logger(),
-          "Could not deactivate controller with name '%s' because "
-          "preceding controller with name '%s' is active and will not be deactivated.",
-          controller_it->info.name.c_str(), preceeding_controller.c_str());
+        message = "Unable to deactivate controller with name '" + controller_it->info.name +
+                  "' because preceding controller with name '" + preceeding_controller +
+                  "' is currently active and will not be deactivated.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
     }
