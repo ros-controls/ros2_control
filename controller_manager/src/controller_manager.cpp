@@ -2942,29 +2942,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
 
   const auto controller_cmd_interfaces = controller_it->c->command_interface_configuration().names;
   const auto controller_state_interfaces = controller_it->c->state_interface_configuration().names;
-
-  // check if the interfaces are available in the first place
-  for (const auto & cmd_itf : controller_cmd_interfaces)
-  {
-    if (!resource_manager_->command_interface_is_available(cmd_itf))
-    {
-      message = "Unable to activate controller '" + controller_it->info.name +
-                "' since the command interface '" + cmd_itf + "' is not available.";
-      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
-      return controller_interface::return_type::ERROR;
-    }
-  }
-  for (const auto & state_itf : controller_state_interfaces)
-  {
-    if (!resource_manager_->state_interface_is_available(state_itf))
-    {
-      message = "Unable to activate controller '" + controller_it->info.name +
-                "' since the state interface '" + state_itf + "' is not available.";
-      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
-      return controller_interface::return_type::ERROR;
-    }
-  }
-
   // get all interfaces of the controller
   auto controller_interfaces = controller_cmd_interfaces;
   controller_interfaces.insert(
