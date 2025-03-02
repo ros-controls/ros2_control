@@ -420,11 +420,13 @@ private:
   /**
    * \param[in] controllers is a list of controllers to activate.
    * \param[in] controller_it is the iterator pointing to the controller to be activated.
+   * \param[out] message describing the result of the check.
    * \return return_type::OK if all fallback controllers are in the right state, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_fallback_controllers_state_pre_activation(
-    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
+    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it,
+    std::string & message);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the

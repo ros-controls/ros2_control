@@ -1301,7 +1301,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
     if (status == controller_interface::return_type::OK)
     {
-      status = check_fallback_controllers_state_pre_activation(controllers, controller_it);
+      status = check_fallback_controllers_state_pre_activation(controllers, controller_it, message);
     }
 
     if (status != controller_interface::return_type::OK)
@@ -3111,7 +3111,8 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
 
 controller_interface::return_type
 ControllerManager::check_fallback_controllers_state_pre_activation(
-  const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it)
+  const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it,
+  std::string & message)
 {
   for (const auto & fb_ctrl : controller_it->info.fallback_controllers_names)
   {
@@ -3120,22 +3121,19 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
       std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
     if (fb_ctrl_it == controllers.end())
     {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Unable to find the fallback controller : '%s' of the controller : '%s' "
-        "within the controller list",
-        fb_ctrl.c_str(), controller_it->info.name.c_str());
+      message = "Unable to find the fallback controller : '" + fb_ctrl + "' of the controller : '" +
+                controller_it->info.name + "' within the controller list";
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
     else
     {
       if (!(is_controller_inactive(fb_ctrl_it->c) || is_controller_active(fb_ctrl_it->c)))
       {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Controller with name '%s' cannot be activated, as it's fallback controller : '%s'"
-          " need to be configured and be in inactive/active state!",
-          controller_it->info.name.c_str(), fb_ctrl.c_str());
+        message = "Controller with name '" + controller_it->info.name +
+                  "' cannot be activated, as its fallback controller : '" + fb_ctrl +
+                  "' need to be configured and be in inactive/active state!";
+        RCLCPP_ERROR(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
       for (const auto & fb_cmd_itf : fb_ctrl_it->c->command_interface_configuration().names)
@@ -3164,37 +3162,35 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
                   std::find(exported_ref_itfs.begin(), exported_ref_itfs.end(), fb_cmd_itf) ==
                   exported_ref_itfs.end())
                 {
-                  RCLCPP_ERROR(
-                    get_logger(),
-                    "Controller with name '%s' cannot be activated, as the command interface : "
-                    "'%s' required by its fallback controller : '%s' is not exported by the "
-                    "controller : '%s' in the current fallback list!",
-                    controller_it->info.name.c_str(), fb_cmd_itf.c_str(), fb_ctrl.c_str(),
-                    following_ctrl_it->info.name.c_str());
+                  message = "Controller with name '" + controller_it->info.name +
+                            "' cannot be activated, as the command interface : '" + fb_cmd_itf +
+                            "' required by its fallback controller : '" + fb_ctrl +
+                            "' is not exported by the controller : '" +
+                            following_ctrl_it->info.name + "' in the current fallback list!";
+                  RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                   return controller_interface::return_type::ERROR;
                 }
               }
               else
               {
-                RCLCPP_ERROR(
-                  get_logger(),
-                  "Controller with name '%s' cannot be activated, as the command interface : "
-                  "'%s' required by its fallback controller : '%s' is not available as the "
-                  "controller is not in active state!. May be consider adding this controller to "
-                  "the fallback list of the controller : '%s' or already have it activated.",
-                  controller_it->info.name.c_str(), fb_cmd_itf.c_str(), fb_ctrl.c_str(),
-                  following_ctrl_it->info.name.c_str());
+                message =
+                  "Controller with name '" + controller_it->info.name +
+                  "' cannot be activated, as the command interface : '" + fb_cmd_itf +
+                  "' required by its fallback controller : '" + fb_ctrl +
+                  "' is not available as the controller is not in active state!. May be "
+                  "consider adding this controller to the fallback list of the controller : '" +
+                  following_ctrl_it->info.name + "' or already have it activated.";
+                RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                 return controller_interface::return_type::ERROR;
               }
             }
           }
           else
           {
-            RCLCPP_ERROR(
-              get_logger(),
-              "Controller with name '%s' cannot be activated, as not all of its fallback "
-              "controller's : '%s' command interfaces are currently available!",
-              controller_it->info.name.c_str(), fb_ctrl.c_str());
+            message = "Controller with name '" + controller_it->info.name +
+                      "' cannot be activated, as not all of its fallback controller's : '" +
+                      fb_ctrl + "' command interfaces are currently available!";
+            RCLCPP_ERROR(get_logger(), "%s", message.c_str());
             return controller_interface::return_type::ERROR;
           }
         }
@@ -3225,37 +3221,35 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
                   std::find(exported_state_itfs.begin(), exported_state_itfs.end(), fb_state_itf) ==
                   exported_state_itfs.end())
                 {
-                  RCLCPP_ERROR(
-                    get_logger(),
-                    "Controller with name '%s' cannot be activated, as the state interface : "
-                    "'%s' required by its fallback controller : '%s' is not exported by the "
-                    "controller : '%s' in the current fallback list!",
-                    controller_it->info.name.c_str(), fb_state_itf.c_str(), fb_ctrl.c_str(),
-                    following_ctrl_it->info.name.c_str());
+                  message = "Controller with name '" + controller_it->info.name +
+                            "' cannot be activated, as the state interface : '" + fb_state_itf +
+                            "' required by its fallback controller : '" + fb_ctrl +
+                            "' is not exported by the controller : '" +
+                            following_ctrl_it->info.name + "' in the current fallback list!";
+                  RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                   return controller_interface::return_type::ERROR;
                 }
               }
               else
               {
-                RCLCPP_ERROR(
-                  get_logger(),
-                  "Controller with name '%s' cannot be activated, as the state interface : "
-                  "'%s' required by its fallback controller : '%s' is not available as the "
-                  "controller is not in active state!. May be consider adding this controller to "
-                  "the fallback list of the controller : '%s' or already have it activated.",
-                  controller_it->info.name.c_str(), fb_state_itf.c_str(), fb_ctrl.c_str(),
-                  following_ctrl_it->info.name.c_str());
+                message =
+                  "Controller with name '" + controller_it->info.name +
+                  "' cannot be activated, as the state interface : '" + fb_state_itf +
+                  "' required by its fallback controller : '" + fb_ctrl +
+                  "' is not available as the controller is not in active state!. May be "
+                  "consider adding this controller to the fallback list of the controller : '" +
+                  following_ctrl_it->info.name + "' or already have it activated.";
+                RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                 return controller_interface::return_type::ERROR;
               }
             }
           }
           else
           {
-            RCLCPP_ERROR(
-              get_logger(),
-              "Controller with name '%s' cannot be activated, as not all of its fallback "
-              "controller's : '%s' state interfaces are currently available!",
-              controller_it->info.name.c_str(), fb_ctrl.c_str());
+            message = "Controller with name '" + controller_it->info.name +
+                      "' cannot be activated, as not all of its fallback controller's : '" +
+                      fb_ctrl + "' state interfaces are currently available!";
+            RCLCPP_ERROR(get_logger(), "%s", message.c_str());
             return controller_interface::return_type::ERROR;
           }
         }
