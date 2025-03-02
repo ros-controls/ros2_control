@@ -144,6 +144,13 @@ public:
         component_info.rw_rate = hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
+        component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
+
+        // if the type of the hardware is sensor then don't initialize the write statistics
+        if (hardware_info.type != "sensor")
+        {
+          component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
+        }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
         hw_group_state_.insert(std::make_pair(component_info.group, return_type::OK));
@@ -1790,6 +1797,14 @@ HardwareReadWriteStatus ResourceManager::read(
             ret_val = component.read(current_time, actual_period);
           }
         }
+        if (hardware_component_info.read_statistics)
+        {
+          const auto & read_statistics_collector = component.get_read_statistics();
+          hardware_component_info.read_statistics->execution_time.update_statistics(
+            read_statistics_collector.execution_time);
+          hardware_component_info.read_statistics->periodicity.update_statistics(
+            read_statistics_collector.periodicity);
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
@@ -1878,6 +1893,14 @@ HardwareReadWriteStatus ResourceManager::write(
           {
             ret_val = component.write(current_time, actual_period);
           }
+        }
+        if (hardware_component_info.write_statistics)
+        {
+          const auto & write_statistics_collector = component.get_write_statistics();
+          hardware_component_info.write_statistics->execution_time.update_statistics(
+            write_statistics_collector.execution_time);
+          hardware_component_info.write_statistics->periodicity.update_statistics(
+            write_statistics_collector.periodicity);
         }
         const auto component_group = component.get_group_name();
         ret_val =
