@@ -253,6 +253,12 @@ void get_controller_list_command_interfaces(
     }
   }
 }
+template <typename Collection>
+[[nodiscard]] auto is_unique(Collection collection)
+{
+  std::sort(collection.begin(), collection.end());
+  return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
+}
 }  // namespace
 
 namespace controller_manager
@@ -835,7 +841,33 @@ controller_interface::return_type ControllerManager::unload_controller(
   return controller_interface::return_type::OK;
 }
 
-void ControllerManager::shutdown_controller(controller_manager::ControllerSpec & controller) const
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const controller_manager::ControllerSpec & controller)
+{
+  try
+  {
+    cleanup_controller_exported_interfaces(controller);
+    const auto new_state = controller.c->get_node()->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' is not cleaned-up properly, it is still in state '%s'",
+        controller.info.name.c_str(), new_state.label().c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught exception while cleaning-up the controller '%s'",
+      controller.info.name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  return controller_interface::return_type::OK;
+}
+
+void ControllerManager::shutdown_controller(
+  const controller_manager::ControllerSpec & controller) const
 {
   try
   {
@@ -905,23 +937,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    try
+    if (cleanup_controller(*found_it) != controller_interface::return_type::OK)
     {
-      cleanup_controller_exported_interfaces(*found_it);
-      new_state = controller->get_node()->cleanup();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-      {
-        RCLCPP_ERROR(
-          get_logger(), "Controller '%s' can not be cleaned-up before configuring",
-          controller_name.c_str());
-        return controller_interface::return_type::ERROR;
-      }
-    }
-    catch (...)
-    {
-      RCLCPP_ERROR(
-        get_logger(), "Caught exception while cleaning-up controller '%s' before configuring",
-        controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
   }
@@ -1013,6 +1030,36 @@ controller_interface::return_type ControllerManager::configure_controller(
   // let's update the list of following and preceding controllers
   const auto cmd_itfs = controller->command_interface_configuration().names;
   const auto state_itfs = controller->state_interface_configuration().names;
+
+  // Check if the cmd_itfs and the state_itfs are unique
+  if (!is_unique(cmd_itfs))
+  {
+    std::string cmd_itfs_str = std::accumulate(
+      std::next(cmd_itfs.begin()), cmd_itfs.end(), cmd_itfs.front(),
+      [](std::string a, std::string b) { return a + ", " + b; });
+    RCLCPP_ERROR(
+      get_logger(),
+      "The command interfaces of the controller '%s' are not unique. Please make sure that the "
+      "command interfaces are unique : '%s'.",
+      controller_name.c_str(), cmd_itfs_str.c_str());
+    cleanup_controller(*found_it);
+    return controller_interface::return_type::ERROR;
+  }
+
+  if (!is_unique(state_itfs))
+  {
+    std::string state_itfs_str = std::accumulate(
+      std::next(state_itfs.begin()), state_itfs.end(), state_itfs.front(),
+      [](std::string a, std::string b) { return a + ", " + b; });
+    RCLCPP_ERROR(
+      get_logger(),
+      "The state interfaces of the controller '%s' are not unique. Please make sure that the state "
+      "interfaces are unique : '%s'.",
+      controller_name.c_str(), state_itfs_str.c_str());
+    cleanup_controller(*found_it);
+    return controller_interface::return_type::ERROR;
+  }
+
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
