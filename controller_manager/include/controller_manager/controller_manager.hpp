@@ -430,6 +430,18 @@ private:
     std::string & message);
 
   /**
+   * Checks that all the interfaces required by the controller are available to activate.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] activation_list list with controllers to activate.
+   * \param[out] message describing the result of the check.
+   * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
+   */
+  controller_interface::return_type check_for_interfaces_availability_to_activate(
+    const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
+    std::string & message);
+
+  /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
    * controller chain.
    *

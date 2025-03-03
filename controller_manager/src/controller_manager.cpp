@@ -1544,6 +1544,14 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     return controller_interface::return_type::OK;
   }
 
+  if (
+    check_for_interfaces_availability_to_activate(controllers, activate_request_, message) !=
+    controller_interface::return_type::OK)
+  {
+    clear_requests();
+    return controller_interface::return_type::ERROR;
+  }
+
   RCLCPP_DEBUG(get_logger(), "Request for command interfaces from activating controllers:");
   for (const auto & interface : activate_command_interface_request_)
   {
@@ -3316,6 +3324,52 @@ void ControllerManager::publish_activity()
     }
   }
   controller_manager_activity_publisher_->publish(status_msg);
+}
+
+controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
+  const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
+  std::string & message)
+{
+  for (const auto & controller_name : activation_list)
+  {
+    auto controller_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (controller_it == controllers.end())
+    {
+      message =
+        "Unable to find the controller : '" + controller_name + "' within the controller list";
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    const auto controller_cmd_interfaces =
+      controller_it->c->command_interface_configuration().names;
+    const auto controller_state_interfaces =
+      controller_it->c->state_interface_configuration().names;
+
+    // check if the interfaces are available in the first place
+    for (const auto & cmd_itf : controller_cmd_interfaces)
+    {
+      if (!resource_manager_->command_interface_is_available(cmd_itf))
+      {
+        message = "Unable to activate controller '" + controller_it->info.name +
+                  "' since the command interface '" + cmd_itf + "' is not available.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    for (const auto & state_itf : controller_state_interfaces)
+    {
+      if (!resource_manager_->state_interface_is_available(state_itf))
+      {
+        message = "Unable to activate controller '" + controller_it->info.name +
+                  "' since the state interface '" + state_itf + "' is not available.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+  }
+  return controller_interface::return_type::OK;
 }
 
 void ControllerManager::controller_activity_diagnostic_callback(
