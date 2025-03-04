@@ -1285,11 +1285,25 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     controller_interface::return_type status = controller_interface::return_type::OK;
 
     // if controller is not inactive then do not do any following-controllers checks
-    if (!is_controller_inactive(controller_it->c))
+    if (is_controller_unconfigured(*controller_it->c))
     {
       message = "Controller with name '" + controller_it->info.name +
-                "' is not inactive so its following controllers do not have to be checked, because "
-                "it cannot be activated.";
+                "' is in 'unconfigured' state. The controller needs to be configured to be in "
+                "'inactive' state before it can be checked and activated.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
+      status = controller_interface::return_type::ERROR;
+    }
+    else if (is_controller_active(controller_it->c))
+    {
+      message = "Controller with name '" + controller_it->info.name + "' is already active.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
+      status = controller_interface::return_type::ERROR;
+    }
+    else if (!is_controller_inactive(controller_it->c))
+    {
+      message = "Controller with name '" + controller_it->info.name +
+                "' is not in 'inactive' state. The controller needs to be in 'inactive' state "
+                "before it can be checked and activated.";
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
