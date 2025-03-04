@@ -1399,7 +1399,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   if (activate_request_.empty() && deactivate_request_.empty())
   {
     message = "After checking the controllers, no controllers need to be activated or deactivated.";
-    RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
+    RCLCPP_INFO(get_logger(), "%s", message.c_str());
     clear_requests();
     return controller_interface::return_type::OK;
   }
