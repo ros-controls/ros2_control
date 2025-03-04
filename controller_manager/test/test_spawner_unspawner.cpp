@@ -83,6 +83,36 @@ int call_unspawner(const std::string extra_args)
   return std::system((unspawner_script + extra_args).c_str());
 }
 
+void verify_ctrl_parameter(
+  const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & ctrl_node, bool has_param_3)
+{
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
+  ASSERT_THAT(
+    ctrl_node->get_parameter("joint_names").as_string_array(),
+    std::vector<std::string>({"joint1"}));
+
+  if (!ctrl_node->has_parameter("param1"))
+  {
+    ctrl_node->declare_parameter("param1", -10.0);
+  }
+  ASSERT_THAT(ctrl_node->get_parameter("param1").as_double(), 1.0);
+
+  if (!ctrl_node->has_parameter("param2"))
+  {
+    ctrl_node->declare_parameter("param2", -10.0);
+  }
+  ASSERT_THAT(ctrl_node->get_parameter("param2").as_double(), 2.0);
+
+  if (!ctrl_node->has_parameter("param3"))
+  {
+    ctrl_node->declare_parameter("param3", -10.0);
+  }
+  ASSERT_THAT(ctrl_node->get_parameter("param3").as_double(), has_param_3 ? 3.0 : -10.0);
+};
+
 TEST_F(TestLoadController, spawner_with_no_arguments_errors)
 {
   EXPECT_NE(call_spawner(""), 0) << "Missing mandatory arguments";
@@ -381,35 +411,6 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
       test_file_path),
     0);
 
-  auto verify_ctrl_parameter = [](const auto & ctrl_node, bool has_param_3)
-  {
-    if (!ctrl_node->has_parameter("joint_names"))
-    {
-      ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
-    }
-    ASSERT_THAT(
-      ctrl_node->get_parameter("joint_names").as_string_array(),
-      std::vector<std::string>({"joint1"}));
-
-    if (!ctrl_node->has_parameter("param1"))
-    {
-      ctrl_node->declare_parameter("param1", -10.0);
-    }
-    ASSERT_THAT(ctrl_node->get_parameter("param1").as_double(), 1.0);
-
-    if (!ctrl_node->has_parameter("param2"))
-    {
-      ctrl_node->declare_parameter("param2", -10.0);
-    }
-    ASSERT_THAT(ctrl_node->get_parameter("param2").as_double(), 2.0);
-
-    if (!ctrl_node->has_parameter("param3"))
-    {
-      ctrl_node->declare_parameter("param3", -10.0);
-    }
-    ASSERT_THAT(ctrl_node->get_parameter("param3").as_double(), has_param_3 ? 3.0 : -10.0);
-  };
-
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
 
   auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[0];
@@ -435,6 +436,32 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
     wildcard_ctrl_1.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_1.c->get_node(), false);
+}
+
+TEST_F(TestLoadController, spawner_test_with_global_wildcard_entries)
+{
+  const std::string test_file_path =
+    std::string(PARAMETERS_FILE_PATH) +
+    std::string("test_controller_spawner_wildcard_entries_global.yaml");
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "wildcard_ctrl -c test_controller_manager "
+      "--controller-manager-timeout 1.0 "
+      "-p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto wildcard_ctrl = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(wildcard_ctrl.info.name, "wildcard_ctrl");
+  ASSERT_EQ(wildcard_ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    wildcard_ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  verify_ctrl_parameter(wildcard_ctrl.c->get_node(), true);
 }
 
 TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
