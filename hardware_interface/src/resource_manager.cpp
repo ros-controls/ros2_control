@@ -1786,8 +1786,8 @@ HardwareReadWriteStatus ResourceManager::read(
               ? current_time - component.get_last_read_time()
               : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(read_rate));
 
-          const double error_now = std::fabs(actual_period.seconds() * read_rate - 1.0);
-          const double error_if_skipped = std::fabs(
+          const double error_now = std::abs(actual_period.seconds() * read_rate - 1.0);
+          const double error_if_skipped = std::abs(
             (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * read_rate - 1.0);
           if (error_now <= error_if_skipped)
           {
@@ -1879,8 +1879,8 @@ HardwareReadWriteStatus ResourceManager::write(
               ? current_time - component.get_last_write_time()
               : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(write_rate));
 
-          const double error_now = std::fabs(actual_period.seconds() * write_rate - 1.0);
-          const double error_if_skipped = std::fabs(
+          const double error_now = std::abs(actual_period.seconds() * write_rate - 1.0);
+          const double error_if_skipped = std::abs(
             (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * write_rate -
             1.0);
           if (error_now <= error_if_skipped)
