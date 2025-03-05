@@ -2123,6 +2123,60 @@ TEST_F(
   check_read_and_write_cycles(false);
 }
 
+TEST_F(
+  ResourceManagerTestReadWriteDifferentReadWriteRate,
+  test_components_with_different_read_write_freq_not_exact_timing)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  const auto test_jitter = std::chrono::milliseconds{1};
+
+  const auto read = [&]()
+  {
+    const auto [ok, failed_hardware_names] = rm->read(time, duration);
+    EXPECT_TRUE(ok);
+    EXPECT_TRUE(failed_hardware_names.empty());
+  };
+  const auto write = [&]()
+  {
+    const auto [ok, failed_hardware_names] = rm->write(time, duration);
+    EXPECT_TRUE(ok);
+    EXPECT_TRUE(failed_hardware_names.empty());
+  };
+
+  // t = 1 * duration
+  // State interface should not update
+  read();
+  EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 0.0);
+  EXPECT_TRUE(claimed_itfs[0].set_value(10));
+  write();
+  node_.get_clock()->sleep_until(time + duration + test_jitter);
+  time = node_.get_clock()->now();
+
+  // t = 2 * duration + test_jitter
+  // State interface should update
+  read();
+  EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 5.0);
+  EXPECT_TRUE(claimed_itfs[0].set_value(20));
+  write();
+  node_.get_clock()->sleep_until(time + duration - test_jitter);
+  time = node_.get_clock()->now();
+
+  // t = 3 * duration
+  // State interface should not update
+  read();
+  EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 5.0);
+  EXPECT_TRUE(claimed_itfs[0].set_value(30));
+  write();
+  node_.get_clock()->sleep_until(time + duration - test_jitter);
+  time = node_.get_clock()->now();
+
+  // t = 4 * duration - test_jitter
+  // State interface should update
+  read();
+  EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 15.0);
+}
+
 class ResourceManagerTestAsyncReadWrite : public ResourceManagerTest
 {
 public:
