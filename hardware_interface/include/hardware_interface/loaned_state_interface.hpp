@@ -89,8 +89,8 @@ public:
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
   [[deprecated(
-    "Use std::optional<T> get_value() or bool get_value(double & "
-    "value) instead to retrieve the value.")]]
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
     double value = std::numeric_limits<double>::quiet_NaN();
@@ -119,13 +119,13 @@ public:
    * returns the value immediately.
    */
   template <typename T = double>
-  [[nodiscard]] std::optional<T> get_value(unsigned int max_tries = 10) const
+  [[nodiscard]] std::optional<T> get_optional(unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
     do
     {
       ++get_value_statistics_.total_counter;
-      const std::optional<T> data = state_interface_.get_value<T>();
+      const std::optional<T> data = state_interface_.get_optional<T>();
       if (data.has_value())
       {
         return data;
@@ -155,7 +155,10 @@ public:
    * the value and returns true immediately.
    */
   template <typename T>
-  [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
+  get_value(T & value, unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
     ++get_value_statistics_.total_counter;

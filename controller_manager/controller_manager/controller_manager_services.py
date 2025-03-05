@@ -343,10 +343,9 @@ def get_params_files_with_controller_parameters(
                         )
                         break
                     controller_parameter_files.append(parameter_file)
-
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
-                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
     return controller_parameter_files
 
@@ -378,9 +377,9 @@ def get_parameter_from_param_files(
                         break
                     controller_param_dict = parameters[key]
 
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY][key]
-                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY]
 
                 if controller_param_dict and (

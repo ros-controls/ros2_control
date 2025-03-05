@@ -453,6 +453,13 @@ private:
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
 
+  /**
+   * @brief cleanup_controller_exported_interfaces - A method that cleans up the exported interfaces
+   * of a chainable controller
+   * @param controller - controller info
+   */
+  void cleanup_controller_exported_interfaces(const ControllerSpec & controller);
+
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
   diagnostic_updater::Updater diagnostics_updater_;
