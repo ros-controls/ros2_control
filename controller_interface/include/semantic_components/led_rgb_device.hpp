@@ -65,9 +65,9 @@ public:
       return false;
     }
     bool all_set = true;
-    all_set &= command_interfaces_[0].get().set_value(message.r);
-    all_set &= command_interfaces_[1].get().set_value(message.g);
-    all_set &= command_interfaces_[2].get().set_value(message.b);
+    all_set &= command_interfaces_[0].get().set_value(static_cast<double>(message.r));
+    all_set &= command_interfaces_[1].get().set_value(static_cast<double>(message.g));
+    all_set &= command_interfaces_[2].get().set_value(static_cast<double>(message.b));
     return all_set;
   }
 };
