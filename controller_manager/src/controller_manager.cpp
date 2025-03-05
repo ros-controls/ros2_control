@@ -254,7 +254,7 @@ void get_controller_list_command_interfaces(
   }
 }
 template <typename Collection>
-[[nodiscard]] auto is_unique(Collection collection)
+[[nodiscard]] bool is_unique(Collection collection)
 {
   std::sort(collection.begin(), collection.end());
   return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
