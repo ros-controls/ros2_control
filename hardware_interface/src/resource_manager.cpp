@@ -1777,8 +1777,7 @@ HardwareReadWriteStatus ResourceManager::read(
       auto ret_val = return_type::OK;
       try
       {
-        auto & hardware_component_info =
-          resource_storage_->hardware_info_map_[component_name];
+        auto & hardware_component_info = resource_storage_->hardware_info_map_[component_name];
         const auto current_time = resource_storage_->get_clock()->now();
         if (
           hardware_component_info.rw_rate == 0 ||
@@ -1869,8 +1868,7 @@ HardwareReadWriteStatus ResourceManager::write(
       auto ret_val = return_type::OK;
       try
       {
-        auto & hardware_component_info =
-          resource_storage_->hardware_info_map_[component_name];
+        auto & hardware_component_info = resource_storage_->hardware_info_map_[component_name];
         const auto current_time = resource_storage_->get_clock()->now();
         if (
           hardware_component_info.rw_rate == 0 ||
