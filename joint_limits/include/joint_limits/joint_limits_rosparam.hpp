@@ -27,13 +27,15 @@
 
 namespace  // utilities
 {
-/// Declare and initialize a parameter with a type.
 /**
- *
- * Wrapper function for templated node's declare_parameter() which checks if
- * parameter is already declared.
- * For use in all components that inherit from ControllerInterface
+ * @brief Declare and initialize a parameter with a specific type.
+ * 
+ * This is a wrapper function for the templated node's declare_parameter() method. It ensures that the parameter is declared only if it hasn't been declared previously.
+ * 
+ * @note This function is intended for use in all components that inherit from ControllerInterface.
  */
+
+
 template <typename ParameterT>
 auto auto_declare(
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -51,10 +53,10 @@ auto auto_declare(
 namespace joint_limits
 {
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name using node
- * parameters interface \p param_itf.
- *
- * The following parameter structure is declared with base name `joint_limits.joint_name`:
+ * @brief Declare JointLimits and SoftJointLimits parameters for a specific joint.
+ * 
+ * This method declares a set of parameters for a joint with the name `joint_name` using the node's parameters interface `param_itf`.
+ * The following parameter structure is declared under the base name `joint_limits.joint_name`:
  * \code
  *   has_position_limits: bool
  *   min_position: double
@@ -77,12 +79,13 @@ namespace joint_limits
  *   soft_upper_limit: double
  * \endcode
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] param_itf node parameters interface object to access parameters.
- * \param[in] logging_itf node logging interface to log if error happens.
- *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @param[in] joint_name Name of the joint for which parameters will be declared.
+ * @param[in] param_itf Node parameters interface to access parameters.
+ * @param[in] logging_itf Node logging interface to log errors if any occur.
+ * 
+ * @returns `true` if parameters are successfully declared, `false` otherwise.
  */
+
 inline bool declare_parameters(
   const std::string & joint_name,
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -131,16 +134,17 @@ inline bool declare_parameters(
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name for the \p node
- * object.
- * This is a convenience function.
- * For parameters structure see the underlying `declare_parameters` function.
+ * @brief Declare JointLimits and SoftJointLimits parameters for a specific joint.
+ * 
+ * This is a convenience function that declares a set of parameters for a joint with the name `joint_name` using the provided `node` object.
+ * For the detailed parameter structure, refer to the underlying `declare_parameters` function.
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] node node for parameters should be declared.
- *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @param[in] joint_name Name of the joint for which parameters will be declared.
+ * @param[in] node Node object for which parameters should be declared.
+ * 
+ * @returns `true` if parameters are successfully declared, `false` otherwise.
  */
+
 inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
 {
   return declare_parameters(
@@ -148,15 +152,17 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the
- * lifecycle_node object. This is a convenience function. For parameters structure see the
- * underlying `declare_parameters` function.
+ * @brief Declare JointLimits and SoftJointLimits parameters for a specific joint.
+ * 
+ * This is a convenience function that declares a set of parameters for a joint with the name `joint_name`
+ * using the provided `lifecycle_node` object. For the detailed parameter structure, refer to the underlying `declare_parameters` function.
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] lifecycle_node lifecycle node for parameters should be declared.
- *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @param[in] joint_name Name of the joint for which parameters will be declared.
+ * @param[in] lifecycle_node Lifecycle node for which parameters should be declared.
+ * 
+ * @returns `true` if parameters are successfully declared, `false` otherwise.
  */
+
 inline bool declare_parameters(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node)
 {
@@ -164,10 +170,15 @@ inline bool declare_parameters(
     joint_name, lifecycle_node->get_node_parameters_interface(),
     lifecycle_node->get_node_logging_interface());
 }
-
-/// Populate a JointLimits instance from the node parameters.
 /**
- * It is assumed that parameter structure is the following:
+ * @brief Populate a JointLimits instance from the node parameters.
+ *
+ * This function reads the joint limit parameters specified in the node's parameters interface and fills 
+ * the provided `JointLimits` instance with the values. It is assumed that the parameter structure follows 
+ * the specified format (as detailed below). If a parameter is not specified in the parameter server, it will 
+ * not be added to the `JointLimits` instance.
+ * 
+ * Parameter structure:
  * \code
  *   has_position_limits: bool
  *   min_position: double
@@ -182,11 +193,10 @@ inline bool declare_parameters(
  *   max_jerk: double
  *   has_effort_limits: bool
  *   max_effort: double
- *   angle_wraparound: bool  # will be ignored if there are position limits
+ *   angle_wraparound: bool  # Will be ignored if position limits are set.
  * \endcode
- *
- * Unspecified parameters are not added to the joint limits specification.
- * A specification in a yaml would look like this:
+ * 
+ * An example YAML configuration for the parameters:
  * \code
  * <node_name>
  *   ros__parameters:
@@ -207,21 +217,21 @@ inline bool declare_parameters(
  *         max_effort: 20.0
  *       bar_joint:
  *         has_position_limits: false   # Continuous joint
- *         angle_wraparound: true       # available only for continuous joints
+ *         angle_wraparound: true       # Available only for continuous joints
  *         has_velocity_limits: true
  *         max_velocity: 4.0
  * \endcode
- *
- * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
- * \param[in] param_itf node parameters interface of the node where parameters are specified.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
- * server will overwrite existing values. Values in \p limits not specified in the parameter server
- * remain unchanged.
- *
- * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter
- * exists in \p node), false otherwise.
+ * 
+ * @param[in] joint_name Name of the joint whose limits are to be fetched (e.g., "foo_joint").
+ * @param[in] param_itf Node parameters interface from which parameters will be fetched.
+ * @param[in] logging_itf Node logging interface to provide log errors if any.
+ * @param[out] limits The `JointLimits` instance where the fetched limits will be stored.
+ *                    Existing values will be overwritten by the parameters found.
+ * 
+ * @returns `true` if joint limit specifications are found and populated successfully, 
+ *          `false` if no specification is found for the given joint.
  */
+
 inline bool get_joint_limits(
   const std::string & joint_name,
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -754,21 +764,24 @@ inline bool get_joint_limits(
     joint_name, lifecycle_node->get_node_parameters_interface(),
     lifecycle_node->get_node_logging_interface(), soft_limits);
 }
-
 /**
- * Check if any of updated parameters are related to SoftJointLimits.
+ * @brief Check if any updated parameters are related to SoftJointLimits.
  *
- * This method is intended to be used in the parameters update callback.
- * It is recommended that it's result is temporarily stored and synchronized with the
- * SoftJointLimits structure in the main loop.
+ * This method is used to check if any parameters that have been updated in the system 
+ * are related to the SoftJointLimits of a specific joint. It is typically called within 
+ * a parameters update callback. The result of this check should be stored temporarily 
+ * and synchronized with the SoftJointLimits structure in the main loop.
  *
- * \param[in] joint_name Name of the joint whose limits should be checked.
- * \param[in] parameters List of the parameters that should be checked if they belong to this
- * structure and that are used for updating the internal values.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] updated_limits structure with updated SoftJointLimits. It is recommended that the
- * currently used limits are stored into this structure before calling this method.
+ * @param[in] joint_name Name of the joint whose limits should be checked (e.g., "foo_joint").
+ * @param[in] parameters List of parameters to be checked to determine if they belong 
+ *                      to the SoftJointLimits structure and are used for updating 
+ *                      the internal values.
+ * @param[in] logging_itf Node logging interface to provide log errors if any occur.
+ * @param[out] updated_limits The structure that will store the updated SoftJointLimits. 
+ *                            It is recommended that the current limits are stored in this 
+ *                            structure before calling this method.
  */
+
 inline bool check_for_limits_update(
   const std::string & joint_name, const std::vector<rclcpp::Parameter> & parameters,
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,

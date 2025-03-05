@@ -21,21 +21,23 @@
 
 namespace controller_interface
 {
-/// Reorder interfaces with references according to joint names or full interface names.
 /**
- * Method to reorder and check if all expected interfaces are provided for the joint.
- * Fill `ordered_interfaces` with references from `unordered_interfaces` in the same order as in
- * `ordered_names`.
+ * @brief Reorder interfaces with references according to joint names or full interface names.
  *
- * \param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
- * \param[in] ordered_names vector with ordered names to order \p unordered_interfaces.
- *  The valued inputs are list of joint names or interface full names.
- *  If joint names are used for ordering, \p interface_type specifies valid interface.
- *  If full interface names are used for ordering, \p interface_type should be empty string ("").
- * \param[in] interface_type used for ordering interfaces with respect to joint names.
- * \param[out] ordered_interfaces vector with ordered interfaces.
- * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
+ * Reorders and verifies that all expected interfaces are provided for the specified joints. 
+ * Populates `ordered_interfaces` with references from `unordered_interfaces` in the same 
+ * order as specified in `ordered_names`.
+ *
+ * @param[in] unordered_interfaces Vector of loaned unordered state or command interfaces.
+ * @param[in] ordered_names Vector of ordered names used to sort `unordered_interfaces`. 
+ *                          The values can be either a list of joint names or full interface names.  
+ *                          If joint names are used, `interface_type` must be specified.  
+ *                          If full interface names are used, `interface_type` should be an empty string (`""`).
+ * @param[in] interface_type Specifies the interface type when ordering by joint names.
+ * @param[out] ordered_interfaces Vector to store the ordered interfaces.
+ * @return `true` if all interfaces or joints in `ordered_names` are found, otherwise `false`.
  */
+
 template <typename T>
 bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,

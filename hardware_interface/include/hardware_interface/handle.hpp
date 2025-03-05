@@ -293,12 +293,14 @@ public:
   : Handle(interface_description)
   {
   }
-  /// CommandInterface copy constructor is actively deleted.
-  /**
-   * Command interfaces are having a unique ownership and thus
-   * can't be copied in order to avoid simultaneous writes to
-   * the same resource.
-   */
+ /// CommandInterface copy constructor is deleted.
+/**
+ * @brief Prevents copying to ensure unique ownership.
+ *
+ * Command interfaces have unique ownership to prevent simultaneous writes 
+ * to the same resource. Therefore, copying is explicitly disabled.
+ */
+
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;

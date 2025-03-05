@@ -84,19 +84,19 @@ class SimpleTransmission : public Transmission
 {
 public:
   /**
-   * \param[in] joint_to_actuator_reduction Joint to actuator reduction ratio.
-   * \param[in] joint_offset Joint position offset used in the position mappings.
-   * \pre Nonzero reduction value.
+   * @param[in] joint_to_actuator_reduction Joint to actuator reduction ratio.
+   * @param[in] joint_offset Joint position offset used in the position mappings.
+   * @pre Nonzero reduction value.
    */
   explicit SimpleTransmission(
     const double joint_to_actuator_reduction, const double joint_offset = 0.0);
 
   /// Set up the data the transmission operates on.
   /**
-   * \param[in] joint_handles Vector of interface handles of one joint
-   * \param[in] actuator_handles Vector of interface handles of one actuator
-   * \pre Vectors are nonzero.
-   * \pre Joint handles share the same joint name and actuator handles share the same actuator name.
+   * @param[in] joint_handles Vector of interface handles of one joint
+   * @param[in] actuator_handles Vector of interface handles of one actuator
+   * @pre Vectors are nonzero.
+   * @pre Joint handles share the same joint name and actuator handles share the same actuator name.
    */
   void configure(
     const std::vector<JointHandle> & joint_handles,

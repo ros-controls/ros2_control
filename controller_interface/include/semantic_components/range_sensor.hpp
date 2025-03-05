@@ -46,11 +46,14 @@ public:
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  /// Return Range message with range in meters
   /**
-   * Constructs and return a Range message from the current values.
-   * \return Range message from values;
-   */
+ * @brief Construct and return a Range message with the current range in meters.
+ *
+ * Creates a Range message using the current sensor values.
+ *
+ * @return A Range message containing the current range measurement in meters.
+ */
+
   bool get_values_as_message(sensor_msgs::msg::Range & message) const
   {
     message.range = get_range();
