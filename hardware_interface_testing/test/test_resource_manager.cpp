@@ -2127,7 +2127,7 @@ TEST_F(
   ResourceManagerTestReadWriteDifferentReadWriteRate,
   test_components_with_different_read_write_freq_not_exact_timing)
 {
-  setup_resource_manager_and_do_initial_checks();
+  setup_resource_manager_and_do_initial_checks(false);
 
   const auto test_jitter = std::chrono::milliseconds{1};
 
