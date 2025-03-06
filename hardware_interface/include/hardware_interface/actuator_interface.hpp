@@ -503,7 +503,14 @@ public:
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
-    auto & handle = actuator_states_.at(interface_name);
+    auto it = actuator_states_.find(interface_name);
+    if (it == actuator_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
     std::ignore = handle->set_value(lock, value);
   }
@@ -511,7 +518,14 @@ public:
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
-    auto & handle = actuator_states_.at(interface_name);
+    auto it = actuator_states_.find(interface_name);
+    if (it == actuator_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
     const auto opt_value = handle->get_optional<T>(lock);
     if (!opt_value)
@@ -525,7 +539,14 @@ public:
 
   void set_command(const std::string & interface_name, const double & value)
   {
-    auto & handle = actuator_commands_.at(interface_name);
+    auto it = actuator_commands_.find(interface_name);
+    if (it == actuator_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
     std::ignore = handle->set_value(lock, value);
   }
@@ -533,7 +554,14 @@ public:
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
-    auto & handle = actuator_commands_.at(interface_name);
+    auto it = actuator_commands_.find(interface_name);
+    if (it == actuator_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
     const auto opt_value = handle->get_optional<double>(lock);
     if (!opt_value)

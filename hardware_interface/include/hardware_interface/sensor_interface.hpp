@@ -311,7 +311,14 @@ public:
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
-    auto & handle = sensor_states_map_.at(interface_name);
+    auto it = sensor_states_map_.find(interface_name);
+    if (it == sensor_states_map_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in sensor hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
     std::ignore = handle->set_value(lock, value);
   }
@@ -319,7 +326,14 @@ public:
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
-    auto & handle = sensor_states_map_.at(interface_name);
+    auto it = sensor_states_map_.find(interface_name);
+    if (it == sensor_states_map_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in sensor hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
     const auto opt_value = handle->get_optional<T>(lock);
     if (!opt_value)
