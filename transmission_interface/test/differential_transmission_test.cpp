@@ -161,19 +161,19 @@ protected:
       hardware_interface::InterfaceDescription("joint2", interface_info));
 
     // set actuator values to reference
-    a1_handle->set_value(ref_val[0]);
-    a2_handle->set_value(ref_val[1]);
+    std::ignore = a1_handle->set_value(ref_val[0]);
+    std::ignore = a2_handle->set_value(ref_val[1]);
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
 
     // actuator->joint->actuator roundtrip
     // but we also set actuator values to an extremal value
     // to ensure joint_to_actuator is not a no-op
     trans.actuator_to_joint();
-    a1_handle->set_value(EXTREMAL_VALUE);
-    a2_handle->set_value(EXTREMAL_VALUE);
+    std::ignore = a1_handle->set_value(EXTREMAL_VALUE);
+    std::ignore = a2_handle->set_value(EXTREMAL_VALUE);
     trans.joint_to_actuator();
-    EXPECT_THAT(ref_val[0], DoubleNear(a1_handle->get_value(), EPS));
-    EXPECT_THAT(ref_val[1], DoubleNear(a2_handle->get_value(), EPS));
+    EXPECT_THAT(ref_val[0], DoubleNear(a1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(ref_val[1], DoubleNear(a2_handle->get_optional().value(), EPS));
   }
 
   // Generate a set of transmission instances
@@ -256,13 +256,13 @@ TEST_F(WhiteBoxTest, DontMoveJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Velocity interface
@@ -277,13 +277,13 @@ TEST_F(WhiteBoxTest, DontMoveJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Position interface
@@ -298,13 +298,13 @@ TEST_F(WhiteBoxTest, DontMoveJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(joint_offset[0], DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(joint_offset[1], DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(joint_offset[0], DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(joint_offset[1], DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 }
 
@@ -331,13 +331,13 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(400.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(400.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Velocity interface
@@ -352,13 +352,13 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.5, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.5, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Position interface
@@ -373,13 +373,13 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.5, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.5, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 }
 
@@ -406,13 +406,13 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(400.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(400.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Velocity interface
@@ -427,13 +427,13 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.5, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.5, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Position interface
@@ -448,13 +448,13 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.5, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(0.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.5, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 }
 
@@ -486,13 +486,13 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(140.0, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(520.0, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(140.0, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(520.0, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Velocity interface
@@ -507,13 +507,13 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(-0.01250, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(0.06875, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(-0.01250, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(0.06875, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 
   // Position interface
@@ -528,12 +528,12 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
       hardware_interface::InterfaceDescription("joint1", interface_info));
     auto j2_handle = std::make_shared<JointHandle>(
       hardware_interface::InterfaceDescription("joint2", interface_info));
-    a1_handle->set_value(a1_value);
-    a2_handle->set_value(a2_value);
+    std::ignore = a1_handle->set_value(a1_value);
+    std::ignore = a2_handle->set_value(a2_value);
 
     trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(-2.01250, DoubleNear(j1_handle->get_value(), EPS));
-    EXPECT_THAT(4.06875, DoubleNear(j2_handle->get_value(), EPS));
+    EXPECT_THAT(-2.01250, DoubleNear(j1_handle->get_optional().value(), EPS));
+    EXPECT_THAT(4.06875, DoubleNear(j2_handle->get_optional().value(), EPS));
   }
 }

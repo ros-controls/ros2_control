@@ -123,11 +123,11 @@ protected:
       const std::vector<JointHandle::SharedPtr> joint_handles({joint_handle});
       trans.configure(joint_handles, actuator_handles);
 
-      actuator_handle->set_value(ref_val);
+      std::ignore = actuator_handle->set_value(ref_val);
 
       trans.actuator_to_joint();
       trans.joint_to_actuator();
-      EXPECT_THAT(ref_val, DoubleNear(actuator_handle->get_value(), EPS));
+      EXPECT_THAT(ref_val, DoubleNear(actuator_handle->get_optional().value(), EPS));
     }
   }
 };
@@ -181,11 +181,11 @@ TEST_F(WhiteBoxTest, MoveJoint)
     const std::vector<ActuatorHandle::SharedPtr> actuator_handles({actuator_handle});
     const std::vector<JointHandle::SharedPtr> joint_handles({joint_handle});
 
-    actuator_handle->set_value(1.0);
+    std::ignore = actuator_handle->set_value(1.0);
     trans.configure(joint_handles, actuator_handles);
 
     trans.actuator_to_joint();
-    EXPECT_THAT(10.0, DoubleNear(joint_handle->get_value(), EPS));
+    EXPECT_THAT(10.0, DoubleNear(joint_handle->get_optional().value(), EPS));
   }
 
   // Velocity interface
@@ -199,11 +199,11 @@ TEST_F(WhiteBoxTest, MoveJoint)
     const std::vector<ActuatorHandle::SharedPtr> actuator_handles({actuator_handle});
     const std::vector<JointHandle::SharedPtr> joint_handles({joint_handle});
 
-    actuator_handle->set_value(1.0);
+    std::ignore = actuator_handle->set_value(1.0);
     trans.configure(joint_handles, actuator_handles);
 
     trans.actuator_to_joint();
-    EXPECT_THAT(0.1, DoubleNear(joint_handle->get_value(), EPS));
+    EXPECT_THAT(0.1, DoubleNear(joint_handle->get_optional().value(), EPS));
   }
 
   // Position interface
@@ -217,11 +217,11 @@ TEST_F(WhiteBoxTest, MoveJoint)
     const std::vector<ActuatorHandle::SharedPtr> actuator_handles({actuator_handle});
     const std::vector<JointHandle::SharedPtr> joint_handles({joint_handle});
 
-    actuator_handle->set_value(1.0);
+    std::ignore = actuator_handle->set_value(1.0);
     trans.configure(joint_handles, actuator_handles);
 
     trans.actuator_to_joint();
-    EXPECT_THAT(1.1, DoubleNear(joint_handle->get_value(), EPS));
+    EXPECT_THAT(1.1, DoubleNear(joint_handle->get_optional().value(), EPS));
   }
 
   // Mismatched interface is ignored
@@ -239,17 +239,17 @@ TEST_F(WhiteBoxTest, MoveJoint)
       hardware_interface::InterfaceDescription("joint1", interface_info));
 
     double unique_value = 13.37;
-    joint_handle_vel->set_value(unique_value);
-    actuator_handle_vel->set_value(unique_value);
+    std::ignore = joint_handle_vel->set_value(unique_value);
+    std::ignore = actuator_handle_vel->set_value(unique_value);
 
     trans.configure({joint_handle_pos, joint_handle_vel}, {actuator_handle_pos});
     trans.actuator_to_joint();
-    EXPECT_THAT(unique_value, DoubleNear(joint_handle_vel->get_value(), EPS));
-    EXPECT_THAT(unique_value, DoubleNear(actuator_handle_vel->get_value(), EPS));
+    EXPECT_THAT(unique_value, DoubleNear(joint_handle_vel->get_optional().value(), EPS));
+    EXPECT_THAT(unique_value, DoubleNear(actuator_handle_vel->get_optional().value(), EPS));
 
     trans.configure({joint_handle_pos}, {actuator_handle_pos, actuator_handle_vel});
     trans.actuator_to_joint();
-    EXPECT_THAT(unique_value, DoubleNear(joint_handle_vel->get_value(), EPS));
-    EXPECT_THAT(unique_value, DoubleNear(actuator_handle_vel->get_value(), EPS));
+    EXPECT_THAT(unique_value, DoubleNear(joint_handle_vel->get_optional().value(), EPS));
+    EXPECT_THAT(unique_value, DoubleNear(actuator_handle_vel->get_optional().value(), EPS));
   }
 }

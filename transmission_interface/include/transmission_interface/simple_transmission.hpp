@@ -231,17 +231,19 @@ inline void SimpleTransmission::actuator_to_joint()
 {
   if (joint_effort_ && actuator_effort_)
   {
-    joint_effort_->set_value(actuator_effort_->get_value() * reduction_);
+    std::ignore = joint_effort_->set_value(actuator_effort_->get_optional().value() * reduction_);
   }
 
   if (joint_velocity_ && actuator_velocity_)
   {
-    joint_velocity_->set_value(actuator_velocity_->get_value() / reduction_);
+    std::ignore =
+      joint_velocity_->set_value(actuator_velocity_->get_optional().value() / reduction_);
   }
 
   if (joint_position_ && actuator_position_)
   {
-    joint_position_->set_value(actuator_position_->get_value() / reduction_ + jnt_offset_);
+    std::ignore = joint_position_->set_value(
+      actuator_position_->get_optional().value() / reduction_ + jnt_offset_);
   }
 }
 
@@ -249,17 +251,19 @@ inline void SimpleTransmission::joint_to_actuator()
 {
   if (joint_effort_ && actuator_effort_)
   {
-    actuator_effort_->set_value(joint_effort_->get_value() / reduction_);
+    std::ignore = actuator_effort_->set_value(joint_effort_->get_optional().value() / reduction_);
   }
 
   if (joint_velocity_ && actuator_velocity_)
   {
-    actuator_velocity_->set_value(joint_velocity_->get_value() * reduction_);
+    std::ignore =
+      actuator_velocity_->set_value(joint_velocity_->get_optional().value() * reduction_);
   }
 
   if (joint_position_ && actuator_position_)
   {
-    actuator_position_->set_value((joint_position_->get_value() - jnt_offset_) * reduction_);
+    std::ignore = actuator_position_->set_value(
+      (joint_position_->get_optional().value() - jnt_offset_) * reduction_);
   }
 }
 
