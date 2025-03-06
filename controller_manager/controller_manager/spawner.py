@@ -26,6 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
+    set_controller_parameters,
     set_controller_parameters_from_param_files,
     bcolors,
 )
@@ -145,6 +146,12 @@ def main(args=None):
         action="store_true",
         required=False,
     )
+    parser.add_argument(
+        "--controller-ros-args",
+        help="The --ros-args to be passed to the controller node for remapping topics etc",
+        default=None,
+        required=False,
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -203,6 +210,15 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
+                if controller_ros_args := args.controller_ros_args:
+                    if not set_controller_parameters(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        "node_options_args",
+                        controller_ros_args.split(),
+                    ):
+                        return 1
                 if param_files:
                     if not set_controller_parameters_from_param_files(
                         node,
@@ -213,7 +229,13 @@ def main(args=None):
                     ):
                         return 1
 
-                ret = load_controller(node, controller_manager_name, controller_name)
+                ret = load_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    service_call_timeout,
+                )
                 if not ret.ok:
                     node.get_logger().fatal(
                         bcolors.FAIL
@@ -254,7 +276,7 @@ def main(args=None):
                     )
                     if not ret.ok:
                         node.get_logger().error(
-                            bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC
+                            f"{bcolors.FAIL}Failed to activate controller : {controller_name}{bcolors.ENDC}"
                         )
                         return 1
 
@@ -279,7 +301,7 @@ def main(args=None):
             )
             if not ret.ok:
                 node.get_logger().error(
-                    bcolors.FAIL + "Failed to activate the parsed controllers list" + bcolors.ENDC
+                    f"{bcolors.FAIL}Failed to activate the parsed controllers list : {controller_names}{bcolors.ENDC}"
                 )
                 return 1
 
@@ -322,7 +344,13 @@ def main(args=None):
 
             unload_status = True
             for controller_name in controller_names:
-                ret = unload_controller(node, controller_manager_name, controller_name)
+                ret = unload_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    service_call_timeout,
+                )
                 if not ret.ok:
                     unload_status = False
                     node.get_logger().error(
@@ -342,6 +370,7 @@ def main(args=None):
         node.get_logger().fatal(str(err))
         return 1
     finally:
+        node.destroy_node()
         rclpy.shutdown()
 
 

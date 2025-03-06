@@ -27,7 +27,7 @@
 #include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
-#include "controller_manager/visibility_control.h"
+#include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -54,7 +54,7 @@ class ParamListener;
 class Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
-CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
+rclcpp::NodeOptions get_cm_node_options();
 
 class ControllerManager : public rclcpp::Node
 {
@@ -62,7 +62,6 @@ public:
   static constexpr bool kWaitForAllResources = false;
   static constexpr auto kInfiniteTimeout = 0;
 
-  CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
@@ -70,30 +69,30 @@ public:
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
     bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  CONTROLLER_MANAGER_PUBLIC
-  virtual ~ControllerManager() = default;
+  virtual ~ControllerManager();
 
-  CONTROLLER_MANAGER_PUBLIC
+  /// Shutdown all controllers in the controller manager.
+  /**
+   * \return true if all controllers are successfully shutdown, false otherwise.
+   */
+  bool shutdown_controllers();
+
   void robot_description_callback(const std_msgs::msg::String & msg);
 
-  CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
@@ -103,14 +102,11 @@ public:
    * \return controller
    * \see Documentation in controller_manager_msgs/LoadController.srv
    */
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name);
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type unload_controller(const std::string & controller_name);
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<ControllerSpec> get_loaded_controllers() const;
 
   template <
@@ -141,7 +137,6 @@ public:
    * \return configure controller response
    * \see Documentation in controller_manager_msgs/ConfigureController.srv
    */
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type configure_controller(const std::string & controller_name);
 
   /// switch_controller Deactivates some controllers and activates others.
@@ -151,7 +146,6 @@ public:
    * \param[in] set level of strictness (BEST_EFFORT or STRICT)
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type switch_controller(
     const std::vector<std::string> & activate_controllers,
     const std::vector<std::string> & deactivate_controllers, int strictness,
@@ -166,7 +160,6 @@ public:
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration
    */
-  CONTROLLER_MANAGER_PUBLIC
   void read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Run update on controllers
@@ -177,7 +170,6 @@ public:
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration
    */
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period);
 
@@ -189,7 +181,6 @@ public:
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration
    */
-  CONTROLLER_MANAGER_PUBLIC
   void write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Deterministic (real-time safe) callback group, e.g., update function.
@@ -206,7 +197,6 @@ public:
    * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
-  CONTROLLER_MANAGER_PUBLIC
   bool is_resource_manager_initialized() const
   {
     return resource_manager_ && resource_manager_->are_components_initialized();
@@ -219,27 +209,14 @@ public:
    *
    * \returns update rate of the controller manager.
    */
-  CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
-  /// Deletes all async controllers and components.
-  /**
-   * Needed to join the threads immediately after the control loop is ended
-   * to avoid unnecessary iterations. Otherwise
-   * the threads will be joined only when the controller manager gets destroyed.
-   */
-  CONTROLLER_MANAGER_PUBLIC
-  void shutdown_async_controllers_and_components();
-
 protected:
-  CONTROLLER_MANAGER_PUBLIC
   void init_services();
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr add_controller_impl(
     const ControllerSpec & controller);
 
-  CONTROLLER_MANAGER_PUBLIC
   void manage_switch();
 
   /// Deactivate chosen controllers from real-time controller list.
@@ -250,7 +227,6 @@ protected:
    * \param[in] rt_controller_list controllers in the real-time list.
    * \param[in] controllers_to_deactivate names of the controller that have to be deactivated.
    */
-  CONTROLLER_MANAGER_PUBLIC
   void deactivate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_deactivate);
@@ -263,7 +239,6 @@ protected:
    * \param[in] chained_mode_switch_list list of controller to switch chained mode.
    * \param[in] to_chained_mode flag if controller should be switched *to* or *from* chained mode.
    */
-  CONTROLLER_MANAGER_PUBLIC
   void switch_chained_mode(
     const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
@@ -275,7 +250,6 @@ protected:
    * \param[in] rt_controller_list controllers in the real-time list.
    * \param[in] controllers_to_activate names of the controller that have to be activated.
    */
-  CONTROLLER_MANAGER_PUBLIC
   void activate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_activate);
@@ -291,57 +265,46 @@ protected:
    * \param[in] rt_controller_list controllers in the real-time list.
    * \param[in] controllers_to_activate names of the controller that have to be activated.
    */
-  CONTROLLER_MANAGER_PUBLIC
   void activate_controllers_asap(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> controllers_to_activate);
 
-  CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void list_hardware_interfaces_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void load_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::LoadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::LoadController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void configure_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void reload_controller_libraries_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void switch_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::SwitchController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::SwitchController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void unload_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void list_hardware_components_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void set_hardware_component_state_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response);
@@ -360,6 +323,13 @@ private:
   void init_controller_manager();
 
   void initialize_parameters();
+
+  /**
+   * Call shutdown to change the given controller lifecycle node to the finalized state.
+   *
+   * \param[in] controller controller to be shutdown.
+   */
+  void shutdown_controller(controller_manager::ControllerSpec & controller) const;
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -435,7 +405,6 @@ private:
    * \return return_type::OK if all fallback controllers are in the right state, otherwise
    * return_type::ERROR.
    */
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type check_fallback_controllers_state_pre_activation(
     const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
 
@@ -462,6 +431,13 @@ private:
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
 
+  /**
+   * @brief Method to publish the state of the controller manager.
+   * The state includes the list of controllers and the list of hardware interfaces along with
+   * their states.
+   */
+  void publish_activity();
+
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   void hardware_components_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
@@ -476,6 +452,13 @@ private:
    * @return The node options that will be set to the controller LifeCycleNode
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
+
+  /**
+   * @brief cleanup_controller_exported_interfaces - A method that cleans up the exported interfaces
+   * of a chainable controller
+   * @param controller - controller info
+   */
+  void cleanup_controller_exported_interfaces(const ControllerSpec & controller);
 
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
@@ -546,6 +529,12 @@ private:
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
 
+    /// A method to register a callback to be called when the list is switched
+    /**
+     * \param[in] callback Callback to be called when the list is switched
+     */
+    void set_on_switch_callback(std::function<void()> callback);
+
     // Mutex protecting the controllers list
     // must be acquired before using any list other than the "used by rt"
     mutable std::recursive_mutex controllers_lock_;
@@ -567,14 +556,19 @@ private:
     int updated_controllers_index_ = 0;
     /// The index of the controllers list being used in the real-time thread.
     int used_by_realtime_controllers_index_ = -1;
+    /// The callback to be called when the list is switched
+    std::function<void()> on_switch_callback_ = nullptr;
   };
 
+  std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
   std::vector<std::string> ordered_controllers_names_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
+  rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerActivity>::SharedPtr
+    controller_manager_activity_publisher_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
@@ -635,6 +629,42 @@ private:
   };
 
   SwitchParams switch_params_;
+
+  struct RTBufferVariables
+  {
+    RTBufferVariables()
+    {
+      deactivate_controllers_list.reserve(1000);
+      activate_controllers_using_interfaces_list.reserve(1000);
+      fallback_controllers_list.reserve(1000);
+      interfaces_to_start.reserve(1000);
+      interfaces_to_stop.reserve(1000);
+      concatenated_string.reserve(5000);
+    }
+
+    const std::string & get_concatenated_string(
+      const std::vector<std::string> & strings, bool clear_string = true)
+    {
+      if (clear_string)
+      {
+        concatenated_string.clear();
+      }
+      for (const auto & str : strings)
+      {
+        concatenated_string.append(str);
+        concatenated_string.append(" ");
+      }
+      return concatenated_string;
+    }
+
+    std::vector<std::string> deactivate_controllers_list;
+    std::vector<std::string> activate_controllers_using_interfaces_list;
+    std::vector<std::string> fallback_controllers_list;
+    std::vector<std::string> interfaces_to_start;
+    std::vector<std::string> interfaces_to_stop;
+    std::string concatenated_string;
+  };
+  RTBufferVariables rt_buffer_;
 };
 
 }  // namespace controller_manager

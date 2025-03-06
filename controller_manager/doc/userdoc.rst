@@ -28,10 +28,10 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
     @realtime soft rtprio 99
     @realtime soft priority 99
-    @realtime soft memlock 102400
+    @realtime soft memlock unlimited
     @realtime hard rtprio 99
     @realtime hard priority 99
-    @realtime hard memlock 102400
+    @realtime hard memlock unlimited
 
 The limits will be applied after you log out and in again.
 
@@ -44,6 +44,14 @@ Alternatives to the standard kernel include
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
+
+Publishers
+-----------
+
+~/activity [controller_manager_msgs::msg::ControllerManagerActivity]
+  A topic that is published every time there is a change of state of the controllers or hardware components managed by the controller manager.
+  The message contains the list of the controllers and the hardware components that are managed by the controller manager along with their lifecycle states.
+  The topic is published using the "transient local" quality of service, so subscribers should also be "transient local".
 
 Subscribers
 -----------
@@ -84,7 +92,7 @@ Parameters
 
 
 Handling Multiple Controller Managers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 
@@ -142,7 +150,7 @@ There are two scripts to interact with controller manager from launch files:
 
     $ ros2 run controller_manager spawner -h
     usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout SERVICE_CALL_TIMEOUT]
+                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--controller-ros-args CONTROLLER_ROS_ARGS]
                   controller_names [controller_names ...]
 
     positional arguments:
@@ -167,61 +175,83 @@ There are two scripts to interact with controller manager from launch files:
                             Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
                             simulations at startup
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
+      --controller-ros-args CONTROLLER_ROS_ARGS
+                            The --ros-args to be passed to the controller node for remapping topics etc
 
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
 
  .. code-block:: yaml
 
-    /**/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+    /**:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
+
+    position_trajectory_controller_joint1:
+      ros__parameters:
+        joints:
+          - joint1
+
+    position_trajectory_controller_joint2:
+      ros__parameters:
+        joints:
+          - joint2
+
+ .. code-block:: yaml
+
+    /**/position_trajectory_controller:
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
+
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
  .. code-block:: yaml
 
     /rrbot_1/position_trajectory_controller:
-    ros__parameters:
-      type: joint_trajectory_controller/JointTrajectoryController
-      joints:
-        - joint1
-        - joint2
+      ros__parameters:
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+          - joint1
+          - joint2
 
-      command_interfaces:
-        - position
-        .....
+        command_interfaces:
+          - position
+          .....
 
 ``unspawner``
 ^^^^^^^^^^^^^^^^
@@ -331,9 +361,10 @@ lock_memory (optional; bool; default: false for a non-realtime kernel, true for 
   Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
   The following command can be used to set the memory locking limit temporarily : ``ulimit -l unlimited``.
 
-cpu_affinity (optional; int; default: -1)
+cpu_affinity (optional; int (or) int_array;)
   Sets the CPU affinity of the ``controller_manager`` node to the specified CPU core.
-  The value of -1 means that the CPU affinity is not set.
+  If it is an integer, the node's affinity will be set to the specified CPU core.
+  If it is an array of integers, the node's affinity will be set to the specified set of CPU cores.
 
 thread_priority (optional; int; default: 50)
   Sets the thread priority of the ``controller_manager`` node to the specified value. The value must be between 0 and 99.

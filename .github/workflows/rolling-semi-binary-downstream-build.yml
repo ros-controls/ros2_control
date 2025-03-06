@@ -1,0 +1,59 @@
+name: Rolling Downstream Build
+# description: 'Build & test downstream packages from source.'
+# author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/rolling-semi-binary-downstream-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros_controls.rolling.repos'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-downstream:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      ref_for_scheduled_build: master
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      # we don't test target_workspace, we just build it
+      not_test_build: true
+      # we test the downstream packages, which are part of our organization
+      downstream_workspace: ros_controls.${{ matrix.ROS_DISTRO }}.repos
+      not_test_downstream: false
+  build-downstream-3rd-party:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      ref_for_scheduled_build: master
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      # we don't test target_workspace, we just build it
+      not_test_build: true
+      # we don't test the downstream packages, which are outside of our organization
+      downstream_workspace: | # build also the ros_controls packages
+        ros_controls.${{ matrix.ROS_DISTRO }}.repos
+        downstream.${{ matrix.ROS_DISTRO }}.repos
+      not_test_downstream: true

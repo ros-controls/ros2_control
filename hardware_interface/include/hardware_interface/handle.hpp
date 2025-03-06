@@ -15,21 +15,24 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <utility>
 #include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
 {
 
-using HANDLE_DATATYPE = std::variant<double>;
+using HANDLE_DATATYPE = std::variant<std::monostate, double>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -72,55 +75,22 @@ public:
   {
   }
 
-  Handle(const Handle & other) noexcept
-  {
-    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-    prefix_name_ = other.prefix_name_;
-    interface_name_ = other.interface_name_;
-    handle_name_ = other.handle_name_;
-    value_ = other.value_;
-    value_ptr_ = other.value_ptr_;
-  }
-
-  Handle(Handle && other) noexcept
-  {
-    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-    prefix_name_ = std::move(other.prefix_name_);
-    interface_name_ = std::move(other.interface_name_);
-    handle_name_ = std::move(other.handle_name_);
-    value_ = std::move(other.value_);
-    value_ptr_ = std::move(other.value_ptr_);
-  }
+  Handle(const Handle & other) noexcept { copy(other); }
 
   Handle & operator=(const Handle & other)
   {
     if (this != &other)
     {
-      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-      prefix_name_ = other.prefix_name_;
-      interface_name_ = other.interface_name_;
-      handle_name_ = other.handle_name_;
-      value_ = other.value_;
-      value_ptr_ = other.value_ptr_;
+      copy(other);
     }
     return *this;
   }
 
+  Handle(Handle && other) noexcept { swap(*this, other); }
+
   Handle & operator=(Handle && other)
   {
-    if (this != &other)
-    {
-      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
-      prefix_name_ = std::move(other.prefix_name_);
-      interface_name_ = std::move(other.interface_name_);
-      handle_name_ = std::move(other.handle_name_);
-      value_ = std::move(other.value_);
-      value_ptr_ = std::move(other.value_ptr_);
-    }
+    swap(*this, other);
     return *this;
   }
 
@@ -142,7 +112,9 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
-  [[deprecated("Use bool get_value(double & value) instead to retrieve the value.")]]
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
@@ -157,7 +129,47 @@ public:
     // END
   }
 
-  [[nodiscard]] bool get_value(double & value) const
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @return The value of the handle if it accessed successfully, std::nullopt otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to access the value, the handle returns std::nullopt. If the operation is
+   * successful, the value is returned.
+   */
+  template <typename T = double>
+  [[nodiscard]] std::optional<T> get_optional() const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return std::nullopt;
+    }
+    THROW_ON_NULLPTR(this->value_ptr_);
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(saikishor) return value_ if old functionality is removed
+    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+    // END
+  }
+
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The value of the handle.
+   * @return true if the value is accessed successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to access the value, the handle returns false. If the operation is successful,
+   * the value is updated and returns true.
+   */
+  template <typename T>
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
+  get_value(T & value) const
   {
     std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
@@ -165,14 +177,25 @@ public:
       return false;
     }
     // BEGIN (Handle export change): for backward compatibility
-    // TODO(Manuel) set value directly if old functionality is removed
-    THROW_ON_NULLPTR(value_ptr_);
-    value = *value_ptr_;
+    // TODO(Manuel) return value_ if old functionality is removed
+    value = value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
     return true;
     // END
   }
 
-  [[nodiscard]] bool set_value(double value)
+  /**
+   * @brief Set the value of the handle.
+   * @tparam T The type of the value to be set.
+   * @param value The value to be set.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the same handle at same instance, and if they are unable to
+   * lock the handle to set the value, the handle returns false. If the operation is successful, the
+   * handle is updated and returns true.
+   */
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value)
   {
     std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
@@ -187,11 +210,39 @@ public:
     // END
   }
 
+private:
+  void copy(const Handle & other) noexcept
+  {
+    std::scoped_lock lock(other.handle_mutex_, handle_mutex_);
+    prefix_name_ = other.prefix_name_;
+    interface_name_ = other.interface_name_;
+    handle_name_ = other.handle_name_;
+    value_ = other.value_;
+    if (std::holds_alternative<std::monostate>(value_))
+    {
+      value_ptr_ = other.value_ptr_;
+    }
+    else
+    {
+      value_ptr_ = std::get_if<double>(&value_);
+    }
+  }
+
+  void swap(Handle & first, Handle & second) noexcept
+  {
+    std::scoped_lock lock(first.handle_mutex_, second.handle_mutex_);
+    std::swap(first.prefix_name_, second.prefix_name_);
+    std::swap(first.interface_name_, second.interface_name_);
+    std::swap(first.handle_name_, second.handle_name_);
+    std::swap(first.value_, second.value_);
+    std::swap(first.value_ptr_, second.value_ptr_);
+  }
+
 protected:
   std::string prefix_name_;
   std::string interface_name_;
   std::string handle_name_;
-  HANDLE_DATATYPE value_;
+  HANDLE_DATATYPE value_ = std::monostate{};
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
@@ -205,6 +256,24 @@ public:
   explicit StateInterface(const InterfaceDescription & interface_description)
   : Handle(interface_description)
   {
+  }
+
+  void registerIntrospection() const
+  {
+    if (value_ptr_ || std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (value_ptr_ || std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
+    }
   }
 
   StateInterface(const StateInterface & other) = default;
@@ -233,6 +302,24 @@ public:
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;
+
+  void registerIntrospection() const
+  {
+    if (value_ptr_ || std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (value_ptr_ || std::holds_alternative<double>(value_))
+    {
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
+    }
+  }
 
   using Handle::Handle;
 

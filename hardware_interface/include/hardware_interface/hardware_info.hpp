@@ -158,11 +158,11 @@ struct InterfaceDescription
    */
   std::string interface_name;
 
-  std::string get_prefix_name() const { return prefix_name; }
+  const std::string & get_prefix_name() const { return prefix_name; }
 
-  std::string get_interface_name() const { return interface_info.name; }
+  const std::string & get_interface_name() const { return interface_info.name; }
 
-  std::string get_name() const { return interface_name; }
+  const std::string & get_name() const { return interface_name; }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
@@ -178,6 +178,8 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
+  /// Async thread priority
+  int thread_priority;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
   std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.

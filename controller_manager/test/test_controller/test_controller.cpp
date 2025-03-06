@@ -71,7 +71,7 @@ controller_interface::return_type TestController::update(
   // set value to hardware to produce and test different behaviors there
   if (!std::isnan(set_first_command_interface_value_to))
   {
-    command_interfaces_[0].set_value(set_first_command_interface_value_to);
+    (void)command_interfaces_[0].set_value(set_first_command_interface_value_to);
     // reset to be easier to test
     set_first_command_interface_value_to = std::numeric_limits<double>::quiet_NaN();
   }
@@ -87,10 +87,10 @@ controller_interface::return_type TestController::update(
           command_interfaces_[i].get_name().c_str());
         return controller_interface::return_type::ERROR;
       }
-      RCLCPP_INFO(
+      RCLCPP_DEBUG(
         get_node()->get_logger(), "Setting value of command interface '%s' to %f",
         command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
-      command_interfaces_[i].set_value(external_commands_for_testing_[i]);
+      (void)command_interfaces_[i].set_value(external_commands_for_testing_[i]);
     }
   }
 
@@ -101,6 +101,48 @@ CallbackReturn TestController::on_init() { return CallbackReturn::SUCCESS; }
 
 CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  auto ctrl_node = get_node();
+  if (!ctrl_node->has_parameter("command_interfaces"))
+  {
+    ctrl_node->declare_parameter("command_interfaces", std::vector<std::string>({}));
+  }
+  if (!ctrl_node->has_parameter("state_interfaces"))
+  {
+    ctrl_node->declare_parameter("state_interfaces", std::vector<std::string>({}));
+  }
+  const std::vector<std::string> command_interfaces =
+    ctrl_node->get_parameter("command_interfaces").as_string_array();
+  const std::vector<std::string> state_interfaces =
+    ctrl_node->get_parameter("state_interfaces").as_string_array();
+  if (!command_interfaces.empty() || !state_interfaces.empty())
+  {
+    cmd_iface_cfg_.names.clear();
+    state_iface_cfg_.names.clear();
+    for (const auto & cmd_itf : command_interfaces)
+    {
+      cmd_iface_cfg_.names.push_back(cmd_itf);
+    }
+    cmd_iface_cfg_.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+    external_commands_for_testing_.resize(command_interfaces.size(), 0.0);
+    for (const auto & state_itf : state_interfaces)
+    {
+      state_iface_cfg_.names.push_back(state_itf);
+    }
+    state_iface_cfg_.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  }
+
+  const std::string service_name = get_node()->get_name() + std::string("/set_bool");
+  service_ = get_node()->create_service<example_interfaces::srv::SetBool>(
+    service_name,
+    [this](
+      const std::shared_ptr<example_interfaces::srv::SetBool::Request> request,
+      std::shared_ptr<example_interfaces::srv::SetBool::Response> response)
+    {
+      RCLCPP_INFO_STREAM(
+        get_node()->get_logger(), "Setting response to " << std::boolalpha << request->data);
+      response->success = request->data;
+    });
+
   return CallbackReturn::SUCCESS;
 }
 
@@ -114,6 +156,15 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
   if (cleanup_calls)
   {
     (*cleanup_calls)++;
+  }
+  return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn TestController::on_shutdown(const rclcpp_lifecycle::State &)
+{
+  if (shutdown_calls)
+  {
+    (*shutdown_calls)++;
   }
   return CallbackReturn::SUCCESS;
 }
@@ -136,7 +187,7 @@ std::vector<double> TestController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value());
+    state_intr_data.push_back(interface.get_optional().value());
   }
   return state_intr_data;
 }

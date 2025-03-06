@@ -67,7 +67,7 @@ struct JointLimits
   bool has_effort_limits;
   bool angle_wraparound;
 
-  std::string to_string()
+  std::string to_string() const
   {
     std::stringstream ss_output;
 
@@ -124,7 +124,7 @@ struct SoftJointLimits
   double k_position;
   double k_velocity;
 
-  std::string to_string()
+  std::string to_string() const
   {
     std::stringstream ss_output;
 

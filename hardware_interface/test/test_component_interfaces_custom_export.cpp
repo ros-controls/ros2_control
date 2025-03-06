@@ -54,8 +54,6 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
-  std::string get_name() const override { return "DummyActuatorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -95,8 +93,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
-  std::string get_name() const override { return "DummySensorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -118,8 +114,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
-  std::string get_name() const override { return "DummySystemDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -245,21 +239,20 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
   {
-    auto [contains, position] =
-      test_components::vector_contains(state_interfaces, "joint1/voltage");
-    EXPECT_TRUE(contains);
-    EXPECT_EQ("joint1/voltage", state_interfaces[position]->get_name());
+    auto [contains, position] = test_components::vector_contains(state_interfaces, "sens1/voltage");
+    ASSERT_TRUE(contains);
+    EXPECT_EQ("sens1/voltage", state_interfaces[position]->get_name());
     EXPECT_EQ("voltage", state_interfaces[position]->get_interface_name());
-    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
-    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
+    EXPECT_EQ("sens1", state_interfaces[position]->get_prefix_name());
+    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_optional().value()));
   }
   {
     auto [contains, position] =
-      test_components::vector_contains(state_interfaces, "joint1/some_unlisted_interface");
-    EXPECT_TRUE(contains);
-    EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[position]->get_name());
+      test_components::vector_contains(state_interfaces, "sens1/some_unlisted_interface");
+    ASSERT_TRUE(contains);
+    EXPECT_EQ("sens1/some_unlisted_interface", state_interfaces[position]->get_name());
     EXPECT_EQ("some_unlisted_interface", state_interfaces[position]->get_interface_name());
-    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+    EXPECT_EQ("sens1", state_interfaces[position]->get_prefix_name());
   }
 }
 

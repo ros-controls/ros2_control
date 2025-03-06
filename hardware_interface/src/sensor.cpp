@@ -40,7 +40,7 @@ Sensor::Sensor(Sensor && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.sensors_mutex_);
   impl_ = std::move(other.impl_);
-  last_read_cycle_time_ = other.last_read_cycle_time_;
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
@@ -53,7 +53,6 @@ const rclcpp_lifecycle::State & Sensor::initialize(
     switch (impl_->init(sensor_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
-        last_read_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -95,6 +94,7 @@ const rclcpp_lifecycle::State & Sensor::configure()
 const rclcpp_lifecycle::State & Sensor::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
@@ -116,6 +116,7 @@ const rclcpp_lifecycle::State & Sensor::cleanup()
 const rclcpp_lifecycle::State & Sensor::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -138,11 +139,13 @@ const rclcpp_lifecycle::State & Sensor::shutdown()
 const rclcpp_lifecycle::State & Sensor::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
+        impl_->enable_introspection(true);
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
@@ -161,6 +164,7 @@ const rclcpp_lifecycle::State & Sensor::activate()
 const rclcpp_lifecycle::State & Sensor::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
@@ -184,6 +188,7 @@ const rclcpp_lifecycle::State & Sensor::deactivate()
 const rclcpp_lifecycle::State & Sensor::error()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
@@ -233,9 +238,9 @@ std::vector<StateInterface::ConstSharedPtr> Sensor::export_state_interfaces()
   // END: for backward compatibility
 }
 
-std::string Sensor::get_name() const { return impl_->get_name(); }
+const std::string & Sensor::get_name() const { return impl_->get_name(); }
 
-std::string Sensor::get_group_name() const { return impl_->get_group_name(); }
+const std::string & Sensor::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
 {
@@ -251,19 +256,19 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
     last_read_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 std::recursive_mutex & Sensor::get_mutex() { return sensors_mutex_; }

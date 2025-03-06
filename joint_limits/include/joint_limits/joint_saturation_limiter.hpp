@@ -33,21 +33,21 @@ namespace joint_limits
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
  */
-template <typename LimitsType>
-class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
+template <typename JointLimitsStateDataType>
+class JointSaturationLimiter : public JointLimiterInterface<JointLimitsStateDataType>
 {
 public:
   /** \brief Constructor */
-  JOINT_LIMITS_PUBLIC JointSaturationLimiter();
+  JointSaturationLimiter();
 
   /** \brief Destructor */
-  JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
+  ~JointSaturationLimiter();
 
-  JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
+  bool on_init() override { return true; }
 
-  JOINT_LIMITS_PUBLIC bool on_configure(
-    const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/) override
+  bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
+    prev_command_ = current_joint_states;
     return true;
   }
 
@@ -66,34 +66,24 @@ public:
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
-    const rclcpp::Duration & dt) override;
+  bool on_enforce(
+    const JointLimitsStateDataType & current_joint_states,
+    JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
-  /** \brief Enforce joint limits to desired arbitrary physical quantity.
-   * Additional, commonly used method for enforcing limits by clamping desired input value.
-   * The limit is defined in effort limits of the `joint::limits/JointLimit` structure.
-   *
-   * If `has_effort_limits` is set to false, the limits will be not enforced to a joint.
-   *
-   * \param[in,out] desired_joint_states physical quantity that should be adjusted to obey the
-   * limits. \returns true if limits are enforced, otherwise false.
-   */
-  JOINT_LIMITS_PUBLIC bool on_enforce(std::vector<double> & desired_joint_states) override;
-
-private:
+protected:
   rclcpp::Clock::SharedPtr clock_;
+  JointLimitsStateDataType prev_command_;
 };
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::JointSaturationLimiter() : JointLimiterInterface<LimitsType>()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::JointSaturationLimiter()
+: JointLimiterInterface<JointLimitsStateDataType>()
 {
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock(RCL_ROS_TIME));
 }
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::~JointSaturationLimiter()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::~JointSaturationLimiter()
 {
 }
 

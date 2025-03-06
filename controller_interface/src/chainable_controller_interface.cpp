@@ -53,22 +53,25 @@ ChainableControllerInterface::export_state_interfaces()
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
   ordered_exported_state_interfaces_.reserve(state_interfaces.size());
   exported_state_interface_names_.reserve(state_interfaces.size());
+  exported_state_interfaces_.clear();
+  exported_state_interface_names_.clear();
+  ordered_exported_state_interfaces_.clear();
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
   {
-    if (interface.get_prefix_name() != get_node()->get_name())
+    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
       std::string error_msg =
         "The prefix of the interface '" + interface.get_prefix_name() +
-        "' does not equal the controller's name '" + get_node()->get_name() +
+        "' should begin with the controller's name '" + get_node()->get_name() +
         "'. This is mandatory for state interfaces. No state interface will be exported. Please "
         "correct and recompile the controller with name '" +
         get_node()->get_name() + "' and try again.";
       throw std::runtime_error(error_msg);
     }
     auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
-    const auto interface_name = state_interface->get_interface_name();
+    const auto interface_name = state_interface->get_name();
     auto [it, succ] = exported_state_interfaces_.insert({interface_name, state_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
@@ -117,6 +120,9 @@ ChainableControllerInterface::export_reference_interfaces()
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
   exported_reference_interface_names_.reserve(reference_interfaces.size());
   ordered_exported_reference_interfaces_.reserve(reference_interfaces.size());
+  exported_reference_interfaces_.clear();
+  exported_reference_interface_names_.clear();
+  ordered_exported_reference_interfaces_.clear();
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces
@@ -137,19 +143,20 @@ ChainableControllerInterface::export_reference_interfaces()
   const auto ref_interface_size = reference_interfaces.size();
   for (auto & interface : reference_interfaces)
   {
-    if (interface.get_prefix_name() != get_node()->get_name())
+    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
-      std::string error_msg = "The name of the interface " + interface.get_name() +
-                              " does not begin with the controller's name. This is mandatory for "
-                              "reference interfaces. Please "
-                              "correct and recompile the controller with name " +
-                              get_node()->get_name() + " and try again.";
+      std::string error_msg = "The prefix of the interface '" + interface.get_prefix_name() +
+                              "' should begin with the controller's name '" +
+                              get_node()->get_name() +
+                              "'. This is mandatory for reference interfaces. Please correct and "
+                              "recompile the controller with name '" +
+                              get_node()->get_name() + "' and try again.";
       throw std::runtime_error(error_msg);
     }
 
     hardware_interface::CommandInterface::SharedPtr reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    const auto interface_name = reference_interface->get_interface_name();
+    const auto interface_name = reference_interface->get_name();
     // check the exported interface name is unique
     auto [it, succ] = exported_reference_interfaces_.insert({interface_name, reference_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces

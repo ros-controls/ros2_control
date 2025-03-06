@@ -26,7 +26,6 @@
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/async_components.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/sensor.hpp"
@@ -142,10 +141,7 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
-        component_info.rw_rate =
-          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
-            ? cm_update_rate_
-            : hardware_info.rw_rate;
+        component_info.rw_rate = hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
@@ -302,15 +298,6 @@ public:
             hardware.get_name().c_str(), interface.c_str());
         }
       }
-
-      if (hardware_info_map_[hardware.get_name()].is_async)
-      {
-        async_component_threads_.emplace(
-          std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
-          std::forward_as_tuple(cm_update_rate_, clock_interface_));
-
-        async_component_threads_.at(hardware.get_name()).register_component(&hardware);
-      }
     }
     if (!hardware.get_group_name().empty())
     {
@@ -431,7 +418,6 @@ public:
     if (result)
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      async_component_threads_.erase(hardware.get_name());
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
@@ -466,16 +452,6 @@ public:
         get_logger(), "Unknown exception occurred while activating hardware '%s'",
         hardware.get_name().c_str());
     }
-
-    if (result)
-    {
-      if (async_component_threads_.find(hardware.get_name()) != async_component_threads_.end())
-      {
-        async_component_threads_.at(hardware.get_name()).activate();
-      }
-      // TODO(destogl): make all command interfaces available (currently are all available)
-    }
-
     return result;
   }
 
@@ -597,13 +573,17 @@ public:
             result = shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_ACTIVE:
-            result = shutdown_hardware(hardware);
+            result = deactivate_hardware(hardware) && shutdown_hardware(hardware);
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = true;
             break;
         }
         break;
+    }
+    if (on_component_state_switch_callback_)
+    {
+      on_component_state_switch_callback_();
     }
 
     return result;
@@ -615,11 +595,10 @@ public:
     auto interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
 
-    RCLCPP_WARN(
-      get_logger(),
+    RCLCPP_WARN_EXPRESSION(
+      get_logger(), interface_names.empty(),
       "Importing state interfaces for the hardware '%s' returned no state interfaces.",
       hardware.get_name().c_str());
-
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
@@ -636,6 +615,7 @@ public:
         command_interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    command_interface->registerIntrospection();
   }
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -693,6 +673,7 @@ public:
         interface->get_name() + "]");
       throw std::runtime_error(msg);
     }
+    interface->registerIntrospection();
     return interface_name;
   }
   /// Adds exported state interfaces into internal storage.
@@ -740,6 +721,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      state_interface_map_[interface]->unregisterIntrospection();
       state_interface_map_.erase(interface);
     }
   }
@@ -800,6 +782,7 @@ public:
   {
     for (const auto & interface : interface_names)
     {
+      command_interface_map_[interface]->unregisterIntrospection();
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
     }
@@ -828,15 +811,7 @@ public:
       }
       return true;
     };
-
-    if (hardware_info.is_async)
-    {
-      return load_and_init_actuators(async_actuators_);
-    }
-    else
-    {
-      return load_and_init_actuators(actuators_);
-    }
+    return load_and_init_actuators(actuators_);
   }
 
   bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
@@ -861,14 +836,7 @@ public:
       return true;
     };
 
-    if (hardware_info.is_async)
-    {
-      return load_and_init_sensors(async_sensors_);
-    }
-    else
-    {
-      return load_and_init_sensors(sensors_);
-    }
+    return load_and_init_sensors(sensors_);
   }
 
   bool load_and_initialize_system(const HardwareInfo & hardware_info)
@@ -893,15 +861,7 @@ public:
       }
       return true;
     };
-
-    if (hardware_info.is_async)
-    {
-      return load_and_init_systems(async_systems_);
-    }
-    else
-    {
-      return load_and_init_systems(systems_);
-    }
+    return load_and_init_systems(systems_);
   }
 
   void initialize_actuator(
@@ -923,14 +883,7 @@ public:
       }
     };
 
-    if (hardware_info.is_async)
-    {
-      init_actuators(async_actuators_);
-    }
-    else
-    {
-      init_actuators(actuators_);
-    }
+    init_actuators(actuators_);
   }
 
   void initialize_sensor(
@@ -951,14 +904,7 @@ public:
       }
     };
 
-    if (hardware_info.is_async)
-    {
-      init_sensors(async_sensors_);
-    }
-    else
-    {
-      init_sensors(sensors_);
-    }
+    init_sensors(sensors_);
   }
 
   void initialize_system(
@@ -980,14 +926,7 @@ public:
       }
     };
 
-    if (hardware_info.is_async)
-    {
-      init_systems(async_systems_);
-    }
-    else
-    {
-      init_systems(systems_);
-    }
+    init_systems(systems_);
   }
 
   void clear()
@@ -995,10 +934,6 @@ public:
     actuators_.clear();
     sensors_.clear();
     systems_.clear();
-
-    async_actuators_.clear();
-    async_sensors_.clear();
-    async_systems_.clear();
 
     hardware_info_map_.clear();
     state_interface_map_.clear();
@@ -1057,10 +992,6 @@ public:
   std::vector<Sensor> sensors_;
   std::vector<System> systems_;
 
-  std::vector<Actuator> async_actuators_;
-  std::vector<Sensor> async_sensors_;
-  std::vector<System> async_systems_;
-
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
   std::unordered_map<std::string, hardware_interface::return_type> hw_group_state_;
 
@@ -1084,8 +1015,8 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
-  /// List of async components by type
-  std::unordered_map<std::string, AsyncComponentThread> async_component_threads_;
+  /// The callback to be called when a component state is switched
+  std::function<void()> on_component_state_switch_callback_ = nullptr;
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
@@ -1120,6 +1051,22 @@ ResourceManager::ResourceManager(
   }
 }
 
+bool ResourceManager::shutdown_components()
+{
+  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  bool shutdown_status = true;
+  for (auto const & hw_info : resource_storage_->hardware_info_map_)
+  {
+    rclcpp_lifecycle::State finalized_state(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+    if (set_component_state(hw_info.first, finalized_state) != return_type::OK)
+    {
+      shutdown_status = false;
+    }
+  }
+  return shutdown_status;
+}
+
 // CM API: Called in "callback/slow"-thread
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
@@ -1128,7 +1075,12 @@ bool ResourceManager::load_and_initialize_components(
 
   resource_storage_->cm_update_rate_ = update_rate;
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  // Set the update rate for all hardware components
+  for (auto & hw : hardware_info)
+  {
+    hw.rw_rate = (hw.rw_rate == 0 || hw.rw_rate > update_rate) ? update_rate : hw.rw_rate;
+  }
 
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
@@ -1516,7 +1468,8 @@ void ResourceManager::import_component(
 }
 
 // CM API: Called in "callback/slow"-thread
-std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
+const std::unordered_map<std::string, HardwareComponentInfo> &
+ResourceManager::get_components_status()
 {
   auto loop_and_get_state = [&](auto & container)
   {
@@ -1528,11 +1481,8 @@ std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_comp
   };
 
   loop_and_get_state(resource_storage_->actuators_);
-  loop_and_get_state(resource_storage_->async_actuators_);
   loop_and_get_state(resource_storage_->sensors_);
-  loop_and_get_state(resource_storage_->async_sensors_);
   loop_and_get_state(resource_storage_->systems_);
-  loop_and_get_state(resource_storage_->async_systems_);
 
   return resource_storage_->hardware_info_map_;
 }
@@ -1800,33 +1750,8 @@ return_type ResourceManager::set_component_state(
       std::bind(&ResourceStorage::set_component_state<System>, resource_storage_.get(), _1, _2),
       resource_storage_->systems_);
   }
-  if (!found)
-  {
-    found = find_set_component_state(
-      std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
-      resource_storage_->async_actuators_);
-  }
-  if (!found)
-  {
-    found = find_set_component_state(
-      std::bind(&ResourceStorage::set_component_state<System>, resource_storage_.get(), _1, _2),
-      resource_storage_->async_systems_);
-  }
-  if (!found)
-  {
-    found = find_set_component_state(
-      std::bind(&ResourceStorage::set_component_state<Sensor>, resource_storage_.get(), _1, _2),
-      resource_storage_->async_sensors_);
-  }
 
   return result;
-}
-
-void ResourceManager::shutdown_async_components()
-{
-  resource_storage_->async_component_threads_.erase(
-    resource_storage_->async_component_threads_.begin(),
-    resource_storage_->async_component_threads_.end());
 }
 
 // CM API: Called in "update"-thread
@@ -1841,30 +1766,37 @@ HardwareReadWriteStatus ResourceManager::read(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      const std::string component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
           get_logger(), "Skipping read() call for the component '%s' since it is locked",
-          component.get_name().c_str());
+          component_name.c_str());
         continue;
       }
       auto ret_val = return_type::OK;
       try
       {
+        auto & hardware_component_info = resource_storage_->hardware_info_map_[component_name];
+        const auto current_time = resource_storage_->get_clock()->now();
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
-            resource_storage_->cm_update_rate_)
+          hardware_component_info.rw_rate == 0 ||
+          hardware_component_info.rw_rate == resource_storage_->cm_update_rate_)
         {
-          ret_val = component.read(time, period);
+          ret_val = component.read(current_time, period);
         }
         else
         {
-          const double read_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
-          const auto current_time = resource_storage_->get_clock()->now();
-          const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
-          if (actual_period.seconds() * read_rate >= 0.99)
+          const double read_rate = hardware_component_info.rw_rate;
+          const rclcpp::Duration actual_period =
+            component.get_last_read_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
+              ? current_time - component.get_last_read_time()
+              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(read_rate));
+
+          const double error_now = std::abs(actual_period.seconds() * read_rate - 1.0);
+          const double error_if_skipped = std::abs(
+            (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * read_rate - 1.0);
+          if (error_now <= error_if_skipped)
           {
             ret_val = component.read(current_time, actual_period);
           }
@@ -1877,26 +1809,28 @@ HardwareReadWriteStatus ResourceManager::read(
       {
         RCLCPP_ERROR(
           get_logger(), "Exception of type : %s thrown during read of the component '%s': %s",
-          typeid(e).name(), component.get_name().c_str(), e.what());
+          typeid(e).name(), component_name.c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
       {
         RCLCPP_ERROR(
           get_logger(), "Unknown exception thrown during read of the component '%s'",
-          component.get_name().c_str());
+          component_name.c_str());
         ret_val = return_type::ERROR;
       }
       if (ret_val == return_type::ERROR)
       {
         component.error();
         read_write_status.ok = false;
-        read_write_status.failed_hardware_names.push_back(component.get_name());
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+        read_write_status.failed_hardware_names.push_back(component_name);
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        resource_storage_->deactivate_hardware(component);
+        rclcpp_lifecycle::State inactive_state(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component_name, inactive_state);
       }
       // If desired: automatic re-activation. We could add a flag for this...
       // else
@@ -1927,30 +1861,38 @@ HardwareReadWriteStatus ResourceManager::write(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      const std::string component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
           get_logger(), "Skipping write() call for the component '%s' since it is locked",
-          component.get_name().c_str());
+          component_name.c_str());
         continue;
       }
       auto ret_val = return_type::OK;
       try
       {
+        auto & hardware_component_info = resource_storage_->hardware_info_map_[component_name];
+        const auto current_time = resource_storage_->get_clock()->now();
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
-            resource_storage_->cm_update_rate_)
+          hardware_component_info.rw_rate == 0 ||
+          hardware_component_info.rw_rate == resource_storage_->cm_update_rate_)
         {
-          ret_val = component.write(time, period);
+          ret_val = component.write(current_time, period);
         }
         else
         {
-          const double write_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
-          const auto current_time = resource_storage_->get_clock()->now();
-          const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
-          if (actual_period.seconds() * write_rate >= 0.99)
+          const double write_rate = hardware_component_info.rw_rate;
+          const rclcpp::Duration actual_period =
+            component.get_last_write_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
+              ? current_time - component.get_last_write_time()
+              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(write_rate));
+
+          const double error_now = std::abs(actual_period.seconds() * write_rate - 1.0);
+          const double error_if_skipped = std::abs(
+            (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * write_rate -
+            1.0);
+          if (error_now <= error_if_skipped)
           {
             ret_val = component.write(current_time, actual_period);
           }
@@ -1963,26 +1905,28 @@ HardwareReadWriteStatus ResourceManager::write(
       {
         RCLCPP_ERROR(
           get_logger(), "Exception of type : %s thrown during write of the component '%s': %s",
-          typeid(e).name(), component.get_name().c_str(), e.what());
+          typeid(e).name(), component_name.c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
       {
         RCLCPP_ERROR(
           get_logger(), "Unknown exception thrown during write of the component '%s'",
-          component.get_name().c_str());
+          component_name.c_str());
         ret_val = return_type::ERROR;
       }
       if (ret_val == return_type::ERROR)
       {
         component.error();
         read_write_status.ok = false;
-        read_write_status.failed_hardware_names.push_back(component.get_name());
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+        read_write_status.failed_hardware_names.push_back(component_name);
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        resource_storage_->deactivate_hardware(component);
+        rclcpp_lifecycle::State inactive_state(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component_name, inactive_state);
       }
     }
   };
@@ -2021,6 +1965,11 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return resource_storage_->state_interface_map_.find(key) !=
          resource_storage_->state_interface_map_.end();
+}
+
+void ResourceManager::set_on_component_state_switch_callback(std::function<void()> callback)
+{
+  resource_storage_->on_component_state_switch_callback_ = callback;
 }
 
 // END: "used only in tests and locally"

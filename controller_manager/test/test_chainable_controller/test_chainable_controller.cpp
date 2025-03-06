@@ -101,13 +101,14 @@ controller_interface::return_type TestChainableController::update_and_write_comm
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
   {
-    command_interfaces_[i].set_value(reference_interfaces_[i] - state_interfaces_[i].get_value());
+    (void)command_interfaces_[i].set_value(
+      reference_interfaces_[i] - state_interfaces_[i].get_optional().value());
   }
   // If there is a command interface then integrate and set it to the exported state interface data
   for (size_t i = 0; i < exported_state_interface_names_.size() && i < command_interfaces_.size();
        ++i)
   {
-    state_interfaces_values_[i] = command_interfaces_[i].get_value() * CONTROLLER_DT;
+    state_interfaces_values_[i] = command_interfaces_[i].get_optional().value() * CONTROLLER_DT;
   }
   // If there is no command interface and if there is a state interface then just forward the same
   // value as in the state interface
@@ -115,7 +116,7 @@ controller_interface::return_type TestChainableController::update_and_write_comm
                      command_interfaces_.empty();
        ++i)
   {
-    state_interfaces_values_[i] = state_interfaces_[i].get_value();
+    state_interfaces_values_[i] = state_interfaces_[i].get_optional().value();
   }
 
   return controller_interface::return_type::OK;
@@ -240,7 +241,7 @@ std::vector<double> TestChainableController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value());
+    state_intr_data.push_back(interface.get_optional().value());
   }
   return state_intr_data;
 }

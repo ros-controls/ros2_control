@@ -55,6 +55,35 @@ class ServiceNotFoundError(Exception):
     pass
 
 
+class SingletonServiceCaller:
+    """
+    Singleton class to call services of controller manager.
+
+    This class is used to create a service client for a given service name.
+    If the service client already exists, it returns the existing client.
+    It is used to avoid creating multiple service clients for the same service name.
+
+    It needs Node object, service type and fully qualified service name to create a service client.
+
+    """
+
+    _clients = {}
+
+    def __new__(cls, node, service_type, fully_qualified_service_name):
+        if (node, fully_qualified_service_name) not in cls._clients:
+            cls._clients[(node, fully_qualified_service_name)] = node.create_client(
+                service_type, fully_qualified_service_name
+            )
+            node.get_logger().debug(
+                f"{bcolors.MAGENTA}Creating a new service client : {fully_qualified_service_name} with node : {node.get_name()}{bcolors.ENDC}"
+            )
+
+        node.get_logger().debug(
+            f"{bcolors.OKBLUE}Returning the existing service client : {fully_qualified_service_name} for node : {node.get_name()}{bcolors.ENDC}"
+        )
+        return cls._clients[(node, fully_qualified_service_name)]
+
+
 def service_caller(
     node,
     service_name,
@@ -92,7 +121,7 @@ def service_caller(
     fully_qualified_service_name = (
         f"{namespace}/{service_name}" if not service_name.startswith("/") else service_name
     )
-    cli = node.create_client(service_type, fully_qualified_service_name)
+    cli = SingletonServiceCaller(node, service_type, fully_qualified_service_name)
 
     while not cli.service_is_ready():
         node.get_logger().info(
@@ -296,6 +325,7 @@ def get_params_files_with_controller_parameters(
                 f"/{controller_name}" if namespace == "/" else f"{namespace}/{controller_name}"
             )
             WILDCARD_KEY = "/**"
+            ROS_PARAMS_KEY = "ros__parameters"
             parameters = yaml.safe_load(f)
             # check for the parameter in 'controller_name' or 'namespaced_controller' or '/**/namespaced_controller' or '/**/controller_name'
             for key in [
@@ -304,6 +334,8 @@ def get_params_files_with_controller_parameters(
                 f"{WILDCARD_KEY}/{controller_name}",
                 f"{WILDCARD_KEY}{namespaced_controller}",
             ]:
+                if parameter_file in controller_parameter_files:
+                    break
                 if key in parameters:
                     if key == controller_name and namespace != "/":
                         node.get_logger().fatal(
@@ -311,8 +343,9 @@ def get_params_files_with_controller_parameters(
                         )
                         break
                     controller_parameter_files.append(parameter_file)
-
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                    controller_parameter_files.append(parameter_file)
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
     return controller_parameter_files
 
@@ -344,8 +377,10 @@ def get_parameter_from_param_files(
                         break
                     controller_param_dict = parameters[key]
 
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY][key]
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                    controller_param_dict = parameters[WILDCARD_KEY]
 
                 if controller_param_dict and (
                     not isinstance(controller_param_dict, dict)

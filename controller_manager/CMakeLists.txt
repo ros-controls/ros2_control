@@ -6,8 +6,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
           -Werror=missing-braces)
 endif()
 
+# using this instead of visibility macros
+# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-  ament_index_cpp
   controller_interface
   controller_manager_msgs
   diagnostic_updater
@@ -46,10 +49,6 @@ target_link_libraries(controller_manager PUBLIC
 )
 ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
@@ -58,11 +57,12 @@ target_link_libraries(ros2_control_node PRIVATE
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(example_interfaces REQUIRED)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC controller_manager)
-  target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  ament_target_dependencies(test_controller PUBLIC example_interfaces)
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
     TARGETS test_controller
@@ -73,7 +73,6 @@ if(BUILD_TESTING)
     test/test_controller_failed_init/test_controller_failed_init.cpp
   )
   target_link_libraries(test_controller_failed_init PUBLIC controller_manager)
-  target_compile_definitions(test_controller_failed_init PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(
     controller_interface test/test_controller_failed_init/test_controller_failed_init.xml)
   install(
@@ -86,7 +85,6 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(test_chainable_controller PUBLIC realtime_tools)
   target_link_libraries(test_chainable_controller PUBLIC controller_manager)
-  target_compile_definitions(test_chainable_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(
     controller_interface test/test_chainable_controller/test_chainable_controller.xml)
   install(
@@ -176,7 +174,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_with_interfaces PUBLIC
     controller_manager
   )
-  target_compile_definitions(test_controller_with_interfaces PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(
     controller_interface test/test_controller_with_interfaces/test_controller_with_interfaces.xml)
   install(
@@ -190,19 +187,23 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_release_interfaces
     controller_manager
+    test_controller
     test_controller_with_interfaces
     ros2_control_test_assets::ros2_control_test_assets
   )
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
-    TIMEOUT 120
+    TIMEOUT 180
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  target_compile_definitions(
+    test_spawner_unspawner
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
   ament_add_gmock(test_hardware_spawner
     test/test_hardware_spawner.cpp
@@ -210,17 +211,9 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_hardware_spawner
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
-
-  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
-    DESTINATION test)
-
-  install(FILES test/test_controller_spawner_with_type.yaml
-  DESTINATION test)
-
-  install(FILES test/test_controller_overriding_parameters.yaml
-    DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp

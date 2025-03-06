@@ -20,7 +20,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rclcpp/version.h"
+#if RCLCPP_VERSION_GTE(29, 0, 0)
+#include "urdf/model.hpp"
+#else
 #include "urdf/model.h"
+#endif
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -60,6 +65,7 @@ constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
 constexpr const auto kReadWriteRateAttribute = "rw_rate";
 constexpr const auto kIsAsyncAttribute = "is_async";
+constexpr const auto kThreadPriorityAttribute = "thread_priority";
 
 }  // namespace
 
@@ -187,7 +193,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
@@ -271,6 +277,35 @@ bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
   return attr ? parse_bool(attr->Value()) : false;
+}
+
+/// Parse thread_priority attribute
+/**
+ * Parses an XMLElement and returns the value of the thread_priority attribute.
+ * Defaults to 50 if not specified.
+ *
+ * \param[in] elem XMLElement that has the thread_priority attribute.
+ * \return positive integer specifying the thread priority.
+ */
+int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
+  if (!attr)
+  {
+    return 50;
+  }
+  std::string s = attr->Value();
+  std::regex int_re("[1-9][0-9]*");
+  if (std::regex_match(s, int_re))
+  {
+    return std::stoi(s);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "Could not parse thread_priority tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+      s + "\", but expected a non-zero positive integer.");
+  }
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -614,6 +649,8 @@ HardwareInfo parse_resource_from_xml(
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
   hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
+  hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
+                                               : std::numeric_limits<int>::max();
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -923,7 +960,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           {
             throw std::runtime_error("Mimic joint '" + name + "' not found in <ros2_control> tag");
           }
-          return std::distance(hw_info.joints.begin(), it);
+          return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
         };
 
         MimicJoint mimic_joint;
