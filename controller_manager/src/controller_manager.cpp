@@ -1358,9 +1358,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     // if controller is not active then skip preceding-controllers checks
     if (!is_controller_active(controller_it->c))
     {
-      RCLCPP_WARN(
-        get_logger(), "Controller with name '%s' can not be deactivated since it is not active.",
-        controller_it->info.name.c_str());
+      message = "Controller with name '" + controller_it->info.name +
+                "' can not be deactivated since it is not active.";
+      RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
     else
