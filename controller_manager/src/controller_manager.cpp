@@ -315,7 +315,6 @@ controller_interface::return_type evaluate_switch_result(
   else
   {
     message = "Successfully switched controllers!";
-    RCLCPP_INFO(logger, "%s", message.c_str());
     if (strictness != controller_manager_msgs::srv::SwitchController::Request::STRICT)
     {
       if (!deactivate_list.empty())
@@ -337,6 +336,7 @@ controller_interface::return_type evaluate_switch_result(
         RCLCPP_INFO(logger, "%s", info_msg.c_str());
       }
     }
+    RCLCPP_INFO(logger, "Successfully switched controllers!");
   }
   return switch_result;
 }
@@ -1751,9 +1751,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   clear_requests();
 
-  RCLCPP_DEBUG_EXPRESSION(
-    get_logger(), switch_result == controller_interface::return_type::OK,
-    "Successfully switched controllers");
   return switch_result;
 }
 
