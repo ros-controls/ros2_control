@@ -1401,9 +1401,15 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else if (is_controller_active(controller_it->c))
     {
-      message = "Controller with name '" + controller_it->info.name + "' is already active.";
-      RCLCPP_WARN(get_logger(), "%s", message.c_str());
-      status = controller_interface::return_type::ERROR;
+      if (
+        std::find(
+          deactivate_request_.begin(), deactivate_request_.end(), controller_it->info.name) ==
+        deactivate_request_.end())
+      {
+        message = "Controller with name '" + controller_it->info.name + "' is already active.";
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        status = controller_interface::return_type::ERROR;
+      }
     }
     else if (!is_controller_inactive(controller_it->c))
     {
