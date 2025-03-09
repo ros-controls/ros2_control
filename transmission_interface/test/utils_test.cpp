@@ -39,7 +39,6 @@ TEST(UtilsTest, AccessorTest)
 TEST(UtilsTest, AccessorTestSharedPtr)
 {
   const std::string NAME = "joint";
-  double joint_value = 0.0;
   hardware_interface::InterfaceInfo interface_info;
   interface_info.name = HW_IF_POSITION;
   const JointHandle::SharedPtr joint_handle =
