@@ -33,7 +33,6 @@ public:
 class JointHandle : public hardware_interface::Handle
 {
 public:
-
 // Disable deprecated warnings
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
