@@ -394,9 +394,9 @@ Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` met
 
 Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update()`` calls must be below 10ms. If one controller requires 15ms, it cannot be executed synchronously without affecting the overall ros_control update rate. Running a controller asynchronously can be beneficial in this scenario.
+For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall ros_control update rate. Running a controller asynchronously can be beneficial in this scenario.
 
-The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true`` and specifying an ``update_rate`` that is lower than the controller manager's rate. The controller manager will load the controller accordingly. The description of these parameters can be found in the :ref:`ros2_control_parameters` section. For example:
+The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. The description of these parameters can be found in the :ref:`ros2_control_parameters` section. For example:
 
 .. code-block:: yaml
 
@@ -418,7 +418,7 @@ Scheduling Behavior
 ----------------------
 From a design perspective, the controller manager functions as a scheduler that triggers updates for asynchronous controllers during the control loop.
 
-The ROS 2 ``ControllerInterfaceBase`` uses ``AsyncFunctionHandler`` to handle the actual update, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates the timing and then calls the update method if it is due.
+The ROS 2 ``ControllerInterfaceBase`` uses ``AsyncFunctionHandler`` to handle the actual ``update`` callback of the controller, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates if the previous trigger is successfully finished and then calls the update method.
 
 If the update takes significant time and another update is triggered while the previous update is still running, the result of the previous update will be used. When this situation occurs, the controller manager will print a missing update cycle message, informing the user that they need to lower their controller's frequency as the computation is taking longer than initially estimated, as shown in the following example:
 
