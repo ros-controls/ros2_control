@@ -391,3 +391,51 @@ Hardware and Controller Errors
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
 Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+
+Support for Asynchronous Updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update()`` calls must be below 10ms. If one controller requires 15ms, it cannot be executed synchronously without affecting the overall ros_control update rate. Running a controller asynchronously can be beneficial in this scenario.
+
+The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true`` and specifying an ``update_rate`` that is lower than the controller manager's rate. The controller manager will load the controller accordingly. The description of these parameters can be found in the :ref:`ros2_control_parameters` section. For example:
+
+.. code-block:: yaml
+
+    controller_manager:
+      ros__parameters:
+        update_rate: 100  # Hz
+        ...
+
+    example_async_controller:
+      ros__parameters:
+        type: example_controller/ExampleAsyncController
+        is_async: true
+        update_rate: 20  # Hz
+        ...
+
+will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz.
+
+Scheduling Behavior
+----------------------
+From a design perspective, the controller manager functions as a scheduler that triggers updates for asynchronous controllers during the control loop.
+
+The ROS 2 ``ControllerInterfaceBase`` uses ``AsyncFunctionHandler`` to handle the actual update, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates the timing and then calls the update method if it is due.
+
+If the update takes significant time and another update is triggered while the previous update is still running, the result of the previous update will be used. When this situation occurs, the controller manager will print a missing update cycle message, informing the user that they need to lower their controller's frequency as the computation is taking longer than initially estimated, as shown in the following example:
+
+.. code-block:: console
+
+   [ros2_control_node-1] [WARN] [1741626670.311533972] [example_async_controller]: The controller missed xx update cycles out of yy total triggers. 
+
+If the async controller's update method throws an unhandled exception, the controller manager will handle it the same way as the synchronous controllers, deactivating the controller. It will also print an error message, similar to the following:
+
+.. code-block:: console
+
+  [ros2_control_node-1] [ERROR] [1741629098.352771957] [AsyncFunctionHandler]: AsyncFunctionHandler: Exception caught in the async callback thread!
+  ...
+  [ros2_control_node-1] [ERROR] [1741629098.352874151] [controller_manager]: Caught exception of type : St13runtime_error while updating controller 
+  [ros2_control_node-1] [ERROR] [1741629098.352940701] [controller_manager]: Deactivating controllers : [example_async_controller] as their update resulted in an error!
+
+Monitoring and Tuning
+----------------------
+
+ROS2 controller interface has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.
