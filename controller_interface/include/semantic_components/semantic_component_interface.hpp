@@ -42,12 +42,14 @@ public:
 
   virtual ~SemanticComponentInterface() = default;
 
-  /// Assign loaned state interfaces from the hardware.
-  /**
-   * Assign loaned state interfaces on the controller start.
-   *
-   * \param[in] state_interfaces vector of interfaces provided by the controller.
-   */
+ /**
+ * @brief Assign loaned state interfaces from the hardware.
+ *
+ * This function assigns loaned state interfaces when the controller starts.
+ *
+ * @param[in] state_interfaces A vector of state interfaces provided by the controller.
+ */
+
   bool assign_loaned_state_interfaces(
     std::vector<hardware_interface::LoanedStateInterface> & state_interfaces)
   {
@@ -58,15 +60,18 @@ public:
   /// Release loaned interfaces from the hardware.
   void release_interfaces() { state_interfaces_.clear(); }
 
-  /// Definition of state interface names for the component.
-  /**
-   * The function should be used in "state_interface_configuration()" of a controller to provide
-   * standardized interface names semantic component.
-   *
-   * \default Default implementation defined state interfaces as "name/NR" where NR is number
-   * from 0 to size of values;
-   * \return list of strings with state interface names for the semantic component.
-   */
+ /**
+ * @brief Define state interface names for the component.
+ *
+ * This function should be used in `state_interface_configuration()` of a controller 
+ * to provide standardized state interface names for the semantic component.
+ *
+ * @note The default implementation defines state interfaces as `"name/NR"`, 
+ * where `NR` is a number from 0 to the size of the values.
+ *
+ * @return A list of strings containing state interface names for the semantic component.
+ */
+
   virtual std::vector<std::string> get_state_interface_names()
   {
     if (interface_names_.empty())
@@ -79,10 +84,12 @@ public:
     return interface_names_;
   }
 
-  /// Return all values.
-  /**
-   * \return true if it gets all the values, else false
-   */
+ /**
+ * @brief Retrieve all values.
+ *
+ * @return `true` if all values are successfully retrieved, `false` otherwise.
+ */
+
   bool get_values(std::vector<double> & values) const
   {
     // check we have sufficient memory
@@ -98,10 +105,12 @@ public:
     return true;
   }
 
-  /// Return values as MessageReturnType
   /**
-   * \return false by default
-   */
+ * @brief Return values as a MessageReturnType.
+ *
+ * @return `false` by default.
+ */
+
   bool get_values_as_message(MessageReturnType & /* message */) { return false; }
 
 protected:

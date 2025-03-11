@@ -38,19 +38,22 @@ public:
 
   virtual ~JointLimiterInterface() = default;
 
-  /// Initialization of every JointLimiter.
   /**
-   * Initialization of JointLimiter for defined joints with their names.
-   * Robot description topic provides a topic name where URDF of the robot can be found.
-   * This is needed to use joint limits from URDF (not implemented yet!).
-   * Override this method only if initialization and reading joint limits should be adapted.
-   * Otherwise, initialize your custom limiter in `on_limit` method.
-   *
-   * \param[in] joint_names names of joints where limits should be applied.
-   * \param[in] param_itf node parameters interface object to access parameters.
-   * \param[in] logging_itf node logging interface to log if error happens.
-   * \param[in] robot_description_topic string of a topic where robot description is accessible.
-   */
+ * @brief Initializes JointLimiter for defined joints.
+ *
+ * This method initializes JointLimiter for specified joints using their names. 
+ * The robot description topic provides a source for retrieving the URDF of the robot, 
+ * which is required for using joint limits (not implemented yet).
+ *
+ * Override this method only if joint limit initialization needs adaptation. 
+ * Otherwise, initialize custom limiters in the `on_limit` method.
+ *
+ * @param[in] joint_names Names of joints where limits should be applied.
+ * @param[in] param_itf Node parameters interface for accessing parameters.
+ * @param[in] logging_itf Node logging interface for error logging.
+ * @param[in] robot_description_topic Topic name where the robot description is accessible.
+ */
+
   virtual bool init(
     const std::vector<std::string> & joint_names,
     const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -223,34 +226,42 @@ protected:
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
-  /** \brief Method is realized by an implementation.
-   *
-   * Filter-specific implementation of the joint limits enforce algorithm for multiple dependent
-   * physical quantities.
-   *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
-   */
+  /**
+ * @brief Method implemented by a specific realization.
+ * 
+ * This method enforces joint limits for multiple dependent physical quantities based on the filter-specific implementation.
+ * 
+ * @param[in] current_joint_states The current states of the joints of the robot.
+ * @param[in,out] desired_joint_states The joint state to be adjusted to ensure it respects the limits.
+ * @param[in] dt Time delta used to calculate missing integrals and derivatives in joint limits.
+ * 
+ * @return true if the limits were successfully enforced, otherwise false.
+ */
+
   virtual bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
-  /** \brief Checks if the logging interface is set.
-   * \returns true if the logging interface is available, otherwise false.
-   *
-   * \note this way of interfacing would be useful for instances where the logging interface is not
-   * available, for example in the ResourceManager or ResourceStorage classes.
-   */
+ /** 
+ * @brief Checks if the logging interface is set.
+ * 
+ * @return true if the logging interface is available, otherwise false.
+ * 
+ * @note This approach is useful in cases where the logging interface is not available, 
+ *       such as in the ResourceManager or ResourceStorage classes.
+ */
+
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
-  /** \brief Checks if the parameter interface is set.
-   * \returns true if the parameter interface is available, otherwise false.
-   *
-   * * \note this way of interfacing would be useful for instances where the logging interface is
-   * not available, for example in the ResourceManager or ResourceStorage classes.
-   */
+ /** 
+ * @brief Checks if the parameter interface is set.
+ * 
+ * @return true if the parameter interface is available, otherwise false.
+ * 
+ * @note This approach is useful in cases where the logging interface is not available, 
+ *       such as in the ResourceManager or ResourceStorage classes.
+ */
+
   bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
 
   size_t number_of_joints_;

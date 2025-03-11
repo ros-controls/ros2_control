@@ -25,14 +25,14 @@
 
 namespace controller_interface
 {
-/// Virtual class to implement when integrating a controller that can be preceded by other
-/// controllers.
 /**
- * Specialization of ControllerInterface class to force implementation of methods specific for
- * "chainable" controller, i.e., controller that can be preceded by an another controller, for
- * example inner controller of an control cascade.
+ * @brief Virtual class for integrating a controller that can be preceded by other controllers.
  *
+ * This is a specialization of the ControllerInterface class that enforces the implementation 
+ * of methods specific to "chainable" controllers. A chainable controller can be preceded 
+ * by another controller, such as an inner controller in a control cascade.
  */
+
 class ChainableControllerInterface : public ControllerInterfaceBase
 {
 public:
@@ -62,63 +62,69 @@ public:
   bool is_in_chained_mode() const final;
 
 protected:
-  /// Virtual method that each chainable controller should implement to export its read-only
-  /// chainable interfaces.
-  /**
-   * Each chainable controller implements this methods where all its state(read only) interfaces are
-   * exported. The method has the same meaning as `export_state_interfaces` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * \returns list of StateInterfaces that other controller can use as their inputs.
-   */
+/**
+ * @brief Virtual method to export read-only chainable interfaces.
+ *
+ * Each chainable controller must implement this method to export all its state (read-only) 
+ * interfaces. This method serves the same purpose as the `export_state_interfaces` method 
+ * in `hardware_interface::SystemInterface` or `hardware_interface::ActuatorInterface`.
+ *
+ * @return List of StateInterfaces that other controllers can use as inputs.
+ */
+
   virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces();
 
-  /// Virtual method that each chainable controller should implement to export its read/write
-  /// chainable interfaces.
   /**
-   * Each chainable controller implements this methods where all input (command) interfaces are
-   * exported. The method has the same meaning as `export_command_interface` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * \returns list of CommandInterfaces that other controller can use as their outputs.
-   */
+ * @brief Virtual method to export read/write chainable interfaces.
+ *
+ * Each chainable controller must implement this method to export all input (command) interfaces. 
+ * This method serves the same purpose as the `export_command_interface` method in 
+ * `hardware_interface::SystemInterface` or `hardware_interface::ActuatorInterface`.
+ *
+ * @return List of CommandInterfaces that other controllers can use as their outputs.
+ */
+
   virtual std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces();
 
-  /// Virtual method that each chainable controller should implement to switch chained mode.
-  /**
-   * Each chainable controller implements this methods to switch between "chained" and "external"
-   * mode. In "chained" mode all external interfaces like subscriber and service servers are
-   * disabled to avoid potential concurrency in input commands.
-   *
-   * \param[in] flag marking a switch to or from chained mode.
-   *
-   * \returns true if controller successfully switched between "chained" and "external" mode.
-   * \default returns true so the method don't have to be overridden if controller can always switch
-   * chained mode.
-   */
+ /**
+ * @brief Virtual method to switch the chained mode of a chainable controller.
+ *
+ * Each chainable controller must implement this method to switch between "chained" and "external" 
+ * modes. In "chained" mode, all external interfaces, such as subscribers and service servers, 
+ * are disabled to prevent potential concurrency in input commands.
+ *
+ * @param[in] flag Indicates whether to switch to or from chained mode.
+ * @return True if the controller successfully switched between "chained" and "external" modes.
+ * @note The default implementation returns true, so this method does not need to be overridden 
+ *       if the controller can always switch modes.
+ */
+
   virtual bool on_set_chained_mode(bool chained_mode);
 
-  /// Update reference from input topics when not in chained mode.
   /**
-   * Each chainable controller implements this method to update reference from subscribers when not
-   * in chained mode.
-   *
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
-   */
+ * @brief Update the reference from input topics when not in chained mode.
+ *
+ * Each chainable controller must implement this method to update the reference 
+ * from subscribers when not operating in chained mode.
+ *
+ * @return `return_type::OK` if the update is successful, otherwise `return_type::ERROR`.
+ */
+
   virtual return_type update_reference_from_subscribers(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Execute calculations of the controller and update command interfaces.
   /**
-   * Update method for chainable controllers.
-   * In this method is valid to assume that \reference_interfaces_ hold the values for calculation
-   * of the commands in the current control step.
-   * This means that this method is called after \update_reference_from_subscribers if controller is
-   * not in chained mode.
-   *
-   * \returns return_type::OK if calculation and writing of interface is successfully, otherwise
-   * return_type::ERROR.
-   */
+ * @brief Execute controller calculations and update command interfaces.
+ *
+ * This is the update method for chainable controllers. It is valid to assume that 
+ * `reference_interfaces_` hold the values needed for command calculations in the current 
+ * control step. This method is called after `update_reference_from_subscribers` if the controller 
+ * is not in chained mode.
+ *
+ * @return `return_type::OK` if the calculation and writing to the interface are successful, 
+ *         otherwise `return_type::ERROR`.
+ */
+
   virtual return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 

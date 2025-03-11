@@ -24,7 +24,7 @@
 namespace transmission_interface
 {
 /**
- * \brief Abstract interface for loading transmission instances from configuration data.
+ * @brief Abstract interface for loading transmission instances from configuration data.
  *
  * It also provides convenience methods for specific transmission loaders to leverage.
  */

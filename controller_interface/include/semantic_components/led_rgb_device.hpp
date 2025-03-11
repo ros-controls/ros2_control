@@ -44,18 +44,18 @@ public:
   {
   }
 
-  /// Set LED states from ColorRGBA message
-
   /**
-   * Set the values of the LED RGB device from a ColorRGBA message.
-   *
-   * \details Sets the values of the red, green, and blue channels from the message.
-   * If any of the values are out of the range [0, 1], the function fails and returns false.
-   *
-   * \param[in] message ColorRGBA message
-   *
-   * \return true if all values were set, false otherwise
-   */
+ * @brief Set LED states from a ColorRGBA message.
+ *
+ * Updates the RGB values of the LED device based on the provided ColorRGBA message.
+ * The red, green, and blue channel values are extracted from the message.
+ * If any value is out of the valid range [0, 1], the function fails and returns false.
+ *
+ * @param[in] message The ColorRGBA message containing the RGB values.
+ *
+ * @return true if all values were successfully set, false otherwise.
+ */
+
   bool set_values_from_message(const std_msgs::msg::ColorRGBA & message) override
   {
     if (

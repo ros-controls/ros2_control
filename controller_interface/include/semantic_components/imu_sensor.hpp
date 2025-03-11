@@ -42,12 +42,14 @@ public:
              {name + "/" + "linear_acceleration.z"}})
   {
   }
-  /// Return orientation.
   /**
-   * Return orientation reported by an IMU
-   *
-   * \return Array of size 4 with orientation quaternion (x,y,z,w).
-   */
+ * @brief Retrieve the orientation reported by an IMU.
+ *
+ * Returns the orientation as a quaternion (x, y, z, w).
+ *
+ * @return An array of size 4 containing the orientation quaternion in the order: [X, Y, Z, W].
+ */
+
   std::array<double, 4> get_orientation() const
   {
     update_data_from_interfaces();
@@ -56,12 +58,14 @@ public:
     return orientation;
   }
 
-  /// Return angular velocity.
   /**
-   * Return angular velocity reported by an IMU
-   *
-   * \return array of size 3 with angular velocity values (x, y, z).
-   */
+ * @brief Retrieve the angular velocity reported by an IMU.
+ *
+ * Returns the angular velocity measured along the X, Y, and Z axes.
+ *
+ * @return An array of size 3 containing angular velocity values in the order: [X, Y, Z].
+ */
+
   std::array<double, 3> get_angular_velocity() const
   {
     update_data_from_interfaces();
@@ -70,12 +74,14 @@ public:
     return angular_velocity;
   }
 
-  /// Return linear acceleration.
   /**
-   * Return linear acceleration reported by an IMU
-   *
-   * \return array of size 3 with linear acceleration values (x, y, z).
-   */
+ * @brief Retrieve the linear acceleration reported by an IMU.
+ *
+ * Returns the linear acceleration measured along the X, Y, and Z axes.
+ *
+ * @return An array of size 3 containing linear acceleration values in the order: [X, Y, Z].
+ */
+
   std::array<double, 3> get_linear_acceleration() const
   {
     update_data_from_interfaces();
@@ -84,11 +90,15 @@ public:
     return linear_acceleration;
   }
 
-  /// Return Imu message with orientation, angular velocity and linear acceleration
   /**
-   * Constructs and return a IMU message from the current values.
-   * \return imu message from values;
-   */
+ * @brief Construct and return an IMU message with orientation, angular velocity, and linear acceleration.
+ *
+ * Creates an IMU message using the current sensor values, including orientation, angular velocity, 
+ * and linear acceleration.
+ *
+ * @return An IMU message containing the current orientation, angular velocity, and linear acceleration values.
+ */
+
   bool get_values_as_message(sensor_msgs::msg::Imu & message) const
   {
     update_data_from_interfaces();

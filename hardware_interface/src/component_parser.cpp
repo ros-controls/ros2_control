@@ -73,13 +73,15 @@ namespace hardware_interface
 {
 namespace detail
 {
-/// Gets value of the text between tags.
 /**
- * \param[in] element_it XMLElement iterator to search for the text.
- * \param[in] tag_name parent tag name where text is searched for (used for error output)
- * \return text of for the tag
- * \throws std::runtime_error if text is not found
+ * @brief Retrieves the text value between XML tags.
+ *
+ * @param[in] element_it Iterator pointing to the XML element.
+ * @param[in] tag_name Parent tag name for error reporting.
+ * @return The text content of the tag.
+ * @throws std::runtime_error If text is not found.
  */
+
 std::string get_text_for_element(
   const tinyxml2::XMLElement * element_it, const std::string & tag_name)
 {
@@ -92,16 +94,19 @@ std::string get_text_for_element(
   return get_text_output;
 }
 
-/// Gets value of the attribute on an XMLelement.
 /**
- * If attribute is not found throws an error.
+ * @brief Retrieves the value of an attribute from an XML element.
  *
- * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name attribute name to search for and return value
- * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
- * \return attribute value
- * \throws std::runtime_error if attribute is not found
+ * This method searches for the specified attribute in the given XML element.
+ * If the attribute is not found, an error is thrown.
+ *
+ * @param[in] element_it Iterator to the XML element being searched.
+ * @param[in] attribute_name Name of the attribute to retrieve.
+ * @param[in] tag_name Name of the parent tag where the attribute is searched (used for error output).
+ * @return The value of the specified attribute.
+ * @throws std::runtime_error If the attribute is not found.
  */
+
 std::string get_attribute_value(
   const tinyxml2::XMLElement * element_it, const char * attribute_name, std::string tag_name)
 {
@@ -115,31 +120,37 @@ std::string get_attribute_value(
   return element_it->Attribute(attribute_name);
 }
 
-/// Gets value of the attribute on an XMLelement.
 /**
- * If attribute is not found throws an error.
+ * @brief Gets the value of an attribute from an XML element.
  *
- * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name attribute name to search for and return value
- * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
- * \return attribute value
- * \throws std::runtime_error if attribute is not found
+ * This method searches for the specified attribute in the given XML element.
+ * If the attribute is not found, it throws an error.
+ *
+ * @param[in] element_it Iterator pointing to the XML element being searched.
+ * @param[in] attribute_name Name of the attribute to retrieve.
+ * @param[in] tag_name Name of the parent tag where the attribute is searched (used for error messages).
+ * @return The value of the specified attribute.
+ * @throws std::runtime_error If the attribute is not found.
  */
+
 std::string get_attribute_value(
   const tinyxml2::XMLElement * element_it, const char * attribute_name, const char * tag_name)
 {
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
 }
 
-/// Gets value of the parameter on an XMLelement.
 /**
- * If parameter is not found, returns specified default value
+ * @brief Retrieves the value of a parameter from an XML element.
  *
- * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name attribute name to search for and return value
- * \param[in] default_value When the attribute is not found, this value is returned instead
- * \return attribute value or default
+ * This method searches for the specified parameter in the given XML element.
+ * If the parameter is not found, the specified default value is returned.
+ *
+ * @param[in] element_it Iterator pointing to the XML element being searched.
+ * @param[in] attribute_name Name of the attribute to retrieve.
+ * @param[in] default_value Value to return if the attribute is not found.
+ * @return The value of the specified attribute or the default value if not found.
  */
+
 double get_parameter_value_or(
   const tinyxml2::XMLElement * params_it, const char * parameter_name, const double default_value)
 {
@@ -169,15 +180,18 @@ double get_parameter_value_or(
   return default_value;
 }
 
-/// Parse optional size attribute
 /**
- * Parses an XMLElement and returns the value of the size attribute.
- * If not specified, defaults to 1. If not given a positive integer, throws an error.
+ * @brief Parses an optional size attribute from an XML element.
  *
- * \param[in] elem XMLElement that has the size attribute.
- * \return The size.
- * \throws std::runtime_error if not given a positive non-zero integer as value.
+ * This method retrieves the value of the size attribute from the given XML element.
+ * If the attribute is not specified, it defaults to 1. If the value is not a positive 
+ * non-zero integer, an error is thrown.
+ *
+ * @param[in] elem XML element containing the size attribute.
+ * @return The parsed size value.
+ * @throws std::runtime_error If the value is not a positive non-zero integer.
  */
+
 std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kSizeAttribute);
@@ -205,14 +219,16 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   return size;
 }
 
-/// Parse data_type attribute
 /**
- * Parses an XMLElement and returns the value of the data_type attribute.
- * Defaults to "double" if not specified.
- *
- * \param[in] elem XMLElement that has the data_type attribute.
- * \return string specifying the data type.
- */
+* @brief Parses the data_type attribute from an XML element.
+*
+* This method retrieves the value of the data_type attribute from the given XML element.
+* If the attribute is not specified, it defaults to "double".
+*
+* @param[in] elem XML element containing the data_type attribute.
+* @return A string specifying the data type.
+*/
+
 std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kDataTypeAttribute);
@@ -229,14 +245,16 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   return data_type;
 }
 
-/// Parse rw_rate attribute
 /**
- * Parses an XMLElement and returns the value of the rw_rate attribute.
- * Defaults to 0 if not specified.
+ * @brief Parses the rw_rate attribute from an XML element.
  *
- * \param[in] elem XMLElement that has the rw_rate attribute.
- * \return unsigned int specifying the read/write rate.
+ * This method retrieves the value of the rw_rate attribute from the given XML element.
+ * If the attribute is not specified, it defaults to 0.
+ *
+ * @param[in] elem XML element containing the rw_rate attribute.
+ * @return An unsigned integer specifying the read/write rate.
  */
+
 unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
@@ -265,28 +283,32 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
   }
 }
 
-/// Parse is_async attribute
 /**
- * Parses an XMLElement and returns the value of the is_async attribute.
- * Defaults to "false" if not specified.
+ * @brief Parses the is_async attribute from an XML element.
  *
- * \param[in] elem XMLElement that has the data_type attribute.
- * \return boolean specifying the if the value read was true or false.
+ * This method retrieves the value of the is_async attribute from the given XML element.
+ * If the attribute is not specified, it defaults to "false".
+ *
+ * @param[in] elem XML element containing the is_async attribute.
+ * @return A boolean indicating whether the value read was true or false.
  */
+
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
   return attr ? parse_bool(attr->Value()) : false;
 }
 
-/// Parse thread_priority attribute
 /**
- * Parses an XMLElement and returns the value of the thread_priority attribute.
- * Defaults to 50 if not specified.
+ * @brief Parses the thread_priority attribute from an XML element.
  *
- * \param[in] elem XMLElement that has the thread_priority attribute.
- * \return positive integer specifying the thread priority.
+ * This method retrieves the value of the thread_priority attribute from the given XML element.
+ * If the attribute is not specified, it defaults to 50.
+ *
+ * @param[in] elem XML element containing the thread_priority attribute.
+ * @return A positive integer specifying the thread priority.
  */
+
 int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
@@ -308,12 +330,17 @@ int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
   }
 }
 
-/// Search XML snippet from URDF for parameters.
 /**
- * \param[in] params_it pointer to the iterator where parameters info should be found
- * \return key-value map with parameters
- * \throws std::runtime_error if a component attribute or tag is not found
+ * @brief Searches an XML snippet from URDF for parameters.
+ *
+ * This method scans the provided XML snippet for parameter information and 
+ * returns a key-value map of the extracted parameters.
+ *
+ * @param[in] params_it Pointer to the iterator where parameter information should be found.
+ * @return A key-value map containing the extracted parameters.
+ * @throws std::runtime_error If a required component attribute or tag is not found.
  */
+
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it)
 {
@@ -337,13 +364,18 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   return parameters;
 }
 
-/// Search XML snippet for definition of interfaceTypes.
 /**
- * \param[in] interfaces_it pointer to the iterator over interfaces
- * \param[in] interfaceTag interface type tag (command or state)
- * \return list of interface types
- * \throws std::runtime_error if the interfaceType text not set in a tag
+ * @brief Searches an XML snippet for the definition of interface types.
+ *
+ * This method scans the provided XML snippet to extract interface types based 
+ * on the specified interface tag (command or state).
+ *
+ * @param[in] interfaces_it Pointer to the iterator over interfaces.
+ * @param[in] interfaceTag The interface type tag (command or state).
+ * @return A list of interface types.
+ * @throws std::runtime_error If the interfaceType text is not set in a tag.
  */
+
 hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it)
 {
@@ -397,13 +429,17 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   return interface;
 }
 
-/// Search XML snippet from URDF for information about a control component.
 /**
- * \param[in] component_it pointer to the iterator where component
- * info should be found
- * \return ComponentInfo filled with information about component
- * \throws std::runtime_error if a component attribute or tag is not found
+ * @brief Searches an XML snippet from URDF for information about a control component.
+ *
+ * This method scans the provided XML snippet to extract information about 
+ * a control component and returns a ComponentInfo structure containing the details.
+ *
+ * @param[in] component_it Pointer to the iterator where component information should be found.
+ * @return A ComponentInfo object filled with details about the component.
+ * @throws std::runtime_error If a required component attribute or tag is not found.
  */
+
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -465,15 +501,16 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   return component;
 }
 
-/// Search XML snippet from URDF for information about a complex component.
 /**
- * A complex component can have a non-double data type specified on its interfaces,
- *  and the interface may be an array of a fixed size of the data type.
+ * @brief Searches an XML snippet from URDF for information about a complex component.
  *
- * \param[in] component_it pointer to the iterator where component
- * info should be found
- * \throws std::runtime_error if a required component attribute or tag is not found.
+ * A complex component can have a non-double data type specified on its interfaces,
+ * and the interface may be an array with a fixed size of the given data type.
+ *
+ * @param[in] component_it Pointer to the iterator where component information should be found.
+ * @throws std::runtime_error If a required component attribute or tag is not found.
  */
+
 ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -539,12 +576,17 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
   return actuator_info;
 }
 
-/// Search XML snippet from URDF for information about a transmission.
 /**
- * \param[in] transmission_it pointer to the iterator where transmission info should be found
- * \return TransmissionInfo filled with information about transmission
- * \throws std::runtime_error if an attribute or tag is not found
+ * @brief Searches an XML snippet from URDF for information about a transmission.
+ *
+ * This method scans the provided XML snippet to extract information about 
+ * a transmission and returns a TransmissionInfo structure containing the details.
+ *
+ * @param[in] transmission_it Pointer to the iterator where transmission information should be found.
+ * @return A TransmissionInfo object filled with details about the transmission.
+ * @throws std::runtime_error If a required attribute or tag is not found.
  */
+
 TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
 {
   TransmissionInfo transmission;
@@ -580,11 +622,16 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   return transmission;
 }
 
-/// Auto-fill some contents of transmission info based on context
 /**
- * \param[in,out] hardware HardwareInfo structure with elements already parsed.
- * \throws std::runtime_error
+ * @brief Auto-fills certain contents of the transmission info based on context.
+ *
+ * This method populates relevant fields in the given HardwareInfo structure
+ * using the available parsed elements.
+ *
+ * @param[in,out] hardware A HardwareInfo structure with elements already parsed.
+ * @throws std::runtime_error If an error occurs during the auto-fill process.
  */
+
 void auto_fill_transmission_interfaces(HardwareInfo & hardware)
 {
   for (auto & transmission : hardware.transmissions)
@@ -634,13 +681,17 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
   }
 }
 
-/// Parse a control resource from an "ros2_control" tag.
 /**
- * \param[in] ros2_control_it pointer to ros2_control element
- * with information about resource.
- * \return HardwareInfo filled with information about the robot
- * \throws std::runtime_error if a attributes or tag are not found
+ * @brief Parses a control resource from a "ros2_control" tag.
+ *
+ * This method extracts hardware-related information from a given "ros2_control" 
+ * XML element and returns a HardwareInfo structure containing details about the robot.
+ *
+ * @param[in] ros2_control_it Pointer to the ros2_control element containing resource information.
+ * @return A HardwareInfo object filled with details about the robot.
+ * @throws std::runtime_error If required attributes or tags are not found.
  */
+
 HardwareInfo parse_resource_from_xml(
   const tinyxml2::XMLElement * ros2_control_it, const std::string & urdf)
 {
