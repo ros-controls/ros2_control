@@ -396,7 +396,7 @@ Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall ros_control update rate. Running a controller asynchronously can be beneficial in this scenario.
 
-The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. The description of these parameters can be found in the :ref:`ros2_control_parameters` section. For example:
+The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. For example:
 
 .. code-block:: yaml
 
@@ -412,7 +412,7 @@ The async update support is transparent to each controller implementation. A con
         update_rate: 20  # Hz
         ...
 
-will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz.
+will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
 
 Scheduling Behavior
 ----------------------
