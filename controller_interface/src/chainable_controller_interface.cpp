@@ -90,8 +90,8 @@ ChainableControllerInterface::export_state_interfaces()
       state_interfaces_ptrs_vec.clear();
       throw std::runtime_error(error_msg);
     }
-    ordered_exported_state_interfaces_.push_back(state_interface);
-    add_element_to_list(exported_state_interface_names_, interface_name);
+    helpers::add_item(ordered_exported_state_interfaces_, state_interface);
+    helpers::add_item(exported_state_interface_names_, interface_name);
     state_interfaces_ptrs_vec.push_back(
       std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
   }
@@ -176,8 +176,8 @@ ChainableControllerInterface::export_reference_interfaces()
       reference_interfaces_ptrs_vec.clear();
       throw std::runtime_error(error_msg);
     }
-    ordered_exported_reference_interfaces_.push_back(reference_interface);
-    add_element_to_list(exported_reference_interface_names_, interface_name);
+    helpers::add_item(ordered_exported_reference_interfaces_, reference_interface);
+    helpers::add_item(exported_reference_interface_names_, interface_name);
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
