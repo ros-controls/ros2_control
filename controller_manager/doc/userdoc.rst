@@ -394,7 +394,7 @@ Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` met
 
 Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall ros_control update rate. Running a controller asynchronously can be beneficial in this scenario.
+For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall system update rate. Running a controller asynchronously can be beneficial in this scenario.
 
 The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. For example:
 
