@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace helpers
+namespace ros2_control
 {
 
 template <typename Container, typename T>
@@ -103,6 +103,6 @@ template <typename Collection>
   return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
 }
 
-}  // namespace helpers
+}  // namespace ros2_control
 
 #endif  // HARDWARE_INTERFACE__HELPERS_HPP_

@@ -153,11 +153,11 @@ void controller_chain_spec_cleanup(
   const auto preceding_controllers = ctrl_chain_spec[controller].preceding_controllers;
   for (const auto & flwg_ctrl : following_controllers)
   {
-    helpers::remove_item(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
+    ros2_control::remove_item(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
   }
   for (const auto & preced_ctrl : preceding_controllers)
   {
-    helpers::remove_item(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
+    ros2_control::remove_item(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
   }
   ctrl_chain_spec.erase(controller);
 }
@@ -190,7 +190,7 @@ void get_active_controllers_using_command_interfaces_of_controller(
         is_controller_active(controller.c) &&
         std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
       {
-        helpers::add_item(controllers_using_command_interfaces, controller.info.name);
+        ros2_control::add_item(controllers_using_command_interfaces, controller.info.name);
       }
     }
   }
@@ -1007,11 +1007,11 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
     {
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
@@ -1021,11 +1021,11 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
     {
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
-      helpers::add_item(
+      ros2_control::add_item(
         controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
@@ -2656,7 +2656,7 @@ controller_interface::return_type ControllerManager::update(
       rt_buffer_.activate_controllers_using_interfaces_list.begin(),
       rt_buffer_.activate_controllers_using_interfaces_list.end(),
       [this](const std::string & controller)
-      { helpers::add_item(rt_buffer_.deactivate_controllers_list, controller); });
+      { ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller); });
 
     // Retrieve the interfaces to start and stop from the hardware end
     rt_buffer_.interfaces_to_start.clear();
@@ -3337,7 +3337,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-          helpers::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
+          ros2_control::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
         }
         else if (
           periodicity_error >
@@ -3349,7 +3349,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
           {
             level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
           }
-          helpers::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
+          ros2_control::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
         }
       }
       const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
