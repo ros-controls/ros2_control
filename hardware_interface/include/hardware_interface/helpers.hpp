@@ -40,8 +40,14 @@ template <typename Container, typename T>
   }
   else
   {
+    using is_vector = std::is_same<Container, std::vector<T>>;
+    using is_map = std::is_same<Container, std::map<typename Container::key_type, T>>;
+    using is_unordered_map =
+      std::is_same<Container, std::unordered_map<typename Container::key_type, T>>;
     // Handle unsupported container types
-    static_assert(false, "Unsupported container type");
+    static_assert(
+      is_vector::value || is_map::value || is_unordered_map::value,
+      "Only std::vector, std::map and std::unordered_map are supported.");
   }
 }
 
