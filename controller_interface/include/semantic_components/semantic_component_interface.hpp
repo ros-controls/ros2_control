@@ -93,7 +93,7 @@ public:
     // insert all the values
     for (auto i = 0u; i < state_interfaces_.size(); ++i)
     {
-      values.emplace_back(state_interfaces_[i].get().get_value());
+      values.emplace_back(state_interfaces_[i].get().get_optional().value());
     }
     return true;
   }

@@ -41,22 +41,26 @@ Actuator::Actuator(Actuator && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.actuators_mutex_);
   impl_ = std::move(other.impl_);
-  last_read_cycle_time_ = other.last_read_cycle_time_;
-  last_write_cycle_time_ = other.last_write_cycle_time_;
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
 const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  return this->initialize(actuator_info, logger, clock_interface->get_clock());
+}
+
+const rclcpp_lifecycle::State & Actuator::initialize(
+  const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+{
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(actuator_info, logger, clock_interface))
+    switch (impl_->init(actuator_info, logger, clock))
     {
       case CallbackReturn::SUCCESS:
-        last_read_cycle_time_ = clock_interface->get_clock()->now();
-        last_write_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -143,8 +147,11 @@ const rclcpp_lifecycle::State & Actuator::shutdown()
 const rclcpp_lifecycle::State & Actuator::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->prepare_for_activation();
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -302,19 +309,19 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
     last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_read(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
     last_read_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -324,19 +331,19 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
     last_write_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->trigger_write(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_write(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
     last_write_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 std::recursive_mutex & Actuator::get_mutex() { return actuators_mutex_; }

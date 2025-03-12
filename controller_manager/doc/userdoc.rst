@@ -28,10 +28,10 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
     @realtime soft rtprio 99
     @realtime soft priority 99
-    @realtime soft memlock 102400
+    @realtime soft memlock unlimited
     @realtime hard rtprio 99
     @realtime hard priority 99
-    @realtime hard memlock 102400
+    @realtime hard memlock unlimited
 
 The limits will be applied after you log out and in again.
 
@@ -44,6 +44,14 @@ Alternatives to the standard kernel include
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
+
+Publishers
+-----------
+
+~/activity [controller_manager_msgs::msg::ControllerManagerActivity]
+  A topic that is published every time there is a change of state of the controllers or hardware components managed by the controller manager.
+  The message contains the list of the controllers and the hardware components that are managed by the controller manager along with their lifecycle states.
+  The topic is published using the "transient local" quality of service, so subscribers should also be "transient local".
 
 Subscribers
 -----------
@@ -388,3 +396,51 @@ Hardware and Controller Errors
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
 Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+
+Support for Asynchronous Updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall system update rate. Running a controller asynchronously can be beneficial in this scenario.
+
+The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. For example:
+
+.. code-block:: yaml
+
+    controller_manager:
+      ros__parameters:
+        update_rate: 100  # Hz
+        ...
+
+    example_async_controller:
+      ros__parameters:
+        type: example_controller/ExampleAsyncController
+        is_async: true
+        update_rate: 20  # Hz
+        ...
+
+will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
+
+Scheduling Behavior
+----------------------
+From a design perspective, the controller manager functions as a scheduler that triggers updates for asynchronous controllers during the control loop.
+
+In this case, the ``ControllerInterfaceBase`` calls ``AsyncFunctionHandler`` to handle the actual ``update`` callback of the controller, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates if the previous trigger is successfully finished and then calls the update method.
+
+If the update takes significant time and another update is triggered while the previous update is still running, the result of the previous update will be used. When this situation occurs, the controller manager will print a missing update cycle message, informing the user that they need to lower their controller's frequency as the computation is taking longer than initially estimated, as shown in the following example:
+
+.. code-block:: console
+
+   [ros2_control_node-1] [WARN] [1741626670.311533972] [example_async_controller]: The controller missed xx update cycles out of yy total triggers.
+
+If the async controller's update method throws an unhandled exception, the controller manager will handle it the same way as the synchronous controllers, deactivating the controller. It will also print an error message, similar to the following:
+
+.. code-block:: console
+
+  [ros2_control_node-1] [ERROR] [1741629098.352771957] [AsyncFunctionHandler]: AsyncFunctionHandler: Exception caught in the async callback thread!
+  ...
+  [ros2_control_node-1] [ERROR] [1741629098.352874151] [controller_manager]: Caught exception of type : St13runtime_error while updating controller
+  [ros2_control_node-1] [ERROR] [1741629098.352940701] [controller_manager]: Deactivating controllers : [example_async_controller] as their update resulted in an error!
+
+Monitoring and Tuning
+----------------------
+
+ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.

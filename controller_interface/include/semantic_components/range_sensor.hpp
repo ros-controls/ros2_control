@@ -15,6 +15,7 @@
 #ifndef SEMANTIC_COMPONENTS__RANGE_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__RANGE_SENSOR_HPP_
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -35,7 +36,15 @@ public:
    *
    * \return value of the range in meters
    */
-  float get_range() const { return state_interfaces_[0].get().get_value(); }
+  float get_range() const
+  {
+    const auto data = state_interfaces_[0].get().get_optional();
+    if (data.has_value())
+    {
+      return data.value();
+    }
+    return std::numeric_limits<float>::quiet_NaN();
+  }
 
   /// Return Range message with range in meters
   /**

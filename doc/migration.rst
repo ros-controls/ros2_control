@@ -75,11 +75,35 @@ hardware_interface
 ******************
 * ``test_components`` was moved to its own package. Update the dependencies if you are using them. (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
+* A new ``get_optional`` that returns a ``std::optional`` was added to the ``CommandInterface`` and ``StateInterface``. This can be used to check if the value is available or not. (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
 
 Adaption of Command-/StateInterfaces
 ***************************************
 
+* The handles for ``Command-/StateInterfaces`` have new set/get methods to access the values.
 * ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` methods based on the interfaces defined in the ``ros2_control`` XML-tag, which get parsed and the ``InterfaceDescription`` is created accordingly (check the `hardware_info.hpp <https://github.com/ros-controls/ros2_control/tree/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/hardware_info.hpp>`__). The memory is now allocated in the handle itself.
+
+Access to Command-/StateInterfaces
+----------------------------------
+
+Earlier code will issue compile-time warnings like:
+
+.. code::
+
+  warning: ‘double hardware_interface::Handle::get_value() const’ is deprecated: Use std::optional<T> get_optional() or bool get_value(double & value) instead to retrieve the value. [-Wdeprecated-declarations]
+  warning: ignoring return value of ‘bool hardware_interface::Handle::set_value(const T&) [with T = double]’ [-Wunused-result]
+
+The old methods are deprecated and will be removed in the future. The new methods are:
+
+  * ``std::optional<T> get_optional()`` or ``bool get_value(T & value)`` for getting the value.
+  * ``bool set_value(const T & value)`` for setting the value.
+
+The return value ``bool`` or ``std::optional<T>`` with ``get_value`` can be used to check if the value is available or not. Similarly, the ``set_value`` method returns a ``bool`` to check if the value was set or not.
+The ``get_value`` method will return an empty ``std::nullopt`` or ``false`` if the value is not available. The ``set_value`` method will return ``false`` if the value was not set.
+
+.. note::
+   Checking the result of these operations is important as the value might not be available or the value might not be set.
+   This is usually the case when the ros2_control framework has some asynchronous operations due to asynchronous controllers or asynchronous hardware components where different threads are involved to access the same data.
 
 Migration of Command-/StateInterfaces
 -------------------------------------

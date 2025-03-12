@@ -94,8 +94,23 @@ public:
 
   const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
 
+  /**
+   * @brief Set the value of the command interface.
+   * @tparam T The type of the value to be set.
+   * @param value The value to set.
+   * @param max_tries The maximum number of tries to set the value.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to set the value, the handle returns false. If the operation is
+   * successful, the handle is updated and returns true.
+   * @note The method will try to set the value max_tries times before returning false. The method
+   * will yield the thread between tries. If the value is set successfully, the method returns true
+   * immediately.
+   */
   template <typename T>
-  [[nodiscard]] bool set_value(T value, unsigned int max_tries = 10)
+  [[nodiscard]] bool set_value(const T & value, unsigned int max_tries = 10)
   {
     unsigned int nr_tries = 0;
     ++set_value_statistics_.total_counter;
@@ -113,9 +128,12 @@ public:
     return true;
   }
 
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
-    double value;
+    double value = std::numeric_limits<double>::quiet_NaN();
     if (get_value(value))
     {
       return value;
@@ -126,8 +144,61 @@ public:
     }
   }
 
+  /**
+   * @brief Get the value of the command interface.
+   * @tparam T The type of the value to be retrieved.
+   * @return The value of the command interface if it accessed successfully, std::nullopt otherwise.
+   * @param max_tries The maximum number of tries to get the value.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to access the value, the handle returns std::nullopt. If the
+   * operation is successful, the value is returned.
+   * @note The method will try to get the value max_tries times before returning std::nullopt. The
+   * method will yield the thread between tries. If the value is retrieved successfully, the method
+   * returns the value immediately.
+   */
+  template <typename T = double>
+  [[nodiscard]] std::optional<T> get_optional(unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    do
+    {
+      ++get_value_statistics_.total_counter;
+      const std::optional<T> data = command_interface_.get_optional<T>();
+      if (data.has_value())
+      {
+        return data;
+      }
+      ++get_value_statistics_.failed_counter;
+      ++nr_tries;
+      std::this_thread::yield();
+    } while (nr_tries < max_tries);
+
+    ++get_value_statistics_.timeout_counter;
+    return std::nullopt;
+  }
+
+  /**
+   * @brief Get the value of the command interface.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The value of the command interface.
+   * @param max_tries The maximum number of tries to get the value.
+   * @return true if the value is accessed successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to access the value, the handle returns false. If the operation is
+   * successful, the value is updated and returns true.
+   * @note The method will try to get the value max_tries times before returning false. The method
+   * will yield the thread between tries. If the value is updated successfully, the method returns
+   * true immediately.
+   */
   template <typename T>
-  [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
+  get_value(T & value, unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
     ++get_value_statistics_.total_counter;
