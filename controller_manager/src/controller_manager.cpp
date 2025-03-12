@@ -274,8 +274,6 @@ ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
-  resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
-    this->get_node_clock_interface(), this->get_node_logging_interface())),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
@@ -286,6 +284,8 @@ ControllerManager::ControllerManager(
   cm_node_options_(options)
 {
   initialize_parameters();
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
   init_controller_manager();
 }
 
@@ -306,8 +306,7 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
-    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
-    activate_all_hw_components, params_->update_rate);
+    urdf, trigger_clock_, this->get_logger(), activate_all_hw_components, params_->update_rate);
   init_controller_manager();
 }
 
@@ -456,6 +455,12 @@ void ControllerManager::initialize_parameters()
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
+    const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+    trigger_clock_ =
+      use_sim_time.as_bool() ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    RCLCPP_INFO(
+      get_logger(), "Using %s clock for triggering controller manager cycles.",
+      trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
   }
   catch (const std::exception & e)
   {
@@ -686,8 +691,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
-  controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(
-    0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
+  controller_spec.last_update_cycle_time =
+    std::make_shared<rclcpp::Time>(0, 0, this->get_trigger_clock()->get_clock_type());
   controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
   controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
 
@@ -1856,7 +1861,7 @@ void ControllerManager::activate_controllers(
     auto controller = found_it->c;
     // reset the last update cycle time for newly activated controllers
     *found_it->last_update_cycle_time =
-      rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
+      rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type());
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
@@ -2516,7 +2521,7 @@ controller_interface::return_type ControllerManager::update(
   // Check for valid time
   if (!get_clock()->started())
   {
-    if (time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+    if (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
     {
       throw std::runtime_error(
         "No clock received, and time argument is zero. Check your controller_manager node's "
@@ -2557,10 +2562,10 @@ controller_interface::return_type ControllerManager::update(
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
       bool first_update_cycle = false;
-      const rclcpp::Time current_time = get_clock()->started() ? get_clock()->now() : time;
+      const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
       if (
         *loaded_controller.last_update_cycle_time ==
-        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+        rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
       {
         // last_update_cycle_time is zero after activation
         first_update_cycle = true;
@@ -2580,8 +2585,7 @@ controller_interface::return_type ControllerManager::update(
       // to keep up with the controller update rate (see issue #1769).
       const bool controller_go =
         run_controller_at_cm_rate ||
-        (time ==
-         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
+        (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
         (controller_actual_period.seconds() * controller_update_rate >= 0.99) || first_update_cycle;
 
       RCLCPP_DEBUG(
@@ -2597,7 +2601,7 @@ controller_interface::return_type ControllerManager::update(
         try
         {
           const auto trigger_result =
-            loaded_controller.c->trigger_update(current_time, controller_actual_period);
+            loaded_controller.c->trigger_update(this->now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
@@ -2835,6 +2839,8 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
+
+rclcpp::Clock::SharedPtr ControllerManager::get_trigger_clock() const { return trigger_clock_; }
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)

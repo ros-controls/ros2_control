@@ -48,6 +48,9 @@ public:
     const HardwareInfo & system_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
 
+  const rclcpp_lifecycle::State & initialize(
+    const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock);
+
   const rclcpp_lifecycle::State & configure();
 
   const rclcpp_lifecycle::State & cleanup();
