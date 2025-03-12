@@ -418,7 +418,7 @@ Scheduling Behavior
 ----------------------
 From a design perspective, the controller manager functions as a scheduler that triggers updates for asynchronous controllers during the control loop.
 
-The ROS 2 ``ControllerInterfaceBase`` uses ``AsyncFunctionHandler`` to handle the actual ``update`` callback of the controller, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates if the previous trigger is successfully finished and then calls the update method.
+In this case, the ``ControllerInterfaceBase`` calls ``AsyncFunctionHandler`` to handle the actual ``update`` callback of the controller, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates if the previous trigger is successfully finished and then calls the update method.
 
 If the update takes significant time and another update is triggered while the previous update is still running, the result of the previous update will be used. When this situation occurs, the controller manager will print a missing update cycle message, informing the user that they need to lower their controller's frequency as the computation is taking longer than initially estimated, as shown in the following example:
 
@@ -438,4 +438,4 @@ If the async controller's update method throws an unhandled exception, the contr
 Monitoring and Tuning
 ----------------------
 
-ROS2 controller interface has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.
+ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.
