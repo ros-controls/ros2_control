@@ -60,7 +60,7 @@ template <typename Container>
 template <typename T>
 void add_item(std::vector<T> & vector, const T & item)
 {
-  if (has_item(vector, item))
+  if (!has_item(vector, item))
   {
     vector.push_back(item);
   }
