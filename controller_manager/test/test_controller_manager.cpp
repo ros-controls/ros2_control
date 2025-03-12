@@ -465,7 +465,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -476,8 +476,8 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(test_controller->update_period_.seconds(), 0.0)
     << "The first trigger cycle should have zero period";
 
-  const double exp_period = (cm_->get_clock()->now() - time_).seconds();
-  time_ = cm_->get_clock()->now();
+  const double exp_period = (cm_->get_trigger_clock()->now() - time_).seconds();
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -772,9 +772,9 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     ControllerManagerRunner cm_runner(this);
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   }
-  time_ = test_controller->get_node()->now();  // set to something nonzero
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();  // set to something nonzero
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -795,8 +795,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -822,8 +822,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
-    cm_->get_clock()->sleep_until(old_time + PERIOD);
-    time = cm_->get_clock()->now();
+    cm_->get_trigger_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_trigger_clock()->now();
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
@@ -919,9 +919,9 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   }
   ASSERT_TRUE(test_controller->is_async());
-  time_ = test_controller->get_node()->now();  // set to something nonzero
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();  // set to something nonzero
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -942,8 +942,8 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -969,8 +969,8 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
-    cm_->get_clock()->sleep_until(old_time + PERIOD);
-    time = cm_->get_clock()->now();
+    cm_->get_trigger_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_trigger_clock()->now();
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
