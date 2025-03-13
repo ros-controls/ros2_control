@@ -92,6 +92,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
   ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
@@ -100,6 +102,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
@@ -114,6 +118,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
@@ -131,6 +137,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("inactive", result->controller[0].state);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
