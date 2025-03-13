@@ -2,7 +2,7 @@
 <package format="2">
   <name>hardware_interface</name>
   <version>4.27.0</version>
-  <description>ros2_control hardware interface</description>
+  <description>Base classes for hardware abstraction and tooling for them</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
