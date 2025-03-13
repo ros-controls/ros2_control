@@ -294,7 +294,28 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+<<<<<<< HEAD
   void subscribe_to_robot_description_topic();
+=======
+  void init_controller_manager();
+
+  void initialize_parameters();
+
+  /**
+   * Call cleanup to change the given controller lifecycle node to the unconfigured state.
+   *
+   * \param[in] controller controller to be shutdown.
+   */
+  controller_interface::return_type cleanup_controller(
+    const controller_manager::ControllerSpec & controller);
+
+  /**
+   * Call shutdown to change the given controller lifecycle node to the finalized state.
+   *
+   * \param[in] controller controller to be shutdown.
+   */
+  void shutdown_controller(const controller_manager::ControllerSpec & controller) const;
+>>>>>>> 32459c2 (Reject duplicate state/command interfaces after configuring the controller  (#2090))
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"

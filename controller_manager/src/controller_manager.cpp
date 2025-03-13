@@ -253,6 +253,139 @@ std::vector<std::string> get_preceding_controller_names(
   return preceding_controllers;
 }
 
+<<<<<<< HEAD
+=======
+controller_interface::return_type evaluate_switch_result(
+  const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
+  const std::vector<std::string> & activate_list, const std::vector<std::string> & deactivate_list,
+  int strictness, rclcpp::Logger logger,
+  std::vector<controller_manager::ControllerSpec> & controllers_spec, std::string & message)
+{
+  message.clear();
+  auto switch_result = controller_interface::return_type::OK;
+  std::string unable_to_activate_controllers("");
+  std::string unable_to_deactivate_controllers("");
+  for (auto & controller : controllers_spec)
+  {
+    if (is_controller_active(controller.c))
+    {
+      auto command_interface_config = controller.c->command_interface_configuration();
+      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        controller.info.claimed_interfaces = resource_manager->available_command_interfaces();
+      }
+      if (
+        command_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        controller.info.claimed_interfaces = command_interface_config.names;
+      }
+    }
+    else
+    {
+      controller.info.claimed_interfaces.clear();
+    }
+    if (
+      std::find(activate_list.begin(), activate_list.end(), controller.info.name) !=
+      activate_list.end())
+    {
+      if (!is_controller_active(controller.c))
+      {
+        unable_to_activate_controllers += controller.info.name + " ";
+        RCLCPP_ERROR(logger, "Could not activate controller : '%s'", controller.info.name.c_str());
+        switch_result = controller_interface::return_type::ERROR;
+      }
+    }
+    /// @note The following is the case of the real controllers that are deactivated and doesn't
+    /// include the chained controllers that are deactivated and activated
+    if (
+      std::find(deactivate_list.begin(), deactivate_list.end(), controller.info.name) !=
+        deactivate_list.end() &&
+      std::find(activate_list.begin(), activate_list.end(), controller.info.name) ==
+        activate_list.end())
+    {
+      if (is_controller_active(controller.c))
+      {
+        unable_to_deactivate_controllers += controller.info.name + " ";
+        RCLCPP_ERROR(
+          logger, "Could not deactivate controller : '%s'", controller.info.name.c_str());
+        switch_result = controller_interface::return_type::ERROR;
+      }
+    }
+  }
+  if (switch_result != controller_interface::return_type::OK)
+  {
+    message = "Failed switching controllers.... ";
+    RCLCPP_ERROR(logger, "%s", message.c_str());
+    if (!unable_to_activate_controllers.empty())
+    {
+      const std::string error_msg =
+        "Unable to activate controllers: [ " + unable_to_activate_controllers + "]";
+      message += "\n" + error_msg;
+      RCLCPP_ERROR(logger, "%s", error_msg.c_str());
+    }
+    if (!unable_to_deactivate_controllers.empty())
+    {
+      const std::string error_msg =
+        "Unable to deactivate controllers: [ " + unable_to_deactivate_controllers + "]";
+      message += "\n" + error_msg;
+      RCLCPP_ERROR(logger, "%s", error_msg.c_str());
+    }
+  }
+  else
+  {
+    message = "Successfully switched controllers!";
+    if (strictness != controller_manager_msgs::srv::SwitchController::Request::STRICT)
+    {
+      if (!deactivate_list.empty())
+      {
+        std::string list = std::accumulate(
+          std::next(deactivate_list.begin()), deactivate_list.end(), deactivate_list.front(),
+          [](std::string a, std::string b) { return a + " " + b; });
+        const std::string info_msg = "Deactivated controllers: [ " + list + " ]";
+        message += "\n" + info_msg;
+        RCLCPP_INFO(logger, "%s", info_msg.c_str());
+      }
+      if (!activate_list.empty())
+      {
+        std::string list = std::accumulate(
+          std::next(activate_list.begin()), activate_list.end(), activate_list.front(),
+          [](std::string a, std::string b) { return a + " " + b; });
+        const std::string info_msg = "Activated controllers: [ " + list + " ]";
+        message += "\n" + info_msg;
+        RCLCPP_INFO(logger, "%s", info_msg.c_str());
+      }
+    }
+    RCLCPP_INFO(logger, "Successfully switched controllers!");
+  }
+  return switch_result;
+}
+
+void get_controller_list_command_interfaces(
+  const std::vector<std::string> & controllers_list,
+  const std::vector<controller_manager::ControllerSpec> & controllers_spec,
+  const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
+  std::vector<std::string> & request_interface_list)
+{
+  for (const auto & controller_name : controllers_list)
+  {
+    auto found_it = std::find_if(
+      controllers_spec.begin(), controllers_spec.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (found_it != controllers_spec.end())
+    {
+      extract_command_interfaces_for_controller(
+        *found_it, resource_manager, request_interface_list);
+    }
+  }
+}
+template <typename Collection>
+[[nodiscard]] bool is_unique(Collection collection)
+{
+  std::sort(collection.begin(), collection.end());
+  return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
+}
+>>>>>>> 32459c2 (Reject duplicate state/command interfaces after configuring the controller  (#2090))
 }  // namespace
 
 namespace controller_manager
@@ -783,6 +916,62 @@ controller_interface::return_type ControllerManager::unload_controller(
   return controller_interface::return_type::OK;
 }
 
+<<<<<<< HEAD
+=======
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const controller_manager::ControllerSpec & controller)
+{
+  try
+  {
+    cleanup_controller_exported_interfaces(controller);
+    const auto new_state = controller.c->get_node()->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' is not cleaned-up properly, it is still in state '%s'",
+        controller.info.name.c_str(), new_state.label().c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught exception while cleaning-up the controller '%s'",
+      controller.info.name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  return controller_interface::return_type::OK;
+}
+
+void ControllerManager::shutdown_controller(
+  const controller_manager::ControllerSpec & controller) const
+{
+  try
+  {
+    const auto new_state = controller.c->get_node()->shutdown();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to shutdown the controller '%s' before unloading!",
+        controller.info.name.c_str());
+    }
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
+      typeid(e).name(), controller.info.name.c_str(), e.what());
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to shutdown the controller '%s' before unloading",
+      controller.info.name.c_str());
+  }
+}
+
+>>>>>>> 32459c2 (Reject duplicate state/command interfaces after configuring the controller  (#2090))
 std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 {
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -826,6 +1015,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
+<<<<<<< HEAD
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
     new_state = controller->get_node()->cleanup();
@@ -834,6 +1024,10 @@ controller_interface::return_type ControllerManager::configure_controller(
       RCLCPP_ERROR(
         get_logger(), "Controller '%s' can not be cleaned-up before configuring",
         controller_name.c_str());
+=======
+    if (cleanup_controller(*found_it) != controller_interface::return_type::OK)
+    {
+>>>>>>> 32459c2 (Reject duplicate state/command interfaces after configuring the controller  (#2090))
       return controller_interface::return_type::ERROR;
     }
   }
@@ -888,7 +1082,74 @@ controller_interface::return_type ControllerManager::configure_controller(
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
+<<<<<<< HEAD
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
+=======
+    resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
+    resource_manager_->import_controller_exported_state_interfaces(
+      controller_name, state_interfaces);
+  }
+
+  // let's update the list of following and preceding controllers
+  const auto cmd_itfs = controller->command_interface_configuration().names;
+  const auto state_itfs = controller->state_interface_configuration().names;
+
+  // Check if the cmd_itfs and the state_itfs are unique
+  if (!is_unique(cmd_itfs))
+  {
+    std::string cmd_itfs_str = std::accumulate(
+      std::next(cmd_itfs.begin()), cmd_itfs.end(), cmd_itfs.front(),
+      [](std::string a, std::string b) { return a + ", " + b; });
+    RCLCPP_ERROR(
+      get_logger(),
+      "The command interfaces of the controller '%s' are not unique. Please make sure that the "
+      "command interfaces are unique : '%s'.",
+      controller_name.c_str(), cmd_itfs_str.c_str());
+    cleanup_controller(*found_it);
+    return controller_interface::return_type::ERROR;
+  }
+
+  if (!is_unique(state_itfs))
+  {
+    std::string state_itfs_str = std::accumulate(
+      std::next(state_itfs.begin()), state_itfs.end(), state_itfs.front(),
+      [](std::string a, std::string b) { return a + ", " + b; });
+    RCLCPP_ERROR(
+      get_logger(),
+      "The state interfaces of the controller '%s' are not unique. Please make sure that the state "
+      "interfaces are unique : '%s'.",
+      controller_name.c_str(), state_itfs_str.c_str());
+    cleanup_controller(*found_it);
+    return controller_interface::return_type::ERROR;
+  }
+
+  for (const auto & cmd_itf : cmd_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
+      add_element_to_list(
+        controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
+    }
+  }
+  // This is needed when we start exporting the state interfaces from the controllers
+  for (const auto & state_itf : state_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
+      add_element_to_list(
+        controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
+    }
+>>>>>>> 32459c2 (Reject duplicate state/command interfaces after configuring the controller  (#2090))
   }
 
   // Now let's reorder the controllers
