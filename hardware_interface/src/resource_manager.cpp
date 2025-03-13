@@ -926,50 +926,66 @@ public:
           const std::string & joint_name = interface->get_prefix_name();
           const rclcpp::Duration desired_period =
             rclcpp::Duration::from_seconds(1.0 / cm_update_rate_);
-          const auto limiter_fn = [&](double value, bool & is_limited) -> double
+          const std::string & interface_name = interface->get_interface_name();
+          const std::vector<std::string> supported_interfaces = {
+            hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT, hardware_interface::HW_IF_ACCELERATION};
+          if (
+            std::find(supported_interfaces.begin(), supported_interfaces.end(), interface_name) ==
+            supported_interfaces.end())
+          {
+            RCLCPP_DEBUG(
+              get_logger(), "Command interface '%s' is not supported for enforcing limits",
+              interface_name.c_str());
+            continue;
+          }
+          const auto limiter_fn = [&, interface_name](double value, bool & is_limited) -> double
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
             data.joint_name = joint_name;
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
-            if (interface->get_interface_name() == hardware_interface::HW_IF_POSITION)
+            if (interface_name == hardware_interface::HW_IF_POSITION)
             {
               data.command.position = value;
             }
-            else if (interface->get_interface_name() == hardware_interface::HW_IF_VELOCITY)
+            else if (interface_name == hardware_interface::HW_IF_VELOCITY)
             {
               data.command.velocity = value;
             }
-            else if (interface->get_interface_name() == hardware_interface::HW_IF_EFFORT)
+            else if (interface_name == hardware_interface::HW_IF_EFFORT)
             {
               data.command.effort = value;
             }
-            else if (interface->get_interface_name() == hardware_interface::HW_IF_ACCELERATION)
+            else if (interface_name == hardware_interface::HW_IF_ACCELERATION)
             {
               data.command.acceleration = value;
+            }
+            else
+            {
+              return value;
             }
             data.limited = data.command;
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
             if (
-              interface->get_interface_name() == hardware_interface::HW_IF_POSITION &&
+              interface_name == hardware_interface::HW_IF_POSITION &&
               data.limited.position.has_value())
             {
               return data.limited.position.value();
             }
             else if (
-              interface->get_interface_name() == hardware_interface::HW_IF_VELOCITY &&
+              interface_name == hardware_interface::HW_IF_VELOCITY &&
               data.limited.velocity.has_value())
             {
               return data.limited.velocity.value();
             }
             else if (
-              interface->get_interface_name() == hardware_interface::HW_IF_EFFORT &&
-              data.limited.effort.has_value())
+              interface_name == hardware_interface::HW_IF_EFFORT && data.limited.effort.has_value())
             {
               return data.limited.effort.value();
             }
             else if (
-              interface->get_interface_name() == hardware_interface::HW_IF_ACCELERATION &&
+              interface_name == hardware_interface::HW_IF_ACCELERATION &&
               data.limited.acceleration.has_value())
             {
               return data.limited.acceleration.value();

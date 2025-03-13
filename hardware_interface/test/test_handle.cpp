@@ -101,14 +101,14 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
     });
   for (int i = 0; i < 10; i++)
   {
-    handle.set_limited_value(i);
+    handle.set_value(i);
     EXPECT_DOUBLE_EQ(handle.get_value(), i);
     ASSERT_FALSE(handle.is_limited());
   }
 
   for (int i = 11; i < 20; i++)
   {
-    handle.set_limited_value(i);
+    handle.set_value(static_cast<double>(i));
     EXPECT_DOUBLE_EQ(handle.get_value(), 10.0);
     ASSERT_TRUE(handle.is_limited());
   }
@@ -137,7 +137,7 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
       return value;
     });
 
-  handle.set_limited_value(121.0);
+  handle.set_value(121.0);
   ASSERT_DOUBLE_EQ(handle.get_value(), 100.0);
 
   std::atomic_bool done(false);
@@ -159,7 +159,7 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
     {
       for (int i = 100; i < 100000; i++)
       {
-        handle.set_limited_value(i);
+        handle.set_value(static_cast<double>(i));
         std::this_thread::sleep_for(std::chrono::microseconds(10));
       }
       done = true;

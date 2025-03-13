@@ -500,13 +500,13 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       get_logger(),
       "Resource Manager has been successfully initialized. Starting Controller Manager "
       "services...");
-    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
+  resource_manager_->import_joint_limiters(robot_description_);
   if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_))
   {
     RCLCPP_WARN(

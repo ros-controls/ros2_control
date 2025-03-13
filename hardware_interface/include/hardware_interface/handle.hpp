@@ -315,9 +315,17 @@ public:
    * @param value The value to be set.
    * @return True if the value was set successfully, false otherwise.
    */
-  [[nodiscard]] bool set_limited_value(double value)
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value)
   {
-    return set_value(on_set_command_limiter_(value, is_command_limited_));
+    if constexpr (std::is_same_v<T, double>)
+    {
+      return Handle::set_value(on_set_command_limiter_(value, is_command_limited_));
+    }
+    else
+    {
+      return Handle::set_value(value);
+    }
   }
 
   const bool & is_limited() const { return is_command_limited_; }
