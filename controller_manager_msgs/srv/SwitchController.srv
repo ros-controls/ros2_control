@@ -17,6 +17,7 @@
 # The return value "ok" indicates if the controllers were switched
 # successfully or not.  The meaning of success depends on the
 # specified strictness.
+# The return value "message" provides some human-readable information
 
 
 string[] activate_controllers
@@ -28,3 +29,4 @@ bool activate_asap
 builtin_interfaces/Duration timeout
 ---
 bool ok
+string message

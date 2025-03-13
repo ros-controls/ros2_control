@@ -63,12 +63,8 @@ class SwitchControllersVerb(VerbExtension):
                 args.switch_timeout,
             )
             if not response.ok:
-                print(
-                    bcolors.FAIL
-                    + "Error switching controllers, check controller_manager logs"
-                    + bcolors.ENDC
-                )
+                print(bcolors.FAIL + response.message + bcolors.ENDC)
                 return 1
 
-            print(bcolors.OKBLUE + "Successfully switched controllers" + bcolors.ENDC)
+            print(bcolors.OKBLUE + response.message + bcolors.ENDC)
             return 0
