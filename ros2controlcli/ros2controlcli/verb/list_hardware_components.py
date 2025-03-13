@@ -60,6 +60,8 @@ class ListHardwareComponentsVerb(VerbExtension):
                 print(
                     f"\tplugin name: {plugin_name}\n"
                     f"\tstate: id={component.state.id} label={activity_color}{component.state.label}{bcolors.ENDC}\n"
+                    f"\tread/write rate: {component.rw_rate} Hz\n"
+                    f"\tis_async: {component.is_async}\n"
                     f"\tcommand interfaces"
                 )
                 for cmd_interface in component.command_interfaces:
