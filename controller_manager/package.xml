@@ -3,7 +3,7 @@
 <package format="2">
   <name>controller_manager</name>
   <version>4.27.0</version>
-  <description>The main runnable entrypoint of ros2_control and home of controller- and resource management.</description>
+  <description>The main runnable entrypoint of ros2_control and home of controller management and resource management.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
