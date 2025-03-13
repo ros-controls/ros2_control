@@ -3,8 +3,7 @@
 <package format="3">
   <name>ros2_control_test_assets</name>
   <version>4.27.0</version>
-  <description>The package provides shared test resources for ros2_control stack
-  </description>
+  <description>The package provides shared test resources for ros2_control stack</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>

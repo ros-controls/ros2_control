@@ -3,9 +3,7 @@
 <package format="2">
   <name>ros2controlcli</name>
   <version>4.27.0</version>
-  <description>
-    The ROS 2 command line tools for ROS2 Control.
-  </description>
+  <description>The ROS 2 command line tools for ros2_control.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
