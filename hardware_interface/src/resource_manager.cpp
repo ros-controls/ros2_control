@@ -699,11 +699,17 @@ public:
           limits_interface;
         if (soft_limits.empty())
         {
+          RCLCPP_INFO(
+            get_logger(), "Creating JointSaturationLimiter for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
           limits_interface = std::make_unique<
             joint_limits::JointSaturationLimiter<joint_limits::JointControlInterfacesData>>();
         }
         else
         {
+          RCLCPP_INFO(
+            get_logger(), "Creating JointSoftLimiter for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
           limits_interface = std::make_unique<joint_limits::JointSoftLimiter>();
         }
         limits_interface->init({joint_name}, hard_limits, soft_limits, nullptr, nullptr);
@@ -970,6 +976,10 @@ public:
             }
             data.limited = data.command;
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
+            RCLCPP_ERROR_THROTTLE(
+              get_logger(), *rm_clock_, 1000,
+              "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
+              interface_name.c_str(), joint_name.c_str(), value, is_limited);
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
               data.limited.position.has_value())
