@@ -306,6 +306,19 @@ public:
    */
   void wait_for_trigger_update_to_finish();
 
+  /**
+   * Method to prepare the controller for deactivation. This method is called by the controller
+   * manager before deactivating the controller. The method is used to prepare the controller for
+   * deactivation, e.g., to stop triggering the update cycles further. This method is especially
+   * needed for controllers running in async mode and different frequency than the control manager.
+   *
+   * \note **The method is not real-time safe and shouldn't be called in the RT control loop.**
+   *
+   * If the controller is running in async mode, the method will stop the async update cycles. If
+   * the controller is not running in async mode, the method will do nothing.
+   */
+  void prepare_for_deactivation();
+
   std::string get_name() const;
 
   /// Enable or disable introspection of the controller.
@@ -319,11 +332,18 @@ protected:
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
+  /**
+   * Method to stop the async handler thread. This method is called before the controller cleanup,
+   * error and shutdown lifecycle transitions.
+   */
+  void stop_async_handler_thread();
+
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   unsigned int update_rate_ = 0;
   bool is_async_ = false;
   std::string urdf_ = "";
+  std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
 
 protected:
