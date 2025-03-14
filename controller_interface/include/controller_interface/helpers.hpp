@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 
+// Add hardware interface helpers here, so all inherited controllers can use them
+#include "hardware_interface/helpers.hpp"
+
 namespace controller_interface
 {
 /// Reorder interfaces with references according to joint names or full interface names.
@@ -76,16 +79,6 @@ inline bool interface_list_contains_interface_type(
 {
   return std::find(interface_type_list.begin(), interface_type_list.end(), interface_type) !=
          interface_type_list.end();
-}
-
-template <typename T>
-void add_element_to_list(std::vector<T> & list, const T & element)
-{
-  if (std::find(list.begin(), list.end(), element) == list.end())
-  {
-    // Only add to the list if it doesn't exist
-    list.push_back(element);
-  }
 }
 
 }  // namespace controller_interface
