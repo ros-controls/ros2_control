@@ -316,15 +316,15 @@ public:
    * @return True if the value was set successfully, false otherwise.
    */
   template <typename T>
-  [[nodiscard]] bool set_value(const T & value)
+  [[nodiscard]] bool set_limited_value(const T & value)
   {
     if constexpr (std::is_same_v<T, double>)
     {
-      return Handle::set_value(on_set_command_limiter_(value, is_command_limited_));
+      return set_value(on_set_command_limiter_(value, is_command_limited_));
     }
     else
     {
-      return Handle::set_value(value);
+      return set_value(value);
     }
   }
 
