@@ -788,7 +788,10 @@ public:
         joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
         update_joint_limiters_data(data);
         enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
-        update_joint_limiters_commands(data.limited, command_interface_map_);
+        if (enforce_result)
+        {
+          update_joint_limiters_commands(data.limited, command_interface_map_);
+        }
       }
     }
     return enforce_result;
