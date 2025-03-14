@@ -337,6 +337,8 @@ public:
       std::function<double()> f = [this]()
       { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
+        "command_interface." + get_name() + ".is_limited", &is_command_limited_);
     }
   }
 
@@ -345,6 +347,8 @@ public:
     if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
+        "command_interface." + get_name() + ".is_limited");
     }
   }
 
