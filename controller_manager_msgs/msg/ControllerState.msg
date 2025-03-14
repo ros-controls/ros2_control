@@ -1,6 +1,8 @@
 string name        # controller name
 string state        # controller state: unconfigured, inactive, active, or finalized
 string type        # the controller class name, e.g. joint_trajectory_controller/JointTrajectoryController
+bool is_async       # true, if controller runs asynchronously. false, if controller runs synchronously
+uint16 update_rate        # update rate of the controller in Hz
 string[] claimed_interfaces        # command interfaces currently owned by controller
 string[] required_command_interfaces        # command interfaces required by controller
 string[] required_state_interfaces        # state interfaces required by controller

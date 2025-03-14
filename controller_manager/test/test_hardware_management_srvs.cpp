@@ -133,6 +133,8 @@ public:
     {
       if (component.name == TEST_ACTUATOR_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_ACTUATOR_HARDWARE_NAME, TEST_ACTUATOR_HARDWARE_TYPE,
           TEST_ACTUATOR_HARDWARE_PLUGIN_NAME, hw_state_ids[0], hw_state_labels[0]);
@@ -145,6 +147,8 @@ public:
       }
       if (component.name == TEST_SENSOR_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_SENSOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_TYPE,
           TEST_SENSOR_HARDWARE_PLUGIN_NAME, hw_state_ids[1], hw_state_labels[1]);
@@ -157,6 +161,8 @@ public:
       }
       if (component.name == TEST_SYSTEM_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_SYSTEM_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_TYPE,
           TEST_SYSTEM_HARDWARE_PLUGIN_NAME, hw_state_ids[2], hw_state_labels[2]);

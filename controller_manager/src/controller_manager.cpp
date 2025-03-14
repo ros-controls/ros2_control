@@ -2184,6 +2184,8 @@ void ControllerManager::list_controllers_srv_cb(
 
     controller_state.name = controllers[i].info.name;
     controller_state.type = controllers[i].info.type;
+    controller_state.is_async = controllers[i].c->is_async();
+    controller_state.update_rate = static_cast<uint16_t>(controllers[i].c->get_update_rate());
     controller_state.claimed_interfaces = controllers[i].info.claimed_interfaces;
     controller_state.state = controllers[i].c->get_lifecycle_state().label();
     controller_state.is_chainable = controllers[i].c->is_chainable();
@@ -2470,6 +2472,8 @@ void ControllerManager::list_hardware_components_srv_cb(
     auto component = controller_manager_msgs::msg::HardwareComponentState();
     component.name = component_name;
     component.type = component_info.type;
+    component.is_async = component_info.is_async;
+    component.rw_rate = static_cast<uint16_t>(component_info.rw_rate);
     component.plugin_name = component_info.plugin_name;
     component.state.id = component_info.state.id();
     component.state.label = component_info.state.label();
