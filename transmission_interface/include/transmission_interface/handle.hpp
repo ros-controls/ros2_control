@@ -15,6 +15,8 @@
 #ifndef TRANSMISSION_INTERFACE__HANDLE_HPP_
 #define TRANSMISSION_INTERFACE__HANDLE_HPP_
 
+#include <memory>
+
 #include "hardware_interface/handle.hpp"
 
 namespace transmission_interface
@@ -24,13 +26,19 @@ class ActuatorHandle : public hardware_interface::Handle
 {
 public:
   using hardware_interface::Handle::Handle;
+  using SharedPtr = std::shared_ptr<ActuatorHandle>;
 };
 
 /** A handle used to get and set a value on a given joint interface. */
 class JointHandle : public hardware_interface::Handle
 {
 public:
+// Disable deprecated warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   using hardware_interface::Handle::Handle;
+#pragma GCC diagnostic pop
+  using SharedPtr = std::shared_ptr<JointHandle>;
 };
 
 }  // namespace transmission_interface
