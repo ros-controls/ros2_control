@@ -2,10 +2,11 @@
 <package format="2">
   <name>hardware_interface_testing</name>
   <version>4.27.0</version>
-  <description>ros2_control hardware interface testing</description>
+  <description>Commonly used test fixtures for the ros2_control framework</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
