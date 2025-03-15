@@ -31,7 +31,8 @@
 
 namespace
 {
-std::string get_data_type_name(const hardware_interface::HandleDataType & data_type)
+
+std::string to_string(hardware_interface::HandleDataType data_type)
 {
   switch (data_type)
   {
@@ -203,7 +204,7 @@ public:
     {
       throw std::runtime_error(
         "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-        " expected : '" + get_data_type_name(data_type_) + "'");
+        " expected : '" + to_string(data_type_) + "'");
     }
     // END
   }
@@ -248,7 +249,7 @@ public:
       {
         throw std::runtime_error(
           "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + get_data_type_name(data_type_) + "'");
+          " expected : '" + to_string(data_type_) + "'");
       }
     }
     return true;
@@ -288,7 +289,7 @@ public:
       {
         throw std::runtime_error(
           "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + get_data_type_name(data_type_) + "'");
+          " expected : '" + to_string(data_type_) + "'");
       }
       value_ = value;
     }
