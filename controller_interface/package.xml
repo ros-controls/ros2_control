@@ -3,9 +3,11 @@
 <package format="2">
   <name>controller_interface</name>
   <version>4.27.0</version>
-  <description>Description of controller_interface</description>
+  <description>Base classes for controllers and syntax cookies for supporting common sensor types in controllers and broadcasters</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

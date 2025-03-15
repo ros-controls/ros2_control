@@ -6,6 +6,8 @@
   <description>Messages and services for the controller manager.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>BSD</license>
   <url>http://ros.org/wiki/controller_manager_msgs</url>
   <author email="sglaser@willowgarage.com">Stuart Glaser</author>
