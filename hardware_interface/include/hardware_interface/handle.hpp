@@ -29,10 +29,36 @@
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/macros.hpp"
 
+namespace
+{
+
+std::string to_string(hardware_interface::HandleDataType data_type)
+{
+  switch (data_type)
+  {
+    case hardware_interface::HandleDataType::DOUBLE:
+      return "double";
+    case hardware_interface::HandleDataType::BOOL:
+      return "bool";
+    default:
+      return "unknown";
+  }
+}
+
+template <typename T>
+std::string get_type_name()
+{
+  int status = 0;
+  std::unique_ptr<char[], void (*)(void *)> res{
+    abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status), std::free};
+  return (status == 0) ? res.get() : typeid(T).name();
+}
+}  // namespace
+
 namespace hardware_interface
 {
 
-using HANDLE_DATATYPE = std::variant<std::monostate, double>;
+using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -55,10 +81,25 @@ public:
     interface_name_(interface_description.get_interface_name()),
     handle_name_(interface_description.get_name())
   {
+    data_type_ = interface_description.get_data_type();
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
-    value_ = std::numeric_limits<double>::quiet_NaN();
-    value_ptr_ = std::get_if<double>(&value_);
+    if (data_type_ == HandleDataType::DOUBLE)
+    {
+      value_ = std::numeric_limits<double>::quiet_NaN();
+      value_ptr_ = std::get_if<double>(&value_);
+    }
+    else if (data_type_ == HandleDataType::BOOL)
+    {
+      value_ptr_ = nullptr;
+      value_ = false;
+    }
+    else
+    {
+      throw std::runtime_error(
+        "Invalid data type : '" + interface_description.interface_info.data_type +
+        "' for interface : " + interface_description.get_name());
+    }
   }
 
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
@@ -147,10 +188,24 @@ public:
     {
       return std::nullopt;
     }
-    THROW_ON_NULLPTR(this->value_ptr_);
     // BEGIN (Handle export change): for backward compatibility
     // TODO(saikishor) return value_ if old functionality is removed
-    return value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+    if constexpr (std::is_same_v<T, double>)
+    {
+      // If the template is of type double, check if the value_ptr_ is not nullptr
+      THROW_ON_NULLPTR(value_ptr_);
+      return *value_ptr_;
+    }
+    try
+    {
+      return std::get<T>(value_);
+    }
+    catch (const std::bad_variant_access & err)
+    {
+      throw std::runtime_error(
+        "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+        " expected : '" + to_string(data_type_) + "'");
+    }
     // END
   }
 
@@ -178,7 +233,25 @@ public:
     }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) return value_ if old functionality is removed
-    value = value_ptr_ != nullptr ? *value_ptr_ : std::get<T>(value_);
+    if constexpr (std::is_same_v<T, double>)
+    {
+      // If the template is of type double, check if the value_ptr_ is not nullptr
+      THROW_ON_NULLPTR(value_ptr_);
+      value = *value_ptr_;
+    }
+    else
+    {
+      try
+      {
+        value = std::get<T>(value_);
+      }
+      catch (const std::bad_variant_access & err)
+      {
+        throw std::runtime_error(
+          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+          " expected : '" + to_string(data_type_) + "'");
+      }
+    }
     return true;
     // END
   }
@@ -204,11 +277,27 @@ public:
     }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) set value_ directly if old functionality is removed
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
+    if constexpr (std::is_same_v<T, double>)
+    {
+      // If the template is of type double, check if the value_ptr_ is not nullptr
+      THROW_ON_NULLPTR(value_ptr_);
+      *value_ptr_ = value;
+    }
+    else
+    {
+      if (!std::holds_alternative<T>(value_))
+      {
+        throw std::runtime_error(
+          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
+          " expected : '" + to_string(data_type_) + "'");
+      }
+      value_ = value;
+    }
     return true;
     // END
   }
+
+  HandleDataType get_data_type() const { return data_type_; }
 
 private:
   void copy(const Handle & other) noexcept
@@ -243,6 +332,7 @@ protected:
   std::string interface_name_;
   std::string handle_name_;
   HANDLE_DATATYPE value_ = std::monostate{};
+  HandleDataType data_type_ = HandleDataType::DOUBLE;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
