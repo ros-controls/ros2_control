@@ -14,8 +14,8 @@ repositories:
   ros-controls/control_toolbox:
     type: git
     url: https://github.com/ros-controls/control_toolbox.git
-    version: ros2-master
+    version: jazzy
   ros-controls/kinematics_interface:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git
-    version: master
+    version: jazzy
