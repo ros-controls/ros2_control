@@ -144,7 +144,23 @@ public:
   };
 
   HandleDataType() = default;
-  constexpr HandleDataType(Value value) : value_(value) {}
+  constexpr HandleDataType(Value value) : value_(value) {}  // NOLINT(runtime/explicit)
+  explicit HandleDataType(const std::string & data_type)
+  {
+    if (data_type == "double")
+    {
+      value_ = DOUBLE;
+    }
+    else if (data_type == "bool")
+    {
+      value_ = BOOL;
+    }
+    else
+    {
+      value_ = UNKNOWN;
+    }
+  }
+
   operator Value() const { return value_; }
 
   explicit operator bool() const = delete;
@@ -167,6 +183,8 @@ public:
         return "unknown";
     }
   }
+
+  HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
 
 private:
   Value value_ = UNKNOWN;
@@ -206,21 +224,7 @@ struct InterfaceDescription
 
   const std::string & get_name() const { return interface_name; }
 
-  HandleDataType get_data_type() const
-  {
-    if (interface_info.data_type == "double")
-    {
-      return hardware_interface::HandleDataType::DOUBLE;
-    }
-    else if (interface_info.data_type == "bool")
-    {
-      return hardware_interface::HandleDataType::BOOL;
-    }
-    else
-    {
-      return hardware_interface::HandleDataType::UNKNOWN;
-    }
-  }
+  HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
