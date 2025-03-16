@@ -91,6 +91,7 @@ controller_manager
 * The ``pal_statistics`` is now integrated into the controller_manager, so that the controllers, hardware components and the controller_manager can be easily introspected and monitored using the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_).
 * A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
 * A latched topic ``~/activity`` has been added to the controller_manager to publish the activity of the controller_manager, where the change in states of the controllers and the hardware components are published. (`#2006 <https://github.com/ros-controls/ros2_control/pull/2006>`_).
+* The controller manager will use a monotonic clock for triggering read-update-write cycles, but when the ``use_sim_time`` parameter is set to true, it will use the ROS Clock for triggering. When monotonic clock is being used, all the hardware components will receive the monotonic time in their read and write method, instead the controllers will always receive the ROS time in their update method irrespective of the clock being used. (`#2046 <https://github.com/ros-controls/ros2_control/pull/2046>`_).
 
 hardware_interface
 ******************

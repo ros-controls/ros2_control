@@ -2148,7 +2148,7 @@ TEST_F(
   // State interface should not update
   read();
   EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 0.0);
-  EXPECT_TRUE(claimed_itfs[0].set_value(10));
+  EXPECT_TRUE(claimed_itfs[0].set_value(10.0));
   write();
   node_.get_clock()->sleep_until(time + duration + test_jitter);
   time = node_.get_clock()->now();
@@ -2157,7 +2157,7 @@ TEST_F(
   // State interface should update
   read();
   EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 5.0);
-  EXPECT_TRUE(claimed_itfs[0].set_value(20));
+  EXPECT_TRUE(claimed_itfs[0].set_value(20.0));
   write();
   node_.get_clock()->sleep_until(time + duration - test_jitter);
   time = node_.get_clock()->now();
@@ -2166,7 +2166,7 @@ TEST_F(
   // State interface should not update
   read();
   EXPECT_DOUBLE_EQ(state_itfs[0].get_optional().value(), 5.0);
-  EXPECT_TRUE(claimed_itfs[0].set_value(30));
+  EXPECT_TRUE(claimed_itfs[0].set_value(30.0));
   write();
   node_.get_clock()->sleep_until(time + duration - test_jitter);
   time = node_.get_clock()->now();

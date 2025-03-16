@@ -103,17 +103,30 @@ public:
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    clock_interface_(clock_interface),
     rm_logger_(rclcpp::get_logger("resource_manager"))
   {
-    if (!clock_interface_)
+    if (!clock_interface)
     {
       throw std::invalid_argument(
         "Clock interface is nullptr. ResourceManager needs a valid clock interface.");
     }
+    rm_clock_ = clock_interface->get_clock();
     if (logger_interface)
     {
       rm_logger_ = logger_interface->get_logger().get_child("resource_manager");
+    }
+  }
+
+  explicit ResourceStorage(rclcpp::Clock::SharedPtr clock_interface, rclcpp::Logger logger)
+  : actuator_loader_(pkg_name, actuator_interface_name),
+    sensor_loader_(pkg_name, sensor_interface_name),
+    system_loader_(pkg_name, system_interface_name),
+    rm_clock_(clock_interface),
+    rm_logger_(logger)
+  {
+    if (!rm_clock_)
+    {
+      throw std::invalid_argument("Clock is nullptr. ResourceManager needs a valid clock.");
     }
   }
 
@@ -195,7 +208,7 @@ public:
     try
     {
       const rclcpp_lifecycle::State new_state =
-        hardware.initialize(hardware_info, rm_logger_, clock_interface_);
+        hardware.initialize(hardware_info, rm_logger_, rm_clock_);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
@@ -983,7 +996,7 @@ public:
   /**
    * \return clock of the resource storage
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return rm_clock_; }
 
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
@@ -991,8 +1004,7 @@ public:
   pluginlib::ClassLoader<SystemInterface> system_loader_;
 
   // Logger and Clock interfaces
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+  rclcpp::Clock::SharedPtr rm_clock_;
   rclcpp::Logger rm_logger_;
 
   std::vector<Actuator> actuators_;
@@ -1037,6 +1049,11 @@ ResourceManager::ResourceManager(
 {
 }
 
+ResourceManager::ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger)
+: resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
+{
+}
+
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
@@ -1044,6 +1061,24 @@ ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
   const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
+{
+  load_and_initialize_components(urdf, update_rate);
+
+  if (activate_all)
+  {
+    for (auto const & hw_info : resource_storage_->hardware_info_map_)
+    {
+      using lifecycle_msgs::msg::State;
+      rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+      set_component_state(hw_info.first, state);
+    }
+  }
+}
+
+ResourceManager::ResourceManager(
+  const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
+  bool activate_all, const unsigned int update_rate)
+: resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
 {
   load_and_initialize_components(urdf, update_rate);
 
@@ -1768,6 +1803,12 @@ HardwareReadWriteStatus ResourceManager::read(
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
+  // This is needed while we load and initialize the components
+  std::unique_lock<std::recursive_mutex> resource_guard(resources_lock_, std::try_to_lock);
+  if (!resource_guard.owns_lock())
+  {
+    return read_write_status;
+  }
   auto read_components = [&](auto & components)
   {
     for (auto & component : components)
@@ -1871,6 +1912,12 @@ HardwareReadWriteStatus ResourceManager::write(
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
+  // This is needed while we load and initialize the components
+  std::unique_lock<std::recursive_mutex> resource_guard(resources_lock_, std::try_to_lock);
+  if (!resource_guard.owns_lock())
+  {
+    return read_write_status;
+  }
   auto write_components = [&](auto & components)
   {
     for (auto & component : components)

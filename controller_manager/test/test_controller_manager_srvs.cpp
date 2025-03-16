@@ -92,6 +92,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
   ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
@@ -100,6 +102,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
@@ -114,6 +118,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
@@ -131,6 +137,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("inactive", result->controller[0].state);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
@@ -592,6 +600,9 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   auto test_chainable_controller = std::make_shared<TestChainableController>();
   controller_interface::InterfaceConfiguration chained_cmd_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
+  controller_interface::InterfaceConfiguration duplicated_chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/position"}};
   controller_interface::InterfaceConfiguration chained_state_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL,
     {"joint1/position", "joint1/velocity"}};
@@ -624,6 +635,53 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now try to configure the chainable controller with duplicated command interfaces
+  test_chainable_controller->set_command_interface_configuration(duplicated_chained_cmd_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now duplicate state interfaces
+  controller_interface::InterfaceConfiguration duplicated_chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/position", "joint1/velocity"}};
+  test_chainable_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chainable_controller->set_state_interface_configuration(duplicated_chained_state_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now try to configure the chainable controller again with unique state and command interfaces
+  test_chainable_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chainable_controller->set_state_interface_configuration(chained_state_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
     cm_->get_loaded_controllers()[0].c->get_name());
