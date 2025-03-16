@@ -44,7 +44,8 @@ std::string get_type_name()
 namespace hardware_interface
 {
 
-using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
+using HANDLE_DATATYPE =
+  std::variant<std::monostate, double, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -79,6 +80,36 @@ public:
     {
       value_ptr_ = nullptr;
       value_ = false;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT8)
+    {
+      value_ = static_cast<uint8_t>(std::numeric_limits<uint8_t>::max());
+      value_ptr_ = nullptr;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT8)
+    {
+      value_ = static_cast<int8_t>(std::numeric_limits<int8_t>::max());
+      value_ptr_ = nullptr;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT16)
+    {
+      value_ = static_cast<uint16_t>(std::numeric_limits<uint16_t>::max());
+      value_ptr_ = nullptr;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT16)
+    {
+      value_ = static_cast<int16_t>(std::numeric_limits<int16_t>::max());
+      value_ptr_ = nullptr;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT32)
+    {
+      value_ = static_cast<uint32_t>(std::numeric_limits<uint32_t>::max());
+      value_ptr_ = nullptr;
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT32)
+    {
+      value_ = static_cast<int32_t>(std::numeric_limits<int32_t>::max());
+      value_ptr_ = nullptr;
     }
     else
     {

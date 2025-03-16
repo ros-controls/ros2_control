@@ -140,7 +140,13 @@ public:
   {
     UNKNOWN = -1,
     DOUBLE,
-    BOOL
+    BOOL,
+    UINT8,
+    INT8,
+    UINT16,
+    INT16,
+    UINT32,
+    INT32,
   };
 
   HandleDataType() = default;
@@ -154,6 +160,30 @@ public:
     else if (data_type == "bool")
     {
       value_ = BOOL;
+    }
+    else if (data_type == "uint8")
+    {
+      value_ = UINT8;
+    }
+    else if (data_type == "int8")
+    {
+      value_ = INT8;
+    }
+    else if (data_type == "uint16")
+    {
+      value_ = UINT16;
+    }
+    else if (data_type == "int16")
+    {
+      value_ = INT16;
+    }
+    else if (data_type == "uint32")
+    {
+      value_ = UINT32;
+    }
+    else if (data_type == "int32")
+    {
+      value_ = INT32;
     }
     else
     {
@@ -179,6 +209,18 @@ public:
         return "double";
       case BOOL:
         return "bool";
+      case UINT8:
+        return "uint8";
+      case INT8:
+        return "int8";
+      case UINT16:
+        return "uint16";
+      case INT16:
+        return "int16";
+      case UINT32:
+        return "uint32";
+      case INT32:
+        return "int32";
       default:
         return "unknown";
     }

@@ -124,6 +124,197 @@ TEST(TestHandle, interface_description_bool_data_type)
   ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
 }
 
+TEST(TestHandle, interface_description_uint8_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "uint8";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT8, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT8, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<uint8_t>(); });
+  ASSERT_EQ(handle.get_optional<uint8_t>().value(), std::numeric_limits<uint8_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(255); });
+  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 255);
+  EXPECT_NO_THROW({ handle.set_value(0); });
+  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 0);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(256); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_int8_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "int8";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::INT8, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::INT8, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<int8_t>(); });
+  ASSERT_EQ(handle.get_optional<int8_t>().value(), std::numeric_limits<int8_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(127); });
+  ASSERT_EQ(handle.get_optional<int8_t>().value(), 127);
+  EXPECT_NO_THROW({ handle.set_value(-128); });
+  ASSERT_EQ(handle.get_optional<int8_t>().value(), -128);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(-129); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(128); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_uint16_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "uint16";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT16, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT16, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<uint16_t>(); });
+  ASSERT_EQ(handle.get_optional<uint16_t>().value(), std::numeric_limits<uint16_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(65535); });
+  ASSERT_EQ(handle.get_optional<uint16_t>().value(), 65535);
+  EXPECT_NO_THROW({ handle.set_value(0); });
+  ASSERT_EQ(handle.get_optional<uint16_t>().value(), 0);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(65536); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_int16_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "int16";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::INT16, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::INT16, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<int16_t>(); });
+  ASSERT_EQ(handle.get_optional<int16_t>().value(), std::numeric_limits<int16_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(32767); });
+  ASSERT_EQ(handle.get_optional<int16_t>().value(), 32767);
+  EXPECT_NO_THROW({ handle.set_value(-32768); });
+  ASSERT_EQ(handle.get_optional<int16_t>().value(), -32768);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(-32769); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(32768); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_uint32_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "uint32";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT32, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT32, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<uint32_t>(); });
+  ASSERT_EQ(handle.get_optional<uint32_t>().value(), std::numeric_limits<uint32_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint32_t>(4294967295)); });
+  ASSERT_EQ(handle.get_optional<uint32_t>().value(), 4294967295);
+  EXPECT_NO_THROW({ handle.set_value(0); });
+  ASSERT_EQ(handle.get_optional<uint32_t>().value(), 0);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(static_cast<int32_t>(4294967296)); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_int32_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "int32";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::INT32, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::INT32, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<int32_t>(); });
+  ASSERT_EQ(handle.get_optional<int32_t>().value(), std::numeric_limits<int32_t>::max());
+  EXPECT_NO_THROW({ handle.set_value(2147483647); });
+  ASSERT_EQ(handle.get_optional<int32_t>().value(), 2147483647);
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int32_t>(-2147483648)); });
+  ASSERT_EQ(handle.get_optional<int32_t>().value(), -2147483648);
+
+  // Test the assertions
+  ASSERT_THROW({ handle.set_value(static_cast<uint16_t>(-2147)); }, std::runtime_error);
+  ASSERT_THROW({ handle.set_value(static_cast<uint16_t>(2147)); }, std::runtime_error);
+  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+}
+
+TEST(TestHandle, interface_description_double_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "double";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<double>(); });
+  ASSERT_TRUE(std::isnan(handle.get_optional<double>().value()));
+  EXPECT_NO_THROW({ handle.set_value(1.337); });
+  ASSERT_DOUBLE_EQ(handle.get_optional<double>().value(), 1.337);
+  EXPECT_NO_THROW({ handle.set_value(0.0); });
+  ASSERT_DOUBLE_EQ(handle.get_optional<double>().value(), 0.0);
+}
+
 TEST(TestHandle, interface_description_unknown_data_type)
 {
   const std::string collision_interface = "collision";
