@@ -31,20 +31,6 @@
 
 namespace
 {
-
-std::string to_string(hardware_interface::HandleDataType data_type)
-{
-  switch (data_type)
-  {
-    case hardware_interface::HandleDataType::DOUBLE:
-      return "double";
-    case hardware_interface::HandleDataType::BOOL:
-      return "bool";
-    default:
-      return "unknown";
-  }
-}
-
 template <typename T>
 std::string get_type_name()
 {
@@ -84,12 +70,12 @@ public:
     data_type_ = interface_description.get_data_type();
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
-    if (data_type_ == HandleDataType::DOUBLE)
+    if (data_type_ == hardware_interface::HandleDataType::DOUBLE)
     {
       value_ = std::numeric_limits<double>::quiet_NaN();
       value_ptr_ = std::get_if<double>(&value_);
     }
-    else if (data_type_ == HandleDataType::BOOL)
+    else if (data_type_ == hardware_interface::HandleDataType::BOOL)
     {
       value_ptr_ = nullptr;
       value_ = false;
@@ -204,7 +190,7 @@ public:
     {
       throw std::runtime_error(
         "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-        " expected : '" + to_string(data_type_) + "'");
+        " expected : '" + data_type_.to_string() + "'");
     }
     // END
   }
@@ -249,7 +235,7 @@ public:
       {
         throw std::runtime_error(
           "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + to_string(data_type_) + "'");
+          " expected : '" + data_type_.to_string() + "'");
       }
     }
     return true;
@@ -289,7 +275,7 @@ public:
       {
         throw std::runtime_error(
           "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + to_string(data_type_) + "'");
+          " expected : '" + data_type_.to_string() + "'");
       }
       value_ = value;
     }

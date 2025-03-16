@@ -133,11 +133,43 @@ struct TransmissionInfo
 /**
  * Hardware handles supported types
  */
-enum class HandleDataType
+class HandleDataType
 {
-  UNKNOWN,
-  DOUBLE,
-  BOOL
+public:
+  enum Value : int8_t
+  {
+    UNKNOWN = -1,
+    DOUBLE,
+    BOOL
+  };
+
+  HandleDataType() = default;
+  constexpr HandleDataType(Value value) : value_(value) {}
+  operator Value() const { return value_; }
+
+  explicit operator bool() const = delete;
+
+  constexpr bool operator==(HandleDataType other) const { return value_ == other.value_; }
+  constexpr bool operator!=(HandleDataType other) const { return value_ != other.value_; }
+
+  constexpr bool operator==(Value other) const { return value_ == other; }
+  constexpr bool operator!=(Value other) const { return value_ != other; }
+
+  std::string to_string() const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return "double";
+      case BOOL:
+        return "bool";
+      default:
+        return "unknown";
+    }
+  }
+
+private:
+  Value value_ = UNKNOWN;
 };
 
 /**
@@ -178,15 +210,15 @@ struct InterfaceDescription
   {
     if (interface_info.data_type == "double")
     {
-      return HandleDataType::DOUBLE;
+      return hardware_interface::HandleDataType::DOUBLE;
     }
     else if (interface_info.data_type == "bool")
     {
-      return HandleDataType::BOOL;
+      return hardware_interface::HandleDataType::BOOL;
     }
     else
     {
-      return HandleDataType::UNKNOWN;
+      return hardware_interface::HandleDataType::UNKNOWN;
     }
   }
 };
