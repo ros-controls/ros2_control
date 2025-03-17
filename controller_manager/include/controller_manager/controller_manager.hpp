@@ -144,6 +144,8 @@ public:
    * \param[in] activate_controllers is a list of controllers to activate.
    * \param[in] deactivate_controllers is a list of controllers to deactivate.
    * \param[in] set level of strictness (BEST_EFFORT or STRICT)
+   * \param[in] activate_asap flag to activate controllers as soon as possible.
+   * \param[in] timeout to wait for the controllers to be switched.
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   controller_interface::return_type switch_controller(
@@ -151,6 +153,21 @@ public:
     const std::vector<std::string> & deactivate_controllers, int strictness,
     bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
+
+  /// switch_controller Deactivates some controllers and activates others.
+  /**
+   * \param[in] activate_controllers is a list of controllers to activate.
+   * \param[in] deactivate_controllers is a list of controllers to deactivate.
+   * \param[in] set level of strictness (BEST_EFFORT or STRICT)
+   * \param[in] activate_asap flag to activate controllers as soon as possible.
+   * \param[in] timeout to wait for the controllers to be switched.
+   * \param[out] message describing the result of the switch.
+   * \see Documentation in controller_manager_msgs/SwitchController.srv
+   */
+  controller_interface::return_type switch_controller_cb(
+    const std::vector<std::string> & activate_controllers,
+    const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
+    const rclcpp::Duration & timeout, std::string & message);
 
   /// Read values to state interfaces.
   /**
@@ -210,6 +227,19 @@ public:
    * \returns update rate of the controller manager.
    */
   unsigned int get_update_rate() const;
+
+  /// Get the trigger clock of the controller manager.
+  /**
+   * Get the trigger clock of the controller manager.
+   * The method is used to get the clock that is used for triggering the controllers and the
+   * hardware components.
+   *
+   * @note When the use_sim_time parameter is set to true, the clock will be the ROS clock.
+   * Otherwise, the clock will be the Steady Clock.
+   *
+   * \returns trigger clock of the controller manager.
+   */
+  rclcpp::Clock::SharedPtr get_trigger_clock() const;
 
 protected:
   void init_services();
@@ -325,11 +355,19 @@ private:
   void initialize_parameters();
 
   /**
+   * Call cleanup to change the given controller lifecycle node to the unconfigured state.
+   *
+   * \param[in] controller controller to be shutdown.
+   */
+  controller_interface::return_type cleanup_controller(
+    const controller_manager::ControllerSpec & controller);
+
+  /**
    * Call shutdown to change the given controller lifecycle node to the finalized state.
    *
    * \param[in] controller controller to be shutdown.
    */
-  void shutdown_controller(controller_manager::ControllerSpec & controller) const;
+  void shutdown_controller(const controller_manager::ControllerSpec & controller) const;
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -365,6 +403,7 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controller_it iterator to the controller for which the following controllers are
+   * \param[out] message describing the result of the check.
    * checked.
    *
    * \returns return_type::OK if all following controllers pass the checks, otherwise
@@ -372,7 +411,7 @@ private:
    */
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it);
+    const ControllersListIterator controller_it, std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
@@ -389,24 +428,39 @@ private:
    * controllers will be automatically added to the deactivate request list.
    * \param[in] controller_it iterator to the controller for which the preceding controllers are
    * checked.
+   * \param[out] message describing the result of the check.
    *
    * \returns return_type::OK if all preceding controllers pass the checks, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it);
+    const ControllersListIterator controller_it, std::string & message);
 
   /// Checks if the fallback controllers of the given controllers are in the right
   /// state, so they can be activated immediately
   /**
    * \param[in] controllers is a list of controllers to activate.
    * \param[in] controller_it is the iterator pointing to the controller to be activated.
+   * \param[out] message describing the result of the check.
    * \return return_type::OK if all fallback controllers are in the right state, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_fallback_controllers_state_pre_activation(
-    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
+    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it,
+    std::string & message);
+
+  /**
+   * Checks that all the interfaces required by the controller are available to activate.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] activation_list list with controllers to activate.
+   * \param[out] message describing the result of the check.
+   * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
+   */
+  controller_interface::return_type check_for_interfaces_availability_to_activate(
+    const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
+    std::string & message);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
@@ -560,6 +614,7 @@ private:
     std::function<void()> on_switch_callback_ = nullptr;
   };
 
+  rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;

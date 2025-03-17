@@ -41,7 +41,7 @@ struct InterfaceInfo
   /// (Optional) Initial value of the interface.
   std::string initial_value;
   /// (Optional) The datatype of the interface, e.g. "bool", "int".
-  std::string data_type;
+  std::string data_type = "double";
   /// (Optional) If the handle is an array, the size of the array.
   int size;
   /// (Optional) enable or disable the limits for the command interfaces
@@ -131,6 +131,66 @@ struct TransmissionInfo
 };
 
 /**
+ * Hardware handles supported types
+ */
+class HandleDataType
+{
+public:
+  enum Value : int8_t
+  {
+    UNKNOWN = -1,
+    DOUBLE,
+    BOOL
+  };
+
+  HandleDataType() = default;
+  constexpr HandleDataType(Value value) : value_(value) {}  // NOLINT(runtime/explicit)
+  explicit HandleDataType(const std::string & data_type)
+  {
+    if (data_type == "double")
+    {
+      value_ = DOUBLE;
+    }
+    else if (data_type == "bool")
+    {
+      value_ = BOOL;
+    }
+    else
+    {
+      value_ = UNKNOWN;
+    }
+  }
+
+  operator Value() const { return value_; }
+
+  explicit operator bool() const = delete;
+
+  constexpr bool operator==(HandleDataType other) const { return value_ == other.value_; }
+  constexpr bool operator!=(HandleDataType other) const { return value_ != other.value_; }
+
+  constexpr bool operator==(Value other) const { return value_ == other; }
+  constexpr bool operator!=(Value other) const { return value_ != other; }
+
+  std::string to_string() const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return "double";
+      case BOOL:
+        return "bool";
+      default:
+        return "unknown";
+    }
+  }
+
+  HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
+
+private:
+  Value value_ = UNKNOWN;
+};
+
+/**
  * This structure stores information about an interface for a specific hardware which should be
  * instantiated internally.
  */
@@ -163,6 +223,8 @@ struct InterfaceDescription
   const std::string & get_interface_name() const { return interface_info.name; }
 
   const std::string & get_name() const { return interface_name; }
+
+  HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
