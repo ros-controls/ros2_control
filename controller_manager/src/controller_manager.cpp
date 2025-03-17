@@ -340,12 +340,6 @@ void get_controller_list_command_interfaces(
     }
   }
 }
-template <typename Collection>
-[[nodiscard]] bool is_unique(Collection collection)
-{
-  std::sort(collection.begin(), collection.end());
-  return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
-}
 }  // namespace
 
 namespace controller_manager
@@ -1132,7 +1126,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   const auto state_itfs = controller->state_interface_configuration().names;
 
   // Check if the cmd_itfs and the state_itfs are unique
-  if (!is_unique(cmd_itfs))
+  if (!ros2_control::is_unique(cmd_itfs))
   {
     std::string cmd_itfs_str = std::accumulate(
       std::next(cmd_itfs.begin()), cmd_itfs.end(), cmd_itfs.front(),
@@ -1146,7 +1140,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  if (!is_unique(state_itfs))
+  if (!ros2_control::is_unique(state_itfs))
   {
     std::string state_itfs_str = std::accumulate(
       std::next(state_itfs.begin()), state_itfs.end(), state_itfs.front(),
