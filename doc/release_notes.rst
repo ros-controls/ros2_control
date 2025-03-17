@@ -90,6 +90,8 @@ controller_manager
 * The ``cpu_affinity`` parameter can now accept of types ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
 * The ``pal_statistics`` is now integrated into the controller_manager, so that the controllers, hardware components and the controller_manager can be easily introspected and monitored using the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_).
 * A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
+* A latched topic ``~/activity`` has been added to the controller_manager to publish the activity of the controller_manager, where the change in states of the controllers and the hardware components are published. (`#2006 <https://github.com/ros-controls/ros2_control/pull/2006>`_).
+* The controller manager will use a monotonic clock for triggering read-update-write cycles, but when the ``use_sim_time`` parameter is set to true, it will use the ROS Clock for triggering. When monotonic clock is being used, all the hardware components will receive the monotonic time in their read and write method, instead the controllers will always receive the ROS time in their update method irrespective of the clock being used. (`#2046 <https://github.com/ros-controls/ros2_control/pull/2046>`_).
 
 hardware_interface
 ******************
@@ -164,7 +166,7 @@ hardware_interface
 * With (`#1763 <https://github.com/ros-controls/ros2_control/pull/1763>`_) parsing for SDF published to ``robot_description`` topic is now also supported.
 * With (`#1567 <https://github.com/ros-controls/ros2_control/pull/1567>`_) all the Hardware components now have a fully functional asynchronous functionality, by simply adding ``is_async`` tag to the ros2_control tag in the URDF. This will allow the hardware components to run in a separate thread, and the controller manager will be able to run the controllers in parallel with the hardware components.
 * The hardware components can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
-* Added new ``get_value`` method that returns ``std::optional`` of the templated type, and this can be used to check if the value is available or not (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_)
+* Added new ``get_optional`` method that returns ``std::optional`` of the templated type, and this can be used to check if the value is available or not (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
 
 joint_limits
 ************

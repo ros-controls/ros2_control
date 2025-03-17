@@ -18,8 +18,10 @@
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executor.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
 
@@ -30,6 +32,46 @@ class TestControllerManagerWithStrictness
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
   public testing::WithParamInterface<Strictness>
 {
+public:
+  void get_cm_status_message(
+    const std::string & topic, controller_manager_msgs::msg::ControllerManagerActivity & cm_msg)
+  {
+    controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr received_msg;
+    rclcpp::Node test_node("test_node");
+    auto subs_callback =
+      [&](const controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr msg)
+    { received_msg = msg; };
+    auto subscription =
+      test_node.create_subscription<controller_manager_msgs::msg::ControllerManagerActivity>(
+        topic, rclcpp::QoS(1).reliable().transient_local(), subs_callback);
+
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(test_node.get_node_base_interface());
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // call update to publish the test value
+    // since update doesn't guarantee a published message, republish until received
+    int max_sub_check_loop_count = 5;  // max number of tries for pub/sub loop
+    while (max_sub_check_loop_count--)
+    {
+      const auto timeout = std::chrono::milliseconds{50};
+      const auto until = test_node.get_clock()->now() + timeout;
+      while (!received_msg && test_node.get_clock()->now() < until)
+      {
+        executor.spin_some();
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+      // check if message has been received
+      if (received_msg.get())
+      {
+        break;
+      }
+    }
+    ASSERT_GE(max_sub_check_loop_count, 0) << "Test was unable to publish a message through "
+                                              "controller manager activity";
+    ASSERT_TRUE(received_msg);
+    cm_msg = *received_msg;
+  }
 };
 
 class TestControllerManagerRobotDescription
@@ -65,6 +107,15 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   const auto test_param = GetParam();
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
+
+  // Check for the hardware component and no controllers
+  controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
+  const std::string cm_activity_topic =
+    std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 0u);
+
   constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
@@ -73,6 +124,14 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     test_controller2, TEST_CONTROLLER2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
+
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   // setup interface to claim from controllers
   controller_interface::InterfaceConfiguration cmd_itfs_cfg;
@@ -137,6 +196,14 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
     cm_->configure_controller(TEST_CONTROLLER2_NAME);
   }
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -162,6 +229,16 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(test_param.expected_return, switch_future.get());
   }
+  auto expected_ctrl2_state = test_param.strictness == 1
+                                ? lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE
+                                : lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -189,6 +266,14 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -204,6 +289,14 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
+
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -226,6 +319,12 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     << "unload_controller should be blocking until next update cycle";
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
+
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 1u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
 
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
@@ -366,7 +465,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -377,8 +476,8 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(test_controller->update_period_.seconds(), 0.0)
     << "The first trigger cycle should have zero period";
 
-  const double exp_period = (cm_->get_clock()->now() - time_).seconds();
-  time_ = cm_->get_clock()->now();
+  const double exp_period = (cm_->get_trigger_clock()->now() - time_).seconds();
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -893,9 +992,9 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     ControllerManagerRunner cm_runner(this);
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   }
-  time_ = test_controller->get_node()->now();  // set to something nonzero
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();  // set to something nonzero
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -916,8 +1015,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -943,8 +1042,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
-    cm_->get_clock()->sleep_until(old_time + PERIOD);
-    time = cm_->get_clock()->now();
+    cm_->get_trigger_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_trigger_clock()->now();
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
@@ -1040,9 +1139,9 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   }
   ASSERT_TRUE(test_controller->is_async());
-  time_ = test_controller->get_node()->now();  // set to something nonzero
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  time_ = cm_->get_trigger_clock()->now();  // set to something nonzero
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -1063,8 +1162,8 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  cm_->get_clock()->sleep_until(time_ + PERIOD);
-  time_ = cm_->get_clock()->now();
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -1090,8 +1189,8 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
-    cm_->get_clock()->sleep_until(old_time + PERIOD);
-    time = cm_->get_clock()->now();
+    cm_->get_trigger_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_trigger_clock()->now();
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));

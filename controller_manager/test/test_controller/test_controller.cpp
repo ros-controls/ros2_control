@@ -59,8 +59,12 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 }
 
 controller_interface::return_type TestController::update(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error("ROS Time is required for the controller to operate.");
+  }
   if (is_async())
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000 / (2 * get_update_rate())));
@@ -187,7 +191,7 @@ std::vector<double> TestController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value<double>().value());
+    state_intr_data.push_back(interface.get_optional().value());
   }
   return state_intr_data;
 }

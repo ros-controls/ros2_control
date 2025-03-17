@@ -39,6 +39,9 @@
 
 namespace hardware_interface
 {
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
 /**
  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
@@ -60,22 +63,15 @@ namespace hardware_interface
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and non-movement hardware interfaces commanded.
- *   Hardware interfaces for movement will NOT be available.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
  *   Allocated memory is cleaned up.
  *
  * ACTIVE (on_activate):
- *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces for movement are available and have to be accepted.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
@@ -101,16 +97,32 @@ public:
   /// clock and logger interfaces.
   /**
    * \param[in] hardware_info structure with data from URDF.
+   * \param[in] logger Logger for the hardware component.
    * \param[in] clock_interface pointer to the clock interface.
-   * \param[in] logger_interface pointer to the logger interface.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated("Use init(HardwareInfo, rclcpp::Logger, rclcpp::Clock::SharedPtr) instead.")]]
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
-    clock_interface_ = clock_interface;
+    return this->init(hardware_info, logger, clock_interface->get_clock());
+  }
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock pointer to the resource manager clock.
+   * \param[in] logger Logger for the hardware component.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  {
+    sensor_clock_ = clock;
     sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
     info_ = hardware_info;
     if (info_.is_async)
@@ -236,28 +248,41 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  HardwareComponentCycleStatus trigger_read(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    return_type result = return_type::ERROR;
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
     if (info_.is_async)
     {
-      bool trigger_status = true;
-      std::tie(trigger_status, result) = read_async_handler_->trigger_async_callback(time, period);
-      if (!trigger_status)
+      const auto result = read_async_handler_->trigger_async_callback(time, period);
+      status.successful = result.first;
+      status.result = result.second;
+      const auto execution_time = read_async_handler_->get_last_execution_time();
+      if (execution_time.count() > 0)
+      {
+        status.execution_time = execution_time;
+      }
+      if (!status.successful)
       {
         RCLCPP_WARN(
           get_logger(),
           "Trigger read called while read async handler is still in progress for hardware "
           "interface : '%s'. Failed to trigger read cycle!",
           info_.name.c_str());
-        return return_type::OK;
+        status.result = return_type::OK;
+        return status;
       }
     }
     else
     {
-      result = read(time, period);
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
+      status.result = read(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
     }
-    return result;
+    return status;
   }
 
   /// Read the current state values from the actuator.
@@ -319,7 +344,7 @@ public:
   /**
    * \return clock of the SensorInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return sensor_clock_; }
 
   /// Get the hardware info of the SensorInterface.
   /**
@@ -359,7 +384,7 @@ protected:
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr sensor_clock_;
   rclcpp::Logger sensor_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> sensor_states_map_;
