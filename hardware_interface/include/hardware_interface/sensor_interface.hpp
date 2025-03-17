@@ -31,6 +31,9 @@
 
 namespace hardware_interface
 {
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
 /**
  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
@@ -52,22 +55,15 @@ namespace hardware_interface
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and non-movement hardware interfaces commanded.
- *   Hardware interfaces for movement will NOT be available.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
  *   Allocated memory is cleaned up.
  *
  * ACTIVE (on_activate):
- *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces for movement are available and have to be accepted.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
