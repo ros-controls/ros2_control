@@ -8,6 +8,11 @@ install(
   DESTINATION include
 )
 
+install(
+  FILES urdf/test_hardware_components.urdf
+  DESTINATION share/ros2_control_test_assets/urdf
+)
+
 ament_export_include_directories(
   include
 )
