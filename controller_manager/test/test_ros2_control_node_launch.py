@@ -61,6 +61,9 @@ def generate_test_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_controllers],
+        remappings=[
+            ("~/robot_description", "/robot_description"),
+        ],
         output="both",
     )
     # Get URDF, without involving xacro
