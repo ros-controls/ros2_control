@@ -123,7 +123,7 @@ template <typename Container>
  * @brief Check if the container has any of the items.
  * @param container The container to search in.
  * @param items The items to search for.
- * @return True if the container has all of the items, false otherwise.
+ * @return True if the container has any of the items, false otherwise.
  */
 template <typename T>
 [[nodiscard]] bool has_any_item(const std::vector<T> & container, const std::vector<T> & items)
