@@ -37,6 +37,7 @@ ControllerInterfaceBase::~ControllerInterfaceBase()
       get_node()->get_name());
     node_->shutdown();
   }
+  release_interfaces();
 }
 
 return_type ControllerInterfaceBase::init(
