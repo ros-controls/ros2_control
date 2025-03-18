@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.49.0 (2025-03-18)
+-------------------
 * Improve API/lifecycle docs (`#2081 <https://github.com/ros-controls/ros2_control/issues/2081>`_) (`#2085 <https://github.com/ros-controls/ros2_control/issues/2085>`_)
 * Contributors: mergify[bot]
 
