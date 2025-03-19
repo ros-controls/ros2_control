@@ -36,6 +36,13 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
 The limits will be applied after you log out and in again.
 
+
+Subscribers
+-----------
+
+robot_description [std_msgs::msg::String]
+  String with the URDF xml, e.g., from ``robot_state_publisher``.
+
 Parameters
 -----------
 
@@ -61,7 +68,11 @@ hardware_components_initial_state.unconfigured (optional; list<string>; default:
 hardware_components_initial_state.inactive (optional; list<string>; default: empty)
   Defines which hardware components will be configured immediately when controller manager is started.
 
-robot_description (mandatory; string)
+.. note::
+
+  Passing the robot description parameter directly to the control_manager node is deprecated. Use ``~/robot_description`` topic from ``robot_state_publisher`` instead.
+
+robot_description (optional; string; **deprecated**)
   String with the URDF string as robot description.
   This is usually result of the parsed description files by ``xacro`` command.
 
