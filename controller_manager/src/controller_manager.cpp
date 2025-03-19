@@ -3828,7 +3828,9 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     {
       if (
         node_options_arguments.back() == RCL_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG)
+        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG ||
+        node_options_arguments.back() == RCL_PARAM_FLAG ||
+        node_options_arguments.back() == RCL_SHORT_PARAM_FLAG)
       {
         node_options_arguments.pop_back();
       }
