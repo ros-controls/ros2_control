@@ -1887,8 +1887,11 @@ bool ResourceManager::prepare_command_mode_switch(
       const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
       get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
       get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
-      if (start_interfaces.empty() && stop_interfaces.empty())
+      if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
       {
+        RCLCPP_DEBUG(
+          logger, "Component '%s' after filtering has no command interfaces to switch",
+          component.get_name().c_str());
         continue;
       }
       if (
@@ -1931,6 +1934,13 @@ bool ResourceManager::prepare_command_mode_switch(
           ret = false;
         }
       }
+      else
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is not in INACTIVE or ACTIVE state, skipping the prepare switch",
+          component.get_name().c_str());
+        ret = false;
+      }
     }
     return ret;
   };
@@ -1967,8 +1977,11 @@ bool ResourceManager::perform_command_mode_switch(
       const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
       get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
       get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
-      if (start_interfaces.empty() && stop_interfaces.empty())
+      if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
       {
+        RCLCPP_DEBUG(
+          logger, "Component '%s' after filtering has no command interfaces to perform switch",
+          component.get_name().c_str());
         continue;
       }
       if (
@@ -2011,6 +2024,13 @@ bool ResourceManager::perform_command_mode_switch(
             interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
           ret = false;
         }
+      }
+      else
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is not in INACTIVE or ACTIVE state, skipping the perform switch",
+          component.get_name().c_str());
+        ret = false;
       }
     }
     return ret;
