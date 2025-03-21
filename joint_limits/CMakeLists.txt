@@ -16,6 +16,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(urdf REQUIRED)
 
 add_library(joint_limits INTERFACE)
 target_compile_features(joint_limits INTERFACE cxx_std_17)
@@ -38,6 +39,9 @@ if(BUILD_TESTING)
   ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_include_directories(joint_limits_rosparam_test PRIVATE include)
   ament_target_dependencies(joint_limits_rosparam_test rclcpp rclcpp_lifecycle)
+
+  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(
