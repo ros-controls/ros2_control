@@ -13,8 +13,10 @@ Determinism
 For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
 
 Independent of the kernel installed, the main thread of Controller Manager attempts to
-configure ``SCHED_FIFO`` with a priority of ``50``.
-By default, the user does not have permission to set such a high priority.
+configure ``SCHED_FIFO`` with a priority of ``50``. Read more about the scheduling policies
+`for example here <https://blogs.oracle.com/linux/post/task-priority>`__.
+
+For real time tasks a priority range of 0 to 99 is used. In this case a higher number indicates higher priority. By default, the user does not have permission to set such a high priority.
 To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
 
 .. code-block:: console
@@ -38,9 +40,9 @@ The limits will be applied after you log out and in again.
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu 22.04 LTS Beta <https://ubuntu.com/blog/real-time-ubuntu-released>`_ on Ubuntu 22.04
-- `linux-image-rt-amd64 <https://packages.debian.org/bullseye/linux-image-rt-amd64>`_ on Debian Bullseye
-- lowlatency kernel (``sudo apt install linux-lowlatency``) on any ubuntu
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu 24.04 (also for RaspberryPi)
+- `linux-image-rt-amd64 <https://packages.debian.org/bookworm/linux-image-rt-amd64>`_ on Debian Bookworm for 64-bit PCs
+- `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
@@ -58,8 +60,6 @@ Subscribers
 
 robot_description [std_msgs::msg::String]
   String with the URDF xml, e.g., from ``robot_state_publisher``.
-  Reloading of the URDF is not supported yet.
-  All joints defined in the ``<ros2_control>``-tag have to be present in the URDF.
 
 
 Parameters
