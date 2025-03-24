@@ -37,6 +37,18 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
 The limits will be applied after you log out and in again.
 
+You can run ros2_control with real-time requirements also from a docker container. Pass the following capability options to allow the container to set the thread priority and lock memory, e.g., for the ``ros2_control_demos`` container:
+
+.. code-block:: console
+
+    $ docker run -it \
+        --cap-add=sys_nice \
+        --ulimit rtprio=99 \
+        --ulimit memlock=-1 \
+        --rm --name ros2_control_demos --net host ros2_control_demos
+
+For more information, see the Docker engine documentation about `resource_constraints <https://docs.docker.com/engine/containers/resource_constraints/#configure-the-real-time-scheduler>`__ and `linux capabilities <https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities>`__.
+
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
