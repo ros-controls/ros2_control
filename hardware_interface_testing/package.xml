@@ -10,6 +10,7 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
   <depend>control_msgs</depend>
   <depend>hardware_interface</depend>
