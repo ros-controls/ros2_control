@@ -45,7 +45,7 @@ You can run ros2_control with real-time requirements also from a docker containe
         --cap-add=sys_nice \
         --ulimit rtprio=99 \
         --ulimit memlock=-1 \
-        --rm --name ros2_control_demos --net host ros2_control_demos
+        --rm --net host ros2_control_demos
 
 For more information, see the Docker engine documentation about `resource_constraints <https://docs.docker.com/engine/containers/resource_constraints/#configure-the-real-time-scheduler>`__ and `linux capabilities <https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities>`__.
 
