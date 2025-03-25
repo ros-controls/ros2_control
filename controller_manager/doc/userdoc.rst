@@ -53,7 +53,7 @@ The normal linux kernel is optimized for computational throughput and therefore 
 Alternatives to the standard kernel include
 
 - `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu (also for RaspberryPi)
-- `linux-image-rt-amd64 <https://packages.debian.org/bookworm/linux-image-rt-amd64>`_ on Debian Bookworm for 64-bit PCs
+- `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
 - `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
