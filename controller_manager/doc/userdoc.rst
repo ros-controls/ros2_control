@@ -40,8 +40,24 @@ The limits will be applied after you log out and in again.
 Subscribers
 -----------
 
-robot_description [std_msgs::msg::String]
+~/robot_description [std_msgs::msg::String]
   String with the URDF xml, e.g., from ``robot_state_publisher``.
+
+.. note::
+
+  Typically one would remap the topic to ``/robot_description``, which is the default setup with ``robot_state_publisher``. An example for a python launchfile is
+
+  .. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+        remappings=[
+            ("~/robot_description", "/robot_description"),
+        ],
+    )
 
 Parameters
 -----------
