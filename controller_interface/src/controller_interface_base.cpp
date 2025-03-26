@@ -28,8 +28,7 @@ ControllerInterfaceBase::~ControllerInterfaceBase()
 {
   // check if node is initialized and we still have a valid context
   if (
-    node_.get() &&
-    get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
+    node_.get() && get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
     rclcpp::ok())
   {
     RCLCPP_DEBUG(
