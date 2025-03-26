@@ -276,7 +276,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  diagnostics_updater_(this)
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -298,6 +299,11 @@ ControllerManager::ControllerManager(
     init_resource_manager(robot_description);
     init_services();
   }
+
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_services();
 }
 
 ControllerManager::ControllerManager(
@@ -311,7 +317,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  diagnostics_updater_(this)
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -326,6 +333,11 @@ ControllerManager::ControllerManager(
   {
     init_services();
   }
+
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_services();
 }
 
 ControllerManager::~ControllerManager()
@@ -2667,7 +2679,7 @@ bool ControllerManager::controller_sorting(
     // The rest of the cases, basically end up at the end of the list
     return false;
   }
-};
+}
 
 rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   const ControllerSpec & controller) const

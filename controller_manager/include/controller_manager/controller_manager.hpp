@@ -40,6 +40,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
+#include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
@@ -393,6 +394,9 @@ private:
    * @return The node options that will be set to the controller LifeCycleNode
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
+
+  void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
+  diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
 
