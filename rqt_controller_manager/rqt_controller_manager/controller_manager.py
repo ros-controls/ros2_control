@@ -94,8 +94,8 @@ class ControllerManager(Plugin):
         self._icons = {
             "active": QIcon(f"{path}/resource/led_green.png"),
             "finalized": QIcon(f"{path}/resource/led_off.png"),
-            "inactive": QIcon(f"{path}/resource/led_red.png"),
-            "unconfigured": QIcon(f"{path}/resource/led_off.png"),
+            "inactive": QIcon(f"{path}/resource/led_cyan.png"),
+            "unconfigured": QIcon(f"{path}/resource/led_yellow.png"),
         }
 
         # Controllers display
