@@ -555,7 +555,6 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
 
   if (!type_it)
   {
-    std::cerr << "Error: Missing <plugin> tag in <transmission> element in your URDF." << std::endl;
     throw std::runtime_error("Missing <plugin> tag in <transmission> element in your URDF.");
   }
 
@@ -670,8 +669,7 @@ HardwareInfo parse_resource_from_xml(
 
       if (!type_it)
       {
-        std::cerr << "Error: Missing <plugin> tag in <hardware> element in your URDF." << std::endl;
-        throw std::runtime_error("Missing <plugin> tag in <hardware> element in your urdf.");
+        throw std::runtime_error("Missing <plugin> tag in <hardware> element in your URDF.");
       }
 
       hardware.hardware_plugin_name =
