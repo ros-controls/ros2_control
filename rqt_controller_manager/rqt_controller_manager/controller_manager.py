@@ -514,7 +514,7 @@ class ControllerTable(QAbstractTableModel):
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
-                return ctrl.state or "not loaded"
+                return ctrl.state or "unloaded"
 
         if role == Qt.DecorationRole and index.column() == 0:
             return self._icons.get(ctrl.state)
@@ -565,7 +565,7 @@ class HwComponentTable(QAbstractTableModel):
             if index.column() == 0:
                 return hw_component.name
             elif index.column() == 1:
-                return hw_component.state.label or "not loaded"
+                return hw_component.state.label or "unloaded"
 
         if role == Qt.DecorationRole and index.column() == 0:
             return self._icons.get(hw_component.state.label)
