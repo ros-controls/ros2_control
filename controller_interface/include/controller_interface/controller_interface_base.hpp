@@ -70,7 +70,7 @@ public:
   ControllerInterfaceBase() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual ~ControllerInterfaceBase() = default;
+  virtual ~ControllerInterfaceBase();
 
   /// Get configuration for controller's required command interfaces.
   /**
