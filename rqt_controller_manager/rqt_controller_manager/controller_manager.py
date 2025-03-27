@@ -96,6 +96,7 @@ class ControllerManager(Plugin):
             "finalized": QIcon(f"{path}/resource/led_off.png"),
             "inactive": QIcon(f"{path}/resource/led_cyan.png"),
             "unconfigured": QIcon(f"{path}/resource/led_yellow.png"),
+            "unloaded": QIcon(f"{path}/resource/led_black.png"),
         }
 
         # Controllers display
@@ -517,7 +518,8 @@ class ControllerTable(QAbstractTableModel):
                 return ctrl.state or "unloaded"
 
         if role == Qt.DecorationRole and index.column() == 0:
-            return self._icons.get(ctrl.state)
+            state_key = ctrl.state if ctrl.state else "unloaded"
+            return self._icons.get(state_key)
 
         if role == Qt.FontRole and index.column() == 0:
             bf = QFont()
