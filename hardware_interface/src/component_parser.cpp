@@ -410,17 +410,12 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
 
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
-<<<<<<< HEAD
   const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
-  transmission.type = get_text_for_element(type_it, kClassTypeTag);
-=======
-  const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
   if (!type_it)
   {
     throw std::runtime_error("Missing <plugin> tag of <transmission> element in your URDF.");
   }
-  transmission.type = get_text_for_element(type_it, kPluginNameTag);
->>>>>>> c4aca5f ([RM] Add error handling for missing `plugin` tags in URDF parsing (#2138))
+  transmission.type = get_text_for_element(type_it, kClassTypeTag);
 
   // Parse joints
   const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
@@ -523,24 +518,13 @@ HardwareInfo parse_resource_from_xml(
   {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
     {
-<<<<<<< HEAD
       const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      hardware.hardware_class_type =
-        get_text_for_element(type_it, std::string("hardware ") + kClassTypeTag);
-=======
-      const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
       if (!type_it)
       {
         throw std::runtime_error("Missing <plugin> tag of <hardware> element in your URDF.");
       }
-      hardware.hardware_plugin_name =
-        get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
-      const auto * group_it = ros2_control_child_it->FirstChildElement(kGroupTag);
-      if (group_it)
-      {
-        hardware.group = get_text_for_element(group_it, std::string("hardware.") + kGroupTag);
-      }
->>>>>>> c4aca5f ([RM] Add error handling for missing `plugin` tags in URDF parsing (#2138))
+      hardware.hardware_class_type =
+        get_text_for_element(type_it, std::string("hardware ") + kClassTypeTag);
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {
