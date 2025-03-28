@@ -7,6 +7,15 @@ controller_manager:
   }
 
   hardware_components_initial_state:
+    not_loaded: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components should not be loaded activated when controller manager is started. If later used, these hardware components will need to be loaded, configured and activated manually or via a hardware spawner.",
+      validation: {
+        unique<>: null,
+      }
+    }
+
     unconfigured: {
       type: string_array,
       default_value: [],
