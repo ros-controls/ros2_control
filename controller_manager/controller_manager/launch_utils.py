@@ -133,7 +133,7 @@ def generate_controllers_spawner_launch_description_from_dict(
                     f"Invalid controller_params_file type parsed in the dict {controller_params_file}"
                 )
     return generate_controllers_spawner_launch_description(
-        controller_names=controller_names,
+        controller_names=list(controller_names),
         controller_params_files=controller_params_files,
         extra_spawner_args=extra_spawner_args,
     )
