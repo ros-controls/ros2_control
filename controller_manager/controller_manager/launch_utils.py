@@ -122,7 +122,7 @@ def generate_controllers_spawner_launch_description_from_dict(
     """
     if not type(controller_info_dict) is dict:
         raise ValueError(f"Invalid controller_info_dict type parsed {controller_info_dict}")
-    controller_names = controller_info_dict.keys()
+    controller_names = list(controller_info_dict.keys())
     controller_params_files = []
     for controller_name in controller_names:
         controller_params_file = controller_info_dict[controller_name]
