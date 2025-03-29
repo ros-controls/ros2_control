@@ -17,6 +17,7 @@
 #include <gmock/gmock.h>
 #include <memory>
 
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 
@@ -33,13 +34,18 @@ TEST(TestableControllerInterface, init)
   rclcpp::init(argc, argv);
 
   TestableControllerInterface controller;
+  const TestableControllerInterface & const_controller = controller;
 
   // try to get node when not initialized
   ASSERT_THROW(controller.get_node(), std::runtime_error);
+  ASSERT_THROW(const_controller.get_node(), std::runtime_error);
+  ASSERT_THROW(controller.get_state(), std::runtime_error);
 
   // initialize, create node
   ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
+  ASSERT_NO_THROW(const_controller.get_node());
+  ASSERT_NO_THROW(controller.get_state());
 
   // update_rate is set to default 0
   ASSERT_EQ(controller.get_update_rate(), 0u);
@@ -48,6 +54,7 @@ TEST(TestableControllerInterface, init)
   controller.configure();
   ASSERT_EQ(controller.get_update_rate(), 0u);
 
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -111,6 +118,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   ASSERT_EQ(controller.get_update_rate(), 623u);
 
   executor->cancel();
+  controller.get_node()->shutdown();
   rclcpp::shutdown();
 }
 
@@ -125,6 +133,7 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
   // initialize, create node
   ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
 
+  ASSERT_EQ(controller.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
@@ -139,6 +148,7 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
   // initialize, create node
   ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
 
+  ASSERT_EQ(controller.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 

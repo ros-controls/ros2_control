@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "joint_limits/joint_limits_rosparam.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -283,7 +284,17 @@ public:
     lifecycle_node_ = rclcpp_lifecycle::LifecycleNode::make_shared("JointLimitsRosparamTestNode");
   }
 
-  void TearDown() { lifecycle_node_.reset(); }
+  void TearDown()
+  {
+    if (
+      lifecycle_node_->get_current_state().id() !=
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
+      rclcpp::ok())
+    {
+      lifecycle_node_->shutdown();
+    }
+    lifecycle_node_.reset();
+  }
 
 protected:
   rclcpp_lifecycle::LifecycleNode::SharedPtr lifecycle_node_;

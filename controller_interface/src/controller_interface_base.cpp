@@ -24,6 +24,21 @@
 
 namespace controller_interface
 {
+ControllerInterfaceBase::~ControllerInterfaceBase()
+{
+  // check if node is initialized and we still have a valid context
+  if (
+    node_.get() && get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
+    rclcpp::ok())
+  {
+    RCLCPP_DEBUG(
+      get_node()->get_logger(),
+      "Calling shutdown transition of controller node '%s' due to destruction.",
+      get_node()->get_name());
+    node_->shutdown();
+  }
+}
+
 return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & namespace_,
   const rclcpp::NodeOptions & node_options)
@@ -47,6 +62,11 @@ return_type ControllerInterfaceBase::init(
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      RCLCPP_DEBUG(
+        get_node()->get_logger(),
+        "Calling shutdown transition of controller node '%s' due to init failure.",
+        get_node()->get_name());
+      node_->shutdown();
       return return_type::ERROR;
   }
 
@@ -105,6 +125,10 @@ void ControllerInterfaceBase::release_interfaces()
 
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_state() const
 {
+  if (!node_.get())
+  {
+    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
+  }
   return node_->get_current_state();
 }
 
