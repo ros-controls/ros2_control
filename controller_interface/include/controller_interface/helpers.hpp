@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 
+// Add hardware interface helpers here, so all inherited controllers can use them
+#include "hardware_interface/helpers.hpp"
+
 namespace controller_interface
 {
 /// Reorder interfaces with references according to joint names or full interface names.
@@ -79,13 +82,12 @@ inline bool interface_list_contains_interface_type(
 }
 
 template <typename T>
-void add_element_to_list(std::vector<T> & list, const T & element)
+[[deprecated(
+  "Use ros2_control::add_item method instead. This method will be removed by the ROS 2 Kilted "
+  "Kaiju release.")]] void
+add_element_to_list(std::vector<T> & list, const T & element)
 {
-  if (std::find(list.begin(), list.end(), element) == list.end())
-  {
-    // Only add to the list if it doesn't exist
-    list.push_back(element);
-  }
+  ros2_control::add_item(list, element);
 }
 
 }  // namespace controller_interface
