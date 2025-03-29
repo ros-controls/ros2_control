@@ -233,7 +233,7 @@ class ControllerManager(Plugin):
             action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
-            action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
         elif ctrl.state == "unconfigured":
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
@@ -255,8 +255,10 @@ class ControllerManager(Plugin):
         elif ctrl.state in ("finalized", "inactive"):
             if action is action_activate:
                 self._activate_controller(ctrl.name)
-            elif action is action_unload:
+            elif action is action_cleanup:
+                self._deactivate_controller(ctrl.name)
                 unload_controller(self._node, self._cm_name, ctrl.name)
+                load_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == "unconfigured":
             if action is action_configure:
                 configure_controller(self._node, self._cm_name, ctrl.name)
