@@ -93,10 +93,9 @@ class ControllerManager(Plugin):
         path = get_package_share_directory("rqt_controller_manager")
         self._icons = {
             "active": QIcon(f"{path}/resource/led_green.png"),
-            "finalized": QIcon(f"{path}/resource/led_off.png"),
             "inactive": QIcon(f"{path}/resource/led_cyan.png"),
             "unconfigured": QIcon(f"{path}/resource/led_yellow.png"),
-            "unloaded": QIcon(f"{path}/resource/led_black.png"),
+            "unloaded": QIcon(f"{path}/resource/led_off.png"),
         }
 
         # Controllers display
@@ -230,7 +229,7 @@ class ControllerManager(Plugin):
         menu = QMenu(self._widget.ctrl_table_view)
         if ctrl.state == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-            action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
+            action_kill = menu.addAction(self._icons["unloaded"], "Deactivate and Unload")
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
             action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
@@ -252,7 +251,7 @@ class ControllerManager(Plugin):
             elif action is action_kill:
                 self._deactivate_controller(ctrl.name)
                 unload_controller(self._node, self._cm_name, ctrl.name)
-        elif ctrl.state in ("finalized", "inactive"):
+        elif ctrl.state == "inactive":
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_cleanup:
