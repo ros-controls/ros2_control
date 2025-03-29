@@ -256,7 +256,7 @@ class ControllerManager(Plugin):
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_cleanup:
-                self._deactivate_controller(ctrl.name)
+                # TODO: use cleanup service once available
                 unload_controller(self._node, self._cm_name, ctrl.name)
                 load_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == "unconfigured":
