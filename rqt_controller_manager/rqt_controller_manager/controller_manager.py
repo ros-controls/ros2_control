@@ -361,7 +361,7 @@ class ControllerManager(Plugin):
         menu = QMenu(self._widget.hw_table_view)
         if hw_component.state.label == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-            action_cleanup = menu.addAction(self._icons["finalized"], "Deactivate and Cleanup")
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Deactivate and Cleanup")
         elif hw_component.state.label == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
             action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
