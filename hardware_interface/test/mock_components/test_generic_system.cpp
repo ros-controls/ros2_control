@@ -49,6 +49,27 @@ public:
 protected:
   void SetUp() override
   {
+    hardware_system_2dof_non_existing_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/NonExistingSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">1.57</param>
+      </state_interface>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.7854</param>
+      </state_interface>
+    </joint>
+  </ros2_control>
+)";
+
     hardware_system_2dof_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
@@ -645,7 +666,7 @@ protected:
   </ros2_control>
 )";
   }
-
+  std::string hardware_system_2dof_non_existing_;
   std::string hardware_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
   std::string hardware_system_2dof_standard_interfaces_;
@@ -745,6 +766,13 @@ auto deactivate_components = [](
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     hardware_interface::lifecycle_state_names::INACTIVE);
 };
+
+TEST_F(TestGenericSystem, load_generic_system_2dof_non_existing)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_non_existing_ +
+              ros2_control_test_assets::urdf_tail;
+  ASSERT_ANY_THROW(TestableResourceManager rm(node_, urdf));
+}
 
 TEST_F(TestGenericSystem, load_generic_system_2dof)
 {

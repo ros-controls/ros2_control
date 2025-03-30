@@ -1055,7 +1055,12 @@ ResourceManager::ResourceManager(
   const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
-  load_and_initialize_components(urdf, update_rate);
+  if (!load_and_initialize_components(urdf, update_rate))
+  {
+    throw std::runtime_error(
+      std::string("Hardware components could not be initialized. ") +
+      "Creating resource manager failed.");
+  }
 
   if (activate_all)
   {
@@ -1073,7 +1078,12 @@ ResourceManager::ResourceManager(
   bool activate_all, const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
 {
-  load_and_initialize_components(urdf, update_rate);
+  if (!load_and_initialize_components(urdf, update_rate))
+  {
+    throw std::runtime_error(
+      std::string("Hardware components could not be initialized. ") +
+      "Creating resource manager failed.");
+  }
 
   if (activate_all)
   {
