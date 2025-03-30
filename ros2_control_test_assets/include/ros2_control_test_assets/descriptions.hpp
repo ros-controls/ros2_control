@@ -2106,7 +2106,7 @@ const auto minimal_robot_duplicated_component =
   std::string(urdf_tail);
 
 const auto minimal_robot_actuator_initialization_error =
-  std::string(urdf_head) + std::string(hardware_resources_not_existing_actuator_plugin) +
+  std::string(urdf_head) + std::string(hardware_resources_actuator_initializaion_error) +
   std::string(urdf_tail);
 const auto minimal_robot_sensor_initialization_error =
   std::string(urdf_head) + std::string(hardware_resources_sensor_initializaion_error) +
