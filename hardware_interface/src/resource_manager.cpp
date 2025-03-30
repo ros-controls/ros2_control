@@ -176,18 +176,21 @@ public:
       RCLCPP_ERROR(
         get_logger(), "Caught exception of type : %s while loading hardware: %s", typeid(ex).name(),
         ex.what());
+      throw;
     }
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
         get_logger(), "Exception of type : %s occurred while loading hardware '%s': %s",
         typeid(ex).name(), hardware_info.name.c_str(), ex.what());
+      throw;
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Unknown exception occurred while loading hardware '%s'",
         hardware_info.name.c_str());
+      throw;
     }
     return is_loaded;
   }
@@ -1055,12 +1058,7 @@ ResourceManager::ResourceManager(
   const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
-  if (!load_and_initialize_components(urdf, update_rate))
-  {
-    throw std::runtime_error(
-      std::string("Hardware components could not be initialized. ") +
-      "Creating resource manager failed.");
-  }
+  load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
   {
@@ -1078,12 +1076,7 @@ ResourceManager::ResourceManager(
   bool activate_all, const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
 {
-  if (!load_and_initialize_components(urdf, update_rate))
-  {
-    throw std::runtime_error(
-      std::string("Hardware components could not be initialized. ") +
-      "Creating resource manager failed.");
-  }
+  load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
   {
