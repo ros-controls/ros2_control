@@ -14,8 +14,9 @@
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
 
   <build_depend>hardware_interface</build_depend>
-  <build_depend>realtime_tools</build_depend>
   <build_depend>rclcpp_lifecycle</build_depend>
+  <build_depend>realtime_tools</build_depend>
+  <build_depend>ros2_control_cmake</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
   <build_export_depend>hardware_interface</build_export_depend>

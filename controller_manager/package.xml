@@ -13,6 +13,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
   <depend>backward_ros</depend>
   <depend>controller_interface</depend>
