@@ -666,6 +666,7 @@ protected:
   </ros2_control>
 )";
   }
+
   std::string hardware_system_2dof_non_existing_;
   std::string hardware_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
