@@ -13,8 +13,10 @@ Determinism
 For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
 
 Independent of the kernel installed, the main thread of Controller Manager attempts to
-configure ``SCHED_FIFO`` with a priority of ``50``.
-By default, the user does not have permission to set such a high priority.
+configure ``SCHED_FIFO`` with a priority of ``50``. Read more about the scheduling policies
+`for example here <https://blogs.oracle.com/linux/post/task-priority>`__.
+
+For real-time tasks, a priority range of 0 to 99 is expected, with higher numbers indicating higher priority. By default, users do not have permission to set such high priorities.
 To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
 
 .. code-block:: console
@@ -35,12 +37,24 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
 The limits will be applied after you log out and in again.
 
+You can run ros2_control with real-time requirements also from a docker container. Pass the following capability options to allow the container to set the thread priority and lock memory, e.g.,
+
+.. code-block:: console
+
+    $ docker run -it \
+        --cap-add=sys_nice \
+        --ulimit rtprio=99 \
+        --ulimit memlock=-1 \
+        --rm --net host <IMAGE>
+
+For more information, see the Docker engine documentation about `resource_constraints <https://docs.docker.com/engine/containers/resource_constraints/#configure-the-real-time-scheduler>`__ and `linux capabilities <https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities>`__.
+
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu 22.04 LTS Beta <https://ubuntu.com/blog/real-time-ubuntu-released>`_ on Ubuntu 22.04
-- `linux-image-rt-amd64 <https://packages.debian.org/bullseye/linux-image-rt-amd64>`_ on Debian Bullseye
-- lowlatency kernel (``sudo apt install linux-lowlatency``) on any ubuntu
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu (also for RaspberryPi)
+- `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
+- `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
@@ -444,3 +458,17 @@ Monitoring and Tuning
 ----------------------
 
 ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.
+
+
+Different Clocks used by Controller Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The controller manager internally uses the following two different clocks for a non-simulation setup:
+
+- ``RCL_ROS_TIME``: This clock is used mostly in the non-realtime loops.
+- ``RCL_STEADY_TIME``: This clock is used mostly in the realtime loops for the ``read``, ``update``, and ``write`` loops. However, when the controller manager is used in a simulation environment, the ``RCL_ROS_TIME`` clock is used for triggering the ``read``, ``update``, and ``write`` loops.
+
+The ``time`` argument in the ``read`` and ``write`` methods of the hardware components is of type ``RCL_STEADY_TIME``, as most of the hardware expects the time to be monotonic and not affected by the system time changes. However, the ``time`` argument in the ``update`` method of the controller is of type ``RCL_ROS_TIME`` as the controller is the one that interacts with other nodes or topics to receive the commands or publish the state. This ``time`` argument can be used by the controllers to validate the received commands or to publish the state at the correct timestamp.
+The ``period`` argument in the ``read``, ``update`` and ``write`` methods is calculated using the trigger clock of type ``RCL_STEADY_TIME`` so it is always monotonic.
+
+The reason behind using different clocks is to avoid the issues related to the affect of system time changes in the realtime loops. The ``ros2_control_node`` now also detects the overruns caused by the system time changes and longer execution times of the controllers and hardware components. The controller manager will print a warning message if the controller or hardware component misses the update cycle due to the system time changes or longer execution times.
