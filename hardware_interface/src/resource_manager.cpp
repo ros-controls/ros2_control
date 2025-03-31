@@ -2281,7 +2281,7 @@ void ResourceManager::set_on_component_state_switch_callback(std::function<void(
   resource_storage_->on_component_state_switch_callback_ = callback;
 }
 
-const std::string & ResourceManager::get_urdf() const
+const std::string & ResourceManager::get_robot_description() const
 {
   return resource_storage_->robot_description_;
 }
