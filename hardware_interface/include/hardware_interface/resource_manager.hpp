@@ -507,7 +507,7 @@ public:
    */
   void set_on_component_state_switch_callback(std::function<void()> callback);
 
-  const std::string & get_urdf() const;
+  const std::string & get_robot_description() const;
 
 protected:
   /// Gets the logger for the resource manager
