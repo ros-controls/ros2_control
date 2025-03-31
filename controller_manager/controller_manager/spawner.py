@@ -148,8 +148,10 @@ def main(args=None):
     )
     parser.add_argument(
         "--controller-ros-args",
-        help="The --ros-args to be passed to the controller node for remapping topics etc",
+        help="The --ros-args to be passed to the controller node, e.g., for remapping topics. "
+        "Pass multiple times for every argument.",
         default=None,
+        action="append",
         required=False,
     )
 
@@ -216,7 +218,7 @@ def main(args=None):
                         controller_manager_name,
                         controller_name,
                         "node_options_args",
-                        controller_ros_args.split(),
+                        [arg for args in controller_ros_args for arg in args.split()],
                     ):
                         return 1
                 if param_files:
