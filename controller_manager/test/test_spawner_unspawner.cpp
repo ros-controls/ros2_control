@@ -811,8 +811,9 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
 
   // Now test the remapping of the service name with the controller_ros_args
   EXPECT_EQ(
-    call_spawner(
-      "ctrl_2 -c test_controller_manager --controller-ros-args '-r /ctrl_2/set_bool:=/set_bool'"),
+    call_spawner("ctrl_2 -c test_controller_manager --controller-ros-args '-r "
+                 "/ctrl_2/set_bool:=/set_bool -p run_cycle:=20' --controller-ros-args '-r "
+                 "/ctrl_1/set_value:=/set_value'"),
     0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
@@ -825,6 +826,15 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
     node->create_client<example_interfaces::srv::SetBool>("/ctrl_2/set_bool");
   ASSERT_FALSE(ctrl_2_set_bool_service->wait_for_service(std::chrono::seconds(2)));
   ASSERT_FALSE(ctrl_2_set_bool_service->service_is_ready());
+
+  // Check the parameter run_cycle to have the right value
+  ASSERT_EQ("ctrl_2", cm_->get_loaded_controllers()[0].info.name);
+  auto ctrl_2 = cm_->get_loaded_controllers()[0].c->get_node();
+  if (!ctrl_2->has_parameter("run_cycle"))
+  {
+    ctrl_2->declare_parameter("run_cycle", -200);
+  }
+  ASSERT_THAT(ctrl_2->get_parameter("run_cycle").as_int(), 20);
 }
 
 class TestLoadControllerWithoutRobotDescription
