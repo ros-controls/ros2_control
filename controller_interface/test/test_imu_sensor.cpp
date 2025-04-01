@@ -38,9 +38,10 @@ TEST_F(IMUSensorTest, validate_all)
   ASSERT_EQ(imu_sensor_->state_interfaces_.capacity(), size_);
 
   // validate the default interface_names_
-  ASSERT_TRUE(std::equal(
-    imu_sensor_->interface_names_.begin(), imu_sensor_->interface_names_.end(),
-    full_interface_names_.begin(), full_interface_names_.end()));
+  ASSERT_TRUE(
+    std::equal(
+      imu_sensor_->interface_names_.begin(), imu_sensor_->interface_names_.end(),
+      full_interface_names_.begin(), full_interface_names_.end()));
 
   // get the interface names
   std::vector<std::string> interface_names = imu_sensor_->get_state_interface_names();
