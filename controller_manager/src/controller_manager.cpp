@@ -436,7 +436,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options),
-  robot_description_(resource_manager_->get_urdf())
+  robot_description_(resource_manager_->get_robot_description())
 {
   initialize_parameters();
   init_controller_manager();
