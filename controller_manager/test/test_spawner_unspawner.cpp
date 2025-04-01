@@ -811,9 +811,9 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
 
   // Now test the remapping of the service name with the controller_ros_args
   EXPECT_EQ(
-    call_spawner("ctrl_2 -c test_controller_manager --controller-ros-args '-r "
-                 "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '-r "
-                 "/ctrl_1/set_value:=/set_value -p run_cycle:=20'"),
+    call_spawner(
+      "ctrl_2 -c test_controller_manager --controller-ros-args '-r "
+      "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '-p test_cycle:=-11.0 -p run_cycle:=20'"),
     0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
@@ -835,6 +835,11 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
     ctrl_2->declare_parameter("run_cycle", -200);
   }
   ASSERT_THAT(ctrl_2->get_parameter("run_cycle").as_int(), 20);
+  if (!ctrl_2->has_parameter("test_cycle"))
+  {
+    ctrl_2->declare_parameter("test_cycle", 1231.0);
+  }
+  ASSERT_THAT(ctrl_2->get_parameter("test_cycle").as_double(), -11.0);
 }
 
 class TestLoadControllerWithoutRobotDescription
