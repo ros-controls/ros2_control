@@ -79,12 +79,15 @@ public:
     std::vector<hardware_interface::StateInterface> state_interfaces;
     for (auto i = 0u; i < info_.joints.size(); i++)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     return state_interfaces;
@@ -95,10 +98,12 @@ public:
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     for (auto i = 0u; i < info_.joints.size(); i++)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
 
     return command_interfaces;

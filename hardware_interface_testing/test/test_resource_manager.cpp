@@ -318,8 +318,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "external_joint", "external_command_interface", nullptr));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        "external_joint", "external_command_interface", nullptr));
 
     return command_interfaces;
   }
@@ -1184,8 +1185,9 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 
   for (size_t i = 0; i < REFERENCE_INTERFACE_NAMES.size(); ++i)
   {
-    reference_interfaces.push_back(hardware_interface::CommandInterface(
-      CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
+    reference_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
   }
 
   rm.import_controller_reference_interfaces(CONTROLLER_NAME, reference_interfaces);
@@ -1437,8 +1439,9 @@ public:
       EXPECT_FALSE(ok);
       EXPECT_FALSE(failed_hardware_names.empty());
       ASSERT_THAT(
-        failed_hardware_names, testing::ElementsAreArray(std::vector<std::string>(
-                                 {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME})));
+        failed_hardware_names,
+        testing::ElementsAreArray(
+          std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME})));
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1527,21 +1530,24 @@ TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_ACTUATOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_SYSTEM_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_SENSOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 }

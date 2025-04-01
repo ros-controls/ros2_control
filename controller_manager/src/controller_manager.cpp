@@ -272,8 +272,9 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, namespace_, options),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
@@ -307,8 +308,9 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, namespace_, options),
   resource_manager_(std::move(resource_manager)),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))

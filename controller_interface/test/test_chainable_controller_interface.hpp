@@ -68,8 +68,9 @@ public:
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-    command_interfaces.push_back(hardware_interface::CommandInterface(
-      name_prefix_of_reference_interfaces_, "test_itf", &reference_interfaces_[0]));
+    command_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        name_prefix_of_reference_interfaces_, "test_itf", &reference_interfaces_[0]));
 
     return command_interfaces;
   }
