@@ -72,9 +72,10 @@ class TestTwoJointSystem : public SystemInterface
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-        &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+          &position_state_[i]));
     }
 
     return state_interfaces;
@@ -85,9 +86,10 @@ class TestTwoJointSystem : public SystemInterface
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-        &position_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+          &position_command_[i]));
     }
 
     return command_interfaces;

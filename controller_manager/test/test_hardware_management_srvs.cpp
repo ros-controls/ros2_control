@@ -66,12 +66,14 @@ public:
     run_updater_ = false;
 
     SetUpSrvsCMExecutor();
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.unconfigured",
-      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.inactive",
-      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.unconfigured",
+        std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.inactive",
+        std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     auto msg = std_msgs::msg::String();
