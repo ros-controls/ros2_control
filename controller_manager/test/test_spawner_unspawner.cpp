@@ -225,8 +225,9 @@ TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
                                      "/test/test_controller_spawner_with_type.yaml";
 
-  cm_->set_parameter(rclcpp::Parameter(
-    "ctrl_with_parameters_and_type.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(
+    rclcpp::Parameter(
+      "ctrl_with_parameters_and_type.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(
     rclcpp::Parameter("ctrl_with_parameters_and_type.params_file", test_file_path));
 
@@ -790,8 +791,9 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   EXPECT_EQ(call_unspawner("ctrl_1 ctrl_2 ctrl_3 -c /foo_namespace/test_controller_manager"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul) << "Controller should have been unloaded";
   EXPECT_EQ(
-    call_spawner("ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager --activate-as-group --ros-args "
-                 "-r __ns:=/foo_namespace"),
+    call_spawner(
+      "ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager --activate-as-group --ros-args "
+      "-r __ns:=/foo_namespace"),
     0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul) << "Controller should have been loaded";
   {
