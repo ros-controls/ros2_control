@@ -812,8 +812,8 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
   // Now test the remapping of the service name with the controller_ros_args
   EXPECT_EQ(
     call_spawner(
-      "ctrl_2 -c test_controller_manager --controller-ros-args '-r "
-      "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '-p test_cycle:=-11.0 -p run_cycle:=20'"),
+      "ctrl_2 -c test_controller_manager --controller-ros-args '-r /ctrl_2/set_bool:=/set_bool' "
+      "--controller-ros-args '-p test_cycle:=-11.0 -p run_cycle:=20'"),
     0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
