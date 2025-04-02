@@ -92,8 +92,9 @@ class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNod
 {
 public:
   ActuatorInterface()
-  : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+  : lifecycle_state_(
+      rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
     actuator_logger_(rclcpp::get_logger("actuator_interface"))
   {
   }

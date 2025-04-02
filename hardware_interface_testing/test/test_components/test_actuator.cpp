@@ -64,14 +64,17 @@ class TestActuator : public ActuatorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
-      &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
-      &velocity_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
+        &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
+        &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
 
     return state_interfaces;
   }
@@ -79,15 +82,17 @@ class TestActuator : public ActuatorInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name,
-      &velocity_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        get_hardware_info().joints[0].name,
+        get_hardware_info().joints[0].command_interfaces[0].name, &velocity_command_));
 
     if (get_hardware_info().joints[0].command_interfaces.size() > 1)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        get_hardware_info().joints[0].name,
-        get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          get_hardware_info().joints[0].name,
+          get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
     }
 
     return command_interfaces;

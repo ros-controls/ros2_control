@@ -71,8 +71,9 @@ public:
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
+    state_interfaces.push_back(
+      hardware_interface::StateInterface(
+        name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
 
     return state_interfaces;
   }
@@ -82,8 +83,9 @@ public:
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-    command_interfaces.push_back(hardware_interface::CommandInterface(
-      name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
+    command_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
 
     return command_interfaces;
   }

@@ -57,19 +57,23 @@ class TestSystem : public SystemInterface
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
     }
 
     return state_interfaces;
@@ -81,18 +85,22 @@ class TestSystem : public SystemInterface
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
     // Add max_acceleration command interface
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info.joints[0].name, info.joints[0].command_interfaces[1].name, &max_acceleration_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        info.joints[0].name, info.joints[0].command_interfaces[1].name,
+        &max_acceleration_command_));
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
     }
 
     return command_interfaces;

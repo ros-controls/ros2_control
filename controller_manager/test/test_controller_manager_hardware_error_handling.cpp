@@ -198,24 +198,27 @@ TEST_P(TestControllerManagerWithTestableCM, check_cached_controllers_for_hardwar
     auto controllers =
       cm_->resource_manager_->get_cached_controllers_to_hardware(TEST_ACTUATOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::UnorderedElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::UnorderedElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers =
       cm_->resource_manager_->get_cached_controllers_to_hardware(TEST_SYSTEM_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::UnorderedElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::UnorderedElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers =
       cm_->resource_manager_->get_cached_controllers_to_hardware(TEST_SENSOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::UnorderedElementsAreArray(std::vector<std::string>(
-                     {TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::UnorderedElementsAreArray(
+        std::vector<std::string>({TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 }
 

@@ -72,10 +72,12 @@ class TestSingleJointActuator : public ActuatorInterface
     std::vector<StateInterface> state_interfaces;
 
     const auto & joint_name = get_hardware_info().joints[0].name;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
 
     return state_interfaces;
   }
@@ -85,8 +87,9 @@ class TestSingleJointActuator : public ActuatorInterface
     std::vector<CommandInterface> command_interfaces;
 
     const auto & joint_name = get_hardware_info().joints[0].name;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
 
     return command_interfaces;
   }

@@ -56,14 +56,14 @@ repos:
         args: ["--line-length=99"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.2
+    rev: 7.2.0
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
 
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v19.1.7
+    rev: v20.1.0
     hooks:
       - id: clang-format
         args: ['-fallback-style=none', '-i']
@@ -133,7 +133,7 @@ repos:
         exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.31.2
+    rev: 0.32.1
     hooks:
       - id: check-github-workflows
         args: ["--verbose"]

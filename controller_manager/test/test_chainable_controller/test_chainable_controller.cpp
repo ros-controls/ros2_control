@@ -189,8 +189,9 @@ TestChainableController::on_export_state_interfaces()
 
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    state_interfaces.push_back(
+      hardware_interface::StateInterface(
+        get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
   }
 
   return state_interfaces;
@@ -203,8 +204,9 @@ TestChainableController::on_export_reference_interfaces()
 
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)
   {
-    reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
+    reference_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
   }
 
   return reference_interfaces;

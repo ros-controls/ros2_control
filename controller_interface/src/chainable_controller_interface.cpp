@@ -247,8 +247,9 @@ ChainableControllerInterface::on_export_reference_interfaces()
   std::vector<hardware_interface::CommandInterface> reference_interfaces;
   for (size_t i = 0; i < exported_reference_interface_names_.size(); ++i)
   {
-    reference_interfaces.emplace_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), exported_reference_interface_names_[i], &reference_interfaces_[i]));
+    reference_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        get_node()->get_name(), exported_reference_interface_names_[i], &reference_interfaces_[i]));
   }
   return reference_interfaces;
 }

@@ -631,9 +631,10 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
           std::to_string(transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(ActuatorInfo{
-        "actuator1", transmission.joints[0].state_interfaces,
-        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(
+        ActuatorInfo{
+          "actuator1", transmission.joints[0].state_interfaces,
+          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }
