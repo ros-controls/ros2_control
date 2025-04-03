@@ -15,11 +15,11 @@
 #ifndef TEST_JOINT_LIMITER_HPP_
 #define TEST_JOINT_LIMITER_HPP_
 
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "gmock/gmock.h"
 #include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"

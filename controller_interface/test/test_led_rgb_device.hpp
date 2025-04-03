@@ -15,14 +15,13 @@
 #ifndef TEST_LED_RGB_DEVICE_HPP_
 #define TEST_LED_RGB_DEVICE_HPP_
 
-#include <gmock/gmock.h>
-
 #include <array>
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "semantic_components/led_rgb_device.hpp"
 
 class TestableLedDevice : public semantic_components::LedRgbDevice
