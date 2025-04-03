@@ -14,8 +14,9 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include "gmock/gmock.h"
 #include "joint_limits/joint_limits_urdf.hpp"
+
+#include "gmock/gmock.h"
 
 using std::string;
 

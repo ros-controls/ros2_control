@@ -14,8 +14,9 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include "gmock/gmock.h"
 #include "joint_limits/joint_limits_rosparam.hpp"
+
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
