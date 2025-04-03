@@ -15,7 +15,7 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <chrono>
 #include <memory>

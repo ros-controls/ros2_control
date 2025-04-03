@@ -14,7 +14,7 @@
 //
 // Author: Denis Stogl
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <cmath>
 #include <string>

@@ -18,7 +18,7 @@
 #ifndef TEST_SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 #define TEST_SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <memory>
 #include <string>

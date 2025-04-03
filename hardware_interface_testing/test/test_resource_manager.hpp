@@ -17,7 +17,7 @@
 #ifndef TEST_RESOURCE_MANAGER_HPP_
 #define TEST_RESOURCE_MANAGER_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <string>
 #include <vector>

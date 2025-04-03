@@ -14,7 +14,7 @@
 
 #include "test_controller_interface.hpp"
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 #include <memory>
 #include <string>
 #include <vector>

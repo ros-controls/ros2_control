@@ -15,7 +15,7 @@
 #ifndef TEST_LED_RGB_DEVICE_HPP_
 #define TEST_LED_RGB_DEVICE_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <array>
 #include <limits>

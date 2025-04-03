@@ -15,7 +15,7 @@
 #ifndef TEST_POSE_SENSOR_HPP_
 #define TEST_POSE_SENSOR_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <array>
 #include <memory>

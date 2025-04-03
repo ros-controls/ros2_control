@@ -15,7 +15,7 @@
 #ifndef TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <string>
 #include <vector>

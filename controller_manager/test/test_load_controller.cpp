@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 #include <memory>
 #include <string>
 #include <tuple>

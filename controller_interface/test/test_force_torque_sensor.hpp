@@ -19,7 +19,7 @@
 #ifndef TEST_FORCE_TORQUE_SENSOR_HPP_
 #define TEST_FORCE_TORQUE_SENSOR_HPP_
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include <memory>
 #include <string>

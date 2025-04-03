@@ -14,7 +14,7 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 #include <string>
 #include <vector>
 
