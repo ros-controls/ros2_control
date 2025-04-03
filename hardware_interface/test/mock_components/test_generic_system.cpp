@@ -14,13 +14,12 @@
 //
 // Author: Denis Stogl
 
-#include "gmock/gmock.h"
-
 #include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"

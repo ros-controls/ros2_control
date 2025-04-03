@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "gmock/gmock.h"
-
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/system.hpp"
