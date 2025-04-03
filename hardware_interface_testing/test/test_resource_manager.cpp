@@ -2221,6 +2221,6 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -66,17 +66,16 @@ ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  ament_add_gmock_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_link_libraries(joint_limits_rosparam_test joint_limits)
 
-  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)

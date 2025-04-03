@@ -14,7 +14,7 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -441,7 +441,7 @@ TEST_F(
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   int ret = RUN_ALL_TESTS();
   rclcpp::shutdown();
   return ret;

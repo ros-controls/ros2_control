@@ -2210,6 +2210,6 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }
