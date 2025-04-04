@@ -120,6 +120,12 @@ public:
     const std::string & urdf, const unsigned int update_rate = 100);
 
   /**
+   * @brief Import joint limiters from the URDF.
+   * @param urdf string containing the URDF.
+   */
+  void import_joint_limiters(const std::string & urdf);
+
+  /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
    * this returns true. We want to permit to loading the urdf later on, but we currently don't want
    * to permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
@@ -456,6 +462,14 @@ public:
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
 
+  /**
+   * Enforce the command limits for the position, velocity, effort, and acceleration interfaces.
+   * @note This method is RT-safe
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
+   */
+  bool enforce_command_limits(const rclcpp::Duration & period);
+
   /// Reads all loaded hardware components.
   /**
    * Reads from all active hardware components.
@@ -492,6 +506,8 @@ public:
    * \param[in] callback function to be called when the component state changes.
    */
   void set_on_component_state_switch_callback(std::function<void()> callback);
+
+  const std::string & get_robot_description() const;
 
 protected:
   /// Gets the logger for the resource manager

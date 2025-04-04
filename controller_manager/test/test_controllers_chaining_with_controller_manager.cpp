@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -106,9 +107,13 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    const std::regex velocity_pattern(R"(velocity\s*=\s*"-?[0-9]+(\.[0-9]+)?")");
+    const std::string velocity_replacement = R"(velocity="10000.0")";
+    const std::string diffbot_urdf_large_limits = std::regex_replace(
+      ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
     cm_ = std::make_shared<TestableControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::diffbot_urdf, rm_node_->get_node_clock_interface(),
+        diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
         rm_node_->get_node_logging_interface(), true),
       executor_, TEST_CM_NAME);
     run_updater_ = false;

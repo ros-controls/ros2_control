@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <thread>
+
 #include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -73,6 +75,101 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   EXPECT_NO_THROW({ handle.set_value(0.0); });
   ASSERT_TRUE(handle.get_optional().has_value());
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
+}
+
+TEST(TestHandle, test_command_interface_limiter_on_set)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  CommandInterface handle{interface_descr};
+  handle.set_value(1.0);
+  EXPECT_DOUBLE_EQ(handle.get_value(), 1.0);
+  ASSERT_FALSE(handle.is_limited());
+
+  handle.set_on_set_command_limiter(
+    [](double value, bool & is_limited) -> double
+    {
+      is_limited = false;
+      if (value > 10.0)
+      {
+        is_limited = true;
+        return 10.0;
+      }
+      return value;
+    });
+  for (int i = 0; i < 10; i++)
+  {
+    handle.set_limited_value(static_cast<double>(i));
+    EXPECT_DOUBLE_EQ(handle.get_value(), i);
+    ASSERT_FALSE(handle.is_limited());
+  }
+
+  for (int i = 11; i < 20; i++)
+  {
+    handle.set_limited_value(static_cast<double>(i));
+    EXPECT_DOUBLE_EQ(handle.get_value(), 10.0);
+    ASSERT_TRUE(handle.is_limited());
+  }
+}
+
+TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  InterfaceInfo info;
+  info.name = POSITION_INTERFACE;
+  InterfaceDescription interface_descr(JOINT_NAME_1, info);
+  CommandInterface handle{interface_descr};
+  handle.set_value(121.0);
+  ASSERT_DOUBLE_EQ(handle.get_value(), 121.0);
+
+  handle.set_on_set_command_limiter(
+    [](double value, bool & is_limited) -> double
+    {
+      is_limited = false;
+      if (std::abs(value) > 100.0)
+      {
+        is_limited = true;
+        return std::copysign(100.0, value);
+      }
+      return value;
+    });
+
+  handle.set_limited_value(121.0);
+  ASSERT_DOUBLE_EQ(handle.get_value(), 100.0);
+
+  std::atomic_bool done(false);
+  std::thread checking_thread(
+    [&handle, &done]()
+    {
+      while (!done)
+      {
+        double value;
+        if (handle.get_value(value))
+        {
+          EXPECT_DOUBLE_EQ(value, 100.0);
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+    });
+  std::thread modifier_thread(
+    [&handle, &done]()
+    {
+      for (int i = 100; i < 100000; i++)
+      {
+        handle.set_limited_value(static_cast<double>(i));
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+      done = true;
+    });
+
+  modifier_thread.join();
+  done = true;
+  checking_thread.join();
+  EXPECT_DOUBLE_EQ(handle.get_value(), 100.0);
 }
 
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
