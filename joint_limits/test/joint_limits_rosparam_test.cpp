@@ -28,6 +28,10 @@ public:
     rclcpp::NodeOptions node_options;
     node_options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(
       true);
+    const std::vector<std::string> node_option_arguments = {
+      "--ros-args", "--params-file",
+      std::string(PARAMETERS_FILE_PATH) + std::string("joint_limits_rosparam.yaml")};
+    node_options.arguments(node_option_arguments);
 
     node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode", node_options);
   }
@@ -279,7 +283,16 @@ TEST_F(JointLimitsRosParamTest, parse_soft_joint_limits)
 class JointLimitsUndeclaredRosParamTest : public ::testing::Test
 {
 public:
-  void SetUp() { node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode"); }
+  void SetUp()
+  {
+    rclcpp::NodeOptions node_options;
+    const std::vector<std::string> node_option_arguments = {
+      "--ros-args", "--params-file",
+      std::string(PARAMETERS_FILE_PATH) + std::string("joint_limits_rosparam.yaml")};
+    node_options.arguments(node_option_arguments);
+
+    node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode", node_options);
+  }
 
   void TearDown() { node_.reset(); }
 
@@ -292,7 +305,14 @@ class JointLimitsLifecycleNodeUndeclaredRosParamTest : public ::testing::Test
 public:
   void SetUp()
   {
-    lifecycle_node_ = rclcpp_lifecycle::LifecycleNode::make_shared("JointLimitsRosparamTestNode");
+    rclcpp::NodeOptions node_options;
+    const std::vector<std::string> node_option_arguments = {
+      "--ros-args", "--params-file",
+      std::string(PARAMETERS_FILE_PATH) + std::string("joint_limits_rosparam.yaml")};
+    node_options.arguments(node_option_arguments);
+
+    lifecycle_node_ =
+      rclcpp_lifecycle::LifecycleNode::make_shared("JointLimitsRosparamTestNode", node_options);
   }
 
   void TearDown()
