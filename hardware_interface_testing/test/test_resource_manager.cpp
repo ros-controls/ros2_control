@@ -273,6 +273,24 @@ TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
   ASSERT_TRUE(rm.are_components_initialized());
 }
 
+TEST_F(
+  ResourceManagerTest,
+  if_component_excluded_from_loading_expect_that_component_not_loaded_and_initialized)
+{
+  const auto component_to_not_load = "TestSystemHardware";
+  std::vector<std::string> dont_load_components;
+  dont_load_components.push_back(component_to_not_load);
+
+  TestableResourceManager rm(node_);
+  rm.load_and_initialize_components(
+    ros2_control_test_assets::minimal_robot_urdf, 100, dont_load_components);
+  ASSERT_TRUE(rm.are_components_initialized());
+
+  const auto components = rm.get_components_status();
+  EXPECT_EQ(components.size(), 2);  // Sensor and Actuator are loaded
+  EXPECT_TRUE(components.find(component_to_not_load) == components.end());  // not found
+}
+
 TEST_F(ResourceManagerTest, resource_claiming)
 {
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);

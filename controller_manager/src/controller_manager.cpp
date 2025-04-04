@@ -612,7 +612,13 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_))
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
+  if (!resource_manager_->load_and_initialize_components(
+        robot_description, update_rate_, params_->hardware_components_initial_state.not_loaded))
   {
     RCLCPP_WARN(
       get_logger(),
@@ -658,11 +664,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       }
     }
   };
-
-  if (cm_param_listener_->is_old(*params_))
-  {
-    *params_ = cm_param_listener_->get_params();
-  }
 
   // unconfigured (loaded only)
   set_components_to_state(
