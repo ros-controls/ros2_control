@@ -123,8 +123,8 @@ public:
    * \pre Handles are valid and matching in size
    */
   void configure(
-    const std::vector<JointHandle> & joint_handles,
-    const std::vector<ActuatorHandle> & actuator_handles) override;
+    const std::vector<JointHandle::SharedPtr> & joint_handles,
+    const std::vector<ActuatorHandle::SharedPtr> & actuator_handles) override;
 
   /// Transform variables from actuator to joint space.
   /**
@@ -157,13 +157,13 @@ protected:
   std::vector<double> joint_reduction_;
   std::vector<double> joint_offset_;
 
-  std::vector<JointHandle> joint_position_;
-  std::vector<JointHandle> joint_velocity_;
-  std::vector<JointHandle> joint_effort_;
+  std::vector<JointHandle::SharedPtr> joint_position_;
+  std::vector<JointHandle::SharedPtr> joint_velocity_;
+  std::vector<JointHandle::SharedPtr> joint_effort_;
 
-  std::vector<ActuatorHandle> actuator_position_;
-  std::vector<ActuatorHandle> actuator_velocity_;
-  std::vector<ActuatorHandle> actuator_effort_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_position_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_velocity_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_effort_;
 };
 
 inline FourBarLinkageTransmission::FourBarLinkageTransmission(
@@ -188,8 +188,8 @@ inline FourBarLinkageTransmission::FourBarLinkageTransmission(
 }
 
 void FourBarLinkageTransmission::configure(
-  const std::vector<JointHandle> & joint_handles,
-  const std::vector<ActuatorHandle> & actuator_handles)
+  const std::vector<JointHandle::SharedPtr> & joint_handles,
+  const std::vector<ActuatorHandle::SharedPtr> & actuator_handles)
 {
   if (joint_handles.empty())
   {
@@ -199,6 +199,19 @@ void FourBarLinkageTransmission::configure(
   if (actuator_handles.empty())
   {
     throw Exception("No actuator handles were passed in");
+  }
+
+  if (std::any_of(
+        joint_handles.cbegin(), joint_handles.cend(), [](const auto & handle) { return !handle; }))
+  {
+    throw Exception("Null pointers in joint handles");
+  }
+
+  if (std::any_of(
+        actuator_handles.cbegin(), actuator_handles.cend(),
+        [](const auto & handle) { return !handle; }))
+  {
+    throw Exception("Null pointers in actuator handles");
   }
 
   const auto joint_names = get_names(joint_handles);
@@ -262,9 +275,12 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
   {
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
-    joint_pos[0].set_value(act_pos[0].get_value() / (jr[0] * ar[0]) + joint_offset_[0]);
-    joint_pos[1].set_value(
-      (act_pos[1].get_value() / ar[1] - act_pos[0].get_value() / (jr[0] * ar[0])) / jr[1] +
+    std::ignore = joint_pos[0]->set_value(
+      act_pos[0]->get_optional().value() / (jr[0] * ar[0]) + joint_offset_[0]);
+    std::ignore = joint_pos[1]->set_value(
+      (act_pos[1]->get_optional().value() / ar[1] -
+       act_pos[0]->get_optional().value() / (jr[0] * ar[0])) /
+        jr[1] +
       joint_offset_[1]);
   }
 
@@ -275,9 +291,11 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
   {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
-    joint_vel[0].set_value(act_vel[0].get_value() / (jr[0] * ar[0]));
-    joint_vel[1].set_value(
-      (act_vel[1].get_value() / ar[1] - act_vel[0].get_value() / (jr[0] * ar[0])) / jr[1]);
+    std::ignore = joint_vel[0]->set_value(act_vel[0]->get_optional().value() / (jr[0] * ar[0]));
+    std::ignore = joint_vel[1]->set_value(
+      (act_vel[1]->get_optional().value() / ar[1] -
+       act_vel[0]->get_optional().value() / (jr[0] * ar[0])) /
+      jr[1]);
   }
 
   // effort
@@ -287,9 +305,10 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0]);
-    joint_eff[1].set_value(
-      jr[1] * (act_eff[1].get_value() * ar[1] - jr[0] * act_eff[0].get_value() * ar[0]));
+    std::ignore = joint_eff[0]->set_value(jr[0] * act_eff[0]->get_optional().value() * ar[0]);
+    std::ignore = joint_eff[1]->set_value(
+      jr[1] * (act_eff[1]->get_optional().value() * ar[1] -
+               jr[0] * act_eff[0]->get_optional().value() * ar[0]));
   }
 }
 
@@ -306,9 +325,11 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
     double joints_offset_applied[2] = {
-      joint_pos[0].get_value() - joint_offset_[0], joint_pos[1].get_value() - joint_offset_[1]};
-    act_pos[0].set_value(joints_offset_applied[0] * jr[0] * ar[0]);
-    act_pos[1].set_value((joints_offset_applied[0] + joints_offset_applied[1] * jr[1]) * ar[1]);
+      joint_pos[0]->get_optional().value() - joint_offset_[0],
+      joint_pos[1]->get_optional().value() - joint_offset_[1]};
+    std::ignore = act_pos[0]->set_value(joints_offset_applied[0] * jr[0] * ar[0]);
+    std::ignore =
+      act_pos[1]->set_value((joints_offset_applied[0] + joints_offset_applied[1] * jr[1]) * ar[1]);
   }
 
   // velocity
@@ -318,8 +339,10 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
   {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
-    act_vel[0].set_value(joint_vel[0].get_value() * jr[0] * ar[0]);
-    act_vel[1].set_value((joint_vel[0].get_value() + joint_vel[1].get_value() * jr[1]) * ar[1]);
+    std::ignore = act_vel[0]->set_value(joint_vel[0]->get_optional().value() * jr[0] * ar[0]);
+    std::ignore = act_vel[1]->set_value(
+      (joint_vel[0]->get_optional().value() + joint_vel[1]->get_optional().value() * jr[1]) *
+      ar[1]);
   }
 
   // effort
@@ -329,8 +352,10 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    act_eff[0].set_value(joint_eff[0].get_value() / (ar[0] * jr[0]));
-    act_eff[1].set_value((joint_eff[0].get_value() + joint_eff[1].get_value() / jr[1]) / ar[1]);
+    std::ignore = act_eff[0]->set_value(joint_eff[0]->get_optional().value() / (ar[0] * jr[0]));
+    std::ignore = act_eff[1]->set_value(
+      (joint_eff[0]->get_optional().value() + joint_eff[1]->get_optional().value() / jr[1]) /
+      ar[1]);
   }
 }
 
