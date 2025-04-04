@@ -552,6 +552,10 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
   const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
+  if (!type_it)
+  {
+    throw std::runtime_error("Missing <plugin> tag of <transmission> element in your URDF.");
+  }
   transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
   // Parse joints
@@ -627,9 +631,10 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
           std::to_string(transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(ActuatorInfo{
-        "actuator1", transmission.joints[0].state_interfaces,
-        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(
+        ActuatorInfo{
+          "actuator1", transmission.joints[0].state_interfaces,
+          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }
@@ -660,6 +665,10 @@ HardwareInfo parse_resource_from_xml(
     if (std::string(kHardwareTag) == ros2_control_child_it->Name())
     {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
+      if (!type_it)
+      {
+        throw std::runtime_error("Missing <plugin> tag of <hardware> element in your URDF.");
+      }
       hardware.hardware_plugin_name =
         get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
       const auto * group_it = ros2_control_child_it->FirstChildElement(kGroupTag);

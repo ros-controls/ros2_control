@@ -71,7 +71,8 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   ASSERT_EQ(semantic_component_->command_interfaces_.size(), 0u);
 
   // validate that release_interfaces() does not touch interface_names_
-  ASSERT_TRUE(std::equal(
-    semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
-    interface_names.begin(), interface_names.end()));
+  ASSERT_TRUE(
+    std::equal(
+      semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
+      interface_names.begin(), interface_names.end()));
 }

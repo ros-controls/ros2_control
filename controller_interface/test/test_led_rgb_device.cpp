@@ -38,9 +38,10 @@ TEST_F(LedDeviceTest, validate_all)
   ASSERT_EQ(led_device_->command_interfaces_.capacity(), size_);
 
   // Validate default interface_names_
-  EXPECT_TRUE(std::equal(
-    led_device_->interface_names_.cbegin(), led_device_->interface_names_.cend(),
-    full_cmd_interface_names_.cbegin(), full_cmd_interface_names_.cend()));
+  EXPECT_TRUE(
+    std::equal(
+      led_device_->interface_names_.cbegin(), led_device_->interface_names_.cend(),
+      full_cmd_interface_names_.cbegin(), full_cmd_interface_names_.cend()));
 
   // Get interface names
   std::vector<std::string> interface_names = led_device_->get_command_interface_names();

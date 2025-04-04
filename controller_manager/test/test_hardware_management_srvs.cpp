@@ -11,18 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_manager_test_common.hpp"
-
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
+#include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/parameter.hpp"
@@ -66,12 +63,14 @@ public:
     run_updater_ = false;
 
     SetUpSrvsCMExecutor();
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.unconfigured",
-      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.inactive",
-      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.unconfigured",
+        std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.inactive",
+        std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     auto msg = std_msgs::msg::String();

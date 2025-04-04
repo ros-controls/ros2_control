@@ -1,14 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(joint_limits LANGUAGES CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
-          -Werror=missing-braces)
-endif()
-
-# using this instead of visibility macros
-# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
@@ -71,17 +66,19 @@ ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_link_libraries(joint_limits_rosparam_test joint_limits)
+  target_compile_definitions(
+    joint_limits_rosparam_test
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
-  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
