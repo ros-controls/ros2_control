@@ -2221,10 +2221,12 @@ public:
 
     auto check_statistics_for_nan = [&](const std::string & component_name)
     {
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].read_statistics->periodicity.get_statistics().average));
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].write_statistics->periodicity.get_statistics().average));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].read_statistics->periodicity.get_statistics().average));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].write_statistics->periodicity.get_statistics().average));
 
       EXPECT_TRUE(
         std::isnan(status_map[component_name].read_statistics->periodicity.get_statistics().min));
@@ -2236,20 +2238,26 @@ public:
       EXPECT_TRUE(
         std::isnan(status_map[component_name].write_statistics->periodicity.get_statistics().max));
 
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].read_statistics->execution_time.get_statistics().average));
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].write_statistics->execution_time.get_statistics().average));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].read_statistics->execution_time.get_statistics().average));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].write_statistics->execution_time.get_statistics().average));
 
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].read_statistics->execution_time.get_statistics().min));
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].write_statistics->execution_time.get_statistics().min));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].read_statistics->execution_time.get_statistics().min));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].write_statistics->execution_time.get_statistics().min));
 
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].read_statistics->execution_time.get_statistics().max));
-      EXPECT_TRUE(std::isnan(
-        status_map[component_name].write_statistics->execution_time.get_statistics().max));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].read_statistics->execution_time.get_statistics().max));
+      EXPECT_TRUE(
+        std::isnan(
+          status_map[component_name].write_statistics->execution_time.get_statistics().max));
     };
 
     check_statistics_for_nan(TEST_ACTUATOR_HARDWARE_NAME);
