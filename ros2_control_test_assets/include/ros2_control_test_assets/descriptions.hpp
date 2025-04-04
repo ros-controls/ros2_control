@@ -758,6 +758,55 @@ const auto hardware_resources_with_different_rw_rates =
   </ros2_control>
 )";
 
+const auto hardware_resources_with_different_rw_rates_with_async =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="50" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" rw_rate="20" is_async="true">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" rw_rate="25" is_async="true">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
 const auto hardware_resources_with_negative_rw_rates =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="-50">
