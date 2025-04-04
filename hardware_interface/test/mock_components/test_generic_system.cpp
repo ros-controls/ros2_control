@@ -14,13 +14,12 @@
 //
 // Author: Denis Stogl
 
-#include <gmock/gmock.h>
-
 #include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
@@ -2210,6 +2209,6 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

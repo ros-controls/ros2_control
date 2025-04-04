@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <algorithm>
 #include <array>
 #include <string>
 #include <vector>
+
+#include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "semantic_components/gps_sensor.hpp"
