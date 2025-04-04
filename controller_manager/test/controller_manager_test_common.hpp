@@ -15,9 +15,6 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <chrono>
 #include <memory>
 #include <string>
@@ -25,16 +22,13 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
-
+#include "gmock/gmock.h"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/utilities.hpp"
-
-#include "std_msgs/msg/string.hpp"
-
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace
 {
@@ -76,7 +70,7 @@ public:
     {
       pass_robot_description_to_cm_and_rm(robot_description_);
     }
-    time_ = rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type());
+    time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());
   }
 
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }

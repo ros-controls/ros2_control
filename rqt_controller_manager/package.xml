@@ -6,6 +6,8 @@
   <description>Graphical frontend for interacting with the controller manager.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <url type="website">http://ros.org/wiki/rqt_controller_manager</url>
