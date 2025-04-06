@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "test_controller/test_controller.hpp"
 
 using ::testing::_;

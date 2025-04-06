@@ -92,8 +92,9 @@ class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNod
 {
 public:
   ActuatorInterface()
-  : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+  : lifecycle_state_(
+      rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
     actuator_logger_(rclcpp::get_logger("actuator_interface"))
   {
   }
@@ -113,16 +114,32 @@ public:
   /// clock and logger interfaces.
   /**
    * \param[in] hardware_info structure with data from URDF.
+   * \param[in] logger Logger for the hardware component.
    * \param[in] clock_interface pointer to the clock interface.
-   * \param[in] logger_interface pointer to the logger interface.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated("Use init(HardwareInfo, rclcpp::Logger, rclcpp::Clock::SharedPtr) instead.")]]
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
-    clock_interface_ = clock_interface;
+    return this->init(hardware_info, logger, clock_interface->get_clock());
+  }
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock pointer to the resource manager clock.
+   * \param[in] logger Logger for the hardware component.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  {
+    actuator_clock_ = clock;
     actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
     info_ = hardware_info;
     if (info_.is_async)
@@ -530,7 +547,7 @@ public:
   /**
    * \return clock of the ActuatorInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return actuator_clock_; }
 
   /// Get the hardware info of the ActuatorInterface.
   /**
@@ -586,7 +603,7 @@ protected:
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr actuator_clock_;
   rclcpp::Logger actuator_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;

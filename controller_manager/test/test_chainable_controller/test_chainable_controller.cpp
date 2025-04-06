@@ -69,8 +69,13 @@ TestChainableController::state_interface_configuration() const
 }
 
 controller_interface::return_type TestChainableController::update_reference_from_subscribers(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error(
+      "ROS Time is required for the chainable controller to update references from subscribers.");
+  }
   for (size_t i = 0; i < reference_interfaces_.size(); ++i)
   {
     RCLCPP_INFO(
@@ -95,8 +100,13 @@ controller_interface::return_type TestChainableController::update_reference_from
 }
 
 controller_interface::return_type TestChainableController::update_and_write_commands(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error(
+      "ROS Time is required for the chainable controller to update and write commands.");
+  }
   ++internal_counter;
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
@@ -179,8 +189,9 @@ TestChainableController::on_export_state_interfaces()
 
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    state_interfaces.push_back(
+      hardware_interface::StateInterface(
+        get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
   }
 
   return state_interfaces;
@@ -193,8 +204,9 @@ TestChainableController::on_export_reference_interfaces()
 
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)
   {
-    reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
+    reference_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
   }
 
   return reference_interfaces;

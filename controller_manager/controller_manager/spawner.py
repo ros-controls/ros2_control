@@ -148,8 +148,10 @@ def main(args=None):
     )
     parser.add_argument(
         "--controller-ros-args",
-        help="The --ros-args to be passed to the controller node for remapping topics etc",
+        help="The --ros-args to be passed to the controller node, e.g., for remapping topics. "
+        "Pass multiple times for every argument.",
         default=None,
+        action="append",
         required=False,
     )
 
@@ -216,7 +218,7 @@ def main(args=None):
                         controller_manager_name,
                         controller_name,
                         "node_options_args",
-                        controller_ros_args.split(),
+                        [arg for args in controller_ros_args for arg in args.split()],
                     ):
                         return 1
                 if param_files:
@@ -319,8 +321,9 @@ def main(args=None):
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
+            node.get_logger().info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
-                node.get_logger().info("Interrupt captured, deactivating and unloading controller")
+                node.get_logger().info("Deactivating and unloading controllers...")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
                     node,
@@ -365,6 +368,7 @@ def main(args=None):
                 return 1
         return 0
     except KeyboardInterrupt:
+        node.get_logger().info("KeyboardInterrupt received! Exiting....")
         pass
     except ServiceNotFoundError as err:
         node.get_logger().fatal(str(err))

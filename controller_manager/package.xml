@@ -3,14 +3,17 @@
 <package format="2">
   <name>controller_manager</name>
   <version>4.27.0</version>
-  <description>Description of controller_manager</description>
+  <description>The main runnable entrypoint of ros2_control and home of controller management and resource management.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
   <depend>backward_ros</depend>
   <depend>controller_interface</depend>

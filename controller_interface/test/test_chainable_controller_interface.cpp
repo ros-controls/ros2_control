@@ -14,8 +14,9 @@
 
 #include "test_chainable_controller_interface.hpp"
 
-#include <gmock/gmock.h>
 #include <memory>
+
+#include "gmock/gmock.h"
 
 using ::testing::IsEmpty;
 using ::testing::SizeIs;

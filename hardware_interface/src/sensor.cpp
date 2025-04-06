@@ -47,20 +47,28 @@ const rclcpp_lifecycle::State & Sensor::initialize(
   const HardwareInfo & sensor_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  return this->initialize(sensor_info, logger, clock_interface->get_clock());
+}
+
+const rclcpp_lifecycle::State & Sensor::initialize(
+  const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+{
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(sensor_info, logger, clock_interface))
+    switch (impl_->init(sensor_info, logger, clock))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }
@@ -75,13 +83,15 @@ const rclcpp_lifecycle::State & Sensor::configure()
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -100,9 +110,10 @@ const rclcpp_lifecycle::State & Sensor::cleanup()
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
@@ -124,8 +135,9 @@ const rclcpp_lifecycle::State & Sensor::shutdown()
     switch (impl_->on_shutdown(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
@@ -146,12 +158,14 @@ const rclcpp_lifecycle::State & Sensor::activate()
     {
       case CallbackReturn::SUCCESS:
         impl_->enable_introspection(true);
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -170,12 +184,14 @@ const rclcpp_lifecycle::State & Sensor::deactivate()
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -196,14 +212,16 @@ const rclcpp_lifecycle::State & Sensor::error()
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }

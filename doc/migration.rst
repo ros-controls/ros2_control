@@ -4,9 +4,11 @@ Iron to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 controller_interface
 ********************
+* ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
 * The changes from `(PR #1694) <https://github.com/ros-controls/ros2_control/pull/1694>`__ will affect how the controllers will be loading the parameters. Defining parameters in a single yaml file and loading it to the controller_manager node alone will no longer work.
   In order to load the parameters to the controllers properly, it is needed to use ``--param-file`` option from the spawner. This is because the controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments.
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
+* The ``exported_state_interfaces_`` and ``exported_reference_interfaces_`` now uses the the full interface name as the key to the unordered_map, instead of the interface type. This is related to (`#2038 <https://github.com/ros-controls/ros2_control/pull/2038>`_). For instance, the key would be ``joint_1/position`` instead of ``position``.
 
 controller_manager
 ******************
@@ -69,7 +71,7 @@ controller_manager
         <child link="finger_left"/>
         <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
-* The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/github-ros-robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
+* The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
 
 hardware_interface
 ******************
@@ -95,7 +97,7 @@ Earlier code will issue compile-time warnings like:
 
 The old methods are deprecated and will be removed in the future. The new methods are:
 
-  * ``std::optional<T> get_optional()`` or ``bool get_value(T & value)`` for getting the value.
+  * ``std::optional<T> get_optional()`` for getting the value.
   * ``bool set_value(const T & value)`` for setting the value.
 
 The return value ``bool`` or ``std::optional<T>`` with ``get_value`` can be used to check if the value is available or not. Similarly, the ``set_value`` method returns a ``bool`` to check if the value was set or not.

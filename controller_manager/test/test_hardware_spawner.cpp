@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -21,6 +19,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -152,9 +151,10 @@ public:
   : ControllerManagerFixture<controller_manager::ControllerManager>(""),
     RMServiceCaller(TEST_CM_NAME)
   {
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.unconfigured",
-      std::vector<std::string>{"TestSystemHardware"}));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.unconfigured",
+        std::vector<std::string>{"TestSystemHardware"}));
   }
 
 public:
@@ -272,8 +272,9 @@ TEST_F(TestHardwareSpawnerWithNamespacedCM, set_component_to_configured_state_cm
     256)
     << "Should fail without defining the namespace";
   EXPECT_EQ(
-    call_spawner("TestSystemHardware --configure -c test_controller_manager --ros-args -r "
-                 "__ns:=/foo_namespace"),
+    call_spawner(
+      "TestSystemHardware --configure -c test_controller_manager --ros-args -r "
+      "__ns:=/foo_namespace"),
     0);
 
   EXPECT_EQ(
