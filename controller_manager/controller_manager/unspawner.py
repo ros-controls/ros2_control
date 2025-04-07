@@ -19,6 +19,7 @@ import sys
 import warnings
 
 from controller_manager import switch_controllers, unload_controller
+from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
@@ -45,12 +46,28 @@ def main(args=None):
         default=5.0,
         type=float,
     )
+    strictness_group = parser.add_mutually_exclusive_group(required=False)
+    strictness_group.add_argument(
+        "--strict",
+        help="Set the switch_controllers service strictness to strict",
+        action="store_true",
+    )
+    strictness_group.add_argument(
+        "--best-effort",
+        help="Set the switch_controllers service strictness to best effort",
+        action="store_true",
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
     switch_timeout = args.switch_timeout
+    strictness = 0
+    if args.strict:
+        strictness = SwitchController.Request.STRICT
+    elif args.best_effort:
+        strictness = SwitchController.Request.BEST_EFFORT
 
     node = Node("unspawner_" + controller_names[0])
     try:
@@ -60,7 +77,7 @@ def main(args=None):
             controller_manager_name,
             controller_names,
             [],
-            True,
+            strictness,
             True,
             switch_timeout,
         )
