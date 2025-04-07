@@ -25,6 +25,21 @@ controller_manager:
       }
     }
 
+  defaults:
+    switch_controller:
+      strictness: {
+        type: string,
+        default_value: "best_effort",
+        description: "The default switch controller strategy. This strategy is used when no strategy is specified in the switch_controller service call.",
+        validation: {
+          not_empty<>: null,
+          one_of<>: [[
+            "strict",
+            "best_effort",
+          ]],
+        }
+      }
+
   diagnostics:
     threshold:
       controller_manager:
