@@ -155,17 +155,6 @@ def main(args=None):
         action="append",
         required=False,
     )
-    strictness_group = parser.add_mutually_exclusive_group(required=False)
-    strictness_group.add_argument(
-        "--strict",
-        help="Set the switch_controllers service strictness to strict",
-        action="store_true",
-    )
-    strictness_group.add_argument(
-        "--best-effort",
-        help="Set the switch_controllers service strictness to best effort",
-        action="store_true",
-    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -175,11 +164,7 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
-    strictness = 0
-    if args.strict:
-        strictness = SwitchController.Request.STRICT
-    elif args.best_effort:
-        strictness = SwitchController.Request.BEST_EFFORT
+    strictness = SwitchController.Request.STRICT
 
     if param_files:
         for param_file in param_files:
