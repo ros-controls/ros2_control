@@ -69,12 +69,14 @@ public:
 
     cm_->set_parameter(
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.unconfigured",
-      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.inactive",
-      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.unconfigured",
+        std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.inactive",
+        std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     std::string robot_description = "";
     cm_->get_parameter("robot_description", robot_description);
@@ -431,10 +433,12 @@ public:
 
     cm_->set_parameter(
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
-    cm_->set_parameter(rclcpp::Parameter(
-      "activate_components_on_start", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
-    cm_->set_parameter(rclcpp::Parameter(
-      "configure_components_on_start", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "activate_components_on_start", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "configure_components_on_start", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     std::string robot_description = "";
     cm_->get_parameter("robot_description", robot_description);
