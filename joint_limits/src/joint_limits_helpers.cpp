@@ -52,8 +52,10 @@ PositionLimits compute_position_limits(
     const double delta_pos = max_vel * dt;
     const double position_reference =
       act_pos.has_value() ? act_pos.value() : prev_command_pos.value();
-    pos_limits.lower_limit = std::max(position_reference - delta_pos, pos_limits.lower_limit);
-    pos_limits.upper_limit = std::min(position_reference + delta_pos, pos_limits.upper_limit);
+    pos_limits.lower_limit = std::max(
+      std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
+    pos_limits.upper_limit = std::min(
+      std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
