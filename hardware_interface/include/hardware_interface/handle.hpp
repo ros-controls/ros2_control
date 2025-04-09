@@ -16,6 +16,8 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <algorithm>
+#include <atomic>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -415,6 +417,31 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
+  void set_on_set_command_limiter(std::function<double(double, bool &)> on_set_command_limiter)
+  {
+    on_set_command_limiter_ = on_set_command_limiter;
+  }
+
+  /// A setter for the value of the command interface that triggers the limiter.
+  /**
+   * @param value The value to be set.
+   * @return True if the value was set successfully, false otherwise.
+   */
+  template <typename T>
+  [[nodiscard]] bool set_limited_value(const T & value)
+  {
+    if constexpr (std::is_same_v<T, double>)
+    {
+      return set_value(on_set_command_limiter_(value, is_command_limited_));
+    }
+    else
+    {
+      return set_value(value);
+    }
+  }
+
+  const bool & is_limited() const { return is_command_limited_; }
+
   void registerIntrospection() const
   {
     if (value_ptr_ || std::holds_alternative<double>(value_))
@@ -422,6 +449,8 @@ public:
       std::function<double()> f = [this]()
       { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
+        "command_interface." + get_name() + ".is_limited", &is_command_limited_);
     }
   }
 
@@ -430,12 +459,23 @@ public:
     if (value_ptr_ || std::holds_alternative<double>(value_))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
+      DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
+        "command_interface." + get_name() + ".is_limited");
     }
   }
 
   using Handle::Handle;
 
   using SharedPtr = std::shared_ptr<CommandInterface>;
+
+private:
+  bool is_command_limited_ = false;
+  std::function<double(double, bool &)> on_set_command_limiter_ =
+    [](double value, bool & is_limited)
+  {
+    is_limited = false;
+    return value;
+  };
 };
 
 }  // namespace hardware_interface
