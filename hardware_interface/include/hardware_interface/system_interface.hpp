@@ -547,24 +547,77 @@ public:
     lifecycle_state_ = new_state;
   }
 
-  void set_state(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_state(const std::string & interface_name, const T & value)
   {
-    system_states_.at(interface_name)->set_value(value);
+    auto it = system_states_.find(interface_name);
+    if (it == system_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in system hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
+    std::ignore = handle->set_value(lock, value);
   }
 
-  double get_state(const std::string & interface_name) const
+  template <typename T = double>
+  T get_state(const std::string & interface_name) const
   {
-    return system_states_.at(interface_name)->get_value();
+    auto it = system_states_.find(interface_name);
+    if (it == system_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in system hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
+    const auto opt_value = handle->get_optional<T>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        "Failed to get state value from interface: " + interface_name +
+        ". This should not happen.");
+    }
+    return opt_value.value();
   }
 
   void set_command(const std::string & interface_name, const double & value)
   {
-    system_commands_.at(interface_name)->set_value(value);
+    auto it = system_commands_.find(interface_name);
+    if (it == system_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in system hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
+    std::ignore = handle->set_value(lock, value);
   }
 
-  double get_command(const std::string & interface_name) const
+  template <typename T = double>
+  T get_command(const std::string & interface_name) const
   {
-    return system_commands_.at(interface_name)->get_value();
+    auto it = system_commands_.find(interface_name);
+    if (it == system_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in system hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
+    const auto opt_value = handle->get_optional<double>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        "Failed to get command value from interface: " + interface_name +
+        ". This should not happen.");
+    }
+    return opt_value.value();
   }
 
   /// Get the logger of the SystemInterface.
