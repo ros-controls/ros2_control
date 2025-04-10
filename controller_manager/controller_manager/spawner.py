@@ -30,6 +30,7 @@ from controller_manager import (
     set_controller_parameters_from_param_files,
     bcolors,
 )
+from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
@@ -163,6 +164,7 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
+    strictness = SwitchController.Request.STRICT
 
     if param_files:
         for param_file in param_files:
@@ -271,7 +273,7 @@ def main(args=None):
                         controller_manager_name,
                         [],
                         [controller_name],
-                        True,
+                        strictness,
                         True,
                         switch_timeout,
                         service_call_timeout,
@@ -296,7 +298,7 @@ def main(args=None):
                 controller_manager_name,
                 [],
                 controller_names,
-                True,
+                strictness,
                 True,
                 switch_timeout,
                 service_call_timeout,
@@ -330,7 +332,7 @@ def main(args=None):
                     controller_manager_name,
                     controller_names,
                     [],
-                    True,
+                    strictness,
                     True,
                     switch_timeout,
                     service_call_timeout,
