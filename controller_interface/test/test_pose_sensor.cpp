@@ -36,9 +36,10 @@ TEST_F(PoseSensorTest, validate_all)
   ASSERT_EQ(pose_sensor_->state_interfaces_.capacity(), size_);
 
   // Validate default interface_names_
-  EXPECT_TRUE(std::equal(
-    pose_sensor_->interface_names_.cbegin(), pose_sensor_->interface_names_.cend(),
-    full_interface_names_.cbegin(), full_interface_names_.cend()));
+  EXPECT_TRUE(
+    std::equal(
+      pose_sensor_->interface_names_.cbegin(), pose_sensor_->interface_names_.cend(),
+      full_interface_names_.cbegin(), full_interface_names_.cend()));
 
   // Get interface names
   std::vector<std::string> interface_names = pose_sensor_->get_state_interface_names();

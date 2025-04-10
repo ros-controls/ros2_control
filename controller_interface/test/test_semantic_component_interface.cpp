@@ -67,9 +67,10 @@ TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
 
   // validate the interface_names_
   std::vector<std::string> interface_names = semantic_component_->get_state_interface_names();
-  ASSERT_TRUE(std::equal(
-    semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
-    interface_names.begin(), interface_names.end()));
+  ASSERT_TRUE(
+    std::equal(
+      semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
+      interface_names.begin(), interface_names.end()));
 
   ASSERT_EQ(interface_names.size(), size_);
   ASSERT_EQ(interface_names[0], semantic_component_->test_name_ + "/i5");
@@ -129,7 +130,8 @@ TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
   ASSERT_EQ(semantic_component_->state_interfaces_.size(), 0u);
 
   // validate that release_interfaces() does not touch interface_names_
-  ASSERT_TRUE(std::equal(
-    semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
-    interface_names.begin(), interface_names.end()));
+  ASSERT_TRUE(
+    std::equal(
+      semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
+      interface_names.begin(), interface_names.end()));
 }

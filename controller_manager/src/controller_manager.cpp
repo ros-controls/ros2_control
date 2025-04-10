@@ -363,8 +363,9 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
@@ -383,8 +384,9 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
@@ -405,12 +407,14 @@ ControllerManager::ControllerManager(
   resource_manager_(std::move(resource_manager)),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+  cm_node_options_(options),
+  robot_description_(resource_manager_->get_robot_description())
 {
   initialize_parameters();
   init_controller_manager();
@@ -470,6 +474,7 @@ void ControllerManager::init_controller_manager()
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
+    resource_manager_->import_joint_limiters(robot_description_);
     init_services();
   }
   else
@@ -531,6 +536,13 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
+
+  // Declare the enforce_command_limits parameter such a way that it is enabled by default for
+  // rolling and newer alone
+  enforce_command_limits_ =
+    this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), enforce_command_limits_, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -584,6 +596,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
+  resource_manager_->import_joint_limiters(robot_description_);
   if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_))
   {
     RCLCPP_WARN(
@@ -1724,7 +1737,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       std::bind(controller_name_compare, std::placeholders::_1, controller));
     if (controller_it != controllers.end())
     {
-      controller_it->c->wait_for_trigger_update_to_finish();
+      controller_it->c->prepare_for_deactivation();
     }
   }
 
@@ -2841,6 +2854,11 @@ controller_interface::return_type ControllerManager::update(
     }
     // To publish the activity of the failing controllers and the fallback controllers
     publish_activity();
+  }
+
+  if (enforce_command_limits_)
+  {
+    resource_manager_->enforce_command_limits(period);
   }
 
   // there are controllers to (de)activate

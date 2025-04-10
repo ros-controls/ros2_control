@@ -64,14 +64,17 @@ class TestActuator : public ActuatorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
-      &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
-      &velocity_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
+        &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
+        &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
 
     return state_interfaces;
   }
@@ -79,15 +82,17 @@ class TestActuator : public ActuatorInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name,
-      &velocity_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        get_hardware_info().joints[0].name,
+        get_hardware_info().joints[0].command_interfaces[0].name, &velocity_command_));
 
     if (get_hardware_info().joints[0].command_interfaces.size() > 1)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        get_hardware_info().joints[0].name,
-        get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          get_hardware_info().joints[0].name,
+          get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
     }
 
     return command_interfaces;
@@ -109,7 +114,7 @@ class TestActuator : public ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
-  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
     // simulate error on read
     if (velocity_command_ == test_constants::READ_FAIL_VALUE)
@@ -130,6 +135,13 @@ class TestActuator : public ActuatorInterface
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
     velocity_state_ = velocity_command_ / 2;
+    position_state_ += velocity_state_ * period.seconds();
+
+    if (velocity_command_ == test_constants::RESET_STATE_INTERFACES_VALUE)
+    {
+      position_state_ = 0.0;
+      velocity_state_ = 0.0;
+    }
     return return_type::OK;
   }
 

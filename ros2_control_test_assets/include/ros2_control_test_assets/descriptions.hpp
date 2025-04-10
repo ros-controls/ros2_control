@@ -324,6 +324,41 @@ const auto urdf_head_continuous_missing_limits =
       </geometry>
     </collision>
   </link>
+  <joint name="joint3" type="revolute">
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+  </joint>
+  <link name="link3">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="tool_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="link2"/>
+    <child link="tool_link"/>
+  </joint>
+  <link name="tool_link">
+  </link>
 )";
 
 const auto urdf_head_continuous_with_limits =
@@ -2083,6 +2118,8 @@ const auto diff_drive_robot_sdf =
 
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +
+                                          std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
   std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
 const auto minimal_robot_urdf_with_different_hw_rw_rate =

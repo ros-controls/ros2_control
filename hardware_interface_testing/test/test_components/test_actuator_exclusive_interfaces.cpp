@@ -66,12 +66,15 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
     {
       const auto & joint = info_.joints[i];
 
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
     }
     return state_interfaces;
   }
@@ -83,12 +86,15 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
     {
       const auto & joint = info_.joints[i];
 
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
     }
     return command_interfaces;
   }

@@ -365,8 +365,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "external_joint", "external_command_interface", nullptr));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        "external_joint", "external_command_interface", nullptr));
 
     return command_interfaces;
   }
@@ -1238,8 +1239,9 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 
   for (size_t i = 0; i < REFERENCE_INTERFACE_NAMES.size(); ++i)
   {
-    reference_interfaces.push_back(std::make_shared<hardware_interface::CommandInterface>(
-      CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
+    reference_interfaces.push_back(
+      std::make_shared<hardware_interface::CommandInterface>(
+        CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
   }
 
   rm.import_controller_reference_interfaces(CONTROLLER_NAME, reference_interfaces);
@@ -1490,8 +1492,9 @@ public:
       EXPECT_FALSE(ok);
       EXPECT_FALSE(failed_hardware_names.empty());
       ASSERT_THAT(
-        failed_hardware_names, testing::ElementsAreArray(std::vector<std::string>(
-                                 {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME})));
+        failed_hardware_names,
+        testing::ElementsAreArray(
+          std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME})));
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1717,22 +1720,25 @@ TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_ACTUATOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_SYSTEM_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 
   {
     auto controllers = rm.get_cached_controllers_to_hardware(TEST_SENSOR_HARDWARE_NAME);
     ASSERT_THAT(
-      controllers, testing::ElementsAreArray(std::vector<std::string>(
-                     {TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+      controllers,
+      testing::ElementsAreArray(
+        std::vector<std::string>({TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 }
 
@@ -2212,9 +2218,238 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
   check_read_and_write_cycles(false);
 }
 
+class ResourceManagerTestCommandLimitEnforcement : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks()
+  {
+    rm = std::make_shared<TestableResourceManager>(
+      node_, ros2_control_test_assets::minimal_robot_urdf, false);
+    rm->import_joint_limiters(ros2_control_test_assets::minimal_robot_urdf);
+    activate_components(*rm);
+
+    cm_update_rate_ = 100u;  // The default value inside
+    time = node_.get_clock()->now();
+
+    auto status_map = rm->get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[1]));
+    state_itfs.push_back(rm->claim_state_interface(TEST_SYSTEM_HARDWARE_STATE_INTERFACES[1]));
+    state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[0]));
+
+    check_if_interface_available(true, true);
+    // with default values read and write should run without any problems
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      claimed_itfs[0].set_value(10.0);
+      claimed_itfs[1].set_value(20.0);
+      auto [ok, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+
+    time = time + duration;
+    check_if_interface_available(true, true);
+  }
+
+  // check if all interfaces are available
+  void check_if_interface_available(const bool actuator_interfaces, const bool system_interfaces)
+  {
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), system_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), system_interfaces);
+    }
+  };
+
+  void check_limit_enforcement()
+  {
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+
+      claimed_itfs[0].set_value(10.0);
+      claimed_itfs[1].set_value(-20.0);
+
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
+    }
+    for (size_t i = 1; i < 100; i++)
+    {
+      // read now and check that without limit enforcement the values are half of command as this is
+      // the logic implemented in test components
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+
+      EXPECT_EQ(state_itfs[0].get_value(), 5.0);
+      EXPECT_EQ(state_itfs[1].get_value(), -10.0);
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
+    }
+
+    // Let's enforce for one loop and then run the read and write again and reset interfaces to zero
+    // state
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+
+      EXPECT_EQ(state_itfs[0].get_value(), 5.0);
+      EXPECT_EQ(state_itfs[1].get_value(), -10.0);
+
+      claimed_itfs[0].set_value(0.0);
+      claimed_itfs[1].set_value(0.0);
+      EXPECT_EQ(claimed_itfs[0].get_value(), 0.0);
+      EXPECT_EQ(claimed_itfs[1].get_value(), 0.0);
+
+      // enforcing limits
+      rm->enforce_command_limits(duration);
+
+      ASSERT_NEAR(state_itfs[2].get_value(), 5.05, 0.00001);
+      // it is limited to the M_PI as the actual position is outside the range
+      EXPECT_NEAR(claimed_itfs[0].get_value(), M_PI, 0.00001);
+      EXPECT_EQ(claimed_itfs[1].get_value(), 0.0);
+
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
+
+      auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
+      EXPECT_TRUE(read_ok);
+      EXPECT_TRUE(failed_hardware_names_read.empty());
+
+      ASSERT_NEAR(state_itfs[0].get_value(), M_PI_2, 0.00001);
+      ASSERT_EQ(state_itfs[1].get_value(), 0.0);
+    }
+
+    // Reset the position state interface of actuator to zero
+    {
+      ASSERT_GT(state_itfs[2].get_value(), 5.05);
+      claimed_itfs[0].set_value(test_constants::RESET_STATE_INTERFACES_VALUE);
+      auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
+      EXPECT_TRUE(read_ok);
+      EXPECT_TRUE(failed_hardware_names_read.empty());
+      ASSERT_EQ(state_itfs[2].get_value(), 0.0);
+      claimed_itfs[0].set_value(0.0);
+      claimed_itfs[1].set_value(0.0);
+    }
+
+    double new_state_value_1 = state_itfs[0].get_value();
+    double new_state_value_2 = state_itfs[1].get_value();
+    // Now loop and see that the joint limits are being enforced progressively
+    for (size_t i = 1; i < 2000; i++)
+    {
+      // let's amplify the limit enforce period, to test more rapidly. It would work with 0.01s as
+      // well
+      const rclcpp::Duration enforce_period =
+        rclcpp::Duration::from_seconds(duration.seconds() * 10.0);
+
+      auto [ok, failed_hardware_names] = rm->read(time, enforce_period);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+
+      EXPECT_EQ(state_itfs[0].get_value(), new_state_value_1);
+      EXPECT_EQ(state_itfs[1].get_value(), new_state_value_2);
+
+      claimed_itfs[0].set_value(10.0);
+      claimed_itfs[1].set_value(-20.0);
+      EXPECT_EQ(claimed_itfs[0].get_value(), 10.0);
+      EXPECT_EQ(claimed_itfs[1].get_value(), -20.0);
+
+      // enforcing limits
+      rm->enforce_command_limits(enforce_period);
+
+      // the joint limits value is same as in the parsed URDF
+      const double velocity_joint_1 = 0.2;
+      ASSERT_NEAR(
+        claimed_itfs[0].get_value(),
+        std::min(state_itfs[2].get_value() + (velocity_joint_1 * enforce_period.seconds()), M_PI),
+        1.0e-8)
+        << "This should be progressively increasing as it is a position limit for iteration : "
+        << i;
+      EXPECT_NEAR(claimed_itfs[1].get_value(), -0.2, 1.0e-8)
+        << "This should be -0.2 as it is velocity limit";
+
+      // This is as per the logic of the test components internally
+      new_state_value_1 = claimed_itfs[0].get_value() / 2.0;
+      new_state_value_2 = claimed_itfs[1].get_value() / 2.0;
+
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, enforce_period);
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
+    }
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+
+      EXPECT_NEAR(state_itfs[0].get_value(), M_PI_2, 0.00001);
+      EXPECT_NEAR(state_itfs[1].get_value(), -0.1, 0.00001);
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  unsigned int actuator_rw_rate_, system_rw_rate_, cm_update_rate_;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+  std::vector<hardware_interface::LoanedStateInterface> state_itfs;
+
+  rclcpp::Time time = rclcpp::Time(1657232, 0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+
+  // values to set to hardware to simulate failure on read and write
+};
+
+TEST_F(ResourceManagerTestCommandLimitEnforcement, test_command_interfaces_limit_enforcement)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  check_limit_enforcement();
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

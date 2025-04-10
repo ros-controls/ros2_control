@@ -80,12 +80,15 @@ class TestIMUSensor : public SensorInterface
       hardware_interface::StateInterface(sensor_name, "angular_velocity.y", &angular_velocity_.y));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "angular_velocity.z", &angular_velocity_.z));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.x", &linear_acceleration_.x));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.y", &linear_acceleration_.y));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.x", &linear_acceleration_.x));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.y", &linear_acceleration_.y));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
 
     return state_interfaces;
   }
