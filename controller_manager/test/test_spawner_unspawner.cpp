@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -21,6 +19,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -812,9 +811,10 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
 
   // Now test the remapping of the service name with the controller_ros_args
   EXPECT_EQ(
-    call_spawner("ctrl_2 -c test_controller_manager --controller-ros-args '-r "
-                 "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '--param "
-                 "run_cycle:=20 -p test_cycle:=-11.0'"),
+    call_spawner(
+      "ctrl_2 -c test_controller_manager --controller-ros-args '-r "
+      "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '--param "
+      "run_cycle:=20 -p test_cycle:=-11.0'"),
     0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);

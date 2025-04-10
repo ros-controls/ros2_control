@@ -15,11 +15,11 @@
 #ifndef TEST_JOINT_SATURATION_LIMITER_HPP_
 #define TEST_JOINT_SATURATION_LIMITER_HPP_
 
-#include <gmock/gmock.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "gmock/gmock.h"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "pluginlib/class_loader.hpp"

@@ -15,12 +15,11 @@
 #ifndef TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
-#include <gmock/gmock.h>
-
 #include <string>
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
+#include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_chainable_controller";

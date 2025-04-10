@@ -17,15 +17,13 @@
 #ifndef TEST_RESOURCE_MANAGER_HPP_
 #define TEST_RESOURCE_MANAGER_HPP_
 
-#include <gmock/gmock.h>
-
 #include <string>
 #include <vector>
 
-#include <rclcpp/node.hpp>
-
+#include "gmock/gmock.h"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "rclcpp/node.hpp"
 
 class ResourceManagerTest : public ::testing::Test
 {

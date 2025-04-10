@@ -14,10 +14,10 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "random_generator_utils.hpp"
 #include "transmission_interface/four_bar_linkage_transmission.hpp"

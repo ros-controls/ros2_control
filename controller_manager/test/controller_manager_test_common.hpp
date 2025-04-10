@@ -15,9 +15,6 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <chrono>
 #include <memory>
 #include <string>
@@ -25,16 +22,13 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
-
+#include "gmock/gmock.h"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/utilities.hpp"
-
-#include "std_msgs/msg/string.hpp"
-
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace
 {

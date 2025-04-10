@@ -14,11 +14,11 @@
 
 #include "test_controller_interface.hpp"
 
-#include <gmock/gmock.h>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"

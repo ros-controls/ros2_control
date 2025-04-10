@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-
 #include <array>
 #include <limits>
 #include <memory>
@@ -21,6 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/handle.hpp"
@@ -374,6 +373,6 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }
