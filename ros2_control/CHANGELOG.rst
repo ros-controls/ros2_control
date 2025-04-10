@@ -2,6 +2,11 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.28.0 (2025-04-10)
+-------------------
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar
+
 4.27.0 (2025-03-01)
 -------------------
 

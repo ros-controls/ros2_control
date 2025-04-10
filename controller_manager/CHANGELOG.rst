@@ -2,6 +2,32 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Fix async controllers deactivation regime (`#2017 <https://github.com/ros-controls/ros2_control/issues/2017>`_)
+* apply pre-commit changes (`#2160 <https://github.com/ros-controls/ros2_control/issues/2160>`_)
+* Add tests for multiple controller ros args (`#2155 <https://github.com/ros-controls/ros2_control/issues/2155>`_)
+* Bump version of pre-commit hooks (`#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_)
+* Allow for multiple controller-ros-args arguments in spawner.py (`#2150 <https://github.com/ros-controls/ros2_control/issues/2150>`_)
+* Update `rqt_controller_manager` controller state color scheme to match list_controllers color scheme (`#2143 <https://github.com/ros-controls/ros2_control/issues/2143>`_)
+* Fix generate_controllers_spawner_launch_description_from_dict (`#2146 <https://github.com/ros-controls/ros2_control/issues/2146>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* [Docs] Update determinism section (`#2131 <https://github.com/ros-controls/ros2_control/issues/2131>`_)
+* Remove the dangling param flag for robot_description fom ROS parameters (`#2115 <https://github.com/ros-controls/ros2_control/issues/2115>`_)
+* [Doc] Add documentation of different controller manager clocks (`#2109 <https://github.com/ros-controls/ros2_control/issues/2109>`_)
+* [CM] Extend the list controller and hardware components messages (`#2102 <https://github.com/ros-controls/ros2_control/issues/2102>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Reject duplicate state/command interfaces after configuring the controller  (`#2090 <https://github.com/ros-controls/ros2_control/issues/2090>`_)
+* [CM] Add message field to the `switch_controller` service (`#2088 <https://github.com/ros-controls/ros2_control/issues/2088>`_)
+* Update doc: async update support for controller (`#2096 <https://github.com/ros-controls/ros2_control/issues/2096>`_)
+* Use monotonic clock for triggering read-update-write cycles + fix for overruns (`#2046 <https://github.com/ros-controls/ros2_control/issues/2046>`_)
+* Add some logging for `unload_on_kill` keyboard interrupt (`#2097 <https://github.com/ros-controls/ros2_control/issues/2097>`_)
+* [CM] Add controller_manager activity topic (`#2006 <https://github.com/ros-controls/ros2_control/issues/2006>`_)
+* Improve diagnostics strings (`#2078 <https://github.com/ros-controls/ros2_control/issues/2078>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Julia Jia, Sai Kishor Kothakota, Soham Patil, danielcostanzi18, github-actions[bot]
+
 4.27.0 (2025-03-01)
 -------------------
 * [HW Components] Add fix for async hardware components improper rate (`#2076 <https://github.com/ros-controls/ros2_control/issues/2076>`_)
