@@ -73,6 +73,10 @@ if(BUILD_TESTING)
   target_link_libraries(test_joint_handle hardware_interface)
   ament_target_dependencies(test_joint_handle rcpputils)
 
+  # Test helper methods
+  ament_add_gmock(test_helpers test/test_helpers.cpp)
+  target_link_libraries(test_helpers hardware_interface)
+
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_link_libraries(test_component_interfaces hardware_interface)
   ament_target_dependencies(test_component_interfaces ros2_control_test_assets)
