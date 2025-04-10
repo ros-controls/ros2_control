@@ -32,6 +32,9 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "joint_limits/joint_limits_helpers.hpp"
+#include "joint_limits/joint_saturation_limiter.hpp"
+#include "joint_limits/joint_soft_limiter.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rclcpp/logging.hpp"
@@ -682,6 +685,131 @@ public:
     }
   }
 
+  void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
+  {
+    for (const auto & hw_info : hardware_infos)
+    {
+      for (const auto & [joint_name, limits] : hw_info.limits)
+      {
+        std::vector<joint_limits::SoftJointLimits> soft_limits;
+        const std::vector<joint_limits::JointLimits> hard_limits{limits};
+        joint_limits::JointInterfacesCommandLimiterData data;
+        data.joint_name = joint_name;
+        limiters_data_.insert({joint_name, data});
+        // If the joint limits is found in the softlimits, then extract it
+        if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
+        {
+          soft_limits = {hw_info.soft_limits.at(joint_name)};
+        }
+        std::unique_ptr<
+          joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
+          limits_interface;
+        if (soft_limits.empty())
+        {
+          RCLCPP_INFO(
+            get_logger(), "Creating JointSaturationLimiter for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
+          limits_interface = std::make_unique<
+            joint_limits::JointSaturationLimiter<joint_limits::JointControlInterfacesData>>();
+        }
+        else
+        {
+          RCLCPP_INFO(
+            get_logger(), "Creating JointSoftLimiter for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
+          limits_interface = std::make_unique<joint_limits::JointSoftLimiter>();
+        }
+        limits_interface->init({joint_name}, hard_limits, soft_limits, nullptr, nullptr);
+        joint_limiters_interface_[hw_info.name].insert({joint_name, std::move(limits_interface)});
+      }
+    }
+  }
+
+  template <typename T>
+  void update_joint_limiters_data(
+    const std::string & joint_name, const std::map<std::string, T> & interface_map,
+    joint_limits::JointControlInterfacesData & data, bool is_command_itf = false)
+  {
+    data.joint_name = joint_name;
+
+    const auto fill_interface_data =
+      [&](const std::string & interface_type, std::optional<double> & value)
+    {
+      const std::string interface_name = joint_name + "/" + interface_type;
+      if (interface_map.find(interface_name) != interface_map.end())
+      {
+        // If the command interface is not claimed, then the value is not set
+        if (is_command_itf && !claimed_command_interface_map_.at(interface_name))
+        {
+          value = std::nullopt;
+        }
+        else
+        {
+          value = interface_map.at(interface_name)->get_value();
+        }
+      }
+    };
+    // update the actual data of the limiters
+    fill_interface_data(hardware_interface::HW_IF_POSITION, data.position);
+    fill_interface_data(hardware_interface::HW_IF_VELOCITY, data.velocity);
+    fill_interface_data(hardware_interface::HW_IF_EFFORT, data.effort);
+    fill_interface_data(hardware_interface::HW_IF_ACCELERATION, data.acceleration);
+  }
+
+  template <typename T>
+  void update_joint_limiters_commands(
+    const joint_limits::JointControlInterfacesData & limited_command,
+    std::map<std::string, T> & interface_map)
+  {
+    const auto set_interface_command =
+      [&](const std::string & interface_type, const std::optional<double> & data)
+    {
+      const std::string interface_name = limited_command.joint_name + "/" + interface_type;
+      if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
+      {
+        interface_map.at(interface_name)->set_value(data.value());
+      }
+    };
+    // update the command data of the limiters
+    set_interface_command(hardware_interface::HW_IF_POSITION, limited_command.position);
+    set_interface_command(hardware_interface::HW_IF_VELOCITY, limited_command.velocity);
+    set_interface_command(hardware_interface::HW_IF_EFFORT, limited_command.effort);
+    set_interface_command(hardware_interface::HW_IF_ACCELERATION, limited_command.acceleration);
+  }
+
+  void update_joint_limiters_data(joint_limits::JointInterfacesCommandLimiterData & data)
+  {
+    update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
+    update_joint_limiters_data(data.joint_name, command_interface_map_, data.command, true);
+    data.limited = data.command;
+  }
+
+  /// enforce the command limits for a specific joint
+  /**
+   * @param joint_name name of the joint to enforce the command limits
+   * @param period time period of the command
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
+   */
+  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  {
+    bool enforce_result = false;
+    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    {
+      if (limiters.find(joint_name) != limiters.end())
+      {
+        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+        update_joint_limiters_data(data);
+        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
+        if (enforce_result)
+        {
+          update_joint_limiters_commands(data.limited, command_interface_map_);
+        }
+      }
+    }
+    return enforce_result;
+  }
+
   std::string add_state_interface(StateInterface::ConstSharedPtr interface)
   {
     auto interface_name = interface->get_name();
@@ -782,6 +910,7 @@ public:
     for (const auto & interface : interfaces)
     {
       auto key = interface->get_name();
+      bind_command_limiter_to_interface(interface);
       insert_command_interface(interface);
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
@@ -790,6 +919,106 @@ public:
       available_command_interfaces_.capacity() + interface_names.size());
 
     return interface_names;
+  }
+
+  /// Binds the command limiter enforcement to the command interfaces.
+  /**
+   * Binds the enforcement of the command limits to the command interfaces. The enforcement is
+   * triggered by the command interfaces when the command is set.
+   * If the interface prefix is a joint name, then the limit enforcement callback is added to the
+   * command interface.
+   *
+   * \param[interface] command interface to bind the enforcement.
+   */
+  void bind_command_limiter_to_interface(CommandInterface::SharedPtr interface)
+  {
+    if (interface)
+    {
+      for (auto & [hw_name, limiters] : joint_limiters_interface_)
+      {
+        // If the prefix is a joint name, then bind the limiter to the command interface
+        if (limiters.find(interface->get_prefix_name()) != limiters.end())
+        {
+          const std::string & joint_name = interface->get_prefix_name();
+          const rclcpp::Duration desired_period =
+            rclcpp::Duration::from_seconds(1.0 / cm_update_rate_);
+          const std::string & interface_name = interface->get_interface_name();
+          const std::vector<std::string> supported_interfaces = {
+            hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT, hardware_interface::HW_IF_ACCELERATION};
+          if (
+            std::find(supported_interfaces.begin(), supported_interfaces.end(), interface_name) ==
+            supported_interfaces.end())
+          {
+            RCLCPP_DEBUG(
+              get_logger(), "Command interface '%s' is not supported for enforcing limits",
+              interface_name.c_str());
+            continue;
+          }
+          const auto limiter_fn = [&, interface_name](double value, bool & is_limited) -> double
+          {
+            is_limited = false;
+            joint_limits::JointInterfacesCommandLimiterData data;
+            data.joint_name = joint_name;
+            update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
+            if (interface_name == hardware_interface::HW_IF_POSITION)
+            {
+              data.command.position = value;
+            }
+            else if (interface_name == hardware_interface::HW_IF_VELOCITY)
+            {
+              data.command.velocity = value;
+            }
+            else if (interface_name == hardware_interface::HW_IF_EFFORT)
+            {
+              data.command.effort = value;
+            }
+            else if (interface_name == hardware_interface::HW_IF_ACCELERATION)
+            {
+              data.command.acceleration = value;
+            }
+            else
+            {
+              return value;
+            }
+            data.limited = data.command;
+            is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
+            RCLCPP_ERROR_THROTTLE(
+              get_logger(), *rm_clock_, 1000,
+              "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
+              interface_name.c_str(), joint_name.c_str(), value, is_limited);
+            if (
+              interface_name == hardware_interface::HW_IF_POSITION &&
+              data.limited.position.has_value())
+            {
+              return data.limited.position.value();
+            }
+            else if (
+              interface_name == hardware_interface::HW_IF_VELOCITY &&
+              data.limited.velocity.has_value())
+            {
+              return data.limited.velocity.value();
+            }
+            else if (
+              interface_name == hardware_interface::HW_IF_EFFORT && data.limited.effort.has_value())
+            {
+              return data.limited.effort.value();
+            }
+            else if (
+              interface_name == hardware_interface::HW_IF_ACCELERATION &&
+              data.limited.acceleration.has_value())
+            {
+              return data.limited.acceleration.value();
+            }
+            else
+            {
+              return value;
+            }
+          };
+          interface->set_on_set_command_limiter(limiter_fn);
+        }
+      }
+    }
   }
 
   /// Removes command interfaces from internal storage.
@@ -1034,6 +1263,16 @@ public:
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
+  std::unordered_map<std::string, joint_limits::JointInterfacesCommandLimiterData> limiters_data_;
+
+  std::unordered_map<
+    std::string, std::unordered_map<
+                   std::string, std::unique_ptr<joint_limits::JointLimiterInterface<
+                                  joint_limits::JointControlInterfacesData>>>>
+    joint_limiters_interface_;
+
+  std::string robot_description_;
+
   /// The callback to be called when a component state is switched
   std::function<void()> on_component_state_switch_callback_ = nullptr;
 
@@ -1062,6 +1301,7 @@ ResourceManager::ResourceManager(
   const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
+  resource_storage_->robot_description_ = urdf;
   load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
@@ -1115,6 +1355,7 @@ bool ResourceManager::load_and_initialize_components(
 {
   components_are_loaded_and_initialized_ = true;
 
+  resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
@@ -1190,6 +1431,12 @@ bool ResourceManager::load_and_initialize_components(
   }
 
   return components_are_loaded_and_initialized_;
+}
+
+void ResourceManager::import_joint_limiters(const std::string & urdf)
+{
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  resource_storage_->import_joint_limiters(hardware_info);
 }
 
 bool ResourceManager::are_components_initialized() const
@@ -1797,6 +2044,21 @@ return_type ResourceManager::set_component_state(
 }
 
 // CM API: Called in "update"-thread
+bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
+{
+  bool enforce_result = false;
+  // Joint Limiters operations
+  for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
+  {
+    for (const auto & [joint_name, limiter] : limiters)
+    {
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
+    }
+  }
+  return enforce_result;
+}
+
+// CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -2040,6 +2302,11 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 void ResourceManager::set_on_component_state_switch_callback(std::function<void()> callback)
 {
   resource_storage_->on_component_state_switch_callback_ = callback;
+}
+
+const std::string & ResourceManager::get_robot_description() const
+{
+  return resource_storage_->robot_description_;
 }
 
 // END: "used only in tests and locally"

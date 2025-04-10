@@ -114,7 +114,7 @@ class TestActuator : public ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
-  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
     if (get_hardware_info().is_async)
     {
@@ -140,6 +140,13 @@ class TestActuator : public ActuatorInterface
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
     velocity_state_ = velocity_command_ / 2;
+    position_state_ += velocity_state_ * period.seconds();
+
+    if (velocity_command_ == test_constants::RESET_STATE_INTERFACES_VALUE)
+    {
+      position_state_ = 0.0;
+      velocity_state_ = 0.0;
+    }
     return return_type::OK;
   }
 
