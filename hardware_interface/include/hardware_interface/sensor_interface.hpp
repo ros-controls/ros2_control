@@ -325,14 +325,41 @@ public:
     lifecycle_state_ = new_state;
   }
 
-  void set_state(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_state(const std::string & interface_name, const T & value)
   {
-    sensor_states_map_.at(interface_name)->set_value(value);
+    auto it = sensor_states_map_.find(interface_name);
+    if (it == sensor_states_map_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in sensor hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
+    std::ignore = handle->set_value(lock, value);
   }
 
-  double get_state(const std::string & interface_name) const
+  template <typename T = double>
+  T get_state(const std::string & interface_name) const
   {
-    return sensor_states_map_.at(interface_name)->get_value();
+    auto it = sensor_states_map_.find(interface_name);
+    if (it == sensor_states_map_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in sensor hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
+    const auto opt_value = handle->get_optional<T>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        "Failed to get state value from interface: " + interface_name +
+        ". This should not happen.");
+    }
+    return opt_value.value();
   }
 
   /// Get the logger of the SensorInterface.

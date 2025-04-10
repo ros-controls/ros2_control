@@ -2,6 +2,17 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Bump version of pre-commit hooks (`#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* [Handle] Add support for booleans in the handles (`#2065 <https://github.com/ros-controls/ros2_control/issues/2065>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* [RM] Fix skipped cycles by adjusting `rw_rate` handling (`#2091 <https://github.com/ros-controls/ros2_control/issues/2091>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, RobertWilbrandt, Sai Kishor Kothakota, Soham Patil, github-actions[bot]
+
 4.27.0 (2025-03-01)
 -------------------
 * [Handle] Use `get_optional` instead of `get_value<double>` (`#2061 <https://github.com/ros-controls/ros2_control/issues/2061>`_)
