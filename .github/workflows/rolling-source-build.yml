@@ -1,25 +1,13 @@
 name: Rolling Source Build
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - master
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '.github/workflows/rolling-source-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control.rolling.repos'
-  schedule:
-    # Run every day to detect flakiness and broken dependencies
-    - cron: '03 3 * * *'
 
 jobs:
   source:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@fix/source
     with:
       ros_distro: rolling
       ref: master
