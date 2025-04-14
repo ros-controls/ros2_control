@@ -689,10 +689,16 @@ public:
         joint_limits::JointInterfacesCommandLimiterData data;
         data.joint_name = joint_name;
         limiters_data_.insert({joint_name, data});
+        RCLCPP_INFO(
+          get_logger(), "Creating JointLimiter for joint '%s' in hardware '%s' : '%s'",
+          joint_name.c_str(), hw_info.name.c_str(), limits.to_string().c_str());
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
           soft_limits = {hw_info.soft_limits.at(joint_name)};
+          RCLCPP_INFO(
+            get_logger(), "Creating SoftJointLimiter for joint '%s' in hardware '%s' : '%s'",
+            joint_name.c_str(), hw_info.name.c_str(), soft_limits[0].to_string().c_str());
         }
         std::unique_ptr<
           joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
@@ -953,6 +959,9 @@ public:
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
             data.joint_name = joint_name;
+            data.actual.joint_name = joint_name;
+            data.command.joint_name = joint_name;
+            data.limited.joint_name = joint_name;
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)
             {
@@ -978,6 +987,13 @@ public:
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
             if (is_limited)
             {
+              // print the command vaue and also the actual value and limited values if they have value
+              RCLCPP_INFO(
+                get_logger(),
+                "Command '%s' for joint '%s' is limited (actual: [%s], command : [%s] limited: [%s])",
+                interface_name.c_str(), joint_name.c_str(), data.actual.to_string().c_str(), data.command.to_string().c_str(),
+                data.limited.to_string().c_str()); 
+              
               RCLCPP_ERROR_THROTTLE(
                 get_logger(), *rm_clock_, 1000,
                 "Command of at least one joint is out of limits (throttled log).");

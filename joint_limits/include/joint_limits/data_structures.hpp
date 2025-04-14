@@ -64,6 +64,17 @@ struct JointControlInterfacesData
   bool has_acceleration() const { return acceleration.has_value(); }
 
   bool has_jerk() const { return jerk.has_value(); }
+
+  std::string to_string() const
+  {
+    std::string str = joint_name + ": ";
+    if (has_position()) str += "position: " + std::to_string(position.value()) + ", ";
+    if (has_velocity()) str += "velocity: " + std::to_string(velocity.value()) + ", ";
+    if (has_effort()) str += "effort: " + std::to_string(effort.value()) + ", ";
+    if (has_acceleration()) str += "acceleration: " + std::to_string(acceleration.value()) + ", ";
+    if (has_jerk()) str += "jerk: " + std::to_string(jerk.value());
+    return str;
+  }
 };
 
 struct JointInterfacesCommandLimiterData
