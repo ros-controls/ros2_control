@@ -980,8 +980,7 @@ public:
             {
               RCLCPP_ERROR_THROTTLE(
                 get_logger(), *rm_clock_, 1000,
-                "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
-                interface_name.c_str(), joint_name.c_str(), value, is_limited);
+                "Command of at least one joint is out of limits (throttled log).");
             }
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
