@@ -976,10 +976,12 @@ public:
             }
             data.limited = data.command;
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
-            RCLCPP_ERROR_THROTTLE(
-              get_logger(), *rm_clock_, 1000,
-              "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
-              interface_name.c_str(), joint_name.c_str(), value, is_limited);
+            if (is_limited)
+            {
+              RCLCPP_ERROR_THROTTLE(
+                get_logger(), *rm_clock_, 1000,
+                "Command of at least one joint is out of limits (throttled log).");
+            }
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
               data.limited.position.has_value())
