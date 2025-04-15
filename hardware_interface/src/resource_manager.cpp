@@ -744,7 +744,9 @@ public:
         }
         else
         {
-          value = interface_map.at(interface_name)->get_value();
+          auto itf_handle = interface_map.at(interface_name);
+          std::shared_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+          value = itf_handle->get_optional(lock).value();
         }
       }
     };
