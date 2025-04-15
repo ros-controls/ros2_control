@@ -112,6 +112,14 @@ struct JointInterfacesCommandLimiterData
   bool has_actual_data() const { return actual.has_data(); }
 
   bool has_command_data() const { return command.has_data(); }
+
+  bool has_limited_data() const { return limited.has_data(); }
+
+  std::string to_string() const
+  {
+    return "Joint : '" + joint_name + "', (actual: [" + actual.to_string() + "], command : [" +
+           command.to_string() + "], limited: [" + limited.to_string() + "])";
+  }
 };
 
 }  // namespace joint_limits
