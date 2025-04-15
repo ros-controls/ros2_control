@@ -102,7 +102,7 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 1.0;
+    position_state_ += 0.001;
     return hardware_interface::return_type::OK;
   }
 
@@ -110,7 +110,7 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 100.0;
+    position_state_ += 0.1;
     return hardware_interface::return_type::OK;
   }
 
