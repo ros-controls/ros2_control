@@ -123,15 +123,9 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
     const auto limits = compute_velocity_limits(
       joint_name, joint_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
       dt_seconds);
-    double desired_velocity = desired.velocity.value();
     limits_enforced =
       is_limited(desired.velocity.value(), limits.lower_limit, limits.upper_limit) ||
       limits_enforced;
-    RCLCPP_INFO(
-      rclcpp::get_logger("joint_limiter_interface"),
-      "Joint '%s' velocity limited to [%f, %f] from [%f to %f]",
-      joint_name.c_str(), limits.lower_limit, limits.upper_limit, desired_velocity,
-      desired.velocity.value());
     desired.velocity = std::clamp(desired.velocity.value(), limits.lower_limit, limits.upper_limit);
   }
 
