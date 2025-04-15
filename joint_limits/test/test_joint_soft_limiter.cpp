@@ -219,8 +219,9 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
   actual_state_.position = 0.95;
   desired_state_.position = 2.0;
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), 1.95, COMMON_THRESHOLD);
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period))
+    << "Shouldn't change as internally it is using previous command";
+  EXPECT_NEAR(desired_state_.position.value(), 2.0, COMMON_THRESHOLD);
   actual_state_.position = 1.5;
   desired_state_.position = 2.0;
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
@@ -239,7 +240,7 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   actual_state_.position = 0.45;
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), 1.45, COMMON_THRESHOLD);
+  EXPECT_NEAR(desired_state_.position.value(), 1.5, COMMON_THRESHOLD);
   actual_state_.position = 0.95;
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
@@ -277,13 +278,12 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
-  actual_state_.position = 0.2;
+  double prev_command = 1.0;
   while (actual_state_.position.value() < (desired_state_.position.value() - COMMON_THRESHOLD))
   {
     desired_state_.position = 2.0;
     double expected_pos =
-      actual_state_.position.value() +
-      (soft_limits.max_position - actual_state_.position.value()) * soft_limits.k_position;
+      prev_command + (soft_limits.max_position - prev_command) * soft_limits.k_position;
     ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
     EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
     actual_state_.position = expected_pos;
