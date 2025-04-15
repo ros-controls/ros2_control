@@ -958,9 +958,6 @@ public:
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
             data.joint_name = joint_name;
-            data.actual.joint_name = joint_name;
-            data.command.joint_name = joint_name;
-            data.limited.joint_name = joint_name;
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)
             {
