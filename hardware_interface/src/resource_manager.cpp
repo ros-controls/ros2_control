@@ -689,16 +689,10 @@ public:
         joint_limits::JointInterfacesCommandLimiterData data;
         data.joint_name = joint_name;
         limiters_data_.insert({joint_name, data});
-        RCLCPP_INFO(
-          get_logger(), "Creating JointLimiter for joint '%s' in hardware '%s' : '%s'",
-          joint_name.c_str(), hw_info.name.c_str(), limits.to_string().c_str());
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
           soft_limits = {hw_info.soft_limits.at(joint_name)};
-          RCLCPP_INFO(
-            get_logger(), "Creating SoftJointLimiter for joint '%s' in hardware '%s' : '%s'",
-            joint_name.c_str(), hw_info.name.c_str(), soft_limits[0].to_string().c_str());
         }
         std::unique_ptr<
           joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
