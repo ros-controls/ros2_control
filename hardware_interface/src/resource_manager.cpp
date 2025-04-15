@@ -992,15 +992,11 @@ public:
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
             if (is_limited)
             {
-              // print the command value and also the actual value and limited values if they have
-              // value
-              RCLCPP_INFO(
-                get_logger(), "Command '%s' is limited! %s with desired period %f)",
-                interface_name.c_str(), data.to_string().c_str(), desired_period.seconds());
-
               RCLCPP_ERROR_THROTTLE(
                 get_logger(), *rm_clock_, 1000,
-                "Command of at least one joint is out of limits (throttled log).");
+                "Command of at least one joint is out of limits (throttled log). %s with desired "
+                "period : %f sec.",
+                data.to_string().c_str(), desired_period.seconds());
             }
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
