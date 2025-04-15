@@ -67,12 +67,36 @@ struct JointControlInterfacesData
 
   std::string to_string() const
   {
-    std::string str = joint_name + ": ";
-    if (has_position()) str += "position: " + std::to_string(position.value()) + ", ";
-    if (has_velocity()) str += "velocity: " + std::to_string(velocity.value()) + ", ";
-    if (has_effort()) str += "effort: " + std::to_string(effort.value()) + ", ";
-    if (has_acceleration()) str += "acceleration: " + std::to_string(acceleration.value()) + ", ";
-    if (has_jerk()) str += "jerk: " + std::to_string(jerk.value());
+    std::string str;
+    if (has_position())
+    {
+      str += "position: " + std::to_string(position.value()) + ", ";
+    }
+    if (has_velocity())
+    {
+      str += "velocity: " + std::to_string(velocity.value()) + ", ";
+    }
+    if (has_effort())
+    {
+      str += "effort: " + std::to_string(effort.value()) + ", ";
+    }
+    if (has_acceleration())
+    {
+      str += "acceleration: " + std::to_string(acceleration.value()) + ", ";
+    }
+    if (has_jerk())
+    {
+      str += "jerk: " + std::to_string(jerk.value());
+    }
+    // trim the last comma and space
+    if (!str.empty() && str.back() == ' ')
+    {
+      str.pop_back();
+    }
+    if (!str.empty() && str.back() == ',')
+    {
+      str.pop_back();
+    }
     return str;
   }
 };
