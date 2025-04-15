@@ -95,16 +95,25 @@ bool JointSoftLimiter::on_enforce(
 
   double soft_min_vel = -std::numeric_limits<double>::infinity();
   double soft_max_vel = std::numeric_limits<double>::infinity();
-  const double act_position =
-    actual.has_position()
-      ? actual.position.value()
-      : ((prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
-           ? prev_command_.position.value()
-           : std::numeric_limits<double>::infinity());
-  const double prev_command_position =
-    (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
-      ? prev_command_.position.value()
-      : (actual.has_position() ? actual.position.value() : std::numeric_limits<double>::infinity());
+  double act_position = std::numeric_limits<double>::infinity();
+  double prev_command_position = std::numeric_limits<double>::infinity();
+
+  if (actual.position.has_value())
+  {
+    act_position = actual.position.value();
+  }
+  else if (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
+  {
+    act_position = prev_command_.position.value();
+  }
+  if (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
+  {
+    prev_command_position = prev_command_.position.value();
+  }
+  else if (actual.position.has_value())
+  {
+    prev_command_position = actual.position.value();
+  }
 
   if (hard_limits.has_velocity_limits)
   {
