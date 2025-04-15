@@ -77,8 +77,7 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    const double position_reference =
-      act_pos.has_value() ? act_pos.value() : prev_command_pos.value();
+    const double position_reference = prev_command_pos.value();
     pos_limits.lower_limit = std::max(
       std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
     pos_limits.upper_limit = std::min(
