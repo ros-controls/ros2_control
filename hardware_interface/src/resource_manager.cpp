@@ -768,7 +768,9 @@ public:
       const std::string interface_name = limited_command.joint_name + "/" + interface_type;
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
-        interface_map.at(interface_name)->set_value(data.value());
+        auto itf_handle = interface_map.at(interface_name);
+        std::unique_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+        std::ignore = itf_handle->set_value(lock, data.value());
       }
     };
     // update the command data of the limiters
