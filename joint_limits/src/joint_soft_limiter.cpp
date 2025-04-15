@@ -96,7 +96,7 @@ bool JointSoftLimiter::on_enforce(
   double soft_min_vel = -std::numeric_limits<double>::infinity();
   double soft_max_vel = std::numeric_limits<double>::infinity();
   const double act_position =
-    (actual.has_position() && std::isfinite(actual.position.value()))
+    actual.has_position()
       ? actual.position.value()
       : ((prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
            ? prev_command_.position.value()
@@ -104,9 +104,7 @@ bool JointSoftLimiter::on_enforce(
   const double prev_command_position =
     (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
       ? prev_command_.position.value()
-      : ((actual.has_position() && std::isfinite(actual.position.value()))
-           ? actual.position.value()
-           : std::numeric_limits<double>::infinity());
+      : (actual.has_position() ? actual.position.value() : std::numeric_limits<double>::infinity());
 
   if (hard_limits.has_velocity_limits)
   {
@@ -127,8 +125,8 @@ bool JointSoftLimiter::on_enforce(
 
       if (
         std::isfinite(act_position) &&
-          (act_position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
-        (act_position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE)))
+        ((act_position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
+         (act_position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE))))
       {
         soft_min_vel = 0.0;
         soft_max_vel = 0.0;
