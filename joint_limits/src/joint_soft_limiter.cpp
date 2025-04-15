@@ -143,7 +143,8 @@ bool JointSoftLimiter::on_enforce(
   if (desired.has_position())
   {
     const auto position_limits = compute_position_limits(
-      hard_limits, actual.velocity, actual.position, prev_command_.position, dt_seconds);
+      joint_name, hard_limits, actual.velocity, actual.position, prev_command_.position,
+      dt_seconds);
 
     double pos_low = -std::numeric_limits<double>::infinity();
     double pos_high = std::numeric_limits<double>::infinity();

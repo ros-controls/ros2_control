@@ -41,15 +41,18 @@ bool is_limited(double value, double min, double max);
 
 /**
  * @brief Computes the position limits based on the velocity and acceleration limits.
+ * @param joint_name The name of the joint.
  * @param limits The joint limits.
  * @param act_vel The actual velocity of the joint.
+ * @param act_pos The actual position of the joint.
  * @param prev_command_pos The previous commanded position of the joint.
  * @param dt The time step.
  * @return The position limits, first is the lower limit and second is the upper limit.
  */
 PositionLimits compute_position_limits(
-  const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
-  const std::optional<double> & act_pos, const std::optional<double> & prev_command_pos, double dt);
+  const std::string & joint_name, const joint_limits::JointLimits & limits,
+  const std::optional<double> & act_vel, const std::optional<double> & act_pos,
+  const std::optional<double> & prev_command_pos, double dt);
 
 /**
  * @brief Computes the velocity limits based on the position and acceleration limits.
