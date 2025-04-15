@@ -958,7 +958,8 @@ public:
               interface_name.c_str());
             continue;
           }
-          const auto limiter_fn = [&, interface_name](double value, bool & is_limited) -> double
+          const auto limiter_fn = [this, joint_name, interface_name, desired_period, &limiters](
+                                    double value, bool & is_limited) -> double
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
@@ -991,13 +992,12 @@ public:
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
             if (is_limited)
             {
-              // print the command vaue and also the actual value and limited values if they have value
+              // print the command value and also the actual value and limited values if they have
+              // value
               RCLCPP_INFO(
-                get_logger(),
-                "Command '%s' for joint '%s' is limited (actual: [%s], command : [%s] limited: [%s])",
-                interface_name.c_str(), joint_name.c_str(), data.actual.to_string().c_str(), data.command.to_string().c_str(),
-                data.limited.to_string().c_str()); 
-              
+                get_logger(), "Command '%s' is limited! %s with desired period %f)",
+                interface_name.c_str(), data.to_string().c_str(), desired_period.seconds());
+
               RCLCPP_ERROR_THROTTLE(
                 get_logger(), *rm_clock_, 1000,
                 "Command of at least one joint is out of limits (throttled log).");
