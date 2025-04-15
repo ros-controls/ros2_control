@@ -42,8 +42,8 @@ void verify_actual_position_within_limits(
   {
     const double actual_pos = actual_position.value();
     if (
-      actual_pos > (limits.max_position + internal::POSITION_BOUNDS_TOLERANCE) ||
-      actual_pos < (limits.min_position - internal::POSITION_BOUNDS_TOLERANCE))
+      actual_pos > (limits.max_position + internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE) ||
+      actual_pos < (limits.min_position - internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE))
     {
       const std::string error_message =
         "Joint position is out of bounds for the joint : '" + joint_name +

@@ -28,7 +28,9 @@ namespace joint_limits
 namespace internal
 {
 constexpr double POSITION_BOUNDS_TOLERANCE = 0.002;
-}
+// 0.5 degrees (or) approx. 1 cm for the prismatic joint
+constexpr double OUT_OF_BOUNDS_EXCEPTION_TOLERANCE = 0.0087;
+}  // namespace internal
 
 /**
  * @brief Checks if a value is limited by the given limits.
