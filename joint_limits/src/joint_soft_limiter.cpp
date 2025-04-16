@@ -23,6 +23,7 @@ bool JointSoftLimiter::on_enforce(
   const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   bool limits_enforced = false;
 
   const auto dt_seconds = dt.seconds();

@@ -75,11 +75,16 @@ public:
    * This method is called when the controller is stopped or when the controller is
    * reconfigured. It should reset all internal states of the limiter.
    */
-  void reset_internals() override { prev_command_ = JointLimitsStateDataType(); }
+  void reset_internals() override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    prev_command_ = JointLimitsStateDataType();
+  }
 
 protected:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
+  std::mutex mutex_;
 };
 
 template <typename JointLimitsStateDataType>
