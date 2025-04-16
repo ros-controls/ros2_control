@@ -738,7 +738,9 @@ public:
         }
         else
         {
-          value = interface_map.at(interface_name)->get_value();
+          auto itf_handle = interface_map.at(interface_name);
+          std::shared_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+          value = itf_handle->get_optional(lock).value();
         }
       }
     };
@@ -760,7 +762,9 @@ public:
       const std::string interface_name = limited_command.joint_name + "/" + interface_type;
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
-        interface_map.at(interface_name)->set_value(data.value());
+        auto itf_handle = interface_map.at(interface_name);
+        std::unique_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+        std::ignore = itf_handle->set_value(lock, data.value());
       }
     };
     // update the command data of the limiters
@@ -948,7 +952,8 @@ public:
               interface_name.c_str());
             continue;
           }
-          const auto limiter_fn = [&, interface_name](double value, bool & is_limited) -> double
+          const auto limiter_fn = [this, joint_name, interface_name, desired_period, &limiters](
+                                    double value, bool & is_limited) -> double
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
@@ -976,10 +981,14 @@ public:
             }
             data.limited = data.command;
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
-            RCLCPP_ERROR_THROTTLE(
-              get_logger(), *rm_clock_, 1000,
-              "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
-              interface_name.c_str(), joint_name.c_str(), value, is_limited);
+            if (is_limited)
+            {
+              RCLCPP_ERROR_THROTTLE(
+                get_logger(), *rm_clock_, 1000,
+                "Command of at least one joint is out of limits (throttled log). %s with desired "
+                "period : %f sec.",
+                data.to_string().c_str(), desired_period.seconds());
+            }
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
               data.limited.position.has_value())
