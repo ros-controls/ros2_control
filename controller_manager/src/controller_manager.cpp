@@ -499,7 +499,10 @@ void ControllerManager::init_controller_manager()
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
-    resource_manager_->import_joint_limiters(robot_description_);
+    if (enforce_command_limits_)
+    {
+      resource_manager_->import_joint_limiters(robot_description_);
+    }
     init_services();
   }
   else
@@ -621,7 +624,10 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  resource_manager_->import_joint_limiters(robot_description_);
+  if (enforce_command_limits_)
+  {
+    resource_manager_->import_joint_limiters(robot_description_);
+  }
   if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_))
   {
     RCLCPP_WARN(
@@ -2880,11 +2886,7 @@ controller_interface::return_type ControllerManager::update(
     // To publish the activity of the failing controllers and the fallback controllers
     publish_activity();
   }
-
-  if (enforce_command_limits_)
-  {
-    resource_manager_->enforce_command_limits(period);
-  }
+  resource_manager_->enforce_command_limits(period);
 
   // there are controllers to (de)activate
   if (switch_params_.do_switch)
