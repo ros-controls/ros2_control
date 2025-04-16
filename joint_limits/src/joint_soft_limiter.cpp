@@ -120,6 +120,11 @@ bool JointSoftLimiter::on_enforce(
     soft_min_vel = -hard_limits.max_velocity;
     soft_max_vel = hard_limits.max_velocity;
 
+    /// @note: We use the previous command position to compute the velocity limits here because
+    /// using the actual position would be too conservative, usually there is a couple of cycles of
+    /// delay between the command sent to the robot and the robot actually showing that in the
+    /// state. That effectively limits the velocity with which the joint can be moved which is much
+    /// lower than the actual velocity limit.
     if (
       hard_limits.has_position_limits && has_soft_limits(soft_joint_limits) &&
       std::isfinite(prev_command_position))

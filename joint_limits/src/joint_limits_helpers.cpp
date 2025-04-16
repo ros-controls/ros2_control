@@ -34,6 +34,14 @@ void check_and_swap_limits(double & lower_limit, double & upper_limit)
   }
 }
 
+/**
+ * @brief Verify if the actual position is within the limits and if not, log an error and throw an
+ * exception.
+ * @param joint_name The name of the joint.
+ * @param actual_position The actual position of the joint.
+ * @param limits The joint limits.
+ * @throws std::runtime_error if the actual position is out of bounds.
+ */
 void verify_actual_position_within_limits(
   const std::string & joint_name, const std::optional<double> & actual_position,
   const joint_limits::JointLimits & limits)
@@ -77,6 +85,11 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
+    /// @note: We use the previous command position to compute the limits here because using the
+    /// actual position would be too conservative, usually there is a couple of cycles of delay
+    /// between the command sent to the robot and the robot actually showing that in the state. That
+    /// effectively limits the velocity with which the joint can be moved which is much lower than
+    /// the actual velocity limit.
     const double position_reference = prev_command_pos.value();
     pos_limits.lower_limit = std::max(
       std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
