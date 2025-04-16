@@ -319,7 +319,7 @@ public:
     // END
   }
 
-  std::shared_mutex & get_mutex() { return handle_mutex_; }
+  std::shared_mutex & get_mutex() const { return handle_mutex_; }
 
   HandleDataType get_data_type() const { return data_type_; }
 

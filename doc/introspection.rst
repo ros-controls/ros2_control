@@ -70,12 +70,19 @@ Data Visualization
 
 Data can be visualized with any tools that display ROS topics, but we recommend `PlotJuggler <https://plotjuggler.io/>`_ for viewing high resolution live data, or data in bags.
 
-1. Open ``PlotJuggler`` running ``ros2 run plotjuggler plotjuggler``.
+1. Open ``PlotJuggler`` by running ``ros2 run plotjuggler plotjuggler`` from the command line.
+
    .. image:: images/plotjuggler.png
-2. Visualize the data:
-   - Importing from the ros2bag
-   - Subscribing to the ROS2 topics live with the ``ROS2 Topic Subscriber`` option under ``Streaming`` header.
+      :alt: PlotJuggler
+
+2. Visualize the data by importing from the ros2bag file or subscribing to the ROS2 topics live with the ``ROS2 Topic Subscriber`` option under ``Streaming`` header.
+
 3. Choose the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` from the popup window.
+
    .. image:: images/plotjuggler_select_topics.png
-4. Now, select the variables that are of your interest and drag them to the plot.
+      :alt: PlotJuggler Select Topics
+
+4. Then, select the variables that are of your interest and drag them to the plot.
+
    .. image:: images/plotjuggler_visualizing_data.png
+      :alt: PlotJuggler Visualizing Data
