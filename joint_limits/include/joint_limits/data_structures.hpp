@@ -64,6 +64,41 @@ struct JointControlInterfacesData
   bool has_acceleration() const { return acceleration.has_value(); }
 
   bool has_jerk() const { return jerk.has_value(); }
+
+  std::string to_string() const
+  {
+    std::string str;
+    if (has_position())
+    {
+      str += "position: " + std::to_string(position.value()) + ", ";
+    }
+    if (has_velocity())
+    {
+      str += "velocity: " + std::to_string(velocity.value()) + ", ";
+    }
+    if (has_effort())
+    {
+      str += "effort: " + std::to_string(effort.value()) + ", ";
+    }
+    if (has_acceleration())
+    {
+      str += "acceleration: " + std::to_string(acceleration.value()) + ", ";
+    }
+    if (has_jerk())
+    {
+      str += "jerk: " + std::to_string(jerk.value());
+    }
+    // trim the last comma and space
+    if (!str.empty() && str.back() == ' ')
+    {
+      str.pop_back();
+    }
+    if (!str.empty() && str.back() == ',')
+    {
+      str.pop_back();
+    }
+    return str;
+  }
 };
 
 struct JointInterfacesCommandLimiterData
@@ -77,6 +112,14 @@ struct JointInterfacesCommandLimiterData
   bool has_actual_data() const { return actual.has_data(); }
 
   bool has_command_data() const { return command.has_data(); }
+
+  bool has_limited_data() const { return limited.has_data(); }
+
+  std::string to_string() const
+  {
+    return "Joint : '" + joint_name + "', (actual: [" + actual.to_string() + "], command : [" +
+           command.to_string() + "], limited: [" + limited.to_string() + "])";
+  }
 };
 
 }  // namespace joint_limits
