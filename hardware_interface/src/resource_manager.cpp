@@ -740,8 +740,11 @@ public:
       const std::string interface_name = joint_name + "/" + interface_type;
       if (interface_map.find(interface_name) != interface_map.end())
       {
-        // If the command interface is not claimed, then the value is not set
-        if (is_command_itf && !claimed_command_interface_map_.at(interface_name))
+        // If the command interface is not claimed, then the value is not set (or) if the
+        // interface doesn't exist, then value is not set
+        if (
+          is_command_itf && (claimed_command_interface_map_.count(interface_name) == 0 ||
+                             !claimed_command_interface_map_.at(interface_name)))
         {
           value = std::nullopt;
         }
@@ -1446,6 +1449,7 @@ bool ResourceManager::load_and_initialize_components(
 
 void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
+  std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   resource_storage_->import_joint_limiters(hardware_info);
 }
@@ -2057,6 +2061,12 @@ return_type ResourceManager::set_component_state(
 // CM API: Called in "update"-thread
 bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> limiters_guard(joint_limiters_lock_, std::try_to_lock);
+  if (!limiters_guard.owns_lock())
+  {
+    return false;
+  }
+
   bool enforce_result = false;
   // Joint Limiters operations
   for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
