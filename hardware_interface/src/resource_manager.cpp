@@ -693,6 +693,15 @@ public:
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
           soft_limits = {hw_info.soft_limits.at(joint_name)};
+          RCLCPP_INFO(
+            get_logger(), "Using SoftJointLimiter for joint '%s' in hardware '%s' : '%s'",
+            joint_name.c_str(), hw_info.name.c_str(), soft_limits[0].to_string().c_str());
+        }
+        else
+        {
+          RCLCPP_INFO(
+            get_logger(), "Using JointLimiter for joint '%s' in hardware '%s' : '%s'",
+            joint_name.c_str(), hw_info.name.c_str(), limits.to_string().c_str());
         }
         std::unique_ptr<
           joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
