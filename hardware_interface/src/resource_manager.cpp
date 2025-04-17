@@ -1967,6 +1967,21 @@ bool ResourceManager::perform_command_mode_switch(
   const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
   const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
 
+  if (actuators_result && systems_result)
+  {
+    // Reset the internals of the joint limiters
+    for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
+    {
+      for (const auto & [joint_name, limiter] : limiters)
+      {
+        limiter->reset_internals();
+        RCLCPP_DEBUG(
+          get_logger(), "Resetting internals of joint limiter for joint '%s' in hardware '%s'",
+          joint_name.c_str(), hw_name.c_str());
+      }
+    }
+  }
+
   return actuators_result && systems_result;
 }
 

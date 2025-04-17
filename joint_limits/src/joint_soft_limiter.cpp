@@ -23,6 +23,7 @@ bool JointSoftLimiter::on_enforce(
   const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   bool limits_enforced = false;
 
   const auto dt_seconds = dt.seconds();
@@ -95,43 +96,50 @@ bool JointSoftLimiter::on_enforce(
 
   double soft_min_vel = -std::numeric_limits<double>::infinity();
   double soft_max_vel = std::numeric_limits<double>::infinity();
-  double position = std::numeric_limits<double>::infinity();
-
-  if (actual.has_position())
-  {
-    position = actual.position.value();
-  }
-  else if (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
-  {
-    position = prev_command_.position.value();
-  }
+  const double act_position =
+    actual.has_position()
+      ? actual.position.value()
+      : ((prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
+           ? prev_command_.position.value()
+           : std::numeric_limits<double>::infinity());
+  const double prev_command_position =
+    (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
+      ? prev_command_.position.value()
+      : (actual.has_position() ? actual.position.value() : std::numeric_limits<double>::infinity());
 
   if (hard_limits.has_velocity_limits)
   {
     soft_min_vel = -hard_limits.max_velocity;
     soft_max_vel = hard_limits.max_velocity;
 
+    /// @note: We use the previous command position to compute the velocity limits here because
+    /// using the actual position would be too conservative, usually there is a couple of cycles of
+    /// delay between the command sent to the robot and the robot actually showing that in the
+    /// state. That effectively limits the velocity with which the joint can be moved which is much
+    /// lower than the actual velocity limit.
     if (
       hard_limits.has_position_limits && has_soft_limits(soft_joint_limits) &&
-      std::isfinite(position))
+      std::isfinite(prev_command_position))
     {
       soft_min_vel = std::clamp(
-        -soft_joint_limits.k_position * (position - soft_joint_limits.min_position),
+        -soft_joint_limits.k_position * (prev_command_position - soft_joint_limits.min_position),
         -hard_limits.max_velocity, hard_limits.max_velocity);
 
       soft_max_vel = std::clamp(
-        -soft_joint_limits.k_position * (position - soft_joint_limits.max_position),
+        -soft_joint_limits.k_position * (prev_command_position - soft_joint_limits.max_position),
         -hard_limits.max_velocity, hard_limits.max_velocity);
 
       if (
-        (position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
-        (position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE)))
+        std::isfinite(act_position) &&
+        ((act_position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
+         (act_position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE))))
       {
         soft_min_vel = 0.0;
         soft_max_vel = 0.0;
       }
       else if (
-        (position < soft_joint_limits.min_position) || (position > soft_joint_limits.max_position))
+        (act_position < soft_joint_limits.min_position) ||
+        (act_position > soft_joint_limits.max_position))
       {
         const double soft_limit_reach_velocity = 1.0 * (M_PI / 180.0);
         soft_min_vel = std::copysign(soft_limit_reach_velocity, soft_min_vel);
@@ -143,7 +151,8 @@ bool JointSoftLimiter::on_enforce(
   if (desired.has_position())
   {
     const auto position_limits = compute_position_limits(
-      hard_limits, actual.velocity, actual.position, prev_command_.position, dt_seconds);
+      joint_name, hard_limits, actual.velocity, actual.position, prev_command_.position,
+      dt_seconds);
 
     double pos_low = -std::numeric_limits<double>::infinity();
     double pos_high = std::numeric_limits<double>::infinity();
@@ -156,8 +165,8 @@ bool JointSoftLimiter::on_enforce(
 
     if (hard_limits.has_velocity_limits)
     {
-      pos_low = std::clamp(position + soft_min_vel * dt_seconds, pos_low, pos_high);
-      pos_high = std::clamp(position + soft_max_vel * dt_seconds, pos_low, pos_high);
+      pos_low = std::clamp(prev_command_position + soft_min_vel * dt_seconds, pos_low, pos_high);
+      pos_high = std::clamp(prev_command_position + soft_max_vel * dt_seconds, pos_low, pos_high);
     }
     pos_low = std::max(pos_low, position_limits.lower_limit);
     pos_high = std::min(pos_high, position_limits.upper_limit);
