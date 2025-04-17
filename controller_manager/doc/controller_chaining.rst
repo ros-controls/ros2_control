@@ -40,8 +40,6 @@ This means the following:
   3. After that, "position_tracking" can be activated and attached to "diff_drive_controller" that disables its external interfaces.
   4. If any of the controllers is deactivated, also all preceding controllers are deactivated.
 
-<<<<<<< HEAD
-=======
 .. note::
 
   Controllers that expose the reference interfaces are switched to chained mode only when their reference interfaces are used by other controllers. When their reference interfaces are not used by other controllers, they are switched back to get references from the subscriber.
@@ -50,7 +48,6 @@ This means the following:
 .. note::
 
   This document uses terms *preceding* and *following* controller. These terms refer to such ordering of controllers that controller A *precedes* controller B if A claims (*connects its output to*) B's reference interfaces (*inputs*). In the example diagram at the beginning of this section, 'diff_drive_controller' *precedes* 'pid left wheel' and 'pid right wheel'. Consequently, 'pid left wheel' and 'pid right wheel' are controllers *following* after 'diff_drive_controller'.
->>>>>>> 14ea4a6 (doc: Added explanation of preceding/following controllers (#2192))
 
 Implementation
 --------------
