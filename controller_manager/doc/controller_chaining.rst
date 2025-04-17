@@ -48,8 +48,12 @@ This means the following:
 
 .. note::
 
-  Only the controllers that exposes the reference interfaces are switched to chained mode, when their reference interfaces are used by other controllers. When their reference interfaces are not used by the other controllers, they are switched back to get references from the subscriber.
-  However, the controllers that exposes the state interfaces are not triggered to chained mode, when their state interfaces are used by other controllers.
+  Controllers that expose the reference interfaces are switched to chained mode only when their reference interfaces are used by other controllers. When their reference interfaces are not used by other controllers, they are switched back to get references from the subscriber.
+  However, the controllers that expose the state interfaces are not triggered to chained mode when their state interfaces are used by other controllers.
+
+.. note::
+
+  This document uses terms *preceding* and *following* controller. These terms refer to such ordering of controllers that controller A *precedes* controller B iff A's output is connected to B's reference interface. In the example diagram at the beginning of this section, 'diff_drive_controller' *precedes* 'pid left wheel' and 'pid right wheel'. Consequently, 'pid left wheel' and 'pid right wheel' ar controllers *following* after 'diff_drive_controller'.
 
 Implementation
 --------------
