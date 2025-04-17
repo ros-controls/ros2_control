@@ -527,6 +527,7 @@ protected:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
+  mutable std::recursive_mutex joint_limiters_lock_;
 
 private:
   bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
