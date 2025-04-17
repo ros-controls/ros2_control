@@ -30,6 +30,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   bool limits_enforced = false;
 
   const auto dt_seconds = dt.seconds();
