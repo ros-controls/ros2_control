@@ -114,7 +114,7 @@ public:
   {
     unsigned int nr_tries = 0;
     ++set_value_statistics_.total_counter;
-    while (!command_interface_.set_value(value))
+    while (!command_interface_.set_limited_value(value))
     {
       ++set_value_statistics_.failed_counter;
       ++nr_tries;

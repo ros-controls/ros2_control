@@ -14,8 +14,9 @@
 
 #include "test_controller_with_options.hpp"
 
-#include <gtest/gtest.h>
 #include <string>
+
+#include "gmock/gmock.h"
 
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
 {

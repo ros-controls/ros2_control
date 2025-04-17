@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <utility>
@@ -20,6 +19,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -66,6 +66,12 @@ class TestControllerManagerWithTestableCM
   public testing::WithParamInterface<Strictness>
 {
 public:
+  TestControllerManagerWithTestableCM()
+  : ControllerManagerFixture<TestableControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf_no_limits)
+  {
+  }
+
   void SetupAndConfigureControllers(int strictness)
   {
     test_controller_actuator = std::make_shared<test_controller::TestController>();

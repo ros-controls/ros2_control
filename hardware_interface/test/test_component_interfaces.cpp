@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-
 #include <array>
 #include <limits>
 #include <memory>
@@ -22,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -187,6 +186,11 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       set_command("joint1/velocity", 0.0);
     }
+    // Should throw as the interface is unknown
+    EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
+    EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
+    EXPECT_THROW(set_state("joint1/nonexisting/interface", 0.0), std::runtime_error);
+    EXPECT_THROW(set_command("joint1/nonexisting/interface", 0.0), std::runtime_error);
 
     read_calls_ = 0;
     write_calls_ = 0;
@@ -330,6 +334,10 @@ class DummySensorDefault : public hardware_interface::SensorInterface
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     set_state("sens1/voltage", 0.0);
+    // Should throw as the interface is unknown
+    EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
+    EXPECT_THROW(set_state("joint1/nonexisting/interface", 0.0), std::runtime_error);
+
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
@@ -601,6 +609,11 @@ class DummySystemDefault : public hardware_interface::SystemInterface
         set_command(velocity_commands_[i], 0.0);
       }
     }
+    // Should throw as the interface is unknown
+    EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
+    EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
+    EXPECT_THROW(set_state("joint1/nonexisting/interface", 0.0), std::runtime_error);
+    EXPECT_THROW(set_command("joint1/nonexisting/interface", 0.0), std::runtime_error);
 
     read_calls_ = 0;
     write_calls_ = 0;
@@ -2161,6 +2174,6 @@ TEST(TestComponentInterfaces, dummy_system_default_write_error_behavior)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

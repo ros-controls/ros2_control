@@ -102,7 +102,7 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 1.0;
+    position_state_ += 0.001;
     return hardware_interface::return_type::OK;
   }
 
@@ -110,11 +110,11 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 100.0;
+    position_state_ += 0.1;
     return hardware_interface::return_type::OK;
   }
 
-  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
     // simulate error on read
     if (velocity_command_ == test_constants::READ_FAIL_VALUE)
@@ -135,6 +135,13 @@ class TestActuator : public ActuatorInterface
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
     velocity_state_ = velocity_command_ / 2;
+    position_state_ += velocity_state_ * period.seconds();
+
+    if (velocity_command_ == test_constants::RESET_STATE_INTERFACES_VALUE)
+    {
+      position_state_ = 0.0;
+      velocity_state_ = 0.0;
+    }
     return return_type::OK;
   }
 
