@@ -363,7 +363,7 @@ class ControllerManager(Plugin):
             action_cleanup = menu.addAction(self._icons["unconfigured"], "Deactivate and Cleanup")
         elif hw_component.state.label == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
-            action_cleanup = menu.addAction(self._icons["unconfigured"], "Unload and Load")
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
         elif hw_component.state.label == "unconfigured":
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
