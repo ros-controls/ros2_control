@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.28.0 (2025-04-10)
 -------------------
 * [CLI] print update_rate and is_async on verbose (`#2126 <https://github.com/ros-controls/ros2_control/issues/2126>`_)
