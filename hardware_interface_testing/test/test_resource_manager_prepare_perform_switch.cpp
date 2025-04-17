@@ -328,7 +328,7 @@ TEST_F(
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
-  // When TestActuatorHardware is INACTIVE expect OK
+  // When TestActuatorHardware is ACTIVE expect OK
   EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.001, 1e-7);
@@ -383,7 +383,7 @@ TEST_F(
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
-  // When TestActuatorHardware is INACTIVE expect OK
+  // When TestActuatorHardware is FINALIZED expect ERROR
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
