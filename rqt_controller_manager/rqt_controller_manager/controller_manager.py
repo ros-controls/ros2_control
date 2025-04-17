@@ -234,7 +234,9 @@ class ControllerManager(Plugin):
             )
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate (active)")
-            action_cleanup = menu.addAction(self._icons["unconfigured"], "Unload and Load (unconfigured)")
+            action_cleanup = menu.addAction(
+                self._icons["unconfigured"], "Unload and Load (unconfigured)"
+            )
             action_unload = menu.addAction(self._icons["unloaded"], "Unload (unloaded)")
         elif ctrl.state == "unconfigured":
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate (active)")
