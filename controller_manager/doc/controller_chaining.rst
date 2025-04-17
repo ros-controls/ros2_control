@@ -53,7 +53,7 @@ This means the following:
 
 .. note::
 
-  This document uses terms *preceding* and *following* controller. These terms refer to such ordering of controllers that controller A *precedes* controller B iff A's output is connected to B's reference interface. In the example diagram at the beginning of this section, 'diff_drive_controller' *precedes* 'pid left wheel' and 'pid right wheel'. Consequently, 'pid left wheel' and 'pid right wheel' ar controllers *following* after 'diff_drive_controller'.
+  This document uses terms *preceding* and *following* controller. These terms refer to such ordering of controllers that controller A *precedes* controller B if A's output is connected to B's reference interface. In the example diagram at the beginning of this section, 'diff_drive_controller' *precedes* 'pid left wheel' and 'pid right wheel'. Consequently, 'pid left wheel' and 'pid right wheel' are controllers *following* after 'diff_drive_controller'.
 
 Implementation
 --------------
