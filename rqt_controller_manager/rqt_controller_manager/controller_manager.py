@@ -256,6 +256,7 @@ class ControllerManager(Plugin):
                 self._activate_controller(ctrl.name)
             elif action is action_cleanup:
                 # TODO: use cleanup service once available
+                # https://github.com/ros-controls/ros2_control/issues/759
                 unload_controller(self._node, self._cm_name, ctrl.name)
                 load_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_unload:
