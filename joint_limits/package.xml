@@ -1,6 +1,6 @@
 <package format="3">
   <name>joint_limits</name>
-  <version>4.28.0</version>
+  <version>4.28.1</version>
   <description>Package with interfaces for handling of joint limits in controllers or in hardware. The package also implements Saturation Joint Limiter for position-velocity-acceleration set and other individual interfaces.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
