@@ -229,7 +229,9 @@ class ControllerManager(Plugin):
         menu = QMenu(self._widget.ctrl_table_view)
         if ctrl.state == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate (inactive)")
-            action_kill = menu.addAction(self._icons["unloaded"], "Deactivate and Unload (unloaded)")
+            action_kill = menu.addAction(
+                self._icons["unloaded"], "Deactivate and Unload (unloaded)"
+            )
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate (active)")
             action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup (unconfigured)")
