@@ -33,15 +33,50 @@ void check_and_swap_limits(double & lower_limit, double & upper_limit)
     std::swap(lower_limit, upper_limit);
   }
 }
+
+/**
+ * @brief Verify if the actual position is within the limits and if not, log an error and throw an
+ * exception.
+ * @param joint_name The name of the joint.
+ * @param actual_position The actual position of the joint.
+ * @param limits The joint limits.
+ * @throws std::runtime_error if the actual position is out of bounds.
+ */
+void verify_actual_position_within_limits(
+  const std::string & joint_name, const std::optional<double> & actual_position,
+  const joint_limits::JointLimits & limits)
+{
+  if (actual_position.has_value() && limits.has_position_limits)
+  {
+    const double actual_pos = actual_position.value();
+    if (
+      actual_pos > (limits.max_position + internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE) ||
+      actual_pos < (limits.min_position - internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE))
+    {
+      const std::string error_message =
+        "Joint position is out of bounds for the joint : '" + joint_name +
+        "' actual position: " + std::to_string(actual_pos) + " limits: [" +
+        std::to_string(limits.min_position) + ", " + std::to_string(limits.max_position) +
+        "]. This could be due to a hardware failure (or) the physical limits of the joint being "
+        "larger than the ones defined in the URDF. Please recheck the URDF and the hardware to "
+        "verify the joint limits.";
+      RCLCPP_ERROR_ONCE(rclcpp::get_logger("joint_limiter_interface"), "%s", error_message.c_str());
+      // Throw an exception to indicate that the joint position is out of bounds
+      throw std::runtime_error(error_message);
+    }
+  }
+}
 }  // namespace internal
 
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
 PositionLimits compute_position_limits(
-  const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
-  const std::optional<double> & act_pos, const std::optional<double> & prev_command_pos, double dt)
+  const std::string & joint_name, const joint_limits::JointLimits & limits,
+  const std::optional<double> & act_vel, const std::optional<double> & act_pos,
+  const std::optional<double> & prev_command_pos, double dt)
 {
   PositionLimits pos_limits(limits.min_position, limits.max_position);
+  internal::verify_actual_position_within_limits(joint_name, act_pos, limits);
   if (limits.has_velocity_limits)
   {
     const double act_vel_abs = act_vel.has_value() ? std::fabs(act_vel.value()) : 0.0;
@@ -50,8 +85,12 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    const double position_reference =
-      act_pos.has_value() ? act_pos.value() : prev_command_pos.value();
+    /// @note: We use the previous command position to compute the limits here because using the
+    /// actual position would be too conservative, usually there is a couple of cycles of delay
+    /// between the command sent to the robot and the robot actually showing that in the state. That
+    /// effectively limits the velocity with which the joint can be moved which is much lower than
+    /// the actual velocity limit.
+    const double position_reference = prev_command_pos.value();
     pos_limits.lower_limit = std::max(
       std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
     pos_limits.upper_limit = std::min(
@@ -69,6 +108,7 @@ VelocityLimits compute_velocity_limits(
   const double max_vel =
     limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
   VelocityLimits vel_limits(-max_vel, max_vel);
+  internal::verify_actual_position_within_limits(joint_name, act_pos, limits);
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
