@@ -23,5 +23,4 @@ jobs:
     with:
       ros_distro: jazzy
       ref: master
-      ros2_repo_branch: master
       container: ubuntu:24.04
