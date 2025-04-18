@@ -25,6 +25,7 @@
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
+#include "tlsf/tlsf.h"
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager_msgs/msg/controller_manager_activity.hpp"
@@ -52,10 +53,21 @@ namespace controller_manager
 {
 class ParamListener;
 class Params;
-using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
-rclcpp::NodeOptions get_cm_node_options();
+template<typename T>
+using TLSFVector = std::vector<T, tlsf::TlsfAllocator<T>>;
 
+template<typename Allocator = tlsf::TlsfAllocator<void>>
+using ControllersListIterator = typename TLSFVector<ControllerSpec>::const_iterator;
+
+rclcpp::NodeOptions get_cm_node_options()
+{
+  return rclcpp::NodeOptions()
+    .automatically_declare_parameters_from_overrides(true)
+    .allow_undeclared_parameters(false);
+}
+
+template<typename Allocator = std::allocator<void>>
 class ControllerManager : public rclcpp::Node
 {
 public:
@@ -67,21 +79,82 @@ public:
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & options = get_cm_node_options());
+    const rclcpp::NodeOptions & options = get_cm_node_options(),
+    std::shared_ptr<Allocator> allocator = std::make_shared<Allocator>())
+  : rclcpp::Node(manager_node_name, node_namespace, options),
+    resource_manager_(std::move(resource_manager)),
+    executor_(executor),
+    allocator_(allocator),
+    rt_controllers_wrapper_(controllers_lists_),
+    update_rate_(100)  
+    {
+      if constexpr (std::is_same_v<Allocator, tlsf_heap_allocator<void>>) {
+        const size_t pool_size = 1024 * 1024; 
+        tlsf_pool_ = new char[pool_size];
+        tlsf_handle_ = tlsf_create_with_pool(tlsf_pool_, pool_size);
+      }
+      init_controller_manager();
+    }
 
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & options = get_cm_node_options());
+    const rclcpp::NodeOptions & options = get_cm_node_options(),
+    std::shared_ptr<Allocator> allocator = std::make_shared<Allocator>())
+  : rclcpp::Node(manager_node_name, node_namespace, options),
+    executor_(executor),
+    allocator_(allocator),
+    rt_controllers_wrapper_(controllers_lists_),
+    update_rate_(100)
+    {
+      if constexpr (std::is_same_v<Allocator, tlsf_heap_allocator<void>>) {
+        const size_t pool_size = 1024 * 1024; 
+        tlsf_pool_ = new char[pool_size];
+        tlsf_handle_ = tlsf_create_with_pool(tlsf_pool_, pool_size);
+      }
+      init_controller_manager();
+    }
 
   ControllerManager(
-    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
-    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    std::shared_ptr<rclcpp::Executor> executor,
+    const std::string & urdf,
+    bool activate_all_hw_components,
+    const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & options = get_cm_node_options());
+    const rclcpp::NodeOptions & options = get_cm_node_options(),
+    std::shared_ptr<Allocator> allocator = std::make_shared<Allocator>())
+  : rclcpp::Node(manager_node_name, node_namespace, options),
+    executor_(executor),
+    allocator_(allocator),
+    robot_description_(urdf),
+    rt_controllers_wrapper_(controllers_lists_),
+    update_rate_(100)
+    {
+      if constexpr (std::is_same_v<Allocator, tlsf_heap_allocator<void>>) {
+        const size_t pool_size = 1024 * 1024; 
+        tlsf_pool_ = new char[pool_size];
+        tlsf_handle_ = tlsf_create_with_pool(tlsf_pool_, pool_size);
+      }
+      init_controller_manager();
+      init_resource_manager(urdf);
+      if (activate_all_hw_components) {
+        resource_manager_->start_components();
+      }
+    }
 
-  virtual ~ControllerManager();
+  virtual ~ControllerManager()
+  {
+    shutdown_controllers();
+    if constexpr (std::is_same_v<Allocator, tlsf_heap_allocator<void>>) {
+      if (tlsf_handle_) {
+        tlsf_destroy(tlsf_handle_);
+      }
+      if (tlsf_pool_) {
+        delete[] static_cast<char*>(tlsf_pool_);
+      }
+    }
+  }
 
   /// Shutdown all controllers in the controller manager.
   /**
@@ -107,15 +180,15 @@ public:
 
   controller_interface::return_type unload_controller(const std::string & controller_name);
 
-  std::vector<ControllerSpec> get_loaded_controllers() const;
+  TLSFVector<ControllerSpec> get_loaded_controllers() const;
 
-  template <
-    typename T, typename std::enable_if<
+  template <typename T, typename std::enable_if<
                   std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
   controller_interface::ControllerInterfaceBaseSharedPtr add_controller(
     std::shared_ptr<T> controller, const std::string & controller_name,
-    const std::string & controller_type)
+    const std::string & controller_type);
+
   {
     ControllerSpec controller_spec;
     controller_spec.c = controller;
@@ -149,8 +222,8 @@ public:
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   controller_interface::return_type switch_controller(
-    const std::vector<std::string> & activate_controllers,
-    const std::vector<std::string> & deactivate_controllers, int strictness,
+    const TLSFVector<std::string> & activate_controllers,
+    const TLSFVector<std::string> & deactivate_controllers, int strictness,
     bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
@@ -165,8 +238,8 @@ public:
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   controller_interface::return_type switch_controller_cb(
-    const std::vector<std::string> & activate_controllers,
-    const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
+    const TLSFVector<std::string> & activate_controllers,
+    const TLSFVector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
     const rclcpp::Duration & timeout, std::string & message);
 
   /// Read values to state interfaces.
@@ -214,11 +287,11 @@ public:
    * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
-  bool is_resource_manager_initialized() const
-  {
-    return resource_manager_ && resource_manager_->are_components_initialized();
-  }
+  bool is_resource_manager_initialized() const;
 
+{
+   return resource_manager_ && resource_manager_->are_components_initialized();
+}  
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
@@ -226,7 +299,8 @@ public:
    *
    * \returns update rate of the controller manager.
    */
-  unsigned int get_update_rate() const;
+  unsigned int get_update_rate() const { return update_rate_; }
+  rclcpp::Clock::SharedPtr get_trigger_clock() const { return trigger_clock_; }
 
   /// Get the trigger clock of the controller manager.
   /**
@@ -258,8 +332,8 @@ protected:
    * \param[in] controllers_to_deactivate names of the controller that have to be deactivated.
    */
   void deactivate_controllers(
-    const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_deactivate);
+    const TLSFVector<ControllerSpec> & rt_controller_list,
+    const TLSFVector<std::string> & controllers_to_deactivate);
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
@@ -281,8 +355,8 @@ protected:
    * \param[in] controllers_to_activate names of the controller that have to be activated.
    */
   void activate_controllers(
-    const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_activate);
+    const TLSFVector<ControllerSpec> & rt_controller_list,
+    const TLSFVector<std::string> & controllers_to_activate);
 
   /// Activate chosen controllers from real-time controller list.
   /**
@@ -296,8 +370,8 @@ protected:
    * \param[in] controllers_to_activate names of the controller that have to be activated.
    */
   void activate_controllers_asap(
-    const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_activate);
+    const TLSFVector<ControllerSpec> & rt_controller_list,
+    const TLSFVector<std::string> & controllers_to_activate);
 
   void list_controllers_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
@@ -342,12 +416,15 @@ protected:
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_;
-  std::vector<std::vector<std::string>> chained_controllers_configuration_;
+  TLSFVector<TLSFVector<std::string>> chained_controllers_configuration_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
 private:
-  std::vector<std::string> get_controller_names();
+  template<typename T>
+  using VectorT = std::vector<T, Allocator>;
+  VectorT<std::string> get_controller_names();
+
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
   void init_controller_manager();
@@ -381,7 +458,7 @@ private:
    *
    * \param[in] controllers list with controllers.
    */
-  void propagate_deactivation_of_chained_mode(const std::vector<ControllerSpec> & controllers);
+  void propagate_deactivation_of_chained_mode(const VectorT<ControllerSpec> & controllers);
 
   /// Check if all the following controllers will be in active state and in the chained mode
   /// after controllers' switch.
@@ -410,8 +487,8 @@ private:
    * return_type::ERROR.
    */
   controller_interface::return_type check_following_controllers_for_activate(
-    const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it, std::string & message);
+    const VectorT<ControllerSpec> & controllers, int strictness,
+    const ControllersListIterator<Allocator> controller_it, std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
@@ -434,8 +511,8 @@ private:
    * return_type::ERROR.
    */
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
-    const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it, std::string & message);
+    const VectorT<ControllerSpec> & controllers, int strictness,
+    const ControllersListIterator<Allocator> controller_it, std::string & message);
 
   /// Checks if the fallback controllers of the given controllers are in the right
   /// state, so they can be activated immediately
@@ -447,7 +524,7 @@ private:
    * return_type::ERROR.
    */
   controller_interface::return_type check_fallback_controllers_state_pre_activation(
-    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it,
+    const VectorT<ControllerSpec> & controllers, const ControllersListIterator<Allocator> controller_it,
     std::string & message);
 
   /**
@@ -457,9 +534,9 @@ private:
    * \param[in] activation_list list with controllers to activate.
    * \param[out] message describing the result of the check.
    * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
-   */
+   */, std::string
   controller_interface::return_type check_for_interfaces_availability_to_activate(
-    const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
+    const VectorT<ControllerSpec> & controllers, const VectorT<std::string> & activation_list,
     std::string & message);
 
   /**
@@ -482,7 +559,7 @@ private:
    * `preceding_controllers` specify controllers that come before the provided controller.
    */
   void update_list_with_controller_chain(
-    const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+    const std::string & ctrl_name, typename VectorT<std::string>::iterator controller_iterator,
     bool append_to_controller);
 
   /**
@@ -514,15 +591,23 @@ private:
    */
   void cleanup_controller_exported_interfaces(const ControllerSpec & controller);
 
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::shared_ptr<rclcpp::Executor> executor_;
+  std::shared_ptr<Allocator> allocator_;
+
+  void *tlsf_pool_ = nullptr;  
+  tlsf_t tlsf_handle_ = nullptr;
+
+  TLSFVector<ControllerSpec> controllers_lists_[2];
+  class RTControllerListWrapper
+
+  VectorT<VectorT<std::string>> chained_controllers_configuration_;
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
   diagnostic_updater::Updater diagnostics_updater_;
 
-  std::shared_ptr<rclcpp::Executor> executor_;
-
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
-  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>
-    chainable_loader_;
+  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>> chainable_loader_;
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
@@ -553,7 +638,10 @@ private:
      * updated list while it's being used
      * \return reference to the updated list
      */
-    std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
+    explicit RTControllerListWrapper(VectorT<ControllerSpec> (&lists)[2])
+        : controllers_lists_(lists) {}
+
+     TLSFVector<ControllerSpec> & update_and_get_used_by_rt_list();        
 
     /**
      * get_unused_list Waits until the "outdated" and "unused by rt"
@@ -563,7 +651,7 @@ private:
      * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
      * rt list
      */
-    std::vector<ControllerSpec> & get_unused_list(
+    TLSFVector<ControllerSpec> & get_unused_list(
       const std::lock_guard<std::recursive_mutex> & guard);
 
     /// get_updated_list Returns a const reference to the most updated list.
@@ -572,7 +660,7 @@ private:
      * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
      * rt list
      */
-    const std::vector<ControllerSpec> & get_updated_list(
+    const TLSFVector<ControllerSpec> & get_updated_list(
       const std::lock_guard<std::recursive_mutex> & guard) const;
 
     /**
@@ -581,13 +669,12 @@ private:
      * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
      * rt list
      */
-    void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
-
+    void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard)
     /// A method to register a callback to be called when the list is switched
     /**
      * \param[in] callback Callback to be called when the list is switched
      */
-    void set_on_switch_callback(std::function<void()> callback);
+    void set_on_switch_callback(std::function<void()> callback)
 
     // Mutex protecting the controllers list
     // must be acquired before using any list other than the "used by rt"
@@ -600,12 +687,17 @@ private:
     /**
      * \param[in] index int
      */
-    int get_other_list(int index) const;
+    int get_other_list(int index) const { return 1 - index; }
 
     void wait_until_rt_not_using(
-      int index, std::chrono::microseconds sleep_delay = std::chrono::microseconds(200)) const;
+      int index, std::chrono::microseconds sleep_delay = std::chrono::microseconds(200)) const
+      {
+        while (used_by_realtime_controllers_index_ == index) {
+          std::this_thread::sleep_for(sleep_delay);
+        }
+      }
 
-    std::vector<ControllerSpec> controllers_lists_[2];
+    VectorT<ControllerSpec> (&controllers_lists_)[2];
     /// The index of the controller list with the most updated information
     int updated_controllers_index_ = 0;
     /// The index of the controllers list being used in the real-time thread.
@@ -614,11 +706,13 @@ private:
     std::function<void()> on_switch_callback_ = nullptr;
   };
 
-  rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
+  rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
+  VectorT<ControllerSpec> controllers_lists_[2];
   RTControllerListWrapper rt_controllers_wrapper_;
+
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
-  std::vector<std::string> ordered_controllers_names_;
+  VectorT<std::string> ordered_controllers_names_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
@@ -645,13 +739,15 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 
-  std::vector<std::string> activate_request_, deactivate_request_;
-  std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
-  std::vector<std::string> activate_command_interface_request_,
-    deactivate_command_interface_request_;
+    rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
+    std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
 
-  std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
-  std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
+    VectorT<std::string> activate_request_, deactivate_request_;
+    VectorT<std::string> to_chained_mode_request_, from_chained_mode_request_;
+    VectorT<std::string> activate_command_interface_request_, deactivate_command_interface_request_;
+
+    std::map<std::string, VectorT<std::string>> controller_chained_reference_interfaces_cache_;
+    std::map<std::string, VectorT<std::string>> controller_chained_state_interfaces_cache_;
 
   rclcpp::NodeOptions cm_node_options_;
   std::string robot_description_;
@@ -671,8 +767,8 @@ private:
       activate_asap = false;
     }
 
-    bool do_switch;
-    bool started;
+    bool do_switch = false;
+    bool started = false;
 
     // Switch options
     int strictness;
@@ -683,7 +779,6 @@ private:
     std::condition_variable cv;
     std::mutex mutex;
   };
-
   SwitchParams switch_params_;
 
   struct RTBufferVariables
@@ -699,7 +794,7 @@ private:
     }
 
     const std::string & get_concatenated_string(
-      const std::vector<std::string> & strings, bool clear_string = true)
+      const VectorT<std::string> & strings, bool clear_string = true)
     {
       if (clear_string)
       {
@@ -713,15 +808,15 @@ private:
       return concatenated_string;
     }
 
-    std::vector<std::string> deactivate_controllers_list;
-    std::vector<std::string> activate_controllers_using_interfaces_list;
-    std::vector<std::string> fallback_controllers_list;
-    std::vector<std::string> interfaces_to_start;
-    std::vector<std::string> interfaces_to_stop;
-    std::string concatenated_string;
-  };
-  RTBufferVariables rt_buffer_;
+VectorT<std::string> deactivate_controllers_list;
+VectorT<std::string> activate_controllers_using_interfaces_list;
+VectorT<std::string> fallback_controllers_list;
+VectorT<std::string> interfaces_to_start;
+VectorT<std::string> interfaces_to_stop;
+std::string concatenated_string;
 };
+RTBufferVariables rt_buffer_;
+};    
 
 }  // namespace controller_manager
 
