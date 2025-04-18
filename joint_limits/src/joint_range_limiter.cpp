@@ -46,6 +46,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   const JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   bool limits_enforced = false;
 
   const auto dt_seconds = dt.seconds();
@@ -113,7 +114,8 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   if (desired.has_position())
   {
     const auto limits = compute_position_limits(
-      joint_limits, actual.velocity, actual.position, prev_command_.position, dt_seconds);
+      joint_name, joint_limits, actual.velocity, actual.position, prev_command_.position,
+      dt_seconds);
     limits_enforced = is_limited(desired.position.value(), limits.lower_limit, limits.upper_limit);
     desired.position = std::clamp(desired.position.value(), limits.lower_limit, limits.upper_limit);
   }
