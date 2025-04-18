@@ -142,32 +142,6 @@ TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
   EXPECT_FALSE(desired_state_.has_effort());
   EXPECT_FALSE(desired_state_.has_jerk());
 
-  desired_state_ = {};
-  actual_state_ = {};
-  actual_state_.position = 0.0;
-  desired_state_.position = 5.0 * M_PI;
-  const rclcpp::Duration test_period(0, 100);  // 0.1 second
-  for (size_t i = 0; i < 2000; i++)
-  {
-    desired_state_.position = 5.0 * M_PI;
-    SCOPED_TRACE(
-      "Testing for actual position: " + std::to_string(actual_state_.position.value()) +
-      ", desired position: " + std::to_string(desired_state_.position.value()) +
-      " for the joint limits : " + limits.to_string() + " Iteration : " + std::to_string(i));
-    ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, test_period));
-    EXPECT_NEAR(
-      desired_state_.position.value(),
-      std::min(
-        actual_state_.position.value() + (limits.max_velocity * test_period.seconds()), M_PI),
-      COMMON_THRESHOLD);
-    EXPECT_TRUE(desired_state_.has_position());
-    EXPECT_FALSE(desired_state_.has_velocity());
-    EXPECT_FALSE(desired_state_.has_acceleration());
-    EXPECT_FALSE(desired_state_.has_effort());
-    EXPECT_FALSE(desired_state_.has_jerk());
-    actual_state_.position = desired_state_.position.value() / 2.0;
-  }
-
   // Now test when there are no position limits, then the desired position is not saturated
   limits = joint_limits::JointLimits();
   ASSERT_TRUE(Init(limits));
@@ -257,6 +231,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(std::nullopt, 0.12, 0.12, false);
   test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
 
+  const double outside_limits_pos = 5.0 + (2.0 * joint_limits::internal::POSITION_BOUNDS_TOLERANCE);
   // The cases where the actual position value exist
   test_limit_enforcing(4.5, 5.0, 0.5, true);
   test_limit_enforcing(4.8, 5.0, 0.2, true);
@@ -264,8 +239,8 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(4.5, 0.5, 0.5, false);
   test_limit_enforcing(5.0, 0.9, 0.0, true);
   // When the position is out of the limits, then the velocity is saturated to zero
-  test_limit_enforcing(6.0, 2.0, 0.0, true);
-  test_limit_enforcing(6.0, -2.0, 0.0, true);
+  test_limit_enforcing(outside_limits_pos, 2.0, 0.0, true);
+  test_limit_enforcing(outside_limits_pos, -2.0, 0.0, true);
   test_limit_enforcing(4.0, 0.5, 0.5, false);
   test_limit_enforcing(-4.8, -6.0, -0.2, true);
   test_limit_enforcing(4.3, 5.0, 0.7, true);
@@ -276,9 +251,9 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(-5.0, -3.0, 0.0, true);
   test_limit_enforcing(-5.0, -1.0, 0.0, true);
   // When the position is out of the limits, then the velocity is saturated to zero
-  test_limit_enforcing(-6.0, -1.0, 0.0, true);
-  test_limit_enforcing(-6.0, -2.0, 0.0, true);
-  test_limit_enforcing(-6.0, 1.0, 0.0, true);
+  test_limit_enforcing(-1.0 * outside_limits_pos, -1.0, 0.0, true);
+  test_limit_enforcing(-1.0 * outside_limits_pos, -2.0, 0.0, true);
+  test_limit_enforcing(-1.0 * outside_limits_pos, 1.0, 0.0, true);
   // If the reported actual position is within the limits and the tolerance, then the velocity is
   // allowed to move into the range, but not away from the range
   test_limit_enforcing(
@@ -352,10 +327,10 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(-4.3, -1.0, -0.7, true);
   test_limit_enforcing(-4.3, 0.0, -0.2, true);
   test_limit_enforcing(-4.3, 0.0, 0.0, false);
-  test_limit_enforcing(-6.0, 1.0, 0.0, true);
-  test_limit_enforcing(-6.0, -1.0, 0.0, true);
-  test_limit_enforcing(6.0, 1.0, 0.0, true);
-  test_limit_enforcing(6.0, -1.0, 0.0, true);
+  test_limit_enforcing(-1.0 * outside_limits_pos, 1.0, 0.0, true);
+  test_limit_enforcing(-1.0 * outside_limits_pos, -1.0, 0.0, true);
+  test_limit_enforcing(outside_limits_pos, 1.0, 0.0, true);
+  test_limit_enforcing(outside_limits_pos, -1.0, 0.0, true);
 }
 
 TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
@@ -678,40 +653,19 @@ TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 1.0, 0.5, 0.5, 3.0, 1.0, 0.5, 0.5, false);
 
-  ASSERT_TRUE(Init(limits));
-  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
-
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, -6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 1.5, 0.5, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 2.0, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 2.5, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 3.5, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 4.5, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
-
   // Now enforce the limits with actual position and velocity
   ASSERT_TRUE(Init(limits));
   // Desired position and velocity affected due to the acceleration limits
   test_limit_enforcing(0.5, 0.0, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
   test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.2, 0.0, 6.0, 0.0, 0.0, 0.0, 1.7, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.5, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.5, 0.0, -6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(1.0, 0.0, -6.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, true);
-  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.5, 0.5, 0.5, 0.5, true);
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, -6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.0, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(2.0, 0.5, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
-  test_limit_enforcing(4.0, 1.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.8, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
-  test_limit_enforcing(5.0, 1.0, 6.0, 3.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
 }
 
 int main(int argc, char ** argv)

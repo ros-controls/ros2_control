@@ -693,6 +693,15 @@ public:
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
           soft_limits = {hw_info.soft_limits.at(joint_name)};
+          RCLCPP_INFO(
+            get_logger(), "Using SoftJointLimiter for joint '%s' in hardware '%s' : '%s'",
+            joint_name.c_str(), hw_info.name.c_str(), soft_limits[0].to_string().c_str());
+        }
+        else
+        {
+          RCLCPP_INFO(
+            get_logger(), "Using JointLimiter for joint '%s' in hardware '%s' : '%s'",
+            joint_name.c_str(), hw_info.name.c_str(), limits.to_string().c_str());
         }
         std::unique_ptr<
           joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>>
@@ -731,14 +740,19 @@ public:
       const std::string interface_name = joint_name + "/" + interface_type;
       if (interface_map.find(interface_name) != interface_map.end())
       {
-        // If the command interface is not claimed, then the value is not set
-        if (is_command_itf && !claimed_command_interface_map_.at(interface_name))
+        // If the command interface is not claimed, then the value is not set (or) if the
+        // interface doesn't exist, then value is not set
+        if (
+          is_command_itf && (claimed_command_interface_map_.count(interface_name) == 0 ||
+                             !claimed_command_interface_map_.at(interface_name)))
         {
           value = std::nullopt;
         }
         else
         {
-          value = interface_map.at(interface_name)->get_value();
+          auto itf_handle = interface_map.at(interface_name);
+          std::shared_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+          value = itf_handle->get_optional(lock).value();
         }
       }
     };
@@ -760,7 +774,9 @@ public:
       const std::string interface_name = limited_command.joint_name + "/" + interface_type;
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
-        interface_map.at(interface_name)->set_value(data.value());
+        auto itf_handle = interface_map.at(interface_name);
+        std::unique_lock<std::shared_mutex> lock(itf_handle->get_mutex());
+        std::ignore = itf_handle->set_value(lock, data.value());
       }
     };
     // update the command data of the limiters
@@ -948,7 +964,8 @@ public:
               interface_name.c_str());
             continue;
           }
-          const auto limiter_fn = [&, interface_name](double value, bool & is_limited) -> double
+          const auto limiter_fn = [this, joint_name, interface_name, desired_period, &limiters](
+                                    double value, bool & is_limited) -> double
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
@@ -976,10 +993,14 @@ public:
             }
             data.limited = data.command;
             is_limited = limiters[joint_name]->enforce(data.actual, data.limited, desired_period);
-            RCLCPP_ERROR_THROTTLE(
-              get_logger(), *rm_clock_, 1000,
-              "Command '%s' for joint '%s' is out of limits. Command limited to %f - %d",
-              interface_name.c_str(), joint_name.c_str(), value, is_limited);
+            if (is_limited)
+            {
+              RCLCPP_ERROR_THROTTLE(
+                get_logger(), *rm_clock_, 1000,
+                "Command of at least one joint is out of limits (throttled log). %s with desired "
+                "period : %f sec.",
+                data.to_string().c_str(), desired_period.seconds());
+            }
             if (
               interface_name == hardware_interface::HW_IF_POSITION &&
               data.limited.position.has_value())
@@ -1428,6 +1449,7 @@ bool ResourceManager::load_and_initialize_components(
 
 void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
+  std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   resource_storage_->import_joint_limiters(hardware_info);
 }
@@ -1949,6 +1971,21 @@ bool ResourceManager::perform_command_mode_switch(
   const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
   const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
 
+  if (actuators_result && systems_result)
+  {
+    // Reset the internals of the joint limiters
+    for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
+    {
+      for (const auto & [joint_name, limiter] : limiters)
+      {
+        limiter->reset_internals();
+        RCLCPP_DEBUG(
+          get_logger(), "Resetting internals of joint limiter for joint '%s' in hardware '%s'",
+          joint_name.c_str(), hw_name.c_str());
+      }
+    }
+  }
+
   return actuators_result && systems_result;
 }
 
@@ -2039,6 +2076,12 @@ return_type ResourceManager::set_component_state(
 // CM API: Called in "update"-thread
 bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> limiters_guard(joint_limiters_lock_, std::try_to_lock);
+  if (!limiters_guard.owns_lock())
+  {
+    return false;
+  }
+
   bool enforce_result = false;
   // Joint Limiters operations
   for (auto & [hw_name, limiters] : resource_storage_->joint_limiters_interface_)
