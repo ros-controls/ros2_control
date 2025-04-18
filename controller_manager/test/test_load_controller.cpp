@@ -11,9 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -21,6 +18,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
@@ -327,53 +325,54 @@ INSTANTIATE_TEST_SUITE_P(
       "Switch with no controllers specified and strictness BEST_EFFORT didn't return OK"),
     // combination of empty and non-existent controller
     std::make_tuple(
-      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER, EMPTY_STR_VEC,
-      "Switch with nonexistent start controller specified and strictness UNSPECIFIED didn't return "
-      "OK"),
+      controller_interface::return_type::ERROR, UNSPECIFIED, NONEXISTENT_CONTROLLER, EMPTY_STR_VEC,
+      "Switch with nonexistent start controller specified and strictness UNSPECIFIED should return "
+      "ERROR"),
     std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER, EMPTY_STR_VEC,
       "Switch with nonexistent start controller specified and strictness STRICT didn't return "
       "ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER, EMPTY_STR_VEC,
-      "Switch with nonexistent start controller specified and strictness BEST_EFFORT didn't return "
-      "OK"),
+      controller_interface::return_type::ERROR, BEST_EFFORT, NONEXISTENT_CONTROLLER, EMPTY_STR_VEC,
+      "Switch with nonexistent start controller specified and strictness BEST_EFFORT should return "
+      "ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, UNSPECIFIED, EMPTY_STR_VEC, NONEXISTENT_CONTROLLER,
-      "Switch with nonexistent stop controller specified and strictness UNSPECIFIED didn't return "
-      "OK"),
+      controller_interface::return_type::ERROR, UNSPECIFIED, EMPTY_STR_VEC, NONEXISTENT_CONTROLLER,
+      "Switch with nonexistent stop controller specified and strictness UNSPECIFIED should return "
+      "ERROR"),
     std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, EMPTY_STR_VEC, NONEXISTENT_CONTROLLER,
       "Switch with nonexistent stop controller specified and strictness STRICT didn't return "
       "ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, BEST_EFFORT, EMPTY_STR_VEC, NONEXISTENT_CONTROLLER,
-      "Switch with nonexistent stop controller specified and strictness BEST_EFFORT didn't return "
-      "OK"),
+      controller_interface::return_type::ERROR, BEST_EFFORT, EMPTY_STR_VEC, NONEXISTENT_CONTROLLER,
+      "Switch with nonexistent stop controller specified and strictness BEST_EFFORT should return "
+      "ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER,
+      controller_interface::return_type::ERROR, UNSPECIFIED, NONEXISTENT_CONTROLLER,
       NONEXISTENT_CONTROLLER,
       "Switch with nonexistent start and stop controllers specified, and strictness UNSPECIFIED, "
-      "didn't return OK"),
+      "should return ERROR"),
     std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
       NONEXISTENT_CONTROLLER,
       "Switch with nonexistent start and stop controllers specified, and strictness STRICT, didn't "
       "return ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      controller_interface::return_type::ERROR, BEST_EFFORT, NONEXISTENT_CONTROLLER,
       NONEXISTENT_CONTROLLER,
       "Switch with nonexistent start and stop controllers specified, and strictness BEST_EFFORT, "
-      "didn't return OK"),
+      "should return ERROR"),
     // valid controller used
     std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER, VALID_CONTROLLER,
       "Switch with valid stopped controller and nonexistent start controller specified, and "
       "strictness STRICT, didn't return ERROR"),
     std::make_tuple(
-      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER, VALID_CONTROLLER,
+      controller_interface::return_type::ERROR, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      VALID_CONTROLLER,
       "Switch with valid stopped controller specified, nonexistent start controller and strictness "
-      "BEST_EFFORT didn't return OK"),
+      "BEST_EFFORT should return ERROR"),
     std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, VALID_PLUS_NONEXISTENT_CONTROLLERS,
       EMPTY_STR_VEC,

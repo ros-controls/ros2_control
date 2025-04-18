@@ -44,13 +44,16 @@ struct HardwareReadWriteStatus
   std::vector<std::string> failed_hardware_names;
 };
 
-class HARDWARE_INTERFACE_PUBLIC ResourceManager
+class ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
   explicit ResourceManager(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
+
+  /// Default constructor for the Resource Manager.
+  explicit ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger);
 
   /// Constructor for the Resource Manager.
   /**
@@ -64,7 +67,8 @@ public:
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
    * of async components.
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
-   * used for triggering async components.
+   * used for triggering async components and different read/write component rates.
+   * \param[in] logger_interface reference to the logger interface of the CM node for logging.
    */
   explicit ResourceManager(
     const std::string & urdf,
@@ -72,9 +76,35 @@ public:
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
     bool activate_all = false, const unsigned int update_rate = 100);
 
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation loads the specified urdf and initializes the
+   * hardware components listed within as well as populate their respective
+   * state and command interfaces.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] activate_all boolean argument indicating if all resources should be immediately
+   * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock reference to the clock of the CM node for getting time used for triggering
+   * async components and different read/write component rates.
+   * \param[in] logger logger of the CM node for logging.
+   */
+  explicit ResourceManager(
+    const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
+    bool activate_all = false, const unsigned int update_rate = 100);
+
   ResourceManager(const ResourceManager &) = delete;
 
   virtual ~ResourceManager();
+
+  /// Shutdown all hardware components, irrespective of their state.
+  /**
+   * The method is called when the controller manager is being shutdown.
+   * @return true if all hardware components are successfully shutdown, false otherwise.
+   */
+  bool shutdown_components();
 
   /// Load resources from on a given URDF.
   /**
@@ -88,6 +118,12 @@ public:
    */
   virtual bool load_and_initialize_components(
     const std::string & urdf, const unsigned int update_rate = 100);
+
+  /**
+   * @brief Import joint limiters from the URDF.
+   * @param urdf string containing the URDF.
+   */
+  void import_joint_limiters(const std::string & urdf);
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
@@ -370,7 +406,7 @@ public:
   /**
    * \return map of hardware names and their status.
    */
-  std::unordered_map<std::string, HardwareComponentInfo> get_components_status();
+  const std::unordered_map<std::string, HardwareComponentInfo> & get_components_status();
 
   /// Prepare the hardware components for a new command interface mode
   /**
@@ -426,11 +462,13 @@ public:
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
 
-  /// Deletes all async components from the resource storage
   /**
-   * Needed to join the threads immediately after the control loop is ended.
+   * Enforce the command limits for the position, velocity, effort, and acceleration interfaces.
+   * @note This method is RT-safe
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
    */
-  void shutdown_async_components();
+  bool enforce_command_limits(const rclcpp::Duration & period);
 
   /// Reads all loaded hardware components.
   /**
@@ -463,6 +501,14 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
+  /// A method to register a callback to be called when the component state changes.
+  /**
+   * \param[in] callback function to be called when the component state changes.
+   */
+  void set_on_component_state_switch_callback(std::function<void()> callback);
+
+  const std::string & get_robot_description() const;
+
 protected:
   /// Gets the logger for the resource manager
   /**
@@ -481,6 +527,7 @@ protected:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
+  mutable std::recursive_mutex joint_limiters_lock_;
 
 private:
   bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;

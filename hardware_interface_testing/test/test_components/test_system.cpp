@@ -17,6 +17,7 @@
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::CommandInterface;
@@ -39,6 +40,14 @@ class TestSystem : public SystemInterface
       return CallbackReturn::ERROR;
     }
 
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "System hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
+      return CallbackReturn::ERROR;
+    }
     return CallbackReturn::SUCCESS;
   }
 
@@ -48,19 +57,23 @@ class TestSystem : public SystemInterface
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
     }
 
     return state_interfaces;
@@ -72,18 +85,22 @@ class TestSystem : public SystemInterface
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
     // Add max_acceleration command interface
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info.joints[0].name, info.joints[0].command_interfaces[1].name, &max_acceleration_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        info.joints[0].name, info.joints[0].command_interfaces[1].name,
+        &max_acceleration_command_));
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
     }
 
     return command_interfaces;
@@ -104,6 +121,12 @@ class TestSystem : public SystemInterface
     {
       return return_type::DEACTIVATE;
     }
+    // The next line is for the testing purposes. We need value to be changed to
+    // be sure that the feedback from hardware to controllers in the chain is
+    // working as it should. This makes value checks clearer and confirms there
+    // is no "state = command" line or some other mixture of interfaces
+    // somewhere in the test stack.
+    velocity_state_[0] = velocity_command_[0] / 2.0;
     return return_type::OK;
   }
 

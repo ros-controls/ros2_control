@@ -34,6 +34,9 @@ def print_controller_state(c, args, col_width_name, col_width_state, col_width_t
     print(
         f"{state_color}{c.name:<{col_width_name}}{bcolors.ENDC} {c.type:<{col_width_type}}  {state_color}{c.state:<{col_width_state}}{bcolors.ENDC}"
     )
+    if args.verbose:
+        print(f"\tupdate_rate: {c.update_rate} Hz")
+        print(f"\tis_async: {c.is_async}")
     if args.claimed_interfaces or args.verbose:
         print("\tclaimed interfaces:")
         for claimed_interface in c.claimed_interfaces:

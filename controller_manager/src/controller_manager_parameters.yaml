@@ -1,0 +1,136 @@
+controller_manager:
+  update_rate: {
+    type: int,
+    default_value: 100,
+    read_only: true,
+    description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controllers and writes commands to hardware."
+  }
+
+  hardware_components_initial_state:
+    unconfigured: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be only loaded when controller manager is started. These hardware components will need to be configured and activated manually or via a hardware spawner.",
+      validation: {
+        unique<>: null,
+      }
+    }
+
+    inactive: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be configured when controller manager is started. These hardware components will need to be activated manually or via a hardware spawner.",
+      validation: {
+        unique<>: null,
+      }
+    }
+
+  diagnostics:
+    threshold:
+      controller_manager:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the controller manager's periodicity in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the controller manager's periodicity in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the controller manager's periodicity in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the controller manager's periodicity in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+      controllers:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the controller update loop in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the controller update loop in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the controller update loop in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the controller update loop in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+        execution_time:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 1000.0,
+              description: "The warning threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 2000.0,
+              description: "The error threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 100.0,
+              description: "The warning threshold for the standard deviation of the controller's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 200.0,
+              description: "The error threshold for the standard deviation of the controller's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }

@@ -15,12 +15,11 @@
 #ifndef TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
-#include <gmock/gmock.h>
-
 #include <string>
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
+#include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_chainable_controller";
@@ -71,8 +70,9 @@ public:
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
+    state_interfaces.push_back(
+      hardware_interface::StateInterface(
+        name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
 
     return state_interfaces;
   }
@@ -82,8 +82,9 @@ public:
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-    command_interfaces.push_back(hardware_interface::CommandInterface(
-      name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
+    command_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
 
     return command_interfaces;
   }

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/macros.hpp"
 
 class TestMacros : public ::testing::Test
@@ -62,7 +61,7 @@ TEST_F(TestMacros, throw_on_not_null)
   EXPECT_ANY_THROW(THROW_ON_NOT_NULLPTR(a_ptr));
 
   std::vector<int *> vec_ptr;
-  for (auto i : {0, 1, 2})
+  for (size_t i = 0; i < 3; ++i)
   {
     vec_ptr.push_back(i_ptr);
     EXPECT_ANY_THROW(THROW_ON_NOT_NULLPTR(vec_ptr[i]));

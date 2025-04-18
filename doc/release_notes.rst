@@ -27,6 +27,9 @@ For details see the controller_manager section.
 * The ``assign_interfaces`` and ``release_interfaces`` methods are now virtual, so that the user can override them to store the interfaces into custom variable types, so that the user can have the flexibility to take the ownership of the loaned interfaces to the controller (`#1743 <https://github.com/ros-controls/ros2_control/pull/1743>`_)
 * The new ``PoseSensor`` semantic component provides a standard interface for hardware providing cartesian poses (`#1775 <https://github.com/ros-controls/ros2_control/pull/1775>`_)
 * The controllers now support the fallback controllers (a list of controllers that will be activated, when the spawned controllers fails by throwing an exception or returning ``return_type::ERROR`` during the ``update`` cycle) (`#1789 <https://github.com/ros-controls/ros2_control/pull/1789>`_)
+* The controllers can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
+* A new ``SemanticComponentCommandInterface`` semantic component provides capabilities analogous to the ``SemanticComponentInterface``, but for write-only devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
+* The new semantic command interface ``LedRgbDevice`` provides standard (command) interfaces for 3-channel LED devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
 
 controller_manager
 ******************
@@ -76,7 +79,20 @@ controller_manager
 * The ``--controller-type`` or ``-t`` spawner arg is removed. Now the controller type is defined in the controller configuration file with ``type`` field (`#1639 <https://github.com/ros-controls/ros2_control/pull/1639>`_).
 * The ``--namespace`` or ``-n`` spawner arg is deprecated. Now the spawner namespace can be defined using the ROS 2 standard way (`#1640 <https://github.com/ros-controls/ros2_control/pull/1640>`_).
 * Added support for the wildcard entries for the controller configuration files (`#1724 <https://github.com/ros-controls/ros2_control/pull/1724>`_).
+* The spawner now supports the ``--controller-ros-args`` argument to pass the ROS 2 node arguments to the controller node to be able to remap topics, services and etc (`#1713 <https://github.com/ros-controls/ros2_control/pull/1713>`_).
+* The spawner now supports parsing multiple ``-p`` or ``--param-file`` arguments, this should help in loading multiple parameter files for a controller or for multiple controllers (`#1805 <https://github.com/ros-controls/ros2_control/pull/1805>`_).
+* ``--switch-timeout`` was added as parameter to the helper scripts ``spawner.py`` and ``unspawner.py``. Useful if controllers cannot be switched immediately, e.g., paused simulations at startup (`#1790 <https://github.com/ros-controls/ros2_control/pull/1790>`_).
+* ``ros2_control_node`` can now handle the sim time used by different simulators, when ``use_sim_time`` is set to true (`#1810 <https://github.com/ros-controls/ros2_control/pull/1810>`_).
 * The ``ros2_control_node`` node now accepts the ``thread_priority`` parameter to set the scheduler priority of the controller_manager's RT thread (`#1820 <https://github.com/ros-controls/ros2_control/pull/1820>`_).
+* The ``ros2_control_node`` node has a new ``lock_memory`` parameter to lock memory at startup to physical RAM in order to avoid page faults (`#1822 <https://github.com/ros-controls/ros2_control/pull/1822>`_).
+* The ``ros2_control_node`` node has a new ``cpu_affinity`` parameter to bind the process to a specific CPU core. By default, this is not enabled. (`#1852 <https://github.com/ros-controls/ros2_control/pull/1852>`_).
+* The ``--service-call-timeout`` was added as parameter to the helper scripts ``spawner.py``. Useful when the CPU load is high at startup and the service call does not return immediately (`#1808 <https://github.com/ros-controls/ros2_control/pull/1808>`_).
+* The ``cpu_affinity`` parameter can now accept of types ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
+* The ``pal_statistics`` is now integrated into the controller_manager, so that the controllers, hardware components and the controller_manager can be easily introspected and monitored using the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_).
+* A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
+* A new parameter ``enforce_command_limits`` is introduced to be able to enable and disable the enforcement of the command limits (`#1989 <https://github.com/ros-controls/ros2_control/pull/1989>`_).
+* A latched topic ``~/activity`` has been added to the controller_manager to publish the activity of the controller_manager, where the change in states of the controllers and the hardware components are published. (`#2006 <https://github.com/ros-controls/ros2_control/pull/2006>`_).
+* The controller manager will use a monotonic clock for triggering read-update-write cycles, but when the ``use_sim_time`` parameter is set to true, it will use the ROS Clock for triggering. When monotonic clock is being used, all the hardware components will receive the monotonic time in their read and write method, instead the controllers will always receive the ROS time in their update method irrespective of the clock being used. (`#2046 <https://github.com/ros-controls/ros2_control/pull/2046>`_).
 
 hardware_interface
 ******************
@@ -107,9 +123,51 @@ hardware_interface
 
 * Soft limits are also parsed from the URDF into the ``HardwareInfo`` structure for the defined joints (`#1488 <https://github.com/ros-controls/ros2_control/pull/1488>`_)
 * Access to logger and clock through ``get_logger`` and ``get_clock`` methods in ResourceManager and HardwareComponents ``Actuator``, ``Sensor`` and ``System`` (`#1585 <https://github.com/ros-controls/ros2_control/pull/1585>`_)
+* The ``ros2_control`` tag now supports parsing read/write rate ``rw_rate`` for the each hardware component parsed through the URDF (`#1570 <https://github.com/ros-controls/ros2_control/pull/1570>`_)
+
+  .. code:: xml
+
+    <ros2_control name="RRBotSystemMutipleGPIOs" type="system" rw_rate="500">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint1">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+      </joint>
+      <joint name="joint2">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+    <ros2_control name="MultimodalGripper" type="actuator" rw_rate="200">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/MultimodalGripper</plugin>
+      </hardware>
+      <joint name="parallel_fingers">
+        <command_interface name="position">
+          <param name="min">0</param>
+          <param name="max">100</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="suction">
+        <command_interface name="suction"/>
+        <state_interface name="suction"/>
+      </gpio>
+    </ros2_control>
+
 * Added ``get_hardware_info`` method to the hardware components interface to access the ``HardwareInfo`` instead of accessing the variable ``info_`` directly (`#1643 <https://github.com/ros-controls/ros2_control/pull/1643>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
 * With (`#1421 <https://github.com/ros-controls/ros2_control/pull/1421>`_) a key-value storage is added to InterfaceInfo. This allows to define extra params with per Command-/StateInterface in the ``.ros2_control.xacro`` file.
+* With (`#1763 <https://github.com/ros-controls/ros2_control/pull/1763>`_) parsing for SDF published to ``robot_description`` topic is now also supported.
+* With (`#1567 <https://github.com/ros-controls/ros2_control/pull/1567>`_) all the Hardware components now have a fully functional asynchronous functionality, by simply adding ``is_async`` tag to the ros2_control tag in the URDF. This will allow the hardware components to run in a separate thread, and the controller manager will be able to run the controllers in parallel with the hardware components.
+* The hardware components can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
+* Added new ``get_optional`` method that returns ``std::optional`` of the templated type, and this can be used to check if the value is available or not (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
 
 joint_limits
 ************

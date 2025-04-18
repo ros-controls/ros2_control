@@ -39,26 +39,36 @@ System::System(System && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.system_mutex_);
   impl_ = std::move(other.impl_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
 const rclcpp_lifecycle::State & System::initialize(
   const HardwareInfo & system_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  return this->initialize(system_info, logger, clock_interface->get_clock());
+}
+
+const rclcpp_lifecycle::State & System::initialize(
+  const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+{
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(system_info, logger, clock_interface))
+    switch (impl_->init(system_info, logger, clock))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }
@@ -73,13 +83,15 @@ const rclcpp_lifecycle::State & System::configure()
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -92,14 +104,16 @@ const rclcpp_lifecycle::State & System::configure()
 const rclcpp_lifecycle::State & System::cleanup()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
@@ -113,6 +127,7 @@ const rclcpp_lifecycle::State & System::cleanup()
 const rclcpp_lifecycle::State & System::shutdown()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -120,8 +135,9 @@ const rclcpp_lifecycle::State & System::shutdown()
     switch (impl_->on_shutdown(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
@@ -135,17 +151,23 @@ const rclcpp_lifecycle::State & System::shutdown()
 const rclcpp_lifecycle::State & System::activate()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
+  last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->prepare_for_activation();
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        impl_->enable_introspection(true);
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -158,17 +180,20 @@ const rclcpp_lifecycle::State & System::activate()
 const rclcpp_lifecycle::State & System::deactivate()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::ERROR:
         impl_->set_lifecycle_state(error());
@@ -181,6 +206,7 @@ const rclcpp_lifecycle::State & System::deactivate()
 const rclcpp_lifecycle::State & System::error()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
@@ -188,14 +214,16 @@ const rclcpp_lifecycle::State & System::error()
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }
@@ -271,69 +299,62 @@ return_type System::perform_command_mode_switch(
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-std::string System::get_name() const { return impl_->get_name(); }
+const std::string & System::get_name() const { return impl_->get_name(); }
 
-std::string System::get_group_name() const { return impl_->get_group_name(); }
+const std::string & System::get_group_name() const { return impl_->get_group_name(); }
 
 const rclcpp_lifecycle::State & System::get_lifecycle_state() const
 {
   return impl_->get_lifecycle_state();
 }
 
+const rclcpp::Time & System::get_last_read_time() const { return last_read_cycle_time_; }
+
+const rclcpp::Time & System::get_last_write_time() const { return last_write_cycle_time_; }
+
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping read() call for system '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_read_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_read(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
+    last_read_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
 return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping write() call for system '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_write_cycle_time_ = time;
     return return_type::OK;
   }
-  return_type result = return_type::ERROR;
   if (
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->write(time, period);
-    if (result == return_type::ERROR)
+    const auto trigger_result = impl_->trigger_write(time, period);
+    if (trigger_result.result == return_type::ERROR)
     {
       error();
     }
+    last_write_cycle_time_ = time;
+    return trigger_result.result;
   }
-  return result;
+  return return_type::OK;
 }
 
+std::recursive_mutex & System::get_mutex() { return system_mutex_; }
 }  // namespace hardware_interface

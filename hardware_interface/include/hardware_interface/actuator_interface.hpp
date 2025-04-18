@@ -25,8 +25,10 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "hardware_interface/types/trigger_type.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
@@ -34,9 +36,13 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /// Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
 /**
  * The typical examples are conveyors or motors.
@@ -58,9 +64,10 @@ namespace hardware_interface
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and non-movement hardware interfaces commanded.
- *   Hardware interfaces for movement will NOT be available.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   States can be read and command interfaces are available.
+ *
+ *    As of now, it is left to the hardware component implementation to continue using the command
+ * received from the ``CommandInterfaces`` or to skip them completely.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
@@ -68,18 +75,26 @@ namespace hardware_interface
  *
  * ACTIVE (on_activate):
  *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces for movement are available and have to be accepted.
- *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *   Command interfaces available.
+ *
+ * \todo
+ * Implement
+ *  * https://github.com/ros-controls/ros2_control/issues/931
+ *  * https://github.com/ros-controls/roadmap/pull/51/files
+ *  * this means in INACTIVE state:
+ *      * States can be read and non-movement hardware interfaces commanded.
+ *      * Hardware interfaces for movement will NOT be available.
+ *      * Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and
+ * HW_IF_EFFORT.
  */
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
   ActuatorInterface()
-  : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+  : lifecycle_state_(
+      rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
     actuator_logger_(rclcpp::get_logger("actuator_interface"))
   {
   }
@@ -91,7 +106,7 @@ public:
    */
   ActuatorInterface(const ActuatorInterface & other) = delete;
 
-  ActuatorInterface(ActuatorInterface && other) = default;
+  ActuatorInterface(ActuatorInterface && other) = delete;
 
   virtual ~ActuatorInterface() = default;
 
@@ -99,18 +114,65 @@ public:
   /// clock and logger interfaces.
   /**
    * \param[in] hardware_info structure with data from URDF.
+   * \param[in] logger Logger for the hardware component.
    * \param[in] clock_interface pointer to the clock interface.
-   * \param[in] logger_interface pointer to the logger interface.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated("Use init(HardwareInfo, rclcpp::Logger, rclcpp::Clock::SharedPtr) instead.")]]
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
-    clock_interface_ = clock_interface;
+    return this->init(hardware_info, logger, clock_interface->get_clock());
+  }
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock pointer to the resource manager clock.
+   * \param[in] logger Logger for the hardware component.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  {
+    actuator_clock_ = clock;
     actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      async_handler_->init(
+        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        {
+          const auto read_start_time = std::chrono::steady_clock::now();
+          const auto ret_read = read(time, period);
+          const auto read_end_time = std::chrono::steady_clock::now();
+          read_return_info_.store(ret_read, std::memory_order_release);
+          read_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
+            std::memory_order_release);
+          if (ret_read != return_type::OK)
+          {
+            return ret_read;
+          }
+          const auto write_start_time = std::chrono::steady_clock::now();
+          const auto ret_write = write(time, period);
+          const auto write_end_time = std::chrono::steady_clock::now();
+          write_return_info_.store(ret_write, std::memory_order_release);
+          write_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
+            std::memory_order_release);
+          return ret_write;
+        },
+        info_.thread_priority);
+      async_handler_->start_thread();
+    }
     return on_init(hardware_info);
   };
 
@@ -123,38 +185,10 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
-    import_state_interface_descriptions(info_);
-    import_command_interface_descriptions(info_);
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+    parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
     return CallbackReturn::SUCCESS;
   };
-
-  /**
-   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
-   * Separate them into the possible types: Joint and store them.
-   */
-  virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
-  {
-    auto joint_state_interface_descriptions =
-      parse_state_interface_descriptions(hardware_info.joints);
-    for (const auto & description : joint_state_interface_descriptions)
-    {
-      joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
-    }
-  }
-
-  /**
-   * Import the InterfaceDescription for the CommandInterfaces from the HardwareInfo.
-   * Separate them into the possible types: Joint and store them.
-   */
-  virtual void import_command_interface_descriptions(const HardwareInfo & hardware_info)
-  {
-    auto joint_command_interface_descriptions =
-      parse_command_interface_descriptions(hardware_info.joints);
-    for (const auto & description : joint_command_interface_descriptions)
-    {
-      joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
-    }
-  }
 
   /// Exports all state interfaces for this hardware interface.
   /**
@@ -349,6 +383,54 @@ public:
     return return_type::OK;
   }
 
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   * The method is called in the resource_manager's read loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  HardwareComponentCycleStatus trigger_read(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      status.result = read_return_info_.load(std::memory_order_acquire);
+      const auto read_exec_time = read_execution_time_.load(std::memory_order_acquire);
+      if (read_exec_time.count() > 0)
+      {
+        status.execution_time = read_exec_time;
+      }
+      const auto result = async_handler_->trigger_async_callback(time, period);
+      status.successful = result.first;
+      if (!status.successful)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Trigger read/write called while the previous async trigger is still in progress for "
+          "hardware interface : '%s'. Failed to trigger read/write cycle!",
+          info_.name.c_str());
+        status.result = return_type::OK;
+        return status;
+      }
+    }
+    else
+    {
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
+      status.result = read(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
+    }
+    return status;
+  }
+
   /// Read the current state values from the actuator.
   /**
    * The data readings from the physical hardware has to be updated
@@ -360,6 +442,42 @@ public:
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
+  /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The physical hardware shall be updated with the latest value from
+   * the exported command interfaces.
+   * The method is called in the resource_manager's write loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  HardwareComponentCycleStatus trigger_write(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    HardwareComponentCycleStatus status;
+    status.result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      status.successful = true;
+      const auto write_exec_time = write_execution_time_.load(std::memory_order_acquire);
+      if (write_exec_time.count() > 0)
+      {
+        status.execution_time = write_exec_time;
+      }
+      status.result = write_return_info_.load(std::memory_order_acquire);
+    }
+    else
+    {
+      const auto start_time = std::chrono::steady_clock::now();
+      status.successful = true;
+      status.result = write(time, period);
+      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - start_time);
+    }
+    return status;
+  }
 
   /// Write the current command values to the actuator.
   /**
@@ -376,13 +494,13 @@ public:
   /**
    * \return name.
    */
-  virtual std::string get_name() const { return info_.name; }
+  const std::string & get_name() const { return info_.name; }
 
   /// Get name of the actuator hardware group to which it belongs to.
   /**
    * \return group name.
    */
-  virtual std::string get_group_name() const { return info_.group; }
+  const std::string & get_group_name() const { return info_.group; }
 
   /// Get life-cycle state of the actuator hardware.
   /**
@@ -399,24 +517,77 @@ public:
     lifecycle_state_ = new_state;
   }
 
-  void set_state(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_state(const std::string & interface_name, const T & value)
   {
-    actuator_states_.at(interface_name)->set_value(value);
+    auto it = actuator_states_.find(interface_name);
+    if (it == actuator_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
+    std::ignore = handle->set_value(lock, value);
   }
 
-  double get_state(const std::string & interface_name) const
+  template <typename T = double>
+  T get_state(const std::string & interface_name) const
   {
-    return actuator_states_.at(interface_name)->get_value();
+    auto it = actuator_states_.find(interface_name);
+    if (it == actuator_states_.end())
+    {
+      throw std::runtime_error(
+        "State interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
+    const auto opt_value = handle->get_optional<T>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        "Failed to get state value from interface: " + interface_name +
+        ". This should not happen.");
+    }
+    return opt_value.value();
   }
 
   void set_command(const std::string & interface_name, const double & value)
   {
-    actuator_commands_.at(interface_name)->set_value(value);
+    auto it = actuator_commands_.find(interface_name);
+    if (it == actuator_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
+    std::ignore = handle->set_value(lock, value);
   }
 
-  double get_command(const std::string & interface_name) const
+  template <typename T = double>
+  T get_command(const std::string & interface_name) const
   {
-    return actuator_commands_.at(interface_name)->get_value();
+    auto it = actuator_commands_.find(interface_name);
+    if (it == actuator_commands_.end())
+    {
+      throw std::runtime_error(
+        "Command interface not found: " + interface_name +
+        " in actuator hardware component: " + info_.name + ". This should not happen.");
+    }
+    auto & handle = it->second;
+    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
+    const auto opt_value = handle->get_optional<double>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        "Failed to get command value from interface: " + interface_name +
+        ". This should not happen.");
+    }
+    return opt_value.value();
   }
 
   /// Get the logger of the ActuatorInterface.
@@ -429,13 +600,41 @@ public:
   /**
    * \return clock of the ActuatorInterface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+  rclcpp::Clock::SharedPtr get_clock() const { return actuator_clock_; }
 
   /// Get the hardware info of the ActuatorInterface.
   /**
    * \return hardware info of the ActuatorInterface.
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
+
+  /// Prepare for the activation of the hardware.
+  /**
+   * This method is called before the hardware is activated by the resource manager.
+   */
+  void prepare_for_activation()
+  {
+    read_return_info_.store(return_type::OK, std::memory_order_release);
+    read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+    write_return_info_.store(return_type::OK, std::memory_order_release);
+    write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  }
+
+  /// Enable or disable introspection of the hardware.
+  /**
+   * \param[in] enable Enable introspection if true, disable otherwise.
+   */
+  void enable_introspection(bool enable)
+  {
+    if (enable)
+    {
+      stats_registrations_.enableAll();
+    }
+    else
+    {
+      stats_registrations_.disableAll();
+    }
+  }
 
 protected:
   HardwareInfo info_;
@@ -454,13 +653,21 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
 private:
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Clock::SharedPtr actuator_clock_;
   rclcpp::Logger actuator_logger_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
+  std::atomic<return_type> read_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
+  std::atomic<return_type> write_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+
+protected:
+  pal_statistics::RegistrationsRAII stats_registrations_;
 };
 
 }  // namespace hardware_interface

@@ -11,18 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_manager_test_common.hpp"
-
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
+#include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/parameter.hpp"
@@ -65,18 +62,20 @@ public:
     cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
     run_updater_ = false;
 
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.unconfigured",
-      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
-    cm_->set_parameter(rclcpp::Parameter(
-      "hardware_components_initial_state.inactive",
-      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+    SetUpSrvsCMExecutor();
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.unconfigured",
+        std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+    cm_->set_parameter(
+      rclcpp::Parameter(
+        "hardware_components_initial_state.inactive",
+        std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     auto msg = std_msgs::msg::String();
     msg.data = ros2_control_test_assets::minimal_robot_urdf;
     cm_->robot_description_callback(msg);
-
-    SetUpSrvsCMExecutor();
   }
 
   void check_component_fileds(
@@ -133,6 +132,8 @@ public:
     {
       if (component.name == TEST_ACTUATOR_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_ACTUATOR_HARDWARE_NAME, TEST_ACTUATOR_HARDWARE_TYPE,
           TEST_ACTUATOR_HARDWARE_PLUGIN_NAME, hw_state_ids[0], hw_state_labels[0]);
@@ -145,6 +146,8 @@ public:
       }
       if (component.name == TEST_SENSOR_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_SENSOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_TYPE,
           TEST_SENSOR_HARDWARE_PLUGIN_NAME, hw_state_ids[1], hw_state_labels[1]);
@@ -157,6 +160,8 @@ public:
       }
       if (component.name == TEST_SYSTEM_HARDWARE_NAME)
       {
+        ASSERT_FALSE(component.is_async);
+        ASSERT_EQ(100u, component.rw_rate);
         check_component_fileds(
           component, TEST_SYSTEM_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_TYPE,
           TEST_SYSTEM_HARDWARE_PLUGIN_NAME, hw_state_ids[2], hw_state_labels[2]);

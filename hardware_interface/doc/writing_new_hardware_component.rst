@@ -22,14 +22,12 @@ The following is a step-by-step guide to create source files, basic tests, and c
    After creating the package, you should have at least ``CMakeLists.txt`` and ``package.xml`` files in it.
    Create also ``include/<PACKAGE_NAME>/`` and ``src`` folders if they do not already exist.
    In ``include/<PACKAGE_NAME>/`` folder add ``<robot_hardware_interface_name>.hpp`` and ``<robot_hardware_interface_name>.cpp`` in the ``src`` folder.
-   Optionally add ``visibility_control.h`` with the definition of export rules for Windows.
-   You can copy this file from an existing controller package and change the name prefix to the ``<PACKAGE_NAME>``.
 
 #. **Adding declarations into header file (.hpp)**
 
    1. Take care that you use header guards. ROS2-style is using ``#ifndef`` and ``#define`` preprocessor directives. (For more information on this, a search engine is your friend :) ).
 
-   2. Include ``"hardware_interface/$interface_type$_interface.hpp"`` and ``visibility_control.h`` if you are using one.
+   2. Include ``"hardware_interface/$interface_type$_interface.hpp"``.
       ``$interface_type$`` can be ``Actuator``, ``Sensor`` or ``System`` depending on the type of hardware you are using. for more details about each type check :ref:`Hardware Components description <overview_hardware_components>`.
 
    3. Define a unique namespace for your hardware_interface. This is usually the package name written in ``snake_case``.
@@ -167,6 +165,6 @@ That's it! Enjoy writing great controllers!
 Useful External References
 ---------------------------
 
-- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_
+- `Templates and scripts for generating controllers shell <https://rtw.b-robotized.com/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_
 
-  .. NOTE:: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.
+  .. NOTE:: The script is currently only recommended to use with Foxy and Humble, not compatible with the API from Jazzy and onwards.

@@ -20,7 +20,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rclcpp/version.h"
+#if RCLCPP_VERSION_GTE(29, 0, 0)
+#include "urdf/model.hpp"
+#else
 #include "urdf/model.h"
+#endif
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -31,6 +36,8 @@
 namespace
 {
 constexpr const auto kRobotTag = "robot";
+constexpr const auto kSDFTag = "sdf";
+constexpr const auto kModelTag = "model";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kPluginNameTag = "plugin";
@@ -56,7 +63,9 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kReadWriteRateAttribute = "rw_rate";
 constexpr const auto kIsAsyncAttribute = "is_async";
+constexpr const auto kThreadPriorityAttribute = "thread_priority";
 
 }  // namespace
 
@@ -184,7 +193,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
@@ -220,6 +229,42 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   return data_type;
 }
 
+/// Parse rw_rate attribute
+/**
+ * Parses an XMLElement and returns the value of the rw_rate attribute.
+ * Defaults to 0 if not specified.
+ *
+ * \param[in] elem XMLElement that has the rw_rate attribute.
+ * \return unsigned int specifying the read/write rate.
+ */
+unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
+  try
+  {
+    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    if (rw_rate < 0)
+    {
+      throw std::runtime_error(
+        "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+        std::to_string(rw_rate) + "\", but expected a positive integer.");
+    }
+    return static_cast<unsigned int>(rw_rate);
+  }
+  catch (const std::invalid_argument & e)
+  {
+    throw std::runtime_error(
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Invalid value : \"" + attr->Value() + "\", expected a positive integer.");
+  }
+  catch (const std::out_of_range & e)
+  {
+    throw std::runtime_error(
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Out of range value : \"" + attr->Value() + "\", expected a positive valid integer.");
+  }
+}
+
 /// Parse is_async attribute
 /**
  * Parses an XMLElement and returns the value of the is_async attribute.
@@ -232,6 +277,35 @@ bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
   return attr ? parse_bool(attr->Value()) : false;
+}
+
+/// Parse thread_priority attribute
+/**
+ * Parses an XMLElement and returns the value of the thread_priority attribute.
+ * Defaults to 50 if not specified.
+ *
+ * \param[in] elem XMLElement that has the thread_priority attribute.
+ * \return positive integer specifying the thread priority.
+ */
+int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
+  if (!attr)
+  {
+    return 50;
+  }
+  std::string s = attr->Value();
+  std::regex int_re("[1-9][0-9]*");
+  if (std::regex_match(s, int_re))
+  {
+    return std::stoi(s);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "Could not parse thread_priority tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+      s + "\", but expected a non-zero positive integer.");
+  }
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -478,6 +552,10 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
   const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
+  if (!type_it)
+  {
+    throw std::runtime_error("Missing <plugin> tag of <transmission> element in your URDF.");
+  }
   transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
   // Parse joints
@@ -553,9 +631,10 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
           std::to_string(transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(ActuatorInfo{
-        "actuator1", transmission.joints[0].state_interfaces,
-        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(
+        ActuatorInfo{
+          "actuator1", transmission.joints[0].state_interfaces,
+          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }
@@ -573,7 +652,10 @@ HardwareInfo parse_resource_from_xml(
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
+  hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
+  hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
+                                               : std::numeric_limits<int>::max();
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -583,6 +665,10 @@ HardwareInfo parse_resource_from_xml(
     if (std::string(kHardwareTag) == ros2_control_child_it->Name())
     {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
+      if (!type_it)
+      {
+        throw std::runtime_error("Missing <plugin> tag of <hardware> element in your URDF.");
+      }
       hardware.hardware_plugin_name =
         get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
       const auto * group_it = ros2_control_child_it->FirstChildElement(kGroupTag);
@@ -812,15 +898,26 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
 
-  // Find robot tag
+  // Find robot or sdf tag
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
+  const tinyxml2::XMLElement * ros2_control_it;
 
-  if (std::string(kRobotTag) != robot_it->Name())
+  if (std::string(kRobotTag) == robot_it->Name())
   {
-    throw std::runtime_error("the robot tag is not root element in URDF");
+    ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  }
+  else if (std::string(kSDFTag) == robot_it->Name())
+  {
+    // find model tag in sdf tag
+    const tinyxml2::XMLElement * model_it = robot_it->FirstChildElement(kModelTag);
+    ros2_control_it = model_it->FirstChildElement(kROS2ControlTag);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "the robot tag is not root element in URDF or sdf tag is not root element in SDF");
   }
 
-  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   if (!ros2_control_it)
   {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
@@ -872,7 +969,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           {
             throw std::runtime_error("Mimic joint '" + name + "' not found in <ros2_control> tag");
           }
-          return std::distance(hw_info.joints.begin(), it);
+          return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
         };
 
         MimicJoint mimic_joint;
@@ -929,6 +1026,22 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
   return component_state_interface_descriptions;
 }
 
+void parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map)
+{
+  state_interfaces_map.reserve(state_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      InterfaceDescription description(component.name, state_interface);
+      state_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+}
+
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
@@ -944,6 +1057,22 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions(
     }
   }
   return component_command_interface_descriptions;
+}
+
+void parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map)
+{
+  command_interfaces_map.reserve(command_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      InterfaceDescription description(component.name, command_interface);
+      command_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
 }
 
 }  // namespace hardware_interface
