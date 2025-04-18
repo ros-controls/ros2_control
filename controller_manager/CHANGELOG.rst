@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.28.1 (2025-04-17)
+-------------------
+* Fix the enforce_command_limits deactivation (`#2181 <https://github.com/ros-controls/ros2_control/issues/2181>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.28.0 (2025-04-10)
 -------------------
 * Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
