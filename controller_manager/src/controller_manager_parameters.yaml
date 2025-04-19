@@ -134,3 +134,74 @@ controller_manager:
                 gt<>: 0.0,
               }
             }
+      hardware_components:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the hardware component's read/write loop in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the hardware component's read/write loop in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the hardware component's read/write loop in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the hardware component's read/write loop in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+        execution_time:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 1000.0,
+              description: "The warning threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 2000.0,
+              description: "The error threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 100.0,
+              description: "The warning threshold for the standard deviation of the hardware component's read/write cycle execution time in microseconds. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 200.0,
+              description: "The error threshold for the standard deviation of the hardware component's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
