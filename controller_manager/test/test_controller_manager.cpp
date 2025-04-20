@@ -105,7 +105,6 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
 {
   const auto test_param = GetParam();
   auto test_controller = std::make_shared<test_controller::TestController>();
-  auto test_controller2 = std::make_shared<test_controller::TestController>();
 
   // Check for the hardware component and no controllers
   controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
@@ -118,7 +117,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
-  
+
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(1, test_controller.use_count());
 
@@ -127,7 +126,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   ASSERT_EQ(cm_msg.controllers.size(), 1u);
   ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  
+
   // setup interface to claim from controllers
   controller_interface::InterfaceConfiguration cmd_itfs_cfg;
   cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -169,7 +168,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   ASSERT_EQ(cm_msg.controllers.size(), 1u);
   ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  
+
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -185,7 +184,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   auto switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
     start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
-  
+
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
@@ -227,7 +226,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   ASSERT_EQ(cm_msg.controllers.size(), 1u);
   ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  
+
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -253,7 +252,6 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     test_controller->get_lifecycle_state().id());
-
 }
 
 TEST_P(TestControllerManagerWithStrictness, switch_controller_with_unknown_controller)
@@ -353,7 +351,8 @@ TEST_P(TestControllerManagerWithStrictness, switch_controller_with_unknown_contr
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  // TODO: Confirm whether first controller is TEST_CONTROLLER2_NAME or test_controller?? Inconsistent from the order of insertion.
+  // TODO: Confirm whether first controller is TEST_CONTROLLER2_NAME or test_controller??
+  // Inconsistent from the order of insertion.
   ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
   ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
