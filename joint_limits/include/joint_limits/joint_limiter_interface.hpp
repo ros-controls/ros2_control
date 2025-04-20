@@ -208,6 +208,8 @@ public:
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
+  virtual void reset_internals() = 0;
+
 protected:
   /** \brief Method is realized by an implementation.
    *
