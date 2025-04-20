@@ -696,6 +696,7 @@ void ResourceManager::load_urdf(
   const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
   is_urdf_loaded__ = true;
+  robot_description_ = urdf;
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
@@ -1329,6 +1330,8 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
   return resource_storage_->state_interface_map_.find(key) !=
          resource_storage_->state_interface_map_.end();
 }
+
+const std::string & ResourceManager::get_robot_description() const { return robot_description_; }
 // END: "used only in tests and locally"
 
 // BEGIN: private methods

@@ -419,6 +419,12 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
+  /// Returns the robot description of the loaded URDF.
+  /**
+   * \return string containing the robot description.
+   */
+  const std::string & get_robot_description() const;
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -436,6 +442,7 @@ private:
   HardwareReadWriteStatus read_write_status;
 
   bool is_urdf_loaded__ = false;
+  std::string robot_description_;
 };
 
 }  // namespace hardware_interface

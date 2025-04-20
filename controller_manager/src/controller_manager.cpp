@@ -1434,6 +1434,9 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
+  rclcpp::Parameter robot_description_param(
+    "robot_description", rclcpp::ParameterValue(resource_manager_->get_robot_description()));
+  controller.c->get_node()->set_parameter(robot_description_param);
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.

@@ -514,6 +514,7 @@ private:
     deactivate_command_interface_request_;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
+  std::string robot_description_;
 
   struct SwitchParams
   {
