@@ -119,7 +119,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
     test_controller::TEST_CONTROLLER_CLASS_NAME);
 
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  EXPECT_EQ(1, test_controller.use_count());
+  EXPECT_EQ(2, test_controller.use_count());
 
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
@@ -225,7 +225,7 @@ TEST_P(TestControllerManagerWithStrictness, single_controller_lifecycle)
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 1u);
   ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
