@@ -170,57 +170,61 @@ def main(args=None):
             if not os.path.isfile(param_file):
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
-    node = Node("spawner_" + controller_names[0])
-
-    if node.get_namespace() != "/" and args.namespace:
-        raise RuntimeError(
-            f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
-            f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
-        )
-
-    if args.namespace:
-        warnings.filterwarnings("always")
-        warnings.warn(
-            "The '--namespace' argument is deprecated and will be removed in future releases."
-            " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
-            DeprecationWarning,
-        )
-
-    spawner_namespace = args.namespace if args.namespace else node.get_namespace()
-
-    if not spawner_namespace.startswith("/"):
-        spawner_namespace = f"/{spawner_namespace}"
-
-    if not controller_manager_name.startswith("/"):
-        if spawner_namespace and spawner_namespace != "/":
-            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
-        else:
-            controller_manager_name = f"/{controller_manager_name}"
-
     try:
+        spawner_node_name = "spawner_" + controller_names[0]
         lock = FileLock("/tmp/ros2-control-controller-spawner.lock")
         max_retries = 5
         retry_delay = 3  # seconds
         for attempt in range(max_retries):
+            tmp_logger = rclpy.logging.get_logger(spawner_node_name)
             try:
-                node.get_logger().debug(
+                tmp_logger.debug(
                     bcolors.OKGREEN + "Waiting for the spawner lock to be acquired!" + bcolors.ENDC
                 )
-                lock.acquire(timeout=20)  # timeout after 20 seconds and try again
-                node.get_logger().debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+                # timeout after 20 seconds and try again
+                lock.acquire(timeout=20)
+                tmp_logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
                 break
             except Timeout:
-                node.get_logger().warn(
+                tmp_logger.warn(
                     bcolors.WARNING
                     + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
                 )
                 time.sleep(retry_delay)
         else:
-            node.get_logger().error(
+            tmp_logger.error(
                 bcolors.ERROR + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
             )
             return 1
+
+        node = Node(spawner_node_name)
+
+        if node.get_namespace() != "/" and args.namespace:
+            raise RuntimeError(
+                f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
+                f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
+            )
+
+        if args.namespace:
+            warnings.filterwarnings("always")
+            warnings.warn(
+                "The '--namespace' argument is deprecated and will be removed in future releases."
+                " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
+                DeprecationWarning,
+            )
+
+        spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+
+        if not spawner_namespace.startswith("/"):
+            spawner_namespace = f"/{spawner_namespace}"
+
+        if not controller_manager_name.startswith("/"):
+            if spawner_namespace and spawner_namespace != "/":
+                controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
+            else:
+                controller_manager_name = f"/{controller_manager_name}"
+
         for controller_name in controller_names:
 
             if is_controller_loaded(
