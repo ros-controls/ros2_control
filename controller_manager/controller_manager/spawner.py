@@ -32,6 +32,7 @@ from controller_manager import (
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
+from filelock import Timeout, FileLock
 import rclpy
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
@@ -197,6 +198,29 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
+        lock = FileLock("/tmp/ros2-control-controller-spawner.lock")
+        max_retries = 5
+        retry_delay = 3  # seconds
+        for attempt in range(max_retries):
+            try:
+                node.get_logger().debug(
+                    bcolors.OKGREEN + "Waiting for the spawner lock to be acquired!" + bcolors.ENDC
+                )
+                lock.acquire(timeout=20)  # timeout after 20 seconds and try again
+                node.get_logger().debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+                break
+            except Timeout:
+                node.get_logger().warn(
+                    bcolors.WARNING
+                    + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
+                    + bcolors.ENDC
+                )
+                time.sleep(retry_delay)
+        else:
+            node.get_logger().error(
+                bcolors.ERROR + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
+            )
+            return 1
         for controller_name in controller_names:
 
             if is_controller_loaded(
@@ -375,6 +399,7 @@ def main(args=None):
         return 1
     finally:
         node.destroy_node()
+        lock.release()
         rclpy.shutdown()
 
 
