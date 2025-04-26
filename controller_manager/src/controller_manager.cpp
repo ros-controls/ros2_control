@@ -3874,8 +3874,9 @@ void ControllerManager::controller_manager_diagnostic_callback(
 
   const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
   const std::string diag_summary =
-    "Controller Manager has bad periodicity : " + std::to_string(cm_stats.average) +
-    " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
+    fmt::format(FMT_COMPILE(
+      "Controller Manager has bad periodicity : {} Hz. Expected consistent {} Hz"),
+    cm_stats.average, get_update_rate());
   if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||

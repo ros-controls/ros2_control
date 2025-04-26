@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <fmt/compile.h>
 
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
