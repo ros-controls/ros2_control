@@ -1478,9 +1478,8 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
 {
   if (!state_interface_is_available(key))
   {
-    const std::string msg =
-      fmt::format(FMT_COMPILE("State interface with key '{}' does not exist"), key);
-    throw std::runtime_error(msg);
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("State interface with key '{}' does not exist"), key));
   }
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
