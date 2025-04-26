@@ -151,7 +151,7 @@ list_hardware_interfaces
 .. code-block:: console
 
     $ ros2 control list_hardware_interfaces -h
-    usage: ros2 control list_hardware_interfaces [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
+    usage: ros2 control list_hardware_interfaces [-h] [--spin-time SPIN_TIME] [-s] [--verbose] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
     Output the list of available command and state interfaces
 
@@ -160,6 +160,7 @@ list_hardware_interfaces
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
+      --verbose, -v         List hardware interfaces and their data types
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
@@ -176,6 +177,16 @@ list_hardware_interfaces
     state interfaces
       joint1/position
       joint2/position
+
+.. code-block:: console
+
+    $ ros2 control list_hardware_interfaces -v
+    command interfaces
+      joint1/position [double] [unclaimed]
+      joint2/position [double] [unclaimed]
+    state interfaces
+      joint1/position [double]
+      joint2/position [double]
 
 
 load_controller
