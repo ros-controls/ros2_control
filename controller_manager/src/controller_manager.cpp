@@ -2502,6 +2502,7 @@ void ControllerManager::list_hardware_components_srv_cb(
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
+      hwi.data_type = resource_manager_->get_command_interface_data_type(interface);
       hwi.is_available = resource_manager_->command_interface_is_available(interface);
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
       // TODO(destogl): Add here mapping to controller that has claimed or
@@ -2526,6 +2527,7 @@ void ControllerManager::list_hardware_components_srv_cb(
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
+      hwi.data_type = resource_manager_->get_state_interface_data_type(interface);
       hwi.is_available = resource_manager_->state_interface_is_available(interface);
       hwi.is_claimed = false;
       component.state_interfaces.push_back(hwi);
@@ -2551,6 +2553,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
     hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
+    hwi.data_type = resource_manager_->get_state_interface_data_type(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
@@ -2561,6 +2564,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     hwi.name = command_interface_name;
     hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
+    hwi.data_type = resource_manager_->get_command_interface_data_type(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
 
