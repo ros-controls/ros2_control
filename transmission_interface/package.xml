@@ -16,9 +16,11 @@
 
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
+  <depend>fmt</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>fmt</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -62,12 +62,12 @@ ChainableControllerInterface::export_state_interfaces()
   {
     if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
-      std::string error_msg =
-        "The prefix of the interface '" + interface.get_prefix_name() +
-        "' should begin with the controller's name '" + get_node()->get_name() +
-        "'. This is mandatory for state interfaces. No state interface will be exported. Please "
-        "correct and recompile the controller with name '" +
-        get_node()->get_name() + "' and try again.";
+      const std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "The prefix of the interface '{}' should begin with the controller's name '{}'. "
+          "This is mandatory for state interfaces. No state interface will be exported. "
+          "Please correct and recompile the controller with name '{}' and try again."),
+        interface.get_prefix_name(), get_node()->get_name(), get_node()->get_name());
       throw std::runtime_error(error_msg);
     }
     auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
@@ -78,13 +78,13 @@ ChainableControllerInterface::export_state_interfaces()
     // inform cm by throwing exception
     if (!succ)
     {
-      std::string error_msg =
-        "Could not insert StateInterface<" + interface_name +
-        "> into exported_state_interfaces_ map. Check if you export duplicates. The "
-        "map returned iterator with interface_name<" +
-        it->second->get_name() +
-        ">. If its a duplicate adjust exportation of InterfacesDescription so that all the "
-        "interface names are unique.";
+      std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "Could not insert StateInterface<{}> into exported_state_interfaces_ map. "
+          "Check if you export duplicates. The map returned iterator with interface_name<{}>. "
+          "If its a duplicate adjust exportation of InterfacesDescription so that all the "
+          "interface names are unique."),
+        interface_name, it->second->get_name());
       exported_state_interfaces_.clear();
       exported_state_interface_names_.clear();
       state_interfaces_ptrs_vec.clear();
@@ -98,14 +98,13 @@ ChainableControllerInterface::export_state_interfaces()
 
   if (exported_state_interfaces_.size() != state_interfaces.size())
   {
-    std::string error_msg =
-      "The internal storage for state interface ptrs 'exported_state_interfaces_' variable has "
-      "size '" +
-      std::to_string(exported_state_interfaces_.size()) +
-      "', but it is expected to have the size '" + std::to_string(state_interfaces.size()) +
-      "' equal to the number of exported reference interfaces. Please correct and recompile the "
-      "controller with name '" +
-      get_node()->get_name() + "' and try again.";
+    std::string error_msg = fmt::format(
+      FMT_COMPILE(
+        "The internal storage for state interface ptrs 'exported_state_interfaces_' variable has "
+        "size '{}', but it is expected to have the size '{}' equal to the number of exported "
+        "reference interfaces. Please correct and recompile the controller with name '{}' and try "
+        "again."),
+      exported_state_interfaces_.size(), state_interfaces.size(), get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
 
@@ -128,13 +127,13 @@ ChainableControllerInterface::export_reference_interfaces()
   // check if the "reference_interfaces_" variable is resized to number of interfaces
   if (reference_interfaces_.size() != reference_interfaces.size())
   {
-    std::string error_msg =
-      "The internal storage for reference values 'reference_interfaces_' variable has size '" +
-      std::to_string(reference_interfaces_.size()) + "', but it is expected to have the size '" +
-      std::to_string(reference_interfaces.size()) +
-      "' equal to the number of exported reference interfaces. Please correct and recompile the "
-      "controller with name '" +
-      get_node()->get_name() + "' and try again.";
+    std::string error_msg = fmt::format(
+      FMT_COMPILE(
+        "The internal storage for reference values 'reference_interfaces_' variable has size '{}', "
+        "but it is expected to have the size '{}' equal to the number of exported reference "
+        "interfaces. "
+        "Please correct and recompile the controller with name '{}' and try again."),
+      reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
   // END
@@ -145,12 +144,12 @@ ChainableControllerInterface::export_reference_interfaces()
   {
     if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
-      std::string error_msg = "The prefix of the interface '" + interface.get_prefix_name() +
-                              "' should begin with the controller's name '" +
-                              get_node()->get_name() +
-                              "'. This is mandatory for reference interfaces. Please correct and "
-                              "recompile the controller with name '" +
-                              get_node()->get_name() + "' and try again.";
+      std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "The prefix of the interface '{}' should begin with the controller's name '{}'. "
+          "This is mandatory for reference interfaces. Please correct and recompile the "
+          "controller with name '{}' and try again."),
+        interface.get_prefix_name(), get_node()->get_name(), get_node()->get_name());
       throw std::runtime_error(error_msg);
     }
 
@@ -164,13 +163,13 @@ ChainableControllerInterface::export_reference_interfaces()
     // inform cm by throwing exception
     if (!succ)
     {
-      std::string error_msg =
-        "Could not insert Reference interface<" + interface_name +
-        "> into reference_interfaces_ map. Check if you export duplicates. The "
-        "map returned iterator with interface_name<" +
-        it->second->get_name() +
-        ">. If its a duplicate adjust exportation of InterfacesDescription so that all the "
-        "interface names are unique.";
+      std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "Could not insert Reference interface<{}> into reference_interfaces_ map. "
+          "Check if you export duplicates. The map returned iterator with interface_name<{}>. "
+          "If its a duplicate adjust exportation of InterfacesDescription so that all the "
+          "interface names are unique."),
+        interface_name, it->second->get_name());
       reference_interfaces_.clear();
       exported_reference_interface_names_.clear();
       reference_interfaces_ptrs_vec.clear();
@@ -183,14 +182,14 @@ ChainableControllerInterface::export_reference_interfaces()
 
   if (exported_reference_interfaces_.size() != ref_interface_size)
   {
-    std::string error_msg =
-      "The internal storage for exported reference ptrs 'exported_reference_interfaces_' variable "
-      "has size '" +
-      std::to_string(exported_reference_interfaces_.size()) +
-      "', but it is expected to have the size '" + std::to_string(ref_interface_size) +
-      "' equal to the number of exported reference interfaces. Please correct and recompile the "
-      "controller with name '" +
-      get_node()->get_name() + "' and try again.";
+    std::string error_msg = fmt::format(
+      FMT_COMPILE(
+        "The internal storage for exported reference ptrs 'exported_reference_interfaces_' "
+        "variable "
+        "has size '{}', but it is expected to have the size '{}' equal to the number of exported "
+        "reference interfaces. Please correct and recompile the controller with name '{}' and try "
+        "again."),
+      exported_reference_interfaces_.size(), ref_interface_size, get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
 

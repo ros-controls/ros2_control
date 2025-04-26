@@ -53,13 +53,14 @@ void verify_actual_position_within_limits(
       actual_pos > (limits.max_position + internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE) ||
       actual_pos < (limits.min_position - internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE))
     {
-      const std::string error_message =
-        "Joint position is out of bounds for the joint : '" + joint_name +
-        "' actual position: " + std::to_string(actual_pos) + " limits: [" +
-        std::to_string(limits.min_position) + ", " + std::to_string(limits.max_position) +
-        "]. This could be due to a hardware failure (or) the physical limits of the joint being "
-        "larger than the ones defined in the URDF. Please recheck the URDF and the hardware to "
-        "verify the joint limits.";
+      const std::string error_message = fmt::format(
+        FMT_COMPILE(
+          "Joint position is out of bounds for the joint : '{}' actual position: {} limits: [{}, "
+          "{}]. This could be due to a hardware failure (or) the physical limits of the joint "
+          "being larger than the ones defined in the URDF. Please recheck the URDF and the "
+          "hardware "
+          "to verify the joint limits."),
+        joint_name, actual_pos, limits.min_position, limits.max_position);
       RCLCPP_ERROR_ONCE(rclcpp::get_logger("joint_limiter_interface"), "%s", error_message.c_str());
       // Throw an exception to indicate that the joint position is out of bounds
       throw std::runtime_error(error_message);

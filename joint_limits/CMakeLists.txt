@@ -15,6 +15,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 )
 
 find_package(ament_cmake REQUIRED)
+find_package(fmt REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake_gen_version_h REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -73,13 +74,14 @@ if(BUILD_TESTING)
   find_package(rclcpp REQUIRED)
 
   ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_link_libraries(joint_limits_rosparam_test joint_limits)
+  target_link_libraries(joint_limits_rosparam_test joint_limits fmt::fmt)
   target_compile_definitions(
     joint_limits_rosparam_test
-    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/"
+  )
 
   ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
-  target_link_libraries(joint_limits_urdf_test joint_limits)
+  target_link_libraries(joint_limits_urdf_test joint_limits fmt::fmt)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(
