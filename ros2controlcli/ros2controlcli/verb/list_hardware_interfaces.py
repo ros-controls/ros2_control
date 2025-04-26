@@ -41,22 +41,22 @@ class ListHardwareInterfacesVerb(VerbExtension):
                 if command_interface.is_available:
                     if command_interface.is_claimed:
                         print(
-                            f"\t{bcolors.OKBLUE}{command_interface.name} "
-                            f"[available] [claimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKBLUE}{command_interface.name} [{command_interface.data_type}]"
+                            f" [available] [claimed]{bcolors.ENDC}"
                         )
                     else:
                         print(
-                            f"\t{bcolors.OKCYAN}{command_interface.name} "
-                            f"[available] [unclaimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKCYAN}{command_interface.name} [{command_interface.data_type}]"
+                            f" [available] [unclaimed]{bcolors.ENDC}"
                         )
                 else:
                     print(
-                        f"\t{bcolors.WARNING}{command_interface.name} "
-                        f"[unavailable] [unclaimed]{bcolors.ENDC}"
+                        f"\t{bcolors.WARNING}{command_interface.name} [{command_interface.data_type}]"
+                        f" [unavailable] [unclaimed]{bcolors.ENDC}"
                     )
 
             print("state interfaces")
             for state_interface in state_interfaces:
-                print(f"\t{state_interface.name}")
+                print(f"\t{state_interface.name} [{state_interface.data_type}]")
 
             return 0

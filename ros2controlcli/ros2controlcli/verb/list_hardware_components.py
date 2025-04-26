@@ -75,7 +75,9 @@ class ListHardwareComponentsVerb(VerbExtension):
                     else:
                         claimed_str = "[unclaimed]"
 
-                    print(f"\t\t{cmd_interface.name} {available_str} {claimed_str}")
+                    print(
+                        f"\t\t{cmd_interface.name} [{cmd_interface.data_type}] {available_str} {claimed_str}"
+                    )
 
                 if args.verbose:
                     print("\tstate interfaces")
@@ -85,6 +87,8 @@ class ListHardwareComponentsVerb(VerbExtension):
                         else:
                             available_str = f"{bcolors.WARNING}[unavailable]{bcolors.ENDC}"
 
-                        print(f"\t\t{state_interface.name} {available_str}")
+                        print(
+                            f"\t\t{state_interface.name} [{state_interface.data_type}] {available_str}"
+                        )
 
         return 0
