@@ -449,7 +449,7 @@ private:
    * \returns return_type::OK if all preceding controllers pass the checks, otherwise
    * return_type::ERROR.
    */
-  controller_interface::return_type check_preceeding_controllers_for_deactivate(
+  controller_interface::return_type check_preceding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it, std::string & message);
 
