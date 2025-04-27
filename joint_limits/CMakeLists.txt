@@ -12,10 +12,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   trajectory_msgs
   urdf
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
-find_package(fmt REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake_gen_version_h REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})

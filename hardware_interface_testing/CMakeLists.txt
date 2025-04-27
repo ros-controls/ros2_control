@@ -12,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp_lifecycle
   ros2_control_test_assets
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -25,6 +26,7 @@ test/test_components/test_sensor.cpp
 test/test_components/test_system.cpp
 test/test_components/test_actuator_exclusive_interfaces.cpp)
 ament_target_dependencies(test_components hardware_interface pluginlib ros2_control_test_assets)
+target_link_libraries(test_components fmt::fmt)
 install(TARGETS test_components
 DESTINATION lib
 )
@@ -36,7 +38,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
 
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
-  ament_target_dependencies(test_resource_manager hardware_interface ros2_control_test_assets)
+  target_link_libraries(test_resource_manager fmt::fmt)
+  ament_target_dependencies(test_resource_manager hardware_interface ros2_control_test_assets fmt)
 
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
   ament_target_dependencies(test_resource_manager_prepare_perform_switch hardware_interface ros2_control_test_assets)

@@ -9,11 +9,11 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gen_version_h REQUIRED)
-find_package(fmt REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()

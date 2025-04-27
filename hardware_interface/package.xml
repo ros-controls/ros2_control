@@ -25,12 +25,14 @@
   <depend>sdformat_urdf</depend>
   <depend>tinyxml2_vendor</depend>
   <depend>urdf</depend>
+  <depend>fmt</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>fmt</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
