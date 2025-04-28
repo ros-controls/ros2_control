@@ -161,8 +161,8 @@ int main(int argc, char ** argv)
               1.e6;
             const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
             const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
-            RCLCPP_WARN(
-              cm->get_logger(),
+            RCLCPP_WARN_THROTTLE(
+              cm->get_logger(), *cm->get_clock(), 1000,
               "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
               "took %f ms (missed cycles : %d).",
               cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);

@@ -376,6 +376,22 @@ private:
   void clear_requests();
 
   /**
+   * Perform hardware command mode change for the given list of controllers to activate and
+   * deactivate.
+   * \param[in] rt_controller_list list of controllers in the real-time list.
+   * \param[in] activate_controllers_list list of controllers to activate.
+   * \param[in] deactivate_controllers_list list of controllers to deactivate.
+   * \param[in] rt_cycle_name name of the real-time cycle.
+   * \note This method is meant to be used only in the real-time control loops (`read`, `update` and
+   * `write`).
+   */
+  void perform_hardware_command_mode_change(
+    const std::vector<ControllerSpec> & rt_controller_list,
+    const std::vector<std::string> & activate_controllers_list,
+    const std::vector<std::string> & deactivate_controllers_list,
+    const std::string & rt_cycle_name);
+
+  /**
    * If a controller is deactivated all following controllers (if any exist) should be switched
    * 'from' the chained mode.
    *
@@ -433,7 +449,7 @@ private:
    * \returns return_type::OK if all preceding controllers pass the checks, otherwise
    * return_type::ERROR.
    */
-  controller_interface::return_type check_preceeding_controllers_for_deactivate(
+  controller_interface::return_type check_preceding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it, std::string & message);
 

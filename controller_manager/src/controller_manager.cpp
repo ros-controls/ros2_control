@@ -1548,8 +1548,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status = check_preceeding_controllers_for_deactivate(
-        controllers, strictness, controller_it, message);
+      status =
+        check_preceding_controllers_for_deactivate(controllers, strictness, controller_it, message);
     }
 
     if (status != controller_interface::return_type::OK)
@@ -2640,6 +2640,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    perform_hardware_command_mode_change(
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -2858,26 +2860,9 @@ controller_interface::return_type ControllerManager::update(
       { add_element_to_list(rt_buffer_.deactivate_controllers_list, controller); });
 
     // Retrieve the interfaces to start and stop from the hardware end
-    rt_buffer_.interfaces_to_start.clear();
-    rt_buffer_.interfaces_to_stop.clear();
-    get_controller_list_command_interfaces(
-      rt_buffer_.deactivate_controllers_list, rt_controller_list, resource_manager_,
-      rt_buffer_.interfaces_to_stop);
-    get_controller_list_command_interfaces(
-      rt_buffer_.fallback_controllers_list, rt_controller_list, resource_manager_,
-      rt_buffer_.interfaces_to_start);
-    if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
-    {
-      if (!(resource_manager_->prepare_command_mode_switch(
-              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop) &&
-            resource_manager_->perform_command_mode_switch(
-              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
-      {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Error while attempting mode switch when deactivating controllers in update cycle!");
-      }
-    }
+    perform_hardware_command_mode_change(
+      rt_controller_list, rt_buffer_.fallback_controllers_list,
+      rt_buffer_.deactivate_controllers_list, "update");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     if (!rt_buffer_.fallback_controllers_list.empty())
     {
@@ -2925,6 +2910,9 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+    perform_hardware_command_mode_change(
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -3018,6 +3006,34 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
 rclcpp::Clock::SharedPtr ControllerManager::get_trigger_clock() const { return trigger_clock_; }
+
+void ControllerManager::perform_hardware_command_mode_change(
+  const std::vector<ControllerSpec> & rt_controller_list,
+  const std::vector<std::string> & activate_controllers_list,
+  const std::vector<std::string> & deactivate_controllers_list, const std::string & rt_cycle_name)
+{
+  rt_buffer_.interfaces_to_start.clear();
+  rt_buffer_.interfaces_to_stop.clear();
+  get_controller_list_command_interfaces(
+    deactivate_controllers_list, rt_controller_list, resource_manager_,
+    rt_buffer_.interfaces_to_stop);
+  get_controller_list_command_interfaces(
+    activate_controllers_list, rt_controller_list, resource_manager_,
+    rt_buffer_.interfaces_to_start);
+  if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
+  {
+    if (!(resource_manager_->prepare_command_mode_switch(
+            rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop) &&
+          resource_manager_->perform_command_mode_switch(
+            rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Error while attempting mode switch when deactivating controllers in %s cycle!",
+        rt_cycle_name.c_str());
+    }
+  }
+}
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
@@ -3209,7 +3225,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
   return controller_interface::return_type::OK;
 };
 
-controller_interface::return_type ControllerManager::check_preceeding_controllers_for_deactivate(
+controller_interface::return_type ControllerManager::check_preceding_controllers_for_deactivate(
   const std::vector<ControllerSpec> & controllers, int /*strictness*/,
   const ControllersListIterator controller_it, std::string & message)
 {
@@ -3223,40 +3239,40 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
     get_logger(), "Checking preceding controller of following controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  auto preceeding_controllers_list =
+  auto preceding_controllers_list =
     controller_chained_state_interfaces_cache_[controller_it->info.name];
-  preceeding_controllers_list.insert(
-    preceeding_controllers_list.end(),
+  preceding_controllers_list.insert(
+    preceding_controllers_list.end(),
     controller_chained_reference_interfaces_cache_[controller_it->info.name].cbegin(),
     controller_chained_reference_interfaces_cache_[controller_it->info.name].cend());
 
-  for (const auto & preceeding_controller : preceeding_controllers_list)
+  for (const auto & preceding_controller : preceding_controllers_list)
   {
-    RCLCPP_DEBUG(get_logger(), "\t Preceding controller : '%s'.", preceeding_controller.c_str());
+    RCLCPP_DEBUG(get_logger(), "\t Preceding controller : '%s'.", preceding_controller.c_str());
     auto found_it = std::find_if(
       controllers.begin(), controllers.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, preceeding_controller));
+      std::bind(controller_name_compare, std::placeholders::_1, preceding_controller));
 
     if (found_it != controllers.end())
     {
       if (
         is_controller_inactive(found_it->c) &&
-        std::find(activate_request_.begin(), activate_request_.end(), preceeding_controller) !=
+        std::find(activate_request_.begin(), activate_request_.end(), preceding_controller) !=
           activate_request_.end())
       {
         message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceeding_controller +
+                  "' because preceding controller with name '" + preceding_controller +
                   "' is inactive and will be activated.";
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
       if (
         is_controller_active(found_it->c) &&
-        std::find(deactivate_request_.begin(), deactivate_request_.end(), preceeding_controller) ==
+        std::find(deactivate_request_.begin(), deactivate_request_.end(), preceding_controller) ==
           deactivate_request_.end())
       {
         message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceeding_controller +
+                  "' because preceding controller with name '" + preceding_controller +
                   "' is currently active and will not be deactivated.";
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
