@@ -107,10 +107,8 @@ if(BUILD_TESTING)
     controller_interface
     hardware_interface::hardware_interface
   )
-  ament_target_dependencies(test_led_rgb_device
-    std_msgs
-  )target_link_libraries(test_led_rgb_device
-  std_msgs::std_msgs
+target_link_libraries(test_led_rgb_device
+    ${std_msgs_TARGETS}
   )
 endif()
 
