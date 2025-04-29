@@ -26,6 +26,7 @@ find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+
 generate_parameter_library(controller_manager_parameters
   src/controller_manager_parameters.yaml
 )
