@@ -5,20 +5,27 @@ find_package(ros2_control_cmake REQUIRED)
 set_compiler_options()
 export_windows_symbols()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  controller_interface
+  controller_manager_msgs
+  diagnostic_updater
+  hardware_interface
+  pluginlib
+  rclcpp
+  realtime_tools
+  std_msgs
+  libstatistics_collector
+  generate_parameter_library
+)
 
-
-find_package(controller_interface REQUIRED)
-find_package(controller_manager_msgs REQUIRED)
-find_package(diagnostic_updater REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(realtime_tools REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(libstatistics_collector REQUIRED)
-find_package(generate_parameter_library REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(ament_cmake_core REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 find_package(backward_ros REQUIRED)
-
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 generate_parameter_library(controller_manager_parameters
   src/controller_manager_parameters.yaml
 )
