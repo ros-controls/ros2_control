@@ -64,8 +64,8 @@ target_include_directories(mock_components PUBLIC
 )
 target_link_libraries(mock_components 
 PUBLIC hardware_interface
-control_msgs::control_msgs
-  lifecycle_msgs::lifecycle_msgs
+  {control_msgs_TARGETS}
+  {lifecycle_msgs_TARGETS}
   pluginlib::pluginlib
   rclcpp_lifecycle::rclcpp_lifecycle
   rcpputils::rcpputils
