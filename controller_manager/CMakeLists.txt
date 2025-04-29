@@ -261,16 +261,6 @@ ament_python_install_package(controller_manager
   SCRIPTS_DESTINATION lib/controller_manager
 )
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-controller_interface
-controller_manager_msgs
-diagnostic_updater
-hardware_interface
-pluginlib
-rclcpp
-realtime_tools
-std_msgs
-libstatistics_collector
-)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})
