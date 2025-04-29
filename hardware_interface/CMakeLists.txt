@@ -41,8 +41,8 @@ target_include_directories(hardware_interface PUBLIC
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
 target_link_libraries(hardware_interface PUBLIC
-  control_msgs::control_msgs
-  lifecycle_msgs::lifecycle_msgs
+  {control_msgs_TARGETS}
+  {lifecycle_msgs_TARGETS}
   pluginlib::pluginlib
   rclcpp_lifecycle::rclcpp_lifecycle
   rcpputils::rcpputils
