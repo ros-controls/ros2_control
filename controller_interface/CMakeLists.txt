@@ -84,7 +84,7 @@ if(BUILD_TESTING)
     hardware_interface::hardware_interface
   )
   target_link_libraries(test_pose_sensor
-  geometry_msgs::geometry_msgs
+    ${geometry_msgs_TARGETS}
   )
   ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
   target_link_libraries(test_gps_sensor
