@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(hardware_interface LANGUAGES CXX)
 
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
+find_package(backward_ros REQUIRED)
 find_package(ros2_control_cmake REQUIRED)
 set_compiler_options()
 export_windows_symbols()
@@ -20,9 +23,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pal_statistics
 )
 
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_gen_version_h REQUIRED)
-find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -40,8 +40,20 @@ target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
+target_link_libraries(hardware_interface PUBLIC
+  control_msgs::control_msgs
+  lifecycle_msgs::lifecycle_msgs
+  pluginlib::pluginlib
+  rclcpp_lifecycle::rclcpp_lifecycle
+  rcpputils::rcpputils
+  rcutils::rcutils
+  realtime_tools::realtime_tools
+  TinyXML2::TinyXML2
+  tinyxml2_vendor::tinyxml2_vendor
+  joint_limits::joint_limits
+  urdf::urdf
+  pal_statistics::pal_statistics
+)
 add_library(mock_components SHARED
   src/mock_components/generic_system.cpp
 )
@@ -50,8 +62,21 @@ target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(mock_components PUBLIC hardware_interface)
-ament_target_dependencies(mock_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(mock_components 
+PUBLIC hardware_interface
+control_msgs::control_msgs
+  lifecycle_msgs::lifecycle_msgs
+  pluginlib::pluginlib
+  rclcpp_lifecycle::rclcpp_lifecycle
+  rcpputils::rcpputils
+  rcutils::rcutils
+  realtime_tools::realtime_tools
+  TinyXML2::TinyXML2
+  tinyxml2_vendor::tinyxml2_vendor
+  joint_limits::joint_limits
+  urdf::urdf
+  pal_statistics::pal_statistics
+)
 
 pluginlib_export_plugin_description_file(
   hardware_interface mock_components_plugin_description.xml)
@@ -63,27 +88,22 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
-  ament_target_dependencies(test_macros rcpputils)
+  target_link_libraries(test_macros rcpputils::rcpputils)
 
   ament_add_gmock(test_inst_hardwares test/test_inst_hardwares.cpp)
-  target_link_libraries(test_inst_hardwares hardware_interface)
-  ament_target_dependencies(test_inst_hardwares rcpputils)
+  target_link_libraries(test_inst_hardwares hardware_interface rcpputils::rcpputils)
 
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
-  target_link_libraries(test_joint_handle hardware_interface)
-  ament_target_dependencies(test_joint_handle rcpputils)
+  target_link_libraries(test_joint_handle hardware_interface rcpputils::rcpputils)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
-  target_link_libraries(test_component_interfaces hardware_interface)
-  ament_target_dependencies(test_component_interfaces ros2_control_test_assets)
+  target_link_libraries(test_component_interfaces hardware_interface ros2_control_test_assets::ros2_control_test_assets)
 
   ament_add_gmock(test_component_interfaces_custom_export test/test_component_interfaces_custom_export.cpp)
-  target_link_libraries(test_component_interfaces_custom_export hardware_interface)
-  ament_target_dependencies(test_component_interfaces_custom_export ros2_control_test_assets)
-
+  target_link_libraries(test_component_interfaces_custom_export hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
-  target_link_libraries(test_component_parser hardware_interface)
-  ament_target_dependencies(test_component_parser ros2_control_test_assets)
+  target_link_libraries(test_component_parser hardware_interface ros2_control_test_assets::ros2_control_test_assets)
 
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
@@ -92,9 +112,10 @@ if(BUILD_TESTING)
   test/test_hardware_components/test_two_joint_system.cpp
   test/test_hardware_components/test_system_with_command_modes.cpp
   )
-  target_link_libraries(test_hardware_components hardware_interface)
-  ament_target_dependencies(test_hardware_components
-    pluginlib)
+  target_link_libraries(test_hardware_components 
+  hardware_interface
+  pluginlib::pluginlib
+  )
   install(TARGETS test_hardware_components
     DESTINATION lib
   )
@@ -104,11 +125,11 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
-  target_link_libraries(test_generic_system hardware_interface)
-  ament_target_dependencies(test_generic_system
-    pluginlib
-    ros2_control_test_assets
-  )
+  target_link_libraries(test_generic_system 
+    hardware_interface
+    pluginlib::pluginlib
+    ros2_control_test_assets::ros2_control_test_assets
+   )
 endif()
 
 install(
