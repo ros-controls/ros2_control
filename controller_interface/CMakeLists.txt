@@ -27,7 +27,11 @@ target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
 )
-ament_target_dependencies(controller_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(controller_interface PUBLIC
+  hardware_interface::hardware_interface
+  rclcpp_lifecycle::rclcpp_lifecycle
+  realtime_tools::realtime_tools
+)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
@@ -70,8 +74,8 @@ if(BUILD_TESTING)
     controller_interface
     hardware_interface::hardware_interface
   )
-  ament_target_dependencies(test_imu_sensor
-    sensor_msgs
+  target_link_libraries(test_imu_sensor
+  sensor_msgs::sensor_msgs
   )
 
   ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
@@ -79,8 +83,8 @@ if(BUILD_TESTING)
     controller_interface
     hardware_interface::hardware_interface
   )
-  ament_target_dependencies(test_pose_sensor
-    geometry_msgs
+  target_link_libraries(test_pose_sensor
+  geometry_msgs::geometry_msgs
   )
   ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
   target_link_libraries(test_gps_sensor
@@ -105,6 +109,8 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(test_led_rgb_device
     std_msgs
+  )target_link_libraries(test_led_rgb_device
+  std_msgs::std_msgs
   )
 endif()
 
