@@ -59,7 +59,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller PUBLIC controller_manager)
   ament_target_dependencies(test_controller 
   PUBLIC
-  example_interfaces::example_interfaces
+  ${example_interfaces_TARGETS}
   )
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
