@@ -42,7 +42,7 @@ target_link_libraries(joint_limiter_interface PUBLIC
   realtime_tools::realtime_tools
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
-  trajectory_msgs::trajectory_msgs
+  {trajectory_msgs_TARGETS}
   urdf::urdf
 )
 
@@ -59,7 +59,7 @@ target_link_libraries(joint_limits_helpers PUBLIC
   realtime_tools::realtime_tools
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
-  trajectory_msgs::trajectory_msgs
+  {trajectory_msgs_TARGETS}
   urdf::urdf
 )
 add_library(joint_saturation_limiter SHARED
@@ -78,7 +78,7 @@ target_link_libraries(joint_saturation_limiter PUBLIC
   realtime_tools::realtime_tools
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
-  trajectory_msgs::trajectory_msgs
+  {trajectory_msgs_TARGETS}
   urdf::urdf
   )
 
