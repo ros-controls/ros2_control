@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   debian_source_build:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@add/install_dep/debian_job
     strategy:
       fail-fast: false
       matrix:
