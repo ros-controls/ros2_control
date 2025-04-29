@@ -5,27 +5,19 @@ find_package(ros2_control_cmake REQUIRED)
 set_compiler_options()
 export_windows_symbols()
 
-set(THIS_PACKAGE_INCLUDE_DEPENDS
-  controller_interface
-  controller_manager_msgs
-  diagnostic_updater
-  hardware_interface
-  pluginlib
-  rclcpp
-  realtime_tools
-  std_msgs
-  libstatistics_collector
-  generate_parameter_library
-)
 
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
-find_package(ament_cmake_core REQUIRED)
-find_package(ament_cmake_gen_version_h REQUIRED)
+
+find_package(controller_interface REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
+find_package(diagnostic_updater REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(realtime_tools REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(libstatistics_collector REQUIRED)
+find_package(generate_parameter_library REQUIRED)
 find_package(backward_ros REQUIRED)
-foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
-  find_package(${Dependency} REQUIRED)
-endforeach()
 
 generate_parameter_library(controller_manager_parameters
   src/controller_manager_parameters.yaml
@@ -41,8 +33,16 @@ target_include_directories(controller_manager PUBLIC
 )
 target_link_libraries(controller_manager PUBLIC
   controller_manager_parameters
+  controller_interface::controller_interface
+  controller_manager_msgs::controller_manager_msgs
+  diagnostic_updater::diagnostic_updater
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  realtime_tools::realtime_tools
+  std_msgs::std_msgs
+  libstatistics_collector::libstatistics_collector
 )
-ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_link_libraries(ros2_control_node PRIVATE
@@ -57,7 +57,10 @@ if(BUILD_TESTING)
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC controller_manager)
-  ament_target_dependencies(test_controller PUBLIC example_interfaces)
+  ament_target_dependencies(test_controller 
+  PUBLIC
+  example_interfaces::example_interfaces
+  )
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
     TARGETS test_controller
@@ -78,8 +81,11 @@ if(BUILD_TESTING)
   add_library(test_chainable_controller SHARED
     test/test_chainable_controller/test_chainable_controller.cpp
   )
-  ament_target_dependencies(test_chainable_controller PUBLIC realtime_tools)
-  target_link_libraries(test_chainable_controller PUBLIC controller_manager)
+  target_link_libraries(test_chainable_controller
+  PUBLIC 
+  controller_manager
+  realtime_tools::realtime_tools
+  )
   pluginlib_export_plugin_description_file(
     controller_interface test/test_chainable_controller/test_chainable_controller.xml)
   install(
@@ -248,6 +254,16 @@ ament_python_install_package(controller_manager
   SCRIPTS_DESTINATION lib/controller_manager
 )
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(
+controller_interface
+controller_manager_msgs
+diagnostic_updater
+hardware_interface
+pluginlib
+rclcpp
+realtime_tools
+std_msgs
+libstatistics_collector
+)
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})
