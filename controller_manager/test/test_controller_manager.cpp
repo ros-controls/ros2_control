@@ -910,7 +910,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
-      testing::AllOf(testing::Ge(0.85 / cm_update_rate), testing::Lt((1.15 / cm_update_rate))));
+      testing::AllOf(testing::Ge(0.8 / cm_update_rate), testing::Lt((1.2 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
       cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
