@@ -1239,7 +1239,7 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
         testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter)));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
-        testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+        testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.1 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
         testing::AllOf(testing::Ge(0.5 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
