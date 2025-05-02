@@ -169,6 +169,7 @@ hardware_interface
 * The hardware components can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
 * Added new ``get_optional`` method that returns ``std::optional`` of the templated type, and this can be used to check if the value is available or not (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
 * The ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` methods will now only receive the start/stop interfaces that belong to the hardware component instead of everything (`#2120 <https://github.com/ros-controls/ros2_control/pull/2120>`_)
+* Added hardware components execution time and periodicity statistics diagnostics (`#2086 <https://github.com/ros-controls/ros2_control/pull/2086>`_)
 
 joint_limits
 ************
