@@ -3766,7 +3766,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
                                                      .periodicity.standard_deviation.error)
           {
             diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-            add_element_to_list(bad_periodicity_async_hw, comp_name);
+            ros2_control::add_item(bad_periodicity_async_hw, comp_name);
           }
           else if (
             periodicity_error >
@@ -3778,7 +3778,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
             {
               diag_level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
             }
-            add_element_to_list(bad_periodicity_async_hw, comp_name);
+            ros2_control::add_item(bad_periodicity_async_hw, comp_name);
           }
         }
         const double max_exp_exec_time =
