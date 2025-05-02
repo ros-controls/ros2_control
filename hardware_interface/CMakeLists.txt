@@ -41,7 +41,6 @@ target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(hardware_interface PRIVATE fmt::fmt)
 ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_library(mock_components SHARED
@@ -72,20 +71,20 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_inst_hardwares rcpputils)
 
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
-  target_link_libraries(test_joint_handle hardware_interface fmt::fmt)
-  ament_target_dependencies(test_joint_handle rcpputils fmt)
+  target_link_libraries(test_joint_handle hardware_interface)
+  ament_target_dependencies(test_joint_handle rcpputils)
 
   # Test helper methods
   ament_add_gmock(test_helpers test/test_helpers.cpp)
   target_link_libraries(test_helpers hardware_interface)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
-  target_link_libraries(test_component_interfaces hardware_interface fmt::fmt)
-  ament_target_dependencies(test_component_interfaces ros2_control_test_assets fmt)
+  target_link_libraries(test_component_interfaces hardware_interface)
+  ament_target_dependencies(test_component_interfaces ros2_control_test_assets)
 
   ament_add_gmock(test_component_interfaces_custom_export test/test_component_interfaces_custom_export.cpp)
-  target_link_libraries(test_component_interfaces_custom_export hardware_interface fmt::fmt)
-  ament_target_dependencies(test_component_interfaces_custom_export ros2_control_test_assets fmt)
+  target_link_libraries(test_component_interfaces_custom_export hardware_interface)
+  ament_target_dependencies(test_component_interfaces_custom_export ros2_control_test_assets)
 
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface)

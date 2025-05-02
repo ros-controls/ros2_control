@@ -28,7 +28,6 @@ target_include_directories(transmission_interface PUBLIC
   $<INSTALL_INTERFACE:include/transmission_interface>
 )
 ament_target_dependencies(transmission_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(transmission_interface PUBLIC fmt::fmt)
 pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
 
 if(BUILD_TESTING)

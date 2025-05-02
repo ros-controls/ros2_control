@@ -645,7 +645,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
         {
           throw std::runtime_error(
             fmt::format(
-              FMT_COMPILE("Failed to set the initial state of the component : %s to %s"),
+              FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
               component.c_str(), state.label()));
         }
         components_to_activate.erase(component);
@@ -681,7 +681,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE("Failed to set the initial state of the component : %s to %s"),
+          FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
           component.c_str(), active_state.label()));
     }
   }
