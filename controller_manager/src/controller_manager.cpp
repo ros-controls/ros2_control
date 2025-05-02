@@ -22,6 +22,7 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -144,26 +145,6 @@ bool is_interface_a_chained_interface(
   return true;
 }
 
-template <typename T>
-void add_element_to_list(std::vector<T> & list, const T & element)
-{
-  if (std::find(list.begin(), list.end(), element) == list.end())
-  {
-    // Only add to the list if it doesn't exist
-    list.push_back(element);
-  }
-}
-
-template <typename T>
-void remove_element_from_list(std::vector<T> & list, const T & element)
-{
-  auto itr = std::find(list.begin(), list.end(), element);
-  if (itr != list.end())
-  {
-    list.erase(itr);
-  }
-}
-
 void controller_chain_spec_cleanup(
   std::unordered_map<std::string, controller_manager::ControllerChainSpec> & ctrl_chain_spec,
   const std::string & controller)
@@ -172,11 +153,11 @@ void controller_chain_spec_cleanup(
   const auto preceding_controllers = ctrl_chain_spec[controller].preceding_controllers;
   for (const auto & flwg_ctrl : following_controllers)
   {
-    remove_element_from_list(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
+    ros2_control::remove_item(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
   }
   for (const auto & preced_ctrl : preceding_controllers)
   {
-    remove_element_from_list(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
+    ros2_control::remove_item(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
   }
   ctrl_chain_spec.erase(controller);
 }
@@ -209,7 +190,7 @@ void get_active_controllers_using_command_interfaces_of_controller(
         is_controller_active(controller.c) &&
         std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
       {
-        add_element_to_list(controllers_using_command_interfaces, controller.info.name);
+        ros2_control::add_item(controllers_using_command_interfaces, controller.info.name);
       }
     }
   }
@@ -358,12 +339,6 @@ void get_controller_list_command_interfaces(
         *found_it, resource_manager, request_interface_list);
     }
   }
-}
-template <typename Collection>
-[[nodiscard]] bool is_unique(Collection collection)
-{
-  std::sort(collection.begin(), collection.end());
-  return std::adjacent_find(collection.cbegin(), collection.cend()) == collection.cend();
 }
 }  // namespace
 
@@ -1170,7 +1145,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   const auto state_itfs = controller->state_interface_configuration().names;
 
   // Check if the cmd_itfs and the state_itfs are unique
-  if (!is_unique(cmd_itfs))
+  if (!ros2_control::is_unique(cmd_itfs))
   {
     std::string cmd_itfs_str = std::accumulate(
       std::next(cmd_itfs.begin()), cmd_itfs.end(), cmd_itfs.front(),
@@ -1184,7 +1159,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  if (!is_unique(state_itfs))
+  if (!ros2_control::is_unique(state_itfs))
   {
     std::string state_itfs_str = std::accumulate(
       std::next(state_itfs.begin()), state_itfs.end(), state_itfs.front(),
@@ -1203,11 +1178,11 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
     {
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
@@ -1217,11 +1192,11 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
     {
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
-      add_element_to_list(
+      ros2_control::add_item(
         controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
@@ -1548,8 +1523,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status = check_preceeding_controllers_for_deactivate(
-        controllers, strictness, controller_it, message);
+      status =
+        check_preceding_controllers_for_deactivate(controllers, strictness, controller_it, message);
     }
 
     if (status != controller_interface::return_type::OK)
@@ -2656,6 +2631,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    perform_hardware_command_mode_change(
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -2871,29 +2848,12 @@ controller_interface::return_type ControllerManager::update(
       rt_buffer_.activate_controllers_using_interfaces_list.begin(),
       rt_buffer_.activate_controllers_using_interfaces_list.end(),
       [this](const std::string & controller)
-      { add_element_to_list(rt_buffer_.deactivate_controllers_list, controller); });
+      { ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller); });
 
     // Retrieve the interfaces to start and stop from the hardware end
-    rt_buffer_.interfaces_to_start.clear();
-    rt_buffer_.interfaces_to_stop.clear();
-    get_controller_list_command_interfaces(
-      rt_buffer_.deactivate_controllers_list, rt_controller_list, resource_manager_,
-      rt_buffer_.interfaces_to_stop);
-    get_controller_list_command_interfaces(
-      rt_buffer_.fallback_controllers_list, rt_controller_list, resource_manager_,
-      rt_buffer_.interfaces_to_start);
-    if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
-    {
-      if (!(resource_manager_->prepare_command_mode_switch(
-              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop) &&
-            resource_manager_->perform_command_mode_switch(
-              rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
-      {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Error while attempting mode switch when deactivating controllers in update cycle!");
-      }
-    }
+    perform_hardware_command_mode_change(
+      rt_controller_list, rt_buffer_.fallback_controllers_list,
+      rt_buffer_.deactivate_controllers_list, "update");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     if (!rt_buffer_.fallback_controllers_list.empty())
     {
@@ -2941,6 +2901,9 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+    perform_hardware_command_mode_change(
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -3034,6 +2997,34 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
 rclcpp::Clock::SharedPtr ControllerManager::get_trigger_clock() const { return trigger_clock_; }
+
+void ControllerManager::perform_hardware_command_mode_change(
+  const std::vector<ControllerSpec> & rt_controller_list,
+  const std::vector<std::string> & activate_controllers_list,
+  const std::vector<std::string> & deactivate_controllers_list, const std::string & rt_cycle_name)
+{
+  rt_buffer_.interfaces_to_start.clear();
+  rt_buffer_.interfaces_to_stop.clear();
+  get_controller_list_command_interfaces(
+    deactivate_controllers_list, rt_controller_list, resource_manager_,
+    rt_buffer_.interfaces_to_stop);
+  get_controller_list_command_interfaces(
+    activate_controllers_list, rt_controller_list, resource_manager_,
+    rt_buffer_.interfaces_to_start);
+  if (!rt_buffer_.interfaces_to_stop.empty() || !rt_buffer_.interfaces_to_start.empty())
+  {
+    if (!(resource_manager_->prepare_command_mode_switch(
+            rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop) &&
+          resource_manager_->perform_command_mode_switch(
+            rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Error while attempting mode switch when deactivating controllers in %s cycle!",
+        rt_cycle_name.c_str());
+    }
+  }
+}
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
@@ -3225,7 +3216,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
   return controller_interface::return_type::OK;
 };
 
-controller_interface::return_type ControllerManager::check_preceeding_controllers_for_deactivate(
+controller_interface::return_type ControllerManager::check_preceding_controllers_for_deactivate(
   const std::vector<ControllerSpec> & controllers, int /*strictness*/,
   const ControllersListIterator controller_it, std::string & message)
 {
@@ -3239,40 +3230,40 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
     get_logger(), "Checking preceding controller of following controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  auto preceeding_controllers_list =
+  auto preceding_controllers_list =
     controller_chained_state_interfaces_cache_[controller_it->info.name];
-  preceeding_controllers_list.insert(
-    preceeding_controllers_list.end(),
+  preceding_controllers_list.insert(
+    preceding_controllers_list.end(),
     controller_chained_reference_interfaces_cache_[controller_it->info.name].cbegin(),
     controller_chained_reference_interfaces_cache_[controller_it->info.name].cend());
 
-  for (const auto & preceeding_controller : preceeding_controllers_list)
+  for (const auto & preceding_controller : preceding_controllers_list)
   {
-    RCLCPP_DEBUG(get_logger(), "\t Preceding controller : '%s'.", preceeding_controller.c_str());
+    RCLCPP_DEBUG(get_logger(), "\t Preceding controller : '%s'.", preceding_controller.c_str());
     auto found_it = std::find_if(
       controllers.begin(), controllers.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, preceeding_controller));
+      std::bind(controller_name_compare, std::placeholders::_1, preceding_controller));
 
     if (found_it != controllers.end())
     {
       if (
         is_controller_inactive(found_it->c) &&
-        std::find(activate_request_.begin(), activate_request_.end(), preceeding_controller) !=
+        std::find(activate_request_.begin(), activate_request_.end(), preceding_controller) !=
           activate_request_.end())
       {
         message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceeding_controller +
+                  "' because preceding controller with name '" + preceding_controller +
                   "' is inactive and will be activated.";
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
       if (
         is_controller_active(found_it->c) &&
-        std::find(deactivate_request_.begin(), deactivate_request_.end(), preceeding_controller) ==
+        std::find(deactivate_request_.begin(), deactivate_request_.end(), preceding_controller) ==
           deactivate_request_.end())
       {
         message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceeding_controller +
+                  "' because preceding controller with name '" + preceding_controller +
                   "' is currently active and will not be deactivated.";
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
@@ -3578,7 +3569,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
       const auto exec_time_stats = controllers[i].execution_time_statistics->GetStatistics();
       stat.add(
         controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
-      if (is_async)
+      const bool publish_periodicity_stats =
+        is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
+      if (publish_periodicity_stats)
       {
         stat.add(
           controllers[i].info.name + periodicity_suffix,
@@ -3593,7 +3586,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+          ros2_control::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
         }
         else if (
           periodicity_error >
@@ -3605,7 +3598,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
           {
             level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
           }
-          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+          ros2_control::add_item(bad_periodicity_async_controllers, controllers[i].info.name);
         }
       }
       const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
@@ -3678,12 +3671,21 @@ void ControllerManager::controller_activity_diagnostic_callback(
 void ControllerManager::hardware_components_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  if (!is_resource_manager_initialized())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
+    return;
+  }
+
   bool all_active = true;
   bool atleast_one_hw_active = false;
+  const std::string read_cycle_suffix = ".read_cycle";
+  const std::string write_cycle_suffix = ".write_cycle";
+  const std::string state_suffix = ".state";
   const auto & hw_components_info = resource_manager_->get_components_status();
   for (const auto & [component_name, component_info] : hw_components_info)
   {
-    stat.add(component_name, component_info.state.label());
     if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       all_active = false;
@@ -3693,31 +3695,166 @@ void ControllerManager::hardware_components_diagnostic_callback(
       atleast_one_hw_active = true;
     }
   }
-  if (!is_resource_manager_initialized())
-  {
-    stat.summary(
-      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
-  }
-  else if (hw_components_info.empty())
+  if (hw_components_info.empty())
   {
     stat.summary(
       diagnostic_msgs::msg::DiagnosticStatus::ERROR, "No hardware components are loaded!");
+    return;
   }
-  else
+  else if (!atleast_one_hw_active)
   {
-    if (!atleast_one_hw_active)
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::WARN, "No hardware components are currently active");
+    return;
+  }
+
+  stat.summary(
+    diagnostic_msgs::msg::DiagnosticStatus::OK,
+    all_active ? "All hardware components are active" : "Not all hardware components are active");
+
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
+  auto make_stats_string =
+    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
+  {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+        << statistics_data.max << "] " << measurement_unit
+        << ", StdDev: " << statistics_data.standard_deviation;
+    return oss.str();
+  };
+
+  // Variable to define the overall status of the controller diagnostics
+  auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  std::vector<std::string> high_exec_time_hw;
+  std::vector<std::string> bad_periodicity_async_hw;
+
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    stat.add(component_name + state_suffix, component_info.state.label());
+    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::WARN,
-        "No hardware components are currently active");
+      all_active = false;
     }
     else
     {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::OK, all_active
-                                                      ? "All hardware components are active"
-                                                      : "Not all hardware components are active");
+      atleast_one_hw_active = true;
     }
+    if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      auto update_stats =
+        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string, this](
+          const std::string & comp_name, const auto & statistics,
+          const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
+          const auto & params)
+      {
+        if (!statistics)
+        {
+          return;
+        }
+        const bool is_async = comp_info.is_async;
+        const std::string periodicity_suffix = ".periodicity";
+        const std::string exec_time_suffix = ".execution_time";
+        const auto periodicity_stats = statistics->periodicity.get_statistics();
+        const auto exec_time_stats = statistics->execution_time.get_statistics();
+        stat.add(
+          comp_name + statistics_type_suffix + exec_time_suffix,
+          make_stats_string(exec_time_stats, "us"));
+        const bool publish_periodicity_stats =
+          is_async || (comp_info.rw_rate != this->get_update_rate());
+        if (publish_periodicity_stats)
+        {
+          stat.add(
+            comp_name + statistics_type_suffix + periodicity_suffix,
+            make_stats_string(periodicity_stats, "Hz") +
+              " -> Desired : " + std::to_string(comp_info.rw_rate) + " Hz");
+          const double periodicity_error =
+            std::abs(periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
+          if (
+            periodicity_error >
+              params->diagnostics.threshold.hardware_components.periodicity.mean_error.error ||
+            periodicity_stats.standard_deviation > params->diagnostics.threshold.hardware_components
+                                                     .periodicity.standard_deviation.error)
+          {
+            diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+            ros2_control::add_item(bad_periodicity_async_hw, comp_name);
+          }
+          else if (
+            periodicity_error >
+              params->diagnostics.threshold.hardware_components.periodicity.mean_error.warn ||
+            periodicity_stats.standard_deviation >
+              params->diagnostics.threshold.hardware_components.periodicity.standard_deviation.warn)
+          {
+            if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+            {
+              diag_level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+            }
+            ros2_control::add_item(bad_periodicity_async_hw, comp_name);
+          }
+        }
+        const double max_exp_exec_time =
+          is_async ? 1.e6 / static_cast<double>(comp_info.rw_rate) : 0.0;
+        if (
+          (exec_time_stats.average - max_exp_exec_time) >
+            params->diagnostics.threshold.hardware_components.execution_time.mean_error.error ||
+          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
+                                                 .execution_time.standard_deviation.error)
+        {
+          diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+          high_exec_time_hw.push_back(comp_name);
+        }
+        else if (
+          (exec_time_stats.average - max_exp_exec_time) >
+            params->diagnostics.threshold.hardware_components.execution_time.mean_error.warn ||
+          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
+                                                 .execution_time.standard_deviation.warn)
+        {
+          if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+          {
+            diag_level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+          }
+          high_exec_time_hw.push_back(comp_name);
+        }
+      };
+
+      // For components : {actuator, sensor and system}
+      update_stats(
+        component_name, component_info.read_statistics, read_cycle_suffix, level, component_info,
+        params_);
+      // For components : {actuator and system}
+      update_stats(
+        component_name, component_info.write_statistics, write_cycle_suffix, level, component_info,
+        params_);
+    }
+  }
+
+  if (!high_exec_time_hw.empty())
+  {
+    std::string high_exec_time_hw_string;
+    for (const auto & hw_comp : high_exec_time_hw)
+    {
+      high_exec_time_hw_string.append(hw_comp);
+      high_exec_time_hw_string.append(" ");
+    }
+    stat.mergeSummary(
+      level, "\nHigh execution jitter or mean error : [ " + high_exec_time_hw_string + "]");
+  }
+  if (!bad_periodicity_async_hw.empty())
+  {
+    std::string bad_periodicity_async_hw_string;
+    for (const auto & hw_comp : bad_periodicity_async_hw)
+    {
+      bad_periodicity_async_hw_string.append(hw_comp);
+      bad_periodicity_async_hw_string.append(" ");
+    }
+    stat.mergeSummary(
+      level,
+      "\nHigh periodicity jitter or mean error : [ " + bad_periodicity_async_hw_string + "]");
   }
 }
 
