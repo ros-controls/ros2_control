@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <fmt/compile.h>
+
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"

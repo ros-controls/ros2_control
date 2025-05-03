@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/compile.h>
+
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"

@@ -17,10 +17,11 @@
 #ifndef TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 
-#include <fmt/compile.h>
 #include <cassert>
 #include <string>
 #include <vector>
+
+#include <fmt/compile.h>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/accessor.hpp"

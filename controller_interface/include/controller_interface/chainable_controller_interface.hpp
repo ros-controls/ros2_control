@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <fmt/compile.h>
+
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/handle.hpp"
 

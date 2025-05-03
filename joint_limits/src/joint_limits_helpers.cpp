@@ -19,6 +19,8 @@
 #include <cmath>
 #include "rclcpp/logging.hpp"
 
+#include <fmt/compile.h>
+
 namespace joint_limits
 {
 namespace internal

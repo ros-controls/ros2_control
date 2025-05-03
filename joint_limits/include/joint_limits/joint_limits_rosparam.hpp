@@ -17,10 +17,11 @@
 #ifndef JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 
-#include <fmt/compile.h>
 #include <limits>
 #include <string>
 #include <vector>
+
+#include <fmt/compile.h>
 
 #include "joint_limits/joint_limits.hpp"
 #include "rclcpp/node.hpp"

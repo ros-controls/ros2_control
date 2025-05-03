@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
-#include <fmt/compile.h>
 #include <algorithm>
 #include <atomic>
 #include <functional>
@@ -27,6 +26,8 @@
 #include <string>
 #include <utility>
 #include <variant>
+
+#include <fmt/compile.h>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
