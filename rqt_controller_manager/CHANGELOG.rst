@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add consistent transitions for controllers in rqt_controller_manager (`#2163 <https://github.com/ros-controls/ros2_control/issues/2163>`_)
+* Contributors: Soham Patil
+
 4.28.1 (2025-04-17)
 -------------------
 

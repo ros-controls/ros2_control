@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.28.1 (2025-04-17)
 -------------------
 * Use previous command to enforce the joint limits on position interfaces (`#2183 <https://github.com/ros-controls/ros2_control/issues/2183>`_)

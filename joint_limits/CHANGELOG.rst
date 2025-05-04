@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.28.1 (2025-04-17)
 -------------------
 * Use previous command to enforce the joint limits on position interfaces (`#2183 <https://github.com/ros-controls/ros2_control/issues/2183>`_)
