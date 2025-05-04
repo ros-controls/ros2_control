@@ -10,6 +10,16 @@
 #      controller name, a controller that failed to activate, etc. )
 #    * BEST_EFFORT means that even when something goes wrong with on controller,
 #      the service will still try to activate/stop the remaining controllers
+#    * RESOLVE means that the controller manager will try to resolve the controller
+#      chain automatically in order to activate/deactivate the given controllers.
+#      Useful, if you have a complex system and when you want all the chain to start
+#      in same update iteration.
+#    * FORCE means that the controller manager will try to do the necessary in order
+#      to activate the given controllers without having to specify the controllers
+#      to deactivate. This is useful when you want to activate a controller that
+#      depends on another unknown controller that is currently running. The controller
+#      manager will stop the controller that is blocking the activation of the
+#      requested controller.
 #  * activate the controllers as soon as their hardware dependencies are ready, will
 #    wait for all interfaces to be ready otherwise
 #  * the timeout before aborting pending controllers. Zero for infinite
@@ -25,6 +35,8 @@ string[] deactivate_controllers
 int32 strictness
 int32 BEST_EFFORT=1
 int32 STRICT=2
+int32 RESOLVE=3
+int32 FORCE=4
 bool activate_asap
 builtin_interfaces/Duration timeout
 ---
