@@ -133,10 +133,10 @@ public:
     "removed by the ROS 2 Kilted Kaiju release.")]]
   double get_value() const
   {
-    double value = std::numeric_limits<double>::quiet_NaN();
-    if (get_value(value))
+    std::optional<double> opt_value = get_optional();
+    if (opt_value.has_value())
     {
-      return value;
+      return opt_value.value();
     }
     else
     {
@@ -200,20 +200,13 @@ public:
     "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
   get_value(T & value, unsigned int max_tries = 10) const
   {
-    unsigned int nr_tries = 0;
-    ++get_value_statistics_.total_counter;
-    while (!command_interface_.get_value(value))
+    const auto opt_value = get_optional<T>(max_tries);
+    if (opt_value.has_value())
     {
-      ++get_value_statistics_.failed_counter;
-      ++nr_tries;
-      if (nr_tries == max_tries)
-      {
-        ++get_value_statistics_.timeout_counter;
-        return false;
-      }
-      std::this_thread::yield();
+      value = opt_value.value();
+      return true;
     }
-    return true;
+    return false;
   }
 
 protected:
