@@ -17,12 +17,12 @@
 #ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
 #define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
-
-#include <fmt/compile.h>
 
 #define DEFINE_LIMIT_STRUCT(LimitType)                             \
   struct LimitType                                                 \

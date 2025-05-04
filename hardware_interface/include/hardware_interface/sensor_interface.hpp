@@ -15,14 +15,14 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <fmt/compile.h>
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"

@@ -15,12 +15,12 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
+#include <fmt/compile.h>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <fmt/compile.h>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"

@@ -15,12 +15,12 @@
 #ifndef CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
+#include <fmt/compile.h>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <fmt/compile.h>
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/handle.hpp"
