@@ -53,7 +53,6 @@ class Handle
 {
 public:
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
-
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
