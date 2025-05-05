@@ -32,6 +32,7 @@
   <depend>std_msgs</depend>
   <depend>libstatistics_collector</depend>
   <depend>generate_parameter_library</depend>
+  <depend>fmt</depend>
   <exec_depend>python3-filelock</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>

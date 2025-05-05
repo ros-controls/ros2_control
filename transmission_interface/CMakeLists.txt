@@ -9,6 +9,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -26,6 +27,7 @@ target_include_directories(transmission_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/transmission_interface>
 )
+target_link_libraries(transmission_interface PUBLIC fmt::fmt)
 ament_target_dependencies(transmission_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
 
