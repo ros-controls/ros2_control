@@ -15,8 +15,6 @@
 #ifndef CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
-#include <fmt/compile.h>
-
 #include <memory>
 #include <string>
 #include <unordered_map>

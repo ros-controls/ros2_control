@@ -15,8 +15,6 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
-#include <fmt/compile.h>
-
 #include <memory>
 #include <string>
 #include <unordered_map>

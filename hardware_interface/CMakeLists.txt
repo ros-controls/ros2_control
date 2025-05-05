@@ -41,6 +41,7 @@ target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
+target_link_libraries(hardware_interface PUBLIC fmt::fmt)
 ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_library(mock_components SHARED

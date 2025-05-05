@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fmt/compile.h>
 #include <tinyxml2.h>
 #include <iostream>
 #include <regex>

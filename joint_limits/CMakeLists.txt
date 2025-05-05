@@ -28,7 +28,6 @@ target_include_directories(joint_limits INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-target_link_libraries(joint_limits INTERFACE fmt::fmt)
 ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_library(joint_limiter_interface SHARED
@@ -75,7 +74,7 @@ if(BUILD_TESTING)
   find_package(rclcpp REQUIRED)
 
   ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_link_libraries(joint_limits_rosparam_test joint_limits)
+  target_link_libraries(joint_limits_rosparam_test joint_limits fmt::fmt)
   target_compile_definitions(
     joint_limits_rosparam_test
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")

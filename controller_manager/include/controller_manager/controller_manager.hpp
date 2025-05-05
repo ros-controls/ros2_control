@@ -15,8 +15,6 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
-#include <fmt/compile.h>
-
 #include <map>
 #include <memory>
 #include <string>
