@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+* Use the new reusable helpers methods in hardware diagnostics (`#2216 <https://github.com/ros-controls/ros2_control/issues/2216>`_)
+* [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)
+* Add common reusable helper methods header (`#2099 <https://github.com/ros-controls/ros2_control/issues/2099>`_)
+* Use filelock in spawner to avoid concurrent operations (`#2202 <https://github.com/ros-controls/ros2_control/issues/2202>`_)
+* increase test tolerance to reduce flakiness (`#2212 <https://github.com/ros-controls/ros2_control/issues/2212>`_)
+* Add a method to perform the hardware command mode changes (`#2203 <https://github.com/ros-controls/ros2_control/issues/2203>`_)
+* Fix typos: preceeding -> preceding (`#2206 <https://github.com/ros-controls/ros2_control/issues/2206>`_)
+* Throttle the overrun logs (`#2201 <https://github.com/ros-controls/ros2_control/issues/2201>`_)
+* doc: Added explanation of preceding/following controllers (`#2192 <https://github.com/ros-controls/ros2_control/issues/2192>`_)
+* Contributors: Christoph Fröhlich, Martin Pecka, Sai Kishor Kothakota
+
 4.28.1 (2025-04-17)
 -------------------
 * Fix the enforce_command_limits deactivation (`#2181 <https://github.com/ros-controls/ros2_control/issues/2181>`_)
