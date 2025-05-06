@@ -19,6 +19,7 @@ import sys
 import warnings
 
 from controller_manager import switch_controllers, unload_controller
+from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
@@ -51,6 +52,7 @@ def main(args=None):
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
     switch_timeout = args.switch_timeout
+    strictness = SwitchController.Request.STRICT
 
     node = Node("unspawner_" + controller_names[0])
     try:
@@ -60,7 +62,7 @@ def main(args=None):
             controller_manager_name,
             controller_names,
             [],
-            True,
+            strictness,
             True,
             switch_timeout,
         )
