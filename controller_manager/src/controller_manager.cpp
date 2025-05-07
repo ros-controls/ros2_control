@@ -153,11 +153,23 @@ void controller_chain_spec_cleanup(
   const auto preceding_controllers = ctrl_chain_spec[controller].preceding_controllers;
   for (const auto & flwg_ctrl : following_controllers)
   {
-    ros2_control::remove_item(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
+    if (!ros2_control::remove_item(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller))
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("ControllerManager::utils"),
+        "Controller '%s' is not in the list of preceding controllers of '%s'.", controller.c_str(),
+        flwg_ctrl.c_str());
+    }
   }
   for (const auto & preced_ctrl : preceding_controllers)
   {
-    ros2_control::remove_item(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
+    if (ros2_control::remove_item(ctrl_chain_spec[preced_ctrl].following_controllers, controller))
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("ControllerManager::utils"),
+        "Controller '%s' is not in the list of following controllers of '%s'.", controller.c_str(),
+        preced_ctrl.c_str());
+    }
   }
   ctrl_chain_spec.erase(controller);
 }

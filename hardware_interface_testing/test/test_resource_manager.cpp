@@ -1289,8 +1289,8 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     EXPECT_EQ(claimed_itf1.get_optional().value(), 1.0);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 3.0);
 
-    claimed_itf1.set_value(11.1);
-    claimed_itf3.set_value(33.3);
+    ASSERT_TRUE(claimed_itf1.set_value(11.1));
+    ASSERT_TRUE(claimed_itf3.set_value(33.3));
     EXPECT_EQ(claimed_itf1.get_optional().value(), 11.1);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 33.3);
 
@@ -1412,8 +1412,8 @@ public:
       hardware_interface::lifecycle_state_names::ACTIVE);
 
     // read failure for TEST_ACTUATOR_HARDWARE_NAME
-    claimed_itfs[0].set_value(fail_value);
-    claimed_itfs[1].set_value(fail_value - 10.0);
+    ASSERT_TRUE(claimed_itfs[0].set_value(fail_value));
+    ASSERT_TRUE(claimed_itfs[1].set_value(fail_value - 10.0));
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1448,8 +1448,8 @@ public:
     }
 
     // read failure for TEST_SYSTEM_HARDWARE_NAME
-    claimed_itfs[0].set_value(fail_value - 10.0);
-    claimed_itfs[1].set_value(fail_value);
+    ASSERT_TRUE(claimed_itfs[0].set_value(fail_value - 10.0));
+    ASSERT_TRUE(claimed_itfs[1].set_value(fail_value));
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1485,8 +1485,8 @@ public:
 
     // read failure for both, TEST_ACTUATOR_HARDWARE_NAME and
     // TEST_SYSTEM_HARDWARE_NAME
-    claimed_itfs[0].set_value(fail_value);
-    claimed_itfs[1].set_value(fail_value);
+    ASSERT_TRUE(claimed_itfs[0].set_value(fail_value));
+    ASSERT_TRUE(claimed_itfs[1].set_value(fail_value));
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1532,8 +1532,8 @@ public:
       hardware_interface::lifecycle_state_names::ACTIVE);
 
     // deactivate for TEST_ACTUATOR_HARDWARE_NAME
-    claimed_itfs[0].set_value(deactivate_value);
-    claimed_itfs[1].set_value(deactivate_value - 10.0);
+    ASSERT_TRUE(claimed_itfs[0].set_value(deactivate_value));
+    ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value - 10.0));
     {
       // deactivate on error
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
@@ -1568,8 +1568,8 @@ public:
     }
 
     // deactivate for TEST_SYSTEM_HARDWARE_NAME
-    claimed_itfs[0].set_value(deactivate_value - 10.0);
-    claimed_itfs[1].set_value(deactivate_value);
+    ASSERT_TRUE(claimed_itfs[0].set_value(deactivate_value - 10.0));
+    ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value));
     {
       // deactivate on flag
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
@@ -1604,8 +1604,8 @@ public:
 
     // deactivate both, TEST_ACTUATOR_HARDWARE_NAME and
     // TEST_SYSTEM_HARDWARE_NAME
-    claimed_itfs[0].set_value(deactivate_value);
-    claimed_itfs[1].set_value(deactivate_value);
+    ASSERT_TRUE(claimed_itfs[0].set_value(deactivate_value));
+    ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value));
     {
       // deactivate on flag
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
@@ -1797,8 +1797,8 @@ public:
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     {
-      claimed_itfs[0].set_value(10.0);
-      claimed_itfs[1].set_value(20.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(10.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(20.0));
       auto [ok, failed_hardware_names] = rm->write(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
@@ -1846,13 +1846,13 @@ public:
       {
         // The values are computations exactly within the test_components
         prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
-        claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + 20.0);
+        ASSERT_TRUE(claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + 20.0));
       }
       if (i % (cm_update_rate_ / actuator_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
         prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
-        claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + 10.0);
+        ASSERT_TRUE(claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + 10.0));
       }
       // Even though we skip some read and write iterations, the state interfaces should be the same
       // as previous updated one until the next cycle
@@ -2320,8 +2320,10 @@ public:
         prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
         prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
       }
-      claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + actuator_increment);
-      claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + system_increment);
+      ASSERT_TRUE(
+        claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + actuator_increment));
+      ASSERT_TRUE(
+        claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + system_increment));
       // This is needed to account for any missing hits to the read and write cycles as the tests
       // are going to be run on a non-RT operating system
       ASSERT_NEAR(
@@ -2523,8 +2525,8 @@ public:
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     {
-      claimed_itfs[0].set_value(10.0);
-      claimed_itfs[1].set_value(20.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(10.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(20.0));
       auto [ok, failed_hardware_names] = rm->write(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
@@ -2562,8 +2564,8 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
-      claimed_itfs[0].set_value(2.0);
-      claimed_itfs[1].set_value(-4.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(2.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(-4.0));
 
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
@@ -2579,8 +2581,8 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
-      EXPECT_EQ(state_itfs[0].get_value(), 1.0);
-      EXPECT_EQ(state_itfs[1].get_value(), -2.0);
+      EXPECT_EQ(state_itfs[0].get_optional().value(), 1.0);
+      EXPECT_EQ(state_itfs[1].get_optional().value(), -2.0);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
@@ -2595,23 +2597,23 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
-      EXPECT_EQ(state_itfs[0].get_value(), 1.0);
-      EXPECT_EQ(state_itfs[1].get_value(), -2.0);
+      EXPECT_EQ(state_itfs[0].get_optional().value(), 1.0);
+      EXPECT_EQ(state_itfs[1].get_optional().value(), -2.0);
 
-      EXPECT_EQ(claimed_itfs[0].get_value(), 2.0);
-      EXPECT_EQ(claimed_itfs[1].get_value(), -4.0);
-      claimed_itfs[0].set_value(0.0);
-      claimed_itfs[1].set_value(0.0);
-      EXPECT_EQ(claimed_itfs[0].get_value(), 0.0);
-      EXPECT_EQ(claimed_itfs[1].get_value(), 0.0);
+      EXPECT_EQ(claimed_itfs[0].get_optional().value(), 2.0);
+      EXPECT_EQ(claimed_itfs[1].get_optional().value(), -4.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(0.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(0.0));
+      EXPECT_EQ(claimed_itfs[0].get_optional().value(), 0.0);
+      EXPECT_EQ(claimed_itfs[1].get_optional().value(), 0.0);
 
       // enforcing limits
       rm->enforce_command_limits(duration);
 
-      ASSERT_NEAR(state_itfs[2].get_value(), 1.05, 0.00001);
+      ASSERT_NEAR(state_itfs[2].get_optional().value(), 1.05, 0.00001);
       // It is using the actual velocity 1.05 to limit the claimed_itf
-      EXPECT_NEAR(claimed_itfs[0].get_value(), 1.048, 0.00001);
-      EXPECT_EQ(claimed_itfs[1].get_value(), 0.0);
+      EXPECT_NEAR(claimed_itfs[0].get_optional().value(), 1.048, 0.00001);
+      EXPECT_EQ(claimed_itfs[1].get_optional().value(), 0.0);
 
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
@@ -2623,26 +2625,28 @@ public:
       EXPECT_TRUE(read_ok);
       EXPECT_TRUE(failed_hardware_names_read.empty());
 
-      ASSERT_NEAR(state_itfs[0].get_value(), claimed_itfs[0].get_value() / 2.0, 0.00001);
-      ASSERT_EQ(state_itfs[1].get_value(), 0.0);
+      ASSERT_NEAR(
+        state_itfs[0].get_optional().value(), claimed_itfs[0].get_optional().value() / 2.0,
+        0.00001);
+      ASSERT_EQ(state_itfs[1].get_optional().value(), 0.0);
     }
 
     // Reset the position state interface of actuator to zero
     {
-      ASSERT_GT(state_itfs[2].get_value(), 1.05);
-      claimed_itfs[0].set_value(test_constants::RESET_STATE_INTERFACES_VALUE);
+      ASSERT_GT(state_itfs[2].get_optional().value(), 1.05);
+      ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::RESET_STATE_INTERFACES_VALUE));
       auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
       EXPECT_TRUE(read_ok);
       EXPECT_TRUE(failed_hardware_names_read.empty());
-      ASSERT_EQ(state_itfs[2].get_value(), 0.0);
-      claimed_itfs[0].set_value(0.0);
-      claimed_itfs[1].set_value(0.0);
-      ASSERT_EQ(claimed_itfs[0].get_value(), 0.0);
-      ASSERT_EQ(claimed_itfs[1].get_value(), 0.0);
+      ASSERT_EQ(state_itfs[2].get_optional().value(), 0.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(0.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(0.0));
+      ASSERT_EQ(claimed_itfs[0].get_optional().value(), 0.0);
+      ASSERT_EQ(claimed_itfs[1].get_optional().value(), 0.0);
     }
 
-    double new_state_value_1 = state_itfs[0].get_value();
-    double new_state_value_2 = state_itfs[1].get_value();
+    double new_state_value_1 = state_itfs[0].get_optional().value();
+    double new_state_value_2 = state_itfs[1].get_optional().value();
     // Now loop and see that the joint limits are being enforced progressively
     for (size_t i = 1; i < 300; i++)
     {
@@ -2650,13 +2654,13 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
-      EXPECT_EQ(state_itfs[0].get_value(), new_state_value_1);
-      EXPECT_EQ(state_itfs[1].get_value(), new_state_value_2);
+      EXPECT_EQ(state_itfs[0].get_optional().value(), new_state_value_1);
+      EXPECT_EQ(state_itfs[1].get_optional().value(), new_state_value_2);
 
-      claimed_itfs[0].set_value(10.0);
-      claimed_itfs[1].set_value(-20.0);
-      EXPECT_EQ(claimed_itfs[0].get_value(), 10.0);
-      EXPECT_EQ(claimed_itfs[1].get_value(), -20.0);
+      ASSERT_TRUE(claimed_itfs[0].set_value(10.0));
+      ASSERT_TRUE(claimed_itfs[1].set_value(-20.0));
+      EXPECT_EQ(claimed_itfs[0].get_optional().value(), 10.0);
+      EXPECT_EQ(claimed_itfs[1].get_optional().value(), -20.0);
 
       // enforcing limits
       rm->enforce_command_limits(duration);
@@ -2665,18 +2669,18 @@ public:
       const double velocity_joint_1 = 0.2;
       const double prev_command_val = 1.048;
       ASSERT_NEAR(
-        claimed_itfs[0].get_value(),
+        claimed_itfs[0].get_optional().value(),
         prev_command_val +
           std::min((velocity_joint_1 * (duration.seconds() * static_cast<double>(i))), M_PI),
         1.0e-8)
         << "This should be progressively increasing as it is a position limit for iteration : "
         << i;
-      EXPECT_NEAR(claimed_itfs[1].get_value(), -0.2, 1.0e-8)
+      EXPECT_NEAR(claimed_itfs[1].get_optional().value(), -0.2, 1.0e-8)
         << "This should be -0.2 as it is velocity limit";
 
       // This is as per the logic of the test components internally
-      new_state_value_1 = claimed_itfs[0].get_value() / 2.0;
-      new_state_value_2 = claimed_itfs[1].get_value() / 2.0;
+      new_state_value_1 = claimed_itfs[0].get_optional().value() / 2.0;
+      new_state_value_2 = claimed_itfs[1].get_optional().value() / 2.0;
 
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
@@ -2689,8 +2693,8 @@ public:
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
 
-      EXPECT_NEAR(state_itfs[0].get_value(), 0.823, 0.00001);
-      EXPECT_NEAR(state_itfs[1].get_value(), -0.1, 0.00001);
+      EXPECT_NEAR(state_itfs[0].get_optional().value(), 0.823, 0.00001);
+      EXPECT_NEAR(state_itfs[1].get_optional().value(), -0.1, 0.00001);
     }
   }
 

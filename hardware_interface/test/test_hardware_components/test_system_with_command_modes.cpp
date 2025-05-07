@@ -79,6 +79,8 @@ public:
     std::vector<hardware_interface::StateInterface> state_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
           get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
@@ -91,6 +93,7 @@ public:
         hardware_interface::StateInterface(
           get_hardware_info().joints[i].name, hardware_interface::HW_IF_ACCELERATION,
           &acceleration_state_[i]));
+#pragma GCC diagnostic pop
     }
 
     return state_interfaces;
@@ -101,6 +104,8 @@ public:
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
           get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
@@ -109,6 +114,7 @@ public:
         hardware_interface::CommandInterface(
           get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY,
           &velocity_command_[i]));
+#pragma GCC diagnostic pop
     }
 
     return command_interfaces;
