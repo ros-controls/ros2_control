@@ -37,13 +37,8 @@ concurrency:
 jobs:
   build-on-jazzy:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [jazzy]
-        ROS_REPO: [testing]
     with:
-      ros_distro: ${{ matrix.ROS_DISTRO }}
-      ros_repo: ${{ matrix.ROS_REPO }}
+      ros_distro: jazzy
+      ros_repo: testing
       upstream_workspace: ros2_control.rolling.repos
       ref_for_scheduled_build: master
