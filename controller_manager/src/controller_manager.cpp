@@ -1341,6 +1341,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
     {
+      controller_chain_dependency_graph_.add_dependency(controller_name, ctrl_it->info.name);
       ros2_control::add_item(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
       ros2_control::add_item(
@@ -1355,6 +1356,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     controller_manager::ControllersListIterator ctrl_it;
     if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
     {
+      controller_chain_dependency_graph_.add_dependency(ctrl_it->info.name, controller_name);
       ros2_control::add_item(
         controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
       ros2_control::add_item(

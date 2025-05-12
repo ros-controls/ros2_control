@@ -19,11 +19,16 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/types/statistics_types.hpp"
 
 namespace controller_manager
@@ -57,5 +62,79 @@ struct ControllerChainSpec
   std::vector<std::string> following_controllers;
   std::vector<std::string> preceding_controllers;
 };
+
+class ControllerChainDependencyGraph
+{
+public:
+  void add_dependency(const std::string & predecessor, const std::string & successor)
+  {
+    if (predecessors.count(predecessor) == 0)
+    {
+      predecessors[predecessor] = {};
+    }
+    if (successors.count(successor) == 0)
+    {
+      successors[successor] = {};
+    }
+
+    ros2_control::add_item(predecessors[successor], predecessor);
+    ros2_control::add_item(successors[predecessor], successor);
+  }
+
+  void remove_controller(const std::string & controller_name)
+  {
+    predecessors.erase(controller_name);
+    successors.erase(controller_name);
+    for (auto & [_, succ] : predecessors)
+    {
+      succ.erase(std::remove(succ.begin(), succ.end(), controller_name), succ.end());
+    }
+    for (auto & [_, preds] : successors)
+    {
+      preds.erase(std::remove(preds.begin(), preds.end(), controller_name), preds.end());
+    }
+  }
+
+  void depth_first_search(
+    const std::string & controller_name, std::unordered_set<std::string> & visited,
+    std::unordered_map<std::string, std::vector<std::string>> & graph)
+  {
+    if (visited.find(controller_name) != visited.end())
+    {
+      return;
+    }
+    visited.insert(controller_name);
+    for (const auto & neighbor : graph[controller_name])
+    {
+      if (visited.find(neighbor) == visited.end())
+      {
+        depth_first_search(neighbor, visited, graph);
+      }
+    }
+  }
+
+  std::vector<std::string> get_all_predecessors(const std::string & controller_name)
+  {
+    std::unordered_set<std::string> visited;
+    depth_first_search(controller_name, visited, predecessors);
+    std::vector<std::string> predecessors_list;
+    std::copy(visited.begin(), visited.end(), std::back_inserter(predecessors_list));
+    return predecessors_list;
+  }
+
+  std::vector<std::string> get_all_successors(const std::string & controller_name)
+  {
+    std::unordered_set<std::string> visited;
+    depth_first_search(controller_name, visited, successors);
+    std::vector<std::string> successors_list;
+    std::copy(visited.begin(), visited.end(), std::back_inserter(successors_list));
+    return successors_list;
+  }
+
+private:
+  std::unordered_map<std::string, std::vector<std::string>> predecessors = {};
+  std::unordered_map<std::string, std::vector<std::string>> successors = {};
+};
+
 }  // namespace controller_manager
 #endif  // CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
