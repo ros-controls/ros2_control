@@ -73,6 +73,34 @@ public:
   }
 };
 
+TEST(ControllerManagerDependencyGraph, controller_chain_dependency_graph)
+{
+  {
+    controller_manager::ControllerChainDependencyGraph graph;
+    // Let's test the case of A -> B -> C -> D && B -> E && E -> F
+    graph.add_dependency("A", "B");
+    graph.add_dependency("B", "C");
+    graph.add_dependency("C", "D");
+    graph.add_dependency("B", "E");
+    graph.add_dependency("E", "F");
+
+    EXPECT_THAT(
+      graph.get_all_successors("A"), testing::UnorderedElementsAre("B", "C", "D", "E", "F"));
+    EXPECT_THAT(graph.get_all_successors("B"), testing::UnorderedElementsAre("C", "D", "E", "F"));
+    EXPECT_THAT(graph.get_all_successors("C"), testing::UnorderedElementsAre("D"));
+    EXPECT_THAT(graph.get_all_successors("D"), testing::UnorderedElementsAre());
+    EXPECT_THAT(graph.get_all_successors("E"), testing::UnorderedElementsAre("F"));
+    EXPECT_THAT(graph.get_all_successors("F"), testing::UnorderedElementsAre());
+
+    EXPECT_THAT(graph.get_all_predecessors("A"), testing::UnorderedElementsAre());
+    EXPECT_THAT(graph.get_all_predecessors("B"), testing::UnorderedElementsAre("A"));
+    EXPECT_THAT(graph.get_all_predecessors("C"), testing::UnorderedElementsAre("B", "A"));
+    EXPECT_THAT(graph.get_all_predecessors("D"), testing::UnorderedElementsAre("C", "B", "A"));
+    EXPECT_THAT(graph.get_all_predecessors("E"), testing::UnorderedElementsAre("B", "A"));
+    EXPECT_THAT(graph.get_all_predecessors("F"), testing::UnorderedElementsAre("E", "B", "A"));
+  }
+}
+
 class TestControllerManagerRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {

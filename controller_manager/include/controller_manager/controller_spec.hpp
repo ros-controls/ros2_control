@@ -119,6 +119,7 @@ public:
     depth_first_search(controller_name, visited, predecessors);
     std::vector<std::string> predecessors_list;
     std::copy(visited.begin(), visited.end(), std::back_inserter(predecessors_list));
+    predecessors_list.pop_back();  // Remove the controller itself
     return predecessors_list;
   }
 
@@ -128,6 +129,7 @@ public:
     depth_first_search(controller_name, visited, successors);
     std::vector<std::string> successors_list;
     std::copy(visited.begin(), visited.end(), std::back_inserter(successors_list));
+    successors_list.pop_back();  // Remove the controller itself
     return successors_list;
   }
 
