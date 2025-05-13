@@ -35,8 +35,8 @@ string[] deactivate_controllers
 int32 strictness
 int32 BEST_EFFORT=1
 int32 STRICT=2
-int32 RESOLVE=3
-int32 FORCE=4
+int32 AUTO=3
+int32 AUTO_FORCE=4
 bool activate_asap
 builtin_interfaces/Duration timeout
 ---
