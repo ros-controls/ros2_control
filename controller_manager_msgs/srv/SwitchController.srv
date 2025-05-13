@@ -9,17 +9,20 @@
 #    * STRICT means that switching will fail if anything goes wrong (an invalid
 #      controller name, a controller that failed to activate, etc. )
 #    * BEST_EFFORT means that even when something goes wrong with on controller,
-#      the service will still try to activate/stop the remaining controllers
-#    * RESOLVE means that the controller manager will try to resolve the controller
-#      chain automatically in order to activate/deactivate the given controllers.
-#      Useful, if you have a complex system and when you want all the chain to start
-#      in same update iteration.
-#    * FORCE means that the controller manager will try to do the necessary in order
-#      to activate the given controllers without having to specify the controllers
-#      to deactivate. This is useful when you want to activate a controller that
-#      depends on another unknown controller that is currently running. The controller
-#      manager will stop the controller that is blocking the activation of the
-#      requested controller.
+#      the service will still try to activate/deactivate the remaining controllers
+#    * AUTO means that the controller manager will automatically resolve the controller
+#      chain in order to activate and/or deactivate the specified controllers.
+#      This is useful in complex systems when you want all dependent controllers to start
+#      within the same update iteration.
+#    * AUTO_FORCE means that the controller manager will take all necessary steps to activate
+#      the specified controllers without requiring you to explicitly list the controllers
+#      to be deactivated. This is useful when the controller being activated depends on
+#      another unknown controller that is currently running. The controller manager will
+#      deactivate any controllers that block the activation of the requested controller,
+#      following the mutually exclusive joint interface switching principle. For example,
+#      to activate a controller that uses a joint's position interface, the controller manager
+#      will automatically deactivate any controllers that use conflicting interfaces for
+#      the same joint.
 #  * activate the controllers as soon as their hardware dependencies are ready, will
 #    wait for all interfaces to be ready otherwise
 #  * the timeout before aborting pending controllers. Zero for infinite
