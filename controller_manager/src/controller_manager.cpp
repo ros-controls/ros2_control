@@ -1330,19 +1330,19 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
-  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::RESOLVE)
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
   {
     RCLCPP_WARN(
       get_logger(),
-      "Controller Manager: RESOLVE is not currently implemented. "
+      "Controller Manager: AUTO is not currently implemented. "
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
-  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE)
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO_FORCE)
   {
     RCLCPP_DEBUG(
       get_logger(),
-      "Controller Manager: FORCE is not currently implemented. "
+      "Controller Manager: AUTO_FORCE is not currently implemented. "
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
