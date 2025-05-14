@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - jazzy
+      - master
     paths:
       - '**.hpp'
       - '**.h'
@@ -22,5 +22,6 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: jazzy
-      ref: jazzy
+      ref: master
+      ros2_repo_branch: master
       container: ubuntu:24.04

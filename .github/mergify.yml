@@ -8,14 +8,14 @@ pull_request_rules:
         branches:
           - humble
 
-  - name: Backport to jazzy at reviewers discretion
+  - name: Backport to iron at reviewers discretion
     conditions:
       - base=master
-      - "label=backport-jazzy"
+      - "label=backport-iron"
     actions:
       backport:
         branches:
-          - jazzy
+          - iron
 
   - name: Ask to resolve conflict
     conditions:
