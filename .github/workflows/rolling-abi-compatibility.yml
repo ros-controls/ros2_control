@@ -13,6 +13,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
+      - 'ros2_control-not-released.kilted.repos'
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on master branch
@@ -22,5 +23,9 @@ concurrency:
 jobs:
   abi_check:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [kilted, rolling]
     with:
-      ros_distro: rolling
+      ros_distro: ${{ matrix.ROS_DISTRO }}

@@ -1,6 +1,6 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/release_notes/Jazzy.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/release_notes.rst
 
-Iron to Jazzy
+Humble to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 General
