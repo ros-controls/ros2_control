@@ -1,6 +1,6 @@
 :github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/migration.rst
 
-Iron to Jazzy
+Humble to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 controller_interface
 ********************
