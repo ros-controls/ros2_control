@@ -1,6 +1,6 @@
-name: Check Rolling Compatibility on Humble
+name: Check Rolling Compatibility on Kilted
 # author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
-# description: 'Build & test the rolling version on Humble distro.'
+# description: 'Build & test the rolling version on Kilted distro.'
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
-      - '.github/workflows/rolling-compatibility-humble-binary-build.yml'
+      - '.github/workflows/rolling-compatibility-kilted-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
@@ -24,7 +24,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
-      - '.github/workflows/rolling-compatibility-humble-binary-build.yml'
+      - '.github/workflows/rolling-compatibility-kilted-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
@@ -35,10 +35,10 @@ concurrency:
   cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
-  build-on-humble:
+  build-on-kilted:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
-      ros_distro: humble
+      ros_distro: kilted
       ros_repo: testing
       upstream_workspace: ros2_control.rolling.repos
       ref_for_scheduled_build: master
