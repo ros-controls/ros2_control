@@ -166,6 +166,14 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
+  /// Gets the data type of the state interface.
+  /**
+   * \param[in] name string identifying the interface to check.
+   * \return data type of the state interface.
+   * \throws std::runtime_error if the state interface does not exist.
+   */
+  std::string get_state_interface_data_type(const std::string & name) const;
+
   /// Add controllers' exported state interfaces to resource manager.
   /**
    * Interface for transferring management of exported state interfaces to resource manager.
@@ -335,6 +343,14 @@ public:
    * \return true if interface is available, false otherwise.
    */
   bool command_interface_is_available(const std::string & interface) const;
+
+  /// Gets the data type of the command interface.
+  /**
+   * \param[in] name string identifying the interface to check.
+   * \return data type of the command interface.
+   * \throws std::runtime_error if the command interface does not exist.
+   */
+  std::string get_command_interface_data_type(const std::string & name) const;
 
   /// Return the number size_t of loaded actuator components.
   /**

@@ -3,6 +3,7 @@
 Humble to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 General
 *******
 * A ``version.h`` file will be generated per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/pull/1449>`_). For example, you can include the version of the package in the logs.
@@ -203,3 +204,10 @@ ros2controlcli
   .. code-block:: bash
 
     ros2 control <verb> <arguments> --ros-args -r __ns:=<namespace>
+=======
+This list summarizes the changes between Jazzy (previous) and Kilted (current) releases.
+
+ros2controlcli
+**************
+* The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
+>>>>>>> 0c7cb99 (Add `data_type` field to the HardwareInterfaces message (#2204))
