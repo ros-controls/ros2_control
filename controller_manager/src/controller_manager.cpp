@@ -363,9 +363,8 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
@@ -384,9 +383,8 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
@@ -407,9 +405,8 @@ ControllerManager::ControllerManager(
   resource_manager_(std::move(resource_manager)),
   diagnostics_updater_(this),
   executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
@@ -1338,11 +1335,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
-  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO_FORCE)
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
   {
     RCLCPP_DEBUG(
       get_logger(),
-      "Controller Manager: AUTO_FORCE is not currently implemented. "
+      "Controller Manager: FORCE_AUTO is not currently implemented. "
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }

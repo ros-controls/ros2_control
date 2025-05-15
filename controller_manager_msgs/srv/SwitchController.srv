@@ -14,7 +14,7 @@
 #      chain in order to activate and/or deactivate the specified controllers.
 #      This is useful in complex systems when you want all dependent controllers to start
 #      within the same update iteration.
-#    * AUTO_FORCE means that the controller manager will take all necessary steps to activate
+#    * FORCE_AUTO means that the controller manager will take all necessary steps to activate
 #      the specified controllers without requiring you to explicitly list the controllers
 #      to be deactivated. This is useful when the controller being activated depends on
 #      another unknown controller that is currently running. The controller manager will
@@ -39,7 +39,7 @@ int32 strictness
 int32 BEST_EFFORT=1
 int32 STRICT=2
 int32 AUTO=3
-int32 AUTO_FORCE=4
+int32 FORCE_AUTO=4
 bool activate_asap
 builtin_interfaces/Duration timeout
 ---
