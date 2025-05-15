@@ -2,6 +2,124 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+* Use the new reusable helpers methods in hardware diagnostics (`#2216 <https://github.com/ros-controls/ros2_control/issues/2216>`_)
+* [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)
+* Add common reusable helper methods header (`#2099 <https://github.com/ros-controls/ros2_control/issues/2099>`_)
+* Use filelock in spawner to avoid concurrent operations (`#2202 <https://github.com/ros-controls/ros2_control/issues/2202>`_)
+* increase test tolerance to reduce flakiness (`#2212 <https://github.com/ros-controls/ros2_control/issues/2212>`_)
+* Add a method to perform the hardware command mode changes (`#2203 <https://github.com/ros-controls/ros2_control/issues/2203>`_)
+* Fix typos: preceeding -> preceding (`#2206 <https://github.com/ros-controls/ros2_control/issues/2206>`_)
+* Throttle the overrun logs (`#2201 <https://github.com/ros-controls/ros2_control/issues/2201>`_)
+* doc: Added explanation of preceding/following controllers (`#2192 <https://github.com/ros-controls/ros2_control/issues/2192>`_)
+* Contributors: Christoph Fröhlich, Martin Pecka, Sai Kishor Kothakota
+
+4.28.1 (2025-04-17)
+-------------------
+* Fix the enforce_command_limits deactivation (`#2181 <https://github.com/ros-controls/ros2_control/issues/2181>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Fix async controllers deactivation regime (`#2017 <https://github.com/ros-controls/ros2_control/issues/2017>`_)
+* apply pre-commit changes (`#2160 <https://github.com/ros-controls/ros2_control/issues/2160>`_)
+* Add tests for multiple controller ros args (`#2155 <https://github.com/ros-controls/ros2_control/issues/2155>`_)
+* Bump version of pre-commit hooks (`#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_)
+* Allow for multiple controller-ros-args arguments in spawner.py (`#2150 <https://github.com/ros-controls/ros2_control/issues/2150>`_)
+* Update `rqt_controller_manager` controller state color scheme to match list_controllers color scheme (`#2143 <https://github.com/ros-controls/ros2_control/issues/2143>`_)
+* Fix generate_controllers_spawner_launch_description_from_dict (`#2146 <https://github.com/ros-controls/ros2_control/issues/2146>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* [Docs] Update determinism section (`#2131 <https://github.com/ros-controls/ros2_control/issues/2131>`_)
+* Remove the dangling param flag for robot_description fom ROS parameters (`#2115 <https://github.com/ros-controls/ros2_control/issues/2115>`_)
+* [Doc] Add documentation of different controller manager clocks (`#2109 <https://github.com/ros-controls/ros2_control/issues/2109>`_)
+* [CM] Extend the list controller and hardware components messages (`#2102 <https://github.com/ros-controls/ros2_control/issues/2102>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Reject duplicate state/command interfaces after configuring the controller  (`#2090 <https://github.com/ros-controls/ros2_control/issues/2090>`_)
+* [CM] Add message field to the `switch_controller` service (`#2088 <https://github.com/ros-controls/ros2_control/issues/2088>`_)
+* Update doc: async update support for controller (`#2096 <https://github.com/ros-controls/ros2_control/issues/2096>`_)
+* Use monotonic clock for triggering read-update-write cycles + fix for overruns (`#2046 <https://github.com/ros-controls/ros2_control/issues/2046>`_)
+* Add some logging for `unload_on_kill` keyboard interrupt (`#2097 <https://github.com/ros-controls/ros2_control/issues/2097>`_)
+* [CM] Add controller_manager activity topic (`#2006 <https://github.com/ros-controls/ros2_control/issues/2006>`_)
+* Improve diagnostics strings (`#2078 <https://github.com/ros-controls/ros2_control/issues/2078>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Julia Jia, Sai Kishor Kothakota, Soham Patil, danielcostanzi18, github-actions[bot]
+
+4.27.0 (2025-03-01)
+-------------------
+* [HW Components] Add fix for async hardware components improper rate (`#2076 <https://github.com/ros-controls/ros2_control/issues/2076>`_)
+* [CM] Skip `robot_description` topic remapping for controllers (`#2082 <https://github.com/ros-controls/ros2_control/issues/2082>`_)
+* [Spawner] Fix case with wildcard AND explicit controller in the same file (`#2080 <https://github.com/ros-controls/ros2_control/issues/2080>`_)
+* [Handle] Use `get_optional` instead of `get_value<double>` (`#2061 <https://github.com/ros-controls/ros2_control/issues/2061>`_)
+* [CM] Fix `switch_controller` behaviour with unknown controller switch request (`#2060 <https://github.com/ros-controls/ros2_control/issues/2060>`_)
+* Cleanup chainable controller exported interfaces to allow reconfiguring  (`#2073 <https://github.com/ros-controls/ros2_control/issues/2073>`_)
+* Update memlock values in doc (`#2066 <https://github.com/ros-controls/ros2_control/issues/2066>`_)
+* Add new `get_value` API for Handles and Interfaces (`#1976 <https://github.com/ros-controls/ros2_control/issues/1976>`_)
+* Fix unused timeouts in load/unload controller (`#2052 <https://github.com/ros-controls/ros2_control/issues/2052>`_)
+* [CM] Improve memory allocation with buffer variables (`#1801 <https://github.com/ros-controls/ros2_control/issues/1801>`_)
+* Integrate pal_statistics for introspection of controllers, hardware components and more (`#1918 <https://github.com/ros-controls/ros2_control/issues/1918>`_)
+* [CM] Fix the controller deactivation on the control cycles returning ERROR  (`#1756 <https://github.com/ros-controls/ros2_control/issues/1756>`_)
+* Contributors: Christoph Fröhlich, Dawid Kmak, Sai Kishor Kothakota, bijoua29
+
+4.26.0 (2025-02-07)
+-------------------
+* Slightly increase timeout of test_spawner_unspawner (`#2037 <https://github.com/ros-controls/ros2_control/issues/2037>`_)
+* Contributors: Christoph Fröhlich
+
+4.25.0 (2025-01-29)
+-------------------
+* Handle SIGINT properly in the controller manager (`#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_)
+* Fix the initial wrong periodicity reported by controller_manager (`#2018 <https://github.com/ros-controls/ros2_control/issues/2018>`_)
+* Use `target_compile_definitions` instead of installing test files (`#2009 <https://github.com/ros-controls/ros2_control/issues/2009>`_)
+* Fix a heading level (`#2007 <https://github.com/ros-controls/ros2_control/issues/2007>`_)
+* Update path of GPL (`#1994 <https://github.com/ros-controls/ros2_control/issues/1994>`_)
+* Fix: on_shutdown callback of controllers never get executed (`#1995 <https://github.com/ros-controls/ros2_control/issues/1995>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Wiktor Bajor
+
+4.24.0 (2025-01-13)
+-------------------
+* [CM] Remove obsolete ControllerMock from the tests (`#1990 <https://github.com/ros-controls/ros2_control/issues/1990>`_)
+* Initialize robot description in ControllerManager (`#1983 <https://github.com/ros-controls/ros2_control/issues/1983>`_)
+* Contributors: Dominic Reber, Wiktor Bajor
+
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Move test_utils module from demos repo (`#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_)
+* Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_)
+* Fix spawner behaviour on failing controller activation or deactivation (`#1941 <https://github.com/ros-controls/ros2_control/issues/1941>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Sudip Roy
+
+4.22.0 (2024-12-20)
+-------------------
+* Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
+* Add controller node options args to be able to set controller specific node arguments (`#1713 <https://github.com/ros-controls/ros2_control/issues/1713>`_)
+* Use singleton approach to store and reuse the service clients (`#1949 <https://github.com/ros-controls/ros2_control/issues/1949>`_)
+* Increase the max and min periodicity tolerances to fix flaky tests (`#1937 <https://github.com/ros-controls/ros2_control/issues/1937>`_)
+* Fix the spawner to support full wildcard parameter entries (`#1933 <https://github.com/ros-controls/ros2_control/issues/1933>`_)
+* Suppress unnecessary warnings in clock received validation (`#1935 <https://github.com/ros-controls/ros2_control/issues/1935>`_)
+* Optimize the valid time check in the update loop (`#1923 <https://github.com/ros-controls/ros2_control/issues/1923>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (`#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_)
+* Update CPU affinity parameter to be able to set multiple CPUs (`#1915 <https://github.com/ros-controls/ros2_control/issues/1915>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Takashi Sato
+
+4.21.0 (2024-12-06)
+-------------------
+* Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_)
+* CM: Check if a valid time is received (`#1901 <https://github.com/ros-controls/ros2_control/issues/1901>`_)
+* Lock memory by default on a realtime system setup (`#1896 <https://github.com/ros-controls/ros2_control/issues/1896>`_)
+* Fix the launch_utils regression (`#1909 <https://github.com/ros-controls/ros2_control/issues/1909>`_)
+* [Diagnostics] Add diagnostics of execution time and periodicity of the controllers and controller_manager (`#1871 <https://github.com/ros-controls/ros2_control/issues/1871>`_)
+* Add more parameter overriding tests by parsing multiple parameter files (`#1899 <https://github.com/ros-controls/ros2_control/issues/1899>`_)
+* add logic for 'params_file' to handle both string and string_array (`#1898 <https://github.com/ros-controls/ros2_control/issues/1898>`_)
+* [Spawner] Accept parsing multiple `--param-file` arguments to spawner  (`#1805 <https://github.com/ros-controls/ros2_control/issues/1805>`_)
+* Add documentation on `ros2_control_node` and make lock_memory false by default (`#1890 <https://github.com/ros-controls/ros2_control/issues/1890>`_)
+* Add service call timeout argument in spawner (`#1808 <https://github.com/ros-controls/ros2_control/issues/1808>`_)
+* Add CM `switch_controller` service timeout as parameter to spawner.py (`#1790 <https://github.com/ros-controls/ros2_control/issues/1790>`_)
+* Fix the missing bcolors.ENDC in hardware_spawner log prints (`#1870 <https://github.com/ros-controls/ros2_control/issues/1870>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Tony Najjar
+
 4.20.0 (2024-11-08)
 -------------------
 * change from thread_priority.hpp to realtime_helpers.hpp (`#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_)

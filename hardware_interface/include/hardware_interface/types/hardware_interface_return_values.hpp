@@ -15,7 +15,9 @@
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_
 
+#include <chrono>
 #include <cstdint>
+#include <optional>
 
 namespace hardware_interface
 {
@@ -24,6 +26,22 @@ enum class return_type : std::uint8_t
   OK = 0,
   ERROR = 1,
   DEACTIVATE = 2,
+};
+
+/**
+ * Struct to store the status of the Hardware read or write methods return state.
+ * The status contains information if the cycle was triggered successfully, the result of the
+ * cycle method and the execution duration of the method. The status is used to provide
+ * feedback to the controller_manager.
+ * @var successful: true if it was triggered successfully, false if not.
+ * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
+ * @var execution_time: duration of the execution of the update method.
+ */
+struct HardwareComponentCycleStatus
+{
+  bool successful = true;
+  return_type result = return_type::OK;
+  std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
 };
 
 }  // namespace hardware_interface

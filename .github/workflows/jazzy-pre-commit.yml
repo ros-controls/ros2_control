@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - master
+      - jazzy
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pre-commit:

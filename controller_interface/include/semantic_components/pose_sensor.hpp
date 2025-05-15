@@ -14,6 +14,7 @@
 #ifndef SEMANTIC_COMPONENTS__POSE_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__POSE_SENSOR_HPP_
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <string>
@@ -28,38 +29,29 @@ class PoseSensor : public SemanticComponentInterface<geometry_msgs::msg::Pose>
 {
 public:
   /// Constructor for a standard pose sensor with interface names set based on sensor name.
-  explicit PoseSensor(const std::string & name) : SemanticComponentInterface{name, 7}
+  explicit PoseSensor(const std::string & name)
+  : SemanticComponentInterface(
+      name, {{name + '/' + "position.x"},
+             {name + '/' + "position.y"},
+             {name + '/' + "position.z"},
+             {name + '/' + "orientation.x"},
+             {name + '/' + "orientation.y"},
+             {name + '/' + "orientation.z"},
+             {name + '/' + "orientation.w"}})
   {
-    // Use standard interface names
-    interface_names_.emplace_back(name_ + '/' + "position.x");
-    interface_names_.emplace_back(name_ + '/' + "position.y");
-    interface_names_.emplace_back(name_ + '/' + "position.z");
-    interface_names_.emplace_back(name_ + '/' + "orientation.x");
-    interface_names_.emplace_back(name_ + '/' + "orientation.y");
-    interface_names_.emplace_back(name_ + '/' + "orientation.z");
-    interface_names_.emplace_back(name_ + '/' + "orientation.w");
-
-    // Set all sensor values to default value NaN
-    std::fill(position_.begin(), position_.end(), std::numeric_limits<double>::quiet_NaN());
-    std::fill(orientation_.begin(), orientation_.end(), std::numeric_limits<double>::quiet_NaN());
   }
-
-  virtual ~PoseSensor() = default;
-
   /// Update and return position.
   /*!
    * Update and return current pose position from state interfaces.
    *
    * \return Array of position coordinates.
    */
-  std::array<double, 3> get_position()
+  std::array<double, 3> get_position() const
   {
-    for (size_t i = 0; i < 3; ++i)
-    {
-      position_[i] = state_interfaces_[i].get().get_value();
-    }
-
-    return position_;
+    update_data_from_interfaces();
+    std::array<double, 3> position;
+    std::copy(data_.begin(), data_.begin() + 3, position.begin());
+    return position;
   }
 
   /// Update and return orientation
@@ -68,41 +60,54 @@ public:
    *
    * \return Array of orientation coordinates in xyzw convention.
    */
-  std::array<double, 4> get_orientation()
+  std::array<double, 4> get_orientation() const
   {
-    for (size_t i = 3; i < 7; ++i)
-    {
-      orientation_[i - 3] = state_interfaces_[i].get().get_value();
-    }
-
-    return orientation_;
+    update_data_from_interfaces();
+    std::array<double, 4> orientation;
+    std::copy(data_.begin() + 3, data_.end(), orientation.begin());
+    return orientation;
   }
 
   /// Fill pose message with current values.
   /**
    * Fill a pose message with current position and orientation from the state interfaces.
    */
-  bool get_values_as_message(geometry_msgs::msg::Pose & message)
+  bool get_values_as_message(geometry_msgs::msg::Pose & message) const
   {
-    // Update state from state interfaces
-    get_position();
-    get_orientation();
+    update_data_from_interfaces();
 
-    // Set message values from current state
-    message.position.x = position_[0];
-    message.position.y = position_[1];
-    message.position.z = position_[2];
-    message.orientation.x = orientation_[0];
-    message.orientation.y = orientation_[1];
-    message.orientation.z = orientation_[2];
-    message.orientation.w = orientation_[3];
+    message.position.x = data_[0];
+    message.position.y = data_[1];
+    message.position.z = data_[2];
+    message.orientation.x = data_[3];
+    message.orientation.y = data_[4];
+    message.orientation.z = data_[5];
+    message.orientation.w = data_[6];
 
     return true;
   }
 
-protected:
-  std::array<double, 3> position_;
-  std::array<double, 4> orientation_;
+private:
+  /**
+   * @brief Update the data array from the state interfaces.
+   * @note This method is thread-safe and non-blocking.
+   * @note This method might return stale data if the data is not updated. This is to ensure that
+   * the data from the sensor is not discontinuous.
+   */
+  void update_data_from_interfaces() const
+  {
+    for (auto i = 0u; i < data_.size(); ++i)
+    {
+      const auto data = state_interfaces_[i].get().get_optional();
+      if (data.has_value())
+      {
+        data_[i] = data.value();
+      }
+    }
+  }
+
+  /// Array to store the data of the pose sensor
+  mutable std::array<double, 7> data_{{0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0}};
 };
 
 }  // namespace semantic_components

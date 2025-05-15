@@ -39,9 +39,10 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_default_names)
   ASSERT_EQ(force_torque_sensor_->state_interfaces_.capacity(), size_);
 
   // validate the default interface_names_
-  ASSERT_TRUE(std::equal(
-    force_torque_sensor_->interface_names_.begin(), force_torque_sensor_->interface_names_.end(),
-    full_interface_names_.begin(), full_interface_names_.end()));
+  ASSERT_TRUE(
+    std::equal(
+      force_torque_sensor_->interface_names_.begin(), force_torque_sensor_->interface_names_.end(),
+      full_interface_names_.begin(), full_interface_names_.end()));
 
   // get the interface names
   std::vector<std::string> interface_names = force_torque_sensor_->get_state_interface_names();

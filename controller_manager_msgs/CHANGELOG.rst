@@ -2,6 +2,41 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* [CM] Extend the list controller and hardware components messages (`#2102 <https://github.com/ros-controls/ros2_control/issues/2102>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* [CM] Add message field to the `switch_controller` service (`#2088 <https://github.com/ros-controls/ros2_control/issues/2088>`_)
+* [CM] Add controller_manager activity topic (`#2006 <https://github.com/ros-controls/ros2_control/issues/2006>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+
 4.20.0 (2024-11-08)
 -------------------
 

@@ -54,10 +54,7 @@ Sensors
 *****************************
 ``<sensor>``-tag groups multiple state interfaces describing, e.g., internal states of hardware.
 
-Depending on the type of sensor, there exist a couple of specific semantic components with broadcasters shipped with ros2_controllers, e.g.
-
-- :ref:`Imu Sensor Broadcaster <imu_sensor_broadcaster_userdoc>`
-- :ref:`Force Torque Sensor Broadcaster <force_torque_sensor_broadcaster_userdoc>`
+Depending on the type of sensor, there exist a couple of specific semantic components with broadcasters shipped with ros2_controllers, see details in the :ref:`semantic_components <semantic_components>`.
 
 GPIOs
 *****************************

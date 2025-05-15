@@ -2,6 +2,67 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+* Add common reusable helper methods header (`#2099 <https://github.com/ros-controls/ros2_control/issues/2099>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Fix async controllers deactivation regime (`#2017 <https://github.com/ros-controls/ros2_control/issues/2017>`_)
+* Bump version of pre-commit hooks (`#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* [Handle] Add support for booleans in the handles (`#2065 <https://github.com/ros-controls/ros2_control/issues/2065>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Soham Patil, github-actions[bot]
+
+4.27.0 (2025-03-01)
+-------------------
+* [Handle] Use `get_optional` instead of `get_value<double>` (`#2061 <https://github.com/ros-controls/ros2_control/issues/2061>`_)
+* Cleanup chainable controller exported interfaces to allow reconfiguring  (`#2073 <https://github.com/ros-controls/ros2_control/issues/2073>`_)
+* Use new `get_value` API for newly added tests and semantic components (`#2055 <https://github.com/ros-controls/ros2_control/issues/2055>`_)
+* Add new `get_value` API for Handles and Interfaces (`#1976 <https://github.com/ros-controls/ros2_control/issues/1976>`_)
+* Integrate pal_statistics for introspection of controllers, hardware components and more (`#1918 <https://github.com/ros-controls/ros2_control/issues/1918>`_)
+* [ControllerInterface] Improve the prefix name check for the chainable controllers (`#2038 <https://github.com/ros-controls/ros2_control/issues/2038>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.26.0 (2025-02-07)
+-------------------
+* add a semantic command interface to "semantic_components" (`#1945 <https://github.com/ros-controls/ros2_control/issues/1945>`_)
+* Contributors: Thibault Poignonec
+
+4.25.0 (2025-01-29)
+-------------------
+* Use `target_compile_definitions` instead of installing test files (`#2009 <https://github.com/ros-controls/ros2_control/issues/2009>`_)
+* Add GPS semantic component (`#2000 <https://github.com/ros-controls/ros2_control/issues/2000>`_)
+* Contributors: Sai Kishor Kothakota, Wiktor Bajor
+
+4.24.0 (2025-01-13)
+-------------------
+* Trigger shutdown transition in destructor (`#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_)
+* Contributors: Christoph Fröhlich
+
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Semantic components cleanup (`#1940 <https://github.com/ros-controls/ros2_control/issues/1940>`_)
+* Contributors: Bence Magyar, Wiktor Bajor
+
+4.22.0 (2024-12-20)
+-------------------
+* Fixed typo. Added s to state_interfaces\_ (`#1930 <https://github.com/ros-controls/ros2_control/issues/1930>`_)
+* [CI] Add clang job, setup concurrency, use rt_tools humble branch (`#1910 <https://github.com/ros-controls/ros2_control/issues/1910>`_)
+* Contributors: Christoph Fröhlich, louietouie
+
+4.21.0 (2024-12-06)
+-------------------
+* [Diagnostics] Add diagnostics of execution time and periodicity of the controllers and controller_manager (`#1871 <https://github.com/ros-controls/ros2_control/issues/1871>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.20.0 (2024-11-08)
 -------------------
 * reset the async variables upon activation to work post exceptions (`#1860 <https://github.com/ros-controls/ros2_control/issues/1860>`_)

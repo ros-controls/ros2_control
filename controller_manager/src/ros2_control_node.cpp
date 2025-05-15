@@ -61,22 +61,41 @@ int main(int argc, char ** argv)
 
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
-  std::string message;
-  if (lock_memory && !realtime_tools::lock_memory(message))
+  if (lock_memory)
   {
-    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
+    const auto lock_result = realtime_tools::lock_memory();
+    if (!lock_result.first)
+    {
+      RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory: '%s'", lock_result.second.c_str());
+    }
   }
 
-  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
-  if (cpu_affinity >= 0)
+  rclcpp::Parameter cpu_affinity_param;
+  if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
   {
-    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpu_affinity);
+    std::vector<int> cpus = {};
+    if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+    {
+      cpus = {static_cast<int>(cpu_affinity_param.as_int())};
+    }
+    else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+    {
+      const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+      std::for_each(
+        cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
+        [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+    }
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
     if (!affinity_result.first)
     {
       RCLCPP_WARN(
         cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
     }
   }
+
+  // wait for the clock to be available
+  cm->get_clock()->wait_until_started();
+  cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
@@ -105,38 +124,53 @@ int main(int argc, char ** argv)
 
       // for calculating sleep time
       auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
-      auto const cm_now = std::chrono::nanoseconds(cm->now().nanoseconds());
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
-        next_iteration_time{cm_now};
 
       // for calculating the measured period of the loop
-      rclcpp::Time previous_time = cm->now() - period;
+      rclcpp::Time previous_time = cm->get_trigger_clock()->now();
+      std::this_thread::sleep_for(period);
+
+      std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
 
       while (rclcpp::ok())
       {
         // calculate measured period
-        auto const current_time = cm->now();
+        auto const current_time = cm->get_trigger_clock()->now();
         auto const measured_period = current_time - previous_time;
         previous_time = current_time;
 
         // execute update loop
-        cm->read(cm->now(), measured_period);
-        cm->update(cm->now(), measured_period);
-        cm->write(cm->now(), measured_period);
+        cm->read(cm->get_trigger_clock()->now(), measured_period);
+        cm->update(cm->get_trigger_clock()->now(), measured_period);
+        cm->write(cm->get_trigger_clock()->now(), measured_period);
 
         // wait until we hit the end of the period
-        next_iteration_time += period;
         if (use_sim_time)
         {
           cm->get_clock()->sleep_until(current_time + period);
         }
         else
         {
+          next_iteration_time += period;
+          const auto time_now = std::chrono::steady_clock::now();
+          if (next_iteration_time < time_now)
+          {
+            const double time_diff =
+              static_cast<double>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(time_now - next_iteration_time)
+                  .count()) /
+              1.e6;
+            const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
+            const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
+            RCLCPP_WARN_THROTTLE(
+              cm->get_logger(), *cm->get_clock(), 1000,
+              "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
+              "took %f ms (missed cycles : %d).",
+              cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
+            next_iteration_time += (overrun_count * period);
+          }
           std::this_thread::sleep_until(next_iteration_time);
         }
       }
-
-      cm->shutdown_async_controllers_and_components();
     });
 
   executor->add_node(cm);

@@ -18,10 +18,27 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
 {
+ControllerInterfaceBase::~ControllerInterfaceBase()
+{
+  // check if node is initialized and we still have a valid context
+  if (
+    node_.get() &&
+    get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED &&
+    rclcpp::ok())
+  {
+    RCLCPP_DEBUG(
+      get_node()->get_logger(),
+      "Calling shutdown transition of controller node '%s' due to destruction.",
+      get_node()->get_name());
+    node_->shutdown();
+  }
+}
+
 return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
@@ -34,7 +51,9 @@ return_type ControllerInterfaceBase::init(
 
   try
   {
-    auto_declare<int>("update_rate", update_rate_);
+    // no rclcpp::ParameterValue unsigned int specialization
+    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
+
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", 50);
   }
@@ -50,6 +69,11 @@ return_type ControllerInterfaceBase::init(
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      RCLCPP_DEBUG(
+        get_node()->get_logger(),
+        "Calling shutdown transition of controller node '%s' due to init failure.",
+        get_node()->get_name());
+      node_->shutdown();
       return return_type::ERROR;
   }
 
@@ -59,16 +83,18 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
-      if (is_async() && async_handler_ && async_handler_->is_running())
-      {
-        async_handler_->stop_thread();
-      }
+      // make sure introspection is disabled on controller cleanup as users may manually enable
+      // it in `on_configure` and `on_deactivate` - see the docs for details
+      enable_introspection(false);
+      this->stop_async_handler_thread();
       return on_cleanup(previous_state);
     });
 
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      skip_async_triggers_.store(false);
+      enable_introspection(true);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
@@ -78,13 +104,29 @@ return_type ControllerInterfaceBase::init(
     });
 
   node_->register_on_deactivate(
-    std::bind(&ControllerInterfaceBase::on_deactivate, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      enable_introspection(false);
+      return on_deactivate(previous_state);
+    });
 
   node_->register_on_shutdown(
-    std::bind(&ControllerInterfaceBase::on_shutdown, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_shutdown(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   node_->register_on_error(
-    std::bind(&ControllerInterfaceBase::on_error, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_error(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   return return_type::OK;
 }
@@ -123,8 +165,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   }
   if (is_async_)
   {
-    const unsigned int thread_priority =
-      static_cast<unsigned int>(get_node()->get_parameter("thread_priority").as_int());
+    const int thread_priority =
+      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
       thread_priority);
@@ -135,6 +177,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       thread_priority);
     async_handler_->start_thread();
   }
+  REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
   trigger_stats_.reset();
 
   return get_node()->configure();
@@ -156,6 +200,10 @@ void ControllerInterfaceBase::release_interfaces()
 
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() const
 {
+  if (!node_.get())
+  {
+    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
+  }
   return node_->get_current_state();
 }
 
@@ -166,6 +214,13 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   trigger_stats_.total_triggers++;
   if (is_async())
   {
+    if (skip_async_triggers_.load())
+    {
+      // Skip further async triggers if the controller is being deactivated
+      status.successful = false;
+      status.result = return_type::OK;
+      return status;
+    }
     const rclcpp::Time last_trigger_time = async_handler_->get_current_callback_time();
     const auto result = async_handler_->trigger_async_callback(time, period);
     if (!result.first)
@@ -231,4 +286,33 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
     async_handler_->wait_for_trigger_cycle_to_finish();
   }
 }
+
+void ControllerInterfaceBase::prepare_for_deactivation()
+{
+  skip_async_triggers_.store(true);
+  this->wait_for_trigger_update_to_finish();
+}
+
+void ControllerInterfaceBase::stop_async_handler_thread()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_thread();
+  }
+}
+
+std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
+
+void ControllerInterfaceBase::enable_introspection(bool enable)
+{
+  if (enable)
+  {
+    stats_registrations_.enableAll();
+  }
+  else
+  {
+    stats_registrations_.disableAll();
+  }
+}
+
 }  // namespace controller_interface

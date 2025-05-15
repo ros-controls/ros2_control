@@ -2,6 +2,56 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+
+4.28.1 (2025-04-17)
+-------------------
+* Use previous command to enforce the joint limits on position interfaces (`#2183 <https://github.com/ros-controls/ros2_control/issues/2183>`_)
+* Fix the joint limits enforcement with `position` and `velocity` (`#2182 <https://github.com/ros-controls/ros2_control/issues/2182>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Change to `ament_add_gmock` in joint_limits (`#2165 <https://github.com/ros-controls/ros2_control/issues/2165>`_)
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Soham Patil
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+* Define _USE_MATH_DEFINES in joint_soft_limiter.cpp to ensure that M_PI is defined (`#2001 <https://github.com/ros-controls/ros2_control/issues/2001>`_)
+* Use actual position when limiting desired position (`#1988 <https://github.com/ros-controls/ros2_control/issues/1988>`_)
+* Contributors: Sai Kishor Kothakota, Silvio Traversaro
+
+4.24.0 (2025-01-13)
+-------------------
+* Return strong type for joint_limits helpers (`#1981 <https://github.com/ros-controls/ros2_control/issues/1981>`_)
+* Trigger shutdown transition in destructor (`#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_)
+* Add joint limiter interface plugins to enforce limits defined in the URDF (`#1526 <https://github.com/ros-controls/ros2_control/issues/1526>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Wiktor Bajor
+
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Contributors: Bence Magyar
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+* Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_)
+* Contributors: Christoph Fröhlich
+
 4.20.0 (2024-11-08)
 -------------------
 

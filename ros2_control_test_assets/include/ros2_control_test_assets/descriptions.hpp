@@ -324,6 +324,41 @@ const auto urdf_head_continuous_missing_limits =
       </geometry>
     </collision>
   </link>
+  <joint name="joint3" type="revolute">
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+  </joint>
+  <link name="link3">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="tool_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="link2"/>
+    <child link="tool_link"/>
+  </joint>
+  <link name="tool_link">
+  </link>
 )";
 
 const auto urdf_head_continuous_with_limits =
@@ -662,7 +697,7 @@ const auto hardware_resources =
 
 const auto async_hardware_resources =
   R"(
-  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true">
+  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true" thread_priority="30">
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
@@ -683,7 +718,7 @@ const auto async_hardware_resources =
       <state_interface name="velocity"/>
     </sensor>
   </ros2_control>
-  <ros2_control name="TestSystemHardware" type="system" is_async="true">
+  <ros2_control name="TestSystemHardware" type="system" is_async="true" thread_priority="70">
     <hardware>
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -733,6 +768,55 @@ const auto hardware_resources_with_different_rw_rates =
     </sensor>
   </ros2_control>
   <ros2_control name="TestSystemHardware" type="system" rw_rate="25">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_with_different_rw_rates_with_async =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="50" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" rw_rate="20" is_async="true">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" rw_rate="25" is_async="true">
     <hardware>
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -1254,6 +1338,59 @@ const auto hardware_resources_missing_command_keys =
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_with_exclusive_interface =
+  R"(
+  <ros2_control name="TestActuatorHardware1" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware2" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware3" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
   </ros2_control>
 )";
 
@@ -2030,6 +2167,8 @@ const auto diff_drive_robot_sdf =
 
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +
+                                          std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
   std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
 const auto minimal_robot_urdf_with_different_hw_rw_rate =

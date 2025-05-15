@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::ActuatorInterface;
@@ -33,6 +34,14 @@ class TestActuator : public ActuatorInterface
 
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
     {
+      return CallbackReturn::ERROR;
+    }
+    if (get_hardware_info().rw_rate == 0u)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Actuator hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
+        get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
     }
 
@@ -55,14 +64,17 @@ class TestActuator : public ActuatorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
-      &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
-      &velocity_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
+        &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
+        &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
 
     return state_interfaces;
   }
@@ -70,15 +82,17 @@ class TestActuator : public ActuatorInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name,
-      &velocity_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        get_hardware_info().joints[0].name,
+        get_hardware_info().joints[0].command_interfaces[0].name, &velocity_command_));
 
     if (get_hardware_info().joints[0].command_interfaces.size() > 1)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        get_hardware_info().joints[0].name,
-        get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          get_hardware_info().joints[0].name,
+          get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
     }
 
     return command_interfaces;
@@ -88,7 +102,7 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 1.0;
+    position_state_ += 0.001;
     return hardware_interface::return_type::OK;
   }
 
@@ -96,12 +110,17 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    position_state_ += 100.0;
+    position_state_ += 0.1;
     return hardware_interface::return_type::OK;
   }
 
-  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
+    }
     // simulate error on read
     if (velocity_command_ == test_constants::READ_FAIL_VALUE)
     {
@@ -121,11 +140,23 @@ class TestActuator : public ActuatorInterface
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
     velocity_state_ = velocity_command_ / 2;
+    position_state_ += velocity_state_ * period.seconds();
+
+    if (velocity_command_ == test_constants::RESET_STATE_INTERFACES_VALUE)
+    {
+      position_state_ = 0.0;
+      velocity_state_ = 0.0;
+    }
     return return_type::OK;
   }
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
+    }
     // simulate error on write
     if (velocity_command_ == test_constants::WRITE_FAIL_VALUE)
     {

@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(joint_limits LANGUAGES CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
-          -Werror=missing-braces)
-endif()
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
@@ -39,38 +38,47 @@ target_include_directories(joint_limiter_interface PUBLIC
   $<INSTALL_INTERFACE:include/joint_limits>
 )
 ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_limiter_interface PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
+add_library(joint_limits_helpers SHARED
+  src/joint_limits_helpers.cpp
+)
+target_compile_features(joint_limits_helpers PUBLIC cxx_std_17)
+target_include_directories(joint_limits_helpers PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/joint_limits>
+)
+ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
+  src/joint_range_limiter.cpp
+  src/joint_soft_limiter.cpp
 )
 target_compile_features(joint_saturation_limiter PUBLIC cxx_std_17)
 target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
+target_link_libraries(joint_saturation_limiter PUBLIC joint_limits_helpers)
+
 ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(joint_saturation_limiter PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_link_libraries(joint_limits_rosparam_test joint_limits)
+  target_compile_definitions(
+    joint_limits_rosparam_test
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
-  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
@@ -94,6 +102,24 @@ if(BUILD_TESTING)
     rclcpp
   )
 
+  ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
+  target_include_directories(test_joint_range_limiter PRIVATE include)
+  target_link_libraries(test_joint_range_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_joint_range_limiter
+    pluginlib
+    rclcpp
+  )
+
+  ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
+  target_include_directories(test_joint_soft_limiter PRIVATE include)
+  target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_joint_soft_limiter
+    pluginlib
+    rclcpp
+  )
+
 endif()
 
 install(
@@ -104,6 +130,7 @@ install(TARGETS
     joint_limits
     joint_limiter_interface
     joint_saturation_limiter
+    joint_limits_helpers
   EXPORT export_joint_limits
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

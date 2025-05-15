@@ -2,6 +2,41 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.29.0 (2025-05-04)
+-------------------
+* Add consistent transitions for controllers in rqt_controller_manager (`#2163 <https://github.com/ros-controls/ros2_control/issues/2163>`_)
+* Contributors: Soham Patil
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* Update `rqt_controller_manager` controller state color scheme to match list_controllers color scheme (`#2143 <https://github.com/ros-controls/ros2_control/issues/2143>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Soham Patil
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+
 4.20.0 (2024-11-08)
 -------------------
 
