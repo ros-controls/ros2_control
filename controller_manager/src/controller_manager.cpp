@@ -1342,6 +1342,22 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Controller Manager: AUTO is not currently implemented. "
+      "Defaulting to BEST_EFFORT");
+    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+  }
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
+  {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "Controller Manager: FORCE_AUTO is not currently implemented. "
+      "Defaulting to BEST_EFFORT");
+    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+  }
 
   std::string activate_list, deactivate_list;
   activate_list.reserve(500);
