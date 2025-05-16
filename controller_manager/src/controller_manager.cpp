@@ -1321,14 +1321,22 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   if (strictness == 0)
   {
-    RCLCPP_WARN(
+    std::string default_strictness = params_->defaults.switch_controller.strictness;
+    // Convert to uppercase
+    std::transform(
+      default_strictness.begin(), default_strictness.end(), default_strictness.begin(),
+      [](unsigned char c) { return std::toupper(c); });
+    RCLCPP_WARN_ONCE(
       get_logger(),
       "Controller Manager: to switch controllers you need to specify a "
       "strictness level of controller_manager_msgs::SwitchController::STRICT "
-      "(%d) or ::BEST_EFFORT (%d). Defaulting to ::BEST_EFFORT",
+      "(%d) or ::BEST_EFFORT (%d). When unspecified, the default is %s",
       controller_manager_msgs::srv::SwitchController::Request::STRICT,
-      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
-    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+      default_strictness.c_str());
+    strictness = params_->defaults.switch_controller.strictness == "strict"
+                   ? controller_manager_msgs::srv::SwitchController::Request::STRICT
+                   : controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
   std::string activate_list, deactivate_list;
