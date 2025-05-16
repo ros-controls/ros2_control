@@ -649,9 +649,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           }
           else
           {
-            RCLCPP_ERROR_STREAM(
-              get_logger(), "Failed to set the initial state of the component : "
-                              << component << " to " << state.label());
+            RCLCPP_ERROR(
+              get_logger(), "Failed to set the initial state of the component : '%s' to '%s'",
+              component.c_str(), state.label().c_str());
           }
         }
         components_to_activate.erase(component);
@@ -693,9 +693,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       }
       else
       {
-        RCLCPP_ERROR_STREAM(
-          get_logger(), "Failed to set the initial state of the component : "
-                          << component << " to " << active_state.label());
+        RCLCPP_ERROR(
+          get_logger(), "Failed to set the initial state of the component : '%s' to '%s'",
+          component.c_str(), active_state.label().c_str());
       }
     }
   }
