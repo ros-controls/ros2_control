@@ -1516,6 +1516,21 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            name) != resource_storage_->available_state_interfaces_.end();
 }
 
+std::string ResourceManager::get_state_interface_data_type(const std::string & name) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  auto it = resource_storage_->state_interface_map_.find(name);
+  if (it != resource_storage_->state_interface_map_.end())
+  {
+    return it->second->get_data_type().to_string();
+  }
+  else
+  {
+    throw std::runtime_error(
+      std::string("State interface with key '") + name + std::string("' does not exist"));
+  }
+}
+
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
   const std::string & controller_name, std::vector<StateInterface::ConstSharedPtr> & interfaces)
@@ -1756,6 +1771,21 @@ bool ResourceManager::command_interface_is_available(const std::string & name) c
            resource_storage_->available_command_interfaces_.begin(),
            resource_storage_->available_command_interfaces_.end(),
            name) != resource_storage_->available_command_interfaces_.end();
+}
+
+std::string ResourceManager::get_command_interface_data_type(const std::string & name) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  auto it = resource_storage_->command_interface_map_.find(name);
+  if (it != resource_storage_->command_interface_map_.end())
+  {
+    return it->second->get_data_type().to_string();
+  }
+  else
+  {
+    throw std::runtime_error(
+      std::string("Command interface with '") + name + std::string("' does not exist"));
+  }
 }
 
 void ResourceManager::import_component(

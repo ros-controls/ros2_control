@@ -1328,13 +1328,37 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   if (strictness == 0)
   {
-    RCLCPP_WARN(
+    std::string default_strictness = params_->defaults.switch_controller.strictness;
+    // Convert to uppercase
+    std::transform(
+      default_strictness.begin(), default_strictness.end(), default_strictness.begin(),
+      [](unsigned char c) { return std::toupper(c); });
+    RCLCPP_WARN_ONCE(
       get_logger(),
       "Controller Manager: to switch controllers you need to specify a "
       "strictness level of controller_manager_msgs::SwitchController::STRICT "
-      "(%d) or ::BEST_EFFORT (%d). Defaulting to ::BEST_EFFORT",
+      "(%d) or ::BEST_EFFORT (%d). When unspecified, the default is %s",
       controller_manager_msgs::srv::SwitchController::Request::STRICT,
-      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+      default_strictness.c_str());
+    strictness = params_->defaults.switch_controller.strictness == "strict"
+                   ? controller_manager_msgs::srv::SwitchController::Request::STRICT
+                   : controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+  }
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Controller Manager: AUTO is not currently implemented. "
+      "Defaulting to BEST_EFFORT");
+    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+  }
+  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
+  {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "Controller Manager: FORCE_AUTO is not currently implemented. "
+      "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
@@ -2493,6 +2517,7 @@ void ControllerManager::list_hardware_components_srv_cb(
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
+      hwi.data_type = resource_manager_->get_command_interface_data_type(interface);
       hwi.is_available = resource_manager_->command_interface_is_available(interface);
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
       // TODO(destogl): Add here mapping to controller that has claimed or
@@ -2517,6 +2542,7 @@ void ControllerManager::list_hardware_components_srv_cb(
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
+      hwi.data_type = resource_manager_->get_state_interface_data_type(interface);
       hwi.is_available = resource_manager_->state_interface_is_available(interface);
       hwi.is_claimed = false;
       component.state_interfaces.push_back(hwi);
@@ -2542,6 +2568,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
     hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
+    hwi.data_type = resource_manager_->get_state_interface_data_type(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
@@ -2552,6 +2579,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     hwi.name = command_interface_name;
     hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
+    hwi.data_type = resource_manager_->get_command_interface_data_type(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
 
