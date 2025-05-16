@@ -25,6 +25,12 @@ class ListHardwareInterfacesVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
+        parser.add_argument(
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="List hardware interfaces and their data types",
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
@@ -37,26 +43,32 @@ class ListHardwareInterfacesVerb(VerbExtension):
                 hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name
             )
             print("command interfaces")
+            data_type_str = ""
             for command_interface in command_interfaces:
+                if args.verbose:
+                    data_type_str = f" [{command_interface.data_type}]"
                 if command_interface.is_available:
                     if command_interface.is_claimed:
                         print(
-                            f"\t{bcolors.OKBLUE}{command_interface.name} "
-                            f"[available] [claimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKBLUE}{command_interface.name}{data_type_str}"
+                            f" [available] [claimed]{bcolors.ENDC}"
                         )
                     else:
                         print(
-                            f"\t{bcolors.OKCYAN}{command_interface.name} "
-                            f"[available] [unclaimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKCYAN}{command_interface.name}{data_type_str}"
+                            f" [available] [unclaimed]{bcolors.ENDC}"
                         )
                 else:
                     print(
-                        f"\t{bcolors.WARNING}{command_interface.name} "
-                        f"[unavailable] [unclaimed]{bcolors.ENDC}"
+                        f"\t{bcolors.WARNING}{command_interface.name}{data_type_str}"
+                        f" [unavailable] [unclaimed]{bcolors.ENDC}"
                     )
 
             print("state interfaces")
+            data_type_str = ""
             for state_interface in state_interfaces:
-                print(f"\t{state_interface.name}")
+                if args.verbose:
+                    data_type_str = f" [{state_interface.data_type}]"
+                print(f"\t{state_interface.name}{data_type_str}")
 
             return 0
