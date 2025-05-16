@@ -735,6 +735,32 @@ const auto valid_urdf_ros2_control_parameter_empty =
   </ros2_control>
 )";
 
+const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type_on_joint_sensor_and_gpio =
+  R"(
+  <ros2_control name="RRBotSystemWithSizeAndDataType" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="status" data_type="bool"/>
+      <command_interface name="enable" data_type="bool"/>
+    </joint>
+    <sensor name="trigger">
+      <command_interface name="safety" data_type="bool"/>
+      <state_interface name="safety" data_type="bool"/>
+    </sensor>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
+    </gpio>
+  </ros2_control>
+)";
+
 // Errors
 const auto invalid_urdf_ros2_control_invalid_child =
   R"(
