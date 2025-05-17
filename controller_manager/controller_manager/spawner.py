@@ -188,7 +188,7 @@ def main(args=None):
                 tmp_logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
                 break
             except Timeout:
-                tmp_logger.warn(
+                tmp_logger.warning(
                     bcolors.WARNING
                     + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
@@ -236,7 +236,7 @@ def main(args=None):
                 controller_manager_timeout,
                 service_call_timeout,
             ):
-                node.get_logger().warn(
+                node.get_logger().warning(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
                     + bcolors.ENDC
