@@ -15,7 +15,10 @@
 #include <thread>
 
 #include "gmock/gmock.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "hardware_interface/handle.hpp"
+#pragma GCC diagnostic pop
 #include "hardware_interface/hardware_info.hpp"
 
 using hardware_interface::CommandInterface;
@@ -29,6 +32,8 @@ constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
 }  // namespace
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(TestHandle, command_interface)
 {
   double value = 1.337;
@@ -37,11 +42,14 @@ TEST(TestHandle, command_interface)
   ASSERT_TRUE(interface.get_optional().has_value());
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
-  EXPECT_NO_THROW({ interface.set_value(0.0); });
+  EXPECT_NO_THROW({ std::ignore = interface.set_value(0.0); });
   ASSERT_TRUE(interface.get_optional().has_value());
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), 0.0);
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(TestHandle, state_interface)
 {
   double value = 1.337;
@@ -50,6 +58,7 @@ TEST(TestHandle, state_interface)
   EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
   // interface.set_value(5);  compiler error, no set_value function
 }
+#pragma GCC diagnostic pop
 
 TEST(TestHandle, name_getters_work)
 {
@@ -63,19 +72,22 @@ TEST(TestHandle, value_methods_throw_for_nullptr)
 {
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
   EXPECT_ANY_THROW(handle.get_optional().value());
-  EXPECT_ANY_THROW(bool status = handle.set_value(0.0));
+  EXPECT_ANY_THROW(std::ignore = handle.set_value(0.0));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(TestHandle, value_methods_work_on_non_nullptr)
 {
   double value = 1.337;
   CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
   ASSERT_TRUE(handle.get_optional().has_value());
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-  EXPECT_NO_THROW({ handle.set_value(0.0); });
+  EXPECT_NO_THROW({ std::ignore = handle.set_value(0.0); });
   ASSERT_TRUE(handle.get_optional().has_value());
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
 }
+#pragma GCC diagnostic pop
 
 TEST(TestHandle, test_command_interface_limiter_on_set)
 {
@@ -85,8 +97,8 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
   info.name = POSITION_INTERFACE;
   InterfaceDescription interface_descr(JOINT_NAME_1, info);
   CommandInterface handle{interface_descr};
-  handle.set_value(1.0);
-  EXPECT_DOUBLE_EQ(handle.get_value(), 1.0);
+  ASSERT_TRUE(handle.set_value(1.0));
+  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
   ASSERT_FALSE(handle.is_limited());
 
   handle.set_on_set_command_limiter(
@@ -102,15 +114,15 @@ TEST(TestHandle, test_command_interface_limiter_on_set)
     });
   for (int i = 0; i < 10; i++)
   {
-    handle.set_limited_value(static_cast<double>(i));
-    EXPECT_DOUBLE_EQ(handle.get_value(), i);
+    ASSERT_TRUE(handle.set_limited_value(static_cast<double>(i)));
+    EXPECT_DOUBLE_EQ(handle.get_optional().value(), i);
     ASSERT_FALSE(handle.is_limited());
   }
 
   for (int i = 11; i < 20; i++)
   {
-    handle.set_limited_value(static_cast<double>(i));
-    EXPECT_DOUBLE_EQ(handle.get_value(), 10.0);
+    ASSERT_TRUE(handle.set_limited_value(static_cast<double>(i)));
+    EXPECT_DOUBLE_EQ(handle.get_optional().value(), 10.0);
     ASSERT_TRUE(handle.is_limited());
   }
 }
@@ -123,8 +135,8 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
   info.name = POSITION_INTERFACE;
   InterfaceDescription interface_descr(JOINT_NAME_1, info);
   CommandInterface handle{interface_descr};
-  handle.set_value(121.0);
-  ASSERT_DOUBLE_EQ(handle.get_value(), 121.0);
+  ASSERT_TRUE(handle.set_value(121.0));
+  ASSERT_DOUBLE_EQ(handle.get_optional().value(), 121.0);
 
   handle.set_on_set_command_limiter(
     [](double value, bool & is_limited) -> double
@@ -138,8 +150,8 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
       return value;
     });
 
-  handle.set_limited_value(121.0);
-  ASSERT_DOUBLE_EQ(handle.get_value(), 100.0);
+  ASSERT_TRUE(handle.set_limited_value(121.0));
+  ASSERT_DOUBLE_EQ(handle.get_optional().value(), 100.0);
 
   std::atomic_bool done(false);
   std::thread checking_thread(
@@ -147,10 +159,11 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
     {
       while (!done)
       {
-        double value;
-        if (handle.get_value(value))
+        std::optional<double> opt_value = handle.get_optional();
+
+        if (opt_value.has_value())
         {
-          EXPECT_DOUBLE_EQ(value, 100.0);
+          EXPECT_DOUBLE_EQ(opt_value.value(), 100.0);
         }
         std::this_thread::sleep_for(std::chrono::microseconds(10));
       }
@@ -160,7 +173,7 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
     {
       for (int i = 100; i < 100000; i++)
       {
-        handle.set_limited_value(static_cast<double>(i));
+        std::ignore = handle.set_limited_value(static_cast<double>(i));
         std::this_thread::sleep_for(std::chrono::microseconds(10));
       }
       done = true;
@@ -169,7 +182,7 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
   modifier_thread.join();
   done = true;
   checking_thread.join();
-  EXPECT_DOUBLE_EQ(handle.get_value(), 100.0);
+  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 100.0);
 }
 
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
@@ -186,11 +199,11 @@ TEST(TestHandle, interface_description_state_interface_name_getters_work)
   EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
-  EXPECT_NO_THROW({ handle.get_optional<double>(); });
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
   ASSERT_TRUE(handle.get_optional<double>().has_value());
 
-  ASSERT_THROW({ handle.get_optional<bool>(); }, std::runtime_error);
-  ASSERT_THROW({ handle.set_value(true); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(true); }, std::runtime_error);
 }
 
 TEST(TestHandle, interface_description_bool_data_type)
@@ -208,17 +221,17 @@ TEST(TestHandle, interface_description_bool_data_type)
   EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
   EXPECT_EQ(handle.get_interface_name(), collision_interface);
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
-  EXPECT_NO_THROW({ handle.get_optional<bool>(); });
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<bool>(); });
   ASSERT_FALSE(handle.get_optional<bool>().value()) << "Default value should be false";
-  EXPECT_NO_THROW({ handle.set_value(true); });
+  ASSERT_TRUE(handle.set_value(true));
   ASSERT_TRUE(handle.get_optional<bool>().value());
-  EXPECT_NO_THROW({ handle.set_value(false); });
+  ASSERT_TRUE(handle.set_value(false));
   ASSERT_FALSE(handle.get_optional<bool>().value());
 
   // Test the assertions
-  ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
-  ASSERT_THROW({ handle.set_value(0.0); }, std::runtime_error);
-  ASSERT_THROW({ handle.get_optional<double>(); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
@@ -247,7 +260,8 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(TestHandle, copy_constructor)
 {
   {
@@ -256,7 +270,7 @@ TEST(TestHandle, copy_constructor)
     hardware_interface::Handle copy(handle);
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
   }
@@ -275,10 +289,10 @@ TEST(TestHandle, copy_constructor)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    EXPECT_NO_THROW({ copy.set_value(0.52); });
+    ASSERT_TRUE(copy.set_value(0.52));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   }
@@ -290,7 +304,7 @@ TEST(TesHandle, move_constructor)
   hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
   hardware_interface::Handle moved{std::move(handle)};
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
-  EXPECT_NO_THROW({ moved.set_value(0.0); });
+  ASSERT_TRUE(moved.set_value(0.0));
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
 }
 
@@ -306,7 +320,7 @@ TEST(TestHandle, copy_assignment)
     copy = handle;
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value_1);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value_1);
-    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(value_1, 0.0);
@@ -328,10 +342,10 @@ TEST(TestHandle, copy_assignment)
     EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    EXPECT_NO_THROW({ copy.set_value(0.0); });
+    ASSERT_TRUE(copy.set_value(0.0));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    EXPECT_NO_THROW({ copy.set_value(0.52); });
+    ASSERT_TRUE(copy.set_value(0.52));
     EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
     EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   }
@@ -347,6 +361,7 @@ TEST(TestHandle, move_assignment)
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
   moved = std::move(handle);
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
-  EXPECT_NO_THROW({ moved.set_value(0.0); });
+  ASSERT_TRUE(moved.set_value(0.0));
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
 }
+#pragma GCC diagnostic pop

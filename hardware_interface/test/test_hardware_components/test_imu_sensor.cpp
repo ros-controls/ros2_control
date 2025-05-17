@@ -66,6 +66,8 @@ class TestIMUSensor : public SensorInterface
     std::vector<StateInterface> state_interfaces;
 
     const std::string & sensor_name = get_hardware_info().sensors[0].name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "orientation.x", &orientation_.x));
     state_interfaces.emplace_back(
@@ -89,7 +91,7 @@ class TestIMUSensor : public SensorInterface
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
         sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
-
+#pragma GCC diagnostic pop
     return state_interfaces;
   }
 

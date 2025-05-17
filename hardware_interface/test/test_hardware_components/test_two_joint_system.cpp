@@ -67,6 +67,8 @@ class TestTwoJointSystem : public SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
@@ -80,12 +82,17 @@ class TestTwoJointSystem : public SystemInterface
 
     return state_interfaces;
   }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
           get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
@@ -94,6 +101,7 @@ class TestTwoJointSystem : public SystemInterface
 
     return command_interfaces;
   }
+#pragma GCC diagnostic pop
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
