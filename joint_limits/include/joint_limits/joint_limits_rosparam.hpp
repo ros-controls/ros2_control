@@ -17,6 +17,8 @@
 #ifndef JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <string>
 #include <vector>
@@ -88,7 +90,7 @@ inline bool declare_parameters(
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
 {
-  const std::string param_base_name = "joint_limits." + joint_name;
+  const std::string param_base_name = fmt::format(FMT_COMPILE("joint_limits.{}"), joint_name);
   try
   {
     auto_declare<bool>(param_itf, param_base_name + ".has_position_limits", false);
@@ -228,7 +230,7 @@ inline bool get_joint_limits(
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
   JointLimits & limits)
 {
-  const std::string param_base_name = "joint_limits." + joint_name;
+  const std::string param_base_name = fmt::format(FMT_COMPILE("joint_limits.{}"), joint_name);
   try
   {
     if (
@@ -433,7 +435,7 @@ inline bool check_for_limits_update(
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
   JointLimits & updated_limits)
 {
-  const std::string param_base_name = "joint_limits." + joint_name;
+  const std::string param_base_name = fmt::format(FMT_COMPILE("joint_limits.{}"), joint_name);
   bool changed = false;
 
   // update first numerical values to make later checks for "has" limits members
@@ -664,7 +666,7 @@ inline bool get_joint_limits(
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
   SoftJointLimits & soft_limits)
 {
-  const std::string param_base_name = "joint_limits." + joint_name;
+  const std::string param_base_name = fmt::format(FMT_COMPILE("joint_limits.{}"), joint_name);
   try
   {
     if (
@@ -774,7 +776,7 @@ inline bool check_for_limits_update(
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
   SoftJointLimits & updated_limits)
 {
-  const std::string param_base_name = "joint_limits." + joint_name;
+  const std::string param_base_name = fmt::format(FMT_COMPILE("joint_limits.{}"), joint_name);
   bool changed = false;
 
   for (auto & parameter : parameters)
