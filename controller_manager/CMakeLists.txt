@@ -41,8 +41,16 @@ target_include_directories(controller_manager PUBLIC
 )
 target_link_libraries(controller_manager PUBLIC
   controller_manager_parameters
+  controller_interface::controller_interface
+  controller_manager_msgs::controller_manager_msgs
+  diagnostic_updater::diagnostic_updater
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  realtime_tools::realtime_tools
+  std_msgs::std_msgs
+  libstatistics_collector::libstatistics_collector
 )
-ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_link_libraries(ros2_control_node PRIVATE
@@ -57,7 +65,10 @@ if(BUILD_TESTING)
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC controller_manager)
-  ament_target_dependencies(test_controller PUBLIC example_interfaces)
+  ament_target_dependencies(test_controller 
+  PUBLIC
+  ${example_interfaces_TARGETS}
+  )
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
     TARGETS test_controller
@@ -78,8 +89,11 @@ if(BUILD_TESTING)
   add_library(test_chainable_controller SHARED
     test/test_chainable_controller/test_chainable_controller.cpp
   )
-  ament_target_dependencies(test_chainable_controller PUBLIC realtime_tools)
-  target_link_libraries(test_chainable_controller PUBLIC controller_manager)
+  target_link_libraries(test_chainable_controller
+  PUBLIC 
+  controller_manager
+  realtime_tools::realtime_tools
+  )
   pluginlib_export_plugin_description_file(
     controller_interface test/test_chainable_controller/test_chainable_controller.xml)
   install(

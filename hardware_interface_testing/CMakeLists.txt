@@ -24,7 +24,11 @@ test/test_components/test_actuator.cpp
 test/test_components/test_sensor.cpp
 test/test_components/test_system.cpp
 test/test_components/test_actuator_exclusive_interfaces.cpp)
-ament_target_dependencies(test_components hardware_interface pluginlib ros2_control_test_assets)
+target_link_libraries(test_components PUBLIC
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  ros2_control_test_assets::ros2_control_test_assets
+)
 install(TARGETS test_components
 DESTINATION lib
 )
@@ -36,11 +40,16 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
 
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
-  ament_target_dependencies(test_resource_manager hardware_interface ros2_control_test_assets)
+  target_link_libraries(test_resource_manager PUBLIC
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
 
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
-  ament_target_dependencies(test_resource_manager_prepare_perform_switch hardware_interface ros2_control_test_assets)
-
+  target_link_libraries(test_resource_manager_prepare_perform_switch PUBLIC
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
 endif()
 
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
