@@ -3194,8 +3194,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
       message = fmt::format(
         FMT_COMPILE(
           "The following controller with name '{}' is currently inactive and it is not requested "
-          "to "
-          "be activated."),
+          "to be activated."),
         following_ctrl_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
@@ -3558,8 +3557,8 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
       {
         message = fmt::format(
           FMT_COMPILE(
-            "Unable to activate controller '{}' since the command interface '{}' is not "
-            "available."),
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' is not available."),
           controller_it->info.name, cmd_itf);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
