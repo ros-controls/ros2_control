@@ -18,29 +18,11 @@
 %
 \title{ros2\_control: a hardware-agnostic control framework for ROS2}
 %
-%\titlerunning{Abbreviated paper title}
-% If the paper title is too long for the running head, you can set
-% an abbreviated paper title here
 %
 \author{Bence Magyar\inst{1}\orcidID{0000-0001-8455-8674} \and
 Denis Štogl\inst{2,3}\orcidID{0000-0002-2546-6128} \and
 Karsten Knese\inst{3}}
-% \author{Author1\inst{1} \and
-% Author2\inst{1} \and
-% Author3\inst{1}}
-%\institute{Key contributors to \emph{ros2\_control}}
-% %
-%\authorrunning{Magyar et al.}
-% First names are abbreviated in the running head.
-% If there are more than two authors, 'et al.' is used.
-%
-% \institute{Princeton University, Princeton NJ 08544, USA \and
-% Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany
-% \email{lncs@springer.com}\\
-% \url{http://www.springer.com/gp/computer-science/lncs} \and
-% ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
-% \email{\{abc,lncs\}@uni-heidelberg.de}}
-% %
+
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
@@ -285,7 +267,6 @@ These robots all have slightly unique aspects to them, for example, but not limi
 The above list of robots is merely a demonstration. Companies and community members are welcome to share their \emph{ros2\_control}-compatible robots on the \emph{Supported Robots} page\footnote{\url{https://control.ros.org/master/doc/supported\_robots/supported\_robots.html} (accessed November 2024)} at the documentation portal.
 
 \section{Conclusion and future work}
-% a brief discussion to conclude the paper, focusing on presenting how your findings move the state-of-the-art, showing the contribution of the paper/ highlighting the implications.
 
 The \emph{ros2\_control} framework is already widely used in ROS2 community. The most relevant library for mobile robotics \emph{Nav2} and for manipulation \emph{MoveIt2} are fully relying on hardware abstraction and execution of control algorithms from \emph{ros2\_control}.
 
@@ -300,97 +281,4 @@ Some of the requirements presented in Section \ref{sec:aim} were not referenced 
 The authors would like to express their gratitude to the following organizations for their continued support:
 PAL Robotics, PickNik Robotics, Stogl Robotics, and Bosch.
 
-% Subsequent paragraphs, however, are indented.
-
-% \subsubsection{Sample Heading (Third Level)} Only two levels of
-% headings should be numbered. Lower level headings remain unnumbered;
-% they are formatted as run-in headings.
-
-% \paragraph{Sample Heading (Fourth Level)}
-% The contribution should contain no more than four levels of
-% headings. Table~\ref{tab1} gives a summary of all heading levels.
-
-% \begin{table}
-% \caption{Table captions should be placed above the
-% tables.}\label{tab1}
-% \begin{tabular}{|l|l|l|}
-% \hline
-% Heading level &  Example & Font size and style\\
-% \hline
-% Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
-% 1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
-% 2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
-% 3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
-% 4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
-% \hline
-% \end{tabular}
-% \end{table}
-
-
-% \noindent Displayed equations are centered and set on a separate
-% line.
-% \begin{equation}
-% x + y = z
-% \end{equation}
-% Please try to avoid rasterized images for line-art diagrams and
-% schemas. Whenever possible, use vector graphics instead
-
-
-% \begin{theorem}
-% This is a sample theorem. The run-in heading is set in bold, while
-% the following text appears in italics. Definitions, lemmas,
-% propositions, and corollaries are styled the same way.
-% \end{theorem}
-%
-% the environments 'definition', 'lemma', 'proposition', 'corollary',
-% 'remark', and 'example' are defined in the LLNCS documentclass as well.
-%
-% \begin{proof}
-% Proofs, examples, and remarks have the initial word in italics,
-% while the following text appears in normal font.
-% \end{proof}
-% For citations of references, we prefer the use of square brackets
-% and consecutive numbers. Citations using labels or the author/year
-% convention are also acceptable. The following bibliography provides
-% a sample reference list with entries for journal
-% articles~\cite{ref_article1}, an LNCS chapter~\cite{ref_lncs1}, a
-% book~\cite{ref_book1}, proceedings without editors~\cite{ref_proc1},
-% and a homepage~\cite{ref_url1}. Multiple citations are grouped
-% \cite{ref_article1,ref_lncs1,ref_book1},
-% \cite{ref_article1,ref_book1,ref_proc1,ref_url1}.
-% %
-% ---- Bibliography ----
-%
-% BibTeX users should specify bibliography style 'splncs04'.
-% References will then be sorted and formatted in the correct style.
-%
-% \bibliographystyle{splncs04}
-% \bibliography{mybibliography}
-%
-\newpage
-\begin{thebibliography}{8}
-% \bibitem{ref_article1}
-% Author, F.: Article title. Journal \textbf{2}(5), 99--110 (2016)
-
-\bibitem{ref_roscontrol}
-Sachin Chitta, Eitan Marder-Eppstein, Wim Meeussen, Vijay Pradeep, Adolfo Rodríguez Tsouroukdissian, et al.. ros\_control: A generic and simple control framework for ROS. The Journal of Open Source Software, 2017, 2 (20), pp.456 - 456.
-\doi{10.21105/joss.00456}
-
-\bibitem{ref_ros}
-Quigley, Morgan, et al. "ROS: an open-source Robot Operating System." ICRA workshop on open source software. Vol. 3. No. 3.2. 2009.
-
-\bibitem{ref_orocos}
-Bruyninckx, Herman. "Open robot control software: the OROCOS project." Proceedings 2001 ICRA. IEEE international conference on robotics and automation (Cat. No. 01CH37164). Vol. 3. IEEE, 2001.
-
-\bibitem{ref_ros2}
-S. Macenski, T. Foote, B. Gerkey, C. Lalancette, W. Woodall, “Robot Operating System 2: Design, architecture, and uses in the wild,” Science Robotics vol. 7, May 2022.
-
-% \bibitem{ref_proc1}
-% Author, A.-B.: Contribution title. In: 9th International Proceedings
-% on Proceedings, pp. 1--2. Publisher, Location (2010)
-
-% \bibitem{ref_url1}
-% LNCS Homepage, \url{http://www.springer.com/lncs}. Last accessed 4
-% Oct 2017
-\end{thebibliography}
 \end{document}
