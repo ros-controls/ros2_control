@@ -70,11 +70,11 @@ def handle_set_component_state_service_call(
             f"{bcolors.OKGREEN}{action} component '{component}'. Hardware now in state: {response.state}.{bcolors.ENDC}"
         )
     elif response.ok and not response.state == target_state:
-        node.get_logger().warn(
+        node.get_logger().warning(
             f"{bcolors.WARNING}Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'.{bcolors.ENDC}"
         )
     else:
-        node.get_logger().warn(
+        node.get_logger().warning(
             f"{bcolors.WARNING}Could not {action} component '{component}'. Service call failed. Wrong component name?{bcolors.ENDC}"
         )
 
@@ -156,7 +156,7 @@ def main(args=None):
             if not is_hardware_component_loaded(
                 node, controller_manager_name, hardware_component, controller_manager_timeout
             ):
-                node.get_logger().warn(
+                node.get_logger().warning(
                     f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
                 )
             elif activate:
