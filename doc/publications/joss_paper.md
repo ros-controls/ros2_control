@@ -1,46 +1,42 @@
-\documentclass[journal]{IEEEtran}
-%
-\usepackage{graphicx}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-%
-% If you use the hyperref package, please uncomment the following line
-% to display URLs in blue roman font according to Springer's eBook style:
-% \renewcommand\UrlFont{\color{blue}\rmfamily}
+---
+title: 'ros2\_control: a hardware-agnostic control framework for ROS2'
+tags:
+  - Robot Operating System
+  - robot control
+  - ros2\_control
+authors:
+  - name: Bence Magyar
+    orcid: 0000-0001-8455-8674
+    affiliation: 1
+    equal-contrib: true
+  - name: Denis Štogl
+    affiliation: "2 ,3" # (Multiple affiliations must be quoted)
+    equal-contrib: true
+  - name: Karsten Knese
+    affiliation: 3
+affiliations:
+# TODO: add affiliations
+ - name: Lyman Spitzer, Jr. Fellow, Princeton University, United States
+   index: 1
+   ror: 00hx57361
+ - name: Institution Name, Country
+   index: 2
+ - name: Independent Researcher, Country
+   index: 3
+date: 18 May 2025
+bibliography: paper.bib
+---
 
-
-\usepackage{subcaption}
-\usepackage{url}
-
-\newcommand{\comment}[1]{}
-
-\begin{document}
-%
-\title{ros2\_control: a hardware-agnostic control framework for ROS2}
-%
-%
-\author{Bence Magyar\inst{1}\orcidID{0000-0001-8455-8674} \and
-Denis Štogl\inst{2,3}\orcidID{0000-0002-2546-6128} \and
-Karsten Knese\inst{3}}
-
-\maketitle              % typeset the header of the contribution
-%
-\begin{abstract}
+# Abstract
 \emph{ros2\_control} is a hardware-agnostic control framework focusing on the modular composition of control systems for robots and sharing controllers under the aspects of real-time performance.
 Specifically, \emph{ros2\_control} provides controller-lifecycle and hardware resource management on top of abstractions of real or virtual hardware interfaces.
 Similarly to \emph{ros\_control}, \emph{ros2\_control} controllers expose standard ROS2 interfaces for out-of-the box 3rd
 party solutions to robotics problems like manipulation, path planning and autonomous navigation.
 The modular design of \emph{ros2\_control} makes it a desirable framework for both research and industrial use.
 
+# Motivation
 
-\keywords{Robot Operating System  \and robot control \and ros2\_control}
-\end{abstract}
-%
-%
-%
-\section{Motivation}
-
-% history and related work
+<!-- history and related work -->
 
 Before the release of Robot Operating System (ROS) \cite{ref_ros} around 2009, robotic research was very slow because reproducing results was a tedious, long process, especially when it had to be adjusted to a specific robot. The first fully ROS-powered research robot, \emph{PR2} featured a robot-specific control layer to move its mobile base, two arms, torso, and head.
 Based on the experiences in the first few years of ROS, \cite{ref_roscontrol} proposed in 2014 a hardware-agnostic control framework as an evolution to the approach from the \emph{PR2} control system, called \emph{ros\_control}. This initiated the era of exchange of control algorithms between research groups, resulting in a set of generic and ready-to-use controllers, mostly for manipulators and mobile robots. Robot manufacturers started shipping their products with \emph{ros\_control} implemented on them. The framework took some inspiration from the \emph{OROCOS} \cite{ref_orocos}, a robot control library.
@@ -56,10 +52,10 @@ People well-versed in control theory often write specific controllers for their 
 Sharing slightly more general, configurable, and widely tested controllers benefits both the research and industrial communities, allowing them to focus on what is important to them.
 \comment{The more a controller is used, the quicker achieves maturity, helping robots be safe and reliable in harsh deployment environments or places where they need to interact with humans.}
 
-\section{Aim}
+# Aim
 \label{sec:aim}
-% Highlight the research objectives, hypotheses, and/or research questions
-% \section{Scope and requirements for a robotics control framework}
+<!-- Highlight the research objectives, hypotheses, and/or research questions -->
+<!-- # Scope and requirements for a robotics control framework -->
 The main goal of the \emph{ros2\_control} framework is to provide easy use of common knowledge from control-engineering in robotics applications.
 
 Figure \ref{fig:ros2_control_ach} depicts a conceptual architecture of a control framework for robotics. From left to right, there are custom application-related applications using open-source, 3rd party libraries (marked yellow) for high-level functionalities.
@@ -83,7 +79,7 @@ For this paper, we use the example of a mobile manipulator depicted in the upper
 We consider two aspects of the framework that are generally independent, hardware abstraction and controller management.
 This separation in the design is from \emph{ros\_control} \cite{ref_roscontrol} which we intend to keep.
 
-% TODO: update enumeration to RH1, RH2, ...  - Hardware Requirements
+<!-- % TODO: update enumeration to RH1, RH2, ...  - Hardware Requirements
 %\begin{enumerate}
 %    \item hardware combination
 %    \item different semantic meaning of the hardware
@@ -91,7 +87,7 @@ This separation in the design is from \emph{ros\_control} \cite{ref_roscontrol} 
 %    \item flexible combination of interfaces to controllers, e.g., separate or whole-body control
 %    \item support for different control modes
 %    \item lifecycle of hardware - tool changing
-%\end{enumerate}
+%\end{enumerate} -->
 
 Mobile manipulators are usually built from off-the-shelf hardware components, a mobile base, a lightweight robotic arm and a gripper as end-effector. Therefore a modern control framework should support \textbf{hardware composition} (\emph{RH1}) so that drivers, i.e., hardware interfaces can be reused for standalone and integrated components. These components also have \textbf{different semantic meanings} (\emph{RH2}) which can, in general, be grouped into the following: Sensors (read-only) -- e.g., force-torque sensor in the arm --, Actuators (single joint, self-contained units) -- e.g., parallel grippers and motors --, and general, multi-DoF Systems -- e.g., arms or mobile robots.
 
@@ -106,7 +102,7 @@ For example, the robotic arm on the mobile manipulator can be controlled using p
 On the other hand, another robotic arm can allow setting both interfaces, target position, and average velocity of a joint to that position.
 Finally, a control framework should define a \textbf{su components} (\emph{RH6}) that supports the temporary inactivation of a component, for example when the mobile base is moving, the arm and the gripper are inactive, i.e., can not be moved.
 Furthermore, shutdown and initialization procedures are needed to support tool changing which is very common in industrial robotics.
-% TODO: update enumeration to RC1, RC2, ... Controller Requirements
+<!-- % TODO: update enumeration to RC1, RC2, ... Controller Requirements
 %\begin{enumerate}
 %    \item multi-controller manager
 %    \item controllers lifecycle
@@ -115,7 +111,7 @@ Furthermore, shutdown and initialization procedures are needed to support tool c
 %    \item value limiters in controllers
 %    \item controllers chaining
 %    \item state observers and estimators
-%\end{enumerate}
+%\end{enumerate} -->
 
 \begin{figure}
     \centering
@@ -124,7 +120,7 @@ Furthermore, shutdown and initialization procedures are needed to support tool c
     \label{fig:ros2c-mobile-manipulator-control-architecture}
 \end{figure}
 
-%To control the mobile manipulator depicted in the upper-right corner of Figure \ref{fig:ros2c-mobile-manipulator-control-architecture} built using off-the-shelf components, it would be useful at first to compose multiple controllers that are specifically made for individual hardware, i.e., a robotic control framework should have built-in \textbf{management of multiple controllers} (\emph{RC1}).
+<!-- %To control the mobile manipulator depicted in the upper-right corner of Figure \ref{fig:ros2c-mobile-manipulator-control-architecture} built using off-the-shelf components, it would be useful at first to compose multiple controllers that are specifically made for individual hardware, i.e., a robotic control framework should have built-in \textbf{management of multiple controllers} (\emph{RC1}). -->
 To control the mobile manipulator shown before, it would be useful at first to compose multiple controllers that are specifically made for individual hardware, i.e., a robotic control framework should have built-in \textbf{management of multiple controllers} (\emph{RC1}).
 Additionally, controllers should have a \textbf{lifecycle} (\emph{RC2}) to support online exchange, activation, and deactivation that follows hardware lifecycle and control modes.
 In a complex robotic system, hardware components usually have different expectations for writing commands to them, therefore it is sensible to support \textbf{individual control rates for controllers} (\emph{RC3}).
@@ -138,22 +134,22 @@ Similarly, modern robotic systems sometimes employ \textbf{observers and estimat
 
 From the system perspective, a robot control framework should have concept for \textbf{handling errors from hardware} (\emph{RF5}) and \textbf{emergency stop events} (\emph{RF6}). In those situations, hardware components can become unavailable and recovery procedures for hardware and deactivation procedures for controllers have to be implemented.
 
-% TODO: update enumeration to RF1, RF2, ... Framework requirements
+<!-- % TODO: update enumeration to RF1, RF2, ... Framework requirements
 %\begin{enumerate}
 %    \item Hardware Error handler
 %    \item Emergency stop handler
-%\end{enumerate}
+%\end{enumerate} -->
 
-\section{Results}
+# Results
 \label{sec:results}
-% general overview
+<!-- % general overview
 % * interfaces
 % * controllers concept
 % * hw components concept
 % * controller manager as the main user interface, resource management
 % * lifecycle for hardware and controller components <--- add figure about ROS2 lifecycle state machine
 % * ROS2 CLI interface
-% * supported simulators & mock hardware components
+% * supported simulators & mock hardware components -->
 
 \emph{ros2\_control} consists of three main logical units:
 \begin{itemize}
@@ -161,8 +157,6 @@ From the system perspective, a robot control framework should have concept for \
     \item \emph{Hardware abstraction layer} is a set of robot hardware drivers, drivers for simulators, and framework-internal interfaces to them. Those components provide at least one state or command interface that controllers can access, to receive states from or send commands. This architecture abstracts the actual hardware and the simulator from the rest of \emph{ros2\_control} and ROS2 system, allowing users to test the same setup in simulation that they would use on the real robot. (Implementing \emph{RF1}, \emph{RH2}, \emph{RH3}, \emph{RH4})
     \item \emph{Controllers} are implementations of control algorithms that request access to hardware command and state interfaces. A controller can be simple, e.g., forward commands directly to hardware, or very complex, e.g., generating and interpolating trajectories for the robot or implementing control algorithms, like admittance control. We consider controllers the primary end-user interfaces as well as interfaces for 3rd party applications. A special type of controllers are called \emph{Broadcasters} that only read states and publish them to ROS2 world. (Implementing \emph{RF2}, \emph{RF3}, \emph{RC2}, \emph{RC6})
 \end{itemize}
-
-
 
 Figure \ref{fig:ros2c-mobile-manipulator-control-architecture} depicts a concrete setup of the \emph{ros2\_control} framework for the aforementioned mobile manipulator.
 \comment{The different symbols in the legend show different hardware interface types, which can be claimed by any controller with a compatible connecting interface type.}
@@ -202,24 +196,24 @@ Besides the need to port \emph{ros\_control} to ROS2, the redesign of the librar
 \end{enumerate}
 }
 
-% \begin{figure}
+<!-- % \begin{figure}
 %     \centering
 %     \includegraphics[width=0.5\textwidth]{ROS2nodelifecycle_smaller.png}
 %     \caption{ROS2 lifecycle graph used by \emph{ros2\_control} system components and controllers TODO: re-draw this in a more compact / paper friendly form}
 %     \label{fig:lifecycle_graph}
-% \end{figure}
+% \end{figure} -->
 
 
-% using different control modes
+<!-- % using different control modes -->
 
-% ros2\_control also provides several libraries to support developing new controllers.
+<!-- % ros2\_control also provides several libraries to support developing new controllers. -->
 
-\section{Documentation and examples}
+# Documentation and examples
 
-% * demos repo -> reference systems: rrbot, diffbot, design drafts
-% * docs page
+<!-- % * demos repo -> reference systems: rrbot, diffbot, design drafts
+% * docs page -->
 
-\subsection{Demos}
+## Demos
 
 The \emph{ros2\_control\_demos} repository\footnote{\url{https://github.com/ros-controls/ros2\_control\_demos} (accessed November 2024)} implements several reference systems, configuration and launch files.
 This repository serves as a collection of good examples for uses of the framework and especially for people implementing \emph{ros2\_control} support for their robots. To help this process, we created a list of common robot control use-cases and hardware architectures and captured it in a document in the roadmap repository\footnote{\url{https://tinyurl.com/ros2controlexamples} (accessed November 2024)}.
@@ -245,13 +239,13 @@ The two virtual robots depicted in Figure \ref{fig:demo_robots} are often used f
 
 The demos repository is kept as a source-based, rolling setup that does not get releases to any ROS distribution but should always work with the latest version of \emph{ros2\_control}.
 
-\subsection{Documentation \& Availability}
+## Documentation & Availability
 
 The first alpha release of \emph{ros2\_control} was added to ROS2 Dashing in 2019 and similarly beta, source-based support for ROS2 Eloquent the same year. Starting from 2020, \emph{ros2\_control} was part of the regular ROS2 release, which to this day include the Foxy, Galactic and Humble distributions. Following the introduction of the special distribution, Rolling, to ease ROS2 releases, new functionality is released and made available on a weekly basis.
 
 The documentation portal\footnote{\url{https://control.ros.org} (accessed November 2024)} supports all ROS releases of \emph{ros2\_control} starting from ROS2 Foxy. The contents of the portal are compiled daily from locally available material and the distribution-specific branches of the \emph{ros2\_control} Github repositories where some package-specific documentation lives right next to the code for ease of update and maintainability.
 
-\subsection{Impact}
+## Impact
 
 With \emph{ros2\_control}'s support for component-based hardware drivers, companies and research groups have already started implementing drivers for different robots. Figure \ref{fig:supported-robots-example} shows a few examples, namely the \emph{UR16} robot arm by Universal Robots, the mobile-robot \emph{Husky} UGV by Clearpath Robotics and finally the \emph{TIAGo} mobile manipulator by PAL Robotics.
 
@@ -266,7 +260,7 @@ These robots all have slightly unique aspects to them, for example, but not limi
 
 The above list of robots is merely a demonstration. Companies and community members are welcome to share their \emph{ros2\_control}-compatible robots on the \emph{Supported Robots} page\footnote{\url{https://control.ros.org/master/doc/supported\_robots/supported\_robots.html} (accessed November 2024)} at the documentation portal.
 
-\section{Conclusion and future work}
+# Conclusion and future work
 
 The \emph{ros2\_control} framework is already widely used in ROS2 community. The most relevant library for mobile robotics \emph{Nav2} and for manipulation \emph{MoveIt2} are fully relying on hardware abstraction and execution of control algorithms from \emph{ros2\_control}.
 
@@ -276,9 +270,7 @@ A few configuration files is all one needs to get ready to navigate autonomously
 
 Some of the requirements presented in Section \ref{sec:aim} were not referenced in Section \ref{sec:results}. These are \textbf{handling errors from hardware} (\emph{RF5}), \textbf{emergency stop events} (\emph{RF6}), \textbf{reusable value limiters} (\emph{RC5}) and \textbf{asynchronous controllers} (\emph{RC4}). All of these requirements are either on our roadmap for 2022 or planned for 2023.
 
-\section{Acknowledgements}
+# Acknowledgements
 
 The authors would like to express their gratitude to the following organizations for their continued support:
 PAL Robotics, PickNik Robotics, Stogl Robotics, and Bosch.
-
-\end{document}
