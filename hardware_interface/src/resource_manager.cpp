@@ -2103,7 +2103,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
@@ -2212,7 +2212,7 @@ HardwareReadWriteStatus ResourceManager::read(
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::write(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();

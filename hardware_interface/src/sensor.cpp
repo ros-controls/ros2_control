@@ -231,9 +231,12 @@ const rclcpp_lifecycle::State & Sensor::error()
 
 std::vector<StateInterface::ConstSharedPtr> Sensor::export_state_interfaces()
 {
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
+// BEGIN (Handle export change): for backward compatibility, can be removed if
+// export_command_interfaces() method is removed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<StateInterface> interfaces = impl_->export_state_interfaces();
+#pragma GCC diagnostic pop
   // END: for backward compatibility
 
   // If no StateInterfaces has been exported, this could mean:

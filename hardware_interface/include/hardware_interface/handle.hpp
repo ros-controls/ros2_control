@@ -53,7 +53,6 @@ class Handle
 {
 public:
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
-
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
@@ -394,7 +393,11 @@ public:
 
   StateInterface(StateInterface && other) = default;
 
+// Disable deprecated warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   using Handle::Handle;
+#pragma GCC diagnostic pop
 
   using SharedPtr = std::shared_ptr<StateInterface>;
   using ConstSharedPtr = std::shared_ptr<const StateInterface>;
@@ -464,7 +467,11 @@ public:
     }
   }
 
+// Disable deprecated warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   using Handle::Handle;
+#pragma GCC diagnostic pop
 
   using SharedPtr = std::shared_ptr<CommandInterface>;
 
