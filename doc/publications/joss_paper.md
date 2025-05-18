@@ -223,7 +223,7 @@ With `ros2_control`'s support for component-based hardware drivers, companies an
 
 These robots all have slightly unique aspects to them, for example, but not limited to, `UR16` uses some non-joint interfaces to adjust settings and uses it's own internal board to run a control loop, `Husky` integrates an `Inertial Measurement Unit` into the mobile base while `TIAGo` runs `ros2_control` natively with a realtime Linux kernel as well as reporting joint and force-torque sensor data.
 
-![UR5 by Universal Robots, Husky UGV by Clearpath Robotics, TIAGo by PAL Robotics.\label{fig:supported-robots-example}](figures/robots-collage)
+![UR5 by Universal Robots, Husky UGV by Clearpath Robotics, TIAGo by PAL Robotics.\label{fig:supported-robots-example}](figures/robots-collage.png)
 
 The above list of robots is merely a demonstration. Companies and community members are welcome to share their `ros2_control`-compatible robots on the `Supported Robots` page on [@ros2_control_documentation].
 
