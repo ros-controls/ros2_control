@@ -130,7 +130,9 @@ ChainableControllerInterface::export_reference_interfaces()
   {
     std::string error_msg = fmt::format(
       FMT_COMPILE(
-        "The internal storage for reference values 'reference_interfaces_' variable has size '{}', but it is expected to have the size '{}' equal to the number of exported reference interfaces. Please correct and recompile the controller with name '{}' and try again."),
+        "The internal storage for reference values 'reference_interfaces_' variable has size '{}', "
+        "but it is expected to have the size '{}' equal to the number of exported reference "
+        "interfaces. Please correct and recompile the controller with name '{}' and try again."),
       reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
@@ -182,7 +184,10 @@ ChainableControllerInterface::export_reference_interfaces()
   {
     std::string error_msg = fmt::format(
       FMT_COMPILE(
-        "The internal storage for exported reference ptrs 'exported_reference_interfaces_' variable has size '{}', but it is expected to have the size '{}' equal to the number of exported reference interfaces. Please correct and recompile the controller with name '{}' and try again."),
+        "The internal storage for exported reference ptrs 'exported_reference_interfaces_' "
+        "variable has size '{}', but it is expected to have the size '{}' equal to the number of "
+        "exported reference interfaces. Please correct and recompile the controller with name '{}' "
+        "and try again."),
       exported_reference_interfaces_.size(), ref_interface_size, get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
