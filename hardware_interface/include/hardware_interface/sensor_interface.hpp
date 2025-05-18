@@ -336,8 +336,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in sensor hardware component: {}. This should not "
-            "happen."),
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
@@ -354,8 +354,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in sensor hardware component: {}. This should not "
-            "happen."),
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
@@ -366,8 +366,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Failed to get state value from interface: {}. This "
-            "should not happen."),
+            "Failed to get state value from interface: {}. "
+            "This should not happen."),
           interface_name));
     }
     return opt_value.value();

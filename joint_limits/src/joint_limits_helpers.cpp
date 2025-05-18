@@ -60,8 +60,7 @@ void verify_actual_position_within_limits(
           "Joint position is out of bounds for the joint : '{}' actual position: {} limits: [{}, "
           "{}]. This could be due to a hardware failure (or) the physical limits of the joint "
           "being larger than the ones defined in the URDF. Please recheck the URDF and the "
-          "hardware "
-          "to verify the joint limits."),
+          "hardware to verify the joint limits."),
         joint_name, actual_pos, limits.min_position, limits.max_position);
       RCLCPP_ERROR_ONCE(rclcpp::get_logger("joint_limiter_interface"), "%s", error_message.c_str());
       // Throw an exception to indicate that the joint position is out of bounds

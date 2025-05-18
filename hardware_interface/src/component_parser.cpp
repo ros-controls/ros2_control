@@ -980,8 +980,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
             fmt::format(
               FMT_COMPILE(
                 "Joint '{}' has mimic attribute not set to false: Activated mimic joints cannot "
-                "have "
-                "command interfaces."),
+                "have command interfaces."),
               joint.name));
         }
         auto find_joint = [&hw_info](const std::string & name)

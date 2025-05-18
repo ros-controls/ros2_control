@@ -558,8 +558,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in system hardware component: {}. This should not "
-            "happen."),
+            "State interface not found: {} in system hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
@@ -576,8 +576,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in system hardware component: {}. This should not "
-            "happen."),
+            "State interface not found: {} in system hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
@@ -601,8 +601,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Command interface not found: {} in system hardware component: {}. This should not "
-            "happen."),
+            "Command interface not found: {} in system hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
@@ -619,8 +619,8 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Command interface not found: {} in system hardware component: {}. This should not "
-            "happen."),
+            "Command interface not found: {} in system hardware component: {}. "
+            "This should not happen."),
           interface_name, info_.name));
     }
     auto & handle = it->second;
