@@ -12,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   trajectory_msgs
   urdf
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -73,7 +74,7 @@ if(BUILD_TESTING)
   find_package(rclcpp REQUIRED)
 
   ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_link_libraries(joint_limits_rosparam_test joint_limits)
+  target_link_libraries(joint_limits_rosparam_test joint_limits fmt::fmt)
   target_compile_definitions(
     joint_limits_rosparam_test
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
