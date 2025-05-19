@@ -267,7 +267,7 @@ TEST(TestHandle, handle_constructor_bool_data_type)
   EXPECT_EQ(handle.get_interface_name(), collision_interface);
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ std::ignore = handle.get_optional<bool>(); });
-  ASSERT_FALSE(handle.get_optional<bool>().value())
+  ASSERT_TRUE(handle.get_optional<bool>().value())
     << "Default value should be true as it is initialized";
   ASSERT_TRUE(handle.set_value(false));
   ASSERT_FALSE(handle.get_optional<bool>().value());
