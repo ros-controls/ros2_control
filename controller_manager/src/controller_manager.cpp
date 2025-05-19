@@ -657,10 +657,19 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           resource_manager_->set_component_state(component, state) ==
           hardware_interface::return_type::ERROR)
         {
-          throw std::runtime_error(
-            fmt::format(
-              FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
-              component.c_str(), state.label()));
+          if (params_->hardware_components_initial_state.shutdown_on_initial_state_failure)
+          {
+            throw std::runtime_error(
+              fmt::format(
+                FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
+                component.c_str(), state.label()));
+          }
+          else
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Failed to set the initial state of the component : '%s' to '%s'",
+              component.c_str(), state.label().c_str());
+          }
         }
         components_to_activate.erase(component);
       }
@@ -693,10 +702,19 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       resource_manager_->set_component_state(component, active_state) ==
       hardware_interface::return_type::ERROR)
     {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
-          component.c_str(), active_state.label()));
+      if (params_->hardware_components_initial_state.shutdown_on_initial_state_failure)
+      {
+        throw std::runtime_error(
+          fmt::format(
+            FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
+            component.c_str(), active_state.label()));
+      }
+      else
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Failed to set the initial state of the component : '%s' to '%s'",
+          component.c_str(), active_state.label().c_str());
+      }
     }
   }
   robot_description_notification_timer_->cancel();
