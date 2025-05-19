@@ -12,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp_lifecycle
   ros2_control_test_assets
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -36,6 +37,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
 
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
+  target_link_libraries(test_resource_manager)
   ament_target_dependencies(test_resource_manager hardware_interface ros2_control_test_assets)
 
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)

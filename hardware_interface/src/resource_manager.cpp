@@ -14,6 +14,8 @@
 
 #include "hardware_interface/resource_manager.hpp"
 
+#include <fmt/compile.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -633,9 +635,11 @@ public:
       std::make_pair(command_interface->get_name(), command_interface));
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
-        command_interface->get_name() + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert CommandInterface with already existing key. "
+          "Insert[{}]"),
+        command_interface->get_name());
       throw std::runtime_error(msg);
     }
     command_interface->registerIntrospection();
@@ -650,9 +654,11 @@ public:
       std::make_pair(key, std::make_shared<CommandInterface>(std::move(command_interface))));
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
-        key + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert CommandInterface with already existing key. "
+          "Insert[{}]"),
+        key);
       throw std::runtime_error(msg);
     }
   }
@@ -744,7 +750,8 @@ public:
     const auto fill_interface_data =
       [&](const std::string & interface_type, std::optional<double> & value)
     {
-      const std::string interface_name = joint_name + "/" + interface_type;
+      const std::string interface_name =
+        fmt::format(FMT_COMPILE("{}/{}"), joint_name, interface_type);
       if (interface_map.find(interface_name) != interface_map.end())
       {
         // If the command interface is not claimed, then the value is not set (or) if the
@@ -778,7 +785,8 @@ public:
     const auto set_interface_command =
       [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      const std::string interface_name = limited_command.joint_name + "/" + interface_type;
+      const std::string interface_name =
+        fmt::format(FMT_COMPILE("{}/{}"), limited_command.joint_name, interface_type);
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
         auto itf_handle = interface_map.at(interface_name);
@@ -832,9 +840,10 @@ public:
     const auto [it, success] = state_interface_map_.emplace(interface_name, interface);
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
-        interface->get_name() + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[{}]"),
+        interface->get_name());
       throw std::runtime_error(msg);
     }
     interface->registerIntrospection();
@@ -1471,7 +1480,8 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
 {
   if (!state_interface_is_available(key))
   {
-    throw std::runtime_error(std::string("State interface with key '") + key + "' does not exist");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("State interface with key '{}' does not exist"), key));
   }
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -1710,14 +1720,15 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
 {
   if (!command_interface_is_available(key))
   {
-    throw std::runtime_error(std::string("Command interface with '") + key + "' does not exist");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("Command interface with key '{}' does not exist"), key));
   }
 
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   if (command_interface_is_claimed(key))
   {
     throw std::runtime_error(
-      std::string("Command interface with '") + key + "' is already claimed");
+      fmt::format(FMT_COMPILE("Command interface with key '{}' is already claimed"), key));
   }
 
   resource_storage_->claimed_command_interface_map_[key] = true;
@@ -2133,7 +2144,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
@@ -2242,7 +2253,7 @@ HardwareReadWriteStatus ResourceManager::read(
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::write(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();

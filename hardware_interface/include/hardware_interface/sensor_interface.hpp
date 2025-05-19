@@ -15,6 +15,8 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <string>
@@ -332,8 +334,11 @@ public:
     if (it == sensor_states_map_.end())
     {
       throw std::runtime_error(
-        "State interface not found: " + interface_name +
-        " in sensor hardware component: " + info_.name + ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
+          interface_name, info_.name));
     }
     auto & handle = it->second;
     std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
@@ -347,8 +352,11 @@ public:
     if (it == sensor_states_map_.end())
     {
       throw std::runtime_error(
-        "State interface not found: " + interface_name +
-        " in sensor hardware component: " + info_.name + ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
+          interface_name, info_.name));
     }
     auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
@@ -356,8 +364,11 @@ public:
     if (!opt_value)
     {
       throw std::runtime_error(
-        "Failed to get state value from interface: " + interface_name +
-        ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "Failed to get state value from interface: {}. "
+            "This should not happen."),
+          interface_name));
     }
     return opt_value.value();
   }
