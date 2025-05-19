@@ -234,9 +234,12 @@ const rclcpp_lifecycle::State & System::error()
 
 std::vector<StateInterface::ConstSharedPtr> System::export_state_interfaces()
 {
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
+// BEGIN (Handle export change): for backward compatibility, can be removed if
+// export_command_interfaces() method is removed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<StateInterface> interfaces = impl_->export_state_interfaces();
+#pragma GCC diagnostic pop
   // END: for backward compatibility
 
   // If no StateInterfaces has been exported, this could mean:
@@ -262,9 +265,12 @@ std::vector<StateInterface::ConstSharedPtr> System::export_state_interfaces()
 
 std::vector<CommandInterface::SharedPtr> System::export_command_interfaces()
 {
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
+// BEGIN (Handle export change): for backward compatibility, can be removed if
+// export_command_interfaces() method is removed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<CommandInterface> interfaces = impl_->export_command_interfaces();
+#pragma GCC diagnostic pop
   // END: for backward compatibility
 
   // If no CommandInterface has been exported, this could mean:

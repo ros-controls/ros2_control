@@ -15,6 +15,8 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <fmt/compile.h>
+
 #include <algorithm>
 #include <atomic>
 #include <functional>
@@ -53,7 +55,6 @@ class Handle
 {
 public:
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
-
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
@@ -85,8 +86,9 @@ public:
     else
     {
       throw std::runtime_error(
-        "Invalid data type : '" + interface_description.interface_info.data_type +
-        "' for interface : " + interface_description.get_name());
+        fmt::format(
+          FMT_COMPILE("Invalid data type : '{}' for interface : {}"),
+          interface_description.interface_info.data_type, interface_description.get_name()));
     }
   }
 
@@ -207,8 +209,9 @@ public:
     catch (const std::bad_variant_access & err)
     {
       throw std::runtime_error(
-        "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-        " expected : '" + data_type_.to_string() + "'");
+        fmt::format(
+          FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
     }
     // END
   }
@@ -252,8 +255,9 @@ public:
       catch (const std::bad_variant_access & err)
       {
         throw std::runtime_error(
-          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + data_type_.to_string() + "'");
+          fmt::format(
+            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            get_type_name<T>(), get_name(), data_type_.to_string()));
       }
     }
     return true;
@@ -310,8 +314,9 @@ public:
       if (!std::holds_alternative<T>(value_))
       {
         throw std::runtime_error(
-          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + data_type_.to_string() + "'");
+          fmt::format(
+            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            get_type_name<T>(), get_name(), data_type_.to_string()));
       }
       value_ = value;
     }
@@ -394,7 +399,11 @@ public:
 
   StateInterface(StateInterface && other) = default;
 
+// Disable deprecated warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   using Handle::Handle;
+#pragma GCC diagnostic pop
 
   using SharedPtr = std::shared_ptr<StateInterface>;
   using ConstSharedPtr = std::shared_ptr<const StateInterface>;
@@ -464,7 +473,11 @@ public:
     }
   }
 
+// Disable deprecated warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   using Handle::Handle;
+#pragma GCC diagnostic pop
 
   using SharedPtr = std::shared_ptr<CommandInterface>;
 

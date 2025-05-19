@@ -133,7 +133,7 @@ def service_caller(
                     f"Could not contact service {fully_qualified_service_name}"
                 )
         elif not cli.wait_for_service(10.0):
-            node.get_logger().warn(f"Could not contact service {fully_qualified_service_name}")
+            node.get_logger().warning(f"Could not contact service {fully_qualified_service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
@@ -275,7 +275,7 @@ def switch_controllers(
     controller_manager_name,
     deactivate_controllers,
     activate_controllers,
-    strict,
+    strictness,
     activate_asap,
     timeout,
     call_timeout=10.0,
@@ -283,10 +283,7 @@ def switch_controllers(
     request = SwitchController.Request()
     request.activate_controllers = activate_controllers
     request.deactivate_controllers = deactivate_controllers
-    if strict:
-        request.strictness = SwitchController.Request.STRICT
-    else:
-        request.strictness = SwitchController.Request.BEST_EFFORT
+    request.strictness = strictness
     request.activate_asap = activate_asap
     request.timeout = rclpy.duration.Duration(seconds=timeout).to_msg()
     return service_caller(
