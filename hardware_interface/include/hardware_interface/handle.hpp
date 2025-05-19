@@ -72,7 +72,7 @@ public:
   : prefix_name_(prefix_name),
     interface_name_(interface_name),
     handle_name_(prefix_name_ + "/" + interface_name_),
-    data_type_(HandleDataType(data_type))
+    data_type_(data_type)
   {
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
