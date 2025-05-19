@@ -14,6 +14,8 @@
 
 #include "controller_manager/controller_manager.hpp"
 
+#include <fmt/compile.h>
+
 #include <memory>
 #include <set>
 #include <string>
@@ -292,15 +294,15 @@ controller_interface::return_type evaluate_switch_result(
     RCLCPP_ERROR(logger, "%s", message.c_str());
     if (!unable_to_activate_controllers.empty())
     {
-      const std::string error_msg =
-        "Unable to activate controllers: [ " + unable_to_activate_controllers + "]";
+      const std::string error_msg = fmt::format(
+        FMT_COMPILE("Unable to activate controllers: [ {} ]"), unable_to_activate_controllers);
       message += "\n" + error_msg;
       RCLCPP_ERROR(logger, "%s", error_msg.c_str());
     }
     if (!unable_to_deactivate_controllers.empty())
     {
-      const std::string error_msg =
-        "Unable to deactivate controllers: [ " + unable_to_deactivate_controllers + "]";
+      const std::string error_msg = fmt::format(
+        FMT_COMPILE("Unable to deactivate controllers: [ {} ]"), unable_to_deactivate_controllers);
       message += "\n" + error_msg;
       RCLCPP_ERROR(logger, "%s", error_msg.c_str());
     }
@@ -315,7 +317,8 @@ controller_interface::return_type evaluate_switch_result(
         std::string list = std::accumulate(
           std::next(deactivate_list.begin()), deactivate_list.end(), deactivate_list.front(),
           [](std::string a, std::string b) { return a + " " + b; });
-        const std::string info_msg = "Deactivated controllers: [ " + list + " ]";
+        const std::string info_msg =
+          fmt::format(FMT_COMPILE("Deactivated controllers: [ {} ]"), list);
         message += "\n" + info_msg;
         RCLCPP_INFO(logger, "%s", info_msg.c_str());
       }
@@ -324,7 +327,8 @@ controller_interface::return_type evaluate_switch_result(
         std::string list = std::accumulate(
           std::next(activate_list.begin()), activate_list.end(), activate_list.front(),
           [](std::string a, std::string b) { return a + " " + b; });
-        const std::string info_msg = "Activated controllers: [ " + list + " ]";
+        const std::string info_msg =
+          fmt::format(FMT_COMPILE("Activated controllers: [ {} ]"), list);
         message += "\n" + info_msg;
         RCLCPP_INFO(logger, "%s", info_msg.c_str());
       }
@@ -654,8 +658,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           hardware_interface::return_type::ERROR)
         {
           throw std::runtime_error(
-            "Failed to set the initial state of the component : " + component + " to " +
-            state.label());
+            fmt::format(
+              FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
+              component.c_str(), state.label()));
         }
         components_to_activate.erase(component);
       }
@@ -689,8 +694,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       hardware_interface::return_type::ERROR)
     {
       throw std::runtime_error(
-        "Failed to set the initial state of the component : " + component + " to " +
-        active_state.label());
+        fmt::format(
+          FMT_COMPILE("Failed to set the initial state of the component : {} to {}"),
+          component.c_str(), active_state.label()));
     }
   }
   robot_description_notification_timer_->cancel();
@@ -818,7 +824,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
   // Now check if the parameters_file parameter exist
-  const std::string param_name = controller_name + ".params_file";
+  const std::string param_name = fmt::format(FMT_COMPILE("{}.params_file"), controller_name);
   controller_spec.info.parameters_files.clear();
 
   // get_parameter checks if parameter has been declared/set
@@ -843,7 +849,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     }
   }
 
-  const std::string fallback_ctrl_param = controller_name + ".fallback_controllers";
+  const std::string fallback_ctrl_param =
+    fmt::format(FMT_COMPILE("{}.fallback_controllers"), controller_name);
   std::vector<std::string> fallback_controllers;
   if (!has_parameter(fallback_ctrl_param))
   {
@@ -863,7 +870,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     controller_spec.info.fallback_controllers_names = fallback_controllers;
   }
 
-  const std::string node_options_args_param = controller_name + ".node_options_args";
+  const std::string node_options_args_param =
+    fmt::format(FMT_COMPILE("{}.node_options_args"), controller_name);
   std::vector<std::string> node_options_args;
   if (!has_parameter(node_options_args_param))
   {
@@ -880,7 +888,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
   const std::string & controller_name)
 {
-  const std::string param_name = controller_name + ".type";
+  const std::string param_name = fmt::format(FMT_COMPILE("{}.type"), controller_name);
   std::string controller_type;
 
   // We cannot declare the parameters for the controllers that will be loaded in the future,
@@ -1390,8 +1398,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
       if (found_it == updated_controllers.end())
       {
-        const std::string error_msg = "Could not " + action + " controller with name '" +
-                                      controller + "' because no controller with this name exists";
+        const std::string error_msg = fmt::format(
+          FMT_COMPILE(
+            "Could not {} controller with name '{}' because no controller with this name exists"),
+          action, controller);
         msg += error_msg + "\n";
         RCLCPP_WARN(get_logger(), "%s", error_msg.c_str());
         // For the BEST_EFFORT switch, if there are more controllers that are in the list, this is
@@ -1459,9 +1469,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     // if controller is not inactive then do not do any following-controllers checks
     if (is_controller_unconfigured(*controller_it->c))
     {
-      message = "Controller with name '" + controller_it->info.name +
-                "' is in 'unconfigured' state. The controller needs to be configured to be in "
-                "'inactive' state before it can be checked and activated.";
+      message = fmt::format(
+        FMT_COMPILE(
+          "Controller with name '{}' is in 'unconfigured' state. The controller needs to be "
+          "configured to be in 'inactive' state before it can be checked and activated."),
+        controller_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
@@ -1472,16 +1484,20 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
           deactivate_request_.begin(), deactivate_request_.end(), controller_it->info.name) ==
         deactivate_request_.end())
       {
-        message = "Controller with name '" + controller_it->info.name + "' is already active.";
+        message = fmt::format(
+          FMT_COMPILE("Controller with name '{}' is already active."), controller_it->info.name);
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         status = controller_interface::return_type::ERROR;
       }
     }
     else if (!is_controller_inactive(controller_it->c))
     {
-      message = "Controller with name '" + controller_it->info.name +
-                "' is not in 'inactive' state. The controller needs to be in 'inactive' state "
-                "before it can be checked and activated.";
+      message = fmt::format(
+        FMT_COMPILE(
+          "Controller with name '{}' is not in 'inactive' state. The controller needs to be in "
+          "'inactive' state before it can be checked and activated."),
+        controller_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
@@ -1536,8 +1552,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     // if controller is not active then skip preceding-controllers checks
     if (!is_controller_active(controller_it->c))
     {
-      message = "Controller with name '" + controller_it->info.name +
-                "' can not be deactivated since it is not active.";
+      message = fmt::format(
+        FMT_COMPILE("Controller with name '{}' can not be deactivated since it is not active."),
+        controller_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       status = controller_interface::return_type::ERROR;
     }
@@ -1799,9 +1816,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   if (!switch_params_.cv.wait_for(
         switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
-    message = "Switch controller timed out after " +
-              std::to_string(static_cast<double>(switch_params_.timeout.count()) / 1e9) +
-              " seconds!";
+    message = fmt::format(
+      FMT_COMPILE("Switch controller timed out after {} seconds!"),
+      static_cast<double>(switch_params_.timeout.count()) / 1e9);
     RCLCPP_ERROR(get_logger(), "%s", message.c_str());
     clear_requests();
     return controller_interface::return_type::ERROR;
@@ -3124,10 +3141,11 @@ controller_interface::return_type ControllerManager::check_following_controllers
     // check if following controller is chainable
     if (!following_ctrl_it->c->is_chainable())
     {
-      message = "No state/reference interface from controller : '" + ctrl_itf_name +
-                "' exist, since the following "
-                "controller with name '" +
-                following_ctrl_it->info.name + "' is not chainable.";
+      message = fmt::format(
+        FMT_COMPILE(
+          "No state/reference interface from controller : '{}' exist, since the following "
+          "controller with name '{}' is not chainable."),
+        ctrl_itf_name, following_ctrl_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
@@ -3140,8 +3158,11 @@ controller_interface::return_type ControllerManager::check_following_controllers
           deactivate_request_.begin(), deactivate_request_.end(), following_ctrl_it->info.name) !=
         deactivate_request_.end())
       {
-        message = "The following controller with name '" + following_ctrl_it->info.name +
-                  "' is currently active but it is requested to be deactivated.";
+        message = fmt::format(
+          FMT_COMPILE(
+            "The following controller with name '{}' is currently active but it is requested to "
+            "be deactivated."),
+          following_ctrl_it->info.name);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3151,8 +3172,11 @@ controller_interface::return_type ControllerManager::check_following_controllers
       std::find(activate_request_.begin(), activate_request_.end(), following_ctrl_it->info.name) ==
       activate_request_.end())
     {
-      message = "The following controller with name '" + following_ctrl_it->info.name +
-                "' is currently inactive and it is not requested to be activated.";
+      message = fmt::format(
+        FMT_COMPILE(
+          "The following controller with name '{}' is currently inactive and it is not requested "
+          "to be activated."),
+        following_ctrl_it->info.name);
       RCLCPP_WARN(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
@@ -3255,9 +3279,11 @@ controller_interface::return_type ControllerManager::check_preceding_controllers
         std::find(activate_request_.begin(), activate_request_.end(), preceding_controller) !=
           activate_request_.end())
       {
-        message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceding_controller +
-                  "' is inactive and will be activated.";
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to deactivate controller with name '{}' because preceding controller with "
+            "name '{}' is inactive and will be activated."),
+          controller_it->info.name, preceding_controller);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3266,9 +3292,11 @@ controller_interface::return_type ControllerManager::check_preceding_controllers
         std::find(deactivate_request_.begin(), deactivate_request_.end(), preceding_controller) ==
           deactivate_request_.end())
       {
-        message = "Unable to deactivate controller with name '" + controller_it->info.name +
-                  "' because preceding controller with name '" + preceding_controller +
-                  "' is currently active and will not be deactivated.";
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to deactivate controller with name '{}' because preceding controller with "
+            "name '{}' is currently active and will not be deactivated."),
+          controller_it->info.name, preceding_controller);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3300,8 +3328,11 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
       std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
     if (fb_ctrl_it == controllers.end())
     {
-      message = "Unable to find the fallback controller : '" + fb_ctrl + "' of the controller : '" +
-                controller_it->info.name + "' within the controller list";
+      message = fmt::format(
+        FMT_COMPILE(
+          "Unable to find the fallback controller : '{}' of the controller : '{}' within the "
+          "controller list"),
+        fb_ctrl, controller_it->info.name);
       RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
@@ -3309,9 +3340,11 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
     {
       if (!(is_controller_inactive(fb_ctrl_it->c) || is_controller_active(fb_ctrl_it->c)))
       {
-        message = "Controller with name '" + controller_it->info.name +
-                  "' cannot be activated, as its fallback controller : '" + fb_ctrl +
-                  "' need to be configured and be in inactive/active state!";
+        message = fmt::format(
+          FMT_COMPILE(
+            "Controller with name '{}' cannot be activated, as its fallback controller : '{}' need "
+            "to be configured and be in inactive/active state!"),
+          controller_it->info.name, fb_ctrl);
         RCLCPP_ERROR(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3341,24 +3374,25 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
                   std::find(exported_ref_itfs.begin(), exported_ref_itfs.end(), fb_cmd_itf) ==
                   exported_ref_itfs.end())
                 {
-                  message = "Controller with name '" + controller_it->info.name +
-                            "' cannot be activated, as the command interface : '" + fb_cmd_itf +
-                            "' required by its fallback controller : '" + fb_ctrl +
-                            "' is not exported by the controller : '" +
-                            following_ctrl_it->info.name + "' in the current fallback list!";
+                  message = fmt::format(
+                    FMT_COMPILE(
+                      "Controller with name '{}' cannot be activated, as the command interface : "
+                      "'{}' required by its fallback controller : '{}' is not exported by the "
+                      "controller : '{}' in the current fallback list!"),
+                    controller_it->info.name, fb_cmd_itf, fb_ctrl, following_ctrl_it->info.name);
                   RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                   return controller_interface::return_type::ERROR;
                 }
               }
               else
               {
-                message =
-                  "Controller with name '" + controller_it->info.name +
-                  "' cannot be activated, as the command interface : '" + fb_cmd_itf +
-                  "' required by its fallback controller : '" + fb_ctrl +
-                  "' is not available as the controller is not in active state!. May be "
-                  "consider adding this controller to the fallback list of the controller : '" +
-                  following_ctrl_it->info.name + "' or already have it activated.";
+                message = fmt::format(
+                  FMT_COMPILE(
+                    "Controller with name '{}' cannot be activated, as the command interface : "
+                    "'{}' required by its fallback controller : '{}' is not available as the "
+                    "controller is not in active state!. May be consider adding this controller to "
+                    "the fallback list of the controller : '{}' or already have it activated."),
+                  controller_it->info.name, fb_cmd_itf, fb_ctrl, following_ctrl_it->info.name);
                 RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                 return controller_interface::return_type::ERROR;
               }
@@ -3366,9 +3400,11 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
           }
           else
           {
-            message = "Controller with name '" + controller_it->info.name +
-                      "' cannot be activated, as not all of its fallback controller's : '" +
-                      fb_ctrl + "' command interfaces are currently available!";
+            message = fmt::format(
+              FMT_COMPILE(
+                "Controller with name '{}' cannot be activated, as not all of its fallback "
+                "controller's : '{}' command interfaces are currently available!"),
+              controller_it->info.name, fb_ctrl);
             RCLCPP_ERROR(get_logger(), "%s", message.c_str());
             return controller_interface::return_type::ERROR;
           }
@@ -3400,24 +3436,25 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
                   std::find(exported_state_itfs.begin(), exported_state_itfs.end(), fb_state_itf) ==
                   exported_state_itfs.end())
                 {
-                  message = "Controller with name '" + controller_it->info.name +
-                            "' cannot be activated, as the state interface : '" + fb_state_itf +
-                            "' required by its fallback controller : '" + fb_ctrl +
-                            "' is not exported by the controller : '" +
-                            following_ctrl_it->info.name + "' in the current fallback list!";
+                  message = fmt::format(
+                    FMT_COMPILE(
+                      "Controller with name '{}' cannot be activated, as the state interface : "
+                      "'{}' required by its fallback controller : '{}' is not exported by the "
+                      "controller : '{}' in the current fallback list!"),
+                    controller_it->info.name, fb_state_itf, fb_ctrl, following_ctrl_it->info.name);
                   RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                   return controller_interface::return_type::ERROR;
                 }
               }
               else
               {
-                message =
-                  "Controller with name '" + controller_it->info.name +
-                  "' cannot be activated, as the state interface : '" + fb_state_itf +
-                  "' required by its fallback controller : '" + fb_ctrl +
-                  "' is not available as the controller is not in active state!. May be "
-                  "consider adding this controller to the fallback list of the controller : '" +
-                  following_ctrl_it->info.name + "' or already have it activated.";
+                message = fmt::format(
+                  FMT_COMPILE(
+                    "Controller with name '{}' cannot be activated, as the state interface : '{}' "
+                    "required by its fallback controller : '{}' is not available as the "
+                    "controller is not in active state!. May be consider adding this controller to "
+                    "the fallback list of the controller : '{}' or already have it activated."),
+                  controller_it->info.name, fb_state_itf, fb_ctrl, following_ctrl_it->info.name);
                 RCLCPP_ERROR(get_logger(), "%s", message.c_str());
                 return controller_interface::return_type::ERROR;
               }
@@ -3425,9 +3462,11 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
           }
           else
           {
-            message = "Controller with name '" + controller_it->info.name +
-                      "' cannot be activated, as not all of its fallback controller's : '" +
-                      fb_ctrl + "' state interfaces are currently available!";
+            message = fmt::format(
+              FMT_COMPILE(
+                "Controller with name '{}' cannot be activated, as not all of its fallback "
+                "controller's : '{}' state interfaces are currently available!"),
+              controller_it->info.name, fb_ctrl);
             RCLCPP_ERROR(get_logger(), "%s", message.c_str());
             return controller_interface::return_type::ERROR;
           }
@@ -3481,8 +3520,9 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
       std::bind(controller_name_compare, std::placeholders::_1, controller_name));
     if (controller_it == controllers.end())
     {
-      message =
-        "Unable to find the controller : '" + controller_name + "' within the controller list";
+      message = fmt::format(
+        FMT_COMPILE("Unable to find the controller : '{}' within the controller list"),
+        controller_name);
       RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
@@ -3496,8 +3536,11 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
     {
       if (!resource_manager_->command_interface_is_available(cmd_itf))
       {
-        message = "Unable to activate controller '" + controller_it->info.name +
-                  "' since the command interface '" + cmd_itf + "' is not available.";
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' is not available."),
+          controller_it->info.name, cmd_itf);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3506,8 +3549,10 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
     {
       if (!resource_manager_->state_interface_is_available(state_itf))
       {
-        message = "Unable to activate controller '" + controller_it->info.name +
-                  "' since the state interface '" + state_itf + "' is not available.";
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the state interface '{}' is not available."),
+          controller_it->info.name, state_itf);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
@@ -3893,9 +3938,9 @@ void ControllerManager::controller_manager_diagnostic_callback(
   }
 
   const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
-  const std::string diag_summary =
-    "Controller Manager has bad periodicity : " + std::to_string(cm_stats.average) +
-    " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
+  const std::string diag_summary = fmt::format(
+    FMT_COMPILE("Controller Manager has bad periodicity : {} Hz. Expected consistent {} Hz"),
+    cm_stats.average, get_update_rate());
   if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||

@@ -16,6 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_msgs
   libstatistics_collector
   generate_parameter_library
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
