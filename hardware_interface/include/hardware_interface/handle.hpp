@@ -15,6 +15,8 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <fmt/compile.h>
+
 #include <algorithm>
 #include <atomic>
 #include <functional>
@@ -84,8 +86,9 @@ public:
     else
     {
       throw std::runtime_error(
-        "Invalid data type : '" + interface_description.interface_info.data_type +
-        "' for interface : " + interface_description.get_name());
+        fmt::format(
+          FMT_COMPILE("Invalid data type : '{}' for interface : {}"),
+          interface_description.interface_info.data_type, interface_description.get_name()));
     }
   }
 
@@ -206,8 +209,9 @@ public:
     catch (const std::bad_variant_access & err)
     {
       throw std::runtime_error(
-        "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-        " expected : '" + data_type_.to_string() + "'");
+        fmt::format(
+          FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
     }
     // END
   }
@@ -251,8 +255,9 @@ public:
       catch (const std::bad_variant_access & err)
       {
         throw std::runtime_error(
-          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + data_type_.to_string() + "'");
+          fmt::format(
+            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            get_type_name<T>(), get_name(), data_type_.to_string()));
       }
     }
     return true;
@@ -309,8 +314,9 @@ public:
       if (!std::holds_alternative<T>(value_))
       {
         throw std::runtime_error(
-          "Invalid data type : '" + get_type_name<T>() + "' access for interface : " + get_name() +
-          " expected : '" + data_type_.to_string() + "'");
+          fmt::format(
+            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            get_type_name<T>(), get_name(), data_type_.to_string()));
       }
       value_ = value;
     }

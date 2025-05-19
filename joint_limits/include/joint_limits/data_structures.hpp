@@ -17,6 +17,8 @@
 #ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
 #define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <optional>
@@ -117,8 +119,9 @@ struct JointInterfacesCommandLimiterData
 
   std::string to_string() const
   {
-    return "Joint : '" + joint_name + "', (actual: [" + actual.to_string() + "], command : [" +
-           command.to_string() + "], limited: [" + limited.to_string() + "])";
+    return fmt::format(
+      FMT_COMPILE("Joint: '{}', (actual: [{}], command: [{}], limited: [{}])"), joint_name,
+      actual.to_string(), command.to_string(), limited.to_string());
   }
 };
 

@@ -25,6 +25,7 @@
   <depend>rclcpp_lifecycle</depend>
   <depend>trajectory_msgs</depend>
   <depend>urdf</depend>
+  <depend>fmt</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>generate_parameter_library</test_depend>
