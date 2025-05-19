@@ -14,11 +14,13 @@
 
 /// \author Adrià Roig Moreno
 
+#include "joint_limits/joint_limits_helpers.hpp"
+
 #include <fmt/compile.h>
 
 #include <algorithm>
 #include <cmath>
-#include "joint_limits/joint_limits_helpers.hpp"
+
 #include "rclcpp/logging.hpp"
 
 namespace joint_limits

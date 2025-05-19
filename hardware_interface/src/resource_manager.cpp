@@ -15,6 +15,7 @@
 #include "hardware_interface/resource_manager.hpp"
 
 #include <fmt/compile.h>
+
 #include <functional>
 #include <map>
 #include <memory>
