@@ -56,9 +56,7 @@ class Handle
 {
 public:
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
-  Handle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
+  Handle(const std::string & prefix_name, const std::string & interface_name, double * value_ptr)
   : prefix_name_(prefix_name),
     interface_name_(interface_name),
     handle_name_(prefix_name_ + "/" + interface_name_),
@@ -68,7 +66,7 @@ public:
 
   explicit Handle(
     const std::string & prefix_name, const std::string & interface_name,
-    const std::string & data_type, const std::string & initial_value = "")
+    const std::string & data_type = "double", const std::string & initial_value = "")
   : prefix_name_(prefix_name),
     interface_name_(interface_name),
     handle_name_(prefix_name_ + "/" + interface_name_),
