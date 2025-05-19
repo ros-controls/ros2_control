@@ -1000,7 +1000,6 @@ TEST_F(
     "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
-
   ASSERT_FALSE(hardware_info.is_async);
   ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
@@ -1033,7 +1032,6 @@ TEST_F(
   EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].size, 1);
 
   ASSERT_THAT(hardware_info.gpios, SizeIs(1));
-
   EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
