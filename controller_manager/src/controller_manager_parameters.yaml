@@ -27,7 +27,7 @@ controller_manager:
 
     shutdown_on_initial_state_failure: {
       type: bool,
-      default_value: false,
+      default_value: true,
       description: "Specifies whether the controller manager should shut down if setting the desired initial state fails during startup.",
     }
 
