@@ -252,6 +252,7 @@ TEST(TestHandle, handle_constructor_double_data_type)
   ASSERT_TRUE(handle.set_value(1.0));
   ASSERT_EQ(handle.get_optional<double>().value(), 1.0);
 
+  // Test the assertions
   ASSERT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(true); }, std::runtime_error);
 }
