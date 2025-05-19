@@ -15,6 +15,7 @@
 
 #include "gmock/gmock.h"
 #include "hardware_interface/component_parser.hpp"
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
@@ -1011,6 +1012,11 @@ TEST_F(
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].name, "enable");
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].data_type, "bool");
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_cmd_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].command_interfaces[1]);
+  auto bool_cmd_itf = hardware_interface::CommandInterface(bool_cmd_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_cmd_itf.get_data_type());
+
   EXPECT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].data_type, "double");
@@ -1018,6 +1024,10 @@ TEST_F(
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, "status");
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].data_type, "bool");
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_state_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].state_interfaces[1]);
+  auto bool_state_itf = hardware_interface::StateInterface(bool_state_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_state_itf.get_data_type());
 
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   EXPECT_EQ(hardware_info.sensors[0].name, "trigger");
