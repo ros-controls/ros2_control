@@ -15,6 +15,7 @@
 #ifndef TRANSMISSION_INTERFACE__HANDLE_HPP_
 #define TRANSMISSION_INTERFACE__HANDLE_HPP_
 
+#include <optional>
 #include <string>
 #include "hardware_interface/macros.hpp"
 
