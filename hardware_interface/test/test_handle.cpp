@@ -292,6 +292,8 @@ TEST(TestHandle, interface_description_unknown_data_type)
 
   ASSERT_EQ(hardware_interface::HandleDataType::UNKNOWN, interface_descr.get_data_type());
   EXPECT_ANY_THROW({ StateInterface handle{interface_descr}; }) << "Unknown data type should throw";
+  EXPECT_ANY_THROW({ StateInterface handle("joint1", "collision", "UNKNOWN"); })
+    << "Unknown data type should throw";
 }
 
 TEST(TestHandle, interface_description_command_interface_name_getters_work)
