@@ -234,6 +234,52 @@ TEST(TestHandle, interface_description_bool_data_type)
   ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
 }
 
+TEST(TestHandle, handle_constructor_double_data_type)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "double", "23.0"};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
+  ASSERT_EQ(handle.get_optional<double>().value(), 23.0);
+  ASSERT_TRUE(handle.get_optional<double>().has_value());
+  ASSERT_TRUE(handle.set_value(0.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 0.0);
+  ASSERT_TRUE(handle.set_value(1.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 1.0);
+
+  ASSERT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(true); }, std::runtime_error);
+}
+
+TEST(TestHandle, handle_constructor_bool_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  StateInterface handle{itf_name, collision_interface, "bool", "true"};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<bool>(); });
+  ASSERT_FALSE(handle.get_optional<bool>().value())
+    << "Default value should be true as it is initialized";
+  ASSERT_TRUE(handle.set_value(false));
+  ASSERT_FALSE(handle.get_optional<bool>().value());
+  ASSERT_TRUE(handle.set_value(true));
+  ASSERT_TRUE(handle.get_optional<bool>().value());
+
+  // Test the assertions
+  ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
+}
+
 TEST(TestHandle, interface_description_unknown_data_type)
 {
   const std::string collision_interface = "collision";
