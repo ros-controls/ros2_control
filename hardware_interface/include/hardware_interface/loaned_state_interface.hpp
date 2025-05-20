@@ -132,36 +132,6 @@ public:
     return std::nullopt;
   }
 
-  /**
-   * @brief Get the value of the state interface.
-   * @tparam T The type of the value to be retrieved.
-   * @param value The value of the state interface.
-   * @param max_tries The maximum number of tries to get the value.
-   * @return true if the value is accessed successfully, false otherwise.
-   *
-   * @note The method is thread-safe and non-blocking.
-   * @note When different threads access the same handle at same instance, and if they are unable to
-   * lock the handle to access the value, the handle returns false. If the operation is successful,
-   * the value is updated and returns true.
-   * @note The method will try to get the value max_tries times before returning false. The method
-   * will yield the thread between tries. If the value is retrieved successfully, the method updates
-   * the value and returns true immediately.
-   */
-  template <typename T>
-  [[deprecated(
-    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
-    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
-  get_value(T & value, unsigned int max_tries = 10) const
-  {
-    const auto opt_value = get_optional<T>(max_tries);
-    if (opt_value.has_value())
-    {
-      value = opt_value.value();
-      return true;
-    }
-    return false;
-  }
-
 protected:
   const StateInterface & state_interface_;
   Deleter deleter_;
