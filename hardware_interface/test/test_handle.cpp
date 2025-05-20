@@ -255,6 +255,8 @@ TEST(TestHandle, handle_constructor_double_data_type)
   // Test the assertions
   ASSERT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(true); }, std::runtime_error);
+  EXPECT_ANY_THROW({ StateInterface bad_itf("joint1", POSITION_INTERFACE, "double", "233NaN0"); })
+    << "Invalid double value should throw";
 }
 
 TEST(TestHandle, handle_constructor_bool_data_type)
