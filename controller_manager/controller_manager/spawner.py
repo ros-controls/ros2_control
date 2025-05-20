@@ -94,13 +94,6 @@ def main(args=None):
         required=False,
     )
     parser.add_argument(
-        "-n",
-        "--namespace",
-        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
-        default=None,
-        required=False,
-    )
-    parser.add_argument(
         "--load-only",
         help="Only load the controller and leave unconfigured.",
         action="store_true",
@@ -208,15 +201,7 @@ def main(args=None):
                 f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
             )
 
-        if args.namespace:
-            warnings.filterwarnings("always")
-            warnings.warn(
-                "The '--namespace' argument is deprecated and will be removed in future releases."
-                " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
-                DeprecationWarning,
-            )
-
-        spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+        spawner_namespace = node.get_namespace()
 
         if not spawner_namespace.startswith("/"):
             spawner_namespace = f"/{spawner_namespace}"
