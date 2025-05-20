@@ -195,12 +195,6 @@ def main(args=None):
 
         node = Node(spawner_node_name)
 
-        if node.get_namespace() != "/" and args.namespace:
-            raise RuntimeError(
-                f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
-                f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
-            )
-
         spawner_namespace = node.get_namespace()
 
         if not spawner_namespace.startswith("/"):

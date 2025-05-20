@@ -1227,16 +1227,14 @@ TEST_F(
     << "Should fail without the namespacing it";
   EXPECT_EQ(
     call_spawner(
-      "ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager --namespace foo_namespace -p " +
-      test_file_path),
+      "ctrl_with_parameters_and_type --load-only -c test_controller_manager -p " + test_file_path +
+      " --ros-args -r __ns:=/foo_namespace"),
     256)
     << "Should fail even namespacing it as ctrl_with_parameters_and_type is not a wildcard entry";
   EXPECT_EQ(
     call_spawner(
-      "chainable_ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager --namespace foo_namespace -p " +
-      test_file_path),
+      "chainable_ctrl_with_parameters_and_type --load-only -c test_controller_manager -p " +
+      test_file_path + " --ros-args -r __ns:=/foo_namespace"),
     0)
     << "Should work as chainable_ctrl_with_parameters_and_type is a wildcard entry";
 
