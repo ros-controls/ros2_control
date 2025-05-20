@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
 from controller_manager import list_controllers, bcolors
 
 from ros2cli.node.direct import add_arguments
