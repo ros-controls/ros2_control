@@ -134,13 +134,6 @@ public:
 
   const std::string & get_interface_name() const { return interface_name_; }
 
-  [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string &
-  get_full_name() const
-  {
-    return get_name();
-  }
-
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   [[deprecated(
