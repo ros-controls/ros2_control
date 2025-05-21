@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Keep current shutdown behaviour in Jazzy (`#2254 <https://github.com/ros-controls/ros2_control/issues/2254>`_)
+* [CM] Add option to avoid shutting down on hardware initial state failure (`#2230 <https://github.com/ros-controls/ros2_control/issues/2230>`_) (`#2251 <https://github.com/ros-controls/ros2_control/issues/2251>`_)
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_) (`#2249 <https://github.com/ros-controls/ros2_control/issues/2249>`_)
+* Suppress the deprecation warnings of the hardware_interface API (`#2223 <https://github.com/ros-controls/ros2_control/issues/2223>`_) (`#2247 <https://github.com/ros-controls/ros2_control/issues/2247>`_)
+* Use `warning` attribute of RcutilsLogger (`#2244 <https://github.com/ros-controls/ros2_control/issues/2244>`_) (`#2245 <https://github.com/ros-controls/ros2_control/issues/2245>`_)
+* [CM] Set default strictness of switch_controllers using parameters (`#2168 <https://github.com/ros-controls/ros2_control/issues/2168>`_) (`#2233 <https://github.com/ros-controls/ros2_control/issues/2233>`_)
+* Contributors: Bence Magyar, mergify[bot]
+
 4.29.0 (2025-05-04)
 -------------------
 * Use the new reusable helpers methods in hardware diagnostics (`#2216 <https://github.com/ros-controls/ros2_control/issues/2216>`_)

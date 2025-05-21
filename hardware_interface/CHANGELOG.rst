@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_) (`#2249 <https://github.com/ros-controls/ros2_control/issues/2249>`_)
+* Suppress the deprecation warnings of the hardware_interface API (`#2223 <https://github.com/ros-controls/ros2_control/issues/2223>`_) (`#2247 <https://github.com/ros-controls/ros2_control/issues/2247>`_)
+* Contributors: mergify[bot]
+
 4.29.0 (2025-05-04)
 -------------------
 * [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)

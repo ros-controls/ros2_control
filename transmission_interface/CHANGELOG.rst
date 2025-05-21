@@ -2,6 +2,13 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add deprecated `get_optional` to Transmission Handle (`#2255 <https://github.com/ros-controls/ros2_control/issues/2255>`_)
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_) (`#2249 <https://github.com/ros-controls/ros2_control/issues/2249>`_)
+* Suppress the deprecation warnings of the hardware_interface API (`#2223 <https://github.com/ros-controls/ros2_control/issues/2223>`_) (`#2247 <https://github.com/ros-controls/ros2_control/issues/2247>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
 4.29.0 (2025-05-04)
 -------------------
 

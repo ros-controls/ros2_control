@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Set default strictness of switch_controllers using parameters (`#2168 <https://github.com/ros-controls/ros2_control/issues/2168>`_) (`#2233 <https://github.com/ros-controls/ros2_control/issues/2233>`_)
+* Contributors: mergify[bot]
+
 4.29.0 (2025-05-04)
 -------------------
 
