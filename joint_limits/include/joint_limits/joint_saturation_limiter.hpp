@@ -41,7 +41,7 @@ public:
   JointSaturationLimiter();
 
   /** \brief Destructor */
-  ~JointSaturationLimiter();
+  virtual ~JointSaturationLimiter();
 
   bool on_init() override { return true; }
 

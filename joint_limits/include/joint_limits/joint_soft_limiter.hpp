@@ -30,6 +30,8 @@ namespace joint_limits
 class JointSoftLimiter : public JointSaturationLimiter<JointControlInterfacesData>
 {
 public:
+  virtual ~JointSoftLimiter() = default;
+
   bool on_init() override
   {
     const bool result = (number_of_joints_ == 1);
