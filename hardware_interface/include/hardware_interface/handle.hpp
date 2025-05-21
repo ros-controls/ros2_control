@@ -156,13 +156,6 @@ public:
 
   const std::string & get_interface_name() const { return interface_name_; }
 
-  [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string &
-  get_full_name() const
-  {
-    return get_name();
-  }
-
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   [[deprecated(
@@ -235,54 +228,6 @@ public:
           FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
           get_type_name<T>(), get_name(), data_type_.to_string()));
     }
-    // END
-  }
-
-  /**
-   * @brief Get the value of the handle.
-   * @tparam T The type of the value to be retrieved.
-   * @param value The value of the handle.
-   * @return true if the value is accessed successfully, false otherwise.
-   *
-   * @note The method is thread-safe and non-blocking.
-   * @note When different threads access the same handle at same instance, and if they are unable to
-   * lock the handle to access the value, the handle returns false. If the operation is successful,
-   * the value is updated and returns true.
-   */
-  template <typename T>
-  [[deprecated(
-    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
-    "removed by the ROS 2 Kilted Kaiju release.")]] [[nodiscard]] bool
-  get_value(T & value) const
-  {
-    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
-    if (!lock.owns_lock())
-    {
-      return false;
-    }
-    // BEGIN (Handle export change): for backward compatibility
-    // TODO(Manuel) return value_ if old functionality is removed
-    if constexpr (std::is_same_v<T, double>)
-    {
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      value = *value_ptr_;
-    }
-    else
-    {
-      try
-      {
-        value = std::get<T>(value_);
-      }
-      catch (const std::bad_variant_access & err)
-      {
-        throw std::runtime_error(
-          fmt::format(
-            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
-            get_type_name<T>(), get_name(), data_type_.to_string()));
-      }
-    }
-    return true;
     // END
   }
 
