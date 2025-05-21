@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.30.0 (2025-05-21)
+-------------------
 * Keep current shutdown behaviour in Jazzy (`#2254 <https://github.com/ros-controls/ros2_control/issues/2254>`_)
 * [CM] Add option to avoid shutting down on hardware initial state failure (`#2230 <https://github.com/ros-controls/ros2_control/issues/2230>`_) (`#2251 <https://github.com/ros-controls/ros2_control/issues/2251>`_)
 * Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_) (`#2249 <https://github.com/ros-controls/ros2_control/issues/2249>`_)
