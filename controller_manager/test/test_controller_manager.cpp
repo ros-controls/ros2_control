@@ -78,54 +78,162 @@ TEST(ControllerManagerDependencyGraph, controller_chain_dependency_graph)
   {
     controller_manager::ControllerChainDependencyGraph graph;
     // Let's test the case of A -> B -> C -> D && B -> E -> F
-    graph.add_dependency("A", "B");
-    graph.add_dependency("B", "C");
-    graph.add_dependency("C", "D");
-    graph.add_dependency("B", "E");
-    graph.add_dependency("E", "F");
+    controller_manager::ControllerPeerInfo A;
+    A.name = "A";
+    A.command_interfaces = {"B3", "B4"};
+    A.reference_interfaces = {"A3", "A4"};
+    A.state_interfaces = {"A5", "A6"};
+    controller_manager::ControllerPeerInfo B;
+    B.name = "B";
+    B.command_interfaces = {"C3", "C4", "E3", "E4"};
+    B.reference_interfaces = {"B3", "B4"};
+    B.state_interfaces = {"B5", "B6"};
+    controller_manager::ControllerPeerInfo C;
+    C.name = "C";
+    C.command_interfaces = {"D3", "D4"};
+    C.reference_interfaces = {"C3", "C4"};
+    C.state_interfaces = {"C5", "C6"};
+    controller_manager::ControllerPeerInfo D;
+    D.name = "D";
+    D.command_interfaces = {"D1", "D2"};
+    D.reference_interfaces = {"D3", "D4"};
+    D.state_interfaces = {"D5", "D6"};
+    controller_manager::ControllerPeerInfo E;
+    E.name = "E";
+    E.command_interfaces = {"F3", "F4"};
+    E.reference_interfaces = {"E3", "E4", "E7", "E8"};
+    E.state_interfaces = {"E5", "E6"};
+    controller_manager::ControllerPeerInfo F;
+    F.name = "F";
+    F.command_interfaces = {"F1", "F2"};
+    F.reference_interfaces = {"F3", "F4"};
+    F.state_interfaces = {"F5", "F6"};
 
-    EXPECT_THAT(
-      graph.get_dependencies_to_activate("A"), testing::UnorderedElementsAre("B", "C", "D", "E", "F"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("B"), testing::UnorderedElementsAre("C", "D", "E", "F"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("C"), testing::UnorderedElementsAre("D"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("D"), testing::UnorderedElementsAre());
-    EXPECT_THAT(graph.get_dependencies_to_activate("E"), testing::UnorderedElementsAre("F"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("F"), testing::UnorderedElementsAre());
-
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("A"), testing::UnorderedElementsAre());
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("B"), testing::UnorderedElementsAre("A"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("C"), testing::UnorderedElementsAre("B", "A"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("D"), testing::UnorderedElementsAre("C", "B", "A"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre("B", "A"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("E", "B", "A"));
-  }
-
-  {
-    controller_manager::ControllerChainDependencyGraph graph;
-    // Let's test the case of A -> B -> C -> D && E -> B && E -> F
-    graph.add_dependency("A", "B");
-    graph.add_dependency("B", "C");
-    graph.add_dependency("C", "D");
-    graph.add_dependency("E", "B");
-    graph.add_dependency("E", "F");
+    graph.add_dependency(A, B);
+    graph.add_dependency(B, C);
+    graph.add_dependency(C, D);
+    graph.add_dependency(B, E);
+    graph.add_dependency(E, F);
 
     EXPECT_THAT(
       graph.get_dependencies_to_activate("A"),
-      testing::UnorderedElementsAre("B", "C", "D", "E", "F"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("B"), testing::UnorderedElementsAre("C", "D"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("C"), testing::UnorderedElementsAre("D"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("D"), testing::UnorderedElementsAre());
-    EXPECT_THAT(graph.get_dependencies_to_activate("E"), testing::UnorderedElementsAre("F", "B", "C", "D", "A"));
-    EXPECT_THAT(graph.get_dependencies_to_activate("F"), testing::UnorderedElementsAre());
-
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("A"), testing::UnorderedElementsAre());
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("B"), testing::UnorderedElementsAre("A", "E"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("C"), testing::UnorderedElementsAre("B", "A", "E"));
+      testing::UnorderedElementsAre("A", "B", "C", "D", "E", "F"));
     EXPECT_THAT(
-      graph.get_dependencies_to_deactivate("D"), testing::UnorderedElementsAre("C", "B", "A", "E"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre());
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("E", "B", "A"));
+      graph.get_dependencies_to_activate("B"),
+      testing::UnorderedElementsAre("B", "C", "D", "E", "F"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("C"), testing::UnorderedElementsAre("C", "D"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("D"), testing::UnorderedElementsAre("D"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("E"), testing::UnorderedElementsAre("E", "F"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("F"), testing::UnorderedElementsAre("F"));
+
+    EXPECT_THAT(graph.get_dependencies_to_deactivate("A"), testing::UnorderedElementsAre("A"));
+    EXPECT_THAT(graph.get_dependencies_to_deactivate("B"), testing::UnorderedElementsAre("A", "B"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("C"), testing::UnorderedElementsAre("B", "A", "C"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("D"), testing::UnorderedElementsAre("C", "B", "A", "D"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre("B", "A", "E"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("E", "B", "A", "F"));
   }
+
+  {
+    RCLCPP_INFO(rclcpp::get_logger("test"), "Testing controller chain dependency graph");
+    RCLCPP_INFO(rclcpp::get_logger("test"), "+++++++++++++++++++++++++++++++++++++++++++++++++");
+    controller_manager::ControllerChainDependencyGraph graph;
+    // Let's test the case of A -> B -> C -> D && E -> B && E -> F
+    controller_manager::ControllerPeerInfo A;
+    A.name = "A";
+    A.command_interfaces = {"B3", "B4"};
+    A.reference_interfaces = {"A3", "A4"};
+    A.state_interfaces = {"A5", "A6"};
+    controller_manager::ControllerPeerInfo B;
+    B.name = "B";
+    B.command_interfaces = {"C3", "C4"};
+    B.reference_interfaces = {"B3", "B4", "B5", "B6"};
+    B.state_interfaces = {"B5", "B6"};
+    controller_manager::ControllerPeerInfo C;
+    C.name = "C";
+    C.command_interfaces = {"D3", "D4"};
+    C.reference_interfaces = {"C3", "C4"};
+    C.state_interfaces = {"C5", "C6"};
+    controller_manager::ControllerPeerInfo D;
+    D.name = "D";
+    D.command_interfaces = {"D1", "D2"};
+    D.reference_interfaces = {"D3", "D4"};
+    D.state_interfaces = {"D5", "D6"};
+    controller_manager::ControllerPeerInfo E;
+    E.name = "E";
+    E.command_interfaces = {"F3", "F4", "B5", "B6"};
+    E.reference_interfaces = {"E3", "E4"};
+    E.state_interfaces = {"E5", "E6"};
+    controller_manager::ControllerPeerInfo F;
+    F.name = "F";
+    F.command_interfaces = {"F1", "F2"};
+    F.reference_interfaces = {"F3", "F4"};
+    F.state_interfaces = {"F5", "F6"};
+
+    graph.add_dependency(A, B);
+    graph.add_dependency(B, C);
+    graph.add_dependency(C, D);
+    graph.add_dependency(E, B);
+    graph.add_dependency(E, F);
+
+    EXPECT_THAT(
+      graph.get_dependencies_to_activate("A"),
+      testing::UnorderedElementsAre("A", "B", "C", "D", "E", "F"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_activate("B"), testing::UnorderedElementsAre("B", "C", "D"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("C"), testing::UnorderedElementsAre("C", "D"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("D"), testing::UnorderedElementsAre("D"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_activate("E"),
+      testing::UnorderedElementsAre("E", "F", "B", "C", "D", "A"));
+    EXPECT_THAT(graph.get_dependencies_to_activate("F"), testing::UnorderedElementsAre("F"));
+
+    EXPECT_THAT(graph.get_dependencies_to_deactivate("A"), testing::UnorderedElementsAre("A"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("B"), testing::UnorderedElementsAre("A", "B", "E"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("C"), testing::UnorderedElementsAre("C", "B", "A", "E"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("D"),
+      testing::UnorderedElementsAre("D", "C", "B", "A", "E"));
+    EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre("E"));
+    EXPECT_THAT(
+      graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("F", "E", "B", "A"));
+  }
+
+  // {
+  //   controller_manager::ControllerChainDependencyGraph graph;
+  //   // Let's test the case of A -> B -> C -> D && E -> B && E -> F
+  //   graph.add_dependency("A", "B");
+  //   graph.add_dependency("B", "C");
+  //   graph.add_dependency("C", "D");
+  //   graph.add_dependency("E", "B");
+  //   graph.add_dependency("E", "F");
+
+  //   EXPECT_THAT(
+  //     graph.get_dependencies_to_activate("A"),
+  //     testing::UnorderedElementsAre("B", "C", "D", "E", "F"));
+  //   EXPECT_THAT(graph.get_dependencies_to_activate("B"), testing::UnorderedElementsAre("C",
+  //   "D")); EXPECT_THAT(graph.get_dependencies_to_activate("C"),
+  //   testing::UnorderedElementsAre("D")); EXPECT_THAT(graph.get_dependencies_to_activate("D"),
+  //   testing::UnorderedElementsAre()); EXPECT_THAT(graph.get_dependencies_to_activate("E"),
+  //   testing::UnorderedElementsAre("F", "B", "C", "D", "A"));
+  //   EXPECT_THAT(graph.get_dependencies_to_activate("F"), testing::UnorderedElementsAre());
+
+  //   EXPECT_THAT(graph.get_dependencies_to_deactivate("A"), testing::UnorderedElementsAre());
+  //   EXPECT_THAT(graph.get_dependencies_to_deactivate("B"), testing::UnorderedElementsAre("A",
+  //   "E")); EXPECT_THAT(graph.get_dependencies_to_deactivate("C"),
+  //   testing::UnorderedElementsAre("B", "A", "E")); EXPECT_THAT(
+  //     graph.get_dependencies_to_deactivate("D"), testing::UnorderedElementsAre("C", "B", "A",
+  //     "E"));
+  //   EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre());
+  //   EXPECT_THAT(graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("E",
+  //   "B", "A"));
+  // }
 }
 
 class TestControllerManagerRobotDescription

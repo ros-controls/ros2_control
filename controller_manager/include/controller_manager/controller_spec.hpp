@@ -41,126 +41,278 @@ struct ControllerPeerInfo
   std::string name = "";
   std::vector<ControllerPeerInfo *> predecessors = {};
   std::vector<ControllerPeerInfo *> successors = {};
+  controller_interface::ControllerInterfaceBase::WeakPtr controller;
+  std::unordered_set<std::string> command_interfaces = {};
+  std::unordered_set<std::string> state_interfaces = {};
+  std::unordered_set<std::string> reference_interfaces = {};
 
-  std::vector<std::string> get_controllers_to_activate() const
+  void get_controllers_to_activate(std::vector<std::string> & controllers_to_activate) const
   {
-    std::vector<std::string> controllers_to_activate;
+    // Check the predecessors of the controller and check if they belong to the controller's state
+    // interfaces If they do, add them to the list of controllers to activatestate_itf
+    /// @todo Handle the cases where the predecessor is not active in the current state
+    std::unordered_set<std::string> predecessor_command_interfaces_set = {};
+    std::vector<std::string> predecessor_in_active_list = {};
+    std::for_each(
+      predecessors.begin(), predecessors.end(),
+      [&predecessor_command_interfaces_set, &predecessor_in_active_list, &controllers_to_activate,
+       this](const ControllerPeerInfo * predecessor)
+      {
+        if (ros2_control::has_item(controllers_to_activate, predecessor->name))
+        {
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("controller_manager"),
+            "The predecessor: " << predecessor->name << " is already in the active list.");
+          ros2_control::add_item(predecessor_in_active_list, predecessor->name);
+
+          // Only insert those that has name of the current controller in their command interfaces
+          std::for_each(
+            predecessor->command_interfaces.begin(), predecessor->command_interfaces.end(),
+            [&predecessor_command_interfaces_set, &predecessor,
+             this](const std::string & command_itf)
+            {
+              if (command_itf.find(name) != std::string::npos)
+              {
+                predecessor_command_interfaces_set.insert(command_itf);
+              }
+            });
+          // break;
+        }
+      });
+
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("controller_manager"),
+      "The predecessor command interfaces of the predecessor:"
+        << name << " are: " << predecessor_command_interfaces_set.size());
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("controller_manager"),
+      "The reference interfaces of the controller:" << name
+                                                    << " are: " << reference_interfaces.size());
+    if (
+      !predecessor_in_active_list.empty() &&
+      (predecessor_command_interfaces_set.size() != reference_interfaces.size()))
+    {
+      RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger("controller_manager"),
+        "The predecessor command interfaces of the predecessor:"
+          << name << " are not equal to the reference interfaces of the controller:" << name
+          << " : " << predecessor_command_interfaces_set.size()
+          << " != " << reference_interfaces.size());
+      for (const auto & predecessor : predecessors)
+      {
+        if (!ros2_control::has_item(predecessor_in_active_list, predecessor->name))
+        {
+          ros2_control::add_item(controllers_to_activate, predecessor->name);
+          predecessor->get_controllers_to_activate(controllers_to_activate);
+        }
+      }
+    }
+    for (const auto & predecessor : predecessors)
+    {
+      for (const auto & state_itf : state_interfaces)
+      {
+        if (state_itf.find(predecessor->name) != std::string::npos)
+        {
+          ros2_control::add_item(controllers_to_activate, predecessor->name);
+          break;
+        }
+      }
+    }
+
+    std::unordered_set<std::string> command_interfaces_set(
+      command_interfaces.begin(), command_interfaces.end());
+    size_t successors_reference_interfaces_count = 0;
     for (const auto & successor : successors)
     {
-      ros2_control::add_item(controllers_to_activate, successor->name);
-      successor->get_successors_and_predecessors(controllers_to_activate, name);
+      successors_reference_interfaces_count += successor->reference_interfaces.size();
     }
-    ros2_control::remove_item(controllers_to_activate, name);
-    return controllers_to_activate;
+    for (const auto & successor : successors)
+    {
+      // check if all the successors reference interfaces are in the current controller's command
+      // interfaces If they are, add them to the list of controllers to activate
+
+      RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger("controller_manager"),
+        "The command interfaces of the predecessor:" << name
+                                                     << " are: " << command_interfaces_set.size());
+      for (const auto & command_itf : command_interfaces_set)
+      {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "The command interfaces of the predecessor:" << name << " are: " << command_itf);
+      }
+
+      for (const auto & reference_itf : successor->reference_interfaces)
+      {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "The reference interfaces of the successor:" << successor->name
+                                                       << " are: " << reference_itf);
+      }
+
+      bool all_successor_interfaces_match = false;
+      std::for_each(
+        command_interfaces.begin(), command_interfaces.end(),
+        [&successor, &all_successor_interfaces_match](const std::string & command_itf)
+        {
+          if (
+            successor->reference_interfaces.find(command_itf) !=
+            successor->reference_interfaces.end())
+          {
+            all_successor_interfaces_match = true;
+          }
+        });
+      RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger("controller_manager"),
+        "The reference interfaces of the successor: "
+          << successor->name << " are within the command interfaces of the predecessor: " << name
+          << " : " << std::boolalpha << all_successor_interfaces_match);
+      if (all_successor_interfaces_match)
+      {
+        ros2_control::add_item(controllers_to_activate, successor->name);
+        successor->get_controllers_to_activate(controllers_to_activate);
+        continue;
+      }
+      else
+      {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("controller_manager"),
+          "Controller %s has a successor %s who has more reference interfaces that use different "
+          "controllers. This is not supported now.",
+          name.c_str(), successor->name.c_str());
+      }
+    }
   }
 
-  std::vector<std::string> get_controllers_to_deactivate() const
+  void get_controllers_to_deactivate(std::vector<std::string> & controllers_to_deactivate) const
   {
-    std::vector<std::string> controllers_to_deactivate;
+    // All predecessors of the controller should be deactivated except the state interface ones
     for (const auto & predecessor : predecessors)
     {
       ros2_control::add_item(controllers_to_deactivate, predecessor->name);
-      predecessor->get_predecessors(controllers_to_deactivate, name);
-      predecessor->get_successors(controllers_to_deactivate, name);
+      std::for_each(
+        state_interfaces.begin(), state_interfaces.end(),
+        [&predecessor, &controllers_to_deactivate](const std::string & state_itf)
+        {
+          if (state_itf.find(predecessor->name) != std::string::npos)
+          {
+            ros2_control::remove_item(controllers_to_deactivate, predecessor->name);
+          }
+        });
+      predecessor->get_controllers_to_deactivate(controllers_to_deactivate);
     }
-    ros2_control::remove_item(controllers_to_deactivate, name);
-    return controllers_to_deactivate;
-  }
 
-  void get_predecessors(std::vector<std::string> &total_list, const std::string &untill_controller) const
-  {
-    for (const auto & predecessor : predecessors)
-    {
-      if(!predecessor)
-      {
-        continue;
-      }
-      if(predecessor->name == untill_controller)
-      {
-        RCLCPP_INFO(
-          rclcpp::get_logger("controller_manager"), "skipping predecessor: %s - %s",
-          predecessor->name.c_str(), untill_controller.c_str());
-        continue;
-      }
-      const std::string predecessor_name = predecessor->name;
-      if(!ros2_control::has_item(total_list, predecessor_name))
-      {
-        RCLCPP_INFO(
-          rclcpp::get_logger("controller_manager"),
-          "Getting Predecessor: %s, Successor: %s - %s", predecessor_name.c_str(), name.c_str(), untill_controller.c_str());
-        total_list.push_back(predecessor_name);
-        predecessor->get_predecessors(total_list, predecessor_name);
-      }
-    }
-  }
-
-  void get_successors(std::vector<std::string> &total_list, const std::string &untill_controller) const
-  {
+    // All successors of controller with no command interfaces should be deactivated
     for (const auto & successor : successors)
     {
-      if(!successor)
+      if (successor->command_interfaces.empty())
       {
-        continue;
-      }
-      if(successor->name == untill_controller)
-      {
-        RCLCPP_INFO(
-          rclcpp::get_logger("controller_manager"), "skipping successor: %s - %s",
-          successor->name.c_str(), untill_controller.c_str());
-        continue;
-      }
-      const std::string successor_name = successor->name;
-      if(!ros2_control::has_item(total_list, successor_name))
-      {
-        RCLCPP_INFO(
-          rclcpp::get_logger("controller_manager"),
-          "Getting Successor: %s, Predecessor: %s - %s", successor_name.c_str(), name.c_str(), untill_controller.c_str());
-        total_list.push_back(successor_name);
-        successor->get_successors(total_list, successor_name);
+        ros2_control::add_item(controllers_to_deactivate, successor->name);
+        successor->get_controllers_to_deactivate(controllers_to_deactivate);
       }
     }
   }
 
-  void get_successors_and_predecessors(std::vector<std::string> &total_list, const std::string &untill_controller) const
-  {
-    for (const auto & predecessor : predecessors)
-    {
-      if(!predecessor)
-      {
-        continue;
-      }
-      if(predecessor->name == untill_controller)
-      {
-        continue;
-      }
-      const std::string predecessor_name = predecessor->name;
-      if(!ros2_control::has_item(total_list, predecessor_name))
-      {
-        RCLCPP_INFO(
-          rclcpp::get_logger("controller_manager"),
-          "Predecessor: %s, Successor: %s - %s", predecessor_name.c_str(), name.c_str(), untill_controller.c_str());
-        total_list.push_back(predecessor_name);
-        predecessor->get_successors_and_predecessors(total_list, predecessor_name);
-      }
-    }
-    for (const auto & successor : successors)
-    {
-      if(!successor)
-      {
-        continue;
-      }
-      if(successor->name == untill_controller)
-      {
-        continue;
-      }
-      const std::string successor_name = successor->name;
-      if(!ros2_control::has_item(total_list, successor_name))
-      {
-        total_list.push_back(successor_name);
-        successor->get_successors_and_predecessors(total_list, successor_name);
-      }
-    }
-  }
+  // void get_predecessors(std::vector<std::string> &total_list, const std::string
+  // &untill_controller) const
+  // {
+  //   for (const auto & predecessor : predecessors)
+  //   {
+  //     if(!predecessor)
+  //     {
+  //       continue;
+  //     }
+  //     if(predecessor->name == untill_controller)
+  //     {
+  //       RCLCPP_INFO(
+  //         rclcpp::get_logger("controller_manager"), "skipping predecessor: %s - %s",
+  //         predecessor->name.c_str(), untill_controller.c_str());
+  //       continue;
+  //     }
+  //     const std::string predecessor_name = predecessor->name;
+  //     if(!ros2_control::has_item(total_list, predecessor_name))
+  //     {
+  //       RCLCPP_INFO(
+  //         rclcpp::get_logger("controller_manager"),
+  //         "Getting Predecessor: %s, Successor: %s - %s", predecessor_name.c_str(), name.c_str(),
+  //         untill_controller.c_str());
+  //       total_list.push_back(predecessor_name);
+  //       predecessor->get_predecessors(total_list, predecessor_name);
+  //     }
+  //   }
+  // }
+
+  // void get_successors(std::vector<std::string> &total_list, const std::string &untill_controller)
+  // const
+  // {
+  //   for (const auto & successor : successors)
+  //   {
+  //     if(!successor)
+  //     {
+  //       continue;
+  //     }
+  //     if(successor->name == untill_controller)
+  //     {
+  //       RCLCPP_INFO(
+  //         rclcpp::get_logger("controller_manager"), "skipping successor: %s - %s",
+  //         successor->name.c_str(), untill_controller.c_str());
+  //       continue;
+  //     }
+  //     const std::string successor_name = successor->name;
+  //     if(!ros2_control::has_item(total_list, successor_name))
+  //     {
+  //       RCLCPP_INFO(
+  //         rclcpp::get_logger("controller_manager"),
+  //         "Getting Successor: %s, Predecessor: %s - %s", successor_name.c_str(), name.c_str(),
+  //         untill_controller.c_str());
+  //       total_list.push_back(successor_name);
+  //       successor->get_successors(total_list, successor_name);
+  //     }
+  //   }
+  // }
+
+  // void get_successors_and_predecessors(std::vector<std::string> &total_list, const std::string
+  // &untill_controller) const
+  // {
+  //   for (const auto & predecessor : predecessors)
+  //   {
+  //     if(!predecessor)
+  //     {
+  //       continue;
+  //     }
+  //     if(predecessor->name == untill_controller)
+  //     {
+  //       continue;
+  //     }
+  //     const std::string predecessor_name = predecessor->name;
+  //     if(!ros2_control::has_item(total_list, predecessor_name))
+  //     {
+  //       RCLCPP_INFO(
+  //         rclcpp::get_logger("controller_manager"),
+  //         "Predecessor: %s, Successor: %s - %s", predecessor_name.c_str(), name.c_str(),
+  //         untill_controller.c_str());
+  //       total_list.push_back(predecessor_name);
+  //       predecessor->get_successors_and_predecessors(total_list, predecessor_name);
+  //     }
+  //   }
+  //   for (const auto & successor : successors)
+  //   {
+  //     if(!successor)
+  //     {
+  //       continue;
+  //     }
+  //     if(successor->name == untill_controller)
+  //     {
+  //       continue;
+  //     }
+  //     const std::string successor_name = successor->name;
+  //     if(!ros2_control::has_item(total_list, successor_name))
+  //     {
+  //       total_list.push_back(successor_name);
+  //       successor->get_successors_and_predecessors(total_list, successor_name);
+  //     }
+  //   }
+  // }
 };
 /// Controller Specification
 /**
@@ -195,12 +347,12 @@ class ControllerChainDependencyGraph
 public:
   void add_dependency(const std::string & predecessor, const std::string & successor)
   {
-    if(controller_graph_.count(predecessor) == 0)
+    if (controller_graph_.count(predecessor) == 0)
     {
       controller_graph_[predecessor] = ControllerPeerInfo();
       controller_graph_[predecessor].name = predecessor;
     }
-    if(controller_graph_.count(successor) == 0)
+    if (controller_graph_.count(successor) == 0)
     {
       controller_graph_[successor] = ControllerPeerInfo();
       controller_graph_[successor].name = successor;
@@ -209,30 +361,49 @@ public:
     controller_graph_[successor].predecessors.push_back(&controller_graph_[predecessor]);
   }
 
-  std::vector<std::string> get_dependencies_to_activate(
-    const std::string & controller_name)
+  void add_dependency(const ControllerPeerInfo & predecessor, const ControllerPeerInfo & successor)
   {
-    if (controller_graph_.count(controller_name) == 0)
+    if (controller_graph_.count(predecessor.name) == 0)
     {
-      return {};
+      controller_graph_[predecessor.name] = predecessor;
     }
-    return controller_graph_[controller_name].get_controllers_to_activate();
+    if (controller_graph_.count(successor.name) == 0)
+    {
+      controller_graph_[successor.name] = successor;
+    }
+    controller_graph_[predecessor.name].successors.push_back(&controller_graph_[successor.name]);
+    controller_graph_[successor.name].predecessors.push_back(&controller_graph_[predecessor.name]);
   }
 
-  std::vector<std::string> get_dependencies_to_deactivate(
-    const std::string & controller_name)
+  std::vector<std::string> get_dependencies_to_activate(const std::string & controller_name)
   {
+    RCLCPP_INFO(
+      rclcpp::get_logger("controller_manager"),
+      "+++++++++++++++++++++++++++++++ Getting dependencies to ACTIVATE "
+      "+++++++++++++++++++++++++++++++");
+    std::vector<std::string> controllers_to_activate({controller_name});
     if (controller_graph_.count(controller_name) == 0)
     {
       return {};
     }
-    return controller_graph_[controller_name].get_controllers_to_deactivate();
+    controller_graph_[controller_name].get_controllers_to_activate(controllers_to_activate);
+    return controllers_to_activate;
+  }
+
+  std::vector<std::string> get_dependencies_to_deactivate(const std::string & controller_name)
+  {
+    std::vector<std::string> controllers_to_deactivate({controller_name});
+    if (controller_graph_.count(controller_name) == 0)
+    {
+      return {};
+    }
+    controller_graph_[controller_name].get_controllers_to_deactivate(controllers_to_deactivate);
+    return controllers_to_deactivate;
   }
 
 private:
   std::unordered_map<std::string, ControllerPeerInfo> controller_graph_;
 };
-
 
 // class ControllerChainDependencyGraph
 // {
@@ -268,7 +439,8 @@ private:
 
 //   void depth_first_search(
 //     const std::string & controller_name, std::unordered_set<std::string> & visited,
-//     std::unordered_map<std::string, std::vector<std::string>> & graph, const std::string & untill_node = "")
+//     std::unordered_map<std::string, std::vector<std::string>> & graph, const std::string &
+//     untill_node = "")
 //   {
 //     if (visited.find(controller_name) != visited.end())
 //     {
@@ -288,7 +460,8 @@ private:
 //     }
 //   }
 
-//   std::vector<std::string> get_all_predecessors(const std::string & controller_name, const std::string & untill_node = "")
+//   std::vector<std::string> get_all_predecessors(const std::string & controller_name, const
+//   std::string & untill_node = "")
 //   {
 //     std::unordered_set<std::string> visited;
 //     depth_first_search(controller_name, visited, predecessors, untill_node);
@@ -298,7 +471,8 @@ private:
 //     return predecessors_list;
 //   }
 
-//   std::vector<std::string> get_all_successors(const std::string & controller_name, const std::string & untill_node = "")
+//   std::vector<std::string> get_all_successors(const std::string & controller_name, const
+//   std::string & untill_node = "")
 //   {
 //     std::unordered_set<std::string> visited;
 //     depth_first_search(controller_name, visited, successors, untill_node);
@@ -319,16 +493,16 @@ private:
 //     ros2_control::remove_item(dependents_to_activate, controller_name);
 //     for (const auto & controller : visited)
 //     {
-//       std::vector<std::string> predecessors_list = get_all_predecessors(controller, controller_name);
-//       ros2_control::remove_item(predecessors_list, controller_name);
-      
+//       std::vector<std::string> predecessors_list = get_all_predecessors(controller,
+//       controller_name); ros2_control::remove_item(predecessors_list, controller_name);
+
 //       for(const auto & predecessor : predecessors_list)
 //       {
 //         RCLCPP_INFO(
 //           rclcpp::get_logger("controller_manager"),
 //           "Predecessor of %s is %s", controller_name.c_str(), predecessor.c_str());
-//         std::vector<std::string> successors_of_predecessor = get_all_successors(predecessor, controller_name);
-//         ros2_control::remove_item(successors_of_predecessor, predecessor);
+//         std::vector<std::string> successors_of_predecessor = get_all_successors(predecessor,
+//         controller_name); ros2_control::remove_item(successors_of_predecessor, predecessor);
 
 //         for (const auto & succ_pred : successors_of_predecessor)
 //         {
