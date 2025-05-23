@@ -28,7 +28,12 @@ target_include_directories(joint_limits INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limits INTERFACE
+                      rclcpp::rclcpp
+                      rclcpp_lifecycle::rclcpp_lifecycle
+                      urdf::urdf
+                      realtime_tools::realtime_tools
+                      fmt::fmt)
 
 add_library(joint_limiter_interface SHARED
   src/joint_limiter_interface.cpp
@@ -38,7 +43,10 @@ target_include_directories(joint_limiter_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limiter_interface PUBLIC
+                      joint_limits
+                      pluginlib::pluginlib
+                      ${trajectory_msgs_TARGETS})
 
 add_library(joint_limits_helpers SHARED
   src/joint_limits_helpers.cpp
@@ -48,7 +56,7 @@ target_include_directories(joint_limits_helpers PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limits_helpers PUBLIC joint_limits)
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
@@ -60,9 +68,9 @@ target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-target_link_libraries(joint_saturation_limiter PUBLIC joint_limits_helpers)
-
-ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_saturation_limiter PUBLIC
+                      joint_limits_helpers
+                      joint_limiter_interface)
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
@@ -96,30 +104,24 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/test/joint_saturation_limiter_param.yaml
   )
   target_include_directories(test_joint_saturation_limiter PRIVATE include)
-  target_link_libraries(test_joint_saturation_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_saturation_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_saturation_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
   target_include_directories(test_joint_range_limiter PRIVATE include)
-  target_link_libraries(test_joint_range_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_range_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_range_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
   target_include_directories(test_joint_soft_limiter PRIVATE include)
-  target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_soft_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_soft_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
 endif()
 
