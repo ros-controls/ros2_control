@@ -35,11 +35,11 @@ struct InterfaceInfo
    */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
-  std::string min;
+  std::string min = "";
   /// (Optional) Maximal allowed values of the interface.
-  std::string max;
+  std::string max = "";
   /// (Optional) Initial value of the interface.
-  std::string initial_value;
+  std::string initial_value = "";
   /// (Optional) The datatype of the interface, e.g. "bool", "int".
   std::string data_type = "double";
   /// (Optional) If the handle is an array, the size of the array.
@@ -223,6 +223,8 @@ struct InterfaceDescription
   const std::string & get_interface_name() const { return interface_info.name; }
 
   const std::string & get_name() const { return interface_name; }
+
+  const std::string & get_data_type_string() const { return interface_info.data_type; }
 
   HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
 };

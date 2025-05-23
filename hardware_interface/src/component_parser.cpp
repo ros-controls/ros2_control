@@ -410,6 +410,9 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
     interface.parameters = parse_parameters_from_xml(params_it);
   }
 
+  interface.data_type = parse_data_type_attribute(interfaces_it);
+  interface.size = static_cast<int>(parse_size_attribute(interfaces_it));
+
   return interface;
 }
 
@@ -503,10 +506,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (command_interfaces_it)
   {
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
-    component.command_interfaces.back().data_type =
-      parse_data_type_attribute(command_interfaces_it);
-    component.command_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -515,9 +514,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (state_interfaces_it)
   {
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
-    component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
-    component.state_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 

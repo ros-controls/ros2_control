@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2025-05-21)
+------------------
+* [CM] Add option to avoid shutting down on hardware initial state failure (`#2230 <https://github.com/ros-controls/ros2_control/issues/2230>`_)
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_)
+* Suppress the deprecation warnings of the hardware_interface API (`#2223 <https://github.com/ros-controls/ros2_control/issues/2223>`_)
+* Use `warning` attribute of RcutilsLogger (`#2244 <https://github.com/ros-controls/ros2_control/issues/2244>`_)
+* [CM] Set default strictness of switch_controllers using parameters (`#2168 <https://github.com/ros-controls/ros2_control/issues/2168>`_)
+* Add `data_type` field to the HardwareInterfaces message (`#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_)
+* Add new strictness modes to SwitchController service (`#2224 <https://github.com/ros-controls/ros2_control/issues/2224>`_)
+* Contributors: Marq Rasmussen, Sai Kishor Kothakota, mini-1235
+
 4.29.0 (2025-05-04)
 -------------------
 * Use the new reusable helpers methods in hardware diagnostics (`#2216 <https://github.com/ros-controls/ros2_control/issues/2216>`_)
