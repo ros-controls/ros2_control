@@ -31,9 +31,8 @@ target_link_libraries(test_components
                       ros2_control_test_assets::ros2_control_test_assets
                       pluginlib::pluginlib
                       fmt::fmt)
-
 install(TARGETS test_components
-  DESTINATION lib
+DESTINATION lib
 )
 pluginlib_export_plugin_description_file(
 hardware_interface test/test_components/test_components.xml)
