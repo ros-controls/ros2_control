@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.31.0 (2025-05-24)
+-------------------
 * Fix fourbarlinkage (`#1837 <https://github.com/ros-controls/ros2_control/issues/1837>`_) (`#2276 <https://github.com/ros-controls/ros2_control/issues/2276>`_)
 * Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_) (`#2271 <https://github.com/ros-controls/ros2_control/issues/2271>`_)
 * Contributors: mergify[bot]
