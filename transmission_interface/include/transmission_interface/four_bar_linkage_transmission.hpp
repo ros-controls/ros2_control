@@ -327,7 +327,8 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    act_eff[0].set_value((joint_eff[0].get_value() - joint_eff[1].get_value() / jr[1]) / (jr[0] * ar[0]));
+    act_eff[0].set_value(
+      (joint_eff[0].get_value() - joint_eff[1].get_value() / jr[1]) / (jr[0] * ar[0]));
     act_eff[1].set_value(joint_eff[1].get_value() / (ar[1] * jr[1]));
   }
 }
