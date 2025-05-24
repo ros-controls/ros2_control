@@ -477,10 +477,10 @@ TEST_P(TestControllerManagerWithStrictness, activating_multiple_controllers_with
   test_controller_2->set_command_interface_configuration(cmd_itfs_cfg);
 
   // setup different interface to check if controller_3 works with 1 and 2 in collision
-  controller_interface::InterfaceConfiguration cmd_itfs_cfg3;
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg_2;
   cmd_itfs_cfg_2.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   cmd_itfs_cfg_2.names = {"joint2/position"};
-  test_controller_3->set_command_interface_configuration(cmd_itfs_cfg3);
+  test_controller_3->set_command_interface_configuration(cmd_itfs_cfg_2);
 
   controller_interface::InterfaceConfiguration state_itfs_cfg;
   state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -2349,7 +2349,7 @@ TEST_F(
   test_fallback_controllers_with_chainable_controllers_other_failing_checks)
 {
   const std::string test_controller_1_name = "test_controller_1";
-  ` const std::string test_controller_2_name = "test_controller_2";
+  const std::string test_controller_2_name = "test_controller_2";
   const std::string test_controller_3_name = "test_controller_3";
   const std::string test_controller_4_name = "test_chainable_controller_2";
 
