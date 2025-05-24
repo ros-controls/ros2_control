@@ -344,7 +344,7 @@ return_type GenericSystem::prepare_command_mode_switch(
     // check if interface is joint
     auto joint_it_found = std::find_if(
       info.joints.begin(), info.joints.end(),
-      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+      [key](const auto & joint) { return key.rfind(joint.name + "/", 0) == 0; });
 
     if (joint_it_found != info.joints.end())
     {
@@ -433,7 +433,7 @@ return_type GenericSystem::perform_command_mode_switch(
     const auto & info = get_hardware_info();
     auto joint_it_found = std::find_if(
       info.joints.begin(), info.joints.end(),
-      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+      [key](const auto & joint) { return key.rfind(joint.name + "/", 0) == 0; });
 
     if (joint_it_found != info.joints.end())
     {
