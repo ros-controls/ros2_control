@@ -2,6 +2,36 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.1.0 (2025-05-24)
+------------------
+* Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_)
+* Cleanup deprecations in `ros_control`  (`#2258 <https://github.com/ros-controls/ros2_control/issues/2258>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+* [CM] Add option to avoid shutting down on hardware initial state failure (`#2230 <https://github.com/ros-controls/ros2_control/issues/2230>`_)
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_)
+* Suppress the deprecation warnings of the hardware_interface API (`#2223 <https://github.com/ros-controls/ros2_control/issues/2223>`_)
+* Use `warning` attribute of RcutilsLogger (`#2244 <https://github.com/ros-controls/ros2_control/issues/2244>`_)
+* [CM] Set default strictness of switch_controllers using parameters (`#2168 <https://github.com/ros-controls/ros2_control/issues/2168>`_)
+* Add `data_type` field to the HardwareInterfaces message (`#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_)
+* Add new strictness modes to SwitchController service (`#2224 <https://github.com/ros-controls/ros2_control/issues/2224>`_)
+* Contributors: Marq Rasmussen, Sai Kishor Kothakota, mini-1235
+
+4.29.0 (2025-05-04)
+-------------------
+* Use the new reusable helpers methods in hardware diagnostics (`#2216 <https://github.com/ros-controls/ros2_control/issues/2216>`_)
+* [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)
+* Add common reusable helper methods header (`#2099 <https://github.com/ros-controls/ros2_control/issues/2099>`_)
+* Use filelock in spawner to avoid concurrent operations (`#2202 <https://github.com/ros-controls/ros2_control/issues/2202>`_)
+* increase test tolerance to reduce flakiness (`#2212 <https://github.com/ros-controls/ros2_control/issues/2212>`_)
+* Add a method to perform the hardware command mode changes (`#2203 <https://github.com/ros-controls/ros2_control/issues/2203>`_)
+* Fix typos: preceeding -> preceding (`#2206 <https://github.com/ros-controls/ros2_control/issues/2206>`_)
+* Throttle the overrun logs (`#2201 <https://github.com/ros-controls/ros2_control/issues/2201>`_)
+* doc: Added explanation of preceding/following controllers (`#2192 <https://github.com/ros-controls/ros2_control/issues/2192>`_)
+* Contributors: Christoph Fröhlich, Martin Pecka, Sai Kishor Kothakota
+
 4.28.1 (2025-04-17)
 -------------------
 * Fix the enforce_command_limits deactivation (`#2181 <https://github.com/ros-controls/ros2_control/issues/2181>`_)

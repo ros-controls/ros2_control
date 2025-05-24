@@ -30,6 +30,7 @@ from controller_manager import (
     set_controller_parameters_from_param_files,
     bcolors,
 )
+from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 from filelock import Timeout, FileLock
@@ -90,13 +91,6 @@ def main(args=None):
         "override the parameters of the same controller.",
         default=None,
         action="append",
-        required=False,
-    )
-    parser.add_argument(
-        "-n",
-        "--namespace",
-        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
-        default=None,
         required=False,
     )
     parser.add_argument(
@@ -164,6 +158,7 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
+    strictness = SwitchController.Request.STRICT
 
     if param_files:
         for param_file in param_files:
@@ -186,7 +181,7 @@ def main(args=None):
                 tmp_logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
                 break
             except Timeout:
-                tmp_logger.warn(
+                tmp_logger.warning(
                     bcolors.WARNING
                     + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
@@ -200,21 +195,7 @@ def main(args=None):
 
         node = Node(spawner_node_name)
 
-        if node.get_namespace() != "/" and args.namespace:
-            raise RuntimeError(
-                f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
-                f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
-            )
-
-        if args.namespace:
-            warnings.filterwarnings("always")
-            warnings.warn(
-                "The '--namespace' argument is deprecated and will be removed in future releases."
-                " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
-                DeprecationWarning,
-            )
-
-        spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+        spawner_namespace = node.get_namespace()
 
         if not spawner_namespace.startswith("/"):
             spawner_namespace = f"/{spawner_namespace}"
@@ -234,7 +215,7 @@ def main(args=None):
                 controller_manager_timeout,
                 service_call_timeout,
             ):
-                node.get_logger().warn(
+                node.get_logger().warning(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
                     + bcolors.ENDC
@@ -299,7 +280,7 @@ def main(args=None):
                         controller_manager_name,
                         [],
                         [controller_name],
-                        True,
+                        strictness,
                         True,
                         switch_timeout,
                         service_call_timeout,
@@ -324,7 +305,7 @@ def main(args=None):
                 controller_manager_name,
                 [],
                 controller_names,
-                True,
+                strictness,
                 True,
                 switch_timeout,
                 service_call_timeout,
@@ -358,7 +339,7 @@ def main(args=None):
                     controller_manager_name,
                     controller_names,
                     [],
-                    True,
+                    strictness,
                     True,
                     switch_timeout,
                     service_call_timeout,

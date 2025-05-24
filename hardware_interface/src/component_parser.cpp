@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fmt/compile.h>
 #include <tinyxml2.h>
+
 #include <iostream>
 #include <regex>
 #include <stdexcept>
@@ -110,7 +112,7 @@ std::string get_attribute_value(
   if (!attr)
   {
     throw std::runtime_error(
-      "no attribute " + std::string(attribute_name) + " in " + tag_name + " tag");
+      fmt::format(FMT_COMPILE("no attribute {} in {} tag"), attribute_name, tag_name));
   }
   return element_it->Attribute(attribute_name);
 }
@@ -198,8 +200,11 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   else
   {
     throw std::runtime_error(
-      "Could not parse size tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" + s +
-      "\", but expected a non-zero positive integer.");
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse size tag in \"{}\". Got \"{}\", but expected a non-zero positive "
+          "integer."),
+        elem->Name(), s));
   }
 
   return size;
@@ -246,22 +251,30 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
     if (rw_rate < 0)
     {
       throw std::runtime_error(
-        "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
-        std::to_string(rw_rate) + "\", but expected a positive integer.");
+        fmt::format(
+          FMT_COMPILE(
+            "Could not parse rw_rate tag in \"{}\". Got \"{}\", but expected a positive integer."),
+          elem->Name(), rw_rate));
     }
     return static_cast<unsigned int>(rw_rate);
   }
   catch (const std::invalid_argument & e)
   {
     throw std::runtime_error(
-      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
-      " Invalid value : \"" + attr->Value() + "\", expected a positive integer.");
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse rw_rate tag in \"{}\". Invalid value: \"{}\", expected a positive "
+          "integer."),
+        elem->Name(), attr->Value()));
   }
   catch (const std::out_of_range & e)
   {
     throw std::runtime_error(
-      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
-      " Out of range value : \"" + attr->Value() + "\", expected a positive valid integer.");
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse rw_rate tag in \"{}\". Out of range value: \"{}\", expected a positive "
+          "valid integer."),
+        elem->Name(), attr->Value()));
   }
 }
 
@@ -303,8 +316,11 @@ int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
   else
   {
     throw std::runtime_error(
-      "Could not parse thread_priority tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
-      s + "\", but expected a non-zero positive integer.");
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse thread_priority tag in \"{}\". Got \"{}\", but expected a non-zero "
+          "positive integer."),
+        elem->Name(), s));
   }
 }
 
@@ -393,6 +409,9 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   {
     interface.parameters = parse_parameters_from_xml(params_it);
   }
+
+  interface.data_type = parse_data_type_attribute(interfaces_it);
+  interface.size = static_cast<int>(parse_size_attribute(interfaces_it));
 
   return interface;
 }
@@ -487,10 +506,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (command_interfaces_it)
   {
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
-    component.command_interfaces.back().data_type =
-      parse_data_type_attribute(command_interfaces_it);
-    component.command_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -499,9 +514,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (state_interfaces_it)
   {
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
-    component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
-    component.state_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -603,9 +615,11 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       if (found_it == hardware.joints.cend())
       {
         throw std::runtime_error(
-          "Error while parsing '" + hardware.name + "'. Transmission '" + transmission.name +
-          "' declared joint '" + joint.name + "' is not available in component '" + hardware.name +
-          "'.");
+          fmt::format(
+            FMT_COMPILE(
+              "Error while parsing '{}'. Transmission '{}' declared joint '{}' is not available in "
+              "component '{}'."),
+            hardware.name, transmission.name, joint.name, hardware.name));
       }
 
       //  copy interface names from their definitions in the component
@@ -626,9 +640,11 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       if (transmission.joints.size() != 1)
       {
         throw std::runtime_error(
-          "Error while parsing '" + hardware.name +
-          "'. There should be exactly one joint defined in this component but found " +
-          std::to_string(transmission.joints.size()));
+          fmt::format(
+            FMT_COMPILE(
+              "Error while parsing '{}'. There should be exactly one joint defined in this "
+              "component but found {}."),
+            hardware.name, transmission.joints.size()));
       }
 
       transmission.actuators.push_back(
@@ -700,7 +716,8 @@ HardwareInfo parse_resource_from_xml(
     }
     else
     {
-      throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
+      throw std::runtime_error(
+        fmt::format(FMT_COMPILE("invalid tag name '{}'"), ros2_control_child_it->Name()));
     }
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
@@ -890,12 +907,12 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   if (!doc.Parse(urdf.c_str()) && doc.Error())
   {
     throw std::runtime_error(
-      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
+      fmt::format(FMT_COMPILE("invalid URDF passed in to robot parser: {}"), doc.ErrorStr()));
   }
   if (doc.Error())
   {
     throw std::runtime_error(
-      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
+      fmt::format(FMT_COMPILE("invalid URDF passed in to robot parser: {}"), doc.ErrorStr()));
   }
 
   // Find robot or sdf tag
@@ -920,7 +937,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
 
   if (!ros2_control_it)
   {
-    throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
+    throw std::runtime_error(fmt::format(FMT_COMPILE("no {} tag"), kROS2ControlTag));
   }
 
   std::vector<HardwareInfo> hardware_info;
@@ -944,21 +961,24 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       auto urdf_joint = model.getJoint(joint.name);
       if (!urdf_joint)
       {
-        throw std::runtime_error("Joint '" + joint.name + "' not found in URDF");
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Joint '{}' not found in URDF"), joint.name));
       }
       if (!urdf_joint->mimic && joint.is_mimic == MimicAttribute::TRUE)
       {
         throw std::runtime_error(
-          "Joint '" + joint.name + "' has no mimic information in the URDF.");
+          fmt::format(FMT_COMPILE("Joint '{}' has no mimic information in the URDF"), joint.name));
       }
       if (urdf_joint->mimic && joint.is_mimic != MimicAttribute::FALSE)
       {
         if (joint.command_interfaces.size() > 0)
         {
           throw std::runtime_error(
-            "Joint '" + joint.name +
-            "' has mimic attribute not set to false: Activated mimic joints cannot have command "
-            "interfaces.");
+            fmt::format(
+              FMT_COMPILE(
+                "Joint '{}' has mimic attribute not set to false: Activated mimic joints cannot "
+                "have command interfaces."),
+              joint.name));
         }
         auto find_joint = [&hw_info](const std::string & name)
         {
@@ -967,7 +987,8 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
             [&name](const auto & j) { return j.name == name; });
           if (it == hw_info.joints.end())
           {
-            throw std::runtime_error("Mimic joint '" + name + "' not found in <ros2_control> tag");
+            throw std::runtime_error(
+              fmt::format(FMT_COMPILE("Mimic joint '{}' not found in <ros2_control> tag"), name));
           }
           return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
         };
@@ -983,9 +1004,10 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       if (urdf_joint->type == urdf::Joint::FIXED)
       {
         throw std::runtime_error(
-          "Joint '" + joint.name +
-          "' is of type 'fixed'. "
-          "Fixed joints do not make sense in ros2_control.");
+          fmt::format(
+            FMT_COMPILE(
+              "Joint '{}' is of type 'fixed'. Fixed joints do not make sense in ros2_control."),
+            joint.name));
       }
 
       joint_limits::JointLimits limits;

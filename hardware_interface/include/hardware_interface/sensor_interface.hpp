@@ -15,6 +15,8 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <string>
@@ -93,23 +95,6 @@ public:
   SensorInterface(SensorInterface && other) = delete;
 
   virtual ~SensorInterface() = default;
-
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] logger Logger for the hardware component.
-   * \param[in] clock_interface pointer to the clock interface.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  [[deprecated("Use init(HardwareInfo, rclcpp::Logger, rclcpp::Clock::SharedPtr) instead.")]]
-  CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  {
-    return this->init(hardware_info, logger, clock_interface->get_clock());
-  }
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
@@ -332,8 +317,11 @@ public:
     if (it == sensor_states_map_.end())
     {
       throw std::runtime_error(
-        "State interface not found: " + interface_name +
-        " in sensor hardware component: " + info_.name + ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
+          interface_name, info_.name));
     }
     auto & handle = it->second;
     std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
@@ -347,8 +335,11 @@ public:
     if (it == sensor_states_map_.end())
     {
       throw std::runtime_error(
-        "State interface not found: " + interface_name +
-        " in sensor hardware component: " + info_.name + ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "State interface not found: {} in sensor hardware component: {}. "
+            "This should not happen."),
+          interface_name, info_.name));
     }
     auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
@@ -356,8 +347,11 @@ public:
     if (!opt_value)
     {
       throw std::runtime_error(
-        "Failed to get state value from interface: " + interface_name +
-        ". This should not happen.");
+        fmt::format(
+          FMT_COMPILE(
+            "Failed to get state value from interface: {}. "
+            "This should not happen."),
+          interface_name));
     }
     return opt_value.value();
   }
