@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hardware_interface</name>
-  <version>4.29.0</version>
+  <version>5.1.0</version>
   <description>Base classes for hardware abstraction and tooling for them</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -25,6 +25,7 @@
   <depend>sdformat_urdf</depend>
   <depend>tinyxml2_vendor</depend>
   <depend>urdf</depend>
+  <depend>fmt</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>

@@ -14,6 +14,8 @@
 
 #include "hardware_interface/resource_manager.hpp"
 
+#include <fmt/compile.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -88,6 +90,22 @@ std::string interfaces_to_string(
   ss << "]" << std::endl;
   return ss.str();
 };
+
+void get_hardware_related_interfaces(
+  const std::vector<std::string> & hw_command_itfs,
+  const std::vector<std::string> & start_stop_interfaces_list,
+  std::vector<std::string> & hw_interfaces)
+{
+  hw_interfaces.clear();
+  for (const auto & interface : start_stop_interfaces_list)
+  {
+    if (
+      std::find(hw_command_itfs.begin(), hw_command_itfs.end(), interface) != hw_command_itfs.end())
+    {
+      hw_interfaces.push_back(interface);
+    }
+  }
+}
 
 class ResourceStorage
 {
@@ -633,9 +651,11 @@ public:
       std::make_pair(command_interface->get_name(), command_interface));
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
-        command_interface->get_name() + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert CommandInterface with already existing key. "
+          "Insert[{}]"),
+        command_interface->get_name());
       throw std::runtime_error(msg);
     }
     command_interface->registerIntrospection();
@@ -650,9 +670,11 @@ public:
       std::make_pair(key, std::make_shared<CommandInterface>(std::move(command_interface))));
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
-        key + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert CommandInterface with already existing key. "
+          "Insert[{}]"),
+        key);
       throw std::runtime_error(msg);
     }
   }
@@ -666,6 +688,8 @@ public:
       auto interfaces = hardware.export_command_interfaces();
       hardware_info_map_[hardware.get_name()].command_interfaces =
         add_command_interfaces(interfaces);
+      start_interfaces_buffer_.reserve(start_interfaces_buffer_.capacity() + interfaces.size());
+      stop_interfaces_buffer_.reserve(stop_interfaces_buffer_.capacity() + interfaces.size());
       // TODO(Manuel) END: for backward compatibility
     }
     catch (const std::exception & ex)
@@ -744,7 +768,8 @@ public:
     const auto fill_interface_data =
       [&](const std::string & interface_type, std::optional<double> & value)
     {
-      const std::string interface_name = joint_name + "/" + interface_type;
+      const std::string interface_name =
+        fmt::format(FMT_COMPILE("{}/{}"), joint_name, interface_type);
       if (interface_map.find(interface_name) != interface_map.end())
       {
         // If the command interface is not claimed, then the value is not set (or) if the
@@ -778,7 +803,8 @@ public:
     const auto set_interface_command =
       [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      const std::string interface_name = limited_command.joint_name + "/" + interface_type;
+      const std::string interface_name =
+        fmt::format(FMT_COMPILE("{}/{}"), limited_command.joint_name, interface_type);
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
         auto itf_handle = interface_map.at(interface_name);
@@ -832,9 +858,10 @@ public:
     const auto [it, success] = state_interface_map_.emplace(interface_name, interface);
     if (!success)
     {
-      std::string msg(
-        "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
-        interface->get_name() + "]");
+      const std::string msg = fmt::format(
+        FMT_COMPILE(
+          "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[{}]"),
+        interface->get_name());
       throw std::runtime_error(msg);
     }
     interface->registerIntrospection();
@@ -1297,6 +1324,10 @@ public:
   /// The callback to be called when a component state is switched
   std::function<void()> on_component_state_switch_callback_ = nullptr;
 
+  // To be used with the prepare and perform command switch for the hardware components
+  std::vector<std::string> start_interfaces_buffer_;
+  std::vector<std::string> stop_interfaces_buffer_;
+
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
@@ -1471,7 +1502,8 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
 {
   if (!state_interface_is_available(key))
   {
-    throw std::runtime_error(std::string("State interface with key '") + key + "' does not exist");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("State interface with key '{}' does not exist"), key));
   }
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -1710,14 +1742,15 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
 {
   if (!command_interface_is_available(key))
   {
-    throw std::runtime_error(std::string("Command interface with '") + key + "' does not exist");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("Command interface with key '{}' does not exist"), key));
   }
 
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   if (command_interface_is_claimed(key))
   {
     throw std::runtime_error(
-      std::string("Command interface with '") + key + "' is already claimed");
+      fmt::format(FMT_COMPILE("Command interface with key '{}' is already claimed"), key));
   }
 
   resource_storage_->claimed_command_interface_map_[key] = true;
@@ -1891,12 +1924,24 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
+  const auto & hardware_info_map = resource_storage_->hardware_info_map_;
   auto call_prepare_mode_switch =
-    [&start_interfaces, &stop_interfaces, logger = get_logger()](auto & components)
+    [&start_interfaces, &stop_interfaces, &hardware_info_map, logger = get_logger()](
+      auto & components, auto & start_interfaces_buffer, auto & stop_interfaces_buffer)
   {
     bool ret = true;
     for (auto & component : components)
     {
+      const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
+      get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
+      get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
+      if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
+      {
+        RCLCPP_DEBUG(
+          logger, "Component '%s' after filtering has no command interfaces to switch",
+          component.get_name().c_str());
+        continue;
+      }
       if (
         component.get_lifecycle_state().id() ==
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
@@ -1906,12 +1951,12 @@ bool ResourceManager::prepare_command_mode_switch(
         {
           if (
             return_type::OK !=
-            component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+            component.prepare_command_mode_switch(start_interfaces_buffer, stop_interfaces_buffer))
           {
             RCLCPP_ERROR(
               logger, "Component '%s' did not accept command interfaces combination: \n%s",
               component.get_name().c_str(),
-              interfaces_to_string(start_interfaces, stop_interfaces).c_str());
+              interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
             ret = false;
           }
         }
@@ -1922,7 +1967,8 @@ bool ResourceManager::prepare_command_mode_switch(
             "Exception of type : %s occurred while preparing command mode switch for component "
             "'%s' for the interfaces: \n %s : %s",
             typeid(e).name(), component.get_name().c_str(),
-            interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
+            interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str(),
+            e.what());
           ret = false;
         }
         catch (...)
@@ -1932,16 +1978,27 @@ bool ResourceManager::prepare_command_mode_switch(
             "Unknown exception occurred while preparing command mode switch for component '%s' for "
             "the interfaces: \n %s",
             component.get_name().c_str(),
-            interfaces_to_string(start_interfaces, stop_interfaces).c_str());
+            interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
           ret = false;
         }
+      }
+      else
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is not in INACTIVE or ACTIVE state, skipping the prepare switch",
+          component.get_name().c_str());
+        ret = false;
       }
     }
     return ret;
   };
 
-  const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
-  const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
+  const bool actuators_result = call_prepare_mode_switch(
+    resource_storage_->actuators_, resource_storage_->start_interfaces_buffer_,
+    resource_storage_->stop_interfaces_buffer_);
+  const bool systems_result = call_prepare_mode_switch(
+    resource_storage_->systems_, resource_storage_->start_interfaces_buffer_,
+    resource_storage_->stop_interfaces_buffer_);
 
   return actuators_result && systems_result;
 }
@@ -1957,12 +2014,24 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
+  const auto & hardware_info_map = resource_storage_->hardware_info_map_;
   auto call_perform_mode_switch =
-    [&start_interfaces, &stop_interfaces, logger = get_logger()](auto & components)
+    [&start_interfaces, &stop_interfaces, &hardware_info_map, logger = get_logger()](
+      auto & components, auto & start_interfaces_buffer, auto & stop_interfaces_buffer)
   {
     bool ret = true;
     for (auto & component : components)
     {
+      const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
+      get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
+      get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
+      if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
+      {
+        RCLCPP_DEBUG(
+          logger, "Component '%s' after filtering has no command interfaces to perform switch",
+          component.get_name().c_str());
+        continue;
+      }
       if (
         component.get_lifecycle_state().id() ==
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
@@ -1972,10 +2041,12 @@ bool ResourceManager::perform_command_mode_switch(
         {
           if (
             return_type::OK !=
-            component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+            component.perform_command_mode_switch(start_interfaces_buffer, stop_interfaces_buffer))
           {
             RCLCPP_ERROR(
-              logger, "Component '%s' could not perform switch", component.get_name().c_str());
+              logger, "Component '%s' could not perform switch for the command interfaces: \n%s",
+              component.get_name().c_str(),
+              interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
             ret = false;
           }
         }
@@ -1986,7 +2057,8 @@ bool ResourceManager::perform_command_mode_switch(
             "Exception of type : %s occurred while performing command mode switch for component "
             "'%s' for the interfaces: \n %s : %s",
             typeid(e).name(), component.get_name().c_str(),
-            interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
+            interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str(),
+            e.what());
           ret = false;
         }
         catch (...)
@@ -1997,16 +2069,27 @@ bool ResourceManager::perform_command_mode_switch(
             "for "
             "the interfaces: \n %s",
             component.get_name().c_str(),
-            interfaces_to_string(start_interfaces, stop_interfaces).c_str());
+            interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
           ret = false;
         }
+      }
+      else
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is not in INACTIVE or ACTIVE state, skipping the perform switch",
+          component.get_name().c_str());
+        ret = false;
       }
     }
     return ret;
   };
 
-  const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
-  const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
+  const bool actuators_result = call_perform_mode_switch(
+    resource_storage_->actuators_, resource_storage_->start_interfaces_buffer_,
+    resource_storage_->stop_interfaces_buffer_);
+  const bool systems_result = call_perform_mode_switch(
+    resource_storage_->systems_, resource_storage_->start_interfaces_buffer_,
+    resource_storage_->stop_interfaces_buffer_);
 
   if (actuators_result && systems_result)
   {
@@ -2133,7 +2216,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::read(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
@@ -2242,7 +2325,7 @@ HardwareReadWriteStatus ResourceManager::read(
 
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::write(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();

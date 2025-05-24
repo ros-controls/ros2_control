@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hardware_interface_testing</name>
-  <version>4.29.0</version>
+  <version>5.1.0</version>
   <description>Commonly used test fixtures for the ros2_control framework</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -18,6 +18,7 @@
   <depend>pluginlib</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>ros2_control_test_assets</depend>
+  <depend>fmt</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
 

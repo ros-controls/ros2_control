@@ -133,7 +133,7 @@ def service_caller(
                     f"Could not contact service {fully_qualified_service_name}"
                 )
         elif not cli.wait_for_service(10.0):
-            node.get_logger().warn(f"Could not contact service {fully_qualified_service_name}")
+            node.get_logger().warning(f"Could not contact service {fully_qualified_service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
