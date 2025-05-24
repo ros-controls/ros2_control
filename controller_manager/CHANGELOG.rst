@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add `data_type` field to the HardwareInterfaces message (backport `#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_) (`#2232 <https://github.com/ros-controls/ros2_control/issues/2232>`_)
+* Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_) (`#2271 <https://github.com/ros-controls/ros2_control/issues/2271>`_)
+* Add new strictness modes to SwitchController service (`#2224 <https://github.com/ros-controls/ros2_control/issues/2224>`_) (`#2231 <https://github.com/ros-controls/ros2_control/issues/2231>`_)
+* Contributors: mergify[bot]
+
 4.30.0 (2025-05-21)
 -------------------
 * Keep current shutdown behaviour in Jazzy (`#2254 <https://github.com/ros-controls/ros2_control/issues/2254>`_)

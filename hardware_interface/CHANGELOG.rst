@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [RM] Isolate start and stop interfaces for each Hardware Component (backport `#2120 <https://github.com/ros-controls/ros2_control/issues/2120>`_) (`#2273 <https://github.com/ros-controls/ros2_control/issues/2273>`_)
+* Add `data_type` field to the HardwareInterfaces message (backport `#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_) (`#2232 <https://github.com/ros-controls/ros2_control/issues/2232>`_)
+* Add new `Handle` constructor for easier initialization (`#2253 <https://github.com/ros-controls/ros2_control/issues/2253>`_) (`#2270 <https://github.com/ros-controls/ros2_control/issues/2270>`_)
+* Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_) (`#2271 <https://github.com/ros-controls/ros2_control/issues/2271>`_)
+* Read `data_type` for all types of interfaces (`#2235 <https://github.com/ros-controls/ros2_control/issues/2235>`_) (`#2261 <https://github.com/ros-controls/ros2_control/issues/2261>`_)
+* Contributors: mergify[bot]
+
 4.30.0 (2025-05-21)
 -------------------
 * Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_) (`#2249 <https://github.com/ros-controls/ros2_control/issues/2249>`_)
