@@ -16,7 +16,7 @@ on:
       - 'ros2_control.kilted.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
-    - cron: '03 3 * * *'
+    - cron: '03 3 * * MON-FRI'
 
 jobs:
   source:
