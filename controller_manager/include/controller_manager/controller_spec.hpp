@@ -19,6 +19,8 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
+#include <fmt/core.h>
+#include <fmt/ranges.h>
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -45,6 +47,137 @@ struct ControllerPeerInfo
   std::unordered_set<std::string> command_interfaces = {};
   std::unordered_set<std::string> state_interfaces = {};
   std::unordered_set<std::string> reference_interfaces = {};
+  std::vector<std::unordered_set<std::string>> mutually_exclusive_predecessor_groups = {};
+
+  void build_mutually_exclusive_groups()
+  {
+    // Build mutually exclusive groups of predecessor controllers, that could utilize all the
+    // reference interfaces of the current controller. This is used to determine which predecessor
+    // controllers can be activated together with the current controller.
+
+    mutually_exclusive_predecessor_groups.clear();
+    const auto are_all_reference_interfaces_found =
+      [](
+        const std::unordered_set<std::string> & ref_itfs,
+        const std::unordered_set<std::string> & cmd_itfs)
+    {
+      return std::all_of(
+        ref_itfs.begin(), ref_itfs.end(), [&cmd_itfs](const std::string & reference_itf)
+        { return cmd_itfs.find(reference_itf) != cmd_itfs.end(); });
+    };
+    const auto & current_reference_interfaces = reference_interfaces;
+    std::for_each(
+      predecessors.begin(), predecessors.end(),
+      [this, &are_all_reference_interfaces_found](const ControllerPeerInfo * p)
+      {
+        // check if all the command interfaces of the predecessor are in the current controller's
+        // reference interfaces If they are, add them as individual group
+        std::unordered_set<std::string> predecessor_group = {};
+        bool all_predecessor_interfaces_match =
+          are_all_reference_interfaces_found(reference_interfaces, p->command_interfaces);
+        if (all_predecessor_interfaces_match)
+        {
+          // If the predecessor's command interfaces are all in the current controller's reference
+          // interfaces, add it as individual group
+          predecessor_group.insert(p->name);
+          mutually_exclusive_predecessor_groups.push_back(predecessor_group);
+          RCLCPP_INFO_STREAM(
+            rclcpp::get_logger("controller_manager"),
+            "Adding predecessor: "
+              << p->name
+              << " as individual group, as all its command "
+                 "interfaces are in the current controller's reference interfaces.");
+        }
+      });
+
+    // If the predecessor's command interfaces are not all in the current controller's reference
+    // interfaces, then check other predecessors and see if they can be grouped together
+
+    // generate combinations of predecessors that can be grouped together
+    for (const auto & predecessor : predecessors)
+    {
+      // check if the predessort is already in the mutually exclusive group as single group
+      if (std::any_of(
+            mutually_exclusive_predecessor_groups.begin(),
+            mutually_exclusive_predecessor_groups.end(),
+            [&predecessor](const std::unordered_set<std::string> & group)
+            { return group.find(predecessor->name) != group.end() && group.size() == 1; }))
+      {
+        continue;  // skip this predecessor, as it is already in a group as individual
+      }
+
+      // create all combinations of predecessors that can be grouped together
+      // For instance, predecessors A,B,C,D. Get combinations like:
+      // A,B; A,C; A,D; B,C; B,D; C,D; A,B,C; A,B,D; A,C,D; B,C,D; A,B,C,D
+      // Note: This is a simplified version, in practice you would want to check if the
+      // command interfaces of the predecessors do not overlap and are unique
+
+      std::vector<std::vector<std::string>> combinations;
+      std::vector<std::string> current_combination;
+      std::function<void(size_t)> generate_combinations = [&](size_t start_index)
+      {
+        if (current_combination.size() > 1)
+        {
+          // check if the current combination's command interfaces are all in the
+          // current controller's reference interfaces
+          std::unordered_set<std::string> combined_command_interfaces;
+          for (const auto & predecessor_name : current_combination)
+          {
+            const auto & predecessor_itf = std::find_if(
+              predecessors.begin(), predecessors.end(),
+              [&predecessor_name](const ControllerPeerInfo * p)
+              { return p->name == predecessor_name; });
+            if (predecessor_itf != predecessors.end())
+            {
+              combined_command_interfaces.insert(
+                (*predecessor_itf)->command_interfaces.begin(),
+                (*predecessor_itf)->command_interfaces.end());
+            }
+          }
+          if (are_all_reference_interfaces_found(
+                current_reference_interfaces, combined_command_interfaces))
+          {
+            combinations.push_back(current_combination);
+          }
+        }
+        for (size_t i = start_index; i < predecessors.size(); ++i)
+        {
+          if (std::any_of(
+                mutually_exclusive_predecessor_groups.begin(),
+                mutually_exclusive_predecessor_groups.end(),
+                [&](const std::unordered_set<std::string> & group)
+                { return group.find(predecessors[i]->name) != group.end() && group.size() == 1; }))
+          {
+            continue;  // skip this predecessor, as it is already in a group as individual
+          }
+
+          current_combination.push_back(predecessors[i]->name);
+          generate_combinations(i + 1);
+          current_combination.pop_back();
+        }
+      };
+
+      RCLCPP_INFO(
+        rclcpp::get_logger("controller_manager"),
+        "Generating combinations of predecessors for controller: %s", name.c_str());
+      generate_combinations(0);
+      // Add the combinations to the mutually exclusive predecessor groups
+      for (const auto & combination : combinations)
+      {
+        std::unordered_set<std::string> group(combination.begin(), combination.end());
+        RCLCPP_INFO(
+          rclcpp::get_logger("controller_manager"),
+          fmt::format(
+            "Adding predecessor group: {} with size: {}", fmt::join(combination, ", "),
+            combination.size())
+            .c_str());
+        if (!group.empty())
+        {
+          mutually_exclusive_predecessor_groups.push_back(group);
+        }
+      }
+    }
+  }
 
   void get_controllers_to_activate(std::vector<std::string> & controllers_to_activate) const
   {
