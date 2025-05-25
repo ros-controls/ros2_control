@@ -1,4 +1,4 @@
-name: RHEL Humble Semi-Binary Build
+name: Humble - RHEL Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
@@ -15,7 +15,7 @@ on:
       - 'ros2_control.humble.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
+    - cron: '03 1 * * MON-FRI'
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on humble branch
