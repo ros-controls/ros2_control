@@ -54,4 +54,28 @@ TEST(TestHelper, test_helper_methods)
 
   ASSERT_TRUE(ros2_control::is_unique(vec));
   ASSERT_FALSE(ros2_control::is_unique(std::vector<std::string>({"aa", "bb", "cc", "aa"})));
+
+  std::vector<std::string> vec1({"aa", "bb", "cc"});
+  std::vector<std::string> vec2({"dd", "ee"});
+  std::vector<std::string> vec3({"aa", "bb", "dd"});
+
+  std::unordered_set<std::string> set1({"aa", "bb", "cc"});
+  std::unordered_set<std::string> set2({"dd", "ee"});
+  std::unordered_set<std::string> set3({"aa", "bb", "dd"});
+
+  ASSERT_TRUE(ros2_control::has_no_common_items(vec1, vec2));
+  ASSERT_TRUE(ros2_control::has_no_common_items(set1, set2));
+  ASSERT_TRUE(ros2_control::has_no_common_items(vec1, set2));
+  ASSERT_TRUE(ros2_control::has_no_common_items(vec2, set1));
+  ASSERT_TRUE(ros2_control::has_no_common_items(set1, vec2));
+  ASSERT_TRUE(ros2_control::has_no_common_items(set2, vec1));
+
+  ASSERT_FALSE(ros2_control::has_no_common_items(vec1, vec3));
+  ASSERT_FALSE(ros2_control::has_no_common_items(set1, set3));
+  ASSERT_FALSE(ros2_control::has_no_common_items(vec1, vec1));
+  ASSERT_FALSE(ros2_control::has_no_common_items(set1, set1));
+  ASSERT_FALSE(ros2_control::has_no_common_items(vec2, vec2));
+  ASSERT_FALSE(ros2_control::has_no_common_items(set2, set2));
+  ASSERT_FALSE(ros2_control::has_no_common_items(vec1, set3));
+  ASSERT_FALSE(ros2_control::has_no_common_items(set1, vec3));
 }
