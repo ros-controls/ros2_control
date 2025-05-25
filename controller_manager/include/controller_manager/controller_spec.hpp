@@ -418,17 +418,23 @@ public:
     {
       return {};
     }
+    controller_graph_[controller_name].build_mutually_exclusive_groups();
     controller_graph_[controller_name].get_controllers_to_activate(controllers_to_activate);
     return controllers_to_activate;
   }
 
   std::vector<std::string> get_dependencies_to_deactivate(const std::string & controller_name)
   {
+    RCLCPP_INFO(
+      rclcpp::get_logger("controller_manager"),
+      "+++++++++++++++++++++++++++++++ Getting dependencies to DEACTIVATE "
+      "+++++++++++++++++++++++++++++++");
     std::vector<std::string> controllers_to_deactivate({controller_name});
     if (controller_graph_.count(controller_name) == 0)
     {
       return {};
     }
+    controller_graph_[controller_name].build_mutually_exclusive_groups();
     controller_graph_[controller_name].get_controllers_to_deactivate(controllers_to_deactivate);
     return controllers_to_deactivate;
   }
