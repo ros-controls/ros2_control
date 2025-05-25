@@ -1,4 +1,4 @@
-name: Debian Rolling Source Build
+name: Rolling - Debian Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
@@ -25,7 +25,7 @@ concurrency:
 
 
 jobs:
-  debian_source_build:
+  debian_semi_binary_build:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false

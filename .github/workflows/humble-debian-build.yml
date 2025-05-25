@@ -1,4 +1,4 @@
-name: Debian Humble Source Build
+name: Humble - Debian Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
-  debian_source_build:
+  debian_semi_binary_build:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false
