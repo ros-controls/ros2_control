@@ -40,7 +40,7 @@ def check_node_running(node, node_name, timeout=5.0):
     Checks if a node with the specified name is running within a given timeout.
 
     Args:
-      node: The ROS 2 node object to query for active node names.
+      node (Node): The ROS 2 node instance to use for discovering nodes.
       node_name (str): The name of the node to check for.
       timeout (float, optional): The maximum time to wait for the node to appear, in seconds. Defaults to 5.0.
 
@@ -61,7 +61,7 @@ def check_controllers_running(node, cnames, namespace="", state="active", timeou
     Check if the specified controllers are running on the given node.
 
     Args:
-      node (Node): The ROS2 node instance to check for controllers.
+      node (Node): The ROS 2 node instance to use for discovering controllers.
       cnames (list of str): List of controller names to check.
       namespace (str, optional): The namespace in which to look for controllers. Defaults to "".
       state (str, optional): The desired state of the controllers. Defaults to "active".
