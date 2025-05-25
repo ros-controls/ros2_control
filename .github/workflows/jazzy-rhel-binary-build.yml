@@ -1,4 +1,4 @@
-name: RHEL Jazzy Semi-Binary Build
+name: Jazzy - RHEL Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:

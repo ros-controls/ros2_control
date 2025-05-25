@@ -1,4 +1,4 @@
-name: RHEL Humble Semi-Binary Build
+name: Humble - RHEL Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:

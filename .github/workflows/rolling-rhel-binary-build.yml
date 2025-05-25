@@ -1,4 +1,4 @@
-name: RHEL Rolling Semi-Binary Build
+name: Rolling - RHEL Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
