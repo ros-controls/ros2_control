@@ -36,6 +36,17 @@ from controller_manager.controller_manager_services import list_controllers
 
 
 def check_node_running(node, node_name, timeout=5.0):
+    """
+    Checks if a node with the specified name is running within a given timeout.
+
+    Args:
+      node (Node): The ROS 2 node instance to use for discovering nodes.
+      node_name (str): The name of the node to check for.
+      timeout (float, optional): The maximum time to wait for the node to appear, in seconds. Defaults to 5.0.
+
+    Raises:
+      AssertionError: If the node with the specified name is not found within the timeout period.
+    """
 
     start = time.time()
     found = False
@@ -45,15 +56,16 @@ def check_node_running(node, node_name, timeout=5.0):
     assert found, f"{node_name} not found!"
 
 
-def check_controllers_running(node, cnames, namespace="", state="active"):
+def check_controllers_running(node, cnames, namespace="", state="active", timeout=10.0):
     """
     Check if the specified controllers are running on the given node.
 
     Args:
-      node (Node): The ROS2 node instance to check for controllers.
+      node (Node): The ROS 2 node instance to use for discovering controllers.
       cnames (list of str): List of controller names to check.
       namespace (str, optional): The namespace in which to look for controllers. Defaults to "".
       state (str, optional): The desired state of the controllers. Defaults to "active".
+      timeout (float, optional): The maximum time to wait for the node to appear, in seconds. Defaults to 10.0.
 
     Raises:
       AssertionError: If any of the specified controllers are not found or not in the desired state within the timeout period.
@@ -72,7 +84,7 @@ def check_controllers_running(node, cnames, namespace="", state="active"):
     else:
         namespace_api = "/"
 
-    while time.time() - start < 10.0 and not all(found.values()):
+    while time.time() - start < timeout and not all(found.values()):
         node_names_namespaces = node.get_node_names_and_namespaces()
         for cname in cnames:
             if any(name == cname and ns == namespace_api for name, ns in node_names_namespaces):
@@ -92,7 +104,7 @@ def check_controllers_running(node, cnames, namespace="", state="active"):
             cm = namespace + "controller_manager"
         else:
             cm = namespace + "/controller_manager"
-    while time.time() - start < 10.0 and not all(found.values()):
+    while time.time() - start < timeout and not all(found.values()):
         controllers = list_controllers(node, cm, 5.0).controller
         assert controllers, "No controllers found!"
         for c in controllers:
