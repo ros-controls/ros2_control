@@ -16,6 +16,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
+      - 'ros2_control-not-released.kilted.repos'
   push:
     branches:
       - master
@@ -28,9 +29,10 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
+      - 'ros2_control-not-released.kilted.repos'
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
+    - cron: '03 1 * * MON-FRI'
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on master branch
@@ -43,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [rolling]
+        ROS_DISTRO: [kilted, rolling]
         ROS_REPO: [main, testing]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}

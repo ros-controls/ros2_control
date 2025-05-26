@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.50.0 (2025-04-10)
+-------------------
+* Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)
+* [RM] Add error handling for missing `plugin` tags in URDF parsing (backport `#2138 <https://github.com/ros-controls/ros2_control/issues/2138>`_) (`#2145 <https://github.com/ros-controls/ros2_control/issues/2145>`_)
+* Contributors: mergify[bot]
+
 2.49.0 (2025-03-18)
 -------------------
 * Improve API/lifecycle docs (`#2081 <https://github.com/ros-controls/ros2_control/issues/2081>`_) (`#2085 <https://github.com/ros-controls/ros2_control/issues/2085>`_)

@@ -2,6 +2,9 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.50.0 (2025-04-10)
+-------------------
+
 2.49.0 (2025-03-18)
 -------------------
 * Move test_utils module from demos repo (backport `#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_) (`#2110 <https://github.com/ros-controls/ros2_control/issues/2110>`_)

@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.50.0 (2025-04-10)
+-------------------
+* Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)
+* Fix generate_controllers_spawner_launch_description_from_dict (`#2146 <https://github.com/ros-controls/ros2_control/issues/2146>`_) (`#2148 <https://github.com/ros-controls/ros2_control/issues/2148>`_)
+* Fix `~/robot_description` in docs
+* Fix documentation of `robot_description` in CM (`#2117 <https://github.com/ros-controls/ros2_control/issues/2117>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 2.49.0 (2025-03-18)
 -------------------
 * Move test_utils module from demos repo (backport `#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_) (`#2110 <https://github.com/ros-controls/ros2_control/issues/2110>`_)
