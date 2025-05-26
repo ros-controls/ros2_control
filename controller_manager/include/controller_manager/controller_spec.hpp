@@ -48,6 +48,7 @@ struct ControllerPeerInfo
   std::unordered_set<std::string> state_interfaces = {};
   std::unordered_set<std::string> reference_interfaces = {};
   std::vector<std::unordered_set<std::string>> mutually_exclusive_predecessor_groups = {};
+  std::vector<std::unordered_set<std::string>> mutually_exclusive_successor_groups = {};
 
   void build_mutually_exclusive_predecessor_groups()
   {
@@ -174,6 +175,128 @@ struct ControllerPeerInfo
         if (!group.empty())
         {
           mutually_exclusive_predecessor_groups.push_back(group);
+        }
+      }
+    }
+  }
+
+  void build_mutually_exclusive_successor_groups()
+  {
+    // Build mutually exclusive groups of successor controllers, that could utilize all the
+    // reference interfaces of the current controller. This is used to determine which successor
+    // controllers can be activated together with the current controller.
+
+    mutually_exclusive_successor_groups.clear();
+    const auto are_all_command_interfaces_found =
+      [](
+        const std::unordered_set<std::string> & ref_itfs,
+        const std::unordered_set<std::string> & cmd_itfs)
+    {
+      return std::all_of(
+        cmd_itfs.begin(), cmd_itfs.end(), [&ref_itfs](const std::string & command_itf)
+        { return ref_itfs.find(command_itf) != ref_itfs.end(); });
+    };
+    const auto & current_reference_interfaces = reference_interfaces;
+    std::for_each(
+      successors.begin(), successors.end(),
+      [this, &are_all_command_interfaces_found](const ControllerPeerInfo * s)
+      {
+        // check if all the command interfaces of the successor are in the current controller's
+        // reference interfaces If they are, add them as individual group
+        std::unordered_set<std::string> successor_group = {};
+        bool all_successor_interfaces_match =
+          are_all_command_interfaces_found(s->reference_interfaces, command_interfaces);
+        if (all_successor_interfaces_match)
+        {
+          // If the successor's command interfaces are all in the current controller's reference
+          // interfaces, add it as individual group
+          successor_group.insert(s->name);
+          mutually_exclusive_successor_groups.push_back(successor_group);
+          RCLCPP_INFO_STREAM(
+            rclcpp::get_logger("controller_manager"),
+            "Adding successor: "
+              << s->name
+              << " as individual group, as all its command "
+                 "interfaces are in the current controller's reference interfaces.");
+        }
+      });
+
+    // If the successor's command interfaces are not all in the current controller's reference
+    // interfaces, then check other successors and see if they can be grouped together
+
+    // generate combinations of successors that can be grouped together
+    for (const auto & successor : successors)
+    {
+      // check if the successor is already in the mutually exclusive group as single group
+      if (std::any_of(
+            mutually_exclusive_successor_groups.begin(), mutually_exclusive_successor_groups.end(),
+            [&successor](const std::unordered_set<std::string> & group)
+            { return group.find(successor->name) != group.end() && group.size() == 1; }))
+      {
+        continue;  // skip this successor, as it is already in a group as individual
+      }
+      // create all combinations of successors that can be grouped together
+      // For instance, successors A,B,C,D. Get combinations like:
+      // A,B; A,C; A,D; B,C; B,D; C,D; A,B,C; A,B,D; A,C,D; B,C,D; A,B,C,D
+      std::vector<std::vector<std::string>> combinations;
+      std::vector<std::string> current_combination;
+      std::function<void(size_t)> generate_combinations = [&](size_t start_index)
+      {
+        if (current_combination.size() > 1)
+        {
+          // check if the current combination's command interfaces are all in the
+          // current controller's reference interfaces
+          std::unordered_set<std::string> combined_reference_interfaces;
+          for (const auto & successor_name : current_combination)
+          {
+            const auto & successor_itf = std::find_if(
+              successors.begin(), successors.end(), [&successor_name](const ControllerPeerInfo * s)
+              { return s->name == successor_name; });
+            if (successor_itf != successors.end())
+            {
+              combined_reference_interfaces.insert(
+                (*successor_itf)->reference_interfaces.begin(),
+                (*successor_itf)->reference_interfaces.end());
+            }
+          }
+          if (are_all_command_interfaces_found(combined_reference_interfaces, command_interfaces))
+          {
+            combinations.push_back(current_combination);
+          }
+        }
+        for (size_t i = start_index; i < successors.size(); ++i)
+        {
+          if (std::any_of(
+                mutually_exclusive_successor_groups.begin(),
+                mutually_exclusive_successor_groups.end(),
+                [&](const std::unordered_set<std::string> & group)
+                { return group.find(successors[i]->name) != group.end() && group.size() == 1; }))
+          {
+            continue;  // skip this successor, as it is already in a group as individual
+          }
+
+          current_combination.push_back(successors[i]->name);
+          generate_combinations(i + 1);
+          current_combination.pop_back();
+        }
+      };
+      RCLCPP_INFO(
+        rclcpp::get_logger("controller_manager"),
+        "Generating combinations of successors for controller: %s", name.c_str());
+      generate_combinations(0);
+      // Add the combinations to the mutually exclusive successor groups
+      for (const auto & combination : combinations)
+      {
+        std::unordered_set<std::string> group(combination.begin(), combination.end());
+        RCLCPP_INFO(
+          rclcpp::get_logger("controller_manager"),
+          fmt::format(
+            "Adding successor group: {} with size: {}", fmt::join(combination, ", "),
+            combination.size())
+            .c_str());
+        if (!group.empty())
+        {
+          mutually_exclusive_successor_groups.push_back(group);
         }
       }
     }
@@ -419,6 +542,7 @@ public:
       return {};
     }
     controller_graph_[controller_name].build_mutually_exclusive_predecessor_groups();
+    controller_graph_[controller_name].build_mutually_exclusive_successor_groups();
     controller_graph_[controller_name].get_controllers_to_activate(controllers_to_activate);
     return controllers_to_activate;
   }
@@ -435,6 +559,7 @@ public:
       return {};
     }
     controller_graph_[controller_name].build_mutually_exclusive_predecessor_groups();
+    controller_graph_[controller_name].build_mutually_exclusive_successor_groups();
     controller_graph_[controller_name].get_controllers_to_deactivate(controllers_to_deactivate);
     return controllers_to_deactivate;
   }
