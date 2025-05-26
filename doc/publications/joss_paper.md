@@ -1,5 +1,5 @@
 ---
-title: 'ros2_control: a hardware-agnostic control framework for ROS2'
+title: 'ros2_control: a hardware-agnostic control framework for ROS 2'
 tags:
   - Robot Operating System
   - robot control
@@ -7,22 +7,26 @@ tags:
 authors:
   - name: Bence Magyar
     orcid: 0000-0001-8455-8674
-    affiliation: 1
+    affiliation: "1, 2"
     equal-contrib: true
   - name: Denis Štogl
-    affiliation: "2 ,3" # (Multiple affiliations must be quoted)
+    orcid: 0000-0002-2546-6128
+    affiliation: "3 ,4" # (Multiple affiliations must be quoted)
     equal-contrib: true
   - name: Karsten Knese
-    affiliation: 3
+    affiliation: 5
+    equal-contrib: true
 affiliations:
-# TODO: add affiliations
- - name: Lyman Spitzer, Jr. Fellow, Princeton University, United States
+ - name: Locus Robotics
    index: 1
-   ror: 00hx57361
- - name: Institution Name, Country
+ - name: FiveAI Ltd.
    index: 2
- - name: Independent Researcher, Country
+ - name: Stogl Robotics gmbh.
    index: 3
+ - name: b-robotized
+   index: 4
+ - name: Intrinsic
+   index: 5
 date: 18 May 2025
 bibliography: paper.bib
 ---
@@ -36,12 +40,10 @@ The modular design of `ros2_control` makes it a desirable framework for both res
 
 # Motivation
 
-<!-- history and related work -->
-
 Before the release of Robot Operating System (ROS) [@ref_ros] around 2009, robotic research was very slow because reproducing results was a tedious, long process, especially when it had to be adjusted to a specific robot. The first fully ROS-powered research robot, `PR2` featured a robot-specific control layer to move its mobile base, two arms, torso, and head.
 Based on the experiences in the first few years of ROS, [@ref_roscontrol] proposed in 2014 a hardware-agnostic control framework as an evolution to the approach from the `PR2` control system, called `ros_control`. This initiated the era of exchange of control algorithms between research groups, resulting in a set of generic and ready-to-use controllers, mostly for manipulators and mobile robots. Robot manufacturers started shipping their products with `ros_control` implemented on them. The framework took some inspiration from the `OROCOS` [@ref_orocos], a robot control library.
 
-In 2017, work on the industry-grade Robot Operating System, called `ROS2` [@ref_ros2], has begun. A few years later, in 2019, the porting of `ros_control` was ported to `ROS2` also started. This provided an opportunity to redesign and improve some core concepts of `ros_control`, creating a more modern, flexible, and even more modular framework from the ground up, targeting a wider range of use-cases.
+In 2017, work on the next big iteration of the Robot Operating System, called `ROS 2` [@ref_ros2], has begun. A few years later, in 2019, the porting of `ros_control` was ported to `ROS 2` also started. This provided an opportunity to redesign and improve some core concepts of `ros_control`, creating a more modern, flexible, and even more modular framework from the ground up, targeting a wider range of use-cases.
 
 % The framework has become one of the main utilities for abstracting hardware and low-level control for 3rd party solutions like the `MoveIt2` and `Nav2` frameworks.
 
@@ -50,7 +52,7 @@ One lesson many roboticists learn is that writing robot hardware drivers is hard
 Another lesson fellow roboticists learn early on is that writing controllers is a non-trivial task.
 People well-versed in control theory often write specific controllers for their specific problems, however, this approach does not scale well.
 Sharing slightly more general, configurable, and widely tested controllers benefits both the research and industrial communities, allowing them to focus on what is important to them.
-\comment{The more a controller is used, the quicker achieves maturity, helping robots be safe and reliable in harsh deployment environments or places where they need to interact with humans.}
+\comment{The more a controller is used, the quicker it achieves maturity, helping robots be safe and reliable in harsh environments or places where they need to interact with humans.}
 
 # Aim
 \label{sec:aim}
