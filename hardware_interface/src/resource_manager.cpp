@@ -91,18 +91,32 @@ std::string interfaces_to_string(
   return ss.str();
 };
 
-void get_hardware_related_interfaces(
+void find_common_hardware_interfaces(
   const std::vector<std::string> & hw_command_itfs,
   const std::vector<std::string> & start_stop_interfaces_list,
   std::vector<std::string> & hw_interfaces)
 {
   hw_interfaces.clear();
-  for (const auto & interface : start_stop_interfaces_list)
+
+  // decide which input vector is shorter.
+  const auto & shorter_vec = hw_command_itfs.size() < start_stop_interfaces_list.size()
+                               ? hw_command_itfs
+                               : start_stop_interfaces_list;
+  const auto & longer_vec =
+    &shorter_vec == &hw_command_itfs ? start_stop_interfaces_list : hw_command_itfs;
+
+  // reserve exactly the worst-case result size (all of the smaller one).
+  hw_interfaces.reserve(shorter_vec.size());
+
+  // build a hash set from the smaller vector.
+  std::unordered_set<std::string> lookup(shorter_vec.begin(), shorter_vec.end());
+
+  // iterate through the larger vector; test membership in constant time.
+  for (const auto & name : longer_vec)
   {
-    if (
-      std::find(hw_command_itfs.begin(), hw_command_itfs.end(), interface) != hw_command_itfs.end())
+    if (lookup.find(name) != lookup.end())
     {
-      hw_interfaces.push_back(interface);
+      hw_interfaces.push_back(name);
     }
   }
 }
@@ -1933,8 +1947,8 @@ bool ResourceManager::prepare_command_mode_switch(
     for (auto & component : components)
     {
       const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
-      get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
-      get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
+      find_common_hardware_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
+      find_common_hardware_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
       if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
       {
         RCLCPP_DEBUG(
@@ -2023,8 +2037,8 @@ bool ResourceManager::perform_command_mode_switch(
     for (auto & component : components)
     {
       const auto & hw_command_itfs = hardware_info_map.at(component.get_name()).command_interfaces;
-      get_hardware_related_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
-      get_hardware_related_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
+      find_common_hardware_interfaces(hw_command_itfs, start_interfaces, start_interfaces_buffer);
+      find_common_hardware_interfaces(hw_command_itfs, stop_interfaces, stop_interfaces_buffer);
       if (start_interfaces_buffer.empty() && stop_interfaces_buffer.empty())
       {
         RCLCPP_DEBUG(
