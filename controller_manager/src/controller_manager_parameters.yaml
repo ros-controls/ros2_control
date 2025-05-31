@@ -17,7 +17,6 @@ controller_manager:
     unconfigured: {
       type: string_array,
       default_value: [],
-      read_only: true,
       description: "Defines which hardware components will be only loaded when controller manager is started. These hardware components will need to be configured and activated manually or via a hardware spawner.",
       validation: {
         unique<>: null,
@@ -27,7 +26,6 @@ controller_manager:
     inactive: {
       type: string_array,
       default_value: [],
-      read_only: true,
       description: "Defines which hardware components will be configured when controller manager is started. These hardware components will need to be activated manually or via a hardware spawner.",
       validation: {
         unique<>: null,
