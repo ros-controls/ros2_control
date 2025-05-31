@@ -25,3 +25,7 @@ diagnostics.threshold.hardware_components.periodicity: |
 
 diagnostics.threshold.hardware_components.execution_time.mean_error: |
   The ``execution_time`` diagnostics will be published for all hardware components. The ``mean_error`` for a synchronous hardware component will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous hardware component will be computed against its desired read/write period, as the hardware component can take a maximum of the desired period to execute the read/write cycle.
+
+enforce_command_limits: |
+  When true, If the command is outside the limits, the command is clamped to be within the limits depending on the type of configured joint limits in the URDF.
+  If the command is within the limits, the command is passed through without any changes.
