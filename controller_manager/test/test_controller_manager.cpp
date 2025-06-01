@@ -200,9 +200,9 @@ TEST(ControllerManagerDependencyGraph, controller_chain_dependency_graph)
     EXPECT_THAT(
       graph.get_dependencies_to_deactivate("D"),
       testing::UnorderedElementsAre("D", "C", "B", "A", "E"));
-    EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre("E"));
+    EXPECT_THAT(graph.get_dependencies_to_deactivate("E"), testing::UnorderedElementsAre("E", "A"));
     EXPECT_THAT(
-      graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("F", "E", "B", "A"));
+      graph.get_dependencies_to_deactivate("F"), testing::UnorderedElementsAre("F", "E", "A"));
   }
 
   // {
