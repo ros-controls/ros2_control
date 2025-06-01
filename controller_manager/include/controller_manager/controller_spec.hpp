@@ -544,22 +544,6 @@ struct ControllerChainSpec
 class ControllerChainDependencyGraph
 {
 public:
-  void add_dependency(const std::string & predecessor, const std::string & successor)
-  {
-    if (controller_graph_.count(predecessor) == 0)
-    {
-      controller_graph_[predecessor] = ControllerPeerInfo();
-      controller_graph_[predecessor].name = predecessor;
-    }
-    if (controller_graph_.count(successor) == 0)
-    {
-      controller_graph_[successor] = ControllerPeerInfo();
-      controller_graph_[successor].name = successor;
-    }
-    controller_graph_[predecessor].successors.push_back(&controller_graph_[successor]);
-    controller_graph_[successor].predecessors.push_back(&controller_graph_[predecessor]);
-  }
-
   void add_dependency(const ControllerPeerInfo & predecessor, const ControllerPeerInfo & successor)
   {
     if (controller_graph_.count(predecessor.name) == 0)
