@@ -445,6 +445,13 @@ struct ControllerPeerInfo
     // All predecessors of the controller should be deactivated except the state interface ones
     for (const auto & predecessor : predecessors)
     {
+      if (ros2_control::has_item(controllers_to_deactivate, predecessor->name))
+      {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "The predecessor: " << predecessor->name << " is already in the deactivation list.");
+        continue;
+      }
       ros2_control::add_item(controllers_to_deactivate, predecessor->name);
       std::for_each(
         state_interfaces.begin(), state_interfaces.end(),
@@ -461,11 +468,48 @@ struct ControllerPeerInfo
     // All successors of controller with no command interfaces should be deactivated
     for (const auto & successor : successors)
     {
+      if (ros2_control::has_item(controllers_to_deactivate, successor->name))
+      {
+        RCLCPP_ERROR_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "The successor: " << successor->name << " is already in the deactivation list.");
+        continue;
+      }
+      RCLCPP_INFO(
+        rclcpp::get_logger("controller_manager"),
+        fmt::format(
+          "The controllers to deactivate list is {}", fmt::join(controllers_to_deactivate, ", "))
+          .c_str());
+
+      // Check if the successor is an individual exclusive group, if so, then return
+      if (std::any_of(
+            mutually_exclusive_successor_groups.begin(), mutually_exclusive_successor_groups.end(),
+            [&successor](const std::unordered_set<std::string> & group)
+            { return group.find(successor->name) != group.end() && group.size() == 1; }))
+      {
+        RCLCPP_INFO_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "The successor: " << successor->name
+                            << " is in a mutually exclusive group, skipping further deactivation.");
+        continue;
+      }
+
       if (successor->command_interfaces.empty())
       {
         ros2_control::add_item(controllers_to_deactivate, successor->name);
-        successor->get_controllers_to_deactivate(controllers_to_deactivate);
+        RCLCPP_INFO_STREAM(
+          rclcpp::get_logger("controller_manager"),
+          "Adding successor: " << successor->name
+                               << " to the deactivation list, as it has no command interfaces.");
       }
+      else
+      {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("controller_manager"),
+          "Controller %s has a successor %s who has command interfaces. This is not supported now.",
+          name.c_str(), successor->name.c_str());
+      }
+      successor->get_controllers_to_deactivate(controllers_to_deactivate);
     }
   }
 };
