@@ -502,6 +502,14 @@ private:
     bool append_to_controller);
 
   /**
+   * @brief Build the controller chain topology information based on the provided controllers.
+   *  This method constructs a directed graph representing the dependencies between controllers.
+   *  It analyzes the relationships between controllers, such as which controllers depend on others,
+   *  and builds a directed graph to represent these dependencies.
+   */
+  void build_controllers_topology_info(const std::vector<ControllerSpec> & controllers);
+
+  /**
    * @brief Method to publish the state of the controller manager.
    * The state includes the list of controllers and the list of hardware interfaces along with
    * their states.
