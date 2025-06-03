@@ -1,3 +1,4 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/introspection.rst
 
 Introspection of the ros2_control setup
 ***************************************
