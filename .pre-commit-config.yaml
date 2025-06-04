@@ -37,7 +37,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.20.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -63,7 +63,7 @@ repos:
 
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.3
+    rev: v20.1.5
     hooks:
       - id: clang-format
         args: ['-fallback-style=none', '-i']
