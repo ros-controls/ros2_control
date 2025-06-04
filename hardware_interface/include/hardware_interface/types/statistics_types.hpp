@@ -22,7 +22,12 @@
 
 #include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
+#ifndef _WIN32
 #include "realtime_tools/mutex.hpp"
+#define DEFAULT_MUTEX realtime_tools::prio_inherit_mutex
+#else
+#define DEFAULT_MUTEX std::mutex
+#endif
 
 namespace ros2_control
 {
@@ -49,7 +54,7 @@ public:
    */
   void update_statistics(const std::shared_ptr<MovingAverageStatisticsCollector> & statistics)
   {
-    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     if (statistics->GetCount() > 0)
     {
       statistics_data.average = statistics->Average();
@@ -71,7 +76,7 @@ public:
    */
   void set_reset_statistics_sample_count(unsigned int reset_sample_count)
   {
-    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     reset_statistics_sample_count_ = reset_sample_count;
   }
 
@@ -90,7 +95,7 @@ public:
    */
   const StatisticData & get_statistics() const
   {
-    std::unique_lock<realtime_tools::prio_inherit_mutex> lock(mutex_);
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data;
   }
 
@@ -100,7 +105,7 @@ private:
   /// Number of samples to reset the statistics
   unsigned int reset_statistics_sample_count_ = std::numeric_limits<unsigned int>::max();
   /// Mutex to protect the statistics data
-  mutable realtime_tools::prio_inherit_mutex mutex_;
+  mutable DEFAULT_MUTEX mutex_;
 };
 }  // namespace ros2_control
 
