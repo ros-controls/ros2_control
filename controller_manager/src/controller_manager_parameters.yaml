@@ -8,7 +8,7 @@ controller_manager:
 
   enforce_command_limits: {
     type: bool,
-    default_value: true,
+    default_value: false,
     read_only: true,
     description: "If true, the controller manager will enforce command limits defined in the robot description. If false, no limits will be enforced. If true, when the command is outside the limits, the command is clamped to be within the limits depending on the type of configured joint limits defined in the robot description. If the command is within the limits, the command is passed through without any changes.",
   }
@@ -34,12 +34,8 @@ controller_manager:
 
     shutdown_on_initial_state_failure: {
       type: bool,
-<<<<<<< HEAD
       default_value: true,
-=======
-      default_value: false,
       read_only: true,
->>>>>>> 2c691e0 (Move `enforce_command_limits` parameter to GPL parameters (#2305))
       description: "Specifies whether the controller manager should shut down if setting the desired initial state fails during startup.",
     }
 
