@@ -79,11 +79,6 @@ robot_description [std_msgs::msg::String]
 Parameters
 -----------
 
-enforce_command_limits (optional; bool; default: ``false`` for Jazzy and earlier distro and ``true`` for Rolling and newer distros)
-  Enforces the joint limits to the joint command interfaces.
-  If the command is outside the limits, the command is clamped to be within the limits depending on the type of configured joint limits in the URDF.
-  If the command is within the limits, the command is passed through without any changes.
-
 <controller_name>.type
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
