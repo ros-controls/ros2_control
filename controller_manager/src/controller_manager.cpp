@@ -490,7 +490,7 @@ void ControllerManager::init_controller_manager()
   // Get parameters needed for RT "update" loop to work
   if (is_resource_manager_initialized())
   {
-    if (enforce_command_limits_)
+    if (params_->enforce_command_limits)
     {
       resource_manager_->import_joint_limiters(robot_description_);
     }
@@ -556,12 +556,8 @@ void ControllerManager::init_controller_manager()
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
 
-  // Declare the enforce_command_limits parameter such a way that it is enabled by default for
-  // rolling and newer alone
-  enforce_command_limits_ =
-    this->get_parameter_or("enforce_command_limits", RCLCPP_VERSION_MAJOR >= 29 ? true : false);
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), enforce_command_limits_, "Enforcing command limits is enabled...");
+    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -615,7 +611,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  if (enforce_command_limits_)
+  if (params_->enforce_command_limits)
   {
     resource_manager_->import_joint_limiters(robot_description_);
   }
