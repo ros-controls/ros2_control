@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Cleanup test name (`#2295 <https://github.com/ros-controls/ros2_control/issues/2295>`_) (`#2297 <https://github.com/ros-controls/ros2_control/issues/2297>`_)
+* check_controllers_running: Make timeout a parameter  (`#2278 <https://github.com/ros-controls/ros2_control/issues/2278>`_) (`#2280 <https://github.com/ros-controls/ros2_control/issues/2280>`_)
+* doc: Added explanation of preceding/following controllers (backport `#2192 <https://github.com/ros-controls/ros2_control/issues/2192>`_) (`#2193 <https://github.com/ros-controls/ros2_control/issues/2193>`_)
+* Contributors: mergify[bot]
+
 2.50.0 (2025-04-10)
 -------------------
 * Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)

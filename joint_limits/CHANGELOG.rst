@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.50.0 (2025-04-10)
 -------------------
 * Trigger shutdown transition in destructor (backport `#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_) (`#2142 <https://github.com/ros-controls/ros2_control/issues/2142>`_)
