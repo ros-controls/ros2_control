@@ -22,7 +22,7 @@
 
 #include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 #include "realtime_tools/mutex.hpp"
 #define DEFAULT_MUTEX realtime_tools::prio_inherit_mutex
 #else
