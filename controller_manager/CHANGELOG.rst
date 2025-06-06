@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.32.0 (2025-06-06)
+-------------------
 * Move `enforce_command_limits` parameter to GPL parameters (backport `#2305 <https://github.com/ros-controls/ros2_control/issues/2305>`_) (`#2316 <https://github.com/ros-controls/ros2_control/issues/2316>`_)
 * Cleanup test name (`#2295 <https://github.com/ros-controls/ros2_control/issues/2295>`_) (`#2298 <https://github.com/ros-controls/ros2_control/issues/2298>`_)
 * check_controllers_running: Make timeout a parameter  (`#2278 <https://github.com/ros-controls/ros2_control/issues/2278>`_) (`#2281 <https://github.com/ros-controls/ros2_control/issues/2281>`_)

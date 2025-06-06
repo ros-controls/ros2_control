@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.32.0 (2025-06-06)
+-------------------
 * Fix pre-commit (`#2277 <https://github.com/ros-controls/ros2_control/issues/2277>`_) (`#2285 <https://github.com/ros-controls/ros2_control/issues/2285>`_)
 * Contributors: mergify[bot]
 

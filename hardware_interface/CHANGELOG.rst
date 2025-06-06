@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.32.0 (2025-06-06)
+-------------------
 * also use std::mutex on macOS (`#2313 <https://github.com/ros-controls/ros2_control/issues/2313>`_) (`#2315 <https://github.com/ros-controls/ros2_control/issues/2315>`_)
 * Use std::mutex on windows (`#2311 <https://github.com/ros-controls/ros2_control/issues/2311>`_) (`#2312 <https://github.com/ros-controls/ros2_control/issues/2312>`_)
 * Contributors: mergify[bot]
