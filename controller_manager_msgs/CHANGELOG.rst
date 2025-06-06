@@ -2,6 +2,9 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.31.0 (2025-05-24)
 -------------------
 * Add `data_type` field to the HardwareInterfaces message (backport `#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_) (`#2232 <https://github.com/ros-controls/ros2_control/issues/2232>`_)

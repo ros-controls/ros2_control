@@ -2,6 +2,9 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.31.0 (2025-05-24)
 -------------------
 * [RM] Isolate start and stop interfaces for each Hardware Component (backport `#2120 <https://github.com/ros-controls/ros2_control/issues/2120>`_) (`#2273 <https://github.com/ros-controls/ros2_control/issues/2273>`_)

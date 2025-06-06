@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* also use std::mutex on macOS (`#2313 <https://github.com/ros-controls/ros2_control/issues/2313>`_) (`#2315 <https://github.com/ros-controls/ros2_control/issues/2315>`_)
+* Use std::mutex on windows (`#2311 <https://github.com/ros-controls/ros2_control/issues/2311>`_) (`#2312 <https://github.com/ros-controls/ros2_control/issues/2312>`_)
+* Contributors: mergify[bot]
+
 4.31.0 (2025-05-24)
 -------------------
 * [RM] Isolate start and stop interfaces for each Hardware Component (backport `#2120 <https://github.com/ros-controls/ros2_control/issues/2120>`_) (`#2273 <https://github.com/ros-controls/ros2_control/issues/2273>`_)

@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix pre-commit (`#2277 <https://github.com/ros-controls/ros2_control/issues/2277>`_) (`#2285 <https://github.com/ros-controls/ros2_control/issues/2285>`_)
+* Contributors: mergify[bot]
+
 4.31.0 (2025-05-24)
 -------------------
 * Fix fourbarlinkage (`#1837 <https://github.com/ros-controls/ros2_control/issues/1837>`_) (`#2276 <https://github.com/ros-controls/ros2_control/issues/2276>`_)
