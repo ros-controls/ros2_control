@@ -19,7 +19,7 @@ package_name = "ros2controlcli"
 
 setup(
     name=package_name,
-    version="2.50.0",
+    version="2.51.0",
     packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/" + package_name, ["package.xml"]),
