@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Move `enforce_command_limits` parameter to GPL parameters (`#2305 <https://github.com/ros-controls/ros2_control/issues/2305>`_)
+* Cleanup test name (`#2295 <https://github.com/ros-controls/ros2_control/issues/2295>`_)
+* check_controllers_running: Make timeout a parameter  (`#2278 <https://github.com/ros-controls/ros2_control/issues/2278>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 5.1.0 (2025-05-24)
 ------------------
 * Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_)
