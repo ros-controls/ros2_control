@@ -20,9 +20,11 @@
 
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
+using hardware_interface::HW_IF_TORQUE;
 using hardware_interface::HW_IF_VELOCITY;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::Exception;
+using transmission_interface::HW_IF_ABSOLUTE_POSITION;
 using transmission_interface::JointHandle;
 using transmission_interface::SimpleTransmission;
 
@@ -118,18 +120,15 @@ protected:
   void testIdentityMap(
     SimpleTransmission & trans, const std::string & interface_name, const double ref_val)
   {
-    // Effort interface
-    {
-      auto actuator_handle = ActuatorHandle("act1", interface_name, &a_val);
-      auto joint_handle = JointHandle("joint1", interface_name, &j_val);
-      trans.configure({joint_handle}, {actuator_handle});
+    auto actuator_handle = ActuatorHandle("act1", interface_name, &a_val);
+    auto joint_handle = JointHandle("joint1", interface_name, &j_val);
+    trans.configure({joint_handle}, {actuator_handle});
 
-      a_val = ref_val;
+    a_val = ref_val;
 
-      trans.actuator_to_joint();
-      trans.joint_to_actuator();
-      EXPECT_THAT(ref_val, DoubleNear(a_val, EPS));
-    }
+    trans.actuator_to_joint();
+    trans.joint_to_actuator();
+    EXPECT_THAT(ref_val, DoubleNear(a_val, EPS));
   }
 };
 
@@ -158,6 +157,18 @@ TEST_P(BlackBoxTest, IdentityMap)
   testIdentityMap(trans, HW_IF_EFFORT, 0.0);
   reset_values();
   testIdentityMap(trans, HW_IF_EFFORT, -1.0);
+
+  testIdentityMap(trans, HW_IF_TORQUE, 1.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_TORQUE, 0.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_TORQUE, -1.0);
+
+  testIdentityMap(trans, HW_IF_ABSOLUTE_POSITION, 1.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_ABSOLUTE_POSITION, 0.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_ABSOLUTE_POSITION, -1.0);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -205,6 +216,26 @@ TEST_F(WhiteBoxTest, MoveJoint)
   {
     auto actuator_handle = ActuatorHandle("act1", HW_IF_POSITION, &a_val);
     auto joint_handle = JointHandle("joint1", HW_IF_POSITION, &j_val);
+    trans.configure({joint_handle}, {actuator_handle});
+
+    trans.actuator_to_joint();
+    EXPECT_THAT(1.1, DoubleNear(j_val, EPS));
+  }
+
+  // Torque interface
+  {
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_TORQUE, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_TORQUE, &j_val);
+    trans.configure({joint_handle}, {actuator_handle});
+
+    trans.actuator_to_joint();
+    EXPECT_THAT(10.0, DoubleNear(j_val, EPS));
+  }
+
+  // Absolute position interface
+  {
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_ABSOLUTE_POSITION, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_ABSOLUTE_POSITION, &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();

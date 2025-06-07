@@ -80,6 +80,9 @@ namespace transmission_interface
  *
  * \ingroup transmission_types
  */
+
+constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
+
 class SimpleTransmission : public Transmission
 {
 public:
@@ -131,10 +134,14 @@ protected:
   JointHandle joint_position_ = {"", "", nullptr};
   JointHandle joint_velocity_ = {"", "", nullptr};
   JointHandle joint_effort_ = {"", "", nullptr};
+  JointHandle joint_torque_ = {"", "", nullptr};
+  JointHandle joint_absolute_position_ = {"", "", nullptr};
 
   ActuatorHandle actuator_position_ = {"", "", nullptr};
   ActuatorHandle actuator_velocity_ = {"", "", nullptr};
   ActuatorHandle actuator_effort_ = {"", "", nullptr};
+  ActuatorHandle actuator_torque_ = {"", "", nullptr};
+  ActuatorHandle actuator_absolute_position_ = {"", "", nullptr};
 };
 
 inline SimpleTransmission::SimpleTransmission(
@@ -198,8 +205,12 @@ inline void SimpleTransmission::configure(
   joint_position_ = get_by_interface(joint_handles, hardware_interface::HW_IF_POSITION);
   joint_velocity_ = get_by_interface(joint_handles, hardware_interface::HW_IF_VELOCITY);
   joint_effort_ = get_by_interface(joint_handles, hardware_interface::HW_IF_EFFORT);
+  joint_torque_ = get_by_interface(joint_handles, hardware_interface::HW_IF_TORQUE);
+  joint_absolute_position_ = get_by_interface(joint_handles, HW_IF_ABSOLUTE_POSITION);
 
-  if (!joint_position_ && !joint_velocity_ && !joint_effort_)
+  if (
+    !joint_position_ && !joint_velocity_ && !joint_effort_ && !joint_torque_ &&
+    !joint_absolute_position_)
   {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
@@ -207,8 +218,12 @@ inline void SimpleTransmission::configure(
   actuator_position_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_POSITION);
   actuator_velocity_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_VELOCITY);
   actuator_effort_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_EFFORT);
+  actuator_torque_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_TORQUE);
+  actuator_absolute_position_ = get_by_interface(actuator_handles, HW_IF_ABSOLUTE_POSITION);
 
-  if (!actuator_position_ && !actuator_velocity_ && !actuator_effort_)
+  if (
+    !actuator_position_ && !actuator_velocity_ && !actuator_effort_ && !actuator_torque_ &&
+    !actuator_absolute_position_)
   {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
@@ -230,6 +245,17 @@ inline void SimpleTransmission::actuator_to_joint()
   {
     joint_position_.set_value(actuator_position_.get_value() / reduction_ + jnt_offset_);
   }
+
+  if (joint_torque_ && actuator_torque_)
+  {
+    joint_torque_.set_value(actuator_torque_.get_value() * reduction_);
+  }
+
+  if (joint_absolute_position_ && actuator_absolute_position_)
+  {
+    joint_absolute_position_.set_value(
+      actuator_absolute_position_.get_value() / reduction_ + jnt_offset_);
+  }
 }
 
 inline void SimpleTransmission::joint_to_actuator()
@@ -247,6 +273,11 @@ inline void SimpleTransmission::joint_to_actuator()
   if (joint_position_ && actuator_position_)
   {
     actuator_position_.set_value((joint_position_.get_value() - jnt_offset_) * reduction_);
+  }
+
+  if (joint_torque_ && actuator_torque_)
+  {
+    actuator_torque_.set_value(joint_torque_.get_value() / reduction_);
   }
 }
 
