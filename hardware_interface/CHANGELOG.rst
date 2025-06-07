@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.2.0 (2025-06-07)
+------------------
 * hardware_interface: optimise & rename find_common_hardware_interfaces (`#2294 <https://github.com/ros-controls/ros2_control/issues/2294>`_)
 * also use std::mutex on macOS (`#2313 <https://github.com/ros-controls/ros2_control/issues/2313>`_)
 * Use std::mutex on windows (`#2311 <https://github.com/ros-controls/ros2_control/issues/2311>`_)
