@@ -82,7 +82,7 @@ public:
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    std::shared_ptr<rclcpp::Executor> executor, bool activate_all = false,
+    rclcpp::Executor::SharedPtr executor, bool activate_all = false,
     const unsigned int update_rate = 100);
 
   /// Constructor for the Resource Manager.
