@@ -122,7 +122,8 @@ public:
    * \param[in] hardware_info structure with data from URDF.
    * \param[in] clock pointer to the resource manager clock.
    * \param[in] logger Logger for the hardware component.
-   * \param[in] executor weak pointer to the MultiThreaderExecutor used by the controller manager.
+   * \param[in] executor weak pointer to the Executor used by the controller manager.
+   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks such as `spin()`.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
