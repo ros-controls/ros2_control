@@ -568,7 +568,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  std::weak_ptr<rclcpp::Executor> executor_;
+  rclcpp::Executor::WeakPtr executor_;
 };
 
 }  // namespace hardware_interface
