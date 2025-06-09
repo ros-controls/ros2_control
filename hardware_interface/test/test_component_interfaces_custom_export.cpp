@@ -165,9 +165,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_component");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), test_executor);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
