@@ -76,7 +76,7 @@ public:
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
    * used for triggering async components and different read/write component rates.
    * \param[in] logger_interface reference to the logger interface of the CM node for logging.
-   * \param[in] executor shared pointer to the MultiThreadedExecutor used by the controller manager.
+   * \param[in] executor shared pointer to the Executor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf,
