@@ -45,18 +45,20 @@ System::System(System && other) noexcept
 
 const rclcpp_lifecycle::State & System::initialize(
   const HardwareInfo & system_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::Executor::WeakPtr executor)
 {
-  return this->initialize(system_info, logger, clock_interface->get_clock());
+  return this->initialize(system_info, logger, clock_interface->get_clock(), executor);
 }
 
 const rclcpp_lifecycle::State & System::initialize(
-  const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(system_info, logger, clock))
+    switch (impl_->init(system_info, logger, clock, executor))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(

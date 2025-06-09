@@ -235,7 +235,8 @@ public:
   }
 
   template <class HardwareT>
-  bool initialize_hardware(const HardwareInfo & hardware_info, HardwareT & hardware)
+  bool initialize_hardware(
+    const HardwareInfo & hardware_info, HardwareT & hardware, rclcpp::Executor::WeakPtr executor)
   {
     RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", hardware_info.name.c_str());
 
@@ -243,7 +244,7 @@ public:
     try
     {
       const rclcpp_lifecycle::State new_state =
-        hardware.initialize(hardware_info, rm_logger_, rm_clock_);
+        hardware.initialize(hardware_info, rm_logger_, rm_clock_, executor);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
@@ -1100,7 +1101,8 @@ public:
   }
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  bool load_and_initialize_actuator(
+    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
   {
     auto load_and_init_actuators = [&](auto & container)
     {
@@ -1108,7 +1110,7 @@ public:
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1125,7 +1127,8 @@ public:
     return load_and_init_actuators(actuators_);
   }
 
-  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
+  bool load_and_initialize_sensor(
+    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
   {
     auto load_and_init_sensors = [&](auto & container)
     {
@@ -1133,7 +1136,7 @@ public:
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
       }
@@ -1150,7 +1153,8 @@ public:
     return load_and_init_sensors(sensors_);
   }
 
-  bool load_and_initialize_system(const HardwareInfo & hardware_info)
+  bool load_and_initialize_system(
+    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
   {
     auto load_and_init_systems = [&](auto & container)
     {
@@ -1158,7 +1162,7 @@ public:
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1176,12 +1180,13 @@ public:
   }
 
   void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor)
   {
     auto init_actuators = [&](auto & container)
     {
       container.emplace_back(Actuator(std::move(actuator)));
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1198,12 +1203,13 @@ public:
   }
 
   void initialize_sensor(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
+    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor)
   {
     auto init_sensors = [&](auto & container)
     {
       container.emplace_back(Sensor(std::move(sensor)));
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
       }
@@ -1219,12 +1225,13 @@ public:
   }
 
   void initialize_system(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
+    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor)
   {
     auto init_systems = [&](auto & container)
     {
       container.emplace_back(System(std::move(system)));
-      if (initialize_hardware(hardware_info, container.back()))
+      if (initialize_hardware(hardware_info, container.back(), executor))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1349,13 +1356,16 @@ public:
 
 ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
+  rclcpp::Executor::SharedPtr executor)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface)),
+  executor_(executor)
 {
 }
 
-ResourceManager::ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger)
-: resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
+ResourceManager::ResourceManager(
+  rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, rclcpp::Executor::SharedPtr executor)
+: resource_storage_(std::make_unique<ResourceStorage>(clock, logger)), executor_(executor)
 {
 }
 
@@ -1363,9 +1373,10 @@ ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
-  const unsigned int update_rate)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
+  rclcpp::Executor::SharedPtr executor, bool activate_all, const unsigned int update_rate)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface)),
+  executor_(executor)
 {
   resource_storage_->robot_description_ = urdf;
   load_and_initialize_components(urdf, update_rate);
@@ -1383,8 +1394,8 @@ ResourceManager::ResourceManager(
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-  bool activate_all, const unsigned int update_rate)
-: resource_storage_(std::make_unique<ResourceStorage>(clock, logger))
+  rclcpp::Executor::SharedPtr executor, bool activate_all, const unsigned int update_rate)
+: resource_storage_(std::make_unique<ResourceStorage>(clock, logger)), executor_(executor)
 {
   load_and_initialize_components(urdf, update_rate);
 
@@ -1455,7 +1466,7 @@ bool ResourceManager::load_and_initialize_components(
     if (individual_hardware_info.type == actuator_type)
     {
       std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_actuator(individual_hardware_info))
+      if (!resource_storage_->load_and_initialize_actuator(individual_hardware_info, executor_))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1464,7 +1475,7 @@ bool ResourceManager::load_and_initialize_components(
     if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_sensor(individual_hardware_info))
+      if (!resource_storage_->load_and_initialize_sensor(individual_hardware_info, executor_))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1473,7 +1484,7 @@ bool ResourceManager::load_and_initialize_components(
     if (individual_hardware_info.type == system_type)
     {
       std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_system(individual_hardware_info))
+      if (!resource_storage_->load_and_initialize_system(individual_hardware_info, executor_))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1826,30 +1837,33 @@ std::string ResourceManager::get_command_interface_data_type(const std::string &
 }
 
 void ResourceManager::import_component(
-  std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
+  std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
+  resource_storage_->initialize_actuator(std::move(actuator), hardware_info, executor);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
-  std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
+  std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
+  resource_storage_->initialize_sensor(std::move(sensor), hardware_info, executor);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
-  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
+  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_system(std::move(system), hardware_info);
+  resource_storage_->initialize_system(std::move(system), hardware_info, executor);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());

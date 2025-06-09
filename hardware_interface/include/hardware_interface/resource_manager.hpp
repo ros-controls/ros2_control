@@ -33,6 +33,7 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/executor.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 
@@ -53,10 +54,13 @@ public:
   /// Default constructor for the Resource Manager.
   explicit ResourceManager(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
+    std::shared_ptr<rclcpp::Executor> executor);
 
   /// Default constructor for the Resource Manager.
-  explicit ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger);
+  explicit ResourceManager(
+    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
+    std::shared_ptr<rclcpp::Executor> executor);
 
   /// Constructor for the Resource Manager.
   /**
@@ -72,12 +76,14 @@ public:
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
    * used for triggering async components and different read/write component rates.
    * \param[in] logger_interface reference to the logger interface of the CM node for logging.
+   * \param[in] executor shared pointer to the MultiThreadedExecutor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    std::shared_ptr<rclcpp::Executor> executor, bool activate_all = false,
+    const unsigned int update_rate = 100);
 
   /// Constructor for the Resource Manager.
   /**
@@ -93,10 +99,12 @@ public:
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
+   * \param[in] executor shared pointer to the MultiThreadedExecutor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    std::shared_ptr<rclcpp::Executor> executor, bool activate_all = false,
+    const unsigned int update_rate = 100);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -385,9 +393,11 @@ public:
    * externally and prior to the call to import.
    * \param[in] actuator pointer to the actuator interface.
    * \param[in] hardware_info hardware info
+   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -401,9 +411,11 @@ public:
    * externally and prior to the call to import.
    * \param[in] sensor pointer to the sensor interface.
    * \param[in] hardware_info hardware info
+   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
+    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -417,9 +429,11 @@ public:
    * externally and prior to the call to import.
    * \param[in] system pointer to the system interface.
    * \param[in] hardware_info hardware info
+   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
+    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
+    rclcpp::Executor::WeakPtr executor);
 
   /// Return status for all components.
   /**
@@ -559,6 +573,8 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  std::weak_ptr<rclcpp::Executor> executor_;
 };
 
 }  // namespace hardware_interface

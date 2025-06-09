@@ -45,18 +45,20 @@ Sensor::Sensor(Sensor && other) noexcept
 
 const rclcpp_lifecycle::State & Sensor::initialize(
   const HardwareInfo & sensor_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::Executor::WeakPtr executor)
 {
-  return this->initialize(sensor_info, logger, clock_interface->get_clock());
+  return this->initialize(sensor_info, logger, clock_interface->get_clock(), executor);
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
-  const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(sensor_info, logger, clock))
+    switch (impl_->init(sensor_info, logger, clock, executor))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(

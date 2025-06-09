@@ -30,9 +30,10 @@
 namespace mock_components
 {
 
-CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & info)
+CallbackReturn GenericSystem::on_init(
+  const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor)
 {
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+  if (hardware_interface::SystemInterface::on_init(info, executor) != CallbackReturn::SUCCESS)
   {
     return CallbackReturn::ERROR;
   }

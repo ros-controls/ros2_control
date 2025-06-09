@@ -388,8 +388,8 @@ ControllerManager::ControllerManager(
   cm_node_options_(options)
 {
   initialize_parameters();
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
+    trigger_clock_, this->get_logger(), executor);
   init_controller_manager();
 }
 
@@ -411,7 +411,8 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
-    urdf, trigger_clock_, this->get_logger(), activate_all_hw_components, params_->update_rate);
+    urdf, trigger_clock_, this->get_logger(), executor_, activate_all_hw_components,
+    params_->update_rate);
   init_controller_manager();
 }
 

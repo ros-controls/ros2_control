@@ -118,11 +118,13 @@ public:
    * \param[in] hardware_info structure with data from URDF.
    * \param[in] clock pointer to the resource manager clock.
    * \param[in] logger Logger for the hardware component.
+   * \param[in] executor weak pointer to the MultiThreaderExecutor used by the controller manager.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
+    rclcpp::Executor::WeakPtr executor)
   {
     actuator_clock_ = clock;
     actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
@@ -158,16 +160,18 @@ public:
         info_.thread_priority);
       async_handler_->start_thread();
     }
-    return on_init(hardware_info);
+    return on_init(hardware_info, executor);
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
    * \param[in] hardware_info structure with data from URDF.
+   * \param[in] executor weak pointer to the MultiThreaderExecutor used by the controller manager.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  virtual CallbackReturn on_init(
+    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr /*executor*/)
   {
     info_ = hardware_info;
     parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
