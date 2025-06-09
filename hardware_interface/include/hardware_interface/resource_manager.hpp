@@ -99,7 +99,7 @@ public:
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
-   * \param[in] executor shared pointer to the MultiThreadedExecutor used by the controller manager.
+   * \param[in] executor shared pointer to the Executor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
