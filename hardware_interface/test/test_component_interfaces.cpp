@@ -879,9 +879,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), test_executor);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1003,9 +1002,8 @@ TEST(TestComponentInterfaces, dummy_sensor)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = sensor_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1045,9 +1043,8 @@ TEST(TestComponentInterfaces, dummy_sensor_default)
   const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = sensor_hw.initialize(
-    voltage_sensor_res, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    voltage_sensor_res, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1092,9 +1089,8 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   const hardware_interface::HardwareInfo sensor_res = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = sensor_hw.initialize(
-    sensor_res, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    sensor_res, node->get_logger(), node->get_node_clock_interface(), test_executor);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   ASSERT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1143,9 +1139,8 @@ TEST(TestComponentInterfaces, dummy_system)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1287,9 +1282,8 @@ TEST(TestComponentInterfaces, dummy_system_default)
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    dummy_system, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_system, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1502,9 +1496,8 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1538,9 +1531,8 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1609,9 +1601,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), test_executor);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1677,9 +1668,8 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1748,9 +1738,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = actuator_hw.initialize(
-    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_actuator, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -1815,9 +1804,8 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = sensor_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   // Updated because is is INACTIVE
@@ -1890,9 +1878,8 @@ TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
   const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = sensor_hw.initialize(
-    voltage_sensor_res, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    voltage_sensor_res, node->get_logger(), node->get_node_clock_interface(), test_executor);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   // Updated because is is INACTIVE
@@ -1948,9 +1935,8 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -2023,9 +2009,8 @@ TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    dummy_system, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_system, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -2092,9 +2077,8 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
   hardware_interface::HardwareInfo mock_hw_info{};
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    mock_hw_info, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -2167,9 +2151,8 @@ TEST(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   auto test_executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  rclcpp::Executor::WeakPtr executor_weak_ptr = test_executor;
   auto state = system_hw.initialize(
-    dummy_system, node->get_logger(), node->get_node_clock_interface(), executor_weak_ptr);
+    dummy_system, node->get_logger(), node->get_node_clock_interface(), test_executor);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
