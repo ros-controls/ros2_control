@@ -103,7 +103,7 @@ public:
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    std::shared_ptr<rclcpp::Executor> executor, bool activate_all = false,
+    rclcpp::Executor::SharedPtr executor, bool activate_all = false,
     const unsigned int update_rate = 100);
 
   ResourceManager(const ResourceManager &) = delete;
