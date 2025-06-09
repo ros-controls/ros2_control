@@ -393,11 +393,9 @@ public:
    * externally and prior to the call to import.
    * \param[in] actuator pointer to the actuator interface.
    * \param[in] hardware_info hardware info
-   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor);
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -411,11 +409,9 @@ public:
    * externally and prior to the call to import.
    * \param[in] sensor pointer to the sensor interface.
    * \param[in] hardware_info hardware info
-   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor);
+    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -429,11 +425,9 @@ public:
    * externally and prior to the call to import.
    * \param[in] system pointer to the system interface.
    * \param[in] hardware_info hardware info
-   * \param[in] executor a weak pointer to the MultiThreadedExecutor used by the controller manager.
    */
   void import_component(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor);
+    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
 
   /// Return status for all components.
   /**
