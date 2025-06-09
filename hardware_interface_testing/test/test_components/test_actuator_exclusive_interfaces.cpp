@@ -43,9 +43,10 @@ struct JointState
 
 class TestActuatorExclusiveInterfaces : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override
   {
-    if (ActuatorInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(info, executor) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
