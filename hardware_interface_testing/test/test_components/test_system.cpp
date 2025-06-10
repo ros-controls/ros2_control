@@ -27,9 +27,10 @@ using hardware_interface::SystemInterface;
 
 class TestSystem : public SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override
   {
-    if (SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (SystemInterface::on_init(info, executor) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -170,9 +171,10 @@ private:
 
 class TestUninitializableSystem : public TestSystem
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override
   {
-    SystemInterface::on_init(info);
+    SystemInterface::on_init(info, executor);
     return CallbackReturn::ERROR;
   }
 };

@@ -63,7 +63,7 @@ public:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     cm_ = std::make_shared<CtrlMgr>(
       std::make_unique<hardware_interface::ResourceManager>(
-        rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
+        rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface(), executor_),
       executor_, TEST_CM_NAME, cm_namespace);
     // We want to be able to not pass robot description immediately
     if (!robot_description_.empty())

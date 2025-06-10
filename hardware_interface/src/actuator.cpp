@@ -47,18 +47,20 @@ Actuator::Actuator(Actuator && other) noexcept
 
 const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::Executor::WeakPtr executor)
 {
-  return this->initialize(actuator_info, logger, clock_interface->get_clock());
+  return this->initialize(actuator_info, logger, clock_interface->get_clock(), executor);
 }
 
 const rclcpp_lifecycle::State & Actuator::initialize(
-  const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
+  rclcpp::Executor::WeakPtr executor)
 {
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(actuator_info, logger, clock))
+    switch (impl_->init(actuator_info, logger, clock, executor))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(

@@ -24,9 +24,13 @@ namespace test_hardware_components
 class TestSystemCommandModes : public hardware_interface::SystemInterface
 {
 public:
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & system_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & system_info,
+    rclcpp::Executor::WeakPtr executor) override
   {
-    if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS)
+    if (
+      hardware_interface::SystemInterface::on_init(system_info, executor) !=
+      CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }

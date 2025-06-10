@@ -26,9 +26,11 @@ namespace test_hardware_components
 {
 class TestForceTorqueSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & sensor_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & sensor_info,
+    rclcpp::Executor::WeakPtr executor) override
   {
-    if (SensorInterface::on_init(sensor_info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(sensor_info, executor) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }

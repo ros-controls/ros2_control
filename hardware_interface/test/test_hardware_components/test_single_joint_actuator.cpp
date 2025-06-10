@@ -26,9 +26,11 @@ namespace test_hardware_components
 {
 class TestSingleJointActuator : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & actuator_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & actuator_info,
+    rclcpp::Executor::WeakPtr executor) override
   {
-    if (ActuatorInterface::on_init(actuator_info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(actuator_info, executor) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }

@@ -64,7 +64,7 @@ public:
   {
     ResourceManagerTest::SetUp();
 
-    rm_ = std::make_unique<TestableResourceManager>(node_, command_mode_urdf);
+    rm_ = std::make_unique<TestableResourceManager>(node_, executor_, command_mode_urdf);
     ASSERT_EQ(1u, rm_->actuator_components_size());
     ASSERT_EQ(1u, rm_->system_components_size());
 

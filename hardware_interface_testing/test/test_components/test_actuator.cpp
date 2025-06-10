@@ -25,9 +25,10 @@ using hardware_interface::StateInterface;
 
 class TestActuator : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override
   {
-    if (ActuatorInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(info, executor) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -182,9 +183,10 @@ private:
 
 class TestUninitializableActuator : public TestActuator
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override
   {
-    ActuatorInterface::on_init(info);
+    ActuatorInterface::on_init(info, executor);
     return CallbackReturn::ERROR;
   }
 };

@@ -47,10 +47,12 @@ public:
 
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & sensor_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::Executor::WeakPtr executor);
 
   const rclcpp_lifecycle::State & initialize(
-    const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock);
+    const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
+    rclcpp::Executor::WeakPtr executor);
 
   const rclcpp_lifecycle::State & configure();
 
