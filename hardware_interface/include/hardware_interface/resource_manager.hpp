@@ -59,8 +59,7 @@ public:
 
   /// Default constructor for the Resource Manager.
   explicit ResourceManager(
-    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    rclcpp::Executor::SharedPtr executor);
+    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, rclcpp::Executor::SharedPtr executor);
 
   /// Constructor for the Resource Manager.
   /**
