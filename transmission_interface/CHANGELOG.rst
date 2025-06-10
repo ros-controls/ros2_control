@@ -2,6 +2,13 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.2.0 (2025-06-07)
+------------------
+* [Transmissions] Add `absolute_position` and `torque` interfaces (`#2310 <https://github.com/ros-controls/ros2_control/issues/2310>`_)
+* Fix pre-commit (`#2277 <https://github.com/ros-controls/ros2_control/issues/2277>`_)
+* Fix fourbarlinkage (`#1837 <https://github.com/ros-controls/ros2_control/issues/1837>`_)
+* Contributors: Bartłomiej Krajewski, Jordan Palacios, Sai Kishor Kothakota
+
 5.1.0 (2025-05-24)
 ------------------
 * Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_)
