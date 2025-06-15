@@ -24,8 +24,9 @@ namespace hardware_interface
 {
 
 /**
- * @brief Parameters required for the initialization of a specific hardware component plugin
- * (e.g., for its on_init method).
+ * @brief Parameters required for the initialization of a specific hardware component plugin.
+ * Typically used for on_init methods of hardware interfaces, and is parsed by the user.
+ * This struct is typically populated with data from HardwareComponentParams from each component.
  */
 struct HardwareComponentInterfaceParams
 {
@@ -42,6 +43,13 @@ struct HardwareComponentInterfaceParams
    * to the ControllerManager's executor.
    */
   rclcpp::Executor::WeakPtr executor;
+
+  explicit HardwareComponentInterfaceParams(
+    const hardware_interface::HardwareInfo & hardware_info_param,
+    rclcpp::Executor::WeakPtr executor_param)
+  : hardware_info(hardware_info_param), executor(executor_param)
+  {
+  }
 
   explicit HardwareComponentInterfaceParams(hardware_interface::HardwareComponentParams & params)
   : hardware_info(params.hardware_info), executor(params.executor)
