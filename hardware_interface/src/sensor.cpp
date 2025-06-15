@@ -48,17 +48,18 @@ const rclcpp_lifecycle::State & Sensor::initialize(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::Executor::WeakPtr executor)
 {
-  return this->initialize(sensor_info, logger, clock_interface->get_clock(), executor);
+  hardware_interface::HardwareComponentParams params(
+    sensor_info, logger, clock_interface->get_clock(), executor);
+  return this->initialize(params);
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
-  const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
-  rclcpp::Executor::WeakPtr executor)
+  hardware_interface::HardwareComponentParams & params)
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(sensor_info, logger, clock, executor))
+    switch (impl_->init(params))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(

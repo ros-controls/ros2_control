@@ -34,6 +34,7 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/resource_manager_params.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
 #include "joint_limits/joint_soft_limiter.hpp"
@@ -236,39 +237,39 @@ public:
 
   template <class HardwareT>
   bool initialize_hardware(
-    const HardwareInfo & hardware_info, HardwareT & hardware, rclcpp::Executor::WeakPtr executor)
+    hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
   {
-    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", hardware_info.name.c_str());
+    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", params.hardware_info.name.c_str());
 
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state =
-        hardware.initialize(hardware_info, rm_logger_, rm_clock_, executor);
+      const rclcpp_lifecycle::State new_state = hardware.initialize(params);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
       {
         RCLCPP_INFO(
-          get_logger(), "Successful initialization of hardware '%s'", hardware_info.name.c_str());
+          get_logger(), "Successful initialization of hardware '%s'",
+          params.hardware_info.name.c_str());
       }
       else
       {
         RCLCPP_ERROR(
-          get_logger(), "Failed to initialize hardware '%s'", hardware_info.name.c_str());
+          get_logger(), "Failed to initialize hardware '%s'", params.hardware_info.name.c_str());
       }
     }
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
         get_logger(), "Exception of type : %s occurred while initializing hardware '%s': %s",
-        typeid(ex).name(), hardware_info.name.c_str(), ex.what());
+        typeid(ex).name(), params.hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Unknown exception occurred while initializing hardware '%s'",
-        hardware_info.name.c_str());
+        params.hardware_info.name.c_str());
     }
 
     return result;
@@ -1101,16 +1102,16 @@ public:
   }
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  bool load_and_initialize_actuator(
-    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
+  bool load_and_initialize_actuator(hardware_interface::HardwareComponentParams & params)
   {
     auto load_and_init_actuators = [&](auto & container)
     {
-      if (!load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container))
+      if (!load_hardware<Actuator, ActuatorInterface>(
+            params.hardware_info, actuator_loader_, container))
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1119,7 +1120,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
         return false;
       }
       return true;
@@ -1127,16 +1128,15 @@ public:
     return load_and_init_actuators(actuators_);
   }
 
-  bool load_and_initialize_sensor(
-    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
+  bool load_and_initialize_sensor(hardware_interface::HardwareComponentParams & params)
   {
     auto load_and_init_sensors = [&](auto & container)
     {
-      if (!load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container))
+      if (!load_hardware<Sensor, SensorInterface>(params.hardware_info, sensor_loader_, container))
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
       }
@@ -1144,7 +1144,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
         return false;
       }
       return true;
@@ -1153,16 +1153,15 @@ public:
     return load_and_init_sensors(sensors_);
   }
 
-  bool load_and_initialize_system(
-    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr executor)
+  bool load_and_initialize_system(hardware_interface::HardwareComponentParams & params)
   {
     auto load_and_init_systems = [&](auto & container)
     {
-      if (!load_hardware<System, SystemInterface>(hardware_info, system_loader_, container))
+      if (!load_hardware<System, SystemInterface>(params.hardware_info, system_loader_, container))
       {
         return false;
       }
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1171,7 +1170,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "System hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
         return false;
       }
       return true;
@@ -1180,13 +1179,12 @@ public:
   }
 
   void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor)
+    std::unique_ptr<ActuatorInterface> actuator, hardware_interface::HardwareComponentParams params)
   {
     auto init_actuators = [&](auto & container)
     {
       container.emplace_back(Actuator(std::move(actuator)));
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1195,7 +1193,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
       }
     };
 
@@ -1203,13 +1201,12 @@ public:
   }
 
   void initialize_sensor(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor)
+    std::unique_ptr<SensorInterface> sensor, hardware_interface::HardwareComponentParams params)
   {
     auto init_sensors = [&](auto & container)
     {
       container.emplace_back(Sensor(std::move(sensor)));
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
       }
@@ -1217,7 +1214,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
       }
     };
 
@@ -1225,13 +1222,12 @@ public:
   }
 
   void initialize_system(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
-    rclcpp::Executor::WeakPtr executor)
+    std::unique_ptr<SystemInterface> system, hardware_interface::HardwareComponentParams params)
   {
     auto init_systems = [&](auto & container)
     {
       container.emplace_back(System(std::move(system)));
-      if (initialize_hardware(hardware_info, container.back(), executor))
+      if (initialize_hardware(params, container.back()))
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
@@ -1240,7 +1236,7 @@ public:
       {
         RCLCPP_WARN(
           get_logger(), "System hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          params.hardware_info.name.c_str(), params.hardware_info.hardware_plugin_name.c_str());
       }
     };
 
@@ -1462,11 +1458,14 @@ bool ResourceManager::load_and_initialize_components(
       components_are_loaded_and_initialized_ = false;
       break;
     }
+    hardware_interface::HardwareComponentParams params(
+      individual_hardware_info, resource_storage_->rm_logger_, resource_storage_->rm_clock_,
+      executor_);
 
     if (individual_hardware_info.type == actuator_type)
     {
       std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_actuator(individual_hardware_info, executor_))
+      if (!resource_storage_->load_and_initialize_actuator(params))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1475,7 +1474,7 @@ bool ResourceManager::load_and_initialize_components(
     if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_sensor(individual_hardware_info, executor_))
+      if (!resource_storage_->load_and_initialize_sensor(params))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1484,7 +1483,7 @@ bool ResourceManager::load_and_initialize_components(
     if (individual_hardware_info.type == system_type)
     {
       std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      if (!resource_storage_->load_and_initialize_system(individual_hardware_info, executor_))
+      if (!resource_storage_->load_and_initialize_system(params))
       {
         components_are_loaded_and_initialized_ = false;
         break;
@@ -1840,7 +1839,9 @@ void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_actuator(std::move(actuator), hardware_info, executor_);
+  hardware_interface::HardwareComponentParams params(
+    hardware_info, resource_storage_->rm_logger_, resource_storage_->rm_clock_, executor_);
+  resource_storage_->initialize_actuator(std::move(actuator), params);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
@@ -1850,7 +1851,9 @@ void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_sensor(std::move(sensor), hardware_info, executor_);
+  hardware_interface::HardwareComponentParams params(
+    hardware_info, resource_storage_->rm_logger_, resource_storage_->rm_clock_, executor_);
+  resource_storage_->initialize_sensor(std::move(sensor), params);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
@@ -1860,7 +1863,9 @@ void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_system(std::move(system), hardware_info, executor_);
+  hardware_interface::HardwareComponentParams params(
+    hardware_info, resource_storage_->rm_logger_, resource_storage_->rm_clock_, executor_);
+  resource_storage_->initialize_system(std::move(system), params);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());

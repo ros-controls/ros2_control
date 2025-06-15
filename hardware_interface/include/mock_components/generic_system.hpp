@@ -43,7 +43,7 @@ class GenericSystem : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(
-    const hardware_interface::HardwareInfo & info, rclcpp::Executor::WeakPtr executor) override;
+    const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 

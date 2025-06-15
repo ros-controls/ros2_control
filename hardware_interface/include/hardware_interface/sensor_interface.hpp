@@ -28,6 +28,8 @@
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
+#include "hardware_interface/types/hardware_component_interface_params.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -99,22 +101,21 @@ public:
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
   /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] clock pointer to the resource manager clock.
-   * \param[in] logger Logger for the hardware component.
-   * \param[in] executor weak pointer to the Executor used by the controller manager.
+   * \param[in] params  A struct of type HardwareComponentParams containing all necessary
+   * parameters for initializing this specific hardware component,
+   * including its HardwareInfo, a dedicated logger, a clock, and a
+   * weak_ptr to the executor.
    * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
    * such as `spin()`.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock,
-    rclcpp::Executor::WeakPtr executor)
+  CallbackReturn init(hardware_interface::HardwareComponentParams & params)
   {
-    sensor_clock_ = clock;
-    sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
-    info_ = hardware_info;
+    sensor_clock_ = params.clock;
+    sensor_logger_ =
+      params.logger.get_child("hardware_component.sensor." + params.hardware_info.name);
+    info_ = params.hardware_info;
     if (info_.is_async)
     {
       RCLCPP_INFO_STREAM(
@@ -125,22 +126,23 @@ public:
         info_.thread_priority);
       read_async_handler_->start_thread();
     }
-    return on_init(hardware_info, executor);
+    return on_init(hardware_interface::HardwareComponentInterfaceParams(params));
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] executor weak pointer to the Executor used by the controller manager.
+   * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
+   * containing all necessary parameters for initializing this specific hardware component,
+   * specifically its HardwareInfo, and a weak_ptr to the executor.
    * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
    * such as `spin()`.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   virtual CallbackReturn on_init(
-    const HardwareInfo & hardware_info, rclcpp::Executor::WeakPtr /*executor*/)
+    const hardware_interface::HardwareComponentInterfaceParams & params)
   {
-    info_ = hardware_info;
+    info_ = params.hardware_info;
     parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
     parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
     return CallbackReturn::SUCCESS;
