@@ -54,20 +54,20 @@ struct ResourceManagerParams
    * ResourceManager and its components (including plugins that opt-in) will use.
    * This is typically the ControllerManager's main executor.
    */
-  rclcpp::Executor::SharedPtr executor_shared;
+  rclcpp::Executor::SharedPtr executor;
 
   /**
    * @brief Flag indicating if all hardware components found in the URDF
    * should be automatically activated after successful loading and initialization.
    */
-  bool activate_all_components_on_load = false;
+  bool activate_all = false;
 
   /**
    * @brief The update rate (in Hz) of the ControllerManager.
    * This can be used by ResourceManager to configure asynchronous hardware components
    * or for other timing considerations.
    */
-  unsigned int controller_manager_update_rate = 100;
+  unsigned int update_rate = 100;
 };
 
 }  // namespace hardware_interface

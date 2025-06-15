@@ -34,7 +34,6 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
-#include "hardware_interface/types/resource_manager_params.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
 #include "joint_limits/joint_soft_limiter.hpp"
@@ -1179,7 +1178,8 @@ public:
   }
 
   void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, hardware_interface::HardwareComponentParams params)
+    std::unique_ptr<ActuatorInterface> actuator,
+    hardware_interface::HardwareComponentParams & params)
   {
     auto init_actuators = [&](auto & container)
     {
@@ -1201,7 +1201,7 @@ public:
   }
 
   void initialize_sensor(
-    std::unique_ptr<SensorInterface> sensor, hardware_interface::HardwareComponentParams params)
+    std::unique_ptr<SensorInterface> sensor, hardware_interface::HardwareComponentParams & params)
   {
     auto init_sensors = [&](auto & container)
     {
@@ -1222,7 +1222,7 @@ public:
   }
 
   void initialize_system(
-    std::unique_ptr<SystemInterface> system, hardware_interface::HardwareComponentParams params)
+    std::unique_ptr<SystemInterface> system, hardware_interface::HardwareComponentParams & params)
   {
     auto init_systems = [&](auto & container)
     {
@@ -1366,6 +1366,13 @@ ResourceManager::ResourceManager(
 }
 
 ResourceManager::~ResourceManager() = default;
+
+ResourceManager::ResourceManager(hardware_interface::ResourceManagerParams & params)
+: ResourceManager(
+    params.urdf_string, params.clock_interface, params.logger_interface, params.executor,
+    params.activate_all, params.update_rate)
+{
+}
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,

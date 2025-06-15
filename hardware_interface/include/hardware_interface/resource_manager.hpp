@@ -32,6 +32,7 @@
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/resource_manager_params.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
@@ -60,6 +61,16 @@ public:
   /// Default constructor for the Resource Manager.
   explicit ResourceManager(
     rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, rclcpp::Executor::SharedPtr executor);
+
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation uses the ResourceManagerParams to load the specified urdf and initializes
+   * the hardware components listed within as well as populate their respective state and command
+   * interfaces.
+   *
+   * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
+   */
+  explicit ResourceManager(hardware_interface::ResourceManagerParams & params);
 
   /// Constructor for the Resource Manager.
   /**
@@ -98,7 +109,7 @@ public:
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
-   * \param[in] executor shared pointer to the Executor used by the controller manager.
+   * \param[in] executor shared pointer to zthe Executor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,

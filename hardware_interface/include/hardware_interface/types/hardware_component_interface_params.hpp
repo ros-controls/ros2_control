@@ -43,7 +43,7 @@ struct HardwareComponentInterfaceParams
    */
   rclcpp::Executor::WeakPtr executor;
 
-  explicit HardwareComponentInterfaceParams(hardware_interface::HardwareComponentParams params)
+  explicit HardwareComponentInterfaceParams(hardware_interface::HardwareComponentParams & params)
   : hardware_info(params.hardware_info), executor(params.executor)
   {
   }
