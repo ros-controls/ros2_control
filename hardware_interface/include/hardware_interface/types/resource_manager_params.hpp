@@ -47,7 +47,7 @@ struct ResourceManagerParams
    * ResourceManager will derive its rclcpp::Logger from this.
    * Mutually exclusive with providing a direct 'logger'.
    */
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface = nullptr;
 
   /**
    * @brief Shared pointer to the rclcpp::Executor instance that the
