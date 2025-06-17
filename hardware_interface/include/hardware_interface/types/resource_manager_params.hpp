@@ -40,7 +40,7 @@ struct ResourceManagerParams
    * ResourceManager will derive its rclcpp::Clock::SharedPtr from this.
    * Mutually exclusive with providing a direct 'clock' SharedPtr.
    */
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr;
 
   /**
    * @brief Shared pointer to the logging interface from the node creating the ResourceManager.
