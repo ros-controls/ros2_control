@@ -54,7 +54,7 @@ struct ResourceManagerParams
    * ResourceManager and its components (including plugins that opt-in) will use.
    * This is typically the ControllerManager's main executor.
    */
-  rclcpp::Executor::SharedPtr executor;
+  rclcpp::Executor::SharedPtr executor = nullptr;
 
   /**
    * @brief Flag indicating if all hardware components found in the URDF
