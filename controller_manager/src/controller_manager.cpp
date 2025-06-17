@@ -4304,6 +4304,27 @@ void ControllerManager::build_controllers_topology_info(
   std::for_each(
     controller_chained_state_interfaces_cache_.begin(),
     controller_chained_state_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+
+  const auto get_controller_peer_info = [&](const ControllerSpec & controller) -> ControllerPeerInfo
+  {
+    const auto cmd_itfs = controller.c->command_interface_configuration().names;
+    const auto state_itfs = controller.c->state_interface_configuration().names;
+    ControllerPeerInfo controller_peer_info;
+    controller_peer_info.name = controller.info.name;
+    controller_peer_info.command_interfaces =
+      std::unordered_set<std::string>(cmd_itfs.begin(), cmd_itfs.end());
+    controller_peer_info.state_interfaces =
+      std::unordered_set<std::string>(state_itfs.begin(), state_itfs.end());
+    controller_peer_info.controller = controller.c;
+    if (controller.c->is_chainable())
+    {
+      const auto ref_interface =
+        resource_manager_->get_controller_reference_interface_names(controller.info.name);
+      controller_peer_info.reference_interfaces =
+        std::unordered_set<std::string>(ref_interface.begin(), ref_interface.end());
+    }
+    return controller_peer_info;
+  };
   for (const auto & controller : controllers)
   {
     if (is_controller_unconfigured(*controller.c))
@@ -4316,11 +4337,15 @@ void ControllerManager::build_controllers_topology_info(
     const auto cmd_itfs = controller.c->command_interface_configuration().names;
     const auto state_itfs = controller.c->state_interface_configuration().names;
 
+    ControllerPeerInfo controller_peer_info = get_controller_peer_info(controller);
     for (const auto & cmd_itf : cmd_itfs)
     {
       controller_manager::ControllersListIterator ctrl_it;
       if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
       {
+        ControllerPeerInfo succeeding_peer_info = get_controller_peer_info(*ctrl_it);
+        controller_chain_dependency_graph_.add_dependency(
+          controller_peer_info, succeeding_peer_info);
         ros2_control::add_item(
           controller_chain_spec_[controller.info.name].following_controllers, ctrl_it->info.name);
         ros2_control::add_item(
