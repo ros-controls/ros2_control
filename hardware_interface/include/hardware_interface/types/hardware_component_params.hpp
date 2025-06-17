@@ -47,7 +47,7 @@ struct HardwareComponentParams
    * @brief Shared pointer to the rclcpp::Clock to be used by this hardware component.
    * Typically, this is the same clock used by the ResourceManager/ControllerManager.
    */
-  rclcpp::Clock::SharedPtr clock;
+  rclcpp::Clock::SharedPtr clock = nullptr;
 
   /**
    * @brief Weak pointer to the rclcpp::Executor instance. Hardware components
