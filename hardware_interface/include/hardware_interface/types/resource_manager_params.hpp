@@ -33,7 +33,7 @@ struct ResourceManagerParams
    * Can be empty if ResourceManager is constructed without an initial URDF
    * and components are loaded later or via other means.
    */
-  std::string urdf_string;
+  std::string urdf_string = "";
 
   /**
    * @brief Shared pointer to the clock interface from the node creating the ResourceManager.
