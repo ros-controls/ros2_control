@@ -88,27 +88,24 @@ auto shutdown_components =
 
 TEST_F(ResourceManagerTest, initialization_empty)
 {
-  ASSERT_ANY_THROW(TestableResourceManager rm(node_, executor_, ""););
+  ASSERT_ANY_THROW(TestableResourceManager rm(node_, ""););
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf)
 {
-  ASSERT_NO_THROW(
-    TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf););
+  ASSERT_NO_THROW(TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf););
 }
 
 TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
-  TestableResourceManager rm(node_, executor_);
+  TestableResourceManager rm(node_);
   ASSERT_NO_THROW(rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf));
 }
 
 void test_load_and_initialized_components_failure(const std::string & urdf)
 {
   rclcpp::Node node = rclcpp::Node("TestableResourceManager");
-  rclcpp::Executor::SharedPtr executor =
-    std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  TestableResourceManager rm(node, executor);
+  TestableResourceManager rm(node);
   ASSERT_FALSE(rm.load_and_initialize_components(urdf));
 
   ASSERT_FALSE(rm.are_components_initialized());
@@ -152,7 +149,7 @@ TEST_F(ResourceManagerTest, test_uninitializable_hardware)
 TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
 {
   // we validate the results manually
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
@@ -189,7 +186,7 @@ TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 {
   // we validate the results manually
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
 
   auto command_interface_keys = rm.command_interface_keys();
   for (const auto & key : command_interface_keys)
@@ -207,7 +204,7 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 
 TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
 {
-  TestableResourceManager rm(node_, executor_);
+  TestableResourceManager rm(node_);
   ASSERT_FALSE(rm.are_components_initialized());
 }
 
@@ -258,19 +255,19 @@ TEST_F(
 
 TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
   ASSERT_TRUE(rm.are_components_initialized());
 }
 
 TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_async_urdf_is_valid)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_async_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_async_robot_urdf);
   ASSERT_TRUE(rm.are_components_initialized());
 }
 
 TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
 {
-  TestableResourceManager rm(node_, executor_);
+  TestableResourceManager rm(node_);
   ASSERT_FALSE(rm.are_components_initialized());
   rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf);
   ASSERT_TRUE(rm.are_components_initialized());
@@ -278,7 +275,7 @@ TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
 
 TEST_F(ResourceManagerTest, resource_claiming)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -391,7 +388,7 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
 TEST_F(ResourceManagerTest, post_initialization_add_components)
 {
   // we validate the results manually
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -435,7 +432,7 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
 
 TEST_F(ResourceManagerTest, default_prepare_perform_switch)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -447,7 +444,7 @@ TEST_F(ResourceManagerTest, default_prepare_perform_switch)
 TEST_F(ResourceManagerTest, resource_status)
 {
   TestableResourceManager rm(
-    node_, executor_, ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate);
+    node_, ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate);
 
   auto status_map = rm.get_components_status();
 
@@ -524,7 +521,7 @@ TEST_F(ResourceManagerTest, resource_status)
 
 TEST_F(ResourceManagerTest, lifecycle_all_resources)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
 
   // All resources start as UNCONFIGURED
   {
@@ -667,7 +664,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
 
 TEST_F(ResourceManagerTest, lifecycle_individual_resources)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
 
   // All resources start as UNCONFIGURED
   {
@@ -880,7 +877,7 @@ TEST_F(ResourceManagerTest, lifecycle_individual_resources)
 TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
 {
   using std::placeholders::_1;
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
 
   auto check_interfaces =
     [](const std::vector<std::string> & interface_names, auto check_method, bool expected_result)
@@ -1228,7 +1225,7 @@ TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
 
 TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
 
   std::string CONTROLLER_NAME = "test_controller";
   std::vector<std::string> REFERENCE_INTERFACE_NAMES = {"input1", "input2", "input3"};
@@ -1349,7 +1346,7 @@ public:
   void setup_resource_manager_and_do_initial_checks()
   {
     rm = std::make_shared<TestableResourceManager>(
-      node_, executor_, ros2_control_test_assets::minimal_robot_urdf, false);
+      node_, ros2_control_test_assets::minimal_robot_urdf, false);
     activate_components(*rm);
 
     auto status_map = rm->get_components_status();
@@ -1699,7 +1696,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
 
 TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
 {
-  TestableResourceManager rm(node_, executor_, ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf, false);
   activate_components(rm);
 
   static const std::string TEST_CONTROLLER_ACTUATOR_NAME = "test_controller_actuator";
@@ -1757,7 +1754,7 @@ public:
     const std::string urdf =
       async_components ? minimal_robot_urdf_with_different_hw_rw_rate_with_async
                        : ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate;
-    rm = std::make_shared<TestableResourceManager>(node_, executor_, urdf, false);
+    rm = std::make_shared<TestableResourceManager>(node_, urdf, false);
     activate_components(*rm);
 
     cm_update_rate_ = 100u;  // The default value inside
@@ -2195,8 +2192,7 @@ public:
       std::string(ros2_control_test_assets::urdf_head) +
       std::string(ros2_control_test_assets::async_hardware_resources) +
       std::string(ros2_control_test_assets::urdf_tail);
-    rm =
-      std::make_shared<TestableResourceManager>(node_, executor_, minimal_robot_urdf_async, false);
+    rm = std::make_shared<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
     activate_components(*rm);
 
     time = node_.get_clock()->now();
@@ -2495,7 +2491,7 @@ public:
   void setup_resource_manager_and_do_initial_checks()
   {
     rm = std::make_shared<TestableResourceManager>(
-      node_, executor_, ros2_control_test_assets::minimal_robot_urdf, false);
+      node_, ros2_control_test_assets::minimal_robot_urdf, false);
     rm->import_joint_limiters(ros2_control_test_assets::minimal_robot_urdf);
     activate_components(*rm);
 
