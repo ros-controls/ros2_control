@@ -30,18 +30,18 @@ namespace hardware_interface
  */
 struct HardwareComponentParams
 {
+  HardwareComponentParams() = default;
   /**
-   * @brief Constant reference to the HardwareInfo struct for this specific component,
+   * @brief Reference to the HardwareInfo struct for this specific component,
    * parsed from the URDF. The HardwareInfo object's lifetime must be guaranteed
    * by the caller (e.g., ResourceManager) for the duration this struct is used.
    */
-  const hardware_interface::HardwareInfo & hardware_info;
+  hardware_interface::HardwareInfo hardware_info;
 
   /**
-   * @brief A logger instance specifically for this hardware component
-   * (e.g., a child logger of the ResourceManager's logger).
+   * @brief A logger instance taken from resource manager
    */
-  rclcpp::Logger logger;
+  rclcpp::Logger logger = rclcpp::get_logger("resource_manager");
 
   /**
    * @brief Shared pointer to the rclcpp::Clock to be used by this hardware component.
@@ -55,16 +55,6 @@ struct HardwareComponentParams
    * to the ControllerManager's executor.
    */
   rclcpp::Executor::WeakPtr executor;
-
-  explicit HardwareComponentParams(
-    const hardware_interface::HardwareInfo & hardware_info_param, rclcpp::Logger logger_param,
-    rclcpp::Clock::SharedPtr clock_param, rclcpp::Executor::WeakPtr executor_param)
-  : hardware_info(hardware_info_param),
-    logger(logger_param),
-    clock(clock_param),
-    executor(executor_param)
-  {
-  }
 };
 
 }  // namespace hardware_interface

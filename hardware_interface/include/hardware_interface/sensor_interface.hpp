@@ -101,6 +101,34 @@ public:
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
   /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock pointer to the resource manager clock.
+   * \param[in] logger Logger for the hardware component.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+  {
+    sensor_clock_ = clock;
+    sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
+    info_ = hardware_info;
+    if (info_.is_async)
+    {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      read_async_handler_->init(
+        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2),
+        info_.thread_priority);
+      read_async_handler_->start_thread();
+    }
+    return on_init(hardware_info);
+  };
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
    * \param[in] params  A struct of type HardwareComponentParams containing all necessary
    * parameters for initializing this specific hardware component,
    * including its HardwareInfo, a dedicated logger, a clock, and a
@@ -110,11 +138,12 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  CallbackReturn init(hardware_interface::HardwareComponentParams & params)
+  CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
   {
     sensor_clock_ = params.clock;
+    auto logger_copy = params.logger;
     sensor_logger_ =
-      params.logger.get_child("hardware_component.sensor." + params.hardware_info.name);
+      logger_copy.get_child("hardware_component.sensor." + params.hardware_info.name);
     info_ = params.hardware_info;
     if (info_.is_async)
     {
@@ -126,7 +155,24 @@ public:
         info_.thread_priority);
       read_async_handler_->start_thread();
     }
-    return on_init(hardware_interface::HardwareComponentInterfaceParams(params));
+    hardware_interface::HardwareComponentInterfaceParams interface_params;
+    interface_params.hardware_info = info_;
+    interface_params.executor = params.executor;
+    return on_init(interface_params);
+  };
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  {
+    info_ = hardware_info;
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+    parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
+    return CallbackReturn::SUCCESS;
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.

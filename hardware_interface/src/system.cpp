@@ -45,16 +45,38 @@ System::System(System && other) noexcept
 
 const rclcpp_lifecycle::State & System::initialize(
   const HardwareInfo & system_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-  rclcpp::Executor::WeakPtr executor)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
-  hardware_interface::HardwareComponentParams params(
-    system_info, logger, clock_interface->get_clock(), executor);
-  return this->initialize(params);
+  return this->initialize(system_info, logger, clock_interface->get_clock());
 }
 
 const rclcpp_lifecycle::State & System::initialize(
-  hardware_interface::HardwareComponentParams & params)
+  const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+{
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
+  if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  {
+    switch (impl_->init(system_info, logger, clock))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+            lifecycle_state_names::UNCONFIGURED));
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        impl_->set_lifecycle_state(
+          rclcpp_lifecycle::State(
+            lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        break;
+    }
+  }
+  return impl_->get_lifecycle_state();
+}
+
+const rclcpp_lifecycle::State & System::initialize(
+  const hardware_interface::HardwareComponentParams & params)
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)

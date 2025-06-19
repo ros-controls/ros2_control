@@ -28,6 +28,7 @@ namespace hardware_interface
  */
 struct ResourceManagerParams
 {
+  ResourceManagerParams() = default;
   /**
    * @brief The URDF string describing the robot's hardware components.
    * Can be empty if ResourceManager is constructed without an initial URDF
@@ -36,18 +37,16 @@ struct ResourceManagerParams
   std::string urdf_string = "";
 
   /**
-   * @brief Shared pointer to the clock interface from the node creating the ResourceManager.
-   * ResourceManager will derive its rclcpp::Clock::SharedPtr from this.
-   * Mutually exclusive with providing a direct 'clock' SharedPtr.
+   * @brief Shared pointer to the Clock used by the ResourceManager.
+   * This is typically obtained from the node via get_clock().
    */
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr;
+  rclcpp::Clock::SharedPtr clock = nullptr;
 
   /**
-   * @brief Shared pointer to the logging interface from the node creating the ResourceManager.
-   * ResourceManager will derive its rclcpp::Logger from this.
-   * Mutually exclusive with providing a direct 'logger'.
+   * @brief Logger instance used by the ResourceManager.
+   * This is typically obtained from the node via get_logger().
    */
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface = nullptr;
+  rclcpp::Logger logger = rclcpp::get_logger("resource_manager");
 
   /**
    * @brief Shared pointer to the rclcpp::Executor instance that the

@@ -55,22 +55,10 @@ public:
   /// Default constructor for the Resource Manager.
   explicit ResourceManager(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    rclcpp::Executor::SharedPtr executor);
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
 
   /// Default constructor for the Resource Manager.
-  explicit ResourceManager(
-    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, rclcpp::Executor::SharedPtr executor);
-
-  /// Constructor for the Resource Manager.
-  /**
-   * The implementation uses the ResourceManagerParams to load the specified urdf and initializes
-   * the hardware components listed within as well as populate their respective state and command
-   * interfaces.
-   *
-   * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
-   */
-  explicit ResourceManager(hardware_interface::ResourceManagerParams & params);
+  explicit ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger);
 
   /// Constructor for the Resource Manager.
   /**
@@ -86,14 +74,12 @@ public:
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
    * used for triggering async components and different read/write component rates.
    * \param[in] logger_interface reference to the logger interface of the CM node for logging.
-   * \param[in] executor shared pointer to the Executor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    rclcpp::Executor::SharedPtr executor, bool activate_all = false,
-    const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 100);
 
   /// Constructor for the Resource Manager.
   /**
@@ -109,12 +95,20 @@ public:
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
-   * \param[in] executor shared pointer to zthe Executor used by the controller manager.
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    rclcpp::Executor::SharedPtr executor, bool activate_all = false,
-    const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 100);
+
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation uses the ResourceManagerParams to load the specified urdf and initializes
+   * the hardware components listed within as well as populate their respective state and command
+   * interfaces.
+   *
+   * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
+   */
+  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -544,6 +538,18 @@ public:
    */
   void set_on_component_state_switch_callback(std::function<void()> callback);
 
+  /// Gets the Init Params for the resource manager
+  /**
+   * \return ResourceManagerParams of the resource manager
+   */
+  hardware_interface::ResourceManagerParams get_params() const;
+
+  /// Sets the Init Params for the resource manager
+  /**
+   * \param[in] params ResourceManagerParams to set
+   */
+  void set_params(const hardware_interface::ResourceManagerParams & params);
+
   const std::string & get_robot_description() const;
 
 protected:
@@ -571,6 +577,14 @@ private:
 
   void release_command_interface(const std::string & key);
 
+  const hardware_interface::ResourceManagerParams constructParams(
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Logger logger,
+  const std::string & urdf = std::string(),
+  bool activate_all = false,
+  unsigned int update_rate = 100,
+  rclcpp::Executor::SharedPtr executor = nullptr);
+
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   std::unique_ptr<ResourceStorage> resource_storage_;
@@ -578,7 +592,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  rclcpp::Executor::WeakPtr executor_;
+  hardware_interface::ResourceManagerParams resource_manager_params_;
 };
 
 }  // namespace hardware_interface

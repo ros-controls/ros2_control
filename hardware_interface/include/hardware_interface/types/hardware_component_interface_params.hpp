@@ -30,12 +30,13 @@ namespace hardware_interface
  */
 struct HardwareComponentInterfaceParams
 {
+  HardwareComponentInterfaceParams() = default;
   /**
-   * @brief Constant reference to the HardwareInfo struct for this specific component,
+   * @brief Reference to the HardwareInfo struct for this specific component,
    * parsed from the URDF. The HardwareInfo object's lifetime must be guaranteed
    * by the caller (e.g., ResourceManager) for the duration this struct is used.
    */
-  const hardware_interface::HardwareInfo & hardware_info;
+  hardware_interface::HardwareInfo hardware_info;
 
   /**
    * @brief Weak pointer to the rclcpp::Executor instance. Hardware components
@@ -43,18 +44,6 @@ struct HardwareComponentInterfaceParams
    * to the ControllerManager's executor.
    */
   rclcpp::Executor::WeakPtr executor;
-
-  explicit HardwareComponentInterfaceParams(
-    const hardware_interface::HardwareInfo & hardware_info_param,
-    rclcpp::Executor::WeakPtr executor_param)
-  : hardware_info(hardware_info_param), executor(executor_param)
-  {
-  }
-
-  explicit HardwareComponentInterfaceParams(hardware_interface::HardwareComponentParams & params)
-  : hardware_info(params.hardware_info), executor(params.executor)
-  {
-  }
 };
 
 }  // namespace hardware_interface
