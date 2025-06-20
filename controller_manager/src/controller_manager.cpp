@@ -388,11 +388,8 @@ ControllerManager::ControllerManager(
   cm_node_options_(options)
 {
   initialize_parameters();
-  hardware_interface::ResourceManagerParams params;
-  params.clock = trigger_clock_;
-  params.logger = this->get_logger();
   resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, params.logger);
+    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
   init_controller_manager();
 }
 
