@@ -2720,7 +2720,6 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
         // if this controller has command interfaces add it to the deactivate_controllers_list
         if (!command_interface_names.empty())
         {
-          RCLCPP_ERROR(get_logger(), "Deactivating controller: [%s]", controller.c_str());
           rt_buffer_.deactivate_controllers_list.push_back(controller);
         }
       }
@@ -3037,7 +3036,6 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
         // if this controller has command interfaces add it to the deactivate_controllers_list
         if (!command_interface_names.empty())
         {
-          RCLCPP_ERROR(get_logger(), "Deactivating controller: [%s]", controller.c_str());
           rt_buffer_.deactivate_controllers_list.push_back(controller);
         }
       }
