@@ -30,10 +30,9 @@
 namespace mock_components
 {
 
-CallbackReturn GenericSystem::on_init(
-  const hardware_interface::HardwareComponentInterfaceParams & params)
+CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & info)
 {
-  if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
+  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
   {
     return CallbackReturn::ERROR;
   }
@@ -84,7 +83,7 @@ CallbackReturn GenericSystem::on_init(
   // check if there is parameter that disables commands
   // this way we simulate disconnected driver
   it = get_hardware_info().hardware_parameters.find("disable_commands");
-  if (it != params.hardware_info.hardware_parameters.end())
+  if (it != info.hardware_parameters.end())
   {
     command_propagation_disabled_ = hardware_interface::parse_bool(it->second);
   }
@@ -95,7 +94,7 @@ CallbackReturn GenericSystem::on_init(
 
   // check if there is parameter that enables dynamic calculation
   it = get_hardware_info().hardware_parameters.find("calculate_dynamics");
-  if (it != params.hardware_info.hardware_parameters.end())
+  if (it != info.hardware_parameters.end())
   {
     calculate_dynamics_ = hardware_interface::parse_bool(it->second);
   }
