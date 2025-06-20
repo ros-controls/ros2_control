@@ -134,6 +134,19 @@ public:
   virtual bool load_and_initialize_components(
     const std::string & urdf, const unsigned int update_rate = 100);
 
+
+  /// Load resources from on a given URDF.
+  /**
+   * The resource manager can be post-initialized with a given URDF.
+   * This is mainly used in conjunction with the default constructor
+   * in which the URDF might not be present at first initialization.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
+   * \returns false if URDF validation has failed.
+   */
+  virtual bool load_and_initialize_components(const hardware_interface::ResourceManagerParams & params);
+
   /**
    * @brief Import joint limiters from the URDF.
    * @param urdf string containing the URDF.
