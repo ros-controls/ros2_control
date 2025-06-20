@@ -372,9 +372,8 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
     last_write_cycle_time_ = time;
     return return_type::OK;
   }
-  if (
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  // only call write in the active state
+  if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     const auto trigger_result = impl_->trigger_write(time, period);
     if (trigger_result.result == return_type::ERROR)
