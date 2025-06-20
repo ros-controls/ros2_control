@@ -1216,28 +1216,6 @@ public:
     return load_and_init_systems(systems_);
   }
 
-  void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
-  {
-    auto init_actuators = [&](auto & container)
-    {
-      container.emplace_back(Actuator(std::move(actuator)));
-      if (initialize_hardware(hardware_info, container.back()))
-      {
-        import_state_interfaces(container.back());
-        import_command_interfaces(container.back());
-      }
-      else
-      {
-        RCLCPP_WARN(
-          get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
-      }
-    };
-
-    init_actuators(actuators_);
-  }
-
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
   {
@@ -1314,6 +1292,28 @@ public:
     return load_and_init_systems(systems_);
   }
 
+  void initialize_actuator(
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
+  {
+    auto init_actuators = [&](auto & container)
+    {
+      container.emplace_back(Actuator(std::move(actuator)));
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
+      else
+      {
+        RCLCPP_WARN(
+          get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    init_actuators(actuators_);
+  }
+  
   void initialize_sensor(
     std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
   {
@@ -2116,10 +2116,6 @@ void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  hardware_interface::HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  params.logger = resource_storage_->rm_logger_;
-  params.clock = resource_storage_->rm_clock_;
   resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
@@ -2130,10 +2126,6 @@ void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  hardware_interface::HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  params.logger = resource_storage_->rm_logger_;
-  params.clock = resource_storage_->rm_clock_;
   resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
@@ -2144,10 +2136,6 @@ void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  hardware_interface::HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  params.logger = resource_storage_->rm_logger_;
-  params.clock = resource_storage_->rm_clock_;
   resource_storage_->initialize_system(std::move(system), hardware_info);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
