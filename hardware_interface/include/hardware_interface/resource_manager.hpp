@@ -599,7 +599,6 @@ private:
   const std::string & urdf = std::string(),
   bool activate_all = false,
   unsigned int update_rate = 100
-  //,rclcpp::Executor::SharedPtr executor = nullptr
   );
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;

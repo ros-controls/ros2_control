@@ -1452,8 +1452,8 @@ ResourceManager::ResourceManager(const hardware_interface::ResourceManagerParams
         using lifecycle_msgs::msg::State;
         rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
         set_component_state(hw_info.first, state);
-        }
       }
+    }
   }
 }
 
@@ -2570,7 +2570,6 @@ const hardware_interface::ResourceManagerParams ResourceManager::constructParams
   params.clock = clock;
   params.logger = logger;
   params.urdf_string = urdf;
-  // params.executor = executor;
   params.activate_all = activate_all;
   params.update_rate = update_rate;
 
