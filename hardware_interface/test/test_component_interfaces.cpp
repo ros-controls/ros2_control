@@ -56,7 +56,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 // BEGIN (Handle export change): for backward compatibility
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & /*info*/) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & /*params*/) override
   {
     // We hardcode the info
     return CallbackReturn::SUCCESS;
@@ -169,11 +169,11 @@ private:
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     // We hardcode the info
     if (
-      hardware_interface::ActuatorInterface::on_init(info) !=
+      hardware_interface::ActuatorInterface::on_init(params) !=
       hardware_interface::CallbackReturn::SUCCESS)
     {
       return hardware_interface::CallbackReturn::ERROR;
@@ -260,7 +260,7 @@ private:
 // BEGIN (Handle export change): for backward compatibility
 class DummySensor : public hardware_interface::SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & /*info*/) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & /*params*/) override
   {
     // We hardcode the info
     return CallbackReturn::SUCCESS;
@@ -325,10 +325,10 @@ private:
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (
-      hardware_interface::SensorInterface::on_init(info) !=
+      hardware_interface::SensorInterface::on_init(params) !=
       hardware_interface::CallbackReturn::SUCCESS)
     {
       return hardware_interface::CallbackReturn::ERROR;
@@ -386,10 +386,10 @@ private:
 
 class DummySensorJointDefault : public hardware_interface::SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (
-      hardware_interface::SensorInterface::on_init(info) !=
+      hardware_interface::SensorInterface::on_init(params) !=
       hardware_interface::CallbackReturn::SUCCESS)
     {
       return hardware_interface::CallbackReturn::ERROR;
@@ -447,7 +447,7 @@ private:
 // BEGIN (Handle export change): for backward compatibility
 class DummySystem : public hardware_interface::SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* params */) override
   {
     // We hardcode the info
     return CallbackReturn::SUCCESS;
@@ -593,10 +593,10 @@ private:
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (
-      hardware_interface::SystemInterface::on_init(info) !=
+      hardware_interface::SystemInterface::on_init(params) !=
       hardware_interface::CallbackReturn::SUCCESS)
     {
       return hardware_interface::CallbackReturn::ERROR;
@@ -702,7 +702,7 @@ private:
 class DummySystemPreparePerform : public hardware_interface::SystemInterface
 {
   // Override the pure virtual functions with default behavior
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* params */) override
   {
     // We hardcode the info
     return CallbackReturn::SUCCESS;
