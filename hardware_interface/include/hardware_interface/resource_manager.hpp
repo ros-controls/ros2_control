@@ -554,18 +554,6 @@ public:
    */
   void set_on_component_state_switch_callback(std::function<void()> callback);
 
-  /// Gets the Init Params for the resource manager
-  /**
-   * \return ResourceManagerParams of the resource manager
-   */
-  hardware_interface::ResourceManagerParams get_params() const;
-
-  /// Sets the Init Params for the resource manager
-  /**
-   * \param[in] params ResourceManagerParams to set
-   */
-  void set_params(const hardware_interface::ResourceManagerParams & params);
-
   const std::string & get_robot_description() const;
 
 protected:
@@ -607,8 +595,6 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-
-  hardware_interface::ResourceManagerParams resource_manager_params_;
 };
 
 }  // namespace hardware_interface
