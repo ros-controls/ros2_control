@@ -185,7 +185,7 @@ public:
     }
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
-    // interface_params.executor = params.executor;
+    interface_params.executor = params.executor;
     return on_init(interface_params);
   };
 

@@ -250,13 +250,12 @@ public:
     component_params.hardware_info = params.hardware_info;
     component_params.clock = rm_clock_;
     component_params.logger = rm_logger_;
+    component_params.executor = params.executor;
     RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
 
     bool result = false;
     try
     {
-      component_params.clock = rm_clock_;
-      component_params.logger = rm_logger_;
       const rclcpp_lifecycle::State new_state = hardware.initialize(component_params);      
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
@@ -1112,9 +1111,30 @@ public:
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
     }
-  }
+  } 
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
+  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  {
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = hardware_info;
+    return load_and_initialize_actuator(params);
+  }
+
+  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
+  {
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = hardware_info;
+    return load_and_initialize_sensor(params);
+  }
+
+  bool load_and_initialize_system(const HardwareInfo & hardware_info)
+  {
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = hardware_info;
+    return load_and_initialize_system(params);
+  }
+
   bool load_and_initialize_actuator(const hardware_interface::HardwareComponentParams & params)
   {
     auto load_and_init_actuators = [&](auto & container)
@@ -1189,28 +1209,6 @@ public:
       return true;
     };
     return load_and_init_systems(systems_);
-  }
-
-  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_actuator(params);
-  }
-
-  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_sensor(params);
-  }
-
-  bool load_and_initialize_system(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_system(params);
   }
 
   void initialize_actuator(
@@ -1521,6 +1519,7 @@ bool ResourceManager::load_and_initialize_components(const hardware_interface::R
     }
     hardware_interface::HardwareComponentParams interface_params;
     interface_params.hardware_info = individual_hardware_info;
+    interface_params.executor = params.executor;
 
     if (individual_hardware_info.type == actuator_type)
     {

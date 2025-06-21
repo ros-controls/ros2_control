@@ -49,12 +49,12 @@ struct HardwareComponentParams
    */
   rclcpp::Clock::SharedPtr clock = nullptr;
 
-  // /**
-  //  * @brief Weak pointer to the rclcpp::Executor instance. Hardware components
-  //  * can use this (after locking) to add their own internal ROS 2 nodes
-  //  * to the ControllerManager's executor.
-  //  */
-  // rclcpp::Executor::WeakPtr executor;
+  /**
+   * @brief Weak pointer to the rclcpp::Executor instance. Hardware components
+   * can use this (after locking) to add their own internal ROS 2 nodes
+   * to the ControllerManager's executor.
+   */
+  rclcpp::Executor::WeakPtr executor;
 };
 
 }  // namespace hardware_interface
