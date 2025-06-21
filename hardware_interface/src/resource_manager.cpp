@@ -1485,7 +1485,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
   hardware_interface::ResourceManagerParams params;
-  params.urdf_string = urdf;
+  params.robot_description = urdf;
   params.update_rate = update_rate;
   return load_and_initialize_components(params);
 }
@@ -1495,10 +1495,11 @@ bool ResourceManager::load_and_initialize_components(
 {
   components_are_loaded_and_initialized_ = true;
 
-  resource_storage_->robot_description_ = params.urdf_string;
+  resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
 
-  auto hardware_info = hardware_interface::parse_control_resources_from_urdf(params.urdf_string);
+  auto hardware_info =
+    hardware_interface::parse_control_resources_from_urdf(params.robot_description);
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
@@ -2575,7 +2576,7 @@ const hardware_interface::ResourceManagerParams ResourceManager::constructParams
   hardware_interface::ResourceManagerParams params;
   params.clock = clock;
   params.logger = logger;
-  params.urdf_string = urdf;
+  params.robot_description = urdf;
   params.activate_all = activate_all;
   params.update_rate = update_rate;
 

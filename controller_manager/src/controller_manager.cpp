@@ -411,7 +411,7 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   hardware_interface::ResourceManagerParams params;
-  params.urdf_string = urdf;
+  params.robot_description = urdf;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.activate_all = activate_all_hw_components;
