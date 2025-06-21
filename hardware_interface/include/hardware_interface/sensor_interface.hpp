@@ -110,20 +110,11 @@ public:
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
-    sensor_clock_ = clock;
-    sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
-    info_ = hardware_info;
-    if (info_.is_async)
-    {
-      RCLCPP_INFO_STREAM(
-        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
-      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-      read_async_handler_->init(
-        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2),
-        info_.thread_priority);
-      read_async_handler_->start_thread();
-    }
-    return on_init(hardware_info);
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = hardware_info;
+    params.clock = clock;
+    params.logger = logger;
+    return init(params);
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
@@ -157,7 +148,7 @@ public:
     }
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
-    interface_params.executor = params.executor;
+    // interface_params.executor = params.executor;
     return on_init(interface_params);
   };
 
@@ -169,10 +160,9 @@ public:
    */
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
-    info_ = hardware_info;
-    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-    parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
-    return CallbackReturn::SUCCESS;
+    hardware_interface::HardwareComponentInterfaceParams params;
+    params.hardware_info = hardware_info;
+    return on_init(params);
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.

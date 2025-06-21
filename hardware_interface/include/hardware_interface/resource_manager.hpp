@@ -107,8 +107,11 @@ public:
    * interfaces.
    *
    * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
+   * \param[in] load boolean argument indicating if the components should be loaded and
+   * initialized. If false, the ResourceManager will not load any components and will only
+   * initialize the ResourceManager with the given parameters.
    */
-  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params);
+  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load = true);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -595,8 +598,9 @@ private:
   rclcpp::Logger logger,
   const std::string & urdf = std::string(),
   bool activate_all = false,
-  unsigned int update_rate = 100,
-  rclcpp::Executor::SharedPtr executor = nullptr);
+  unsigned int update_rate = 100
+  //,rclcpp::Executor::SharedPtr executor = nullptr
+  );
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
