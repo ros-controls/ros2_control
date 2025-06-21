@@ -239,8 +239,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.clock = rm_clock_;
-    params.logger = rm_logger_;
     return initialize_hardware(params, hardware);
   }
 
@@ -253,32 +251,34 @@ public:
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state = hardware.initialize(params);
+      component_params.clock = rm_clock_;
+      component_params.logger = rm_logger_;
+      const rclcpp_lifecycle::State new_state = hardware.initialize(component_params);      
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
       {
         RCLCPP_INFO(
           get_logger(), "Successful initialization of hardware '%s'",
-          params.hardware_info.name.c_str());
+          component_params.hardware_info.name.c_str());
       }
       else
       {
         RCLCPP_ERROR(
-          get_logger(), "Failed to initialize hardware '%s'", params.hardware_info.name.c_str());
+          get_logger(), "Failed to initialize hardware '%s'", component_params.hardware_info.name.c_str());
       }
     }
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
         get_logger(), "Exception of type : %s occurred while initializing hardware '%s': %s",
-        typeid(ex).name(), params.hardware_info.name.c_str(), ex.what());
+        typeid(ex).name(), component_params.hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Unknown exception occurred while initializing hardware '%s'",
-        params.hardware_info.name.c_str());
+        component_params.hardware_info.name.c_str());
     }
 
     return result;
@@ -1192,8 +1192,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return load_and_initialize_actuator(params);
   }
 
@@ -1201,8 +1199,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return load_and_initialize_sensor(params);
   }
 
@@ -1210,8 +1206,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return load_and_initialize_system(params);
   }
 
@@ -1220,8 +1214,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return initialize_actuator(std::move(actuator), params);
   }
   void initialize_sensor(
@@ -1229,8 +1221,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return initialize_sensor(std::move(sensor), params);
   }
 
@@ -1239,8 +1229,6 @@ public:
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
-    params.logger = rm_logger_;
-    params.clock = rm_clock_;
     return initialize_system(std::move(system), params);
   }
 
@@ -1462,8 +1450,8 @@ ResourceManager::ResourceManager(const hardware_interface::ResourceManagerParams
         using lifecycle_msgs::msg::State;
         rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
         set_component_state(hw_info.first, state);
+        }
       }
-    }
   }
 }
 
@@ -1490,8 +1478,6 @@ bool ResourceManager::load_and_initialize_components(
   hardware_interface::ResourceManagerParams params;
   params.urdf_string = urdf;
   params.update_rate = update_rate;
-  params.clock = resource_storage_->rm_clock_;
-  params.logger = resource_storage_->rm_logger_;
   return load_and_initialize_components(params);
 }
 
@@ -1531,8 +1517,6 @@ bool ResourceManager::load_and_initialize_components(const hardware_interface::R
     }
     hardware_interface::HardwareComponentParams interface_params;
     interface_params.hardware_info = individual_hardware_info;
-    interface_params.logger = resource_storage_->rm_logger_;
-    interface_params.clock = resource_storage_->rm_clock_;
 
     if (individual_hardware_info.type == actuator_type)
     {
