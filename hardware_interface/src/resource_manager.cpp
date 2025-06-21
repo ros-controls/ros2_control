@@ -1111,7 +1111,7 @@ public:
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
     }
-  } 
+  }
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
