@@ -246,7 +246,11 @@ public:
   bool initialize_hardware(
     const hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
   {
-    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", params.hardware_info.name.c_str());
+    hardware_interface::HardwareComponentParams component_params;
+    component_params.hardware_info = params.hardware_info;
+    component_params.clock = rm_clock_;
+    component_params.logger = rm_logger_;
+    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
 
     bool result = false;
     try
