@@ -24,7 +24,8 @@ namespace test_hardware_components
 class TestSystemCommandModes : public hardware_interface::SystemInterface
 {
 public:
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
     {

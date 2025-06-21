@@ -27,7 +27,8 @@ namespace test_hardware_components
 {
 class TestTwoJointSystem : public SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
     {

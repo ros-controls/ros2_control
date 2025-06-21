@@ -251,12 +251,13 @@ public:
     component_params.clock = rm_clock_;
     component_params.logger = rm_logger_;
     component_params.executor = params.executor;
-    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
+    RCLCPP_INFO(
+      get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
 
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state = hardware.initialize(component_params);      
+      const rclcpp_lifecycle::State new_state = hardware.initialize(component_params);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
@@ -268,7 +269,8 @@ public:
       else
       {
         RCLCPP_ERROR(
-          get_logger(), "Failed to initialize hardware '%s'", component_params.hardware_info.name.c_str());
+          get_logger(), "Failed to initialize hardware '%s'",
+          component_params.hardware_info.name.c_str());
       }
     }
     catch (const std::exception & ex)
@@ -1258,7 +1260,8 @@ public:
   }
 
   void initialize_sensor(
-    std::unique_ptr<SensorInterface> sensor, const hardware_interface::HardwareComponentParams & params)
+    std::unique_ptr<SensorInterface> sensor,
+    const hardware_interface::HardwareComponentParams & params)
   {
     auto init_sensors = [&](auto & container)
     {
@@ -1279,7 +1282,8 @@ public:
   }
 
   void initialize_system(
-    std::unique_ptr<SystemInterface> system, const hardware_interface::HardwareComponentParams & params)
+    std::unique_ptr<SystemInterface> system,
+    const hardware_interface::HardwareComponentParams & params)
   {
     auto init_systems = [&](auto & container)
     {
@@ -1410,8 +1414,8 @@ public:
 ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
-: ResourceManager(constructParams(
-    clock_interface->get_clock(), logger_interface->get_logger()), false)
+: ResourceManager(
+    constructParams(clock_interface->get_clock(), logger_interface->get_logger()), false)
 {
 }
 
@@ -1426,8 +1430,11 @@ ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
   const unsigned int update_rate)
-: ResourceManager(constructParams(
-    clock_interface->get_clock(), logger_interface->get_logger(), urdf, activate_all, update_rate), true)
+: ResourceManager(
+    constructParams(
+      clock_interface->get_clock(), logger_interface->get_logger(), urdf, activate_all,
+      update_rate),
+    true)
 {
 }
 
@@ -1438,11 +1445,11 @@ ResourceManager::ResourceManager(
 {
 }
 
-
-ResourceManager::ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load)
+ResourceManager::ResourceManager(
+  const hardware_interface::ResourceManagerParams & params, bool load)
 : resource_storage_(std::make_unique<ResourceStorage>(params.clock, params.logger))
 {
-  if(load)
+  if (load)
   {
     load_and_initialize_components(params);
     if (params.activate_all)
@@ -1483,7 +1490,8 @@ bool ResourceManager::load_and_initialize_components(
   return load_and_initialize_components(params);
 }
 
-bool ResourceManager::load_and_initialize_components(const hardware_interface::ResourceManagerParams & params)
+bool ResourceManager::load_and_initialize_components(
+  const hardware_interface::ResourceManagerParams & params)
 {
   components_are_loaded_and_initialized_ = true;
 
@@ -1494,7 +1502,8 @@ bool ResourceManager::load_and_initialize_components(const hardware_interface::R
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
-    hw.rw_rate = (hw.rw_rate == 0 || hw.rw_rate > params.update_rate) ? params.update_rate : hw.rw_rate;
+    hw.rw_rate =
+      (hw.rw_rate == 0 || hw.rw_rate > params.update_rate) ? params.update_rate : hw.rw_rate;
   }
 
   const std::string system_type = "system";
@@ -2560,11 +2569,8 @@ rclcpp::Clock::SharedPtr ResourceManager::get_clock() const
 // BEGIN: private methods
 
 const hardware_interface::ResourceManagerParams ResourceManager::constructParams(
-  rclcpp::Clock::SharedPtr clock,
-  rclcpp::Logger logger,
-  const std::string & urdf,
-  bool activate_all,
-  unsigned int update_rate)
+  rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf,
+  bool activate_all, unsigned int update_rate)
 {
   hardware_interface::ResourceManagerParams params;
   params.clock = clock;

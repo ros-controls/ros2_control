@@ -31,7 +31,8 @@ namespace test_hardware_components
 {
 class TestIMUSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (SensorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {

@@ -111,7 +111,8 @@ public:
    * initialized. If false, the ResourceManager will not load any components and will only
    * initialize the ResourceManager with the given parameters.
    */
-  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load = true);
+  explicit ResourceManager(
+    const hardware_interface::ResourceManagerParams & params, bool load = true);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -137,7 +138,6 @@ public:
   virtual bool load_and_initialize_components(
     const std::string & urdf, const unsigned int update_rate = 100);
 
-
   /// Load resources from on a given URDF.
   /**
    * The resource manager can be post-initialized with a given URDF.
@@ -148,7 +148,8 @@ public:
    * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
    * \returns false if URDF validation has failed.
    */
-  virtual bool load_and_initialize_components(const hardware_interface::ResourceManagerParams & params);
+  virtual bool load_and_initialize_components(
+    const hardware_interface::ResourceManagerParams & params);
 
   /**
    * @brief Import joint limiters from the URDF.
@@ -582,12 +583,8 @@ private:
   void release_command_interface(const std::string & key);
 
   const hardware_interface::ResourceManagerParams constructParams(
-  rclcpp::Clock::SharedPtr clock,
-  rclcpp::Logger logger,
-  const std::string & urdf = std::string(),
-  bool activate_all = false,
-  unsigned int update_rate = 100
-  );
+    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
+    bool activate_all = false, unsigned int update_rate = 100);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 

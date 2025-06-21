@@ -42,7 +42,8 @@ static constexpr size_t ACCELERATION_INTERFACE_INDEX = 2;
 class GenericSystem : public hardware_interface::SystemInterface
 {
 public:
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override;
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 

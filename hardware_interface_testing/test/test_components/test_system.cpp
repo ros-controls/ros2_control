@@ -27,7 +27,8 @@ using hardware_interface::SystemInterface;
 
 class TestSystem : public SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     if (SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
@@ -170,7 +171,8 @@ private:
 
 class TestUninitializableSystem : public TestSystem
 {
-  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
     SystemInterface::on_init(params);
     return CallbackReturn::ERROR;
