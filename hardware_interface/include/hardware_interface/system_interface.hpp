@@ -201,9 +201,13 @@ public:
    */
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
-    hardware_interface::HardwareComponentInterfaceParams params;
-    params.hardware_info = hardware_info;
-    return on_init(params);
+    info_ = hardware_info;
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+    parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
+    parse_state_interface_descriptions(info_.gpios, gpio_state_interfaces_);
+    parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
+    parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
+    return CallbackReturn::SUCCESS;
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
@@ -219,13 +223,7 @@ public:
   virtual CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params)
   {
-    info_ = params.hardware_info;
-    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-    parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
-    parse_state_interface_descriptions(info_.gpios, gpio_state_interfaces_);
-    parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
-    parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
-    return CallbackReturn::SUCCESS;
+    return on_init(params.hardware_info);
   };
 
   /// Exports all state interfaces for this hardware interface.

@@ -43,15 +43,14 @@ struct JointState
 
 class TestActuatorExclusiveInterfaces : public ActuatorInterface
 {
-  CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & params) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
-    if (ActuatorInterface::on_init(params) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(info) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
 
-    for (const auto & j : params.hardware_info.joints)
+    for (const auto & j : info.joints)
     {
       (void)j;  // Suppress unused warning
       current_states_.emplace_back(JointState{});
