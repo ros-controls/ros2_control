@@ -1537,8 +1537,8 @@ public:
     {
       // deactivate on error
       auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_EQ(result, hardware_interface::return_type::OK);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1573,8 +1573,8 @@ public:
     {
       // deactivate on flag
       auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_EQ(result, hardware_interface::return_type::OK);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1609,8 +1609,8 @@ public:
     {
       // deactivate on flag
       auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_EQ(result, hardware_interface::return_type::OK);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1832,7 +1832,7 @@ public:
   using FunctionT =
     std::function<hardware_interface::HardwareReadWriteStatus(rclcpp::Time, rclcpp::Duration)>;
 
-  void check_read_and_write_cycles(bool test_for_changing_values)
+  void check_read_and_write_cycles(bool test_for_changing_values, bool is_write_active)
   {
     double prev_act_state_value = state_itfs[0].get_optional().value();
     double prev_system_state_value = state_itfs[1].get_optional().value();
@@ -1885,7 +1885,7 @@ public:
       EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
 
-      if (test_for_changing_values)
+      if (test_for_changing_values && is_write_active)
       {
         auto status_map = rm->get_components_status();
         auto check_periodicity = [&](const std::string & component_name, unsigned int rate)
@@ -1949,7 +1949,7 @@ TEST_F(
 {
   setup_resource_manager_and_do_initial_checks(false);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(
@@ -1958,7 +1958,7 @@ TEST_F(
 {
   setup_resource_manager_and_do_initial_checks(true);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(
@@ -1986,7 +1986,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(
@@ -2014,7 +2014,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(
@@ -2042,7 +2042,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2070,7 +2070,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2098,7 +2098,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2126,7 +2126,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2303,7 +2303,7 @@ public:
     }
   };
 
-  void check_read_and_write_cycles(bool check_for_updated_values)
+  void check_read_and_write_cycles(bool check_for_updated_values, bool is_write_active)
   {
     double prev_act_state_value = state_itfs[0].get_optional().value();
     double prev_system_state_value = state_itfs[1].get_optional().value();
@@ -2361,7 +2361,7 @@ public:
         testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
     };
 
-    if (check_for_updated_values)
+    if (check_for_updated_values && is_write_active)
     {
       const unsigned int rw_rate = 100u;
       const double expec_read_execution_time = (1.e6 / (3 * rw_rate)) + 200.0;
@@ -2404,7 +2404,7 @@ public:
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_activate)
 {
   setup_resource_manager_and_do_initial_checks();
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_deactivate)
@@ -2430,7 +2430,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_unconfigured)
@@ -2456,7 +2456,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_finalized)
@@ -2482,7 +2482,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 class ResourceManagerTestCommandLimitEnforcement : public ResourceManagerTest
