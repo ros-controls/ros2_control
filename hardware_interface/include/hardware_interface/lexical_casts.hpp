@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
 #include <string>
+#include <vector>
 
 namespace hardware_interface
 {
@@ -28,6 +29,8 @@ namespace hardware_interface
 double stod(const std::string & s);
 
 bool parse_bool(const std::string & bool_string);
+
+std::vector<std::string> parse_string_array(const std::string & string_array_string);
 
 }  // namespace hardware_interface
 

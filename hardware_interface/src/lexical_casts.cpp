@@ -15,6 +15,8 @@
 #include <locale>
 #include <optional>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
 
@@ -48,6 +50,7 @@ std::optional<double> stod(const std::string & s)
 #endif
 }
 }  // namespace impl
+
 double stod(const std::string & s)
 {
   if (const auto result = impl::stod(s))
@@ -56,8 +59,63 @@ double stod(const std::string & s)
   }
   throw std::invalid_argument("Failed converting string to real number");
 }
+
 bool parse_bool(const std::string & bool_string)
 {
   return bool_string == "true" || bool_string == "True";
 }
+
+std::vector<std::string> parse_string_array(const std::string & string_array_string)
+{
+  // Check string starts with '[' and ends with ']'
+  if (
+    string_array_string.empty() || string_array_string.front() != '[' ||
+    string_array_string.back() != ']')
+  {
+    throw std::invalid_argument("String must start with '[' and end with ']'");
+  }
+
+  // Check there are no "sub arrays"
+  if (
+    string_array_string.find("[") != 0u ||
+    string_array_string.find("]") != string_array_string.size() - 1u)
+  {
+    throw std::invalid_argument("String contains nested arrays");
+  }
+
+  // Check for empty array
+  if (string_array_string == "[]")
+  {
+    return {};
+  }
+
+  std::vector<std::string> result;
+  std::string current_string;
+  for (char c : string_array_string)
+  {
+    if (c == ',' || c == ']')
+    {
+      if (!current_string.empty())
+      {
+        result.push_back(current_string);
+        current_string.clear();
+      }
+      else
+      {
+        throw std::invalid_argument("Empty string found in array");
+      }
+    }
+    else if (c == '[' || c == ' ')
+    {
+      // Ignore opening brackets and spaces
+    }
+    else
+    {
+      current_string += c;  // Add character to current string
+    }
+  }
+
+  return result;
+}
+
 }  // namespace hardware_interface
