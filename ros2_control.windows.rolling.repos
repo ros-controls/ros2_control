@@ -17,8 +17,8 @@ repositories:
     version: main
   pal_statistics:
     type: git
-    url: https://github.com/pal-robotics/pal_statistics.git
-    version: humble-devel
+    url: https://github.com/christophfroehlich/pal_statistics.git
+    version: fix/win
   backward_ros:
     type: git
     url: https://github.com/pal-robotics/backward_ros.git
