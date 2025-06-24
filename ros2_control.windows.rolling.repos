@@ -21,8 +21,8 @@ repositories:
     version: fix/win
   backward_ros:
     type: git
-    url: https://github.com/pal-robotics/backward_ros.git
-    version: foxy-devel
+    url: https://github.com/christophfroehlich/backward_ros.git
+    version: fix/win
   diagnostics:
     type: git
     url: https://github.com/ros/diagnostics
