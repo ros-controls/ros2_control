@@ -54,13 +54,13 @@ TEST(TestLexicalCasts, test_parse_string_array)
   ASSERT_THROW(parse_string_array("[abc"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("abc]"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("[[abc, def], hij]"), std::invalid_argument);
-  ASSERT_THROW(parse_string_array("[ ]"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("[,]"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("[abc,]"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("[,abc]"), std::invalid_argument);
   ASSERT_THROW(parse_string_array("[abc,,def]"), std::invalid_argument);
 
   ASSERT_EQ(parse_string_array("[]"), std::vector<std::string>());
+  ASSERT_EQ(parse_string_array("[ ]"), std::vector<std::string>());
   ASSERT_EQ(parse_string_array("[abc]"), std::vector<std::string>({"abc"}));
   ASSERT_EQ(parse_string_array("[abc,def]"), std::vector<std::string>({"abc", "def"}));
   ASSERT_EQ(parse_string_array("[abc, def]"), std::vector<std::string>({"abc", "def"}));

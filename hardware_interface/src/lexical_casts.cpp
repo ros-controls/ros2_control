@@ -16,6 +16,9 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <regex>
+#include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
@@ -65,57 +68,79 @@ bool parse_bool(const std::string & bool_string)
   return bool_string == "true" || bool_string == "True";
 }
 
-std::vector<std::string> parse_string_array(const std::string & string_array_string)
+template <typename T>
+std::vector<T> parse_array(const std::string & array_string)
 {
-  // Check string starts with '[' and ends with ']'
-  if (
-    string_array_string.empty() || string_array_string.front() != '[' ||
-    string_array_string.back() != ']')
+  // Use regex to check for a flat array: starts with [, ends with ], no nested brackets
+  const std::regex array_regex(R"(^\[\s*([^\[\]]*\s*(,\s*[^\[\]]+\s*)*)?\]$)");
+  if (!std::regex_match(array_string, array_regex))
   {
-    throw std::invalid_argument("String must start with '[' and end with ']'");
+    throw std::invalid_argument("String must be a flat array: starts with '[' and ends with ']', no nested arrays");
   }
 
-  // Check there are no "sub arrays"
-  if (
-    string_array_string.find("[") != 0u ||
-    string_array_string.find("]") != string_array_string.size() - 1u)
+  // Use regex for the expression that either empty or contains only spaces
+  const std::regex empty_or_spaces_regex(R"(^\[\s*\]$)");
+  if (std::regex_match(array_string, empty_or_spaces_regex))
   {
-    throw std::invalid_argument("String contains nested arrays");
+    return {};  // Return empty array if input is "[]"
   }
 
-  // Check for empty array
-  if (string_array_string == "[]")
+  // Use regex to find cases of comma-separated but only whitespaces or no spaces between them like "[,]" "[a,b,,c]"
+  const std::regex comma_separated_regex(R"(^\[\s*([^,\s]+(\s*,\s*[^,\s]+)*)?\s*\]$)");
+  if (!std::regex_match(array_string, comma_separated_regex))
   {
-    return {};
+    throw std::invalid_argument("String must be a flat array with comma-separated values and no spaces between them");
   }
 
-  std::vector<std::string> result;
-  std::string current_string;
-  for (char c : string_array_string)
+  std::vector<T> result = {};
+  if (array_string == "[]")
   {
-    if (c == ',' || c == ']')
+    return result;  // Return empty array if input is "[]"
+  }
+
+  //regex for comma separated values and no spaces between them or just content like "[a,b,c]" or "[a]" or "[a, b, c]"
+  // The regex captures values between commas, allowing for optional spaces around them
+  // It captures the first group of non-whitespace characters that are not commas
+  // and allows for multiple such groups separated by commas.
+  // Example matches: "a", "b", "c", "a, b", "a, b, c"
+  // It does not allow nested arrays or empty values.
+  const std::regex value_regex(R"(\s*([^,\s]+)\s*)");
+  auto it = std::sregex_iterator(array_string.begin(), array_string.end(), value_regex);
+  auto end = std::sregex_iterator();
+
+  for (; it != end; ++it)
+  {
+    const std::string value_str = it->str(1);  // Get the first capturing group
+    if constexpr (std::is_same_v<T, std::string>)
     {
-      if (!current_string.empty())
+      result.push_back(value_str);
+    }
+    else if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
+    {
+      if (const auto value = impl::stod(value_str))
       {
-        result.push_back(current_string);
-        current_string.clear();
+        result.push_back(static_cast<T>(*value));
       }
       else
       {
-        throw std::invalid_argument("Empty string found in array");
+        throw std::invalid_argument("Failed converting string to floating point or integer: " + value_str);
       }
     }
-    else if (c == '[' || c == ' ')
+    else if constexpr (std::is_same_v<T, bool>)
     {
-      // Ignore opening brackets and spaces
+      result.push_back(parse_bool(value_str));
     }
     else
     {
-      current_string += c;  // Add character to current string
+      throw std::invalid_argument("Unsupported type for parsing: " + std::string(typeid(T).name()));
     }
   }
-
   return result;
+}
+
+std::vector<std::string> parse_string_array(const std::string & string_array_string)
+{
+  return parse_array<std::string>(string_array_string);
 }
 
 }  // namespace hardware_interface
