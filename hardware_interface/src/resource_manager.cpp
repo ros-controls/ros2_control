@@ -2569,7 +2569,7 @@ rclcpp::Clock::SharedPtr ResourceManager::get_clock() const
 
 // BEGIN: private methods
 
-const hardware_interface::ResourceManagerParams ResourceManager::constructParams(
+hardware_interface::ResourceManagerParams ResourceManager::constructParams(
   rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf,
   bool activate_all, unsigned int update_rate)
 {

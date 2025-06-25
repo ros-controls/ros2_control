@@ -582,7 +582,7 @@ private:
 
   void release_command_interface(const std::string & key);
 
-  const hardware_interface::ResourceManagerParams constructParams(
+  hardware_interface::ResourceManagerParams constructParams(
     rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
     bool activate_all = false, unsigned int update_rate = 100);
 
