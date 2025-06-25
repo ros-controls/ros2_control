@@ -581,6 +581,9 @@ private:
 
   void release_command_interface(const std::string & key);
 
+  // Note this was added in #2323 and is a temporary addition to be backwards compatible with the
+  // original constructors. This is planned to be removed in a future PR along with the
+  // aforementioned constructors.
   hardware_interface::ResourceManagerParams constructParams(
     rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
     bool activate_all = false, unsigned int update_rate = 100);
