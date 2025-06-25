@@ -1530,6 +1530,8 @@ bool ResourceManager::load_and_initialize_components(
     hardware_interface::HardwareComponentParams interface_params;
     interface_params.hardware_info = individual_hardware_info;
     interface_params.executor = params.executor;
+    interface_params.clock = params.clock;
+    interface_params.logger = params.logger;
 
     if (individual_hardware_info.type == actuator_type)
     {
