@@ -2307,20 +2307,18 @@ HardwareReadWriteStatus ResourceManager::read(
           component_name.c_str());
         ret_val = return_type::ERROR;
       }
+      if (ret_val == hardware_interface::return_type::DEACTIVATE)
+      {
+        RCLCPP_WARN(
+          get_logger(), "DEACTIVATE returned from read cycle is treated the same as ERROR.");
+        ret_val = hardware_interface::return_type::ERROR;
+      }
       if (ret_val == return_type::ERROR)
       {
         component.error();
         read_write_status.result = ret_val;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
-      }
-      else if (ret_val == return_type::DEACTIVATE)
-      {
-        rclcpp_lifecycle::State inactive_state(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
-        set_component_state(component_name, inactive_state);
-        read_write_status.result = ret_val;
-        read_write_status.failed_hardware_names.push_back(component_name);
       }
     }
   };

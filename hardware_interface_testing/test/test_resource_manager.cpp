@@ -1523,7 +1523,7 @@ public:
     }
   }
 
-  void check_read_or_write_deactivate(
+  void check_write_deactivate(
     FunctionT method_that_deactivates, FunctionT other_method, const double deactivate_value)
   {
     // define state to set components to
@@ -1677,8 +1677,8 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_read)
   setup_resource_manager_and_do_initial_checks();
 
   using namespace std::placeholders;
-  // check read methods failures
-  check_read_or_write_deactivate(
+  // check read methods failures (DEACTIVATE is the same as ERROR on read)
+  check_read_or_write_failure(
     std::bind(&TestableResourceManager::read, rm, _1, _2),
     std::bind(&TestableResourceManager::write, rm, _1, _2), test_constants::READ_DEACTIVATE_VALUE);
 }
@@ -1689,7 +1689,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
 
   using namespace std::placeholders;
   // check write methods failures
-  check_read_or_write_deactivate(
+  check_write_deactivate(
     std::bind(&TestableResourceManager::write, rm, _1, _2),
     std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_DEACTIVATE_VALUE);
 }
