@@ -2388,16 +2388,13 @@ HardwareReadWriteStatus ResourceManager::read(
           component_name.c_str());
         ret_val = return_type::ERROR;
       }
-      if (ret_val == hardware_interface::return_type::DEACTIVATE)
-      {
-        RCLCPP_WARN(
-          get_logger(), "DEACTIVATE returned from read cycle is treated the same as ERROR.");
-        ret_val = hardware_interface::return_type::ERROR;
-      }
-      if (ret_val == return_type::ERROR)
+      RCLCPP_WARN_EXPRESSION(
+        get_logger(), ret_val == hardware_interface::return_type::DEACTIVATE,
+        "DEACTIVATE returned from read cycle is treated the same as ERROR.");
+      if (ret_val != return_type::OK)
       {
         component.error();
-        read_write_status.result = ret_val;
+        read_write_status.result = return_type::ERROR;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
