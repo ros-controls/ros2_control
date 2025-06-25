@@ -417,7 +417,7 @@ ControllerManager::ControllerManager(
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params);
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
   init_controller_manager();
 }
 

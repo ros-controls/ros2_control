@@ -111,8 +111,7 @@ public:
    * initialized. If false, the ResourceManager will not load any components and will only
    * initialize the ResourceManager with the given parameters.
    */
-  explicit ResourceManager(
-    const hardware_interface::ResourceManagerParams & params, bool load = true);
+  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load);
 
   ResourceManager(const ResourceManager &) = delete;
 
