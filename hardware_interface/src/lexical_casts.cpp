@@ -15,11 +15,8 @@
 #include <iostream>
 #include <locale>
 #include <optional>
-#include <regex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
@@ -66,85 +63,23 @@ double stod(const std::string & s)
 
 bool parse_bool(const std::string & bool_string)
 {
-  return bool_string == "true" || bool_string == "True";
-}
+  // Copy input to temp and make lowercase
+  std::string temp = bool_string;
+  std::transform(
+    temp.begin(), temp.end(), temp.begin(), [](unsigned char c) { return std::tolower(c); });
 
-template <typename T>
-std::vector<T> parse_array(const std::string & array_string)
-{
-  // Use regex to check for a flat array: starts with [, ends with ], no nested brackets
-  const std::regex array_regex(R"(^\[\s*([^\[\]]*\s*(,\s*[^\[\]]+\s*)*)?\]$)");
-  if (!std::regex_match(array_string, array_regex))
+  if (temp == "true")
   {
-    throw std::invalid_argument(
-      "String must be a flat array: starts with '[' and ends with ']', no nested arrays");
+    return true;
   }
-
-  // Use regex for the expression that either empty or contains only spaces
-  const std::regex empty_or_spaces_regex(R"(^\[\s*\]$)");
-  if (std::regex_match(array_string, empty_or_spaces_regex))
+  if (temp == "false")
   {
-    std::cerr << "Input is an empty array: " << array_string << std::endl;
-    return {};  // Return empty array if input is "[]"
+    return false;
   }
-
-  // Use regex to find cases of comma-separated but only whitespaces or no spaces between them like
-  // "[,]" "[a,b,,c]"
-  const std::regex comma_separated_regex(R"(^\[\s*([^,\s]+(\s*,\s*[^,\s]+)*)?\s*\]$)");
-  if (!std::regex_match(array_string, comma_separated_regex))
-  {
-    throw std::invalid_argument(
-      "String must be a flat array with comma-separated values and no spaces between them");
-  }
-
-  std::vector<T> result = {};
-  if (array_string == "[]")
-  {
-    return result;  // Return empty array if input is "[]"
-  }
-
-  // regex for comma separated values and no spaces between them or just content like "[a,b,c]" or
-  // "[a]" or "[a, b, c]"
-  //  The regex captures values between commas, allowing for optional spaces around them
-  //  It captures the first group of non-whitespace characters that are not commas
-  //  and allows for multiple such groups separated by commas.
-  //  Example matches: "a", "b", "c", "a, b", "a, b, c"
-  //  It does not allow nested arrays or empty values.
-  std::cerr << "Parsing array string: " << array_string << std::endl;
-  const std::regex value_regex(R"([^\s,\[\]]+)");
-  auto begin = std::sregex_iterator(array_string.begin(), array_string.end(), value_regex);
-  auto end = std::sregex_iterator();
-
-  for (auto it = begin; it != end; ++it)
-  {
-    const std::string value_str = it->str();  // Get the first capturing group
-    std::cerr << "Found value: '" << value_str << "'" << std::endl;
-    if constexpr (std::is_same_v<T, std::string>)
-    {
-      result.push_back(value_str);
-    }
-    else if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
-    {
-      if (const auto value = impl::stod(value_str))
-      {
-        result.push_back(static_cast<T>(*value));
-      }
-      else
-      {
-        throw std::invalid_argument(
-          "Failed converting string to floating point or integer: " + value_str);
-      }
-    }
-    else if constexpr (std::is_same_v<T, bool>)
-    {
-      result.push_back(parse_bool(value_str));
-    }
-    else
-    {
-      throw std::invalid_argument("Unsupported type for parsing: " + std::string(typeid(T).name()));
-    }
-  }
-  return result;
+  // If input is not "true" or "false" (any casing), throw or handle as error
+  throw std::invalid_argument(
+    "Input string : '" + bool_string +
+    "' is not a valid boolean value. Expected 'true' or 'false'.");
 }
 
 std::vector<std::string> parse_string_array(const std::string & string_array_string)
