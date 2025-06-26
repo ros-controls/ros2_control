@@ -1367,13 +1367,13 @@ public:
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     {
-      auto [ok, failed_hardware_names] = rm->write(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     check_if_interface_available(true, true);
@@ -1415,8 +1415,8 @@ public:
     ASSERT_TRUE(claimed_itfs[0].set_value(fail_value));
     ASSERT_TRUE(claimed_itfs[1].set_value(fail_value - 10.0));
     {
-      auto [ok, failed_hardware_names] = method_that_fails(time, duration);
-      EXPECT_FALSE(ok);
+      auto [result, failed_hardware_names] = method_that_fails(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::ERROR);
       EXPECT_FALSE(failed_hardware_names.empty());
       ASSERT_THAT(
         failed_hardware_names,
@@ -1441,8 +1441,8 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
@@ -1451,8 +1451,8 @@ public:
     ASSERT_TRUE(claimed_itfs[0].set_value(fail_value - 10.0));
     ASSERT_TRUE(claimed_itfs[1].set_value(fail_value));
     {
-      auto [ok, failed_hardware_names] = method_that_fails(time, duration);
-      EXPECT_FALSE(ok);
+      auto [result, failed_hardware_names] = method_that_fails(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::ERROR);
       EXPECT_FALSE(failed_hardware_names.empty());
       ASSERT_THAT(
         failed_hardware_names,
@@ -1477,8 +1477,8 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
@@ -1488,8 +1488,8 @@ public:
     ASSERT_TRUE(claimed_itfs[0].set_value(fail_value));
     ASSERT_TRUE(claimed_itfs[1].set_value(fail_value));
     {
-      auto [ok, failed_hardware_names] = method_that_fails(time, duration);
-      EXPECT_FALSE(ok);
+      auto [result, failed_hardware_names] = method_that_fails(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::ERROR);
       EXPECT_FALSE(failed_hardware_names.empty());
       ASSERT_THAT(
         failed_hardware_names,
@@ -1516,14 +1516,14 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
   }
 
-  void check_read_or_write_deactivate(
+  void check_write_deactivate(
     FunctionT method_that_deactivates, FunctionT other_method, const double deactivate_value)
   {
     // define state to set components to
@@ -1536,9 +1536,9 @@ public:
     ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value - 10.0));
     {
       // deactivate on error
-      auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_TRUE(ok);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1561,8 +1561,8 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
@@ -1572,9 +1572,9 @@ public:
     ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value));
     {
       // deactivate on flag
-      auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_TRUE(ok);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1596,8 +1596,8 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
@@ -1608,9 +1608,9 @@ public:
     ASSERT_TRUE(claimed_itfs[1].set_value(deactivate_value));
     {
       // deactivate on flag
-      auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
-      EXPECT_TRUE(ok);
-      EXPECT_TRUE(failed_hardware_names.empty());
+      auto [result, failed_hardware_names] = method_that_deactivates(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::DEACTIVATE);
+      EXPECT_TRUE(!failed_hardware_names.empty());
       auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
@@ -1633,8 +1633,8 @@ public:
     }
     // write is sill OK
     {
-      auto [ok, failed_hardware_names] = other_method(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = other_method(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       check_if_interface_available(true, true);
     }
@@ -1677,8 +1677,8 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_read)
   setup_resource_manager_and_do_initial_checks();
 
   using namespace std::placeholders;
-  // check read methods failures
-  check_read_or_write_deactivate(
+  // check read methods failures (DEACTIVATE is the same as ERROR on read)
+  check_read_or_write_failure(
     std::bind(&TestableResourceManager::read, rm, _1, _2),
     std::bind(&TestableResourceManager::write, rm, _1, _2), test_constants::READ_DEACTIVATE_VALUE);
 }
@@ -1689,7 +1689,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
 
   using namespace std::placeholders;
   // check write methods failures
-  check_read_or_write_deactivate(
+  check_write_deactivate(
     std::bind(&TestableResourceManager::write, rm, _1, _2),
     std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_DEACTIVATE_VALUE);
 }
@@ -1792,15 +1792,15 @@ public:
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     {
       ASSERT_TRUE(claimed_itfs[0].set_value(10.0));
       ASSERT_TRUE(claimed_itfs[1].set_value(20.0));
-      auto [ok, failed_hardware_names] = rm->write(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
 
@@ -1832,15 +1832,15 @@ public:
   using FunctionT =
     std::function<hardware_interface::HardwareReadWriteStatus(rclcpp::Time, rclcpp::Duration)>;
 
-  void check_read_and_write_cycles(bool test_for_changing_values)
+  void check_read_and_write_cycles(bool test_for_changing_values, bool is_write_active)
   {
     double prev_act_state_value = state_itfs[0].get_optional().value();
     double prev_system_state_value = state_itfs[1].get_optional().value();
 
     for (size_t i = 1; i < 100; i++)
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       if (i % (cm_update_rate_ / system_rw_rate_) == 0 && test_for_changing_values)
       {
@@ -1881,11 +1881,11 @@ public:
       {
         ASSERT_EQ(state_itfs[1].get_optional().value(), prev_system_state_value);
       }
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
 
-      if (test_for_changing_values)
+      if (test_for_changing_values && is_write_active)
       {
         auto status_map = rm->get_components_status();
         auto check_periodicity = [&](const std::string & component_name, unsigned int rate)
@@ -1949,7 +1949,7 @@ TEST_F(
 {
   setup_resource_manager_and_do_initial_checks(false);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(
@@ -1958,7 +1958,7 @@ TEST_F(
 {
   setup_resource_manager_and_do_initial_checks(true);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(
@@ -1986,7 +1986,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(
@@ -2014,7 +2014,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(
@@ -2042,7 +2042,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2070,7 +2070,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2098,7 +2098,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2126,7 +2126,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(
@@ -2139,14 +2139,14 @@ TEST_F(
 
   const auto read = [&]()
   {
-    const auto [ok, failed_hardware_names] = rm->read(time, duration);
-    EXPECT_TRUE(ok);
+    const auto [result, failed_hardware_names] = rm->read(time, duration);
+    EXPECT_EQ(result, hardware_interface::return_type::OK);
     EXPECT_TRUE(failed_hardware_names.empty());
   };
   const auto write = [&]()
   {
-    const auto [ok, failed_hardware_names] = rm->write(time, duration);
-    EXPECT_TRUE(ok);
+    const auto [result, failed_hardware_names] = rm->write(time, duration);
+    EXPECT_EQ(result, hardware_interface::return_type::OK);
     EXPECT_TRUE(failed_hardware_names.empty());
   };
 
@@ -2266,15 +2266,15 @@ public:
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_THAT(failed_hardware_names, testing::IsEmpty());
     }
     {
       // claimed_itfs[0].set_value(10.0);
       // claimed_itfs[1].set_value(20.0);
-      auto [ok, failed_hardware_names] = rm->write(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_THAT(failed_hardware_names, testing::IsEmpty());
     }
     node_.get_clock()->sleep_until(time + duration);
@@ -2303,7 +2303,7 @@ public:
     }
   };
 
-  void check_read_and_write_cycles(bool check_for_updated_values)
+  void check_read_and_write_cycles(bool check_for_updated_values, bool is_write_active)
   {
     double prev_act_state_value = state_itfs[0].get_optional().value();
     double prev_system_state_value = state_itfs[1].get_optional().value();
@@ -2311,8 +2311,8 @@ public:
     const double system_increment = 20.0;
     for (size_t i = 1; i < 100; i++)
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
       // The values are computations exactly within the test_components
       if (check_for_updated_values)
@@ -2330,8 +2330,8 @@ public:
         state_itfs[0].get_optional().value(), prev_act_state_value, actuator_increment / 2.0);
       ASSERT_NEAR(
         state_itfs[1].get_optional().value(), prev_system_state_value, system_increment / 2.0);
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
@@ -2361,7 +2361,7 @@ public:
         testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
     };
 
-    if (check_for_updated_values)
+    if (check_for_updated_values && is_write_active)
     {
       const unsigned int rw_rate = 100u;
       const double expec_read_execution_time = (1.e6 / (3 * rw_rate)) + 200.0;
@@ -2404,7 +2404,7 @@ public:
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_activate)
 {
   setup_resource_manager_and_do_initial_checks();
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, true);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_deactivate)
@@ -2430,7 +2430,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles(true);
+  check_read_and_write_cycles(true, false);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_unconfigured)
@@ -2456,7 +2456,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_finalized)
@@ -2482,7 +2482,7 @@ TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  check_read_and_write_cycles(false);
+  check_read_and_write_cycles(false, false);
 }
 
 class ResourceManagerTestCommandLimitEnforcement : public ResourceManagerTest
@@ -2520,15 +2520,15 @@ public:
     check_if_interface_available(true, true);
     // with default values read and write should run without any problems
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
     {
       ASSERT_TRUE(claimed_itfs[0].set_value(10.0));
       ASSERT_TRUE(claimed_itfs[1].set_value(20.0));
-      auto [ok, failed_hardware_names] = rm->write(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
     }
 
@@ -2560,15 +2560,15 @@ public:
   void check_limit_enforcement()
   {
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
 
       ASSERT_TRUE(claimed_itfs[0].set_value(2.0));
       ASSERT_TRUE(claimed_itfs[1].set_value(-4.0));
 
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
@@ -2577,14 +2577,14 @@ public:
     {
       // read now and check that without limit enforcement the values are half of command as this is
       // the logic implemented in test components
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
 
       EXPECT_EQ(state_itfs[0].get_optional().value(), 1.0);
       EXPECT_EQ(state_itfs[1].get_optional().value(), -2.0);
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(write_result == hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
@@ -2593,8 +2593,8 @@ public:
     // Let's enforce for one loop and then run the read and write again and reset interfaces to zero
     // state
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
 
       EXPECT_EQ(state_itfs[0].get_optional().value(), 1.0);
@@ -2615,14 +2615,14 @@ public:
       EXPECT_NEAR(claimed_itfs[0].get_optional().value(), 1.048, 0.00001);
       EXPECT_EQ(claimed_itfs[1].get_optional().value(), 0.0);
 
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
 
-      auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
-      EXPECT_TRUE(read_ok);
+      auto [read_result, failed_hardware_names_read] = rm->read(time, duration);
+      EXPECT_EQ(read_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_read.empty());
 
       ASSERT_NEAR(
@@ -2635,8 +2635,8 @@ public:
     {
       ASSERT_GT(state_itfs[2].get_optional().value(), 1.05);
       ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::RESET_STATE_INTERFACES_VALUE));
-      auto [read_ok, failed_hardware_names_read] = rm->read(time, duration);
-      EXPECT_TRUE(read_ok);
+      auto [read_result, failed_hardware_names_read] = rm->read(time, duration);
+      EXPECT_EQ(read_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_read.empty());
       ASSERT_EQ(state_itfs[2].get_optional().value(), 0.0);
       ASSERT_TRUE(claimed_itfs[0].set_value(0.0));
@@ -2650,8 +2650,8 @@ public:
     // Now loop and see that the joint limits are being enforced progressively
     for (size_t i = 1; i < 300; i++)
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
 
       EXPECT_EQ(state_itfs[0].get_optional().value(), new_state_value_1);
@@ -2682,15 +2682,15 @@ public:
       new_state_value_1 = claimed_itfs[0].get_optional().value() / 2.0;
       new_state_value_2 = claimed_itfs[1].get_optional().value() / 2.0;
 
-      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
-      EXPECT_TRUE(ok_write);
+      auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_EQ(write_result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();
     }
     {
-      auto [ok, failed_hardware_names] = rm->read(time, duration);
-      EXPECT_TRUE(ok);
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
       EXPECT_TRUE(failed_hardware_names.empty());
 
       EXPECT_NEAR(state_itfs[0].get_optional().value(), 0.823, 0.00001);
