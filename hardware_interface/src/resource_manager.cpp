@@ -2218,7 +2218,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  read_write_status.ok = true;
+  read_write_status.result = return_type::OK;
   read_write_status.failed_hardware_names.clear();
 
   // This is needed while we load and initialize the components
@@ -2293,26 +2293,16 @@ HardwareReadWriteStatus ResourceManager::read(
           component_name.c_str());
         ret_val = return_type::ERROR;
       }
-      if (ret_val == return_type::ERROR)
+      RCLCPP_WARN_EXPRESSION(
+        get_logger(), ret_val == hardware_interface::return_type::DEACTIVATE,
+        "DEACTIVATE returned from read cycle is treated the same as ERROR.");
+      if (ret_val != return_type::OK)
       {
         component.error();
-        read_write_status.ok = false;
+        read_write_status.result = return_type::ERROR;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
-      else if (ret_val == return_type::DEACTIVATE)
-      {
-        rclcpp_lifecycle::State inactive_state(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
-        set_component_state(component_name, inactive_state);
-      }
-      // If desired: automatic re-activation. We could add a flag for this...
-      // else
-      // {
-      // using lifecycle_msgs::msg::State;
-      // rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
-      // set_component_state(component.get_name(), state);
-      // }
     }
   };
 
@@ -2327,7 +2317,7 @@ HardwareReadWriteStatus ResourceManager::read(
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  read_write_status.ok = true;
+  read_write_status.result = return_type::OK;
   read_write_status.failed_hardware_names.clear();
 
   // This is needed while we load and initialize the components
@@ -2406,7 +2396,7 @@ HardwareReadWriteStatus ResourceManager::write(
       if (ret_val == return_type::ERROR)
       {
         component.error();
-        read_write_status.ok = false;
+        read_write_status.result = ret_val;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
       }
@@ -2415,6 +2405,8 @@ HardwareReadWriteStatus ResourceManager::write(
         rclcpp_lifecycle::State inactive_state(
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
         set_component_state(component_name, inactive_state);
+        read_write_status.result = ret_val;
+        read_write_status.failed_hardware_names.push_back(component_name);
       }
     }
   };
