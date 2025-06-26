@@ -87,9 +87,9 @@ std::vector<T> parse_array(const std::string & array_string)
     }
     else if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
     {
-      if (const auto value = hardware_interface::stod(value_str))
+      if (const T value = static_cast<T>(hardware_interface::stod(value_str)))
       {
-        result.push_back(static_cast<T>(value));
+        result.push_back(value);
       }
       else
       {
