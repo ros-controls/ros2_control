@@ -49,7 +49,6 @@ std::vector<T> parse_array(const std::string & array_string)
   const std::regex empty_or_spaces_regex(R"(^\[\s*\]$)");
   if (std::regex_match(array_string, empty_or_spaces_regex))
   {
-    std::cerr << "Input is an empty array: " << array_string << std::endl;
     return {};  // Return empty array if input is "[]"
   }
 
