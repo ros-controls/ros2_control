@@ -57,7 +57,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
   CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & /*info*/) override
+    const hardware_interface::HardwareComponentInterfaceParams & /*params*/) override
   {
     // We hardcode the info
     return CallbackReturn::SUCCESS;

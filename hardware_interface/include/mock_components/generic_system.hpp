@@ -43,7 +43,7 @@ class GenericSystem : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & info) override;
+    const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
