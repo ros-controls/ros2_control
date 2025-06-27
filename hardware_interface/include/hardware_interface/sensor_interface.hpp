@@ -183,7 +183,11 @@ public:
   virtual CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params)
   {
+    // This is done for backward compatibility with the old on_init method.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return on_init(params.hardware_info);
+#pragma GCC diagnostic pop
   };
 
   /// Exports all state interfaces for this hardware interface.
