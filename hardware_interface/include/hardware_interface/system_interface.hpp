@@ -127,6 +127,9 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated(
+    "Replaced by CallbackReturn init(const hardware_interface::HardwareComponentParams & "
+    "params). Initialization is handled by the Framework.")]]
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
@@ -199,6 +202,7 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated("Use on_init(const HardwareComponentInterfaceParams & params) instead.")]]
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
@@ -240,9 +244,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled "
-    "by the Framework.")]] virtual std::vector<StateInterface>
-  export_state_interfaces()
+    "Exporting is handled by the Framework.")]]
+  virtual std::vector<StateInterface> export_state_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_state_interfaces() and only when empty vector is returned call
@@ -331,10 +334,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is "
-    "handled "
-    "by the Framework.")]] virtual std::vector<CommandInterface>
-  export_command_interfaces()
+    "Exporting is handled by the Framework.")]]
+  virtual std::vector<CommandInterface> export_command_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_command_interfaces() and only when empty vector is returned call
