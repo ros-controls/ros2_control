@@ -46,15 +46,15 @@ public:
   ~Sensor() = default;
 
   [[deprecated(
-    "Replaced by const rclcpp_lifecycle::State & initialize(const hardware_interface::HardwareComponentParams & "
-    "params).")]]
+    "Replaced by const rclcpp_lifecycle::State & initialize(const "
+    "hardware_interface::HardwareComponentParams & params).")]]
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & sensor_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
 
   [[deprecated(
-    "Replaced by const rclcpp_lifecycle::State & initialize(const hardware_interface::HardwareComponentParams & "
-    "params).")]]
+    "Replaced by const rclcpp_lifecycle::State & initialize(const "
+    "hardware_interface::HardwareComponentParams & params).")]]
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & sensor_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock);
 
