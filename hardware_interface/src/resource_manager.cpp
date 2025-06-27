@@ -1895,28 +1895,52 @@ std::string ResourceManager::get_command_interface_data_type(const std::string &
 void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
-  read_write_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
-    resource_storage_->systems_.size());
+  HardwareComponentParams params;
+  params.hardware_info = hardware_info;
+  import_component(std::move(actuator), params);
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
+  HardwareComponentParams params;
+  params.hardware_info = hardware_info;
+  import_component(std::move(sensor), params);
+}
+
+void ResourceManager::import_component(
+  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
+{
+  HardwareComponentParams params;
+  params.hardware_info = hardware_info;
+  import_component(std::move(system), params);
+}
+
+void ResourceManager::import_component(
+  std::unique_ptr<ActuatorInterface> actuator, const HardwareComponentParams & params)
+{
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
+  resource_storage_->initialize_actuator(std::move(actuator), params);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
-  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
+  std::unique_ptr<SensorInterface> sensor, const HardwareComponentParams & params)
 {
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  resource_storage_->initialize_system(std::move(system), hardware_info);
+  resource_storage_->initialize_sensor(std::move(sensor), params);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
+}
+
+void ResourceManager::import_component(
+  std::unique_ptr<SystemInterface> system, const HardwareComponentParams & params)
+{
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  resource_storage_->initialize_system(std::move(system), params);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
