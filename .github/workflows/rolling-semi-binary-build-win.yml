@@ -17,6 +17,19 @@ on:
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
       - 'ros2_control.windows.rolling.repos'
+  push:
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/rolling-semi-binary-build-win.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.rolling.repos'
+      - 'ros2_control.windows.rolling.repos'
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on master branch
@@ -29,10 +42,9 @@ jobs:
     #   (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-windows')) ||
     #   (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-windows')) ||
     #   (github.event_name == 'workflow_dispatch')
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@test/pixi/cache
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@fix/pixi/cache
     with:
       ros_distro: rolling
-      ref_for_scheduled_build: master
       pixi_dependencies: typeguard jinja2 boost compilers
       windows_dependencies: ros2_control.windows.rolling.repos
       ninja_packages: rsl
