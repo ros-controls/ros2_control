@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cctype>
 #include <locale>
 #include <optional>
-#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -62,60 +64,28 @@ double stod(const std::string & s)
 
 bool parse_bool(const std::string & bool_string)
 {
-  return bool_string == "true" || bool_string == "True";
+  // Copy input to temp and make lowercase
+  std::string temp = bool_string;
+  std::transform(
+    temp.begin(), temp.end(), temp.begin(), [](unsigned char c) { return std::tolower(c); });
+
+  if (temp == "true")
+  {
+    return true;
+  }
+  if (temp == "false")
+  {
+    return false;
+  }
+  // If input is not "true" or "false" (any casing), throw or handle as error
+  throw std::invalid_argument(
+    "Input string : '" + bool_string +
+    "' is not a valid boolean value. Expected 'true' or 'false'.");
 }
 
 std::vector<std::string> parse_string_array(const std::string & string_array_string)
 {
-  // Check string starts with '[' and ends with ']'
-  if (
-    string_array_string.empty() || string_array_string.front() != '[' ||
-    string_array_string.back() != ']')
-  {
-    throw std::invalid_argument("String must start with '[' and end with ']'");
-  }
-
-  // Check there are no "sub arrays"
-  if (
-    string_array_string.find("[") != 0u ||
-    string_array_string.find("]") != string_array_string.size() - 1u)
-  {
-    throw std::invalid_argument("String contains nested arrays");
-  }
-
-  // Check for empty array
-  if (string_array_string == "[]")
-  {
-    return {};
-  }
-
-  std::vector<std::string> result;
-  std::string current_string;
-  for (char c : string_array_string)
-  {
-    if (c == ',' || c == ']')
-    {
-      if (!current_string.empty())
-      {
-        result.push_back(current_string);
-        current_string.clear();
-      }
-      else
-      {
-        throw std::invalid_argument("Empty string found in array");
-      }
-    }
-    else if (c == '[' || c == ' ')
-    {
-      // Ignore opening brackets and spaces
-    }
-    else
-    {
-      current_string += c;  // Add character to current string
-    }
-  }
-
-  return result;
+  return parse_array<std::string>(string_array_string);
 }
 
 }  // namespace hardware_interface
