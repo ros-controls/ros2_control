@@ -1305,22 +1305,6 @@ public:
     init_systems(systems_);
   }
 
-  bool is_hardware_command_interface(const std::string & interface_name) const
-  {
-    // Check if the interface is a command interface of any hardware component
-    for (const auto & [hw_name, hw_info] : hardware_info_map_)
-    {
-      const auto & command_interfaces = hw_info.command_interfaces;
-      if (
-        std::find(command_interfaces.begin(), command_interfaces.end(), interface_name) !=
-        command_interfaces.end())
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
   void clear()
   {
     actuators_.clear();
@@ -2037,8 +2021,7 @@ bool ResourceManager::prepare_command_mode_switch(
   // Check if interfaces are available
   std::stringstream ss_not_available;
   ss_not_available << "Not available: " << std::endl << "[" << std::endl;
-  auto check_available =
-    [&](const std::vector<std::string> & list_to_check, bool check_only_if_cmd_itf_available)
+  auto check_available = [&](const std::vector<std::string> & list_to_check)
   {
     bool all_available = true;
     for (const auto & interface : list_to_check)
@@ -2048,19 +2031,13 @@ bool ResourceManager::prepare_command_mode_switch(
       /// interfaces belong to the hardware when they are unavailable to avoid deactivation
       if (!command_interface_is_available(interface))
       {
-        if (
-          !check_only_if_cmd_itf_available &&
-          resource_storage_->is_hardware_command_interface(interface))
-        {
-          continue;
-        }
         all_available = false;
         ss_not_available << " " << interface << std::endl;
       }
     }
     return all_available;
   };
-  if (!(check_available(start_interfaces, true) && check_available(stop_interfaces, false)))
+  if (!(check_available(start_interfaces) && check_available(stop_interfaces)))
   {
     ss_not_available << "]" << std::endl;
     RCLCPP_ERROR(
