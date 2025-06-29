@@ -2026,9 +2026,6 @@ bool ResourceManager::prepare_command_mode_switch(
     bool all_available = true;
     for (const auto & interface : list_to_check)
     {
-      /// When the hardware goes is in error, the command interfaces are made unavailable to avoid
-      /// starting any interfaces, so for the stop interfaces we will have to check if the
-      /// interfaces belong to the hardware when they are unavailable to avoid deactivation
       if (!command_interface_is_available(interface))
       {
         all_available = false;
