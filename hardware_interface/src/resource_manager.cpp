@@ -665,6 +665,7 @@ public:
   {
     auto interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
+    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
 
     RCLCPP_WARN_EXPRESSION(
       get_logger(), interface_names.empty(),
