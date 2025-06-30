@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   pre-commit:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@fix/pixi/cache
     strategy:
       fail-fast: false
       matrix:
