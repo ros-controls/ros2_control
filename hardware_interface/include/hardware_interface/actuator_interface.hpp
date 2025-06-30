@@ -183,7 +183,7 @@ public:
         info_.thread_priority);
       async_handler_->start_thread();
     }
-    
+
     if (auto locked_executor = params.executor.lock())
     {
       std::string node_name = params.hardware_info.name;
@@ -198,7 +198,7 @@ public:
         "Executor is not available during hardware component initialization for '%s'.",
         params.hardware_info.name.c_str());
     }
-    
+
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
     interface_params.executor = params.executor;

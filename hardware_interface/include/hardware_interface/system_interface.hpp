@@ -687,6 +687,12 @@ public:
    */
   rclcpp::Clock::SharedPtr get_clock() const { return system_clock_; }
 
+  /// Get the default node of the ActuatorInterface.
+  /**
+   * \return node of the ActuatorInterface.
+   */
+  rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
+
   /// Get the hardware info of the SystemInterface.
   /**
    * \return hardware info of the SystemInterface.
