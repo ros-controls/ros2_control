@@ -56,14 +56,14 @@ repos:
         args: ["--line-length=99"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
 
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.5
+    rev: v20.1.7
     hooks:
       - id: clang-format
         args: ['-fallback-style=none', '-i']
@@ -109,7 +109,7 @@ repos:
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.2
+    rev: v2.0.0
     hooks:
       - id: doc8
         args: ['--max-line-length=100', '--ignore=D001']
@@ -133,7 +133,7 @@ repos:
         exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.0
+    rev: 0.33.1
     hooks:
       - id: check-github-workflows
         args: ["--verbose"]
