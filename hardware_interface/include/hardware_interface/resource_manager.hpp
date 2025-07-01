@@ -45,7 +45,7 @@ class ControllerManager;
 
 struct HardwareReadWriteStatus
 {
-  bool ok;
+  return_type result;
   std::vector<std::string> failed_hardware_names;
 };
 
