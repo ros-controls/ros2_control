@@ -169,6 +169,12 @@ public:
     return false;
   }
 
+  /**
+   * @brief Get the data type of the state interface.
+   * @return The data type of the state interface.
+   */
+  HandleDataType get_data_type() const { return state_interface_.get_data_type(); }
+
 protected:
   const StateInterface & state_interface_;
   Deleter deleter_;

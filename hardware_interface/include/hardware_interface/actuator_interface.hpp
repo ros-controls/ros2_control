@@ -559,7 +559,8 @@ public:
     return opt_value.value();
   }
 
-  void set_command(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_command(const std::string & interface_name, const T & value)
   {
     auto it = actuator_commands_.find(interface_name);
     if (it == actuator_commands_.end())
