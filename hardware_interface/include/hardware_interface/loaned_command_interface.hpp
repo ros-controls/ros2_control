@@ -172,6 +172,12 @@ public:
     return std::nullopt;
   }
 
+  /**
+   * @brief Get the data type of the command interface.
+   * @return The data type of the command interface.
+   */
+  HandleDataType get_data_type() const { return command_interface_.get_data_type(); }
+
 protected:
   CommandInterface & command_interface_;
   Deleter deleter_;
