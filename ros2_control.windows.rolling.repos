@@ -17,12 +17,12 @@ repositories:
     version: main
   pal_statistics:
     type: git
-    url: https://github.com/christophfroehlich/pal_statistics.git
-    version: fix/win
+    url: https://github.com/pal-robotics/pal_statistics.git
+    version: humble-devel
   backward_ros:
     type: git
-    url: https://github.com/christophfroehlich/backward_ros.git
-    version: fix/win
+    url: https://github.com/pal-robotics//backward_ros.git
+    version: foxy-devel
   diagnostics:
     type: git
     url: https://github.com/ros/diagnostics
