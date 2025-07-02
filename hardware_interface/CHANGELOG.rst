@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.33.0 (2025-07-02)
+-------------------
+* expose get_data_type method in loaned interfaces (`#2351 <https://github.com/ros-controls/ros2_control/issues/2351>`_) (`#2357 <https://github.com/ros-controls/ros2_control/issues/2357>`_)
+* Improve lexical casts methods (`#2343 <https://github.com/ros-controls/ros2_control/issues/2343>`_) (`#2345 <https://github.com/ros-controls/ros2_control/issues/2345>`_)
+* Deactivate controllers with command interfaces to hardware on DEACTIVATE (`#2334 <https://github.com/ros-controls/ros2_control/issues/2334>`_) (`#2341 <https://github.com/ros-controls/ros2_control/issues/2341>`_)
+* Add string array to lexical casts (`#2333 <https://github.com/ros-controls/ros2_control/issues/2333>`_) (`#2335 <https://github.com/ros-controls/ros2_control/issues/2335>`_)
+* Contributors: mergify[bot]
+
 4.32.0 (2025-06-06)
 -------------------
 * also use std::mutex on macOS (`#2313 <https://github.com/ros-controls/ros2_control/issues/2313>`_) (`#2315 <https://github.com/ros-controls/ros2_control/issues/2315>`_)

@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.33.0 (2025-07-02)
+-------------------
+* Deactivate controllers with command interfaces to hardware on DEACTIVATE (`#2334 <https://github.com/ros-controls/ros2_control/issues/2334>`_) (`#2341 <https://github.com/ros-controls/ros2_control/issues/2341>`_)
+* Contributors: mergify[bot]
+
 4.32.0 (2025-06-06)
 -------------------
 * Move `enforce_command_limits` parameter to GPL parameters (backport `#2305 <https://github.com/ros-controls/ros2_control/issues/2305>`_) (`#2316 <https://github.com/ros-controls/ros2_control/issues/2316>`_)
