@@ -30,6 +30,43 @@ namespace
 {
 constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
+
+class InterfaceSetValueFilter
+{
+public:
+  InterfaceSetValueFilter() = default;
+
+  double amplifier(double value)
+  {
+    std::cout << "Amplifying value: " << value << std::endl;
+    return value * 2.0;  // Amplify the value by a factor of 2
+  }
+
+  double attenuator(double value)
+  {
+    std::cout << "Attenuating value: " << value << std::endl;
+    return value / 2.0;  // Attenuate the value by a factor of 2
+  }
+
+  double low_pass_filter(double value)
+  {
+    std::cout << "Applying low-pass filter to value: " << value << std::endl;
+    // Simple low-pass filter implementation
+    if (std::isfinite(last_value_))
+    {
+      const double alpha = 0.5;  // Smoothing factor
+      last_value_ = alpha * value + (1.0 - alpha) * last_value_;
+    }
+    else
+    {
+      last_value_ = value;  // Initialize with the first value
+    }
+    return last_value_;
+  }
+
+private:
+  double last_value_ = std::numeric_limits<double>::quiet_NaN();
+};
 }  // namespace
 
 #pragma GCC diagnostic push
@@ -318,9 +355,11 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
 
 TEST(TestHandle, handle_double_data_type_add_on_set_value_callbacks)
 {
-  const std::string POSITION_INTERFACE = "position";
-  const std::string JOINT_NAME_1 = "joint1";
-  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "double", "23.0"};
+  const std::string position_interface = "position";
+  const std::string velocity_interface = "velocity";
+  const std::string joint_name_1 = "joint1";
+  StateInterface handle{joint_name_1, position_interface, "double", "23.0"};
+  CommandInterface handle_2{joint_name_1, velocity_interface, "double", "2.0"};
 
   std::function<double(double)> amplify_callback = [](double value) -> double
   { return value * 2.0; };
@@ -335,9 +374,9 @@ TEST(TestHandle, handle_double_data_type_add_on_set_value_callbacks)
   };
 
   ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, handle.get_data_type());
-  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
-  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
-  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
+  EXPECT_EQ(handle.get_name(), joint_name_1 + "/" + position_interface);
+  EXPECT_EQ(handle.get_interface_name(), position_interface);
+  EXPECT_EQ(handle.get_prefix_name(), joint_name_1);
   EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
   ASSERT_EQ(handle.get_optional<double>().value(), 23.0);
   ASSERT_TRUE(handle.get_optional<double>().has_value());
@@ -365,6 +404,29 @@ TEST(TestHandle, handle_double_data_type_add_on_set_value_callbacks)
   ASSERT_EQ(handle.get_optional<double>().value(), -90.0);
   ASSERT_TRUE(handle.set_value(100.0));
   ASSERT_EQ(handle.get_optional<double>().value(), 10.0);
+
+  // Handle 2 case
+  ASSERT_TRUE(handle_2.set_value(5.0));
+  ASSERT_EQ(handle_2.get_optional<double>().value(), 5.0);
+  ASSERT_TRUE(handle_2.set_value(50.0));
+  ASSERT_EQ(handle_2.get_optional<double>().value(), 50.0);
+  // Add cascaded operation to amplify, filter and then attenuate the value
+  InterfaceSetValueFilter filter;
+  handle_2.add_on_set_value_callback(
+    std::bind(&InterfaceSetValueFilter::amplifier, &filter, std::placeholders::_1));
+  handle_2.add_on_set_value_callback(
+    std::bind(&InterfaceSetValueFilter::low_pass_filter, &filter, std::placeholders::_1));
+  handle_2.add_on_set_value_callback(
+    std::bind(&InterfaceSetValueFilter::attenuator, &filter, std::placeholders::_1));
+
+  ASSERT_TRUE(handle_2.set_value(5.0));
+  ASSERT_NEAR(handle_2.get_optional<double>().value(), 5.0, 1e-9) << "As this is the first value";
+  ASSERT_TRUE(handle_2.set_value(10.0));
+  ASSERT_NEAR(handle_2.get_optional<double>().value(), 7.5, 1e-9);
+  ASSERT_TRUE(handle_2.set_value(20.0));
+  ASSERT_NEAR(handle_2.get_optional<double>().value(), 13.75, 1e-9);
+  ASSERT_TRUE(handle_2.set_value(100.0));
+  ASSERT_NEAR(handle_2.get_optional<double>().value(), 56.875, 1e-9);
 }
 
 #pragma GCC diagnostic push
