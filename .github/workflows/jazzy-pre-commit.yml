@@ -5,6 +5,9 @@ on:
   pull_request:
     branches:
       - jazzy
+  push:
+    branches:
+      - jazzy
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

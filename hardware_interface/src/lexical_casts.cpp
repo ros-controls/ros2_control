@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cctype>
 #include <locale>
 #include <optional>
-#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
 
@@ -48,6 +52,7 @@ std::optional<double> stod(const std::string & s)
 #endif
 }
 }  // namespace impl
+
 double stod(const std::string & s)
 {
   if (const auto result = impl::stod(s))
@@ -56,8 +61,31 @@ double stod(const std::string & s)
   }
   throw std::invalid_argument("Failed converting string to real number");
 }
+
 bool parse_bool(const std::string & bool_string)
 {
-  return bool_string == "true" || bool_string == "True";
+  // Copy input to temp and make lowercase
+  std::string temp = bool_string;
+  std::transform(
+    temp.begin(), temp.end(), temp.begin(), [](unsigned char c) { return std::tolower(c); });
+
+  if (temp == "true")
+  {
+    return true;
+  }
+  if (temp == "false")
+  {
+    return false;
+  }
+  // If input is not "true" or "false" (any casing), throw or handle as error
+  throw std::invalid_argument(
+    "Input string : '" + bool_string +
+    "' is not a valid boolean value. Expected 'true' or 'false'.");
 }
+
+std::vector<std::string> parse_string_array(const std::string & string_array_string)
+{
+  return parse_array<std::string>(string_array_string);
+}
+
 }  // namespace hardware_interface
