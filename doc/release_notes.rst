@@ -13,6 +13,7 @@ controller_manager
 hardware_interface
 ******************
 * The ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` methods will now only receive the start/stop interfaces that belong to the hardware component instead of everything (`#2120 <https://github.com/ros-controls/ros2_control/pull/2120>`_)
+* The ``StateInterface`` and ``CommandInterface`` classes now have a ``add_on_set_value_callback`` method that allows to register a callback that will be called when the value of the interface is set. The resulting value after passing through all the callbacks will be the one set in the interface (`#2365 <https://github.com/ros-controls/ros2_control/pull/2365>`_).
 
 ros2controlcli
 **************
