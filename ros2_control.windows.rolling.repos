@@ -1,0 +1,29 @@
+repositories:
+  filters:
+    type: git
+    url: https://github.com/ros/filters.git
+    version: ros2
+  cpp_polyfills:
+    type: git
+    url: https://github.com/PickNikRobotics/cpp_polyfills.git
+    version: main
+  rsl:
+    type: git
+    url: https://github.com/PickNikRobotics/RSL.git
+    version: main
+  generate_parameter_library:
+    type: git
+    url: https://github.com/PickNikRobotics/generate_parameter_library.git
+    version: main
+  pal_statistics:
+    type: git
+    url: https://github.com/pal-robotics/pal_statistics.git
+    version: humble-devel
+  backward_ros:
+    type: git
+    url: https://github.com/pal-robotics//backward_ros.git
+    version: foxy-devel
+  diagnostics:
+    type: git
+    url: https://github.com/ros/diagnostics
+    version: ros2
