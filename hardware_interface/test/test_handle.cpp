@@ -281,6 +281,10 @@ TEST(TestHandle, handle_constructor_bool_data_type)
   ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
+  ASSERT_THROW(
+    { handle.add_on_set_value_callback([](double value) -> double { return value * 2.0; }); },
+    std::runtime_error)
+    << "Bool data type should not support add_on_set_value_callback";
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
@@ -311,6 +315,58 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }
+
+TEST(TestHandle, handle_double_data_type_add_on_set_value_callbacks)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "double", "23.0"};
+
+  std::function<double(double)> amplify_callback = [](double value) -> double
+  { return value * 2.0; };
+
+  std::function<double(double)> limit_callback = [](double value) -> double
+  {
+    if (value > 10.0)
+    {
+      return 10.0;
+    }
+    return value;
+  };
+
+  ASSERT_EQ(hardware_interface::HandleDataType::DOUBLE, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
+  ASSERT_EQ(handle.get_optional<double>().value(), 23.0);
+  ASSERT_TRUE(handle.get_optional<double>().has_value());
+  ASSERT_TRUE(handle.set_value(0.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 0.0);
+  ASSERT_TRUE(handle.set_value(1.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 1.0);
+
+  handle.add_on_set_value_callback(amplify_callback);
+  ASSERT_TRUE(handle.set_value(2.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 4.0);
+  ASSERT_TRUE(handle.set_value(5.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 10.0);
+  ASSERT_TRUE(handle.set_value(6.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 12.0);
+  ASSERT_TRUE(handle.set_value(20.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 40.0);
+
+  handle.add_on_set_value_callback(limit_callback);
+  ASSERT_TRUE(handle.set_value(35.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 10.0);
+  ASSERT_TRUE(handle.set_value(3.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 6.0);
+  ASSERT_TRUE(handle.set_value(-45.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), -90.0);
+  ASSERT_TRUE(handle.set_value(100.0));
+  ASSERT_EQ(handle.get_optional<double>().value(), 10.0);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(TestHandle, copy_constructor)

@@ -28,6 +28,7 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -274,7 +275,12 @@ public:
     {
       // If the template is of type double, check if the value_ptr_ is not nullptr
       THROW_ON_NULLPTR(value_ptr_);
-      *value_ptr_ = value;
+      double new_value = value;
+      for (const auto & callback : on_set_value_callbacks_)
+      {
+        new_value = callback(new_value);
+      }
+      *value_ptr_ = new_value;
     }
     else
     {
@@ -289,6 +295,25 @@ public:
     }
     return true;
     // END
+  }
+
+  /**
+   * @brief Add a callback to be called when the value is set.
+   * @param on_set_value_callback The callback to be added.
+   * @note This callback is only valid for the Handle with data type double.
+   */
+  void add_on_set_value_callback(std::function<double(double)> on_set_value_callback)
+  {
+    std::unique_lock<std::shared_mutex> lock(handle_mutex_);
+    if (data_type_ != HandleDataType::DOUBLE)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "Invalid data type : '{}' for interface : {}. Only double type supports on_set_value "
+          "callbacks.",
+          data_type_.to_string(), get_name()));
+    }
+    on_set_value_callbacks_.emplace_back(std::move(on_set_value_callback));
   }
 
   std::shared_mutex & get_mutex() const { return handle_mutex_; }
@@ -329,6 +354,7 @@ protected:
   std::string handle_name_;
   HANDLE_DATATYPE value_ = std::monostate{};
   HandleDataType data_type_ = HandleDataType::DOUBLE;
+  std::vector<std::function<double(double)>> on_set_value_callbacks_;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
