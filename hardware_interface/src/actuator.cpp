@@ -49,7 +49,11 @@ const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  // This is done for backward compatibility with the old initialize method.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return this->initialize(actuator_info, logger, clock_interface->get_clock());
+#pragma GCC diagnostic pop
 }
 
 const rclcpp_lifecycle::State & Actuator::initialize(

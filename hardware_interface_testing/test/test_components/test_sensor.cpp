@@ -23,9 +23,10 @@ using hardware_interface::StateInterface;
 
 class TestSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SensorInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -67,9 +68,10 @@ private:
 
 class TestUninitializableSensor : public TestSensor
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    SensorInterface::on_init(info);
+    SensorInterface::on_init(params);
     return CallbackReturn::ERROR;
   }
 };
