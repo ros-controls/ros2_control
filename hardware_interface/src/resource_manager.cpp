@@ -221,9 +221,22 @@ public:
   }
 
   template <class HardwareT>
+<<<<<<< HEAD
   bool initialize_hardware(const HardwareInfo & hardware_info, HardwareT & hardware)
   {
     RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", hardware_info.name.c_str());
+=======
+  bool initialize_hardware(
+    const hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
+  {
+    hardware_interface::HardwareComponentParams component_params;
+    component_params.hardware_info = params.hardware_info;
+    component_params.clock = rm_clock_;
+    component_params.logger = rm_logger_;
+    component_params.executor = params.executor;
+    RCLCPP_INFO(
+      get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
+>>>>>>> cd7e522 (Cleanup old internal API (#2346))
 
     bool result = false;
     try
@@ -1085,8 +1098,12 @@ public:
     }
   }
 
+<<<<<<< HEAD
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
+=======
+  bool load_and_initialize_actuator(const hardware_interface::HardwareComponentParams & params)
+>>>>>>> cd7e522 (Cleanup old internal API (#2346))
   {
     auto load_and_init_actuators = [&](auto & container)
     {
@@ -1162,7 +1179,12 @@ public:
   }
 
   void initialize_actuator(
+<<<<<<< HEAD
     std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
+=======
+    std::unique_ptr<ActuatorInterface> actuator,
+    const hardware_interface::HardwareComponentParams & params)
+>>>>>>> cd7e522 (Cleanup old internal API (#2346))
   {
     auto init_actuators = [&](auto & container)
     {
