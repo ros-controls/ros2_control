@@ -61,6 +61,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   // The following conditional filling is needed for cases of having certain information missing
   if (!prev_command_.has_data())
   {
+    prev_command_.joint_name = joint_name;
     if (actual.has_position())
     {
       prev_command_.position = actual.position;
@@ -159,7 +160,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
     desired.jerk = std::clamp(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
   }
 
-  prev_command_ = desired;
+  update_prev_command(desired, prev_command_);
 
   return limits_enforced;
 }

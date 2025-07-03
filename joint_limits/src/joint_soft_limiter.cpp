@@ -266,7 +266,7 @@ bool JointSoftLimiter::on_enforce(
     limits_enforced = true;
   }
 
-  prev_command_ = desired;
+  update_prev_command(desired, prev_command_);
 
   return limits_enforced;
 }
