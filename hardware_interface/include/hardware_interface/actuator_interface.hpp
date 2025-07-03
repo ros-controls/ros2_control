@@ -186,6 +186,22 @@ public:
         info_.thread_priority);
       async_handler_->start_thread();
     }
+
+    if (auto locked_executor = params.executor.lock())
+    {
+      std::string node_name = params.hardware_info.name;
+      std::replace(node_name.begin(), node_name.end(), '/', '_');
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      locked_executor->add_node(hardware_component_node_->get_node_base_interface());
+    }
+    else
+    {
+      RCLCPP_ERROR(
+        params.logger,
+        "Executor is not available during hardware component initialization for '%s'.",
+        params.hardware_info.name.c_str());
+    }
+
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
     interface_params.executor = params.executor;
@@ -646,6 +662,12 @@ public:
    */
   rclcpp::Clock::SharedPtr get_clock() const { return actuator_clock_; }
 
+  /// Get the default node of the ActuatorInterface.
+  /**
+   * \return node of the ActuatorInterface.
+   */
+  rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
+
   /// Get the hardware info of the ActuatorInterface.
   /**
    * \return hardware info of the ActuatorInterface.
@@ -702,6 +724,7 @@ protected:
 private:
   rclcpp::Clock::SharedPtr actuator_clock_;
   rclcpp::Logger actuator_logger_;
+  rclcpp::Node::SharedPtr hardware_component_node_;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
