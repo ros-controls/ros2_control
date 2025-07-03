@@ -14,11 +14,8 @@ on:
       - '**.svg'
       - '**.yml'
       - '**.yaml'
-<<<<<<< HEAD
-=======
       - '!.github/**' # exclude yaml files in .github directory
       - '.github/workflows/rolling-check-docs.yml'
->>>>>>> c1386c5 (Improve paths filtering (#2367))
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
