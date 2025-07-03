@@ -8,7 +8,14 @@ on:
     paths:
       - '**.rst'
       - '**.md'
+      - '**.jpg'
+      - '**.jpeg'
+      - '**.png'
+      - '**.svg'
+      - '**.yml'
       - '**.yaml'
+      - '!.github/**' # exclude yaml files in .github directory
+      - '.github/workflows/jazzy-check-docs.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
