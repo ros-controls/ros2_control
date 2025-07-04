@@ -70,6 +70,7 @@ struct JointControlInterfacesData
   std::string to_string() const
   {
     std::string str;
+    str += "Joint: '" + joint_name + "', ";
     if (has_position())
     {
       str += "position: " + std::to_string(position.value()) + ", ";
@@ -116,6 +117,15 @@ struct JointInterfacesCommandLimiterData
   bool has_command_data() const { return command.has_data(); }
 
   bool has_limited_data() const { return limited.has_data(); }
+
+  void set_joint_name(const std::string & name)
+  {
+    joint_name = name;
+    actual.joint_name = name;
+    command.joint_name = name;
+    limited.joint_name = name;
+    prev_command.joint_name = name;
+  }
 
   std::string to_string() const
   {

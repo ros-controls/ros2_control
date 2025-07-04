@@ -72,6 +72,32 @@ void verify_actual_position_within_limits(
 }
 }  // namespace internal
 
+void update_prev_command(
+  const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command)
+{
+  if (desired.has_position())
+  {
+    prev_command.position = desired.position;
+  }
+  if (desired.has_velocity())
+  {
+    prev_command.velocity = desired.velocity;
+  }
+  if (desired.has_effort())
+  {
+    prev_command.effort = desired.effort;
+  }
+  if (desired.has_acceleration())
+  {
+    prev_command.acceleration = desired.acceleration;
+  }
+  if (desired.has_jerk())
+  {
+    prev_command.jerk = desired.jerk;
+  }
+  prev_command.joint_name = desired.joint_name;
+}
+
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
 PositionLimits compute_position_limits(
