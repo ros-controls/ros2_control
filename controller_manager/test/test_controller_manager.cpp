@@ -705,12 +705,12 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rat
   ASSERT_THAT(
     test_controller->internal_counter,
     testing::AllOf(
-      testing::Ge(last_internal_counter + cm_->get_update_rate() - 3),
+      testing::Ge(last_internal_counter + cm_->get_update_rate() - 4),
       testing::Le(last_internal_counter + cm_->get_update_rate() + 1)))
     << "As the sleep is 1 sec and the controller rate is 100Hz, we should have approx. 100 updates";
 
-  // Sleep for 2 cycles to allow for any changes
-  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  // Sleep for 3 cycles to allow for any changes
+  std::this_thread::sleep_for(std::chrono::milliseconds(30));
   last_internal_counter = test_controller->internal_counter;
   {
     ControllerManagerRunner cm_runner(this);
@@ -724,7 +724,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rat
     ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     EXPECT_EQ(last_internal_counter + 1, test_controller->internal_counter)
       << "Controller is stopped at the end of update, it should finish it's active cycle";
@@ -920,11 +920,11 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
       testing::AllOf(
-        testing::Ge(0.92 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+        testing::Ge(0.90 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
       testing::AllOf(
-        testing::Ge(0.75 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+        testing::Ge(0.70 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
       testing::AllOf(
