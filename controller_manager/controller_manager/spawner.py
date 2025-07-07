@@ -166,6 +166,7 @@ def main(args=None):
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
     strictness = SwitchController.Request.STRICT
+    unload_controllers_upon_exit = False
 
     if param_files:
         for param_file in param_files:
@@ -342,15 +343,15 @@ def main(args=None):
                 + f"Configured and activated all the parsed controllers list : {controller_names}!"
                 + bcolors.ENDC
             )
-
-        if not args.unload_on_kill:
+        unload_controllers_upon_exit = args.unload_on_kill
+        if not unload_controllers_upon_exit:
             return 0
 
-        try:
-            node.get_logger().info("Waiting until interrupt to unload controllers")
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
+        node.get_logger().info("Waiting until interrupt to unload controllers")
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        if unload_controllers_upon_exit:
             node.get_logger().info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
                 node.get_logger().info("Deactivating and unloading controllers...")
@@ -396,10 +397,9 @@ def main(args=None):
                 node.get_logger().info(f"Successfully unloaded controllers : {controller_names}")
             else:
                 return 1
-        return 0
-    except KeyboardInterrupt:
-        node.get_logger().info("KeyboardInterrupt received! Exiting....")
-        pass
+        else:
+            node.get_logger().info("KeyboardInterrupt received! Exiting....")
+            pass
     except ServiceNotFoundError as err:
         node.get_logger().fatal(str(err))
         return 1
