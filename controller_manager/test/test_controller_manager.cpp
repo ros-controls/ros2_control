@@ -495,8 +495,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   }
   ASSERT_THAT(
     test_controller->internal_counter,
-    testing::AllOf(
-      testing::Ge(last_internal_counter + 9), testing::Le(last_internal_counter + 11)))
+    testing::AllOf(testing::Ge(last_internal_counter + 9), testing::Le(last_internal_counter + 11)))
     << "As the sleep is 1 sec and the controller rate is 20Hz, we should have approx. 20 updates";
 
   last_internal_counter = test_controller->internal_counter;
