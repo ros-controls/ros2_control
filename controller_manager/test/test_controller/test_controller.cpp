@@ -67,7 +67,7 @@ controller_interface::return_type TestController::update(
   }
   if (is_async())
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 / (2 * get_update_rate())));
+    std::this_thread::sleep_for(std::chrono::microseconds(1000000u / (2 * get_update_rate())));
   }
   update_period_ = period;
   ++internal_counter;
