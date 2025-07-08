@@ -34,6 +34,8 @@
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/macros.hpp"
 
+#include "rclcpp/logging.hpp"
+
 namespace
 {
 #ifndef _WIN32
@@ -222,9 +224,23 @@ public:
     // TODO(saikishor) return value_ if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      return *value_ptr_;
+      switch (data_type_)
+      {
+        case HandleDataType::DOUBLE:
+          THROW_ON_NULLPTR(value_ptr_);
+          return *value_ptr_;
+        case HandleDataType::BOOL:
+          RCLCPP_WARN_ONCE(
+            rclcpp::get_logger(get_name()),
+            "Casting bool to double for interface : %s. Better use get_optional<bool>().",
+            get_name().c_str());
+          return static_cast<double>(std::get<bool>(value_));
+        default:
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE("Data type : '{}' cannot be casted to double for interface : {}"),
+              data_type_.to_string(), get_name()));
+      }
     }
     try
     {
@@ -303,6 +319,9 @@ public:
   std::shared_mutex & get_mutex() const { return handle_mutex_; }
 
   HandleDataType get_data_type() const { return data_type_; }
+
+  /// Returns true if the handle data type can be casted to double.
+  bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
 private:
   void copy(const Handle & other) noexcept

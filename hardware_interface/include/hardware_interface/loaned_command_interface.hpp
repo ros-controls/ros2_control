@@ -178,6 +178,12 @@ public:
    */
   HandleDataType get_data_type() const { return command_interface_.get_data_type(); }
 
+  /**
+   * @brief Check if the state interface can be casted to double.
+   * @return True if the state interface can be casted to double, false otherwise.
+   */
+  bool is_castable_to_double() const { return command_interface_.is_castable_to_double(); }
+
 protected:
   CommandInterface & command_interface_;
   Deleter deleter_;
