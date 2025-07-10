@@ -172,6 +172,7 @@ def main(args=None):
         for param_file in param_files:
             if not os.path.isfile(param_file):
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+    logger = rclpy.logging.get_logger("ros2_control_controller_spawner_" + controller_names[0])
 
     try:
         spawner_node_name = "spawner_" + controller_names[0]
@@ -179,29 +180,29 @@ def main(args=None):
         max_retries = 5
         retry_delay = 3  # seconds
         for attempt in range(max_retries):
-            tmp_logger = rclpy.logging.get_logger(spawner_node_name)
             try:
-                tmp_logger.debug(
+                logger.debug(
                     bcolors.OKGREEN + "Waiting for the spawner lock to be acquired!" + bcolors.ENDC
                 )
                 # timeout after 20 seconds and try again
                 lock.acquire(timeout=20)
-                tmp_logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+                logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
                 break
             except Timeout:
-                tmp_logger.warning(
+                logger.warning(
                     bcolors.WARNING
                     + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
                 )
                 time.sleep(retry_delay)
         else:
-            tmp_logger.error(
+            logger.error(
                 bcolors.ERROR + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
             )
             return 1
 
         node = Node(spawner_node_name)
+        logger = node.get_logger()
 
         if node.get_namespace() != "/" and args.namespace:
             raise RuntimeError(
@@ -237,7 +238,7 @@ def main(args=None):
                 controller_manager_timeout,
                 service_call_timeout,
             ):
-                node.get_logger().warning(
+                logger.warning(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
                     + bcolors.ENDC
@@ -270,7 +271,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().fatal(
+                    logger.fatal(
                         bcolors.FAIL
                         + "Failed loading controller "
                         + bcolors.BOLD
@@ -278,7 +279,7 @@ def main(args=None):
                         + bcolors.ENDC
                     )
                     return 1
-                node.get_logger().info(
+                logger.info(
                     bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
 
@@ -291,9 +292,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().error(
-                        bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
-                    )
+                    logger.error(bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC)
                     return 1
 
                 if not args.inactive and not args.activate_as_group:
@@ -308,12 +307,12 @@ def main(args=None):
                         service_call_timeout,
                     )
                     if not ret.ok:
-                        node.get_logger().error(
+                        logger.error(
                             f"{bcolors.FAIL}Failed to activate controller : {controller_name}{bcolors.ENDC}"
                         )
                         return 1
 
-                    node.get_logger().info(
+                    logger.info(
                         bcolors.OKGREEN
                         + "Configured and activated "
                         + bcolors.BOLD
@@ -333,12 +332,12 @@ def main(args=None):
                 service_call_timeout,
             )
             if not ret.ok:
-                node.get_logger().error(
+                logger.error(
                     f"{bcolors.FAIL}Failed to activate the parsed controllers list : {controller_names}{bcolors.ENDC}"
                 )
                 return 1
 
-            node.get_logger().info(
+            logger.info(
                 bcolors.OKGREEN
                 + f"Configured and activated all the parsed controllers list : {controller_names}!"
                 + bcolors.ENDC
@@ -347,14 +346,14 @@ def main(args=None):
         if not unload_controllers_upon_exit:
             return 0
 
-        node.get_logger().info("Waiting until interrupt to unload controllers")
+        logger.info("Waiting until interrupt to unload controllers")
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         if unload_controllers_upon_exit:
-            node.get_logger().info("KeyboardInterrupt successfully captured!")
+            logger.info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
-                node.get_logger().info("Deactivating and unloading controllers...")
+                logger.info("Deactivating and unloading controllers...")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
                     node,
@@ -367,14 +366,10 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().error(
-                        bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC
-                    )
+                    logger.error(bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC)
                     return 1
 
-                node.get_logger().info(
-                    f"Successfully deactivated controllers : {controller_names}"
-                )
+                logger.info(f"Successfully deactivated controllers : {controller_names}")
 
             unload_status = True
             for controller_name in controller_names:
@@ -387,21 +382,21 @@ def main(args=None):
                 )
                 if not ret.ok:
                     unload_status = False
-                    node.get_logger().error(
+                    logger.error(
                         bcolors.FAIL
                         + f"Failed to unload controller : {controller_name}"
                         + bcolors.ENDC
                     )
 
             if unload_status:
-                node.get_logger().info(f"Successfully unloaded controllers : {controller_names}")
+                logger.info(f"Successfully unloaded controllers : {controller_names}")
             else:
                 return 1
         else:
-            node.get_logger().info("KeyboardInterrupt received! Exiting....")
+            logger.info("KeyboardInterrupt received! Exiting....")
             pass
     except ServiceNotFoundError as err:
-        node.get_logger().fatal(str(err))
+        logger.fatal(str(err))
         return 1
     finally:
         node.destroy_node()
