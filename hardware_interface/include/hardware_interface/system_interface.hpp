@@ -759,7 +759,7 @@ protected:
 private:
   rclcpp::Clock::SharedPtr system_clock_;
   rclcpp::Logger system_logger_;
-  rclcpp::Node::SharedPtr hardware_component_node_;
+  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
