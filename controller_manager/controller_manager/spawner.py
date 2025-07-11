@@ -160,6 +160,7 @@ def main(args=None):
     switch_timeout = args.switch_timeout
     strictness = SwitchController.Request.STRICT
     unload_controllers_upon_exit = False
+    node: Node | None = None
 
     if param_files:
         for param_file in param_files:
@@ -378,7 +379,8 @@ def main(args=None):
         logger.fatal(str(err))
         return 1
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         lock.release()
         rclpy.shutdown()
 
