@@ -193,9 +193,9 @@ public:
     }
     else
     {
-      RCLCPP_ERROR(
+      RCLCPP_WARN(
         params.logger,
-        "Executor is not available during hardware component initialization for '%s'.",
+        "Executor is not available during hardware component initialization for '%s'. Skipping node creation!",
         params.hardware_info.name.c_str());
     }
 
