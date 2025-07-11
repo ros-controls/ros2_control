@@ -45,6 +45,12 @@ public:
 
   ~System() = default;
 
+  System(const System & other) = delete;
+
+  System & operator=(const System & other) = delete;
+
+  System & operator=(System && other) = delete;
+
   [[deprecated(
     "Replaced by const rclcpp_lifecycle::State & initialize(const "
     "hardware_interface::HardwareComponentParams & params).")]]
