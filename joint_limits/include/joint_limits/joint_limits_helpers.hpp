@@ -33,6 +33,14 @@ constexpr double OUT_OF_BOUNDS_EXCEPTION_TOLERANCE = 0.0087;
 }  // namespace internal
 
 /**
+ * @brief Updates the previous command with the desired command.
+ * @param prev_command The previous command to update.
+ * @param desired The desired command which is limited.
+ */
+void update_prev_command(
+  const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command);
+
+/**
  * @brief Checks if a value is limited by the given limits.
  * @param value The value to check.
  * @param min The minimum limit.
