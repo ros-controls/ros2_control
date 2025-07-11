@@ -719,7 +719,7 @@ protected:
 private:
   rclcpp::Clock::SharedPtr actuator_clock_;
   rclcpp::Logger actuator_logger_;
-  rclcpp::Node::SharedPtr hardware_component_node_;
+  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
