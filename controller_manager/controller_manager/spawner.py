@@ -190,7 +190,7 @@ def main(args=None):
                 time.sleep(retry_delay)
         else:
             logger.error(
-                bcolors.ERROR + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
+                bcolors.FAIL + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
             )
             return 1
 
