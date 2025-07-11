@@ -167,6 +167,7 @@ def main(args=None):
     switch_timeout = args.switch_timeout
     strictness = SwitchController.Request.STRICT
     unload_controllers_upon_exit = False
+    node = None
 
     if param_files:
         for param_file in param_files:
@@ -197,7 +198,7 @@ def main(args=None):
                 time.sleep(retry_delay)
         else:
             logger.error(
-                bcolors.ERROR + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
+                bcolors.FAIL + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
             )
             return 1
 
@@ -399,7 +400,8 @@ def main(args=None):
         logger.fatal(str(err))
         return 1
     finally:
-        node.destroy_node()
+        if node:
+            node.destroy_node()
         lock.release()
         rclpy.shutdown()
 
