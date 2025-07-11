@@ -403,7 +403,9 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   external_component_hw_info.name = "ExternalComponent";
   external_component_hw_info.type = "actuator";
   external_component_hw_info.is_async = false;
-  rm.import_component(std::make_unique<ExternalComponent>(), external_component_hw_info);
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = external_component_hw_info;
+  rm.import_component(std::make_unique<ExternalComponent>(), params);
   EXPECT_EQ(2u, rm.actuator_components_size());
 
   ASSERT_THAT(rm.state_interface_keys(), SizeIs(12));
