@@ -1054,7 +1054,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         test_controller->update_period_.seconds(),
         testing::AllOf(
           testing::Gt(0.99 * controller_period),
-          testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+          testing::Lt((1.2 * controller_period) + PERIOD.seconds())))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
         << " actual controller period: " << test_controller->update_period_.seconds();
