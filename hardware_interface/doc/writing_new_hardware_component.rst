@@ -54,7 +54,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
          The ``ros2_control`` framework provides a standard way to do this by automatically creating a dedicated ROS 2 node for each hardware component and adding it to the ``ControllerManager``'s executor.
          Your hardware plugin can get access to this node to publish standard ROS 2 diagnostic messages.
 
-         This is the suggested approach and is demonstrated in :ref:`ros2_control_demos_example_17_userdoc`.
+         This is the suggested approach and is demonstrated in :ref:`example 17<ros2_control_demos_example_17_userdoc>`.
 
          The following steps outline how to add a simple diagnostic publisher to your hardware component:
 
