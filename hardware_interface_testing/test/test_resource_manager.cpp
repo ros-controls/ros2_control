@@ -1356,7 +1356,7 @@ public:
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-  
+
   std::vector<std::string> added_node_names;
 };
 
