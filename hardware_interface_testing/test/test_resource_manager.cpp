@@ -1342,6 +1342,38 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
+class MockExecutor : public rclcpp::executors::SingleThreadedExecutor
+{
+public:
+  explicit MockExecutor(const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions())
+  : rclcpp::executors::SingleThreadedExecutor(options)
+  {
+  }
+  std::vector<std::string> added_node_names;
+  void add_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+  {
+    rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
+    added_node_names.push_back(node_ptr->get_name());
+  }
+};
+
+TEST_F(ResourceManagerTest, hardware_nodes_are_added_to_mock_executor_on_load)
+{
+  auto mock_executor = std::make_shared<MockExecutor>();
+
+  hardware_interface::ResourceManagerParams params;
+  params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+  params.clock = node_.get_clock();
+  params.logger = node_.get_logger();
+  params.executor = mock_executor;
+  TestableResourceManager rm(params);
+  EXPECT_THAT(
+    mock_executor->added_node_names,
+    testing::UnorderedElementsAre(
+      TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME));
+}
+
 class ResourceManagerTestReadWriteError : public ResourceManagerTest
 {
 public:
