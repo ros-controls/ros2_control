@@ -48,6 +48,54 @@ The following is a step-by-step guide to create source files, basic tests, and c
       In the first line usually the parents ``on_init`` is called to process standard values, like name. This is done using: ``hardware_interface::(Actuator|Sensor|System)Interface::on_init(info)``.
       If all required parameters are set and valid and everything works fine return ``CallbackReturn::SUCCESS`` or ``return CallbackReturn::ERROR`` otherwise.
 
+      #. **(Optional) Adding a Diagnostic Publisher**
+
+         A common requirement for a hardware component is to publish status or diagnostic information without interfering with the real-time control loop.
+         The ``ros2_control`` framework provides a standard way to do this by automatically creating a dedicated ROS 2 node for each hardware component and adding it to the ``ControllerManager``'s executor.
+         Your hardware plugin can get access to this node to publish standard ROS 2 diagnostic messages.
+
+         This is the suggested approach and is demonstrated in :ref:`ros2_control_demos_example_17_userdoc`.
+
+         The following steps outline how to add a simple diagnostic publisher to your hardware component:
+
+         #. Inside your ``on_init`` method, after calling the base class's ``on_init``, get access to the framework-provided node using the ``get_node()`` protected method.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.cpp, inside on_init()
+               hardware_node_ = get_node();
+
+         #. Once you have the node, you can create the diagnostic publisher and a timer. The timer's callback will create and send the diagnostic message.
+
+            .. code-block:: cpp
+
+               // Continuing inside on_init()
+               if (hardware_node_)
+               {
+                  diagnostic_publisher_ =
+                     hardware_node_->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
+
+                  using namespace std::chrono_literals;
+                  diagnostic_timer_ = hardware_node_->create_wall_timer(1s, [this]() {
+                     auto msg = std::make_unique<diagnostic_msgs::msg::DiagnosticArray>();
+                     msg->header.stamp = hardware_node_->now();
+
+                     diagnostic_msgs::msg::DiagnosticStatus status_msg;
+                     status_msg.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+                     status_msg.name = this->get_name();
+                     status_msg.message = "OK";
+
+                     // Add a single key-value pair for the temperature
+                     diagnostic_msgs::msg::KeyValue kv;
+                     kv.key = "Temperature (C)";
+                     kv.value = std::to_string(this->temperature_);
+                     status_msg.values.push_back(kv);
+
+                     msg->status.push_back(status_msg);
+                     diagnostic_publisher_->publish(std::move(msg));
+                  });
+               }
+
    #. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
    #. Implement ``on_cleanup`` method, which does the opposite of ``on_configure``.
