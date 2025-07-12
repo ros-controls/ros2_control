@@ -48,53 +48,71 @@ The following is a step-by-step guide to create source files, basic tests, and c
       In the first line usually the parents ``on_init`` is called to process standard values, like name. This is done using: ``hardware_interface::(Actuator|Sensor|System)Interface::on_init(info)``.
       If all required parameters are set and valid and everything works fine return ``CallbackReturn::SUCCESS`` or ``return CallbackReturn::ERROR`` otherwise.
 
-      #. **(Optional) Adding a Diagnostic Publisher**
+      #. **(Optional) Adding Publisher, Services, etc.**
 
          A common requirement for a hardware component is to publish status or diagnostic information without interfering with the real-time control loop.
-         The ``ros2_control`` framework provides a standard way to do this by automatically creating a dedicated ROS 2 node for each hardware component and adding it to the ``ControllerManager``'s executor.
-         Your hardware plugin can get access to this node to publish standard ROS 2 diagnostic messages.
 
-         This is the suggested approach and is demonstrated in :ref:`example 17<ros2_control_demos_example_17_userdoc>`.
+         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are two primary ways to achieve this.
 
-         The following steps outline how to add a simple diagnostic publisher to your hardware component:
+         **Method 1: Using the Framework-Managed Node (Recommended & Simplest)**
 
-         #. Inside your ``on_init`` method, after calling the base class's ``on_init``, get access to the framework-provided node using the ``get_node()`` protected method.
+         The framework can automatically create a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
+
+         #. **Access the Node in ``on_init```**: Inside your ``on_init`` method, you can get a ``shared_ptr`` to the node by calling the ``protected`` ``get_node()`` method. It's good practice to store this pointer as a member variable.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.hpp
+               private:
+               rclcpp::Node::SharedPtr hardware_node_;
 
             .. code-block:: cpp
 
                // In your <robot_hardware_interface_name>.cpp, inside on_init()
                hardware_node_ = get_node();
 
-         #. Once you have the node, you can create the diagnostic publisher and a timer. The timer's callback will create and send the diagnostic message.
+         #. **Use the Node**: Once you have the ``hardware_node_``, you can use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
 
             .. code-block:: cpp
 
                // Continuing inside on_init()
                if (hardware_node_)
                {
-                  diagnostic_publisher_ =
-                     hardware_node_->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
+                  my_publisher_ = hardware_node_->create_publisher<std_msgs::msg::String>("~/status", 10);
 
                   using namespace std::chrono_literals;
-                  diagnostic_timer_ = hardware_node_->create_wall_timer(1s, [this]() {
-                     auto msg = std::make_unique<diagnostic_msgs::msg::DiagnosticArray>();
-                     msg->header.stamp = hardware_node_->now();
-
-                     diagnostic_msgs::msg::DiagnosticStatus status_msg;
-                     status_msg.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-                     status_msg.name = this->get_name();
-                     status_msg.message = "OK";
-
-                     // Add a single key-value pair for the temperature
-                     diagnostic_msgs::msg::KeyValue kv;
-                     kv.key = "Temperature (C)";
-                     kv.value = std::to_string(this->temperature_);
-                     status_msg.values.push_back(kv);
-
-                     msg->status.push_back(status_msg);
-                     diagnostic_publisher_->publish(std::move(msg));
+                  my_timer_ = hardware_node_->create_wall_timer(1s, [this]() {
+                     std_msgs::msg::String msg;
+                     msg.data = "Hardware status update!";
+                     my_publisher_->publish(msg);
                   });
                }
+
+         **Method 2: Using the Executor from `HardwareComponentParams`**
+
+         For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
+
+         #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentParams``.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.hpp
+               hardware_interface::CallbackReturn on_init(
+               const hardware_interface::HardwareComponentParams & params) override;
+
+         #. **Lock and Use the Executor**: Inside ``on_init``, you must safely "lock" the ``weak_ptr`` to get a usable ``shared_ptr``. You can then create your own node and add it to the executor.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.cpp, inside on_init(params)
+               if (auto locked_executor = params.executor.lock())
+               {
+                  my_custom_node_ = std::make_shared<rclcpp::Node>("my_custom_node");
+                  locked_executor->add_node(my_custom_node_->get_node_base_interface());
+                  // ... create publishers/timers on my_custom_node_ ...
+               }
+
+         For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in :ref:`example 17<ros2_control_demos_example_17_userdoc>`.
 
    #. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
