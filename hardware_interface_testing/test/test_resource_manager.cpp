@@ -1349,13 +1349,15 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-  std::vector<std::string> added_node_names;
+
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
+  
+  std::vector<std::string> added_node_names;
 };
 
 TEST_F(ResourceManagerTest, hardware_nodes_are_added_to_mock_executor_on_load)
