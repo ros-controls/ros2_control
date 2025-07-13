@@ -1370,10 +1370,19 @@ TEST_F(ResourceManagerTest, hardware_nodes_are_added_to_mock_executor_on_load)
   params.logger = node_.get_logger();
   params.executor = mock_executor;
   TestableResourceManager rm(params);
+  auto to_lower = [](const std::string & s)
+  {
+    std::string result = s;
+    std::transform(
+      result.begin(), result.end(), result.begin(),
+      [](unsigned char c) { return std::tolower(c); });
+    return result;
+  };
   EXPECT_THAT(
     mock_executor->added_node_names,
     testing::UnorderedElementsAre(
-      TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME));
+      to_lower(TEST_ACTUATOR_HARDWARE_NAME), to_lower(TEST_SENSOR_HARDWARE_NAME),
+      to_lower(TEST_SYSTEM_HARDWARE_NAME)));
 }
 
 class ResourceManagerTestReadWriteError : public ResourceManagerTest
