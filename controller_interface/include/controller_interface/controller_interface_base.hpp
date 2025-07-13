@@ -343,7 +343,6 @@ private:
 
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
-  unsigned int update_rate_ = 0;
   bool is_async_ = false;
   controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;

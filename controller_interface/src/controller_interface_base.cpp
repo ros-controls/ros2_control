@@ -46,7 +46,7 @@ return_type ControllerInterfaceBase::init(
   controller_interface::ControllerInterfaceParams params;
   params.controller_name = controller_name;
   params.robot_description = urdf;
-  params.cm_update_rate = cm_update_rate;
+  params.update_rate = cm_update_rate;
   params.node_namespace = node_namespace;
   params.node_options = node_options;
 
@@ -65,7 +65,7 @@ return_type ControllerInterfaceBase::init(
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.cm_update_rate));
+    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.update_rate));
 
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", 50);
@@ -162,17 +162,17 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
       return get_lifecycle_state();
     }
-    if (update_rate_ != 0u && update_rate > update_rate_)
+    if (ctrl_itf_params_.update_rate != 0u && update_rate > ctrl_itf_params_.update_rate)
     {
       RCLCPP_WARN(
         get_node()->get_logger(),
         "The update rate of the controller : '%ld Hz' cannot be higher than the update rate of the "
         "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
-        update_rate, update_rate_);
+        update_rate, ctrl_itf_params_.update_rate);
     }
     else
     {
-      update_rate_ = static_cast<unsigned int>(update_rate);
+      ctrl_itf_params_.update_rate = static_cast<unsigned int>(update_rate);
     }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
@@ -286,7 +286,10 @@ std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::
   return node_;
 }
 
-unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
+unsigned int ControllerInterfaceBase::get_update_rate() const
+{
+  return ctrl_itf_params_.update_rate;
+}
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
 

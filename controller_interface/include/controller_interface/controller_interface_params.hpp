@@ -46,7 +46,7 @@ struct ControllerInterfaceParams
 
   std::string controller_name = "";
   std::string robot_description = "";
-  unsigned int cm_update_rate = 0;
+  unsigned int update_rate = 0;
 
   std::string node_namespace = "";
   rclcpp::NodeOptions node_options = rclcpp::NodeOptions();
