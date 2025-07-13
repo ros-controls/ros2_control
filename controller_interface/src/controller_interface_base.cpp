@@ -298,6 +298,18 @@ const std::string & ControllerInterfaceBase::get_robot_description() const
   return ctrl_itf_params_.robot_description;
 }
 
+const std::unordered_map<std::string, joint_limits::JointLimits> &
+ControllerInterfaceBase::get_joint_limits() const
+{
+  return joint_limits_;
+}
+
+const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
+ControllerInterfaceBase::get_soft_joint_limits() const
+{
+  return soft_joint_limits_;
+}
+
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {
   if (is_async() && async_handler_ && async_handler_->is_running())

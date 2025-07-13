@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -203,6 +204,17 @@ public:
   bool is_async() const;
 
   const std::string & get_robot_description() const;
+
+  /**
+   * Get the unordered map of joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_joint_limits() const;
+
+  /**
+   * Get the unordered map of soft joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
+    const;
 
   /**
    * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
