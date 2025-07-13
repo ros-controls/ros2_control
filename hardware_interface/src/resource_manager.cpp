@@ -738,6 +738,7 @@ public:
       for (const auto & [joint_name, limits] : hw_info.limits)
       {
         std::vector<joint_limits::SoftJointLimits> soft_limits;
+        hard_joint_limits_.insert({joint_name, limits});
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
         joint_limits::JointInterfacesCommandLimiterData data;
         data.joint_name = joint_name;
@@ -746,6 +747,7 @@ public:
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
         {
           soft_limits = {hw_info.soft_limits.at(joint_name)};
+          soft_joint_limits_.insert({joint_name, hw_info.soft_limits.at(joint_name)});
           RCLCPP_INFO(
             get_logger(), "Using SoftJointLimiter for joint '%s' in hardware '%s' : '%s'",
             joint_name.c_str(), hw_info.name.c_str(), soft_limits[0].to_string().c_str());
@@ -1346,6 +1348,10 @@ public:
 
   std::string robot_description_;
 
+  // Unordered map of the hard and soft limits for the joints
+  std::unordered_map<std::string, joint_limits::JointLimits> hard_joint_limits_;
+  std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_joint_limits_;
+
   /// The callback to be called when a component state is switched
   std::function<void()> on_component_state_switch_callback_ = nullptr;
 
@@ -1925,6 +1931,18 @@ ResourceManager::get_components_status()
   loop_and_get_state(resource_storage_->systems_);
 
   return resource_storage_->hardware_info_map_;
+}
+
+const std::unordered_map<std::string, joint_limits::JointLimits> &
+ResourceManager::get_hard_joint_limits() const
+{
+  return resource_storage_->hard_joint_limits_;
+}
+
+const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
+ResourceManager::get_soft_joint_limits() const
+{
+  return resource_storage_->soft_joint_limits_;
 }
 
 // CM API: Called in "callback/slow"-thread

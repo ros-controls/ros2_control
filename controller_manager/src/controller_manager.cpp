@@ -1920,6 +1920,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     controller_params.update_rate = get_update_rate();
     controller_params.node_namespace = get_namespace();
     controller_params.node_options = controller_node_options;
+    controller_params.hard_joint_limits = resource_manager_->get_hard_joint_limits();
+    controller_params.soft_joint_limits = resource_manager_->get_soft_joint_limits();
     if (controller.c->init(controller_params) == controller_interface::return_type::ERROR)
     {
       to.clear();

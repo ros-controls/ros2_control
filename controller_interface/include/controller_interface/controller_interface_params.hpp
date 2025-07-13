@@ -51,7 +51,7 @@ struct ControllerInterfaceParams
   std::string node_namespace = "";
   rclcpp::NodeOptions node_options = rclcpp::NodeOptions();
 
-  std::unordered_map<std::string, joint_limits::JointLimits> joint_limits = {};
+  std::unordered_map<std::string, joint_limits::JointLimits> hard_joint_limits = {};
   std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_joint_limits = {};
 };
 

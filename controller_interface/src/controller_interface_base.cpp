@@ -299,15 +299,15 @@ const std::string & ControllerInterfaceBase::get_robot_description() const
 }
 
 const std::unordered_map<std::string, joint_limits::JointLimits> &
-ControllerInterfaceBase::get_joint_limits() const
+ControllerInterfaceBase::get_hard_joint_limits() const
 {
-  return joint_limits_;
+  return ctrl_itf_params_.hard_joint_limits;
 }
 
 const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
 ControllerInterfaceBase::get_soft_joint_limits() const
 {
-  return soft_joint_limits_;
+  return ctrl_itf_params_.soft_joint_limits;
 }
 
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()

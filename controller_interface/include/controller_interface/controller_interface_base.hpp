@@ -208,7 +208,7 @@ public:
   /**
    * Get the unordered map of joint limits that are defined in the robot description.
    */
-  const std::unordered_map<std::string, joint_limits::JointLimits> & get_joint_limits() const;
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
 
   /**
    * Get the unordered map of soft joint limits that are defined in the robot description.
