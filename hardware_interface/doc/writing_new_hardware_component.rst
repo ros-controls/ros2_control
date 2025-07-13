@@ -75,7 +75,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
             .. code-block:: cpp
 
-               // Continuing inside on_init()
+               // Continuing inside on_configure()
                if (get_node())
                {
                   my_publisher_ = hardware_node_->create_publisher<std_msgs::msg::String>("~/status", 10);
