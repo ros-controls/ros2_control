@@ -58,7 +58,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
          The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
 
-         #. **Access and using the Default Node**: Inside your ``on_init`` method, you can get a ``shared_ptr`` to the node by calling the ``get_node()`` method. You can use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
+         #. **Access and using the Default Node**: You can get a ``shared_ptr`` to the node by calling the ``get_node()`` method and use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
 
             .. code-block:: cpp
 
