@@ -56,7 +56,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
          **Method 1: Using the Framework-Managed Node (Recommended & Simplest)**
 
-         The framework can automatically create a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
+         The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
 
          #. **Access the Node in ``on_init```**: Inside your ``on_init`` method, you can get a ``shared_ptr`` to the node by calling the ``protected`` ``get_node()`` method. It's good practice to store this pointer as a member variable.
 
