@@ -99,7 +99,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
                   // ... create publishers/timers on my_custom_node_ ...
                }
 
-         For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in :ref:`example 17<ros2_control_demos_example_17_userdoc>`.
+         For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in example 17.
 
    #. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
