@@ -81,7 +81,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
                   my_publisher_ = hardware_node_->create_publisher<std_msgs::msg::String>("~/status", 10);
 
                   using namespace std::chrono_literals;
-                  my_timer_ = hardware_node_->create_wall_timer(1s, [this]() {
+                  my_timer_ = get_node()->create_wall_timer(1s, [this]() {
                      std_msgs::msg::String msg;
                      msg.data = "Hardware status update!";
                      my_publisher_->publish(msg);
