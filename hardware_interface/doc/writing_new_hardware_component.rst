@@ -58,27 +58,14 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
          The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
 
-         #. **Access the Node in ``on_init```**: Inside your ``on_init`` method, you can get a ``shared_ptr`` to the node by calling the ``get_node()`` method.
-
-            .. code-block:: cpp
-
-               // In your <robot_hardware_interface_name>.hpp
-               private:
-               rclcpp::Node::SharedPtr hardware_node_;
-
-            .. code-block:: cpp
-
-               // In your <robot_hardware_interface_name>.cpp, inside on_init()
-               hardware_node_ = get_node();
-
-         #. **Use the Node**: Once you have the ``hardware_node_``, you can use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
+         #. **Access and using the Default Node**: Inside your ``on_init`` method, you can get a ``shared_ptr`` to the node by calling the ``get_node()`` method. You can use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
 
             .. code-block:: cpp
 
                // Continuing inside on_configure()
                if (get_node())
                {
-                  my_publisher_ = hardware_node_->create_publisher<std_msgs::msg::String>("~/status", 10);
+                  my_publisher_ = get_node()->create_publisher<std_msgs::msg::String>("~/status", 10);
 
                   using namespace std::chrono_literals;
                   my_timer_ = get_node()->create_wall_timer(1s, [this]() {
