@@ -22,6 +22,7 @@
 
 #include "realtime_tools/async_function_handler.hpp"
 
+#include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -154,6 +155,8 @@ public:
   return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
+
+  return_type init(const controller_interface::ControllerInterfaceParams & params);
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -342,7 +345,7 @@ private:
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   unsigned int update_rate_ = 0;
   bool is_async_ = false;
-  std::string urdf_ = "";
+  controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
 

@@ -43,16 +43,29 @@ return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
 {
-  urdf_ = urdf;
-  update_rate_ = cm_update_rate;
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = controller_name;
+  params.robot_description = urdf;
+  params.cm_update_rate = cm_update_rate;
+  params.node_namespace = node_namespace;
+  params.node_options = node_options;
+
+  return init(params);
+}
+
+return_type ControllerInterfaceBase::init(
+  const controller_interface::ControllerInterfaceParams & params)
+{
+  ctrl_itf_params_ = params;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, node_namespace, node_options,
+    ctrl_itf_params_.controller_name, ctrl_itf_params_.node_namespace,
+    ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
 
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
+    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.cm_update_rate));
 
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", 50);
@@ -277,7 +290,10 @@ unsigned int ControllerInterfaceBase::get_update_rate() const { return update_ra
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
-const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
+const std::string & ControllerInterfaceBase::get_robot_description() const
+{
+  return ctrl_itf_params_.robot_description;
+}
 
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {
