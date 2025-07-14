@@ -1852,9 +1852,17 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
   }
   switch_params_.do_switch = true;
+  
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
+  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::try_to_lock);
+  if (!switch_params_guard.owns_lock())
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Could not lock switch mutex, controller switch failed!");
+    clear_requests();
+    return controller_interface::return_type::ERROR;
+  }  
   if (!switch_params_.cv.wait_for(
         switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
