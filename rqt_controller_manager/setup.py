@@ -34,7 +34,11 @@ setup(
     maintainer_email="bence.magyar.robotics@gmail.com",
     description="Graphical frontend for interacting with the controller manager.",
     license="Apache License, Version 2.0",
-    tests_require=["pytest"],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "rqt_controller_manager = \
