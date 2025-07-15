@@ -328,7 +328,18 @@ public:
   void enable_introspection(bool enable);
 
 protected:
+  /** Loaned command interfaces. The order of the interfaces is the same as exported in the
+   * \ref ActuatorInterface::export_command_interfaces "export_command_interfaces"
+   * \ref SystemInterface::export_command_interfaces "export_command_interfaces"
+   * methods, or defined by the ros2_control xml tag if auto-export is used.
+   */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  /** Loaned state interfaces. The order of the interfaces is the same as exported in the
+   * \ref ActuatorInterface::export_state_interfaces "export_state_interfaces"
+   * \ref SensorInterface::export_state_interfaces "export_state_interfaces"
+   * \ref SystemInterface::export_state_interfaces "export_state_interfaces"
+   * methods, or defined by the ros2_control xml tag if auto-export is used.
+   */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
