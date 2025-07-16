@@ -164,8 +164,11 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_component");
-  auto state =
-    actuator_hw.initialize(dummy_actuator, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = dummy_actuator;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  auto state = actuator_hw.initialize(params);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -230,8 +233,11 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_component");
-  auto state =
-    sensor_hw.initialize(voltage_sensor_res, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = voltage_sensor_res;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  auto state = sensor_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -267,8 +273,11 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_component");
-  auto state =
-    system_hw.initialize(dummy_system, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = dummy_system;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
