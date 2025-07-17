@@ -55,10 +55,20 @@ const rclcpp_lifecycle::State & Actuator::initialize(
 const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
 {
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = actuator_info;
+  params.logger = logger;
+  params.clock = clock;
+  return initialize(params);
+}
+
+const rclcpp_lifecycle::State & Actuator::initialize(
+  const hardware_interface::HardwareComponentParams & params)
+{
   std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(actuator_info, logger, clock))
+    switch (impl_->init(params))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(
