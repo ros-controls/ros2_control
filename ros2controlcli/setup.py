@@ -36,14 +36,17 @@ setup(
     classifiers=[
         "Environment :: Console",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
     ],
     description="ROS2 Control command  interface.",
     long_description="""\
 ROS2 Control command  interface.""",
     license="Apache License, Version 2.0",
-    tests_require=["pytest"],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     entry_points={
         "ros2cli.command": [
             "control = ros2controlcli.command.control:ControlCommand",
