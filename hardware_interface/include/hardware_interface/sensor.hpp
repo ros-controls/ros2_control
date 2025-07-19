@@ -45,6 +45,18 @@ public:
 
   ~Sensor() = default;
 
+<<<<<<< HEAD
+=======
+  Sensor(const Sensor & other) = delete;
+
+  Sensor & operator=(const Sensor & other) = delete;
+
+  Sensor & operator=(Sensor && other) = delete;
+
+  [[deprecated(
+    "Replaced by const rclcpp_lifecycle::State & initialize(const "
+    "hardware_interface::HardwareComponentParams & params).")]]
+>>>>>>> b315f2b (Delete copy constructor and copy and move operators (#2378))
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & sensor_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
