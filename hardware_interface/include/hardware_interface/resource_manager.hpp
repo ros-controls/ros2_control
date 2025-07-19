@@ -516,6 +516,19 @@ public:
    */
   const std::unordered_map<std::string, HardwareComponentInfo> & get_components_status();
 
+  /// Return the unordered map of hard joint limits.
+  /**
+   * \return unordered map of hard joint limits.
+   */
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
+
+  /// Return the unordered map of soft joint limits.
+  /**
+   * \return unordered map of soft joint limits.
+   */
+  const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
+    const;
+
   /// Prepare the hardware components for a new command interface mode
   /**
    * Hardware components are asked to prepare a new command interface claim.

@@ -17,11 +17,13 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "realtime_tools/async_function_handler.hpp"
 
+#include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -155,6 +157,8 @@ public:
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
 
+  return_type init(const controller_interface::ControllerInterfaceParams & params);
+
   /// Custom configure method to read additional parameters for controller-nodes
   /*
    * Override default implementation for configure of LifecycleNode to get parameters.
@@ -200,6 +204,17 @@ public:
   bool is_async() const;
 
   const std::string & get_robot_description() const;
+
+  /**
+   * Get the unordered map of joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
+
+  /**
+   * Get the unordered map of soft joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
+    const;
 
   /**
    * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
@@ -340,9 +355,8 @@ private:
 
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
-  unsigned int update_rate_ = 0;
   bool is_async_ = false;
-  std::string urdf_ = "";
+  controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
 
