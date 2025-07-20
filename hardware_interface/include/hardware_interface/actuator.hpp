@@ -45,6 +45,12 @@ public:
 
   ~Actuator() = default;
 
+  Actuator(const Actuator & other) = delete;
+
+  Actuator & operator=(const Actuator & other) = delete;
+
+  Actuator & operator=(Actuator && other) = delete;
+
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & actuator_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);

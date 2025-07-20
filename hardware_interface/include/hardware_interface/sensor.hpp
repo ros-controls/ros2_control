@@ -45,6 +45,12 @@ public:
 
   ~Sensor() = default;
 
+  Sensor(const Sensor & other) = delete;
+
+  Sensor & operator=(const Sensor & other) = delete;
+
+  Sensor & operator=(Sensor && other) = delete;
+
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & sensor_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
