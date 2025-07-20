@@ -45,6 +45,12 @@ public:
 
   ~Actuator() = default;
 
+  Actuator(const Actuator & other) = delete;
+
+  Actuator & operator=(const Actuator & other) = delete;
+
+  Actuator & operator=(Actuator && other) = delete;
+
   [[deprecated(
     "Replaced by const rclcpp_lifecycle::State & initialize(const "
     "hardware_interface::HardwareComponentParams & params).")]]
@@ -57,6 +63,9 @@ public:
     "hardware_interface::HardwareComponentParams & params).")]]
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock);
+
+  const rclcpp_lifecycle::State & initialize(
+    const hardware_interface::HardwareComponentParams & params);
 
   const rclcpp_lifecycle::State & configure();
 

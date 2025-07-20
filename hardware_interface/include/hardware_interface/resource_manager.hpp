@@ -32,7 +32,9 @@
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/resource_manager_params.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/executor.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 
@@ -98,6 +100,19 @@ public:
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
     bool activate_all = false, const unsigned int update_rate = 100);
 
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation uses the ResourceManagerParams to load the specified urdf and initializes
+   * the hardware components listed within as well as populate their respective state and command
+   * interfaces.
+   *
+   * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
+   * \param[in] load boolean argument indicating if the components should be loaded and
+   * initialized. If false, the ResourceManager will not load any components and will only
+   * initialize the ResourceManager with the given parameters.
+   */
+  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load);
+
   ResourceManager(const ResourceManager &) = delete;
 
   virtual ~ResourceManager();
@@ -122,6 +137,19 @@ public:
   [[deprecated("Use load_and_initialize_components(const ResourceManagerParams & params) instead")]]
   virtual bool load_and_initialize_components(
     const std::string & urdf, const unsigned int update_rate = 100);
+
+  /// Load resources from on a given URDF.
+  /**
+   * The resource manager can be post-initialized with a given URDF.
+   * This is mainly used in conjunction with the default constructor
+   * in which the URDF might not be present at first initialization.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
+   * \returns false if URDF validation has failed.
+   */
+  virtual bool load_and_initialize_components(
+    const hardware_interface::ResourceManagerParams & params);
 
   /**
    * @brief Import joint limiters from the URDF.
@@ -616,6 +644,13 @@ private:
   bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
+
+  // Note this was added in #2323 and is a temporary addition to be backwards compatible with the
+  // original constructors. This is planned to be removed in a future PR along with the
+  // aforementioned constructors.
+  hardware_interface::ResourceManagerParams constructParams(
+    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
+    bool activate_all = false, unsigned int update_rate = 100);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 

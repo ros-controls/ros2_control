@@ -28,6 +28,8 @@
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
+#include "hardware_interface/types/hardware_component_interface_params.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "hardware_interface/types/trigger_type.hpp"
@@ -144,9 +146,32 @@ public:
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
-    actuator_clock_ = clock;
-    actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
-    info_ = hardware_info;
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = hardware_info;
+    params.clock = clock;
+    params.logger = logger;
+    return init(params);
+  };
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] params  A struct of type HardwareComponentParams containing all necessary
+   * parameters for initializing this specific hardware component,
+   * including its HardwareInfo, a dedicated logger, a clock, and a
+   * weak_ptr to the executor.
+   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
+   * such as `spin()`.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
+  {
+    actuator_clock_ = params.clock;
+    auto logger_copy = params.logger;
+    actuator_logger_ =
+      logger_copy.get_child("hardware_component.actuator." + params.hardware_info.name);
+    info_ = params.hardware_info;
     if (info_.is_async)
     {
       RCLCPP_INFO_STREAM(
@@ -178,7 +203,10 @@ public:
         info_.thread_priority);
       async_handler_->start_thread();
     }
-    return on_init(hardware_info);
+    hardware_interface::HardwareComponentInterfaceParams interface_params;
+    interface_params.hardware_info = info_;
+    interface_params.executor = params.executor;
+    return on_init(interface_params);
   };
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
@@ -196,8 +224,6 @@ public:
     return CallbackReturn::SUCCESS;
   };
 
-<<<<<<< HEAD
-=======
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
    * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
@@ -218,8 +244,7 @@ public:
 #pragma GCC diagnostic pop
   };
 
->>>>>>> abbf8d6 (Add deprecations to old methods not using param structs  (#2344))
-  /// Exports all state interfaces for this hardware interface.
+/// Exports all state interfaces for this hardware interface.
   /**
    * Old way of exporting the StateInterfaces. If a empty vector is returned then
    * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
@@ -582,7 +607,8 @@ public:
     return opt_value.value();
   }
 
-  void set_command(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_command(const std::string & interface_name, const T & value)
   {
     auto it = actuator_commands_.find(interface_name);
     if (it == actuator_commands_.end())
