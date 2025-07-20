@@ -45,18 +45,12 @@ public:
 
   ~Actuator() = default;
 
-<<<<<<< HEAD
-=======
   Actuator(const Actuator & other) = delete;
 
   Actuator & operator=(const Actuator & other) = delete;
 
   Actuator & operator=(Actuator && other) = delete;
 
-  [[deprecated(
-    "Replaced by const rclcpp_lifecycle::State & initialize(const "
-    "hardware_interface::HardwareComponentParams & params).")]]
->>>>>>> b315f2b (Delete copy constructor and copy and move operators (#2378))
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & actuator_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
