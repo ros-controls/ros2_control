@@ -1347,6 +1347,7 @@ public:
   // Logger and Clock interfaces
   rclcpp::Clock::SharedPtr rm_clock_;
   rclcpp::Logger rm_logger_;
+  rclcpp::Executor::WeakPtr executor_;
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
@@ -1470,27 +1471,16 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
-  hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
-  params.update_rate = update_rate;
-  return load_and_initialize_components(params);
-}
-
-bool ResourceManager::load_and_initialize_components(
-  const hardware_interface::ResourceManagerParams & params)
-{
   components_are_loaded_and_initialized_ = true;
 
-  resource_storage_->robot_description_ = params.robot_description;
-  resource_storage_->cm_update_rate_ = params.update_rate;
+  resource_storage_->robot_description_ = urdf;
+  resource_storage_->cm_update_rate_ = update_rate;
 
-  auto hardware_info =
-    hardware_interface::parse_control_resources_from_urdf(params.robot_description);
+  auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
-    hw.rw_rate =
-      (hw.rw_rate == 0 || hw.rw_rate > params.update_rate) ? params.update_rate : hw.rw_rate;
+    hw.rw_rate = (hw.rw_rate == 0 || hw.rw_rate > update_rate) ? update_rate : hw.rw_rate;
   }
 
   const std::string system_type = "system";
@@ -1515,9 +1505,9 @@ bool ResourceManager::load_and_initialize_components(
     }
     hardware_interface::HardwareComponentParams interface_params;
     interface_params.hardware_info = individual_hardware_info;
-    interface_params.executor = params.executor;
-    interface_params.clock = params.clock;
-    interface_params.logger = params.logger;
+    interface_params.executor = resource_storage_->executor_;
+    interface_params.clock = resource_storage_->rm_clock_;
+    interface_params.logger = resource_storage_->rm_logger_;
 
     if (individual_hardware_info.type == actuator_type)
     {
@@ -1564,6 +1554,17 @@ bool ResourceManager::load_and_initialize_components(
   }
 
   return components_are_loaded_and_initialized_;
+}
+
+bool ResourceManager::load_and_initialize_components(
+  const hardware_interface::ResourceManagerParams & params)
+{
+  resource_storage_->rm_clock_ = params.clock;
+  resource_storage_->rm_logger_ = params.logger;
+  resource_storage_->robot_description_ = params.robot_description;
+  resource_storage_->cm_update_rate_ = params.update_rate;
+  resource_storage_->executor_ = params.executor;
+  return load_and_initialize_components(params.robot_description, params.update_rate);
 }
 
 void ResourceManager::import_joint_limiters(const std::string & urdf)
