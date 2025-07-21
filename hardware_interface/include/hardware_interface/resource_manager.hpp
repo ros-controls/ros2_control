@@ -134,8 +134,10 @@ public:
    * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
    * \returns false if URDF validation has failed.
    */
-  virtual bool load_and_initialize_components(
-    const std::string & urdf, const unsigned int update_rate = 100);
+  [[deprecated(
+    "Use load_and_initialize_components(const ResourceManagerParams & params) "
+    "instead")]] virtual bool
+  load_and_initialize_components(const std::string & urdf, const unsigned int update_rate = 100);
 
   /// Load resources from on a given URDF.
   /**
@@ -414,8 +416,10 @@ public:
    * \param[in] actuator pointer to the actuator interface.
    * \param[in] hardware_info hardware info
    */
-  void import_component(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
+  [[deprecated(
+    "Use import_component(std::unique_ptr<ActuatorInterface> actuator, "
+    "const HardwareComponentParams & params) instead")]] void
+  import_component(std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -430,8 +434,10 @@ public:
    * \param[in] sensor pointer to the sensor interface.
    * \param[in] hardware_info hardware info
    */
-  void import_component(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
+  [[deprecated(
+    "Use import_component(std::unique_ptr<SensorInterface> sensor, "
+    "const HardwareComponentParams & params) instead")]] void
+  import_component(std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -446,8 +452,10 @@ public:
    * \param[in] system pointer to the system interface.
    * \param[in] hardware_info hardware info
    */
-  void import_component(
-    std::unique_ptr<SystemInterface> system, const HardwareComponentParams & params);
+  [[deprecated(
+    "Use import_component(std::unique_ptr<SystemInterface> system, "
+    "const HardwareComponentParams & params) instead")]] void
+  import_component(std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
 
   /// Import a hardware component which is not listed in the URDF
   /**
@@ -498,7 +506,7 @@ public:
    * and other parameters for the component.
    */
   void import_component(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
+    std::unique_ptr<SystemInterface> system, const HardwareComponentParams & params);
 
   /// Return status for all components.
   /**
