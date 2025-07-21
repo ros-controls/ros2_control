@@ -1492,6 +1492,32 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
+  if (!activate_controllers.empty())
+  {
+    for (const auto & controller : activate_controllers)
+    {
+      const auto x = controller_chain_dependency_graph_.get_dependencies_to_activate(controller);
+      RCLCPP_INFO(
+        get_logger(),
+        fmt::format(
+          "Controller {} has '{}' dependencies to activate", controller, fmt::join(x, ", "))
+          .c_str());
+    }
+  }
+
+  if (!deactivate_controllers.empty())
+  {
+    for (const auto & controller : deactivate_controllers)
+    {
+      const auto x = controller_chain_dependency_graph_.get_dependencies_to_deactivate(controller);
+      RCLCPP_INFO(
+        get_logger(),
+        fmt::format(
+          "Controller {} has '{}' dependencies to deactivate", controller, fmt::join(x, ", "))
+          .c_str());
+    }
+  }
+
   std::string activate_list, deactivate_list;
   activate_list.reserve(500);
   deactivate_list.reserve(500);
