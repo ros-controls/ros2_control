@@ -626,6 +626,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.executor = executor_;
+  params.update_rate = static_cast<unsigned int>(params_->update_rate);
   if (!resource_manager_->load_and_initialize_components(params))
   {
     RCLCPP_WARN(
