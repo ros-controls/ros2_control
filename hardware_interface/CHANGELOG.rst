@@ -2,6 +2,17 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Cleanup old internal API (`#2346 <https://github.com/ros-controls/ros2_control/issues/2346>`_) (`#2358 <https://github.com/ros-controls/ros2_control/issues/2358>`_)
+* Add deprecations to old methods not using Structs  (backport `#2344 <https://github.com/ros-controls/ros2_control/issues/2344>`_) (`#2359 <https://github.com/ros-controls/ros2_control/issues/2359>`_)
+* Further Struct based Method changes to support propagation in `gz_ros2_control` (backport `#2340 <https://github.com/ros-controls/ros2_control/issues/2340>`_) (`#2407 <https://github.com/ros-controls/ros2_control/issues/2407>`_)
+* Delete copy constructor and copy and move operators (backport `#2378 <https://github.com/ros-controls/ros2_control/issues/2378>`_) (`#2404 <https://github.com/ros-controls/ros2_control/issues/2404>`_)
+* Shift to Struct based Method and Constructors, with Executor passed from CM to `on_init()` (`#2323 <https://github.com/ros-controls/ros2_control/issues/2323>`_) (`#2339 <https://github.com/ros-controls/ros2_control/issues/2339>`_)
+* Fix the crashing joint limiters when used with multiple interfaces (`#2371 <https://github.com/ros-controls/ros2_control/issues/2371>`_) (`#2398 <https://github.com/ros-controls/ros2_control/issues/2398>`_)
+* Add pixi workflow and dependency file (`#2338 <https://github.com/ros-controls/ros2_control/issues/2338>`_) (`#2364 <https://github.com/ros-controls/ros2_control/issues/2364>`_)
+* Contributors: mergify[bot]
+
 4.33.0 (2025-07-02)
 -------------------
 * expose get_data_type method in loaned interfaces (`#2351 <https://github.com/ros-controls/ros2_control/issues/2351>`_) (`#2357 <https://github.com/ros-controls/ros2_control/issues/2357>`_)

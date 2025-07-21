@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Further Struct based Method changes to support propagation in `gz_ros2_control` (backport `#2340 <https://github.com/ros-controls/ros2_control/issues/2340>`_) (`#2407 <https://github.com/ros-controls/ros2_control/issues/2407>`_)
+* Shift to Struct based Method and Constructors, with Executor passed from CM to `on_init()` (`#2323 <https://github.com/ros-controls/ros2_control/issues/2323>`_) (`#2339 <https://github.com/ros-controls/ros2_control/issues/2339>`_)
+* Increase controller period tolerance further (`#2405 <https://github.com/ros-controls/ros2_control/issues/2405>`_) (`#2406 <https://github.com/ros-controls/ros2_control/issues/2406>`_)
+* Fix controller activation crash on macOS (Fixes `#604 <https://github.com/ros-controls/ros2_control/issues/604>`_) (`#2391 <https://github.com/ros-controls/ros2_control/issues/2391>`_) (`#2396 <https://github.com/ros-controls/ros2_control/issues/2396>`_)
+* Increase controller period tolerance in tests (`#2388 <https://github.com/ros-controls/ros2_control/issues/2388>`_) (`#2389 <https://github.com/ros-controls/ros2_control/issues/2389>`_)
+* [spawner] Fix Lock timeout error crashes (`#2386 <https://github.com/ros-controls/ros2_control/issues/2386>`_) (`#2387 <https://github.com/ros-controls/ros2_control/issues/2387>`_)
+* [Spawner] Fix the scope issue of the logger (`#2382 <https://github.com/ros-controls/ros2_control/issues/2382>`_) (`#2383 <https://github.com/ros-controls/ros2_control/issues/2383>`_)
+* Increase tolerance to improve the success rate of the tests (`#2373 <https://github.com/ros-controls/ros2_control/issues/2373>`_) (`#2377 <https://github.com/ros-controls/ros2_control/issues/2377>`_)
+* [Spawner] Change strategy for `--unload-on-kill` option (`#2372 <https://github.com/ros-controls/ros2_control/issues/2372>`_) (`#2376 <https://github.com/ros-controls/ros2_control/issues/2376>`_)
+* Contributors: mergify[bot]
+
 4.33.0 (2025-07-02)
 -------------------
 * Deactivate controllers with command interfaces to hardware on DEACTIVATE (`#2334 <https://github.com/ros-controls/ros2_control/issues/2334>`_) (`#2341 <https://github.com/ros-controls/ros2_control/issues/2341>`_)

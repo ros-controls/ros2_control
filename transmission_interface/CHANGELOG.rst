@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.33.0 (2025-07-02)
 -------------------
 * [Transmissions] Add `absolute_position` and `torque` interfaces (`#2310 <https://github.com/ros-controls/ros2_control/issues/2310>`_) (`#2319 <https://github.com/ros-controls/ros2_control/issues/2319>`_)
