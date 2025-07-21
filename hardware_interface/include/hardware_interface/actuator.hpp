@@ -45,6 +45,12 @@ public:
 
   ~Actuator() = default;
 
+  Actuator(const Actuator & other) = delete;
+
+  Actuator & operator=(const Actuator & other) = delete;
+
+  Actuator & operator=(Actuator && other) = delete;
+
   [[deprecated(
     "Replaced by const rclcpp_lifecycle::State & initialize(const "
     "hardware_interface::HardwareComponentParams & params).")]]
