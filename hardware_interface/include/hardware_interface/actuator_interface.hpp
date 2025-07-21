@@ -244,7 +244,7 @@ public:
 #pragma GCC diagnostic pop
   };
 
-/// Exports all state interfaces for this hardware interface.
+  /// Exports all state interfaces for this hardware interface.
   /**
    * Old way of exporting the StateInterfaces. If a empty vector is returned then
    * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
