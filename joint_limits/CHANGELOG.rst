@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.4.0 (2025-07-21)
+------------------
 * Fix the crashing joint limiters when used with multiple interfaces (`#2371 <https://github.com/ros-controls/ros2_control/issues/2371>`_)
 * Contributors: Sai Kishor Kothakota
 

@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.4.0 (2025-07-21)
+------------------
 * Addition of a Default Node for Hardware Component (`#2348 <https://github.com/ros-controls/ros2_control/issues/2348>`_)
 * Contributors: Soham Patil
 

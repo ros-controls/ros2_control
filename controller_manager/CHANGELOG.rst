@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.4.0 (2025-07-21)
+------------------
 * Increase controller period tolerance further (`#2405 <https://github.com/ros-controls/ros2_control/issues/2405>`_)
 * Fix controller activation crash on macOS (Fixes `#604 <https://github.com/ros-controls/ros2_control/issues/604>`_) (`#2391 <https://github.com/ros-controls/ros2_control/issues/2391>`_)
 * Increase controller period tolerance in tests (`#2388 <https://github.com/ros-controls/ros2_control/issues/2388>`_)

@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.4.0 (2025-07-21)
+------------------
 * Fix setuptools deprecations (`#2395 <https://github.com/ros-controls/ros2_control/issues/2395>`_)
 * Contributors: mosfet80
 

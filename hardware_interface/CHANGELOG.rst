@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.4.0 (2025-07-21)
+------------------
 * Delete copy constructor and copy and move operators (`#2378 <https://github.com/ros-controls/ros2_control/issues/2378>`_)
 * Fix the crashing joint limiters when used with multiple interfaces (`#2371 <https://github.com/ros-controls/ros2_control/issues/2371>`_)
 * add changes to cast the other data types to double (`#2360 <https://github.com/ros-controls/ros2_control/issues/2360>`_)
