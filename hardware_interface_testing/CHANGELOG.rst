@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.34.0 (2025-07-21)
+-------------------
 * Add deprecations to old methods not using Structs  (backport `#2344 <https://github.com/ros-controls/ros2_control/issues/2344>`_) (`#2359 <https://github.com/ros-controls/ros2_control/issues/2359>`_)
 * Contributors: mergify[bot]
 
