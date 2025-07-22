@@ -75,17 +75,17 @@ The following is a step-by-step guide to create source files, basic tests, and c
                   });
                }
 
-         **Method 2: Using the Executor from `HardwareComponentParams`**
+         **Method 2: Using the Executor from `HardwareComponentInterfaceParams`**
 
-         For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
+         For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentInterfaceParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
 
-         #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentParams``.
+         #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentInterfaceParams``.
 
             .. code-block:: cpp
 
                // In your <robot_hardware_interface_name>.hpp
                hardware_interface::CallbackReturn on_init(
-               const hardware_interface::HardwareComponentParams & params) override;
+               const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
          #. **Lock and Use the Executor**: Inside ``on_init``, you must safely "lock" the ``weak_ptr`` to get a usable ``shared_ptr``. You can then create your own node and add it to the executor.
 
