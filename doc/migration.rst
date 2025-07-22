@@ -48,4 +48,3 @@ hardware_interface
   have been updated from passing a ``const HardwareInfo &`` to passing a ``const
   HardwareComponentParams &`` (`# 2344 <https://github.com/ros-controls/ros2_control/pull/2344>`_).
   The old signatures are deprecated and will be removed in a future release.
-
