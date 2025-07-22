@@ -3,6 +3,8 @@
 Migration Guides: Jazzy to Kilted
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This list summarizes important changes between Jazzy (previous) and Kilted (current) releases, where changes to user code might be necessary.
+
 hardware_interface
 ******************
 
