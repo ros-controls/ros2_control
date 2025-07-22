@@ -110,7 +110,7 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
  * \return true if interface has a controller name as prefix, false otherwise.
  */
 bool is_interface_a_chained_interface(
-  const std::string interface_name,
+  const std::string & interface_name,
   const std::vector<controller_manager::ControllerSpec> & controllers,
   controller_manager::ControllersListIterator & following_controller_it)
 {
@@ -316,7 +316,7 @@ controller_interface::return_type evaluate_switch_result(
       {
         std::string list = std::accumulate(
           std::next(deactivate_list.begin()), deactivate_list.end(), deactivate_list.front(),
-          [](std::string a, std::string b) { return a + " " + b; });
+          [](const std::string & a, const std::string & b) { return a + " " + b; });
         const std::string info_msg =
           fmt::format(FMT_COMPILE("Deactivated controllers: [ {} ]"), list);
         message += "\n" + info_msg;
@@ -326,7 +326,7 @@ controller_interface::return_type evaluate_switch_result(
       {
         std::string list = std::accumulate(
           std::next(activate_list.begin()), activate_list.end(), activate_list.front(),
-          [](std::string a, std::string b) { return a + " " + b; });
+          [](const std::string & a, const std::string & b) { return a + " " + b; });
         const std::string info_msg =
           fmt::format(FMT_COMPILE("Activated controllers: [ {} ]"), list);
         message += "\n" + info_msg;
@@ -1195,7 +1195,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     std::string cmd_itfs_str = std::accumulate(
       std::next(cmd_itfs.begin()), cmd_itfs.end(), cmd_itfs.front(),
-      [](std::string a, std::string b) { return a + ", " + b; });
+      [](const std::string & a, const std::string & b) { return a + ", " + b; });
     RCLCPP_ERROR(
       get_logger(),
       "The command interfaces of the controller '%s' are not unique. Please make sure that the "
@@ -1209,7 +1209,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     std::string state_itfs_str = std::accumulate(
       std::next(state_itfs.begin()), state_itfs.end(), state_itfs.front(),
-      [](std::string a, std::string b) { return a + ", " + b; });
+      [](const std::string & a, const std::string & b) { return a + ", " + b; });
     RCLCPP_ERROR(
       get_logger(),
       "The state interfaces of the controller '%s' are not unique. Please make sure that the state "
@@ -1852,9 +1852,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
   }
   switch_params_.do_switch = true;
+
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
+  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
   if (!switch_params_.cv.wait_for(
         switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {

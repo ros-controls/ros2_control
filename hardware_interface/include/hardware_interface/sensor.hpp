@@ -45,6 +45,12 @@ public:
 
   ~Sensor() = default;
 
+  Sensor(const Sensor & other) = delete;
+
+  Sensor & operator=(const Sensor & other) = delete;
+
+  Sensor & operator=(Sensor && other) = delete;
+
   [[deprecated(
     "Replaced by const rclcpp_lifecycle::State & initialize(const "
     "hardware_interface::HardwareComponentParams & params).")]]

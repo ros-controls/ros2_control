@@ -548,6 +548,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   limits.max_effort = 200.0;
   joint_limits::SoftJointLimits soft_limits;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   // Reset the desired and actual states
@@ -651,6 +652,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   // Check with high values of k_velocity (hard limits should be considered)
   soft_limits.k_velocity = 5000.0;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   for (auto act_pos :
@@ -674,6 +676,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   // Check with low values of k_velocity
   soft_limits.k_velocity = 300.0;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   for (auto act_pos :
@@ -702,6 +705,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   soft_limits.min_position = -4.0;
   soft_limits.max_position = 4.0;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   test_limit_enforcing(0.0, 0.5, 20.0, 20.0, false);
@@ -762,6 +766,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   soft_limits.min_position = -10.0;
   soft_limits.max_position = 10.0;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   for (auto act_pos :
@@ -788,6 +793,7 @@ TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
   soft_limits.min_position = -10.0;
   soft_limits.max_position = 10.0;
   ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   for (auto act_pos :

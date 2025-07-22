@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.4.0 (2025-07-21)
+------------------
+* Delete copy constructor and copy and move operators (`#2378 <https://github.com/ros-controls/ros2_control/issues/2378>`_)
+* Fix the crashing joint limiters when used with multiple interfaces (`#2371 <https://github.com/ros-controls/ros2_control/issues/2371>`_)
+* add changes to cast the other data types to double (`#2360 <https://github.com/ros-controls/ros2_control/issues/2360>`_)
+* Addition of a Default Node for Hardware Component (`#2348 <https://github.com/ros-controls/ros2_control/issues/2348>`_)
+* Add pixi workflow and dependency file (`#2338 <https://github.com/ros-controls/ros2_control/issues/2338>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Soham Patil
+
 5.3.0 (2025-07-02)
 ------------------
 * Add deprecations to old methods not using param structs  (`#2344 <https://github.com/ros-controls/ros2_control/issues/2344>`_)
