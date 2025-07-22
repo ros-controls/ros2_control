@@ -152,6 +152,14 @@ struct ControllerPeerInfo
             continue;  // skip this predecessor, as it is already in a group as individual
           }
 
+          if (
+            std::find(
+              current_combination.begin(), current_combination.end(), predecessors[i]->name) !=
+            current_combination.end())
+          {
+            continue;  // skip this predecessor, as it is already in the current combination
+          }
+
           current_combination.push_back(predecessors[i]->name);
           generate_combinations(i + 1);
           current_combination.pop_back();
@@ -160,7 +168,8 @@ struct ControllerPeerInfo
 
       RCLCPP_INFO(
         rclcpp::get_logger("controller_manager"),
-        "Generating combinations of predecessors for controller: %s", name.c_str());
+        "Generating combinations of predecessors for controller: %s (%s)",
+        predecessor->name.c_str(), name.c_str());
       generate_combinations(0);
       // Add the combinations to the mutually exclusive predecessor groups
       for (const auto & combination : combinations)
@@ -275,6 +284,13 @@ struct ControllerPeerInfo
             continue;  // skip this successor, as it is already in a group as individual
           }
 
+          if (
+            std::find(
+              current_combination.begin(), current_combination.end(), successors[i]->name) !=
+            current_combination.end())
+          {
+            continue;  // skip this successor, as it is already in the current combination
+          }
           current_combination.push_back(successors[i]->name);
           generate_combinations(i + 1);
           current_combination.pop_back();
@@ -299,6 +315,10 @@ struct ControllerPeerInfo
           mutually_exclusive_successor_groups.push_back(group);
         }
       }
+      RCLCPP_INFO_STREAM(
+        rclcpp::get_logger("controller_manager"),
+        "Mutually exclusive successor groups for controller: "
+          << name << " are: " << mutually_exclusive_successor_groups.size());
     }
   }
 
@@ -554,8 +574,25 @@ public:
     {
       controller_graph_[successor.name] = successor;
     }
-    controller_graph_[predecessor.name].successors.push_back(&controller_graph_[successor.name]);
-    controller_graph_[successor.name].predecessors.push_back(&controller_graph_[predecessor.name]);
+    if (
+      std::find_if(
+        controller_graph_[predecessor.name].successors.begin(),
+        controller_graph_[predecessor.name].successors.end(),
+        [&successor](const ControllerPeerInfo * s) { return s->name == successor.name; }) ==
+      controller_graph_[predecessor.name].successors.end())
+    {
+      controller_graph_[predecessor.name].successors.push_back(&controller_graph_[successor.name]);
+    }
+    if (
+      std::find_if(
+        controller_graph_[successor.name].predecessors.begin(),
+        controller_graph_[successor.name].predecessors.end(),
+        [&predecessor](const ControllerPeerInfo * p) { return p->name == predecessor.name; }) ==
+      controller_graph_[successor.name].predecessors.end())
+    {
+      controller_graph_[successor.name].predecessors.push_back(
+        &controller_graph_[predecessor.name]);
+    }
   }
 
   std::vector<std::string> get_dependencies_to_activate(const std::string & controller_name)
