@@ -8,7 +8,7 @@ hardware_interface
 
 * The preferred signature for the ``on_init`` method in all
   ``hardware_interface::*Interface`` classes has changed (`#
-  2344 <https://github.com/ros-controls/ros2_control/pull/2344>`_) from
+  2323 <https://github.com/ros-controls/ros2_control/pull/2323>`_) from
 
   .. code-block:: cpp
 
@@ -46,5 +46,5 @@ hardware_interface
 
 * The ``initialize`` methods of all hardware components (such as ``Actuator``, ``Sensor``, etc.)
   have been updated from passing a ``const HardwareInfo &`` to passing a ``const
-  HardwareComponentParams &`` (`# 2344 <https://github.com/ros-controls/ros2_control/pull/2344>`_).
+  HardwareComponentParams &`` (`# 2323 <https://github.com/ros-controls/ros2_control/pull/2323>`_).
   The old signatures are deprecated and will be removed in a future release.
