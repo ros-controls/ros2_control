@@ -741,7 +741,7 @@ public:
         std::vector<joint_limits::SoftJointLimits> soft_limits;
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
         joint_limits::JointInterfacesCommandLimiterData data;
-        data.joint_name = joint_name;
+        data.set_joint_name(joint_name);
         limiters_data_.insert({joint_name, data});
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
@@ -1026,7 +1026,7 @@ public:
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
-            data.joint_name = joint_name;
+            data.set_joint_name(joint_name);
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)
             {

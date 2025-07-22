@@ -20,7 +20,7 @@ package_name = "rqt_controller_manager"
 
 setup(
     name=package_name,
-    version="5.3.0",
+    version="5.4.0",
     packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
@@ -34,7 +34,11 @@ setup(
     maintainer_email="bence.magyar.robotics@gmail.com",
     description="Graphical frontend for interacting with the controller manager.",
     license="Apache License, Version 2.0",
-    tests_require=["pytest"],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "rqt_controller_manager = \
