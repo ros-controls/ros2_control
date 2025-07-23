@@ -328,7 +328,13 @@ public:
   void enable_introspection(bool enable);
 
 protected:
+  /** Loaned command interfaces. The order of the interfaces is the same as defined in
+   * \ref command_interface_configuration() if interface_configuration_type::INDIVIDUAL is set.
+   */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  /** Loaned state interfaces. The order of the interfaces is the same as defined in
+   * \ref state_interface_configuration() if interface_configuration_type::INDIVIDUAL is set.
+   */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
