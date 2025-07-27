@@ -24,6 +24,7 @@
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_controller/test_controller.hpp"
+#include "test_controller_failed_init/test_controller_failed_init.hpp"
 
 using test_controller::TEST_CONTROLLER_CLASS_NAME;
 using ::testing::_;
