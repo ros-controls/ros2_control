@@ -20,7 +20,10 @@
 #include <string>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "hardware_interface/handle.hpp"
+#pragma GCC diagnostic pop
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -36,10 +39,11 @@ static constexpr size_t POSITION_INTERFACE_INDEX = 0;
 static constexpr size_t VELOCITY_INTERFACE_INDEX = 1;
 static constexpr size_t ACCELERATION_INTERFACE_INDEX = 2;
 
-class HARDWARE_INTERFACE_PUBLIC GenericSystem : public hardware_interface::SystemInterface
+class GenericSystem : public hardware_interface::SystemInterface
 {
 public:
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -71,14 +75,6 @@ protected:
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
-
-  struct MimicJoint
-  {
-    std::size_t joint_index;
-    std::size_t mimicked_joint_index;
-    double multiplier = 1.0;
-  };
-  std::vector<MimicJoint> mimic_joints_;
 
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;

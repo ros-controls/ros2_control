@@ -23,15 +23,19 @@
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#pragma GCC diagnostic pop
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/system.hpp"
+#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
+#include "hardware_interface/types/resource_manager_params.hpp"
 #include "rclcpp/duration.hpp"
-#include "rclcpp/node.hpp"
+#include "rclcpp/executor.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface
@@ -41,17 +45,20 @@ class ControllerManager;
 
 struct HardwareReadWriteStatus
 {
-  bool ok;
+  return_type result;
   std::vector<std::string> failed_hardware_names;
 };
 
-class HARDWARE_INTERFACE_PUBLIC ResourceManager
+class ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager(
-    unsigned int update_rate = 100,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+  explicit ResourceManager(
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
+
+  /// Default constructor for the Resource Manager.
+  explicit ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger);
 
   /// Constructor for the Resource Manager.
   /**
@@ -59,49 +66,106 @@ public:
    * hardware components listed within as well as populate their respective
    * state and command interfaces.
    *
-   * If the interfaces ought to be validated, the constructor throws an exception
-   * in case the URDF lists interfaces which are not available.
-   *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock_interface reference to the clock interface of the CM node for getting time
+   * used for triggering async components and different read/write component rates.
+   * \param[in] logger_interface reference to the logger interface of the CM node for logging.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
-    unsigned int update_rate = 100,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+    const std::string & urdf,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
+    bool activate_all = false, const unsigned int update_rate = 100);
+
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation loads the specified urdf and initializes the
+   * hardware components listed within as well as populate their respective
+   * state and command interfaces.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] activate_all boolean argument indicating if all resources should be immediately
+   * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock reference to the clock of the CM node for getting time used for triggering
+   * async components and different read/write component rates.
+   * \param[in] logger logger of the CM node for logging.
+   */
+  explicit ResourceManager(
+    const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
+    bool activate_all = false, const unsigned int update_rate = 100);
+
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation uses the ResourceManagerParams to load the specified urdf and initializes
+   * the hardware components listed within as well as populate their respective state and command
+   * interfaces.
+   *
+   * \param[in] params ResourceManagerParams containing the parameters for the ResourceManager.
+   * \param[in] load boolean argument indicating if the components should be loaded and
+   * initialized. If false, the ResourceManager will not load any components and will only
+   * initialize the ResourceManager with the given parameters.
+   */
+  explicit ResourceManager(const hardware_interface::ResourceManagerParams & params, bool load);
 
   ResourceManager(const ResourceManager &) = delete;
 
-  ~ResourceManager();
+  virtual ~ResourceManager();
+
+  /// Shutdown all hardware components, irrespective of their state.
+  /**
+   * The method is called when the controller manager is being shutdown.
+   * @return true if all hardware components are successfully shutdown, false otherwise.
+   */
+  bool shutdown_components();
 
   /// Load resources from on a given URDF.
   /**
-   * The resource manager can be post initialized with a given URDF.
+   * The resource manager can be post-initialized with a given URDF.
    * This is mainly used in conjunction with the default constructor
    * in which the URDF might not be present at first initialization.
    *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
-   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
-   * initialize the components present in the parsed URDF. Defaults to true.
+   * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
+   * \returns false if URDF validation has failed.
    */
-  void load_urdf(
-    const std::string & urdf, bool validate_interfaces = true,
-    bool load_and_initialize_components = true);
+  [[deprecated("Use load_and_initialize_components(const ResourceManagerParams & params) instead")]]
+  virtual bool load_and_initialize_components(
+    const std::string & urdf, const unsigned int update_rate = 100);
+
+  /// Load resources from on a given URDF.
+  /**
+   * The resource manager can be post-initialized with a given URDF.
+   * This is mainly used in conjunction with the default constructor
+   * in which the URDF might not be present at first initialization.
+   *
+   * \param[in] urdf string containing the URDF.
+   * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
+   * \returns false if URDF validation has failed.
+   */
+  virtual bool load_and_initialize_components(
+    const hardware_interface::ResourceManagerParams & params);
 
   /**
-   * @brief if the resource manager load_urdf(...) function has been called this returns true.
-   * We want to permit to load the urdf later on but we currently don't want to permit multiple
-   * calls to load_urdf (reloading/loading different urdf).
-   *
-   * @return true if resource manager's load_urdf() has been already called.
-   * @return false if resource manager's load_urdf() has not been yet called.
+   * @brief Import joint limiters from the URDF.
+   * @param urdf string containing the URDF.
    */
-  bool is_urdf_already_loaded() const;
+  void import_joint_limiters(const std::string & urdf);
+
+  /**
+   * @brief if the resource manager load_and_initialize_components(...) function has been called
+   * this returns true. We want to permit to loading the urdf later on, but we currently don't want
+   * to permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
+   *
+   * @return true if the resource manager has successfully loaded and initialized the components
+   * @return false if the resource manager doesn't have any components loaded and initialized.
+   */
+  bool are_components_initialized() const;
 
   /// Claim a state interface given its key.
   /**
@@ -134,6 +198,67 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
+  /// Gets the data type of the state interface.
+  /**
+   * \param[in] name string identifying the interface to check.
+   * \return data type of the state interface.
+   * \throws std::runtime_error if the state interface does not exist.
+   */
+  std::string get_state_interface_data_type(const std::string & name) const;
+
+  /// Add controllers' exported state interfaces to resource manager.
+  /**
+   * Interface for transferring management of exported state interfaces to resource manager.
+   * When chaining controllers, state interfaces are used by the preceding
+   * controllers.
+   * Therefore, they should be managed in the same way as state interface of hardware.
+   *
+   * \param[in] controller_name name of the controller which state interfaces are imported.
+   * \param[in] interfaces list of controller's state interfaces as StateInterfaces.
+   */
+  void import_controller_exported_state_interfaces(
+    const std::string & controller_name, std::vector<StateInterface::ConstSharedPtr> & interfaces);
+
+  /// Get list of exported tate interface of a controller.
+  /**
+   * Returns lists of stored exported state interfaces names for a controller.
+   *
+   * \param[in] controller_name for which list of state interface names is returned.
+   * \returns list of reference interface names.
+   */
+  std::vector<std::string> get_controller_exported_state_interface_names(
+    const std::string & controller_name);
+
+  /// Add controller's exported state interfaces to available list.
+  /**
+   * Adds state interfacess of a controller with given name to the available list. This method
+   * should be called when a controller gets activated with chained mode turned on. That means, the
+   * controller's exported state interfaces can be used by another controllers in chained
+   * architectures.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become available.
+   */
+  void make_controller_exported_state_interfaces_available(const std::string & controller_name);
+
+  /// Remove controller's exported state interface to available list.
+  /**
+   * Removes interfaces of a controller with given name from the available list. This method should
+   * be called when a controller gets deactivated and its reference interfaces cannot be used by
+   * another controller anymore.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become unavailable.
+   */
+  void make_controller_exported_state_interfaces_unavailable(const std::string & controller_name);
+
+  /// Remove controllers exported state interfaces from resource manager.
+  /**
+   * Remove exported state interfaces from resource manager, i.e., resource storage.
+   * The interfaces will be deleted from all internal maps and lists.
+   *
+   * \param[in] controller_name list of interface names that will be deleted from resource manager.
+   */
+  void remove_controller_exported_state_interfaces(const std::string & controller_name);
+
   /// Add controllers' reference interfaces to resource manager.
   /**
    * Interface for transferring management of reference interfaces to resource manager.
@@ -145,7 +270,8 @@ public:
    * \param[in] interfaces list of controller's reference interfaces as CommandInterfaces.
    */
   void import_controller_reference_interfaces(
-    const std::string & controller_name, std::vector<CommandInterface> & interfaces);
+    const std::string & controller_name,
+    const std::vector<hardware_interface::CommandInterface::SharedPtr> & interfaces);
 
   /// Get list of reference interface of a controller.
   /**
@@ -250,6 +376,14 @@ public:
    */
   bool command_interface_is_available(const std::string & interface) const;
 
+  /// Gets the data type of the command interface.
+  /**
+   * \param[in] name string identifying the interface to check.
+   * \return data type of the command interface.
+   * \throws std::runtime_error if the command interface does not exist.
+   */
+  std::string get_command_interface_data_type(const std::string & name) const;
+
   /// Return the number size_t of loaded actuator components.
   /**
    * \return number of actuator components.
@@ -281,6 +415,9 @@ public:
    * \param[in] actuator pointer to the actuator interface.
    * \param[in] hardware_info hardware info
    */
+  [[deprecated(
+    "Use import_component(std::unique_ptr<ActuatorInterface> actuator, "
+    "const HardwareComponentParams & params) instead")]]
   void import_component(
     std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
 
@@ -297,6 +434,9 @@ public:
    * \param[in] sensor pointer to the sensor interface.
    * \param[in] hardware_info hardware info
    */
+  [[deprecated(
+    "Use import_component(std::unique_ptr<SensorInterface> sensor, "
+    "const HardwareComponentParams & params) instead")]]
   void import_component(
     std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
 
@@ -314,13 +454,67 @@ public:
    * \param[in] hardware_info hardware info
    */
   void import_component(
+    std::unique_ptr<SystemInterface> system, const HardwareComponentParams & params);
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] actuator pointer to the actuator interface.
+   * \param[in] params Struct of type HardwareComponentParams containing the hardware info
+   * and other parameters for the component.
+   */
+  void import_component(
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareComponentParams & params);
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] sensor pointer to the sensor interface.
+   * \param[in] params Struct of type HardwareComponentParams containing the hardware info
+   * and other parameters for the component.
+   */
+  void import_component(
+    std::unique_ptr<SensorInterface> sensor, const HardwareComponentParams & params);
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] system pointer to the system interface.
+   * \param[in] params Struct of type HardwareComponentParams containing the hardware info
+   * and other parameters for the component.
+   */
+  [[deprecated(
+    "Use import_component(std::unique_ptr<SystemInterface> system, "
+    "const HardwareComponentParams & params) instead")]]
+  void import_component(
     std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
 
   /// Return status for all components.
   /**
    * \return map of hardware names and their status.
    */
-  std::unordered_map<std::string, HardwareComponentInfo> get_components_status();
+  const std::unordered_map<std::string, HardwareComponentInfo> & get_components_status();
 
   /// Prepare the hardware components for a new command interface mode
   /**
@@ -353,7 +547,7 @@ public:
    * \note it is assumed that `prepare_command_mode_switch` is called just before this method
    * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
-   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
    * \return true if switch is performed, false if a component rejects switching.
    */
   bool perform_command_mode_switch(
@@ -375,6 +569,14 @@ public:
    */
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
+
+  /**
+   * Enforce the command limits for the position, velocity, effort, and acceleration interfaces.
+   * @note This method is RT-safe
+   * @return true if the command interfaces are out of limits and the limits are enforced
+   * @return false if the command interfaces values are within limits
+   */
+  bool enforce_command_limits(const rclcpp::Duration & period);
 
   /// Reads all loaded hardware components.
   /**
@@ -407,23 +609,52 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
-private:
-  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  /// A method to register a callback to be called when the component state changes.
+  /**
+   * \param[in] callback function to be called when the component state changes.
+   */
+  void set_on_component_state_switch_callback(std::function<void()> callback);
 
-  void release_command_interface(const std::string & key);
+  const std::string & get_robot_description() const;
 
-  std::unordered_map<std::string, bool> claimed_command_interface_map_;
+protected:
+  /// Gets the logger for the resource manager
+  /**
+   * \return logger of the resource manager
+   */
+  rclcpp::Logger get_logger() const;
+
+  /// Gets the clock for the resource manager
+  /**
+   * \return clock of the resource manager
+   */
+  rclcpp::Clock::SharedPtr get_clock() const;
+
+  bool components_are_loaded_and_initialized_ = false;
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
+  mutable std::recursive_mutex joint_limiters_lock_;
+
+private:
+  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+
+  void release_command_interface(const std::string & key);
+
+  // Note this was added in #2323 and is a temporary addition to be backwards compatible with the
+  // original constructors. This is planned to be removed in a future PR along with the
+  // aforementioned constructors.
+  hardware_interface::ResourceManagerParams constructParams(
+    rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
+    bool activate_all = false, unsigned int update_rate = 100);
+
+  std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   std::unique_ptr<ResourceStorage> resource_storage_;
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-
-  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface

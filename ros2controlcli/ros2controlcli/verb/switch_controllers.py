@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import switch_controllers
+from controller_manager import switch_controllers, bcolors
+from controller_manager_msgs.srv import SwitchController
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -40,7 +41,17 @@ class SwitchControllersVerb(VerbExtension):
             help="Name of the controllers to be activated",
         )
         arg.completer = LoadedControllerNameCompleter(["inactive"])
-        parser.add_argument("--strict", action="store_true", help="Strict switch")
+        strictness_group = parser.add_mutually_exclusive_group(required=False)
+        strictness_group.add_argument(
+            "--strict",
+            help="Set the switch_controllers service strictness to strict",
+            action="store_true",
+        )
+        strictness_group.add_argument(
+            "--best-effort",
+            help="Set the switch_controllers service strictness to best effort",
+            action="store_true",
+        )
         parser.add_argument("--activate-asap", action="store_true", help="Start asap controllers")
         parser.add_argument(
             "--switch-timeout",
@@ -52,18 +63,24 @@ class SwitchControllersVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
+            strictness = 0
+            if args.strict:
+                strictness = SwitchController.Request.STRICT
+            elif args.best_effort:
+                strictness = SwitchController.Request.BEST_EFFORT
             response = switch_controllers(
                 node,
                 args.controller_manager,
                 args.deactivate,
                 args.activate,
-                args.strict,
+                strictness,
                 args.activate_asap,
                 args.switch_timeout,
             )
             if not response.ok:
-                return "Error switching controllers, check controller_manager logs"
+                print(bcolors.FAIL + response.message + bcolors.ENDC)
+                return 1
 
-            print("Successfully switched controllers")
+            print(bcolors.OKBLUE + response.message + bcolors.ENDC)
             return 0

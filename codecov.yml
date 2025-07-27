@@ -14,12 +14,11 @@ fixes:
 comment:
   layout: "diff, flags, files"
   behavior: default
-ignore:
-  - "**/test"
 flags:
   unittests:
     paths:
       - controller_interface
       - controller_manager
       - hardware_interface
+      - joint_limits
       - transmission_interface

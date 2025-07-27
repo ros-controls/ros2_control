@@ -2,16 +2,19 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_manager</name>
-  <version>4.6.0</version>
-  <description>Description of controller_manager</description>
+  <version>5.4.0</version>
+  <description>The main runnable entrypoint of ros2_control and home of controller management and resource management.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
-  <depend>ament_index_cpp</depend>
   <depend>backward_ros</depend>
   <depend>controller_interface</depend>
   <depend>controller_manager_msgs</depend>
@@ -27,10 +30,23 @@
   <depend>ros2param</depend>
   <depend>ros2run</depend>
   <depend>std_msgs</depend>
+  <depend>libstatistics_collector</depend>
+  <depend>generate_parameter_library</depend>
+  <depend>fmt</depend>
+  <exec_depend>python3-filelock</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>hardware_interface_testing</test_depend>
+  <test_depend>launch_testing_ros</test_depend>
+  <test_depend>launch_testing</test_depend>
+  <test_depend>launch</test_depend>
+  <test_depend>python3-coverage</test_depend>
+  <test_depend>rclpy</test_depend>
+  <test_depend>robot_state_publisher</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>sensor_msgs</test_depend>
+  <test_depend>example_interfaces</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -16,23 +16,69 @@
 #define TRANSMISSION_INTERFACE__HANDLE_HPP_
 
 #include <string>
-
-#include "hardware_interface/handle.hpp"
+#include "hardware_interface/macros.hpp"
 
 namespace transmission_interface
 {
-/** A handle used to get and set a value on a given actuator interface. */
-class ActuatorHandle : public hardware_interface::ReadWriteHandle
+class Handle
 {
 public:
-  using hardware_interface::ReadWriteHandle::ReadWriteHandle;
+  Handle(
+    const std::string & prefix_name, const std::string & interface_name,
+    double * value_ptr = nullptr)
+  : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
+  {
+  }
+
+  Handle(const Handle & other) = default;
+
+  Handle(Handle && other) = default;
+
+  Handle & operator=(const Handle & other) = default;
+
+  Handle & operator=(Handle && other) = default;
+
+  virtual ~Handle() = default;
+
+  /// Returns true if handle references a value.
+  inline operator bool() const { return value_ptr_ != nullptr; }
+
+  const std::string get_name() const { return prefix_name_ + "/" + interface_name_; }
+
+  const std::string & get_interface_name() const { return interface_name_; }
+
+  const std::string & get_prefix_name() const { return prefix_name_; }
+
+  double get_value() const
+  {
+    THROW_ON_NULLPTR(value_ptr_);
+    return *value_ptr_;
+  }
+
+  void set_value(double value)
+  {
+    THROW_ON_NULLPTR(this->value_ptr_);
+    *this->value_ptr_ = value;
+  }
+
+protected:
+  std::string prefix_name_;
+  std::string interface_name_;
+  double * value_ptr_ = nullptr;
+};
+
+/** A handle used to get and set a value on a given actuator interface. */
+class ActuatorHandle : public transmission_interface::Handle
+{
+public:
+  using transmission_interface::Handle::Handle;
 };
 
 /** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public hardware_interface::ReadWriteHandle
+class JointHandle : public transmission_interface::Handle
 {
 public:
-  using hardware_interface::ReadWriteHandle::ReadWriteHandle;
+  using transmission_interface::Handle::Handle;
 };
 
 }  // namespace transmission_interface

@@ -12,20 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
-#include "controller_manager_test_common.hpp"
-
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
+#include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -92,6 +90,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
   ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
   ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
@@ -100,6 +100,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
@@ -114,6 +116,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
@@ -131,6 +135,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
   ASSERT_EQ("inactive", result->controller[0].state);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
@@ -168,9 +174,38 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
       "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
 
+  // Switch with a very low timeout 1 ns and it should fail as there is no enough time to switch
+  ASSERT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 1)));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre(
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  // Try again with higher timeout
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(3, 0));
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
@@ -336,7 +371,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   std::weak_ptr<controller_interface::ControllerInterface> test_controller_weak(test_controller);
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
@@ -359,18 +395,20 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   test_controller_weak = test_controller;
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
 
-  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
-  cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
+  size_t shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_EQ(cleanup_calls, 1u);
+  ASSERT_EQ(shutdown_calls, 1u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();
@@ -383,19 +421,21 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
   // Failed reload due to active controller
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Cannot reload if controllers are running";
-  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should still have have a copy of "
        "this shared ptr, no unloading was performed";
 
-  cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
+  shutdown_calls = 0;
+  test_controller->shutdown_calls = &shutdown_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   // Force stop active controller
@@ -405,7 +445,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
 
   ASSERT_EQ(test_controller_weak.use_count(), 0)
     << "No more references to the controller after reloading.";
-  ASSERT_EQ(cleanup_calls, 1u)
+  ASSERT_EQ(shutdown_calls, 1u)
     << "Controller should have been stopped and cleaned up with force_kill = true";
 }
 
@@ -431,7 +471,7 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_state().id());
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
 }
 
 TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
@@ -519,7 +559,8 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
@@ -553,7 +594,8 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   auto result = call_service_and_wait(*unload_client, unload_request, srv_executor, true);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    test_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 
   // now load it and check if it got the new robot description
@@ -594,15 +636,136 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_state().id());
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // call configure again and check the state + it shouldn't throw any exception
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // Now repeat the same with the chainable controller
+  request->name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
+
+  auto test_chainable_controller = std::make_shared<TestChainableController>();
+  controller_interface::InterfaceConfiguration chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
+  controller_interface::InterfaceConfiguration duplicated_chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/position"}};
+  controller_interface::InterfaceConfiguration chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_chainable_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chainable_controller->set_state_interface_configuration(chained_state_cfg);
+  test_chainable_controller->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+  test_chainable_controller->set_exported_state_interface_names(
+    {"joint1/position", "joint1/velocity"});
+
+  auto abstract_test_chainable_controller = cm_->add_controller(
+    test_chainable_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(nullptr, abstract_test_chainable_controller);
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
+
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // call configure again and check the state + it shouldn't throw any exception
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now try to configure the chainable controller with duplicated command interfaces
+  test_chainable_controller->set_command_interface_configuration(duplicated_chained_cmd_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now duplicate state interfaces
+  controller_interface::InterfaceConfiguration duplicated_chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/position", "joint1/velocity"}};
+  test_chainable_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chainable_controller->set_state_interface_configuration(duplicated_chained_state_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // Now try to configure the chainable controller again with unique state and command interfaces
+  test_chainable_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chainable_controller->set_state_interface_configuration(chained_state_cfg);
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    cm_->get_loaded_controllers()[0].c->get_name());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller->get_lifecycle_state().id());
 
   // now unload the controller and check the state
   auto unload_request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   ASSERT_TRUE(call_service_and_wait(*unload_client, unload_request, srv_executor, true)->ok);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    test_controller->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  unload_request->name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  ASSERT_TRUE(call_service_and_wait(*unload_client, unload_request, srv_executor, true)->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    test_chainable_controller->get_lifecycle_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
@@ -894,8 +1057,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -927,7 +1089,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   /// &&
   /// test_controller_name_2 -> chain_ctrl_6 -> chain_ctrl_5 -> chain_ctrl_4
   /// &&
-  /// test_controller_name_7 -> test_controller_name_8
+  /// test_controller_name_8 -> test_controller_name_7
   ///
   /// NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported
   /// from the controller B (or) the controller B is utilizing the expected interfaces exported from
@@ -1042,34 +1204,37 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
 
   // get controller list before configure
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -1106,8 +1271,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -1296,40 +1460,40 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-
   {
     ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
     for (auto random_ctrl : random_controllers_list)
     {
       cm_->add_controller(
@@ -1383,8 +1547,7 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -1568,7 +1731,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   }
 
   // Now shuffle the list to be able to configure controller later randomly
-  std::random_shuffle(controllers_list.begin(), controllers_list.end());
+  std::random_device rnd;
+  std::mt19937 mers(rnd());
+  std::shuffle(controllers_list.begin(), controllers_list.end(), mers);
 
   {
     ControllerManagerRunner cm_runner(this);
@@ -1608,8 +1773,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -1987,4 +2151,130 @@ TEST_F(TestControllerManagerSrvs, activate_chained_controllers_all_at_once)
   ASSERT_EQ(res, controller_interface::return_type::OK);
 
   RCLCPP_ERROR(srv_node->get_logger(), "Check successful!");
+}
+
+TEST_F(TestControllerManagerSrvs, switch_controller_failure_behaviour_on_unknown_controller)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+
+  auto test_controller = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint2/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity", "joint2/position"}};
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
+  ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
+
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+
+  // Switch to an unknown controller and see if it is working
+  // It should fail if the controller doesn't exist at all
+  for (const auto & strictness :
+       {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+        controller_manager_msgs::srv::SwitchController::Request::STRICT})
+  {
+    SCOPED_TRACE("Switching to unknown controller with strictness: " + std::to_string(strictness));
+    ASSERT_EQ(
+      cm_->switch_controller({"unknown_controller"}, {}, strictness, true, rclcpp::Duration(0, 0)),
+      controller_interface::return_type::ERROR);
+    ASSERT_EQ(
+      cm_->switch_controller({}, {"unknown_controller"}, strictness, true, rclcpp::Duration(0, 0)),
+      controller_interface::return_type::ERROR);
+  }
+
+  // now test with strict along with our known controller. It should fail as the unknown controller
+  // is not known
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+
+  // Now with best effort, it should work even though the unknown controller is not known
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"}, {},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME, "unknown_controller"},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::OK);
+
+  // Now let's deactivate the controller and by having unknown controller in the activate list
+  // it should fail
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->switch_controller(
+      {"unknown_controller"}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT, true,
+      rclcpp::Duration(0, 0)),
+    controller_interface::return_type::ERROR);
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
 }

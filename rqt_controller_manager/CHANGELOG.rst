@@ -2,6 +2,113 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.4.0 (2025-07-21)
+------------------
+* Fix setuptools deprecations (`#2395 <https://github.com/ros-controls/ros2_control/issues/2395>`_)
+* Contributors: mosfet80
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+
+5.0.0 (2025-05-21)
+------------------
+
+4.29.0 (2025-05-04)
+-------------------
+* Add consistent transitions for controllers in rqt_controller_manager (`#2163 <https://github.com/ros-controls/ros2_control/issues/2163>`_)
+* Contributors: Soham Patil
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* Update `rqt_controller_manager` controller state color scheme to match list_controllers color scheme (`#2143 <https://github.com/ros-controls/ros2_control/issues/2143>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Soham Patil
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+
+4.20.0 (2024-11-08)
+-------------------
+
+4.19.0 (2024-10-26)
+-------------------
+* fix: call configure_controller  on 'unconfigured' state instead load_controller (`#1794 <https://github.com/ros-controls/ros2_control/issues/1794>`_)
+* Contributors: Santosh Govindaraj
+
+4.18.0 (2024-10-07)
+-------------------
+
+4.17.0 (2024-09-11)
+-------------------
+
+4.16.1 (2024-08-24)
+-------------------
+
+4.16.0 (2024-08-22)
+-------------------
+
+4.15.0 (2024-08-05)
+-------------------
+
+4.14.0 (2024-07-23)
+-------------------
+
+4.13.0 (2024-07-08)
+-------------------
+
+4.12.0 (2024-07-01)
+-------------------
+* [rqt_controller_manager] Add hardware components (`#1455 <https://github.com/ros-controls/ros2_control/issues/1455>`_)
+* Contributors: Christoph Fröhlich
+
+4.11.0 (2024-05-14)
+-------------------
+
+4.10.0 (2024-05-08)
+-------------------
+
+4.9.0 (2024-04-30)
+------------------
+
+4.8.0 (2024-03-27)
+------------------
+* Fix rqt_controller_manager for non-humble (`#1454 <https://github.com/ros-controls/ros2_control/issues/1454>`_)
+* Add cm as dependency to rqt_cm (`#1447 <https://github.com/ros-controls/ros2_control/issues/1447>`_)
+* Contributors: Christoph Fröhlich
+
+4.7.0 (2024-03-22)
+------------------
+* Codeformat from new pre-commit config (`#1433 <https://github.com/ros-controls/ros2_control/issues/1433>`_)
+* rqt_controller_manager compatibility for humble (`#1429 <https://github.com/ros-controls/ros2_control/issues/1429>`_)
+* Contributors: Christoph Fröhlich
+
 4.6.0 (2024-03-02)
 ------------------
 * [CI] Code coverage + pre-commit (`#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_)

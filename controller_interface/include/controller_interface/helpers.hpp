@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 
+// Add hardware interface helpers here, so all inherited controllers can use them
+#include "hardware_interface/helpers.hpp"
+
 namespace controller_interface
 {
 /// Reorder interfaces with references according to joint names or full interface names.

@@ -14,10 +14,10 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "random_generator_utils.hpp"
 #include "transmission_interface/four_bar_linkage_transmission.hpp"
@@ -26,7 +26,6 @@ using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
 using testing::DoubleNear;
-using testing::Not;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::Exception;
 using transmission_interface::FourBarLinkageTransmission;
@@ -298,8 +297,8 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(100.0, DoubleNear(j_val[0], EPS));
-    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+    EXPECT_THAT(200.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(200.0, DoubleNear(j_val[1], EPS));
   }
 
   // Velocity interface
@@ -350,7 +349,7 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(100.0, DoubleNear(j_val[0], EPS));
     EXPECT_THAT(200.0, DoubleNear(j_val[1], EPS));
   }
 
@@ -403,8 +402,8 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(-60.0, DoubleNear(j_val[0], EPS));
-    EXPECT_THAT(-160.0, DoubleNear(j_val[1], EPS));
+    EXPECT_THAT(-160.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(-400.0, DoubleNear(j_val[1], EPS));
   }
 
   // Velocity interface

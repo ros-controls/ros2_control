@@ -24,4 +24,4 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    target-branch: "iron"
+    target-branch: "jazzy"

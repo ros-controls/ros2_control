@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
@@ -27,20 +26,21 @@ namespace test_hardware_components
 {
 class TestSingleJointActuator : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & actuator_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (ActuatorInterface::on_init(actuator_info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
 
     // can only control one joint
-    if (info_.joints.size() != 1)
+    if (get_hardware_info().joints.size() != 1)
     {
       return CallbackReturn::ERROR;
     }
     // can only control in position
-    const auto & command_interfaces = info_.joints[0].command_interfaces;
+    const auto & command_interfaces = get_hardware_info().joints[0].command_interfaces;
     if (command_interfaces.size() != 1)
     {
       return CallbackReturn::ERROR;
@@ -50,7 +50,7 @@ class TestSingleJointActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
     // can only give feedback state for position and velocity
-    const auto & state_interfaces = info_.joints[0].state_interfaces;
+    const auto & state_interfaces = get_hardware_info().joints[0].state_interfaces;
     if (state_interfaces.size() < 1)
     {
       return CallbackReturn::ERROR;
@@ -72,12 +72,16 @@ class TestSingleJointActuator : public ActuatorInterface
   {
     std::vector<StateInterface> state_interfaces;
 
-    const auto & joint_name = info_.joints[0].name;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
-
+    const auto & joint_name = get_hardware_info().joints[0].name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
+#pragma GCC diagnostic pop
     return state_interfaces;
   }
 
@@ -85,9 +89,13 @@ class TestSingleJointActuator : public ActuatorInterface
   {
     std::vector<CommandInterface> command_interfaces;
 
-    const auto & joint_name = info_.joints[0].name;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
+    const auto & joint_name = get_hardware_info().joints[0].name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
+#pragma GCC diagnostic pop
 
     return command_interfaces;
   }

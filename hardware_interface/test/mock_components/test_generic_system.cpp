@@ -14,20 +14,22 @@
 //
 // Author: Denis Stogl
 
-#include <gmock/gmock.h>
-
 #include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#pragma GCC diagnostic pop
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/state.hpp"
-#include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 namespace
@@ -96,6 +98,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -121,6 +124,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -142,12 +146,12 @@ protected:
         <param name="initial_value">0.2</param>
       </state_interface>
     </joint>
-    <joint name="voltage_output">
+    <gpio name="voltage_output">
       <command_interface name="voltage"/>
       <state_interface name="voltage">
         <param name="initial_value">0.5</param>
       </state_interface>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -251,11 +255,7 @@ protected:
       </state_interface>
       <state_interface name="velocity"/>
     </joint>
-    <joint name="joint2">
-      <param name="mimic">joint1</param>
-      <param name="multiplier">-2</param>
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
+    <joint name="joint2" mimic="true">
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
@@ -293,6 +293,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -355,6 +356,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -515,7 +517,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
@@ -546,7 +547,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
@@ -555,7 +555,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
@@ -583,6 +582,70 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_system_2dof_standard_interfaces_with_same_hardware_group_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 1</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 2</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string hardware_system_2dof_;
@@ -604,6 +667,9 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
+  std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
+  std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
+  rclcpp::Node node_ = rclcpp::Node("TestGenericSystem");
 };
 
 // Forward declaration
@@ -628,11 +694,18 @@ public:
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
 
-  TestableResourceManager() : hardware_interface::ResourceManager() {}
+  explicit TestableResourceManager(rclcpp::Node & node)
+  : hardware_interface::ResourceManager(
+      node.get_node_clock_interface(), node.get_node_logging_interface())
+  {
+  }
 
-  TestableResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  explicit TestableResourceManager(
+    rclcpp::Node & node, const std::string & urdf, bool activate_all = false,
+    unsigned int cm_update_rate = 100)
+  : hardware_interface::ResourceManager(
+      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all,
+      cm_update_rate)
   {
   }
 };
@@ -679,7 +752,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  ASSERT_NO_THROW(TestableResourceManager rm(urdf));
+  ASSERT_NO_THROW(TestableResourceManager rm(node_, urdf));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
@@ -687,7 +760,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -707,10 +780,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
 
-  ASSERT_EQ(1.57, j1p_s.get_value());
-  ASSERT_EQ(0.7854, j2p_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_EQ(1.57, j1p_s.get_optional().value());
+  ASSERT_EQ(0.7854, j2p_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
@@ -718,7 +791,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -756,30 +829,34 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
   hardware_interface::LoanedCommandInterface j2a_c =
     rm.claim_command_interface("joint2/acceleration");
 
-  ASSERT_EQ(1.57, j1v_s.get_value());
-  ASSERT_EQ(0.7854, j2p_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2a_c.get_value()));
+  ASSERT_EQ(1.57, j1v_s.get_optional().value());
+  ASSERT_EQ(0.7854, j2p_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2a_c.get_optional().value()));
 }
 
 void generic_system_functional_test(
   const std::string & urdf, const std::string component_name = "GenericSystem2dof",
   const double offset = 0)
 {
-  TestableResourceManager rm(urdf);
+  rclcpp::Node node("test_generic_system");
+  TestableResourceManager rm(node, urdf);
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   configure_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   activate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(status_map[component_name].rw_rate, 100u);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -792,73 +869,229 @@ void generic_system_functional_test(
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j1v_c.set_value(0.22);
-  j2p_c.set_value(0.33);
-  j2v_c.set_value(0.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11 + offset, j1p_s.get_value());
-  ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33 + offset, j2p_s.get_value());
-  ASSERT_EQ(0.44, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // set some new values in commands
-  j1p_c.set_value(0.55);
-  j1v_c.set_value(0.66);
-  j2p_c.set_value(0.77);
-  j2v_c.set_value(0.88);
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
-  ASSERT_EQ(0.11 + offset, j1p_s.get_value());
-  ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33 + offset, j2p_s.get_value());
-  ASSERT_EQ(0.44, j2v_s.get_value());
-  ASSERT_EQ(0.55, j1p_c.get_value());
-  ASSERT_EQ(0.66, j1v_c.get_value());
-  ASSERT_EQ(0.77, j2p_c.get_value());
-  ASSERT_EQ(0.88, j2v_c.get_value());
+  ASSERT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.55, j1p_c.get_optional().value());
+  ASSERT_EQ(0.66, j1v_c.get_optional().value());
+  ASSERT_EQ(0.77, j2p_c.get_optional().value());
+  ASSERT_EQ(0.88, j2v_c.get_optional().value());
 
   deactivate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+void generic_system_error_group_test(
+  const std::string & urdf, const std::string component_prefix, bool validate_same_group)
+{
+  rclcpp::Node node("test_generic_system");
+  TestableResourceManager rm(node, urdf, false, 200u);
+  const std::string component1 = component_prefix + "1";
+  const std::string component2 = component_prefix + "2";
+  // check is hardware is configured
+  auto status_map = rm.get_components_status();
+  for (auto component : {component1, component2})
+  {
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+    configure_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+    activate_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+  }
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
+
+  // State interfaces without initial value are set to 0
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // set some new values in commands
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
+
+  // State values should not be changed
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // write() does not change values
+  EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // read() mirrors commands to states
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // set some new values in commands
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
+
+  // state values should not be changed
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.55, j1p_c.get_optional().value());
+  ASSERT_EQ(0.66, j1v_c.get_optional().value());
+  ASSERT_EQ(0.77, j2p_c.get_optional().value());
+  ASSERT_EQ(0.88, j2v_c.get_optional().value());
+
+  // Error testing
+  ASSERT_TRUE(j1p_c.set_value(std::numeric_limits<double>::infinity()));
+  ASSERT_TRUE(j1v_c.set_value(std::numeric_limits<double>::infinity()));
+  // read() should now bring error in the first component
+  auto read_result = rm.read(TIME, PERIOD);
+  EXPECT_EQ(read_result.result, hardware_interface::return_type::ERROR);
+  if (validate_same_group)
+  {
+    // If they belong to the same group, show the error in all hardware components of same group
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1, component2));
+  }
+  else
+  {
+    // If they don't belong to the same group, show the error in only that hardware component
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1));
+  }
+
+  // Check initial values
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/velocity"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/velocity"));
+
+  if (validate_same_group)
+  {
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/velocity"));
+  }
+  else
+  {
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));
+  }
+
+  // Error should be recoverable only after reactivating the hardware component
+  ASSERT_TRUE(j1p_c.set_value(0.0));
+  ASSERT_TRUE(j1v_c.set_value(0.0));
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::ERROR);
+
+  // Now it should be recoverable
+  deactivate_components(rm, {component1});
+  activate_components(rm, {component1});
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+
+  deactivate_components(rm, {component1, component2});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map[component1].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map[component2].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
@@ -869,11 +1102,29 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality)
   generic_system_functional_test(urdf, {"MockHardwareSystem"});
 }
 
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, false);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, true);
+}
+
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_other_interface_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -905,58 +1156,58 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   hardware_interface::LoanedCommandInterface vo_c =
     rm.claim_command_interface("voltage_output/voltage");
 
-  ASSERT_EQ(1.55, j1p_s.get_value());
-  ASSERT_EQ(0.1, j1v_s.get_value());
-  ASSERT_EQ(0.65, j2p_s.get_value());
-  ASSERT_EQ(0.2, j2v_s.get_value());
-  ASSERT_EQ(0.5, vo_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
-  ASSERT_TRUE(std::isnan(vo_c.get_value()));
+  ASSERT_EQ(1.55, j1p_s.get_optional().value());
+  ASSERT_EQ(0.1, j1v_s.get_optional().value());
+  ASSERT_EQ(0.65, j2p_s.get_optional().value());
+  ASSERT_EQ(0.2, j2v_s.get_optional().value());
+  ASSERT_EQ(0.5, vo_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(vo_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j2p_c.set_value(0.33);
-  vo_c.set_value(0.99);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(vo_c.set_value(0.99));
 
   // State values should not be changed
-  ASSERT_EQ(1.55, j1p_s.get_value());
-  ASSERT_EQ(0.1, j1v_s.get_value());
-  ASSERT_EQ(0.65, j2p_s.get_value());
-  ASSERT_EQ(0.2, j2v_s.get_value());
-  ASSERT_EQ(0.5, vo_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.99, vo_c.get_value());
+  ASSERT_EQ(1.55, j1p_s.get_optional().value());
+  ASSERT_EQ(0.1, j1v_s.get_optional().value());
+  ASSERT_EQ(0.65, j2p_s.get_optional().value());
+  ASSERT_EQ(0.2, j2v_s.get_optional().value());
+  ASSERT_EQ(0.5, vo_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.99, vo_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(1.55, j1p_s.get_value());
-  ASSERT_EQ(0.1, j1v_s.get_value());
-  ASSERT_EQ(0.65, j2p_s.get_value());
-  ASSERT_EQ(0.2, j2v_s.get_value());
-  ASSERT_EQ(0.5, vo_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.99, vo_c.get_value());
+  ASSERT_EQ(1.55, j1p_s.get_optional().value());
+  ASSERT_EQ(0.1, j1v_s.get_optional().value());
+  ASSERT_EQ(0.65, j2p_s.get_optional().value());
+  ASSERT_EQ(0.2, j2v_s.get_optional().value());
+  ASSERT_EQ(0.5, vo_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.99, vo_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.1, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
-  ASSERT_EQ(0.99, vo_s.get_value());
-  ASSERT_EQ(0.2, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.99, vo_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.1, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.99, vo_s.get_optional().value());
+  ASSERT_EQ(0.2, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.99, vo_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -998,64 +1249,64 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/tx"));
   EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/ty"));
 
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j2p_c.set_value(0.33);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
 }
 
 void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {component_name});
 
@@ -1101,78 +1352,78 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   hardware_interface::LoanedCommandInterface sty_c =
     rm.claim_command_interface("tcp_force_sensor/ty");
 
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
-  EXPECT_TRUE(std::isnan(sfx_c.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_c.get_value()));
-  EXPECT_TRUE(std::isnan(stx_c.get_value()));
-  EXPECT_TRUE(std::isnan(sty_c.get_value()));
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfx_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j2p_c.set_value(0.33);
-  sfx_c.set_value(1.11);
-  sfy_c.set_value(2.22);
-  stx_c.set_value(3.33);
-  sty_c.set_value(4.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(sfx_c.set_value(1.11));
+  ASSERT_TRUE(sfy_c.set_value(2.22));
+  ASSERT_TRUE(stx_c.set_value(3.33));
+  ASSERT_TRUE(sty_c.set_value(4.44));
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(1.11, sfx_c.get_value());
-  ASSERT_EQ(2.22, sfy_c.get_value());
-  ASSERT_EQ(3.33, stx_c.get_value());
-  ASSERT_EQ(4.44, sty_c.get_value());
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(1.11, sfx_c.get_optional().value());
+  ASSERT_EQ(2.22, sfy_c.get_optional().value());
+  ASSERT_EQ(3.33, stx_c.get_optional().value());
+  ASSERT_EQ(4.44, sty_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
-  EXPECT_TRUE(std::isnan(stx_s.get_value()));
-  EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(1.11, sfx_c.get_value());
-  ASSERT_EQ(2.22, sfy_c.get_value());
-  ASSERT_EQ(3.33, stx_c.get_value());
-  ASSERT_EQ(4.44, sty_c.get_value());
+  ASSERT_EQ(0.0, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(1.11, sfx_c.get_optional().value());
+  ASSERT_EQ(2.22, sfy_c.get_optional().value());
+  ASSERT_EQ(3.33, stx_c.get_optional().value());
+  ASSERT_EQ(4.44, sty_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(1.11, sfx_s.get_value());
-  ASSERT_EQ(2.22, sfy_s.get_value());
-  ASSERT_EQ(3.33, stx_s.get_value());
-  ASSERT_EQ(4.44, sty_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(1.11, sfx_c.get_value());
-  ASSERT_EQ(2.22, sfy_c.get_value());
-  ASSERT_EQ(3.33, stx_c.get_value());
-  ASSERT_EQ(4.44, sty_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(1.11, sfx_s.get_optional().value());
+  ASSERT_EQ(2.22, sfy_s.get_optional().value());
+  ASSERT_EQ(3.33, stx_s.get_optional().value());
+  ASSERT_EQ(4.44, sty_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(1.11, sfx_c.get_optional().value());
+  ASSERT_EQ(2.22, sfy_c.get_optional().value());
+  ASSERT_EQ(3.33, stx_c.get_optional().value());
+  ASSERT_EQ(4.44, sty_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
@@ -1195,7 +1446,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
 void TestGenericSystem::test_generic_system_with_mimic_joint(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {component_name});
 
@@ -1207,11 +1458,9 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(4u, rm.command_interface_keys().size());
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -1221,47 +1470,47 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
   hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
 
-  ASSERT_EQ(1.57, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
+  ASSERT_EQ(1.57, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j1v_c.set_value(0.05);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.05));
 
   // State values should not be changed
-  ASSERT_EQ(1.57, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.05, j1v_c.get_value());
+  ASSERT_EQ(1.57, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(1.57, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.05, j1v_c.get_value());
+  ASSERT_EQ(1.57, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.0, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.05, j1v_s.get_value());
-  ASSERT_EQ(-0.22, j2p_s.get_value());
-  ASSERT_EQ(-0.1, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.05, j1v_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.05, j1v_s.get_optional().value());
+  ASSERT_EQ(-0.22, j2p_s.get_optional().value());
+  ASSERT_EQ(-0.1, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.05, j1v_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_mimic_joint_ +
+  auto urdf = ros2_control_test_assets::urdf_head_mimic + hardware_system_2dof_with_mimic_joint_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mimic_joint(urdf, "MockHardwareSystem");
@@ -1294,7 +1543,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   const double offset = -3;
 
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   const std::string hardware_name = "MockHardwareSystem";
 
@@ -1330,72 +1579,72 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
     rm.claim_state_interface("joint2/actual_position");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j1v_c.set_value(0.22);
-  j2p_c.set_value(0.33);
-  j2v_c.set_value(0.44);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(2.78, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands + offset to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.11 + offset, c_j1p_s.get_value());
-  ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
-  ASSERT_EQ(0.33 + offset, c_j2p_s.get_value());
-  ASSERT_EQ(0.44, j2v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.22, j1v_c.get_value());
-  ASSERT_EQ(0.33, j2p_c.get_value());
-  ASSERT_EQ(0.44, j2v_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.11 + offset, c_j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.33 + offset, c_j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // set some new values in commands
-  j1p_c.set_value(0.55);
-  j1v_c.set_value(0.66);
-  j2p_c.set_value(0.77);
-  j2v_c.set_value(0.88);
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
-  ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.11 + offset, c_j1p_s.get_value());
-  ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
-  ASSERT_EQ(0.33 + offset, c_j2p_s.get_value());
-  ASSERT_EQ(0.44, j2v_s.get_value());
-  ASSERT_EQ(0.55, j1p_c.get_value());
-  ASSERT_EQ(0.66, j1v_c.get_value());
-  ASSERT_EQ(0.77, j2p_c.get_value());
-  ASSERT_EQ(0.88, j2v_c.get_value());
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.11 + offset, c_j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.33 + offset, c_j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.55, j1p_c.get_optional().value());
+  ASSERT_EQ(0.66, j1v_c.get_optional().value());
+  ASSERT_EQ(0.77, j2p_c.get_optional().value());
+  ASSERT_EQ(0.88, j2v_c.get_optional().value());
 
   deactivate_components(rm, {hardware_name});
   status_map = rm.get_components_status();
@@ -1407,7 +1656,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   const std::string hardware_name = "MockHardwareSystem";
 
@@ -1458,44 +1707,44 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
     rm.claim_command_interface("flange_vacuum/vacuum");
 
   // State interfaces without initial value are set to 0
-  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  ASSERT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
-  ASSERT_TRUE(std::isnan(gpio2_vac_c.get_value()));
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_c.get_optional().value()));
 
   // set some new values in commands
-  gpio1_a_o1_c.set_value(0.111);
-  gpio2_vac_c.set_value(0.222);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.111));
+  ASSERT_TRUE(gpio2_vac_c.set_value(0.222));
 
   // State values should not be changed
-  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_optional().value());
 
   // read() mirrors commands + offset to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.111, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.222, gpio2_vac_s.get_value());
-  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_s.get_optional().value());
+  ASSERT_EQ(0.222, gpio2_vac_s.get_optional().value());
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_optional().value());
 
   // set some new values in commands
-  gpio1_a_o1_c.set_value(0.333);
-  gpio2_vac_c.set_value(0.444);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.333));
+  ASSERT_TRUE(gpio2_vac_c.set_value(0.444));
 
   // state values should not be changed
-  ASSERT_EQ(0.111, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.222, gpio2_vac_s.get_value());
-  ASSERT_EQ(0.333, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.444, gpio2_vac_c.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_s.get_optional().value());
+  ASSERT_EQ(0.222, gpio2_vac_s.get_optional().value());
+  ASSERT_EQ(0.333, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.444, gpio2_vac_c.get_optional().value());
 
   // check other functionalities are working well
   generic_system_functional_test(urdf, hardware_name);
@@ -1504,7 +1753,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1560,52 +1809,52 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
 
-  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_i1_c.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_i2_c.get_value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_c.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i2_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_c.get_optional().value()));
 
   // set some new values in commands
-  gpio1_a_o1_c.set_value(0.11);
-  gpio1_a_i1_c.set_value(0.33);
-  gpio1_a_i2_c.set_value(1.11);
-  gpio2_vac_c.set_value(2.22);
+  ASSERT_TRUE(gpio1_a_o1_c.set_value(0.11));
+  ASSERT_TRUE(gpio1_a_i1_c.set_value(0.33));
+  ASSERT_TRUE(gpio1_a_i2_c.set_value(1.11));
+  ASSERT_TRUE(gpio2_vac_c.set_value(2.22));
 
   // State values should not be changed
-  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_value());
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
+  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
-  ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_value());
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
+  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(0.11, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.33, gpio1_a_i1_s.get_value());
-  ASSERT_EQ(1.11, gpio1_a_o2_s.get_value());
-  ASSERT_EQ(2.22, gpio2_vac_s.get_value());
-  ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
-  ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_value());
+  ASSERT_EQ(0.11, gpio1_a_o1_s.get_optional().value());
+  ASSERT_EQ(0.33, gpio1_a_i1_s.get_optional().value());
+  ASSERT_EQ(1.11, gpio1_a_o2_s.get_optional().value());
+  ASSERT_EQ(2.22, gpio2_vac_s.get_optional().value());
+  ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
+  ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
+  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command)
@@ -1630,7 +1879,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1649,16 +1898,16 @@ TEST_F(TestGenericSystem, sensor_with_initial_value)
   hardware_interface::LoanedStateInterface force_z_s =
     rm.claim_state_interface("force_sensor/force.z");
 
-  ASSERT_EQ(0.0, force_x_s.get_value());
-  ASSERT_EQ(0.0, force_y_s.get_value());
-  ASSERT_EQ(0.0, force_z_s.get_value());
+  ASSERT_EQ(0.0, force_x_s.get_optional().value());
+  ASSERT_EQ(0.0, force_y_s.get_optional().value());
+  ASSERT_EQ(0.0, force_z_s.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, gpio_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1670,7 +1919,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
   // Check initial values
   hardware_interface::LoanedStateInterface state = rm.claim_state_interface("sample_io/output_1");
 
-  ASSERT_EQ(1, state.get_value());
+  ASSERT_EQ(1, state.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
@@ -1679,7 +1928,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
               hardware_system_2dof_standard_interfaces_with_different_control_modes_ +
               ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1714,16 +1963,16 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   hardware_interface::LoanedCommandInterface j2a_c =
     rm.claim_command_interface("joint2/acceleration");
 
-  EXPECT_EQ(3.45, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.78, j2p_s.get_value());
-  EXPECT_EQ(0.0, j2v_s.get_value());
-  EXPECT_EQ(0.0, j2a_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2a_c.get_value()));
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2a_c.get_optional().value()));
 
   // Test error management in prepare mode switch
   ASSERT_EQ(  // joint2 has non 'position', 'velocity', or 'acceleration' interface
@@ -1742,138 +1991,138 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
     true);
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
-  j2a_c.set_value(3.5);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2a_c.set_value(3.5));
 
   // State values should not be changed
-  EXPECT_EQ(3.45, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.78, j2p_s.get_value());
-  EXPECT_EQ(0.0, j2v_s.get_value());
-  EXPECT_EQ(0.0, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  EXPECT_EQ(3.45, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.78, j2p_s.get_value());
-  EXPECT_EQ(0.0, j2v_s.get_value());
-  EXPECT_EQ(0.0, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
   rm.read(TIME, PERIOD);
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(-33.4, j1v_s.get_value());
-  EXPECT_NEAR(-334.0, j1a_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(2.78, j2p_s.get_value());
-  EXPECT_EQ(0.0, j2v_s.get_value());
-  EXPECT_EQ(3.5, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(-33.4, j1v_s.get_optional().value());
+  EXPECT_NEAR(-334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
   rm.read(TIME, PERIOD);
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_NEAR(334.0, j1a_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(2.78, j2p_s.get_value());
-  EXPECT_NEAR(0.35, j2v_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(3.5, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_NEAR(334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_NEAR(0.35, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
   rm.read(TIME, PERIOD);
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.815, j2p_s.get_value());
-  EXPECT_NEAR(0.7, j2v_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(3.5, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.815, j2p_s.get_optional().value());
+  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // switch controller mode as controller manager is doing
   ASSERT_EQ(rm.prepare_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
   ASSERT_EQ(rm.perform_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
 
   // set some new values in commands
-  j1v_c.set_value(0.5);
-  j2v_c.set_value(2.0);
+  ASSERT_TRUE(j1v_c.set_value(0.5));
+  ASSERT_TRUE(j2v_c.set_value(2.0));
 
   // State values should not be changed
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.815, j2p_s.get_value());
-  EXPECT_NEAR(0.7, j2v_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(3.5, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.5, j1v_c.get_value());
-  ASSERT_EQ(2.0, j2v_c.get_value());
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.815, j2p_s.get_optional().value());
+  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.5, j1v_c.get_optional().value());
+  ASSERT_EQ(2.0, j2v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(0.0, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(2.815, j2p_s.get_value());
-  EXPECT_NEAR(0.7, j2v_s.get_value(), COMPARE_DELTA);
-  EXPECT_EQ(3.5, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.5, j1v_c.get_value());
-  ASSERT_EQ(2.0, j2v_c.get_value());
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.815, j2p_s.get_optional().value());
+  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.5, j1v_c.get_optional().value());
+  ASSERT_EQ(2.0, j2v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
   rm.read(TIME, PERIOD);
-  EXPECT_EQ(0.11, j1p_s.get_value());
-  EXPECT_EQ(0.5, j1v_s.get_value());
-  EXPECT_EQ(5.0, j1a_s.get_value());
-  EXPECT_EQ(2.885, j2p_s.get_value());
-  EXPECT_EQ(2.0, j2v_s.get_value());
-  EXPECT_NEAR(13.0, j2a_s.get_value(), COMPARE_DELTA);
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.5, j1v_c.get_value());
-  ASSERT_EQ(2.0, j2v_c.get_value());
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.5, j1v_s.get_optional().value());
+  EXPECT_EQ(5.0, j1a_s.get_optional().value());
+  EXPECT_EQ(2.885, j2p_s.get_optional().value());
+  EXPECT_EQ(2.0, j2v_s.get_optional().value());
+  EXPECT_NEAR(13.0, j2a_s.get_optional().value(), COMPARE_DELTA);
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.5, j1v_c.get_optional().value());
+  ASSERT_EQ(2.0, j2v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
   rm.read(TIME, PERIOD);
-  EXPECT_EQ(0.16, j1p_s.get_value());
-  EXPECT_EQ(0.5, j1v_s.get_value());
-  EXPECT_EQ(0.0, j1a_s.get_value());
-  EXPECT_EQ(3.085, j2p_s.get_value());
-  EXPECT_EQ(2.0, j2v_s.get_value());
-  EXPECT_EQ(0.0, j2a_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
-  ASSERT_EQ(0.5, j1v_c.get_value());
-  ASSERT_EQ(2.0, j2v_c.get_value());
-  ASSERT_EQ(3.5, j2a_c.get_value());
+  EXPECT_EQ(0.16, j1p_s.get_optional().value());
+  EXPECT_EQ(0.5, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_EQ(3.085, j2p_s.get_optional().value());
+  EXPECT_EQ(2.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.5, j1v_c.get_optional().value());
+  ASSERT_EQ(2.0, j2v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 {
   auto urdf =
     ros2_control_test_assets::urdf_head + disabled_commands_ + ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1891,37 +2140,38 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
 
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
 
   // set some new values in commands
-  j1p_c.set_value(0.11);
+  ASSERT_TRUE(j1p_c.set_value(0.11));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // read() also does not change values
   rm.read(TIME, PERIOD);
-  ASSERT_EQ(3.45, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
 {
-  auto check_prepare_command_mode_switch = [&](const std::string & urdf)
+  auto check_prepare_command_mode_switch =
+    [&](
+      const std::string & urdf, const std::string & urdf_head = ros2_control_test_assets::urdf_head)
   {
-    TestableResourceManager rm(
-      ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    TestableResourceManager rm(node_, urdf_head + urdf + ros2_control_test_assets::urdf_tail);
     rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
     rm.set_component_state("MockHardwareSystem", state);
     auto start_interfaces = rm.command_interface_keys();
@@ -1937,7 +2187,8 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
   ASSERT_TRUE(
     check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_mimic_joint_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
   ASSERT_TRUE(
     check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
@@ -1956,4 +2207,11 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(
     valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
+}
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  testing::InitGoogleMock(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fmt/compile.h>
 #include <tinyxml2.h>
-#include <charconv>
+
 #include <iostream>
 #include <regex>
 #include <stdexcept>
@@ -21,17 +22,29 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rclcpp/version.h"
+#if RCLCPP_VERSION_GTE(29, 0, 0)
+#include "urdf/model.hpp"
+#else
+#include "urdf/model.h"
+#endif
+
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/lexical_casts.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "joint_limits/joint_limits_urdf.hpp"
 
 namespace
 {
 constexpr const auto kRobotTag = "robot";
+constexpr const auto kSDFTag = "sdf";
+constexpr const auto kModelTag = "model";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kPluginNameTag = "plugin";
 constexpr const auto kParamTag = "param";
+constexpr const auto kGroupTag = "group";
 constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
@@ -41,7 +54,10 @@ constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kLimitsTag = "limits";
+constexpr const auto kEnableAttribute = "enable";
 constexpr const auto kInitialValueTag = "initial_value";
+constexpr const auto kMimicAttribute = "mimic";
 constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
@@ -49,7 +65,9 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kReadWriteRateAttribute = "rw_rate";
 constexpr const auto kIsAsyncAttribute = "is_async";
+constexpr const auto kThreadPriorityAttribute = "thread_priority";
 
 }  // namespace
 
@@ -94,7 +112,7 @@ std::string get_attribute_value(
   if (!attr)
   {
     throw std::runtime_error(
-      "no attribute " + std::string(attribute_name) + " in " + tag_name + " tag");
+      fmt::format(FMT_COMPILE("no attribute {} in {} tag"), attribute_name, tag_name));
   }
   return element_it->Attribute(attribute_name);
 }
@@ -177,13 +195,16 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
     throw std::runtime_error(
-      "Could not parse size tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" + s +
-      "\", but expected a non-zero positive integer.");
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse size tag in \"{}\". Got \"{}\", but expected a non-zero positive "
+          "integer."),
+        elem->Name(), s));
   }
 
   return size;
@@ -213,6 +234,50 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   return data_type;
 }
 
+/// Parse rw_rate attribute
+/**
+ * Parses an XMLElement and returns the value of the rw_rate attribute.
+ * Defaults to 0 if not specified.
+ *
+ * \param[in] elem XMLElement that has the rw_rate attribute.
+ * \return unsigned int specifying the read/write rate.
+ */
+unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
+  try
+  {
+    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    if (rw_rate < 0)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE(
+            "Could not parse rw_rate tag in \"{}\". Got \"{}\", but expected a positive integer."),
+          elem->Name(), rw_rate));
+    }
+    return static_cast<unsigned int>(rw_rate);
+  }
+  catch (const std::invalid_argument & e)
+  {
+    throw std::runtime_error(
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse rw_rate tag in \"{}\". Invalid value: \"{}\", expected a positive "
+          "integer."),
+        elem->Name(), attr->Value()));
+  }
+  catch (const std::out_of_range & e)
+  {
+    throw std::runtime_error(
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse rw_rate tag in \"{}\". Out of range value: \"{}\", expected a positive "
+          "valid integer."),
+        elem->Name(), attr->Value()));
+  }
+}
+
 /// Parse is_async attribute
 /**
  * Parses an XMLElement and returns the value of the is_async attribute.
@@ -225,6 +290,38 @@ bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
   return attr ? parse_bool(attr->Value()) : false;
+}
+
+/// Parse thread_priority attribute
+/**
+ * Parses an XMLElement and returns the value of the thread_priority attribute.
+ * Defaults to 50 if not specified.
+ *
+ * \param[in] elem XMLElement that has the thread_priority attribute.
+ * \return positive integer specifying the thread priority.
+ */
+int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kThreadPriorityAttribute);
+  if (!attr)
+  {
+    return 50;
+  }
+  std::string s = attr->Value();
+  std::regex int_re("[1-9][0-9]*");
+  if (std::regex_match(s, int_re))
+  {
+    return std::stoi(s);
+  }
+  else
+  {
+    throw std::runtime_error(
+      fmt::format(
+        FMT_COMPILE(
+          "Could not parse thread_priority tag in \"{}\". Got \"{}\", but expected a non-zero "
+          "positive integer."),
+        elem->Name(), s));
+  }
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -286,6 +383,15 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
     interface.max = interface_param->second;
   }
 
+  // Option enable or disable the interface limits, by default they are enabled
+  interface.enable_limits = true;
+  const auto * limits_it = interfaces_it->FirstChildElement(kLimitsTag);
+  if (limits_it)
+  {
+    interface.enable_limits =
+      parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
+  }
+
   // Optional initial_value attribute
   interface_param = interface_params.find(kInitialValueTag);
   if (interface_param != interface_params.end())
@@ -296,6 +402,16 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   // Default to a single double
   interface.data_type = "double";
   interface.size = 1;
+
+  // Parse parameters
+  const auto * params_it = interfaces_it->FirstChildElement(kParamTag);
+  if (params_it)
+  {
+    interface.parameters = parse_parameters_from_xml(params_it);
+  }
+
+  interface.data_type = parse_data_type_attribute(interfaces_it);
+  interface.size = static_cast<int>(parse_size_attribute(interfaces_it));
 
   return interface;
 }
@@ -315,11 +431,36 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   component.type = component_it->Name();
   component.name = get_attribute_value(component_it, kNameAttribute, component.type);
 
+  if (std::string(kJointTag) == component.type)
+  {
+    try
+    {
+      component.is_mimic = parse_bool(get_attribute_value(component_it, kMimicAttribute, kJointTag))
+                             ? MimicAttribute::TRUE
+                             : MimicAttribute::FALSE;
+    }
+    catch (const std::runtime_error & e)
+    {
+      // mimic attribute not set
+      component.is_mimic = MimicAttribute::NOT_SET;
+    }
+  }
+
+  // Option enable or disable the interface limits, by default they are enabled
+  bool enable_limits = true;
+  const auto * limits_it = component_it->FirstChildElement(kLimitsTag);
+  if (limits_it)
+  {
+    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
+  }
+
   // Parse all command interfaces
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it)
   {
-    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+    InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it);
+    cmd_info.enable_limits &= enable_limits;
+    component.command_interfaces.push_back(cmd_info);
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -327,7 +468,9 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
-    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+    InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it);
+    state_info.enable_limits &= enable_limits;
+    component.state_interfaces.push_back(state_info);
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -347,7 +490,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  *  and the interface may be an array of a fixed size of the data type.
  *
  * \param[in] component_it pointer to the iterator where component
- * info should befound
+ * info should be found
  * \throws std::runtime_error if a required component attribute or tag is not found.
  */
 ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * component_it)
@@ -363,10 +506,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (command_interfaces_it)
   {
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
-    component.command_interfaces.back().data_type =
-      parse_data_type_attribute(command_interfaces_it);
-    component.command_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -375,9 +514,6 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   while (state_interfaces_it)
   {
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
-    component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
-    component.state_interfaces.back().size =
-      static_cast<int>(parse_size_attribute(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -428,6 +564,10 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
   const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
+  if (!type_it)
+  {
+    throw std::runtime_error("Missing <plugin> tag of <transmission> element in your URDF.");
+  }
   transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
   // Parse joints
@@ -475,9 +615,11 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       if (found_it == hardware.joints.cend())
       {
         throw std::runtime_error(
-          "Error while parsing '" + hardware.name + "'. Transmission '" + transmission.name +
-          "' declared joint '" + joint.name + "' is not available in component '" + hardware.name +
-          "'.");
+          fmt::format(
+            FMT_COMPILE(
+              "Error while parsing '{}'. Transmission '{}' declared joint '{}' is not available in "
+              "component '{}'."),
+            hardware.name, transmission.name, joint.name, hardware.name));
       }
 
       //  copy interface names from their definitions in the component
@@ -498,14 +640,17 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       if (transmission.joints.size() != 1)
       {
         throw std::runtime_error(
-          "Error while parsing '" + hardware.name +
-          "'. There should be exactly one joint defined in this component but found " +
-          std::to_string(transmission.joints.size()));
+          fmt::format(
+            FMT_COMPILE(
+              "Error while parsing '{}'. There should be exactly one joint defined in this "
+              "component but found {}."),
+            hardware.name, transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(ActuatorInfo{
-        "actuator1", transmission.joints[0].state_interfaces,
-        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(
+        ActuatorInfo{
+          "actuator1", transmission.joints[0].state_interfaces,
+          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }
@@ -523,43 +668,56 @@ HardwareInfo parse_resource_from_xml(
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
+  hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
+  hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
+                                               : std::numeric_limits<int>::max();
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
   while (ros2_control_child_it)
   {
-    if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
+    if (std::string(kHardwareTag) == ros2_control_child_it->Name())
     {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
+      if (!type_it)
+      {
+        throw std::runtime_error("Missing <plugin> tag of <hardware> element in your URDF.");
+      }
       hardware.hardware_plugin_name =
         get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
+      const auto * group_it = ros2_control_child_it->FirstChildElement(kGroupTag);
+      if (group_it)
+      {
+        hardware.group = get_text_for_element(group_it, std::string("hardware.") + kGroupTag);
+      }
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     }
-    else if (!std::string(kJointTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kJointTag) == ros2_control_child_it->Name())
     {
       hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kSensorTag) == ros2_control_child_it->Name())
     {
       hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kGPIOTag) == ros2_control_child_it->Name())
     {
       hardware.gpios.push_back(parse_complex_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kTransmissionTag) == ros2_control_child_it->Name())
     {
       hardware.transmissions.push_back(parse_transmission_from_xml(ros2_control_child_it));
     }
     else
     {
-      throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
+      throw std::runtime_error(
+        fmt::format(FMT_COMPILE("invalid tag name '{}'"), ros2_control_child_it->Name()));
     }
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
@@ -569,6 +727,171 @@ HardwareInfo parse_resource_from_xml(
   hardware.original_xml = urdf;
 
   return hardware;
+}
+
+/**
+ * @brief Retrieve the min and max values from the interface tag.
+ * @param itf The interface tag to retrieve the values from.
+ * @param min The minimum value to be retrieved.
+ * @param max The maximum value to be retrieved.
+ * @return true if the values are retrieved, false otherwise.
+ */
+bool retrieve_min_max_interface_values(const InterfaceInfo & itf, double & min, double & max)
+{
+  try
+  {
+    if (itf.min.empty() && itf.max.empty())
+    {
+      // If the limits don't exist then return false as they are not retrieved
+      return false;
+    }
+    if (!itf.min.empty())
+    {
+      min = hardware_interface::stod(itf.min);
+    }
+    if (!itf.max.empty())
+    {
+      max = hardware_interface::stod(itf.max);
+    }
+    return true;
+  }
+  catch (const std::invalid_argument & err)
+  {
+    std::cerr << "Error parsing the limits for the interface: " << itf.name << " from the tags ["
+              << kMinTag << ": '" << itf.min << "' and " << kMaxTag << ": '" << itf.max
+              << "'] within " << kROS2ControlTag << " tag inside the URDF. Skipping it"
+              << std::endl;
+    return false;
+  }
+}
+
+/**
+ * @brief Set custom values for acceleration and jerk limits (no URDF standard)
+ * @param itr The interface tag to retrieve the values from.
+ * @param limits The joint limits to be set.
+ */
+void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointLimits & limits)
+{
+  if (itr.name == hardware_interface::HW_IF_ACCELERATION)
+  {
+    double max_decel(std::numeric_limits<double>::quiet_NaN()),
+      max_accel(std::numeric_limits<double>::quiet_NaN());
+    if (detail::retrieve_min_max_interface_values(itr, max_decel, max_accel))
+    {
+      if (std::isfinite(max_decel))
+      {
+        limits.max_deceleration = std::fabs(max_decel);
+        if (!std::isfinite(max_accel))
+        {
+          limits.max_acceleration = std::fabs(limits.max_deceleration);
+        }
+        limits.has_deceleration_limits = itr.enable_limits;
+      }
+      if (std::isfinite(max_accel))
+      {
+        limits.max_acceleration = max_accel;
+
+        if (!std::isfinite(limits.max_deceleration))
+        {
+          limits.max_deceleration = std::fabs(limits.max_acceleration);
+        }
+        limits.has_acceleration_limits = itr.enable_limits;
+      }
+    }
+  }
+  else if (itr.name == "jerk")
+  {
+    if (!itr.min.empty())
+    {
+      std::cerr << "Error parsing the limits for the interface: " << itr.name
+                << " from the tag: " << kMinTag << " within " << kROS2ControlTag
+                << " tag inside the URDF. Jerk only accepts max limits." << std::endl;
+    }
+    double min_jerk(std::numeric_limits<double>::quiet_NaN()),
+      max_jerk(std::numeric_limits<double>::quiet_NaN());
+    if (
+      !itr.max.empty() && detail::retrieve_min_max_interface_values(itr, min_jerk, max_jerk) &&
+      std::isfinite(max_jerk))
+    {
+      limits.max_jerk = std::abs(max_jerk);
+      limits.has_jerk_limits = itr.enable_limits;
+    }
+  }
+  else
+  {
+    if (!itr.min.empty() || !itr.max.empty())
+    {
+      std::cerr << "Unable to parse the limits for the interface: " << itr.name
+                << " from the tags [" << kMinTag << " and " << kMaxTag << "] within "
+                << kROS2ControlTag
+                << " tag inside the URDF. Supported interfaces for joint limits are: "
+                   "position, velocity, effort, acceleration and jerk."
+                << std::endl;
+    }
+  }
+}
+
+/**
+ * @brief Retrieve the limits from ros2_control command interface tags and override URDF limits if
+ * restrictive
+ * @param interfaces The interfaces to retrieve the limits from.
+ * @param limits The joint limits to be set.
+ */
+void update_interface_limits(
+  const std::vector<InterfaceInfo> & interfaces, joint_limits::JointLimits & limits)
+{
+  for (auto & itr : interfaces)
+  {
+    if (itr.name == hardware_interface::HW_IF_POSITION)
+    {
+      limits.min_position = limits.has_position_limits && itr.enable_limits
+                              ? limits.min_position
+                              : -std::numeric_limits<double>::max();
+      limits.max_position = limits.has_position_limits && itr.enable_limits
+                              ? limits.max_position
+                              : std::numeric_limits<double>::max();
+      double min_pos(limits.min_position), max_pos(limits.max_position);
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_pos, max_pos))
+      {
+        limits.min_position = std::max(min_pos, limits.min_position);
+        limits.max_position = std::min(max_pos, limits.max_position);
+        limits.has_position_limits = true;
+      }
+      limits.has_position_limits &= itr.enable_limits;
+    }
+    else if (itr.name == hardware_interface::HW_IF_VELOCITY)
+    {
+      limits.max_velocity =
+        limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::max();
+      // Apply the most restrictive one in the case
+      double min_vel(-limits.max_velocity), max_vel(limits.max_velocity);
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_vel, max_vel))
+      {
+        max_vel = std::min(std::abs(min_vel), max_vel);
+        limits.max_velocity = std::min(max_vel, limits.max_velocity);
+        limits.has_velocity_limits = true;
+      }
+      limits.has_velocity_limits &= itr.enable_limits;
+    }
+    else if (itr.name == hardware_interface::HW_IF_EFFORT)
+    {
+      limits.max_effort =
+        limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::max();
+      // Apply the most restrictive one in the case
+      double min_eff(-limits.max_effort), max_eff(limits.max_effort);
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_eff, max_eff))
+      {
+        max_eff = std::min(std::abs(min_eff), max_eff);
+        limits.max_effort = std::min(max_eff, limits.max_effort);
+        limits.has_effort_limits = true;
+      }
+      limits.has_effort_limits &= itr.enable_limits;
+    }
+    else
+    {
+      detail::set_custom_interface_values(itr, limits);
+    }
+  }
 }
 
 }  // namespace detail
@@ -583,25 +906,38 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   tinyxml2::XMLDocument doc;
   if (!doc.Parse(urdf.c_str()) && doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("invalid URDF passed in to robot parser: {}"), doc.ErrorStr()));
   }
   if (doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("invalid URDF passed in to robot parser: {}"), doc.ErrorStr()));
   }
 
-  // Find robot tag
+  // Find robot or sdf tag
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
+  const tinyxml2::XMLElement * ros2_control_it;
 
-  if (std::string(kRobotTag).compare(robot_it->Name()))
+  if (std::string(kRobotTag) == robot_it->Name())
   {
-    throw std::runtime_error("the robot tag is not root element in URDF");
+    ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  }
+  else if (std::string(kSDFTag) == robot_it->Name())
+  {
+    // find model tag in sdf tag
+    const tinyxml2::XMLElement * model_it = robot_it->FirstChildElement(kModelTag);
+    ros2_control_it = model_it->FirstChildElement(kROS2ControlTag);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "the robot tag is not root element in URDF or sdf tag is not root element in SDF");
   }
 
-  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   if (!ros2_control_it)
   {
-    throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
+    throw std::runtime_error(fmt::format(FMT_COMPILE("no {} tag"), kROS2ControlTag));
   }
 
   std::vector<HardwareInfo> hardware_info;
@@ -611,7 +947,154 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
   }
 
+  // parse full URDF for mimic options
+  urdf::Model model;
+  if (!model.initString(urdf))
+  {
+    throw std::runtime_error("Failed to parse URDF file");
+  }
+  for (auto & hw_info : hardware_info)
+  {
+    for (auto i = 0u; i < hw_info.joints.size(); ++i)
+    {
+      const auto & joint = hw_info.joints.at(i);
+      auto urdf_joint = model.getJoint(joint.name);
+      if (!urdf_joint)
+      {
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Joint '{}' not found in URDF"), joint.name));
+      }
+      if (!urdf_joint->mimic && joint.is_mimic == MimicAttribute::TRUE)
+      {
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Joint '{}' has no mimic information in the URDF"), joint.name));
+      }
+      if (urdf_joint->mimic && joint.is_mimic != MimicAttribute::FALSE)
+      {
+        if (joint.command_interfaces.size() > 0)
+        {
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Joint '{}' has mimic attribute not set to false: Activated mimic joints cannot "
+                "have command interfaces."),
+              joint.name));
+        }
+        auto find_joint = [&hw_info](const std::string & name)
+        {
+          auto it = std::find_if(
+            hw_info.joints.begin(), hw_info.joints.end(),
+            [&name](const auto & j) { return j.name == name; });
+          if (it == hw_info.joints.end())
+          {
+            throw std::runtime_error(
+              fmt::format(FMT_COMPILE("Mimic joint '{}' not found in <ros2_control> tag"), name));
+          }
+          return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
+        };
+
+        MimicJoint mimic_joint;
+        mimic_joint.joint_index = i;
+        mimic_joint.mimicked_joint_index = find_joint(urdf_joint->mimic->joint_name);
+        mimic_joint.multiplier = urdf_joint->mimic->multiplier;
+        mimic_joint.offset = urdf_joint->mimic->offset;
+        hw_info.mimic_joints.push_back(mimic_joint);
+      }
+
+      if (urdf_joint->type == urdf::Joint::FIXED)
+      {
+        throw std::runtime_error(
+          fmt::format(
+            FMT_COMPILE(
+              "Joint '{}' is of type 'fixed'. Fixed joints do not make sense in ros2_control."),
+            joint.name));
+      }
+
+      joint_limits::JointLimits limits;
+      getJointLimits(urdf_joint, limits);
+      // Take the most restricted one. Also valid for continuous-joint type only
+      detail::update_interface_limits(joint.command_interfaces, limits);
+      hw_info.limits[joint.name] = limits;
+      joint_limits::SoftJointLimits soft_limits;
+      if (getSoftJointLimits(urdf_joint, soft_limits))
+      {
+        if (limits.has_position_limits)
+        {
+          soft_limits.min_position = std::max(soft_limits.min_position, limits.min_position);
+          soft_limits.max_position = std::min(soft_limits.max_position, limits.max_position);
+        }
+        hw_info.soft_limits[joint.name] = soft_limits;
+      }
+    }
+  }
+
   return hardware_info;
+}
+
+std::vector<InterfaceDescription> parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info)
+{
+  std::vector<InterfaceDescription> component_state_interface_descriptions;
+  component_state_interface_descriptions.reserve(component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      component_state_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, state_interface));
+    }
+  }
+  return component_state_interface_descriptions;
+}
+
+void parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map)
+{
+  state_interfaces_map.reserve(state_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      InterfaceDescription description(component.name, state_interface);
+      state_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+}
+
+std::vector<InterfaceDescription> parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info)
+{
+  std::vector<InterfaceDescription> component_command_interface_descriptions;
+  component_command_interface_descriptions.reserve(component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      component_command_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, command_interface));
+    }
+  }
+  return component_command_interface_descriptions;
+}
+
+void parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map)
+{
+  command_interfaces_map.reserve(command_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      InterfaceDescription description(component.name, command_interface);
+      command_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
 }
 
 }  // namespace hardware_interface

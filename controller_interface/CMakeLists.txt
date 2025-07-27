@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
 project(controller_interface LANGUAGES CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
-          -Werror=missing-braces)
-endif()
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   rclcpp_lifecycle
+  realtime_tools
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -26,13 +28,15 @@ target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
 )
-ament_target_dependencies(controller_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(controller_interface PRIVATE "CONTROLLER_INTERFACE_BUILDING_DLL")
+target_link_libraries(controller_interface PUBLIC
+                      hardware_interface::hardware_interface
+                      rclcpp_lifecycle::rclcpp_lifecycle
+                      realtime_tools::realtime_tools
+                      fmt::fmt)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
@@ -41,11 +45,12 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
-  install(FILES test/test_controller_node_options.yaml
-      DESTINATION test)
   target_link_libraries(test_controller_with_options
     controller_interface
   )
+  target_compile_definitions(
+    test_controller_with_options
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
   ament_add_gmock(test_chainable_controller_interface test/test_chainable_controller_interface.cpp)
   target_link_libraries(test_chainable_controller_interface
@@ -70,9 +75,36 @@ if(BUILD_TESTING)
     controller_interface
     hardware_interface::hardware_interface
   )
-  ament_target_dependencies(test_imu_sensor
-    sensor_msgs
+  target_link_libraries(test_imu_sensor ${sensor_msgs_TARGETS})
+
+  ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
+  target_link_libraries(test_pose_sensor
+    controller_interface
+    hardware_interface::hardware_interface
   )
+  target_link_libraries(test_pose_sensor ${geometry_msgs_TARGETS})
+  ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
+  target_link_libraries(test_gps_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+
+  # Semantic component command interface tests
+
+  ament_add_gmock(test_semantic_component_command_interface
+    test/test_semantic_component_command_interface.cpp
+  )
+  target_link_libraries(test_semantic_component_command_interface
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+
+  ament_add_gmock(test_led_rgb_device test/test_led_rgb_device.cpp)
+  target_link_libraries(test_led_rgb_device
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+  target_link_libraries(test_led_rgb_device ${std_msgs_TARGETS})
 endif()
 
 install(
@@ -89,3 +121,4 @@ install(TARGETS controller_interface
 ament_export_targets(export_controller_interface HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

@@ -24,6 +24,10 @@ from .controller_manager_services import (
     switch_controllers,
     unload_controller,
     cleanup_controller,
+    get_parameter_from_param_files,
+    set_controller_parameters,
+    set_controller_parameters_from_param_files,
+    bcolors,
 )
 
 __all__ = [
@@ -38,4 +42,8 @@ __all__ = [
     "switch_controllers",
     "unload_controller",
     "cleanup_controller",
+    "get_parameter_from_param_files",
+    "set_controller_parameters",
+    "set_controller_parameters_from_param_files",
+    "bcolors",
 ]

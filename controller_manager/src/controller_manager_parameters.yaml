@@ -1,0 +1,236 @@
+controller_manager:
+  update_rate: {
+    type: int,
+    default_value: 100,
+    read_only: true,
+    description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controllers and writes commands to hardware."
+  }
+
+  enforce_command_limits: {
+    type: bool,
+    default_value: true,
+    read_only: true,
+    description: "If true, the controller manager will enforce command limits defined in the robot description. If false, no limits will be enforced. If true, when the command is outside the limits, the command is clamped to be within the limits depending on the type of configured joint limits defined in the robot description. If the command is within the limits, the command is passed through without any changes.",
+  }
+
+  hardware_components_initial_state:
+    unconfigured: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be only loaded when controller manager is started. These hardware components will need to be configured and activated manually or via a hardware spawner.",
+      validation: {
+        unique<>: null,
+      }
+    }
+
+    inactive: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be configured when controller manager is started. These hardware components will need to be activated manually or via a hardware spawner.",
+      validation: {
+        unique<>: null,
+      }
+    }
+
+    shutdown_on_initial_state_failure: {
+      type: bool,
+      default_value: false,
+      read_only: true,
+      description: "Specifies whether the controller manager should shut down if setting the desired initial state fails during startup.",
+    }
+
+  defaults:
+    switch_controller:
+      strictness: {
+        type: string,
+        default_value: "best_effort",
+        description: "The default switch controller strategy. This strategy is used when no strategy is specified in the switch_controller service call.",
+        validation: {
+          not_empty<>: null,
+          one_of<>: [[
+            "strict",
+            "best_effort",
+          ]],
+        }
+      }
+
+  diagnostics:
+    threshold:
+      controller_manager:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the controller manager's periodicity in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the controller manager's periodicity in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the controller manager's periodicity in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the controller manager's periodicity in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+      controllers:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the controller update loop in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the controller update loop in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the controller update loop in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the controller update loop in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+        execution_time:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 1000.0,
+              description: "The warning threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 2000.0,
+              description: "The error threshold for the mean error of the controller's update cycle execution time in microseconds. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 100.0,
+              description: "The warning threshold for the standard deviation of the controller's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 200.0,
+              description: "The error threshold for the standard deviation of the controller's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+      hardware_components:
+        periodicity:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the mean error of the hardware component's read/write loop in Hz. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the mean error of the hardware component's read/write loop in Hz. If the mean error exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 5.0,
+              description: "The warning threshold for the standard deviation of the hardware component's read/write loop in Hz. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 10.0,
+              description: "The error threshold for the standard deviation of the hardware component's read/write loop in Hz. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+        execution_time:
+          mean_error:
+            warn: {
+              type: double,
+              default_value: 1000.0,
+              description: "The warning threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 2000.0,
+              description: "The error threshold for the mean error of the hardware component's read/write cycle execution time in microseconds. If the mean error exceeds this threshold, a error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+          standard_deviation:
+            warn: {
+              type: double,
+              default_value: 100.0,
+              description: "The warning threshold for the standard deviation of the hardware component's read/write cycle execution time in microseconds. If the standard deviation exceeds this threshold, a warning diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }
+            error: {
+              type: double,
+              default_value: 200.0,
+              description: "The error threshold for the standard deviation of the hardware component's update cycle execution time in microseconds. If the standard deviation exceeds this threshold, an error diagnostic will be published.",
+              validation: {
+                gt<>: 0.0,
+              }
+            }

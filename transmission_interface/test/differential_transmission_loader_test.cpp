@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
 #include <exception>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_loader.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 #include "transmission_interface/differential_transmission.hpp"
-#include "transmission_interface/differential_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
 using testing::DoubleNear;
@@ -57,9 +56,7 @@ private:
 TEST(DifferentialTransmissionLoaderTest, FullSpec)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -132,9 +129,7 @@ TEST(DifferentialTransmissionLoaderTest, FullSpec)
 TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -203,9 +198,7 @@ TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
 TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -266,9 +259,7 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
 TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -338,9 +329,7 @@ TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
 TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -413,9 +402,7 @@ TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
 TEST(DifferentialTransmissionLoaderTest, mech_red_invalid_value)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
