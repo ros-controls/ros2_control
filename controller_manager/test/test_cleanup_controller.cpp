@@ -65,10 +65,12 @@ TEST_F(TestCleanupController, cleanup_unconfigured_controller)
   ASSERT_NE(controller_if, nullptr);
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_lifecycle_state().id());
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_lifecycle_state().id());
 }
 
 TEST_F(TestCleanupController, cleanup_inactive_controller)
@@ -77,14 +79,17 @@ TEST_F(TestCleanupController, cleanup_inactive_controller)
     cm_->load_controller(CONTROLLER_NAME_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_NE(controller_if, nullptr);
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_lifecycle_state().id());
 
   cm_->configure_controller(CONTROLLER_NAME_1);
 
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_lifecycle_state().id());
 }
 
 TEST_F(TestCleanupController, cleanup_active_controller)
@@ -93,16 +98,20 @@ TEST_F(TestCleanupController, cleanup_active_controller)
     cm_->load_controller(CONTROLLER_NAME_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_NE(controller_if, nullptr);
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_lifecycle_state().id());
 
   cm_->configure_controller(CONTROLLER_NAME_1);
 
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
 
   switch_test_controllers(strvec{CONTROLLER_NAME_1}, strvec{}, STRICT);
 
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_lifecycle_state().id());
 
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_lifecycle_state().id());
 }

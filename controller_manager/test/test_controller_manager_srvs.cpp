@@ -517,7 +517,7 @@ TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_state().id());
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_FALSE(result->ok) << "Controller can not be cleaned in active state: " << request->name;
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
@@ -530,7 +530,7 @@ TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_state().id());
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok) << "Controller cleaned in inactive state: " << request->name;
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
