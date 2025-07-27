@@ -987,39 +987,15 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  // ASYNCHRONOUS CONTROLLERS: Stop background thread for update
-  if (controller->is_async())
+  RCLCPP_DEBUG(get_logger(), "Calling cleanup for controller '%s'", controller_name.c_str());
+  auto result = cleanup_controller(*found_it);
+
+  if (result == controller_interface::return_type::OK)
   {
-    RCLCPP_DEBUG(
-      get_logger(), "Removing controller '%s' from the list of async controllers",
-      controller_name.c_str());
-    async_controller_threads_.erase(controller_name);
+    RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
   }
 
-  // CHAINABLE CONTROLLERS: remove reference interfaces of chainable controllers
-  if (controller->is_chainable())
-  {
-    RCLCPP_DEBUG(
-      get_logger(),
-      "Controller '%s' is chainable. Interfaces are being removed from resource manager.",
-      controller_name.c_str());
-    resource_manager_->remove_controller_reference_interfaces(controller_name);
-  }
-
-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-
-  auto new_state = controller->get_node()->cleanup();
-  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-  {
-    RCLCPP_ERROR(
-      get_logger(), "After cleanup-up, controller '%s' is in state '%s', expected 'unconfigured'.",
-      controller_name.c_str(), new_state.label().c_str());
-    return controller_interface::return_type::ERROR;
-  }
-
-  RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
-
-  return controller_interface::return_type::OK;
+  return result;
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
