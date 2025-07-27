@@ -27,7 +27,6 @@
 #include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
-#include "controller_manager/visibility_control.h"
 #include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_msgs/srv/cleanup_controller.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
@@ -109,10 +108,8 @@ public:
 
   controller_interface::return_type unload_controller(const std::string & controller_name);
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type cleanup_controller(const std::string & controller_name);
 
-  CONTROLLER_MANAGER_PUBLIC
   std::vector<ControllerSpec> get_loaded_controllers() const;
 
   template <
@@ -333,12 +330,10 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void cleanup_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response);
 
-  CONTROLLER_MANAGER_PUBLIC
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response);
