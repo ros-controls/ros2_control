@@ -311,11 +311,18 @@ def unload_controller(
     )
 
 
-def cleanup_controller(node, controller_manager_name, controller_name):
+def cleanup_controller(
+    node, controller_manager_name, controller_name, service_timeout=0.0, call_timeout=10.0
+):
     request = CleanupController.Request()
     request.name = controller_name
     return service_caller(
-        node, f"{controller_manager_name}/cleanup_controller", CleanupController, request
+        node,
+        f"{controller_manager_name}/cleanup_controller",
+        CleanupController,
+        request,
+        service_timeout,
+        call_timeout,
     )
 
 

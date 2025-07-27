@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import cleanup_controller
+from controller_manager import cleanup_controller, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -31,10 +31,15 @@ class CleanupControllerVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             response = cleanup_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
-                return "Error cleanup controllers, check controller_manager logs"
+                print(
+                    f"{bcolors.FAIL}Error cleaning up controller {args.controller_name}, check controller_manager logs{bcolors.ENDC}"
+                )
+                return 1
 
-            print(f"Successfully cleaned up controller {args.controller_name}")
+            print(
+                f"{bcolors.OKBLUE}Successfully cleaned up controller {args.controller_name}{bcolors.ENDC}"
+            )
             return 0
