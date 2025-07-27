@@ -1012,7 +1012,9 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
+  // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
+
   auto found_it = std::find_if(
     to.begin(), to.end(),
     std::bind(controller_name_compare, std::placeholders::_1, controller_name));
@@ -1029,7 +1031,6 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   auto & controller = *found_it;
 
-  RCLCPP_DEBUG(get_logger(), "Unload controller");
   if (is_controller_active(*controller.c))
   {
     to.clear();
