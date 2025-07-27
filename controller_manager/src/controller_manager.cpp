@@ -976,7 +976,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     return controller_interface::return_type::OK;
   }
 
-  auto state = controller->get_state();
+  auto state = controller->get_lifecycle_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
