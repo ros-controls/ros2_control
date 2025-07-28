@@ -490,6 +490,9 @@ TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
   // scenario: call the cleanup service when no controllers are loaded
   // expected: it should return ERROR as no controllers will be found to cleanup
   auto result = call_service_and_wait(*client, request, srv_executor);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
   // variation - 2:
@@ -503,6 +506,9 @@ TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
 
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   // variation - 3:
@@ -520,6 +526,9 @@ TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_FALSE(result->ok) << "Controller can not be cleaned in active state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   // variation - 4:
@@ -533,6 +542,9 @@ TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok) << "Controller cleaned in inactive state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 }
 
