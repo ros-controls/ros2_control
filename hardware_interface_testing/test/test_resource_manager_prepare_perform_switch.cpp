@@ -247,7 +247,7 @@ TEST_F(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive",
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
 
-  // When TestSystemCommandModes is INACTIVE expect OK
+  // When TestSystemCommandModes is INACTIVE expect not OK
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0)
     << "Start interfaces with inactive should result in no change";
