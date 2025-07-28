@@ -490,9 +490,6 @@ TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
   // scenario: call the cleanup service when no controllers are loaded
   // expected: it should return ERROR as no controllers will be found to cleanup
   auto result = call_service_and_wait(*client, request, srv_executor);
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
   // variation - 2:
