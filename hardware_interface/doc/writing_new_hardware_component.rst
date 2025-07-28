@@ -48,6 +48,59 @@ The following is a step-by-step guide to create source files, basic tests, and c
       In the first line usually the parents ``on_init`` is called to process standard values, like name. This is done using: ``hardware_interface::(Actuator|Sensor|System)Interface::on_init(info)``.
       If all required parameters are set and valid and everything works fine return ``CallbackReturn::SUCCESS`` or ``return CallbackReturn::ERROR`` otherwise.
 
+      #. **(Optional) Adding Publisher, Services, etc.**
+
+         A common requirement for a hardware component is to publish status or diagnostic information without interfering with the real-time control loop.
+
+         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are two primary ways to achieve this.
+
+         **Method 1: Using the Framework-Managed Node (Recommended & Simplest)**
+
+         The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
+
+         #. **Access and using the Default Node**: You can get a ``shared_ptr`` to the node by calling the ``get_node()`` method and use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
+
+            .. code-block:: cpp
+
+               // Continuing inside on_configure()
+               if (get_node())
+               {
+                  my_publisher_ = get_node()->create_publisher<std_msgs::msg::String>("~/status", 10);
+
+                  using namespace std::chrono_literals;
+                  my_timer_ = get_node()->create_wall_timer(1s, [this]() {
+                     std_msgs::msg::String msg;
+                     msg.data = "Hardware status update!";
+                     my_publisher_->publish(msg);
+                  });
+               }
+
+         **Method 2: Using the Executor from `HardwareComponentInterfaceParams`**
+
+         For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentInterfaceParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
+
+         #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentInterfaceParams``.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.hpp
+               hardware_interface::CallbackReturn on_init(
+               const hardware_interface::HardwareComponentInterfaceParams & params) override;
+
+         #. **Lock and Use the Executor**: Inside ``on_init``, you must safely "lock" the ``weak_ptr`` to get a usable ``shared_ptr``. You can then create your own node and add it to the executor.
+
+            .. code-block:: cpp
+
+               // In your <robot_hardware_interface_name>.cpp, inside on_init(params)
+               if (auto locked_executor = params.executor.lock())
+               {
+                  my_custom_node_ = std::make_shared<rclcpp::Node>("my_custom_node");
+                  locked_executor->add_node(my_custom_node_->get_node_base_interface());
+                  // ... create publishers/timers on my_custom_node_ ...
+               }
+
+         For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in example 17.
+
    #. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
    #. Implement ``on_cleanup`` method, which does the opposite of ``on_configure``.

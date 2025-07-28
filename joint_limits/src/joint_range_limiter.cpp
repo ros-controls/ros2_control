@@ -61,45 +61,26 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   // The following conditional filling is needed for cases of having certain information missing
   if (!prev_command_.has_data())
   {
-    if (actual.has_position())
+    if (desired.has_position())
     {
-      prev_command_.position = actual.position;
+      prev_command_.position = actual.has_position() ? actual.position : desired.position;
     }
-    else if (desired.has_position())
+    if (desired.has_velocity())
     {
-      prev_command_.position = desired.position;
+      prev_command_.velocity = actual.has_velocity() ? actual.velocity : desired.velocity;
     }
-    if (actual.has_velocity())
+    if (desired.has_effort())
     {
-      prev_command_.velocity = actual.velocity;
+      prev_command_.effort = actual.has_effort() ? actual.effort : desired.effort;
     }
-    else if (desired.has_velocity())
+    if (desired.has_acceleration())
     {
-      prev_command_.velocity = desired.velocity;
+      prev_command_.acceleration =
+        actual.has_acceleration() ? actual.acceleration : desired.acceleration;
     }
-    if (actual.has_effort())
+    if (desired.has_jerk())
     {
-      prev_command_.effort = actual.effort;
-    }
-    else if (desired.has_effort())
-    {
-      prev_command_.effort = desired.effort;
-    }
-    if (actual.has_acceleration())
-    {
-      prev_command_.acceleration = actual.acceleration;
-    }
-    else if (desired.has_acceleration())
-    {
-      prev_command_.acceleration = desired.acceleration;
-    }
-    if (actual.has_jerk())
-    {
-      prev_command_.jerk = actual.jerk;
-    }
-    else if (desired.has_jerk())
-    {
-      prev_command_.jerk = desired.jerk;
+      prev_command_.jerk = actual.has_jerk() ? actual.jerk : desired.jerk;
     }
     if (actual.has_data())
     {
@@ -159,7 +140,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
     desired.jerk = std::clamp(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
   }
 
-  prev_command_ = desired;
+  update_prev_command(desired, prev_command_);
 
   return limits_enforced;
 }

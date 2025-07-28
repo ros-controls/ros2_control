@@ -127,6 +127,9 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated(
+    "Replaced by CallbackReturn init(const hardware_interface::HardwareComponentParams & "
+    "params). Initialization is handled by the Framework.")]]
   CallbackReturn init(
     const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
@@ -187,6 +190,26 @@ public:
         info_.thread_priority);
       async_handler_->start_thread();
     }
+
+    if (auto locked_executor = params.executor.lock())
+    {
+      std::string node_name = params.hardware_info.name;
+      std::transform(
+        node_name.begin(), node_name.end(), node_name.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+      std::replace(node_name.begin(), node_name.end(), '/', '_');
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      locked_executor->add_node(hardware_component_node_->get_node_base_interface());
+    }
+    else
+    {
+      RCLCPP_WARN(
+        params.logger,
+        "Executor is not available during hardware component initialization for '%s'. Skipping "
+        "node creation!",
+        params.hardware_info.name.c_str());
+    }
+
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
     interface_params.executor = params.executor;
@@ -199,6 +222,7 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
+  [[deprecated("Use on_init(const HardwareComponentInterfaceParams & params) instead.")]]
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
@@ -223,7 +247,11 @@ public:
   virtual CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params)
   {
+    // This is done for backward compatibility with the old on_init method.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return on_init(params.hardware_info);
+#pragma GCC diagnostic pop
   };
 
   /// Exports all state interfaces for this hardware interface.
@@ -240,9 +268,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled "
-    "by the Framework.")]] virtual std::vector<StateInterface>
-  export_state_interfaces()
+    "Exporting is handled by the Framework.")]]
+  virtual std::vector<StateInterface> export_state_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_state_interfaces() and only when empty vector is returned call
@@ -331,10 +358,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is "
-    "handled "
-    "by the Framework.")]] virtual std::vector<CommandInterface>
-  export_command_interfaces()
+    "Exporting is handled by the Framework.")]]
+  virtual std::vector<CommandInterface> export_command_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_command_interfaces() and only when empty vector is returned call
@@ -616,7 +641,8 @@ public:
     return opt_value.value();
   }
 
-  void set_command(const std::string & interface_name, const double & value)
+  template <typename T>
+  void set_command(const std::string & interface_name, const T & value)
   {
     auto it = system_commands_.find(interface_name);
     if (it == system_commands_.end())
@@ -670,6 +696,12 @@ public:
    * \return clock of the SystemInterface.
    */
   rclcpp::Clock::SharedPtr get_clock() const { return system_clock_; }
+
+  /// Get the default node of the ActuatorInterface.
+  /**
+   * \return node of the ActuatorInterface.
+   */
+  rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
 
   /// Get the hardware info of the SystemInterface.
   /**
@@ -737,6 +769,7 @@ protected:
 private:
   rclcpp::Clock::SharedPtr system_clock_;
   rclcpp::Logger system_logger_;
+  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;

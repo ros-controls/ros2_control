@@ -45,10 +45,22 @@ public:
 
   ~System() = default;
 
+  System(const System & other) = delete;
+
+  System & operator=(const System & other) = delete;
+
+  System & operator=(System && other) = delete;
+
+  [[deprecated(
+    "Replaced by const rclcpp_lifecycle::State & initialize(const "
+    "hardware_interface::HardwareComponentParams & params).")]]
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & system_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
 
+  [[deprecated(
+    "Replaced by const rclcpp_lifecycle::State & initialize(const "
+    "hardware_interface::HardwareComponentParams & params).")]]
   const rclcpp_lifecycle::State & initialize(
     const HardwareInfo & system_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock);
 

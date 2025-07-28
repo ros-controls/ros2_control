@@ -2,6 +2,17 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.4.0 (2025-07-21)
+------------------
+* Addition of a Default Node for Hardware Component (`#2348 <https://github.com/ros-controls/ros2_control/issues/2348>`_)
+* Contributors: Soham Patil
+
+5.3.0 (2025-07-02)
+------------------
+* Add deprecations to old methods not using param structs  (`#2344 <https://github.com/ros-controls/ros2_control/issues/2344>`_)
+* Deactivate controllers with command interfaces to hardware on DEACTIVATE (`#2334 <https://github.com/ros-controls/ros2_control/issues/2334>`_)
+* Contributors: Marq Rasmussen, Sai Kishor Kothakota
+
 5.2.0 (2025-06-07)
 ------------------
 

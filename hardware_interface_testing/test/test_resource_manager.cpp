@@ -403,7 +403,9 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   external_component_hw_info.name = "ExternalComponent";
   external_component_hw_info.type = "actuator";
   external_component_hw_info.is_async = false;
-  rm.import_component(std::make_unique<ExternalComponent>(), external_component_hw_info);
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = external_component_hw_info;
+  rm.import_component(std::make_unique<ExternalComponent>(), params);
   EXPECT_EQ(2u, rm.actuator_components_size());
 
   ASSERT_THAT(rm.state_interface_keys(), SizeIs(12));
@@ -1338,6 +1340,49 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
   // try to remove interfaces from unknown controller
   EXPECT_THROW(
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
+}
+
+class MockExecutor : public rclcpp::executors::SingleThreadedExecutor
+{
+public:
+  explicit MockExecutor(const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions())
+  : rclcpp::executors::SingleThreadedExecutor(options)
+  {
+  }
+
+  void add_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+  {
+    rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
+    added_node_names.push_back(node_ptr->get_name());
+  }
+
+  std::vector<std::string> added_node_names;
+};
+
+TEST_F(ResourceManagerTest, hardware_nodes_are_added_to_mock_executor_on_load)
+{
+  auto mock_executor = std::make_shared<MockExecutor>();
+
+  hardware_interface::ResourceManagerParams params;
+  params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+  params.clock = node_.get_clock();
+  params.logger = node_.get_logger();
+  params.executor = mock_executor;
+  TestableResourceManager rm(params);
+  auto to_lower = [](const std::string & s)
+  {
+    std::string result = s;
+    std::transform(
+      result.begin(), result.end(), result.begin(),
+      [](unsigned char c) { return std::tolower(c); });
+    return result;
+  };
+  EXPECT_THAT(
+    mock_executor->added_node_names,
+    testing::UnorderedElementsAre(
+      to_lower(TEST_ACTUATOR_HARDWARE_NAME), to_lower(TEST_SENSOR_HARDWARE_NAME),
+      to_lower(TEST_SYSTEM_HARDWARE_NAME)));
 }
 
 class ResourceManagerTestReadWriteError : public ResourceManagerTest

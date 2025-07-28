@@ -2,6 +2,25 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.4.0 (2025-07-21)
+------------------
+* Increase controller period tolerance further (`#2405 <https://github.com/ros-controls/ros2_control/issues/2405>`_)
+* Fix controller activation crash on macOS (Fixes `#604 <https://github.com/ros-controls/ros2_control/issues/604>`_) (`#2391 <https://github.com/ros-controls/ros2_control/issues/2391>`_)
+* Increase controller period tolerance in tests (`#2388 <https://github.com/ros-controls/ros2_control/issues/2388>`_)
+* [spawner] Fix Lock timeout error crashes (`#2386 <https://github.com/ros-controls/ros2_control/issues/2386>`_)
+* [Spawner] Fix the scope issue of the logger (`#2382 <https://github.com/ros-controls/ros2_control/issues/2382>`_)
+* Increase tolerance to improve the success rate of the tests (`#2373 <https://github.com/ros-controls/ros2_control/issues/2373>`_)
+* [Spawner] Change strategy for `--unload-on-kill` option (`#2372 <https://github.com/ros-controls/ros2_control/issues/2372>`_)
+* Contributors: Dhruv Patel, Jasper van Brakel, Sai Kishor Kothakota
+
+5.3.0 (2025-07-02)
+------------------
+* Cleanup old internal API (`#2346 <https://github.com/ros-controls/ros2_control/issues/2346>`_)
+* added params approach to allow propagation in gz_ros2_control (`#2340 <https://github.com/ros-controls/ros2_control/issues/2340>`_)
+* Deactivate controllers with command interfaces to hardware on DEACTIVATE (`#2334 <https://github.com/ros-controls/ros2_control/issues/2334>`_)
+* Shift to Struct based Method and Constructors, with Executor passed from CM to `on_init()` (`#2323 <https://github.com/ros-controls/ros2_control/issues/2323>`_)
+* Contributors: Marq Rasmussen, Sai Kishor Kothakota, Soham Patil
+
 5.2.0 (2025-06-07)
 ------------------
 * Move `enforce_command_limits` parameter to GPL parameters (`#2305 <https://github.com/ros-controls/ros2_control/issues/2305>`_)

@@ -235,14 +235,6 @@ public:
   }
 
   template <class HardwareT>
-  bool initialize_hardware(const HardwareInfo & hardware_info, HardwareT & hardware)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return initialize_hardware(params, hardware);
-  }
-
-  template <class HardwareT>
   bool initialize_hardware(
     const hardware_interface::HardwareComponentParams & params, HardwareT & hardware)
   {
@@ -748,7 +740,7 @@ public:
         std::vector<joint_limits::SoftJointLimits> soft_limits;
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
         joint_limits::JointInterfacesCommandLimiterData data;
-        data.joint_name = joint_name;
+        data.set_joint_name(joint_name);
         limiters_data_.insert({joint_name, data});
         // If the joint limits is found in the softlimits, then extract it
         if (hw_info.soft_limits.find(joint_name) != hw_info.soft_limits.end())
@@ -1033,7 +1025,7 @@ public:
           {
             is_limited = false;
             joint_limits::JointInterfacesCommandLimiterData data;
-            data.joint_name = joint_name;
+            data.set_joint_name(joint_name);
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)
             {
@@ -1115,28 +1107,6 @@ public:
     }
   }
 
-  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_actuator(params);
-  }
-
-  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_sensor(params);
-  }
-
-  bool load_and_initialize_system(const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return load_and_initialize_system(params);
-  }
-
   bool load_and_initialize_actuator(const hardware_interface::HardwareComponentParams & params)
   {
     auto load_and_init_actuators = [&](auto & container)
@@ -1211,29 +1181,6 @@ public:
       return true;
     };
     return load_and_init_systems(systems_);
-  }
-
-  void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return initialize_actuator(std::move(actuator), params);
-  }
-  void initialize_sensor(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return initialize_sensor(std::move(sensor), params);
-  }
-
-  void initialize_system(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    return initialize_system(std::move(system), params);
   }
 
   void initialize_actuator(
