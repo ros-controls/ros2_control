@@ -765,10 +765,11 @@ void ControllerManager::init_services()
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
-  cleanup_controller_service_ = create_service<controller_manager_msgs::srv::CleanupController>(
-    "~/cleanup_controller",
-    std::bind(&ControllerManager::cleanup_controller_service_cb, this, _1, _2), qos_services,
-    best_effort_callback_group_);
+  unconfigure_controller_service_ =
+    create_service<controller_manager_msgs::srv::UnconfigureController>(
+      "~/unconfigure_controller",
+      std::bind(&ControllerManager::unconfigure_controller_service_cb, this, _1, _2), qos_services,
+      best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -2588,9 +2589,9 @@ void ControllerManager::unload_controller_service_cb(
     get_logger(), "unloading service finished for controller '%s' ", request->name.c_str());
 }
 
-void ControllerManager::cleanup_controller_service_cb(
-  const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
-  std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response)
+void ControllerManager::unconfigure_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::UnconfigureController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::UnconfigureController::Response> response)
 {
   // lock services
   RCLCPP_DEBUG(get_logger(), "cleanup service called for controller '%s' ", request->name.c_str());

@@ -474,16 +474,16 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv)
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
 }
 
-TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
+TEST_F(TestControllerManagerSrvs, unconfigure_controller_srv)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
-  rclcpp::Client<controller_manager_msgs::srv::CleanupController>::SharedPtr client =
-    srv_node->create_client<controller_manager_msgs::srv::CleanupController>(
-      "test_controller_manager/cleanup_controller");
+  rclcpp::Client<controller_manager_msgs::srv::UnconfigureController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::UnconfigureController>(
+      "test_controller_manager/unconfigure_controller");
 
-  auto request = std::make_shared<controller_manager_msgs::srv::CleanupController::Request>();
+  auto request = std::make_shared<controller_manager_msgs::srv::UnconfigureController::Request>();
   request->name = test_controller::TEST_CONTROLLER_NAME;
 
   // variation - 1:
