@@ -674,6 +674,16 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  struct ControllerManagerExecutionTime
+  {
+    double read_time = 0.0;
+    double update_time = 0.0;
+    double write_time = 0.0;
+    double switch_time = 0.0;
+  };
+
+  ControllerManagerExecutionTime execution_time_;
+
   controller_manager::MovingAverageStatistics periodicity_stats_;
 
   struct SwitchParams

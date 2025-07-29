@@ -41,6 +41,7 @@ static constexpr const char * kControllerInterfaceClassName =
   "controller_interface::ControllerInterface";
 static constexpr const char * kChainableControllerInterfaceClassName =
   "controller_interface::ChainableControllerInterface";
+static constexpr const char * kStatisticsTopic = "~/statistics";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
 // \note The versions conditioning is added here to support the source-compatibility with Humble
@@ -780,6 +781,14 @@ void ControllerManager::init_services()
       "~/set_hardware_component_state",
       std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
       qos_services, best_effort_callback_group_);
+
+  const std::string cm_name = get_name();
+  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".update_time", &execution_time_.update_time);
+  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".read_time", &execution_time_.read_time);
+  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".write_time", &execution_time_.write_time);
+  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".switch_time", &execution_time_.switch_time);
+
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(kStatisticsTopic);
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
@@ -2676,6 +2685,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   periodicity_stats_.AddMeasurement(1.0 / period.seconds());
+  const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
   if (result != hardware_interface::return_type::OK)
@@ -2705,6 +2715,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
+  execution_time_.read_time =
+    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
 }
 
 void ControllerManager::manage_switch()
@@ -2715,6 +2727,7 @@ void ControllerManager::manage_switch()
     RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
     return;
   }
+  const auto start_time = std::chrono::steady_clock::now();
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
         activate_command_interface_request_, deactivate_command_interface_request_))
@@ -2744,11 +2757,14 @@ void ControllerManager::manage_switch()
   // All controllers switched --> switching done
   switch_params_.do_switch = false;
   switch_params_.cv.notify_all();
+  execution_time_.switch_time =
+    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
 }
 
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  const auto start_time = std::chrono::steady_clock::now();
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
@@ -2941,11 +2957,15 @@ controller_interface::return_type ControllerManager::update(
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
 
+  execution_time_.update_time =
+    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
+
   return ret;
 }
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->write(time, period);
 
   if (result == hardware_interface::return_type::ERROR)
@@ -3021,6 +3041,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
   }
+  execution_time_.write_time =
+    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
 }
 
 std::vector<ControllerSpec> &
