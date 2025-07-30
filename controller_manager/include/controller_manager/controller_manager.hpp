@@ -680,6 +680,11 @@ private:
     double update_time = 0.0;
     double write_time = 0.0;
     double switch_time = 0.0;
+    double total_time = 0.0;
+    double switch_chained_mode_time = 0.0;
+    double switch_perform_mode_time = 0.0;
+    double deactivation_time = 0.0;
+    double activation_time = 0.0;
   };
 
   ControllerManagerExecutionTime execution_time_;
