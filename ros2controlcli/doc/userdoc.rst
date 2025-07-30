@@ -19,7 +19,7 @@ Currently supported commands are
     - ros2 control set_hardware_component_state
     - ros2 control switch_controllers
     - ros2 control unload_controller
-    - ros2 control unconfigure_controller
+    - ros2 control cleanup_controller
     - ros2 control view_controller_chains
 
 
@@ -345,15 +345,15 @@ unload_controller
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
 
-unconfigure_controller
+cleanup_controller
 ----------------------
 
 .. code-block:: console
 
-    $ ros2 control unconfigure_controller -h
-    usage: ros2 control unconfigure_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name
+    $ ros2 control cleanup_controller -h
+    usage: ros2 control cleanup_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name
 
-    Unconfigure/Cleanup a controller in a controller manager
+    Cleanup a controller in a controller manager
 
     positional arguments:
       controller_name       Name of the controller
