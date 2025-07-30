@@ -524,7 +524,7 @@ void ControllerManager::init_controller_manager()
     robot_description_subscription_->get_topic_name());
 
   // Setup diagnostics
-  periodicity_stats_.Reset();
+  periodicity_stats_.reset();
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -727,6 +727,72 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     }
   }
   robot_description_notification_timer_->cancel();
+
+  auto hw_components_info = resource_manager_->get_components_status();
+
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.min",
+      &component_info.read_statistics->execution_time.get_statistics().min);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.max",
+      &component_info.read_statistics->execution_time.get_statistics().max);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.avg",
+      &component_info.read_statistics->execution_time.get_statistics().average);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.stddev",
+      &component_info.read_statistics->execution_time.get_statistics().standard_deviation);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.current",
+      &component_info.read_statistics->execution_time.get_current_data());
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.min",
+      &component_info.write_statistics->execution_time.get_statistics().min);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.max",
+      &component_info.write_statistics->execution_time.get_statistics().max);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.avg",
+      &component_info.write_statistics->execution_time.get_statistics().average);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.stddev",
+      &component_info.write_statistics->execution_time.get_statistics().standard_deviation);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.current",
+      &component_info.write_statistics->execution_time.get_current_data());
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.min",
+      &component_info.read_statistics->periodicity.get_statistics().min);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.max",
+      &component_info.read_statistics->periodicity.get_statistics().max);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.avg",
+      &component_info.read_statistics->periodicity.get_statistics().average);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.stddev",
+      &component_info.read_statistics->periodicity.get_statistics().standard_deviation);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.current",
+      &component_info.read_statistics->periodicity.get_current_data());
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.min",
+      &component_info.write_statistics->periodicity.get_statistics().min);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.max",
+      &component_info.write_statistics->periodicity.get_statistics().max);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.avg",
+      &component_info.write_statistics->periodicity.get_statistics().average);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.stddev",
+      &component_info.write_statistics->periodicity.get_statistics().standard_deviation);
+    REGISTER_VARIABLE(
+      this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.current",
+      &component_info.write_statistics->periodicity.get_current_data());
+  }
 }
 
 void ControllerManager::init_services()
@@ -788,7 +854,7 @@ void ControllerManager::init_services()
   REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".write_time", &execution_time_.write_time);
   REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".switch_time", &execution_time_.switch_time);
 
-  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(kStatisticsTopic);
+  START_PUBLISH_THREAD(this, kStatisticsTopic);
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
@@ -854,6 +920,30 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     std::make_shared<rclcpp::Time>(0, 0, this->get_trigger_clock()->get_clock_type());
   controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
   controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.execution_time.min",
+    &controller_spec.execution_time_statistics->get_statistics_const_ptr().min);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.execution_time.max",
+    &controller_spec.execution_time_statistics->get_statistics_const_ptr().max);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.execution_time.avg",
+    &controller_spec.execution_time_statistics->get_statistics_const_ptr().average);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.execution_time.current_measurement",
+    &controller_spec.execution_time_statistics->get_current_measurement_const_ptr());
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.periodicity.min",
+    &controller_spec.periodicity_statistics->get_statistics_const_ptr().min);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.periodicity.max",
+    &controller_spec.periodicity_statistics->get_statistics_const_ptr().max);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.periodicity.avg",
+    &controller_spec.periodicity_statistics->get_statistics_const_ptr().average);
+  REGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.periodicity.current_measurement",
+    &controller_spec.periodicity_statistics->get_current_measurement_const_ptr());
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
@@ -993,6 +1083,16 @@ controller_interface::return_type ControllerManager::unload_controller(
       get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
     shutdown_controller(controller);
   }
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.min");
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.max");
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.avg");
+  UNREGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.execution_time.current_measurement");
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.min");
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.max");
+  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.avg");
+  UNREGISTER_VARIABLE(
+    this, kStatisticsTopic, controller_name + ".stats.periodicity.current_measurement");
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
@@ -2191,8 +2291,8 @@ void ControllerManager::activate_controllers(
 
     try
     {
-      found_it->periodicity_statistics->Reset();
-      found_it->execution_time_statistics->Reset();
+      found_it->periodicity_statistics->reset();
+      found_it->execution_time_statistics->reset();
       const auto new_state = controller->get_node()->activate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
@@ -2684,7 +2784,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  periodicity_stats_.AddMeasurement(1.0 / period.seconds());
+  periodicity_stats_.add_measurement(1.0 / period.seconds());
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -2716,7 +2816,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     // TODO(destogl): do auto-start of broadcasters
   }
   execution_time_.read_time =
-    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
+    std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
+      .count();
 }
 
 void ControllerManager::manage_switch()
@@ -2758,13 +2859,15 @@ void ControllerManager::manage_switch()
   switch_params_.do_switch = false;
   switch_params_.cv.notify_all();
   execution_time_.switch_time =
-    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
+    std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
+      .count();
 }
 
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   const auto start_time = std::chrono::steady_clock::now();
+  execution_time_.switch_time = 0.0;
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
@@ -2860,12 +2963,12 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {
-            loaded_controller.execution_time_statistics->AddMeasurement(
+            loaded_controller.execution_time_statistics->add_measurement(
               static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
-            loaded_controller.periodicity_statistics->AddMeasurement(
+            loaded_controller.periodicity_statistics->add_measurement(
               1.0 / trigger_result.period.value().seconds());
           }
         }
@@ -2956,9 +3059,11 @@ controller_interface::return_type ControllerManager::update(
   }
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
+  PUBLISH_ASYNC_STATISTICS(this, kStatisticsTopic);
 
   execution_time_.update_time =
-    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
+    std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
+      .count();
 
   return ret;
 }
@@ -3042,7 +3147,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
   }
   execution_time_.write_time =
-    std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start_time).count();
+    std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
+      .count();
 }
 
 std::vector<ControllerSpec> &
@@ -3729,8 +3835,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
       controllers[i].info.name + state_suffix, controllers[i].c->get_lifecycle_state().label());
     if (is_controller_active(controllers[i].c))
     {
-      const auto periodicity_stats = controllers[i].periodicity_statistics->GetStatistics();
-      const auto exec_time_stats = controllers[i].execution_time_statistics->GetStatistics();
+      const auto periodicity_stats = controllers[i].periodicity_statistics->get_statistics();
+      const auto exec_time_stats = controllers[i].execution_time_statistics->get_statistics();
       stat.add(
         controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
       const bool publish_periodicity_stats =
@@ -4026,7 +4132,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
   const std::string periodicity_stat_name = "periodicity";
-  const auto cm_stats = periodicity_stats_.GetStatistics();
+  const auto cm_stats = periodicity_stats_.get_statistics();
   stat.add("update_rate", std::to_string(get_update_rate()));
   stat.add(periodicity_stat_name + ".average", std::to_string(cm_stats.average));
   stat.add(

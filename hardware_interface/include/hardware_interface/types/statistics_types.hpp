@@ -21,6 +21,7 @@
 #include <limits>
 #include <memory>
 
+#include "hardware_interface/introspection.hpp"
 #include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 #if !defined(_WIN32) && !defined(__APPLE__)
@@ -58,7 +59,7 @@ public:
    *
    *  @return The arithmetic mean of all data recorded, or NaN if the sample count is 0.
    */
-  double getAverage() const
+  double get_average() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_.average;
@@ -69,7 +70,7 @@ public:
    *
    *  @return The maximum value recorded, or NaN if size of data is zero.
    */
-  double getMax() const
+  double get_max() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_.max;
@@ -80,7 +81,7 @@ public:
    *
    *  @return The minimum value recorded, or NaN if size of data is zero.
    */
-  double getMin() const
+  double get_min() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_.min;
@@ -97,7 +98,7 @@ public:
    *  @return The standard deviation (population) of all data recorded, or NaN if size of data is
    * zero.
    */
-  double getStandardDeviation() const
+  double get_standard_deviation() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_.standard_deviation;
@@ -111,13 +112,13 @@ public:
    *  @return StatisticData object, containing average, minimum, maximum, standard deviation
    * (population), and sample count.
    */
-  const StatisticData & getStatisticsConstPtr() const
+  const StatisticData & get_statistics_const_ptr() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_;
   }
 
-  StatisticData getStatistics() const
+  StatisticData get_statistics() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_;
@@ -129,13 +130,13 @@ public:
    *
    *  @return The current measurement value, or NaN if no measurements have been made.
    */
-  const double & getCurrentMeasurementConstPtr() const
+  const double & get_current_measurement_const_ptr() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return current_measurement_;
   }
 
-  double getCurrentMeasurement() const
+  double get_current_measurement() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return current_measurement_;
@@ -147,13 +148,19 @@ public:
   void reset()
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
-    statistics_data_.average = std::numeric_limits<double>::quiet_NaN();
+    statistics_data_.average = 0.0;
     statistics_data_.min = std::numeric_limits<double>::max();
     statistics_data_.max = std::numeric_limits<double>::lowest();
-    statistics_data_.standard_deviation = std::numeric_limits<double>::quiet_NaN();
+    statistics_data_.standard_deviation = 0.0;
     statistics_data_.sample_count = 0;
     current_measurement_ = std::numeric_limits<double>::quiet_NaN();
     sum_of_square_diff_from_mean_ = 0;
+  }
+
+  void reset_current_measurement()
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    current_measurement_ = 0.0;
   }
 
   /**
@@ -162,24 +169,25 @@ public:
    *
    *  @param item The item that was observed
    */
-  virtual void AddMeasurement(const double item)
+  virtual void add_measurement(const double item)
   {
-    std::lock_guard<std::mutex> guard{mutex_};
+    std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
 
     current_measurement_ = item;
     if (std::isfinite(item))
     {
-      statistics_data_.sample_count++;
+      statistics_data_.sample_count = statistics_data_.sample_count + 1;
       const double previous_average = statistics_data_.average;
-      statistics_data_.average = previous_average + (current_measurement_ - previous_average) /
-                                                      statistics_data_.sample_count;
+      statistics_data_.average =
+        previous_average + (current_measurement_ - previous_average) /
+                             static_cast<double>(statistics_data_.sample_count);
       statistics_data_.min = std::min(statistics_data_.min, current_measurement_);
       statistics_data_.max = std::max(statistics_data_.max, current_measurement_);
       sum_of_square_diff_from_mean_ =
         sum_of_square_diff_from_mean_ + (current_measurement_ - previous_average) *
                                           (current_measurement_ - statistics_data_.average);
-      statistics_data_.standard_deviation =
-        std::sqrt(sum_of_square_diff_from_mean_ / statistics_data_.sample_count);
+      statistics_data_.standard_deviation = std::sqrt(
+        sum_of_square_diff_from_mean_ / static_cast<double>(statistics_data_.sample_count));
     }
   }
 
@@ -188,7 +196,7 @@ public:
    *
    * @return the number of samples observed
    */
-  uint64_t GetCount() const
+  uint64_t get_count() const
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_.sample_count;
@@ -198,7 +206,7 @@ private:
   mutable DEFAULT_MUTEX mutex_;
   StatisticData statistics_data_;
   double current_measurement_ = std::numeric_limits<double>::quiet_NaN();
-  double sum_of_square_diff_from_mean_ = 0;
+  double sum_of_square_diff_from_mean_ = 0.0;
 };
 
 /**
@@ -207,8 +215,6 @@ private:
  */
 class MovingAverageStatisticsData
 {
-  using MovingAverageStatisticsCollector =
-    libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
   using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
 
 public:
@@ -222,21 +228,22 @@ public:
    * @brief Update the statistics data with the new statistics data.
    * @param statistics statistics collector to update the current statistics data.
    */
-  void update_statistics(const std::shared_ptr<MovingAverageStatisticsCollector> & statistics)
+  void update_statistics(const std::shared_ptr<MovingAverageStatistics> & statistics)
   {
     std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
-    if (statistics->GetCount() > 0)
+    if (statistics->get_count() > 0)
     {
-      statistics_data_.average = statistics->Average();
-      statistics_data_.min = statistics->Min();
-      statistics_data_.max = statistics->Max();
-      statistics_data_.standard_deviation = statistics->StandardDeviation();
-      statistics_data_.sample_count = statistics->GetCount();
-      statistics_data_ = statistics->GetStatistics();
+      statistics_data_.average = statistics->get_average();
+      statistics_data_.min = statistics->get_min();
+      statistics_data_.max = statistics->get_max();
+      statistics_data_.standard_deviation = statistics->get_standard_deviation();
+      statistics_data_.sample_count = statistics->get_count();
+      statistics_data_ = statistics->get_statistics();
+      current_data_ = statistics->get_current_measurement();
     }
-    if (statistics->GetCount() >= reset_statistics_sample_count_)
+    if (statistics->get_count() >= reset_statistics_sample_count_)
     {
-      statistics->Reset();
+      statistics->reset();
     }
   }
 
@@ -269,6 +276,12 @@ public:
     return statistics_data_;
   }
 
+  const double & get_current_data() const
+  {
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
+    return current_data_;
+  }
+
 private:
   /// Mutex to protect the statistics data
   mutable DEFAULT_MUTEX mutex_;
@@ -291,12 +304,9 @@ struct HardwareComponentStatisticsCollector
 {
   HardwareComponentStatisticsCollector()
   {
-    execution_time = std::make_shared<MovingAverageStatisticsCollector>();
-    periodicity = std::make_shared<MovingAverageStatisticsCollector>();
+    execution_time = std::make_shared<ros2_control::MovingAverageStatistics>();
+    periodicity = std::make_shared<ros2_control::MovingAverageStatistics>();
   }
-
-  using MovingAverageStatisticsCollector =
-    libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
 
   /**
    * @brief Resets the internal statistics of the execution time and periodicity statistics
@@ -304,14 +314,14 @@ struct HardwareComponentStatisticsCollector
    */
   void reset_statistics()
   {
-    execution_time->Reset();
-    periodicity->Reset();
+    execution_time->reset();
+    periodicity->reset();
   }
 
   /// Execution time statistics collector
-  std::shared_ptr<MovingAverageStatisticsCollector> execution_time = nullptr;
+  std::shared_ptr<ros2_control::MovingAverageStatistics> execution_time = nullptr;
   /// Periodicity statistics collector
-  std::shared_ptr<MovingAverageStatisticsCollector> periodicity = nullptr;
+  std::shared_ptr<ros2_control::MovingAverageStatistics> periodicity = nullptr;
 };
 }  // namespace hardware_interface
 
