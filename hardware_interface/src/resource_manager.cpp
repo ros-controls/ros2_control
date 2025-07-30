@@ -657,6 +657,7 @@ public:
   {
     auto interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
+    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
 
     RCLCPP_WARN_EXPRESSION(
       get_logger(), interface_names.empty(),
@@ -1459,6 +1460,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string actuator_type = "actuator";
 
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
+  std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
     // Check for identical names
@@ -2009,6 +2011,16 @@ bool ResourceManager::prepare_command_mode_switch(
         continue;
       }
       if (
+        !start_interfaces_buffer.empty() &&
+        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is in INACTIVE state, but has start interfaces to switch: \n%s",
+          component.get_name().c_str(),
+          interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
+        return false;
+      }
+      if (
         component.get_lifecycle_state().id() ==
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -2097,6 +2109,16 @@ bool ResourceManager::perform_command_mode_switch(
           logger, "Component '%s' after filtering has no command interfaces to perform switch",
           component.get_name().c_str());
         continue;
+      }
+      if (
+        !start_interfaces_buffer.empty() &&
+        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+      {
+        RCLCPP_WARN(
+          logger, "Component '%s' is in INACTIVE state, but has start interfaces to switch: \n%s",
+          component.get_name().c_str(),
+          interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
+        return false;
       }
       if (
         component.get_lifecycle_state().id() ==
@@ -2240,6 +2262,7 @@ return_type ResourceManager::set_component_state(
   };
 
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   bool found = find_set_component_state(
     std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
     resource_storage_->actuators_);
