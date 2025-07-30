@@ -28,6 +28,7 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager_msgs/msg/controller_manager_activity.hpp"
+#include "controller_manager_msgs/srv/cleanup_controller.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -37,7 +38,6 @@
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
-#include "controller_manager_msgs/srv/unconfigure_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
 #include "diagnostic_updater/diagnostic_updater.hpp"
@@ -330,9 +330,9 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
-  void unconfigure_controller_service_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::UnconfigureController::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::UnconfigureController::Response> response);
+  void cleanup_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response);
 
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
@@ -660,8 +660,8 @@ private:
     switch_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_service_;
-  rclcpp::Service<controller_manager_msgs::srv::UnconfigureController>::SharedPtr
-    unconfigure_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::CleanupController>::SharedPtr
+    cleanup_controller_service_;
 
   rclcpp::Service<controller_manager_msgs::srv::ListHardwareComponents>::SharedPtr
     list_hardware_components_service_;

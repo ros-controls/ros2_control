@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import unconfigure_controller, bcolors
+from controller_manager import cleanup_controller, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -21,8 +21,8 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
-class UnconfigureControllerVerb(VerbExtension):
-    """Unconfigure/Cleanup a controller in a controller manager."""
+class CleanupControllerVerb(VerbExtension):
+    """Cleanup a controller in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
@@ -32,7 +32,7 @@ class UnconfigureControllerVerb(VerbExtension):
 
     def main(self, *, args):
         with NodeStrategy(args).direct_node as node:
-            response = unconfigure_controller(node, args.controller_manager, args.controller_name)
+            response = cleanup_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
                 print(
                     f"{bcolors.FAIL}Error cleaning up controller {args.controller_name}, check controller_manager logs{bcolors.ENDC}"
