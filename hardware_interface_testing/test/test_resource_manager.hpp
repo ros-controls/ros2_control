@@ -64,6 +64,11 @@ public:
       urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
   {
   }
+
+  explicit TestableResourceManager(const hardware_interface::ResourceManagerParams & params)
+  : hardware_interface::ResourceManager(params, true)
+  {
+  }
 };
 
 std::vector<hardware_interface::return_type> set_components_state(
