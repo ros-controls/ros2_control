@@ -328,12 +328,24 @@ public:
   void enable_introspection(bool enable);
 
 protected:
-  /** Loaned command interfaces. The order of the interfaces is the same as defined in
-   * \ref command_interface_configuration() if interface_configuration_type::INDIVIDUAL is set.
+  /** Loaned command interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref command_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
    */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
-  /** Loaned state interfaces. The order of the interfaces is the same as defined in
-   * \ref state_interface_configuration() if interface_configuration_type::INDIVIDUAL is set.
+  /** Loaned state interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref state_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
    */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
