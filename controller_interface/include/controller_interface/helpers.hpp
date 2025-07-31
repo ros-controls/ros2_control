@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_INTERFACE__HELPERS_HPP_
 #define CONTROLLER_INTERFACE__HELPERS_HPP_
 
+#include <algorithm>
 #include <functional>
 #include <string>
 #include <vector>
