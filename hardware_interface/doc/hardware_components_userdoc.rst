@@ -41,7 +41,7 @@ The hardware transitions to the following state after each method:
 * **INACTIVE** (``on_configure``, ``on_deactivate``):
 
   Communication with the hardware is established and hardware component is configured.
-  States can be read and command interfaces (System and Actuator only) are available.
+  States can be read, but command interfaces (System and Actuator only) are not available.
 
   As of now, it is left to the hardware component implementation to continue using the command received from the ``CommandInterfaces`` or to skip them completely.
 
