@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.4.0 (2025-07-21)
 ------------------
 
