@@ -80,7 +80,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
  *
  * ACTIVE (on_activate):
  *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces available.
+ *   Command interfaces are available.
  *
  * \todo
  * Implement
