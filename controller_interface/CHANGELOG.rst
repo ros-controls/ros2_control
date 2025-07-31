@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Document order of interfaces (`#2394 <https://github.com/ros-controls/ros2_control/issues/2394>`_) (`#2422 <https://github.com/ros-controls/ros2_control/issues/2422>`_)
+* Contributors: mergify[bot]
+
 4.34.0 (2025-07-21)
 -------------------
 

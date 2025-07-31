@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix wrong strict arg of switch_controllers method (`#2410 <https://github.com/ros-controls/ros2_control/issues/2410>`_) (`#2411 <https://github.com/ros-controls/ros2_control/issues/2411>`_)
+* Contributors: mergify[bot]
+
 4.34.0 (2025-07-21)
 -------------------
 
