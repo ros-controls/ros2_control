@@ -93,7 +93,7 @@ controller_manager
 * A new parameter ``enforce_command_limits`` is introduced to be able to enable and disable the enforcement of the command limits (`#1989 <https://github.com/ros-controls/ros2_control/pull/1989>`_).
 * A latched topic ``~/activity`` has been added to the controller_manager to publish the activity of the controller_manager, where the change in states of the controllers and the hardware components are published. (`#2006 <https://github.com/ros-controls/ros2_control/pull/2006>`_).
 * The controller manager will use a monotonic clock for triggering read-update-write cycles, but when the ``use_sim_time`` parameter is set to true, it will use the ROS Clock for triggering. When monotonic clock is being used, all the hardware components will receive the monotonic time in their read and write method, instead the controllers will always receive the ROS time in their update method irrespective of the clock being used. (`#2046 <https://github.com/ros-controls/ros2_control/pull/2046>`_).
-* The default strictness of the ``swtich_controllers`` can now we be chosen using ROS 2 parameters. The default behaviour is still left to ``BEST_EFFORT`` (`#2168 <https://github.com/ros-controls/ros2_control/pull/2168>`_).
+* The default strictness of the ``switch_controllers`` can now we be chosen using ROS 2 parameters. The default behaviour is still left to ``BEST_EFFORT`` (`#2168 <https://github.com/ros-controls/ros2_control/pull/2168>`_).
 * Parameter ``shutdown_on_initial_state_failure`` was added to avoid shutting down on hardware initial state failure  (`#2230 <https://github.com/ros-controls/ros2_control/pull/2230>`_).
 
 hardware_interface
