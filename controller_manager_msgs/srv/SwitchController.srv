@@ -5,7 +5,7 @@
 # To switch controllers, specify
 #  * the list of controller names to activate,
 #  * the list of controller names to deactivate, and
-#  * the strictness (BEST_EFFORT or STRICT)
+#  * the strictness (STRICT, BEST_EFFORT, AUTO, or FORCE_AUTO)
 #    * STRICT means that switching will fail if anything goes wrong (an invalid
 #      controller name, a controller that failed to activate, etc.).
 #    * BEST_EFFORT means that even when something goes wrong with one controller,
