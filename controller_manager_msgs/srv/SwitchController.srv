@@ -11,7 +11,7 @@
 #    * BEST_EFFORT:
 #      Transitions are only triggered if the controller is not yet in the target state.
 #      If it is already in the target state, no error occurs.
-#      Returns 'false' if no controller of 'activate_controllers' or 'deactivate_controllers' exists,
+#      Returns 'false' if all controllers of 'activate_controllers' or 'deactivate_controllers' are not yet loaded or configured,
 #      or the pending transitions of all existing controllers of 'activate_controllers'
 #      or 'deactivate_controllers' fail.
 #      Returns 'true' otherwise.
