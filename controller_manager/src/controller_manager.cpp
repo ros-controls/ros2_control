@@ -41,7 +41,6 @@ static constexpr const char * kControllerInterfaceClassName =
   "controller_interface::ControllerInterface";
 static constexpr const char * kChainableControllerInterfaceClassName =
   "controller_interface::ChainableControllerInterface";
-static constexpr const char * kStatisticsTopic = "~/statistics";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
 // \note The versions conditioning is added here to support the source-compatibility with Humble
@@ -533,6 +532,9 @@ void ControllerManager::init_controller_manager()
     this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
     hardware_interface::DEFAULT_REGISTRY_KEY);
   START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+    this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
 
   // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
@@ -721,68 +723,86 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     RCLCPP_INFO(get_logger(), "Registering statistics for : %s", component_name.c_str());
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.min",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.execution_time.min",
       &component_info.read_statistics->execution_time.get_statistics().min);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.max",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.execution_time.max",
       &component_info.read_statistics->execution_time.get_statistics().max);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.avg",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.execution_time.average",
       &component_info.read_statistics->execution_time.get_statistics().average);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.stddev",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.execution_time.stddev",
       &component_info.read_statistics->execution_time.get_statistics().standard_deviation);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.execution_time.current",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.execution_time.current",
       &component_info.read_statistics->execution_time.get_current_data());
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.min",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY, component_name + ".stats.read_cycle.periodicity.min",
       &component_info.read_statistics->periodicity.get_statistics().min);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.max",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY, component_name + ".stats.read_cycle.periodicity.max",
       &component_info.read_statistics->periodicity.get_statistics().max);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.avg",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.periodicity.average",
       &component_info.read_statistics->periodicity.get_statistics().average);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.stddev",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.periodicity.stddev",
       &component_info.read_statistics->periodicity.get_statistics().standard_deviation);
-    REGISTER_VARIABLE(
-      this, kStatisticsTopic, component_name + ".stats.read_cycle.periodicity.current",
+    REGISTER_ENTITY(
+      hardware_interface::CM_STATISTICS_KEY,
+      component_name + ".stats.read_cycle.periodicity.current",
       &component_info.read_statistics->periodicity.get_current_data());
 
     if (component_info.write_statistics)
     {
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.min",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.execution_time.min",
         &component_info.write_statistics->execution_time.get_statistics().min);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.max",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.execution_time.max",
         &component_info.write_statistics->execution_time.get_statistics().max);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.avg",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.execution_time.average",
         &component_info.write_statistics->execution_time.get_statistics().average);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.stddev",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.execution_time.stddev",
         &component_info.write_statistics->execution_time.get_statistics().standard_deviation);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.execution_time.current",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.execution_time.current",
         &component_info.write_statistics->execution_time.get_current_data());
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.min",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.periodicity.min",
         &component_info.write_statistics->periodicity.get_statistics().min);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.max",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.periodicity.max",
         &component_info.write_statistics->periodicity.get_statistics().max);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.avg",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.periodicity.average",
         &component_info.write_statistics->periodicity.get_statistics().average);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.stddev",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.periodicity.stddev",
         &component_info.write_statistics->periodicity.get_statistics().standard_deviation);
-      REGISTER_VARIABLE(
-        this, kStatisticsTopic, component_name + ".stats.write_cycle.periodicity.current",
+      REGISTER_ENTITY(
+        hardware_interface::CM_STATISTICS_KEY,
+        component_name + ".stats.write_cycle.periodicity.current",
         &component_info.write_statistics->periodicity.get_current_data());
     }
   }
@@ -842,23 +862,28 @@ void ControllerManager::init_services()
       qos_services, best_effort_callback_group_);
 
   const std::string cm_name = get_name();
-  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".update_time", &execution_time_.update_time);
-  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".read_time", &execution_time_.read_time);
-  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".write_time", &execution_time_.write_time);
-  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".total_time", &execution_time_.total_time);
-  REGISTER_VARIABLE(this, kStatisticsTopic, cm_name + ".switch_time", &execution_time_.switch_time);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, cm_name + ".switch_chained_mode_time",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".update_time", &execution_time_.update_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".read_time", &execution_time_.read_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".write_time", &execution_time_.write_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".total_time", &execution_time_.total_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".switch_time", &execution_time_.switch_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".switch_chained_mode_time",
     &execution_time_.switch_chained_mode_time);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, cm_name + ".switch_perform_mode_time",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".switch_perform_mode_time",
     &execution_time_.switch_perform_mode_time);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, cm_name + ".deactivation_time", &execution_time_.deactivation_time);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, cm_name + ".activation_time", &execution_time_.activation_time);
-
-  START_PUBLISH_THREAD(this, kStatisticsTopic);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".deactivation_time",
+    &execution_time_.deactivation_time);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, cm_name + ".activation_time",
+    &execution_time_.activation_time);
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
@@ -924,29 +949,35 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     std::make_shared<rclcpp::Time>(0, 0, this->get_trigger_clock()->get_clock_type());
   controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
   controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.execution_time.min",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.min",
     &controller_spec.execution_time_statistics->get_statistics_const_ptr().min);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.execution_time.max",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.max",
     &controller_spec.execution_time_statistics->get_statistics_const_ptr().max);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.execution_time.avg",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.average",
     &controller_spec.execution_time_statistics->get_statistics_const_ptr().average);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.execution_time.current_measurement",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.stddev",
+    &controller_spec.execution_time_statistics->get_statistics_const_ptr().standard_deviation);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.current",
     &controller_spec.execution_time_statistics->get_current_measurement_const_ptr());
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.periodicity.min",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.min",
     &controller_spec.periodicity_statistics->get_statistics_const_ptr().min);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.periodicity.max",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.max",
     &controller_spec.periodicity_statistics->get_statistics_const_ptr().max);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.periodicity.avg",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.average",
     &controller_spec.periodicity_statistics->get_statistics_const_ptr().average);
-  REGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.periodicity.current_measurement",
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.stddev",
+    &controller_spec.periodicity_statistics->get_statistics_const_ptr().standard_deviation);
+  REGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.current",
     &controller_spec.periodicity_statistics->get_current_measurement_const_ptr());
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
@@ -1087,16 +1118,24 @@ controller_interface::return_type ControllerManager::unload_controller(
       get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
     shutdown_controller(controller);
   }
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.min");
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.max");
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.execution_time.avg");
-  UNREGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.execution_time.current_measurement");
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.min");
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.max");
-  UNREGISTER_VARIABLE(this, kStatisticsTopic, controller_name + ".stats.periodicity.avg");
-  UNREGISTER_VARIABLE(
-    this, kStatisticsTopic, controller_name + ".stats.periodicity.current_measurement");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.min");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.max");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.average");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY,
+    controller_name + ".stats.execution_time.current_measurement");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.min");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.max");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.average");
+  UNREGISTER_ENTITY(
+    hardware_interface::CM_STATISTICS_KEY,
+    controller_name + ".stats.periodicity.current_measurement");
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
@@ -3084,7 +3123,7 @@ controller_interface::return_type ControllerManager::update(
   }
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
-  PUBLISH_ASYNC_STATISTICS(this, kStatisticsTopic);
+  PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::CM_STATISTICS_KEY);
 
   execution_time_.update_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3176,14 +3215,18 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       .count();
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
-  const bool print_log =  execution_time_.total_time > (1.e6 / static_cast<double>(get_update_rate()));
-  RCLCPP_WARN_EXPRESSION(get_logger(), print_log, "Overrun might occur, Total time : %f us --> Read time : %f us, "
-      "Update time : %f us, Write time : %f us, and Switch time : %f us (Switch "
-      "chained mode time : %f us, perform mode change time : %f us, Activation time : %f us, Deactivation time : %f us)"
-      , execution_time_.total_time, execution_time_.read_time, execution_time_.update_time,
-      execution_time_.write_time, execution_time_.switch_time, execution_time_.switch_chained_mode_time,
-      execution_time_.switch_perform_mode_time, execution_time_.activation_time,
-      execution_time_.deactivation_time);
+  const bool print_log =
+    execution_time_.total_time > (1.e6 / static_cast<double>(get_update_rate()));
+  RCLCPP_WARN_EXPRESSION(
+    get_logger(), print_log,
+    "Overrun might occur, Total time : %f us --> Read time : %f us, "
+    "Update time : %f us, Write time : %f us, and Switch time : %f us (Switch "
+    "chained mode time : %f us, perform mode change time : %f us, Activation time : %f us, "
+    "Deactivation time : %f us)",
+    execution_time_.total_time, execution_time_.read_time, execution_time_.update_time,
+    execution_time_.write_time, execution_time_.switch_time,
+    execution_time_.switch_chained_mode_time, execution_time_.switch_perform_mode_time,
+    execution_time_.activation_time, execution_time_.deactivation_time);
 }
 
 std::vector<ControllerSpec> &
