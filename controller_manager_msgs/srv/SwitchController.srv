@@ -11,7 +11,7 @@
 #    * BEST_EFFORT means that even when something goes wrong with one controller,
 #      the service will still try to activate/deactivate the remaining controllers.
 #      However, this will still fail if either all controllers to be activated or all controllers to be
-#      deactivated have invalid names.
+#      deactivated are unknown controllers or controllers yet to be loaded/configured.
 #    * AUTO means that the controller manager will automatically resolve the controller
 #      chain in order to activate and/or deactivate the specified controllers.
 #      This is useful in complex systems when you want all dependent controllers to start
