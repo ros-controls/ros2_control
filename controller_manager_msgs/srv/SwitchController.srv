@@ -7,7 +7,7 @@
 #  * the list of controller names to deactivate, and
 #  * the strictness (BEST_EFFORT or STRICT)
 #    * STRICT means that switching will fail if anything goes wrong (an invalid
-#      controller name, a controller that failed to activate, etc. ).
+#      controller name, a controller that failed to activate, etc.).
 #    * BEST_EFFORT means that even when something goes wrong with one controller,
 #      the service will still try to activate/deactivate the remaining controllers.
 #      This will still fail if either all controllers to be activated or all controllers to be
