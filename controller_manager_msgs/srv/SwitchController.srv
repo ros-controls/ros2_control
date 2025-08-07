@@ -8,10 +8,13 @@
 #  * the strictness (STRICT, BEST_EFFORT, AUTO, or FORCE_AUTO)
 #    * STRICT means that switching will fail if anything goes wrong (an invalid
 #      controller name, a controller that failed to activate, etc.).
-#    * BEST_EFFORT means that even when something goes wrong with one controller,
-#      the service will still try to activate/deactivate the remaining controllers.
-#      However, this will still fail if either all controllers to be activated or all controllers to be
-#      deactivated are unknown controllers or controllers yet to be loaded/configured.
+#    * BEST_EFFORT:
+#      Transitions are only triggered if the controller is not yet in the target state.
+#      If it is already in the target state, no error occurs.
+#      Returns 'false' if no controller of 'activate_controllers' or 'deactivate_controllers' exists,
+#      or the pending transitions of all existing controllers of 'activate_controllers'
+#      or 'deactivate_controllers' fail.
+#      Returns 'true' otherwise.
 #    * AUTO means that the controller manager will automatically resolve the controller
 #      chain in order to activate and/or deactivate the specified controllers.
 #      This is useful in complex systems when you want all dependent controllers to start
