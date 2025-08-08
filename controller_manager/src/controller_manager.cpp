@@ -2835,7 +2835,7 @@ void ControllerManager::manage_switch()
   const auto chain_start_time = std::chrono::steady_clock::now();
   switch_chained_mode(to_chained_mode_request_, true);
   switch_chained_mode(from_chained_mode_request_, false);
-  RCLCPP_INFO(
+  RCLCPP_DEBUG(
     get_logger(),
     "Switching  %lu controllers to chained mode and %lu controllers from chained mode",
     to_chained_mode_request_.size(), from_chained_mode_request_.size());
@@ -3158,18 +3158,18 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       .count();
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
-  const bool print_log =
-    execution_time_.total_time > (1.e6 / static_cast<double>(get_update_rate()));
+  const double expected_cycle_time = 1.e6 / static_cast<double>(get_update_rate());
+  const bool print_log = execution_time_.total_time > expected_cycle_time;
   RCLCPP_WARN_EXPRESSION(
     get_logger(), print_log,
-    "Overrun might occur, Total time : %f us --> Read time : %f us, "
-    "Update time : %f us, Write time : %f us, and Switch time : %f us (Switch "
-    "chained mode time : %f us, perform mode change time : %f us, Activation time : %f us, "
-    "Deactivation time : %f us)",
-    execution_time_.total_time, execution_time_.read_time, execution_time_.update_time,
-    execution_time_.write_time, execution_time_.switch_time,
+    "Overrun might occur, Total time : %.3f us (Expected < %.3f us) --> Read time : %.3f us, "
+    "Update time : %.3f us (Switch time : %.3f us (Switch chained mode time : %.3f us, perform "
+    "mode change time : %.3f us, Activation time : %.3f us, Deactivation time : %.3f us)), Write "
+    "time : %.3f us",
+    execution_time_.total_time, expected_cycle_time, execution_time_.read_time,
+    execution_time_.update_time, execution_time_.switch_time,
     execution_time_.switch_chained_mode_time, execution_time_.switch_perform_mode_time,
-    execution_time_.activation_time, execution_time_.deactivation_time);
+    execution_time_.activation_time, execution_time_.deactivation_time, execution_time_.write_time);
 }
 
 std::vector<ControllerSpec> &
