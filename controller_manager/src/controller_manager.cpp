@@ -356,6 +356,23 @@ void get_controller_list_command_interfaces(
     }
   }
 }
+
+void register_controller_manager_statistics(
+  const std::string & name,
+  const libstatistics_collector::moving_average_statistics::StatisticData * variable)
+{
+  REGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name, variable);
+}
+
+void unregister_controller_manager_statistics(const std::string & name)
+{
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/max");
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/min");
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/average");
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/standard_deviation");
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/sample_count");
+  UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
+}
 }  // namespace
 
 namespace controller_manager
@@ -722,87 +739,45 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
   for (const auto & [component_name, component_info] : hw_components_info)
   {
+    if (component_name.empty())
+    {
+      RCLCPP_WARN(
+        get_logger(), "Component name is empty, skipping statistics registration for it.");
+      continue;
+    }
     RCLCPP_INFO(get_logger(), "Registering statistics for : %s", component_name.c_str());
+    const std::string read_cycle_exec_time_prefix =
+      component_name + ".stats/read_cycle/execution_time";
+    const std::string read_cycle_periodicity_prefix =
+      component_name + ".stats/read_cycle/periodicity";
+    register_controller_manager_statistics(
+      read_cycle_exec_time_prefix,
+      &component_info.read_statistics->execution_time.get_statistics());
     REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.execution_time.min",
-      &component_info.read_statistics->execution_time.get_statistics().min);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.execution_time.max",
-      &component_info.read_statistics->execution_time.get_statistics().max);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.execution_time.average",
-      &component_info.read_statistics->execution_time.get_statistics().average);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.execution_time.stddev",
-      &component_info.read_statistics->execution_time.get_statistics().standard_deviation);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.execution_time.current",
+      hardware_interface::CM_STATISTICS_KEY, read_cycle_exec_time_prefix + "/current_value",
       &component_info.read_statistics->execution_time.get_current_data());
+    register_controller_manager_statistics(
+      read_cycle_periodicity_prefix, &component_info.read_statistics->periodicity.get_statistics());
     REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY, component_name + ".stats.read_cycle.periodicity.min",
-      &component_info.read_statistics->periodicity.get_statistics().min);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY, component_name + ".stats.read_cycle.periodicity.max",
-      &component_info.read_statistics->periodicity.get_statistics().max);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.periodicity.average",
-      &component_info.read_statistics->periodicity.get_statistics().average);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.periodicity.stddev",
-      &component_info.read_statistics->periodicity.get_statistics().standard_deviation);
-    REGISTER_ENTITY(
-      hardware_interface::CM_STATISTICS_KEY,
-      component_name + ".stats.read_cycle.periodicity.current",
+      hardware_interface::CM_STATISTICS_KEY, read_cycle_periodicity_prefix + "/current_value",
       &component_info.read_statistics->periodicity.get_current_data());
-
     if (component_info.write_statistics)
     {
+      const std::string write_cycle_exec_time_prefix =
+        component_name + ".stats/write_cycle/execution_time";
+      const std::string write_cycle_periodicity_prefix =
+        component_name + ".stats/write_cycle/periodicity";
+      register_controller_manager_statistics(
+        write_cycle_exec_time_prefix,
+        &component_info.write_statistics->execution_time.get_statistics());
       REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.execution_time.min",
-        &component_info.write_statistics->execution_time.get_statistics().min);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.execution_time.max",
-        &component_info.write_statistics->execution_time.get_statistics().max);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.execution_time.average",
-        &component_info.write_statistics->execution_time.get_statistics().average);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.execution_time.stddev",
-        &component_info.write_statistics->execution_time.get_statistics().standard_deviation);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.execution_time.current",
+        hardware_interface::CM_STATISTICS_KEY, write_cycle_exec_time_prefix + "/current_value",
         &component_info.write_statistics->execution_time.get_current_data());
+      register_controller_manager_statistics(
+        write_cycle_periodicity_prefix,
+        &component_info.write_statistics->periodicity.get_statistics());
       REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.periodicity.min",
-        &component_info.write_statistics->periodicity.get_statistics().min);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.periodicity.max",
-        &component_info.write_statistics->periodicity.get_statistics().max);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.periodicity.average",
-        &component_info.write_statistics->periodicity.get_statistics().average);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.periodicity.stddev",
-        &component_info.write_statistics->periodicity.get_statistics().standard_deviation);
-      REGISTER_ENTITY(
-        hardware_interface::CM_STATISTICS_KEY,
-        component_name + ".stats.write_cycle.periodicity.current",
+        hardware_interface::CM_STATISTICS_KEY, write_cycle_periodicity_prefix + "/current_value",
         &component_info.write_statistics->periodicity.get_current_data());
     }
   }
@@ -949,35 +924,19 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     std::make_shared<rclcpp::Time>(0, 0, this->get_trigger_clock()->get_clock_type());
   controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
   controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
+  const std::string controller_exec_time_prefix = controller_name + ".stats/execution_time";
+  const std::string controller_periodicity_prefix = controller_name + ".stats/periodicity";
+  register_controller_manager_statistics(
+    controller_exec_time_prefix,
+    &controller_spec.execution_time_statistics->get_statistics_const_ptr());
   REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.min",
-    &controller_spec.execution_time_statistics->get_statistics_const_ptr().min);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.max",
-    &controller_spec.execution_time_statistics->get_statistics_const_ptr().max);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.average",
-    &controller_spec.execution_time_statistics->get_statistics_const_ptr().average);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.stddev",
-    &controller_spec.execution_time_statistics->get_statistics_const_ptr().standard_deviation);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.current",
+    hardware_interface::CM_STATISTICS_KEY, controller_exec_time_prefix + "/current_value",
     &controller_spec.execution_time_statistics->get_current_measurement_const_ptr());
+  register_controller_manager_statistics(
+    controller_periodicity_prefix,
+    &controller_spec.periodicity_statistics->get_statistics_const_ptr());
   REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.min",
-    &controller_spec.periodicity_statistics->get_statistics_const_ptr().min);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.max",
-    &controller_spec.periodicity_statistics->get_statistics_const_ptr().max);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.average",
-    &controller_spec.periodicity_statistics->get_statistics_const_ptr().average);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.stddev",
-    &controller_spec.periodicity_statistics->get_statistics_const_ptr().standard_deviation);
-  REGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.current",
+    hardware_interface::CM_STATISTICS_KEY, controller_periodicity_prefix + "/current_value",
     &controller_spec.periodicity_statistics->get_current_measurement_const_ptr());
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
@@ -1118,24 +1077,8 @@ controller_interface::return_type ControllerManager::unload_controller(
       get_logger(), "Controller '%s' is shutdown before unloading!", controller_name.c_str());
     shutdown_controller(controller);
   }
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.min");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.max");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.execution_time.average");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY,
-    controller_name + ".stats.execution_time.current_measurement");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.min");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.max");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY, controller_name + ".stats.periodicity.average");
-  UNREGISTER_ENTITY(
-    hardware_interface::CM_STATISTICS_KEY,
-    controller_name + ".stats.periodicity.current_measurement");
+  unregister_controller_manager_statistics(controller_name + ".stats/execution_time");
+  unregister_controller_manager_statistics(controller_name + ".stats/periodicity");
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
