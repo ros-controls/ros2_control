@@ -310,12 +310,12 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     {
       if (trigger_result.execution_time.has_value())
       {
-        read_statistics_.execution_time->AddMeasurement(
+        read_statistics_.execution_time->add_measurement(
           static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
       }
       if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
-        read_statistics_.periodicity->AddMeasurement(
+        read_statistics_.periodicity->add_measurement(
           1.0 / (time - last_read_cycle_time_).seconds());
       }
       last_read_cycle_time_ = time;
