@@ -1,4 +1,4 @@
-# The SwitchController service allows you deactivate a number of controllers
+# The SwitchController service allows you to deactivate a number of controllers
 # and activate a number of controllers, all in one single timestep of the
 # controller manager's control loop.
 
@@ -8,7 +8,7 @@
 #  * the strictness (BEST_EFFORT or STRICT)
 #    * STRICT means that switching will fail if anything goes wrong (an invalid
 #      controller name, a controller that failed to activate, etc. )
-#    * BEST_EFFORT means that even when something goes wrong with on controller,
+#    * BEST_EFFORT means that even when something goes wrong with one controller,
 #      the service will still try to activate/deactivate the remaining controllers
 #    * AUTO means that the controller manager will automatically resolve the controller
 #      chain in order to activate and/or deactivate the specified controllers.

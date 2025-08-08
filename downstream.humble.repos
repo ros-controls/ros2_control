@@ -7,7 +7,3 @@ repositories:
     type: git
     url: https://github.com/cyberbotics/webots_ros2.git
     version: master
-  PickNikRobotics/topic_based_ros2_control:
-    type: git
-    url: https://github.com/PickNikRobotics/topic_based_ros2_control.git
-    version: main
