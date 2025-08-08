@@ -17,6 +17,8 @@
 #ifndef HARDWARE_INTERFACE__INTROSPECTION_HPP_
 #define HARDWARE_INTERFACE__INTROSPECTION_HPP_
 
+#include <string>
+
 #include "hardware_interface/types/statistics_types.hpp"
 #include "pal_statistics/pal_statistics_macros.hpp"
 #include "pal_statistics/pal_statistics_utils.hpp"
