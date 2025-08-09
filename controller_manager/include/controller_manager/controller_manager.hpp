@@ -661,11 +661,6 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 
-  std::vector<std::string> activate_request_, deactivate_request_;
-  std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
-  std::vector<std::string> activate_command_interface_request_,
-    deactivate_command_interface_request_;
-
   std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
   std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
 
@@ -697,6 +692,14 @@ private:
     // conditional variable and mutex to wait for the switch to complete
     std::condition_variable cv;
     std::mutex mutex;
+
+    // The controllers list to activate and deactivate
+    std::vector<std::string> activate_request;
+    std::vector<std::string> deactivate_request;
+    std::vector<std::string> to_chained_mode_request;
+    std::vector<std::string> from_chained_mode_request;
+    std::vector<std::string> activate_command_interface_request;
+    std::vector<std::string> deactivate_command_interface_request;
   };
 
   SwitchParams switch_params_;
