@@ -1298,6 +1298,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 void ControllerManager::clear_requests()
 {
   switch_params_.do_switch = false;
+  switch_params_.activate_asap = false;
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
   // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
@@ -1871,17 +1872,27 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   switch_params_.do_switch = true;
 
   // wait until switch is finished
-  RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
-  if (!switch_params_.cv.wait_for(
-        switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
+  if (switch_params_.activate_asap)
   {
-    message = fmt::format(
-      FMT_COMPILE("Switch controller timed out after {} seconds!"),
-      static_cast<double>(switch_params_.timeout.count()) / 1e9);
-    RCLCPP_ERROR(get_logger(), "%s", message.c_str());
-    clear_requests();
-    return controller_interface::return_type::ERROR;
+    RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
+    std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
+    if (!switch_params_.cv.wait_for(
+          switch_params_guard, switch_params_.timeout,
+          [this] { return !switch_params_.do_switch; }))
+    {
+      message = fmt::format(
+        FMT_COMPILE("Switch controller timed out after {} seconds!"),
+        static_cast<double>(switch_params_.timeout.count()) / 1e9);
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+      clear_requests();
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  else
+  {
+    RCLCPP_INFO(get_logger(), "Requested controller switch from non-realtime loop");
+    // This should work as the realtime thread operation is read-only operation
+    manage_switch();
   }
 
   // copy the controllers spec from the used to the unused list
@@ -1983,7 +1994,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
 
 void ControllerManager::deactivate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
-  const std::vector<std::string> controllers_to_deactivate)
+  const std::vector<std::string> & controllers_to_deactivate)
 {
   // deactivate controllers
   for (const auto & controller_name : controllers_to_deactivate)
@@ -2087,7 +2098,7 @@ void ControllerManager::switch_chained_mode(
 
 void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
-  const std::vector<std::string> controllers_to_activate)
+  const std::vector<std::string> & controllers_to_activate)
 {
   for (const auto & controller_name : controllers_to_activate)
   {
@@ -2237,14 +2248,6 @@ void ControllerManager::activate_controllers(
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
   }
-}
-
-void ControllerManager::activate_controllers_asap(
-  const std::vector<ControllerSpec> & rt_controller_list,
-  const std::vector<std::string> controllers_to_activate)
-{
-  //  https://github.com/ros-controls/ros2_control/issues/263
-  activate_controllers(rt_controller_list, controllers_to_activate);
 }
 
 void ControllerManager::list_controllers_srv_cb(
@@ -2788,6 +2791,15 @@ controller_interface::return_type ControllerManager::update(
   rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
   {
+    if (
+      switch_params_.do_switch && !switch_params_.activate_asap &&
+      switch_params_.skip_cycle(loaded_controller))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Skipping update for controller '%s' as it is being switched",
+        loaded_controller.info.name.c_str());
+      continue;
+    }
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_active(*loaded_controller.c))
@@ -2944,7 +2956,7 @@ controller_interface::return_type ControllerManager::update(
   resource_manager_->enforce_command_limits(period);
 
   // there are controllers to (de)activate
-  if (switch_params_.do_switch)
+  if (switch_params_.do_switch && switch_params_.activate_asap)
   {
     manage_switch();
   }
