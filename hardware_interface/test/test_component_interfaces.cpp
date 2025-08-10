@@ -813,14 +813,13 @@ TEST(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
 
-  // Read and Write are working because it is INACTIVE
+  // Read should work but write should not update the state because it is INACTIVE
   for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(
-      step * velocity_value, state_interfaces[0]->get_optional().value());  // position value
-    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1]->get_optional().value());  // velocity
+    EXPECT_EQ(0.0, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[1]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -835,9 +834,10 @@ TEST(TestComponentInterfaces, dummy_actuator)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      (10 + step) * velocity_value,
-      state_interfaces[0]->get_optional().value());                          // position value
-    EXPECT_EQ(velocity_value, state_interfaces[1]->get_optional().value());  // velocity
+      step * velocity_value,
+      state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0.0, state_interfaces[1]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -851,7 +851,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(20 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(10 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[1]->get_optional().value());                    // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
@@ -939,17 +939,13 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
 
-  // Read and Write are working because it is INACTIVE
+  // Read should work but write should not update the state because it is INACTIVE
   for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(
-      step * velocity_value,
-      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
-    EXPECT_EQ(
-      step ? velocity_value : 0,
-      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(0.0, state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -964,9 +960,11 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      (10 + step) * velocity_value,
+      step * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());  // position value
-    EXPECT_EQ(velocity_value, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step ? velocity_value : 0.0,
+      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -981,7 +979,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      20 * velocity_value,
+      10 * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());             // position value
     EXPECT_EQ(0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
