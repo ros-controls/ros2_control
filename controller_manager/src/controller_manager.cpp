@@ -2699,8 +2699,9 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
+
+    // As the hardware is in UNCONFIGURED state with error call, no need to prepare or perform
+    // command mode switch
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -2970,8 +2971,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-    perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
+    // As the hardware is in UNCONFIGURED state with error call, no need to prepare or perform
+    // command mode switch
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }

@@ -40,10 +40,7 @@ namespace hardware_interface
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
- *   States can be read and command interfaces are available.
- *
- *    As of now, it is left to the hardware component implementation to continue using the command
- * received from the ``CommandInterfaces`` or to skip them completely.
+ *   States can be read, but command interfaces are not available.
  *
  * FINALIZED (on_shutdown):
  *   Hardware interface is ready for unloading/destruction.
