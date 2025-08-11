@@ -361,10 +361,10 @@ TEST_F(
 };
 
 // System  : UNCONFIGURED
-// Actuator: DEACTIVATED then WRITE_IGNORED
+// Actuator: ERROR
 TEST_F(
   ResourceManagerPreparePerformTest,
-  when_actuator_deactivated_then_write_error_is_ignored_and_remains_inactive)
+  when_system_unconfigured_and_actuator_active_and_then_error_expect_actuator_passing)
 {
   preconfigure_components(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured",
@@ -467,25 +467,23 @@ TEST_F(
   EXPECT_EQ(
     status_map["TestSystemCommandModes"].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  // The component is INACTIVE, write does nothing, so no error is triggered. State remains
-  // INACTIVE.
   EXPECT_EQ(
     status_map["TestActuatorHardware"].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
-  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_FALSE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
-  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.405, 1e-7);
-  EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.404, 1e-7);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
-  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.505, 1e-7);
+  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.404, 1e-7);
 
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
-  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.505, 1e-7);
+  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.404, 1e-7);
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
-  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.505, 1e-7);
+  EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.404, 1e-7);
 };
 
 // System  : UNCONFIGURED
