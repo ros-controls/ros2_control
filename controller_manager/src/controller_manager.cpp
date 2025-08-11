@@ -745,6 +745,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
         get_logger(), "Component name is empty, skipping statistics registration for it.");
       continue;
     }
+    if (!component_info.read_statistics && !component_info.write_statistics)
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Component '%s' does not have read or write statistics initialized, skipping registration.",
+        component_name.c_str());
+      continue;
+    }
     RCLCPP_INFO(get_logger(), "Registering statistics for : %s", component_name.c_str());
     const std::string read_cycle_exec_time_prefix =
       component_name + ".stats/read_cycle/execution_time";
