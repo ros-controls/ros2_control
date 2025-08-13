@@ -1,4 +1,4 @@
-// Copyright 2020-2021 ros2_control Development Team
+// Copyright 2025 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,64 +12,65 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/hardware_component.hpp"
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/handle.hpp"
+#include "hardware_interface/hardware_component_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/lifecycle_helpers.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-// TODO(destogl): Add transition names also
 namespace hardware_interface
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
-
-Actuator::Actuator(Actuator && other) noexcept
+HardwareComponent::HardwareComponent(std::unique_ptr<HardwareComponentInterface> impl)
+: impl_(std::move(impl))
 {
-  std::lock_guard<std::recursive_mutex> lock(other.actuators_mutex_);
+}
+
+HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
+{
+  std::lock_guard<std::recursive_mutex> lock(other.component_mutex_);
   impl_ = std::move(other.impl_);
   last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
-const rclcpp_lifecycle::State & Actuator::initialize(
-  const HardwareInfo & actuator_info, rclcpp::Logger logger,
+const rclcpp_lifecycle::State & HardwareComponent::initialize(
+  const HardwareInfo & hardware_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
   // This is done for backward compatibility with the old initialize method.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  return this->initialize(actuator_info, logger, clock_interface->get_clock());
+  return this->initialize(hardware_info, logger, clock_interface->get_clock());
 #pragma GCC diagnostic pop
 }
 
-const rclcpp_lifecycle::State & Actuator::initialize(
-  const HardwareInfo & actuator_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+const rclcpp_lifecycle::State & HardwareComponent::initialize(
+  const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
 {
   hardware_interface::HardwareComponentParams params;
-  params.hardware_info = actuator_info;
+  params.hardware_info = hardware_info;
   params.logger = logger;
   params.clock = clock;
   return initialize(params);
 }
 
-const rclcpp_lifecycle::State & Actuator::initialize(
+const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
     switch (impl_->init(params))
@@ -91,9 +92,9 @@ const rclcpp_lifecycle::State & Actuator::initialize(
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::configure()
+const rclcpp_lifecycle::State & HardwareComponent::configure()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
@@ -117,9 +118,9 @@ const rclcpp_lifecycle::State & Actuator::configure()
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::cleanup()
+const rclcpp_lifecycle::State & HardwareComponent::cleanup()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
@@ -140,9 +141,9 @@ const rclcpp_lifecycle::State & Actuator::cleanup()
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::shutdown()
+const rclcpp_lifecycle::State & HardwareComponent::shutdown()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
@@ -164,13 +165,16 @@ const rclcpp_lifecycle::State & Actuator::shutdown()
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::activate()
+const rclcpp_lifecycle::State & HardwareComponent::activate()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   read_statistics_.reset_statistics();
-  write_statistics_.reset_statistics();
+  if (impl_->get_hardware_info().type != "sensor")
+  {
+    write_statistics_.reset_statistics();
+  }
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     impl_->prepare_for_activation();
@@ -195,9 +199,9 @@ const rclcpp_lifecycle::State & Actuator::activate()
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::deactivate()
+const rclcpp_lifecycle::State & HardwareComponent::deactivate()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
@@ -221,9 +225,9 @@ const rclcpp_lifecycle::State & Actuator::deactivate()
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp_lifecycle::State & Actuator::error()
+const rclcpp_lifecycle::State & HardwareComponent::error()
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
+  std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
@@ -248,7 +252,7 @@ const rclcpp_lifecycle::State & Actuator::error()
   return impl_->get_lifecycle_state();
 }
 
-std::vector<StateInterface::ConstSharedPtr> Actuator::export_state_interfaces()
+std::vector<StateInterface::ConstSharedPtr> HardwareComponent::export_state_interfaces()
 {
 // BEGIN (Handle export change): for backward compatibility, can be removed if
 // export_command_interfaces() method is removed
@@ -279,7 +283,7 @@ std::vector<StateInterface::ConstSharedPtr> Actuator::export_state_interfaces()
   // END: for backward compatibility
 }
 
-std::vector<CommandInterface::SharedPtr> Actuator::export_command_interfaces()
+std::vector<CommandInterface::SharedPtr> HardwareComponent::export_command_interfaces()
 {
 // BEGIN (Handle export change): for backward compatibility, can be removed if
 // export_command_interfaces() method is removed
@@ -309,44 +313,47 @@ std::vector<CommandInterface::SharedPtr> Actuator::export_command_interfaces()
   // END: for backward compatibility
 }
 
-return_type Actuator::prepare_command_mode_switch(
+return_type HardwareComponent::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
   return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-return_type Actuator::perform_command_mode_switch(
+return_type HardwareComponent::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-const std::string & Actuator::get_name() const { return impl_->get_name(); }
+const std::string & HardwareComponent::get_name() const { return impl_->get_name(); }
 
-const std::string & Actuator::get_group_name() const { return impl_->get_group_name(); }
+const std::string & HardwareComponent::get_group_name() const { return impl_->get_group_name(); }
 
-const rclcpp_lifecycle::State & Actuator::get_lifecycle_state() const
+const rclcpp_lifecycle::State & HardwareComponent::get_lifecycle_state() const
 {
   return impl_->get_lifecycle_state();
 }
 
-const rclcpp::Time & Actuator::get_last_read_time() const { return last_read_cycle_time_; }
+const rclcpp::Time & HardwareComponent::get_last_read_time() const { return last_read_cycle_time_; }
 
-const rclcpp::Time & Actuator::get_last_write_time() const { return last_write_cycle_time_; }
+const rclcpp::Time & HardwareComponent::get_last_write_time() const
+{
+  return last_write_cycle_time_;
+}
 
-const HardwareComponentStatisticsCollector & Actuator::get_read_statistics() const
+const HardwareComponentStatisticsCollector & HardwareComponent::get_read_statistics() const
 {
   return read_statistics_;
 }
 
-const HardwareComponentStatisticsCollector & Actuator::get_write_statistics() const
+const HardwareComponentStatisticsCollector & HardwareComponent::get_write_statistics() const
 {
   return write_statistics_;
 }
 
-return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
@@ -381,13 +388,22 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
   return return_type::OK;
 }
 
-return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (impl_->get_hardware_info().type == "sensor")
+  {
+    return return_type::OK;
+  }
+
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_write_cycle_time_ = time;
     return return_type::OK;
   }
+<<<<<<< HEAD:hardware_interface/src/actuator.cpp
+=======
+  // only call write in the active state
+>>>>>>> 350cbdd (Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (#2451)):hardware_interface/src/hardware_component.cpp
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     const auto trigger_result = impl_->trigger_write(time, period);
@@ -414,5 +430,5 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
   return return_type::OK;
 }
 
-std::recursive_mutex & Actuator::get_mutex() { return actuators_mutex_; }
+std::recursive_mutex & HardwareComponent::get_mutex() { return component_mutex_; }
 }  // namespace hardware_interface

@@ -15,38 +15,10 @@
 #ifndef HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 
-#include <fmt/compile.h>
-
-#include <limits>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
-#include "hardware_interface/component_parser.hpp"
-#include "hardware_interface/handle.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/introspection.hpp"
-#include "hardware_interface/types/hardware_component_interface_params.hpp"
-#include "hardware_interface/types/hardware_component_params.hpp"
-#include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "hardware_interface/types/trigger_type.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/duration.hpp"
-#include "rclcpp/logger.hpp"
-#include "rclcpp/node_interfaces/node_clock_interface.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "rclcpp_lifecycle/state.hpp"
-#include "realtime_tools/async_function_handler.hpp"
+#include "hardware_interface/hardware_component_interface.hpp"
 
 namespace hardware_interface
 {
-
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 /// Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
 /**
  * The typical examples are conveyors or motors.
@@ -89,9 +61,10 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
  * HW_IF_EFFORT.
  */
 
-class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
+class ActuatorInterface : public HardwareComponentInterface
 {
 public:
+<<<<<<< HEAD
   ActuatorInterface()
   : lifecycle_state_(
       rclcpp_lifecycle::State(
@@ -753,6 +726,9 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
+=======
+  return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override = 0;
+>>>>>>> 350cbdd (Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (#2451))
 };
 
 }  // namespace hardware_interface

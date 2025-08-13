@@ -1,4 +1,4 @@
-// Copyright 2020 - 2021 ros2_control Development Team
+// Copyright 2025 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,96 +12,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 
-#include "hardware_interface/hardware_component_interface.hpp"
+#include <fmt/compile.h>
+
+#include <limits>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "hardware_interface/component_parser.hpp"
+#include "hardware_interface/handle.hpp"
+#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
+#include "hardware_interface/types/hardware_component_interface_params.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
+#include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "hardware_interface/types/trigger_type.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
-/**
- * @brief Virtual Class to implement when integrating a complex system into ros2_control.
- *
- * The common examples for these types of hardware are multi-joint systems with or without sensors
- * such as industrial or humanoid robots.
- *
- * Methods return values have type
- * rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn with the following
- * meaning:
- *
- * \returns CallbackReturn::SUCCESS method execution was successful.
- * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
- * \returns CallbackReturn::ERROR critical error has happened that should be managed in
- * "on_error" method.
- *
- * The hardware ends after each method in a state with the following meaning:
- *
- * UNCONFIGURED (on_init, on_cleanup):
- *   Hardware is initialized but communication is not started and therefore no interface is
- *available.
- *
- * INACTIVE (on_configure, on_deactivate):
- *   Communication with the hardware is started and it is configured.
- *   States can be read, but command interfaces are not available.
- *
- * FINALIZED (on_shutdown):
- *   Hardware interface is ready for unloading/destruction.
- *   Allocated memory is cleaned up.
- *
- * ACTIVE (on_activate):
- *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
- *   Command interfaces are available.
- *
- * \todo
- * Implement
- *  * https://github.com/ros-controls/ros2_control/issues/931
- *  * https://github.com/ros-controls/roadmap/pull/51/files
- *  * this means in INACTIVE state:
- *      * States can be read and non-movement hardware interfaces commanded.
- *      * Hardware interfaces for movement will NOT be available.
- *      * Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and
- *HW_IF_EFFORT.
- */
 
-class SystemInterface : public HardwareComponentInterface
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+/**
+ * @brief Virtual base class for all hardware components (Actuators, Sensors, and Systems).
+ *
+ * This class provides the common structure and functionality for all hardware components,
+ * including lifecycle management, interface handling, and asynchronous support. Hardware
+ * plugins should inherit from one of its derivatives: ActuatorInterface, SensorInterface,
+ * or SystemInterface.
+ */
+class HardwareComponentInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-<<<<<<< HEAD
-  SystemInterface()
+  HardwareComponentInterface()
   : lifecycle_state_(
       rclcpp_lifecycle::State(
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
-    system_logger_(rclcpp::get_logger("system_interface"))
+    logger_(rclcpp::get_logger("hardware_component_interface"))
   {
   }
 
-  /// SystemInterface copy constructor is actively deleted.
+  /// HardwareComponentInterface copy constructor is actively deleted.
   /**
-   * Hardware interfaces are having a unique ownership and thus can't be copied in order to avoid
+   * Hardware interfaces have unique ownership and thus can't be copied in order to avoid
    * failed or simultaneous access to hardware.
    */
-  SystemInterface(const SystemInterface & other) = delete;
+  HardwareComponentInterface(const HardwareComponentInterface & other) = delete;
 
-  SystemInterface(SystemInterface && other) = delete;
+  HardwareComponentInterface(HardwareComponentInterface && other) = delete;
 
-  virtual ~SystemInterface() = default;
-
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] logger Logger for the hardware component.
-   * \param[in] clock_interface pointer to the clock interface.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  [[deprecated("Use init(HardwareInfo, rclcpp::Logger, rclcpp::Clock::SharedPtr) instead.")]]
-  CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  {
-    return this->init(hardware_info, logger, clock_interface->get_clock());
-  }
+  virtual ~HardwareComponentInterface() = default;
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
@@ -139,10 +115,10 @@ public:
    */
   CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
   {
-    system_clock_ = params.clock;
+    clock_ = params.clock;
     auto logger_copy = params.logger;
-    system_logger_ =
-      logger_copy.get_child("hardware_component.system." + params.hardware_info.name);
+    logger_ = logger_copy.get_child(
+      "hardware_component." + params.hardware_info.type + "." + params.hardware_info.name);
     info_ = params.hardware_info;
     if (info_.is_async)
     {
@@ -163,14 +139,19 @@ public:
           {
             return ret_read;
           }
-          const auto write_start_time = std::chrono::steady_clock::now();
-          const auto ret_write = write(time, period);
-          const auto write_end_time = std::chrono::steady_clock::now();
-          write_return_info_.store(ret_write, std::memory_order_release);
-          write_execution_time_.store(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
-            std::memory_order_release);
-          return ret_write;
+          if (info_.type != "sensor")
+          {
+            const auto write_start_time = std::chrono::steady_clock::now();
+            const auto ret_write = write(time, period);
+            const auto write_end_time = std::chrono::steady_clock::now();
+            write_return_info_.store(ret_write, std::memory_order_release);
+            write_execution_time_.store(
+              std::chrono::duration_cast<std::chrono::nanoseconds>(
+                write_end_time - write_start_time),
+              std::memory_order_release);
+            return ret_write;
+          }
+          return return_type::OK;
         },
         info_.thread_priority);
       async_handler_->start_thread();
@@ -211,11 +192,24 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
-    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-    parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
-    parse_state_interface_descriptions(info_.gpios, gpio_state_interfaces_);
-    parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
-    parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
+    if (info_.type == "actuator")
+    {
+      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+      parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
+    }
+    else if (info_.type == "sensor")
+    {
+      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+      parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
+    }
+    else if (info_.type == "system")
+    {
+      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+      parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
+      parse_state_interface_descriptions(info_.gpios, gpio_state_interfaces_);
+      parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
+      parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
+    }
     return CallbackReturn::SUCCESS;
   };
 
@@ -278,7 +272,7 @@ public:
   /**
    * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
    * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
-   * assigned here and resides in the system_interface.
+   * assigned here and resides in the interface.
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
@@ -300,7 +294,7 @@ public:
       auto name = description.get_name();
       unlisted_state_interfaces_.insert(std::make_pair(name, description));
       auto state_interface = std::make_shared<StateInterface>(description);
-      system_states_.insert(std::make_pair(name, state_interface));
+      hardware_states_.insert(std::make_pair(name, state_interface));
       unlisted_states_.push_back(state_interface);
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
@@ -308,21 +302,21 @@ public:
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
       auto state_interface = std::make_shared<StateInterface>(descr);
-      system_states_.insert(std::make_pair(name, state_interface));
+      hardware_states_.insert(std::make_pair(name, state_interface));
       joint_states_.push_back(state_interface);
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
     for (const auto & [name, descr] : sensor_state_interfaces_)
     {
       auto state_interface = std::make_shared<StateInterface>(descr);
-      system_states_.insert(std::make_pair(name, state_interface));
+      hardware_states_.insert(std::make_pair(name, state_interface));
       sensor_states_.push_back(state_interface);
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
     for (const auto & [name, descr] : gpio_state_interfaces_)
     {
       auto state_interface = std::make_shared<StateInterface>(descr);
-      system_states_.insert(std::make_pair(name, state_interface));
+      hardware_states_.insert(std::make_pair(name, state_interface));
       gpio_states_.push_back(state_interface);
       state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
@@ -370,6 +364,9 @@ public:
    * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
    * assigned here and resides in the system_interface.
    *
+   * Actuator and System components should override this method. Sensor components can use the
+   * default.
+   *
    * \return vector of shared pointers to the created and stored CommandInterfaces
    */
   virtual std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
@@ -390,7 +387,7 @@ public:
       auto name = description.get_name();
       unlisted_command_interfaces_.insert(std::make_pair(name, description));
       auto command_interface = std::make_shared<CommandInterface>(description);
-      system_commands_.insert(std::make_pair(name, command_interface));
+      hardware_commands_.insert(std::make_pair(name, command_interface));
       unlisted_commands_.push_back(command_interface);
       command_interfaces.push_back(command_interface);
     }
@@ -398,7 +395,7 @@ public:
     for (const auto & [name, descr] : joint_command_interfaces_)
     {
       auto command_interface = std::make_shared<CommandInterface>(descr);
-      system_commands_.insert(std::make_pair(name, command_interface));
+      hardware_commands_.insert(std::make_pair(name, command_interface));
       joint_commands_.push_back(command_interface);
       command_interfaces.push_back(command_interface);
     }
@@ -406,7 +403,7 @@ public:
     for (const auto & [name, descr] : gpio_command_interfaces_)
     {
       auto command_interface = std::make_shared<CommandInterface>(descr);
-      system_commands_.insert(std::make_pair(name, command_interface));
+      hardware_commands_.insert(std::make_pair(name, command_interface));
       gpio_commands_.push_back(command_interface);
       command_interfaces.push_back(command_interface);
     }
@@ -496,7 +493,7 @@ public:
     return status;
   }
 
-  /// Read the current state values from the actuator.
+  /// Read the current state values from the hardware.
   /**
    * The data readings from the physical hardware has to be updated
    * and reflected accordingly in the exported state interfaces.
@@ -544,7 +541,7 @@ public:
     return status;
   }
 
-  /// Write the current command values to the actuator.
+  /// Write the current command values to the hardware.
   /**
    * The physical hardware shall be updated with the latest value from
    * the exported command interfaces.
@@ -553,27 +550,30 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+  virtual return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  {
+    return return_type::OK;
+  }
 
-  /// Get name of the actuator hardware.
+  /// Get name of the hardware.
   /**
    * \return name.
    */
   const std::string & get_name() const { return info_.name; }
 
-  /// Get name of the actuator hardware group to which it belongs to.
+  /// Get name of the hardware group to which it belongs to.
   /**
    * \return group name.
    */
   const std::string & get_group_name() const { return info_.group; }
 
-  /// Get life-cycle state of the actuator hardware.
+  /// Get life-cycle state of the hardware.
   /**
    * \return state.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
-  /// Set life-cycle state of the actuator hardware.
+  /// Set life-cycle state of the hardware.
   /**
    * \return state.
    */
@@ -585,13 +585,13 @@ public:
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
-    auto it = system_states_.find(interface_name);
-    if (it == system_states_.end())
+    auto it = hardware_states_.find(interface_name);
+    if (it == hardware_states_.end())
     {
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in system hardware component: {}. "
+            "State interface not found: {} in hardware component: {}. "
             "This should not happen."),
           interface_name, info_.name));
     }
@@ -603,13 +603,13 @@ public:
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
-    auto it = system_states_.find(interface_name);
-    if (it == system_states_.end())
+    auto it = hardware_states_.find(interface_name);
+    if (it == hardware_states_.end())
     {
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "State interface not found: {} in system hardware component: {}. "
+            "State interface not found: {} in hardware component: {}. "
             "This should not happen."),
           interface_name, info_.name));
     }
@@ -629,13 +629,13 @@ public:
   template <typename T>
   void set_command(const std::string & interface_name, const T & value)
   {
-    auto it = system_commands_.find(interface_name);
-    if (it == system_commands_.end())
+    auto it = hardware_commands_.find(interface_name);
+    if (it == hardware_commands_.end())
     {
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Command interface not found: {} in system hardware component: {}. "
+            "Command interface not found: {} in hardware component: {}. "
             "This should not happen."),
           interface_name, info_.name));
     }
@@ -647,13 +647,13 @@ public:
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
-    auto it = system_commands_.find(interface_name);
-    if (it == system_commands_.end())
+    auto it = hardware_commands_.find(interface_name);
+    if (it == hardware_commands_.end())
     {
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Command interface not found: {} in system hardware component: {}. "
+            "Command interface not found: {} in hardware component: {}. "
             "This should not happen."),
           interface_name, info_.name));
     }
@@ -670,27 +670,27 @@ public:
     return opt_value.value();
   }
 
-  /// Get the logger of the SystemInterface.
+  /// Get the logger of the Interface.
   /**
-   * \return logger of the SystemInterface.
+   * \return logger of the Interface.
    */
-  rclcpp::Logger get_logger() const { return system_logger_; }
+  rclcpp::Logger get_logger() const { return logger_; }
 
-  /// Get the clock of the SystemInterface.
+  /// Get the clock of the Interface.
   /**
-   * \return clock of the SystemInterface.
+   * \return clock of the Interface.
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return system_clock_; }
+  rclcpp::Clock::SharedPtr get_clock() const { return clock_; }
 
-  /// Get the default node of the ActuatorInterface.
+  /// Get the default node of the Interface.
   /**
-   * \return node of the ActuatorInterface.
+   * \return node of the Interface.
    */
   rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
 
-  /// Get the hardware info of the SystemInterface.
+  /// Get the hardware info of the Interface.
   /**
-   * \return hardware info of the SystemInterface.
+   * \return hardware info of the Interface.
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
@@ -752,12 +752,12 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
 private:
-  rclcpp::Clock::SharedPtr system_clock_;
-  rclcpp::Logger system_logger_;
+  rclcpp::Clock::SharedPtr clock_;
+  rclcpp::Logger logger_;
   rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
   // interface names to Handle accessed through getters/setters
-  std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
-  std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
+  std::unordered_map<std::string, StateInterface::SharedPtr> hardware_states_;
+  std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
   std::atomic<return_type> read_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
@@ -765,10 +765,7 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
-=======
-  return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override = 0;
->>>>>>> 350cbdd (Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (#2451))
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
