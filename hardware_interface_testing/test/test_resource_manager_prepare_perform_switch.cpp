@@ -430,7 +430,8 @@ TEST_F(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   // Now deactivate with write deactivate value
-  claimed_actuator_velocity_command_->set_value(test_constants::WRITE_DEACTIVATE_VALUE);
+  EXPECT_TRUE(
+    claimed_actuator_velocity_command_->set_value(test_constants::WRITE_DEACTIVATE_VALUE));
   rm_->write(node_.now(), rclcpp::Duration(0, 1000000));
 
   status_map = rm_->get_components_status();
@@ -460,7 +461,7 @@ TEST_F(
     << "Start interfaces with inactive should result in no change";
 
   // Now return ERROR with write fail value
-  claimed_actuator_velocity_command_->set_value(test_constants::WRITE_FAIL_VALUE);
+  EXPECT_TRUE(claimed_actuator_velocity_command_->set_value(test_constants::WRITE_FAIL_VALUE));
   rm_->write(node_.now(), rclcpp::Duration(0, 1000000));
 
   status_map = rm_->get_components_status();
