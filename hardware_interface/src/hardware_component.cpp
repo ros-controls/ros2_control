@@ -400,10 +400,7 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     last_write_cycle_time_ = time;
     return return_type::OK;
   }
-<<<<<<< HEAD:hardware_interface/src/actuator.cpp
-=======
   // only call write in the active state
->>>>>>> 350cbdd (Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (#2451)):hardware_interface/src/hardware_component.cpp
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     const auto trigger_result = impl_->trigger_write(time, period);
