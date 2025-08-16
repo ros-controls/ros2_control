@@ -19,6 +19,15 @@ The topic ``~/introspection_data/full`` can be used to integrate with your custo
 .. note::
   If you have a high frequency of data, it is recommended to use the ``~/introspection_data/names`` and ``~/introspection_data/values`` topic. So, that the data transferred and stored is minimized.
 
+Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic.
+
+All the registered variables are published over 3 topics: ``~/statistics/full``, ``~/statistics/names``, and ``~/statistics/values``.
+- The ``~/statistics/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
+- The ``~/statistics/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a a variables is registered and unregistered.
+- The ``~/statistics/values`` topic publishes the values of the registered variables. This topic contains the values of the variables registered.
+
+This topic is mainly used to introspect the behaviour of the realtime loops, this is very crucial for hardware that need to meet strict deadlines and also to understand the which component of the ecosystem is consuming more time in the realtime loop.
+
 How to introspect internal variables of controllers and hardware components
 ============================================================================
 
