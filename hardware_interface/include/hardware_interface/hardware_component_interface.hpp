@@ -682,9 +682,9 @@ public:
    */
   rclcpp::Clock::SharedPtr get_clock() const { return clock_; }
 
-  /// Get the default node of the Interface.
+  /// Get the default node of the HardwareComponentInterface.
   /**
-   * \return node of the Interface.
+   * \return node of the HardwareComponentInterface.
    */
   rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
 
