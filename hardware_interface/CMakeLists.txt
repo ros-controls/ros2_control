@@ -73,6 +73,9 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(ament_index_cpp REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBXML2 REQUIRED IMPORTED_TARGET libxml-2.0)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
@@ -100,6 +103,10 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+
+  # Test XML Schema Validator
+  ament_add_gmock(test_validate_xml_schema test/test_validate_xml_schema.cpp)
+  target_link_libraries(test_validate_xml_schema PkgConfig::LIBXML2 ament_index_cpp::ament_index_cpp)
 
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
@@ -133,6 +140,11 @@ install(
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
+)
+
+install(
+  DIRECTORY schema urdf
+  DESTINATION share/hardware_interface
 )
 
 ament_export_targets(export_hardware_interface HAS_LIBRARY_TARGET)
