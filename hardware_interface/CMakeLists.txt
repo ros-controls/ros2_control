@@ -133,6 +133,12 @@ install(
   DIRECTORY include/
   DESTINATION include/hardware_interface
 )
+
+install(
+  DIRECTORY schema
+  DESTINATION share/hardware_interface
+)
+
 install(
   TARGETS
     mock_components
