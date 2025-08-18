@@ -52,6 +52,7 @@
   <ros2_control name="TestSensorComponent" type="sensor">
     <hardware>
       <plugin>test_hardware_components/TestForceTorqueSensor</plugin>
+      <param name="test_param">0</param>
     </hardware>
     <sensor name="ft_sensor">
       <state_interface name="fx"/>
@@ -68,12 +69,22 @@
       <plugin>test_hardware_components/TestTwoJointSystem</plugin>
     </hardware>
     <joint name="joint1">
-      <command_interface name="position"/>
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
       <state_interface name="position"/>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <state_interface name="position"/>
     </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1">
+        <param name="min">0</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="analog_input1"/>
+    </gpio>
   </ros2_control>
 </robot>
