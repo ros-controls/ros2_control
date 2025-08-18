@@ -97,11 +97,13 @@ protected:
   void SetUp() override
   {
     // Use ament_index_cpp to get the package share directory
-    std::string package_share_dir =
+    std::string urdf_package_share_dir =
+      ament_index_cpp::get_package_share_directory("ros2_control_test_assets");
+    std::string xsd_package_share_dir =
       ament_index_cpp::get_package_share_directory("hardware_interface");
-    valid_xml = package_share_dir + "/urdf/test_hardware_components.urdf";
-    invalid_xml = package_share_dir + "/urdf/test_hardware_components_with_error.urdf";
-    xsd = package_share_dir + "/schema/ros2_control.xsd";
+    valid_xml = urdf_package_share_dir + "/urdf/test_hardware_components.urdf";
+    invalid_xml = urdf_package_share_dir + "/urdf/test_hardware_components_with_error.urdf";
+    xsd = xsd_package_share_dir + "/schema/ros2_control.xsd";
   }
 };
 
