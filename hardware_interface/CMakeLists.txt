@@ -74,8 +74,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(ament_index_cpp REQUIRED)
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(LIBXML2 REQUIRED IMPORTED_TARGET libxml-2.0)
+  find_package(LibXml2)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
@@ -106,7 +105,10 @@ if(BUILD_TESTING)
 
   # Test XML Schema Validator
   ament_add_gmock(test_validate_xml_schema test/test_validate_xml_schema.cpp)
-  target_link_libraries(test_validate_xml_schema PkgConfig::LIBXML2 ament_index_cpp::ament_index_cpp)
+  target_link_libraries(test_validate_xml_schema
+     ament_index_cpp::ament_index_cpp
+     LibXml2::LibXml2
+  )
 
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
