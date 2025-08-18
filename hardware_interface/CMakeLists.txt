@@ -106,8 +106,8 @@ if(BUILD_TESTING)
   # Test XML Schema Validator
   ament_add_gmock(test_validate_xml_schema test/test_validate_xml_schema.cpp)
   target_link_libraries(test_validate_xml_schema
-     ament_index_cpp::ament_index_cpp
-     LibXml2::LibXml2
+    ament_index_cpp::ament_index_cpp
+    LibXml2::LibXml2
   )
 
   add_library(test_hardware_components SHARED
@@ -142,11 +142,6 @@ install(
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-)
-
-install(
-  DIRECTORY schema urdf
-  DESTINATION share/hardware_interface
 )
 
 ament_export_targets(export_hardware_interface HAS_LIBRARY_TARGET)
