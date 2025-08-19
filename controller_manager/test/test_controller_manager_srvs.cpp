@@ -1143,7 +1143,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
   {
-    ControllerManagerRunner cm_runner(this);
     cm_->add_controller(
       test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
       test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -1399,7 +1398,6 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
   {
-    ControllerManagerRunner cm_runner(this);
     cm_->add_controller(
       test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
       test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -1465,7 +1463,6 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
     TEST_CONTROLLER_2,         TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_6,
     TEST_CHAINED_CONTROLLER_7, TEST_CHAINED_CONTROLLER_8};
   {
-    ControllerManagerRunner cm_runner(this);
     for (const auto & controller : ctrls_order)
     {
       cm_->configure_controller(controller);
@@ -1674,7 +1671,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   std::shuffle(controllers_list.begin(), controllers_list.end(), mers);
 
   {
-    ControllerManagerRunner cm_runner(this);
     for (auto random_chain_ctrl : random_chainable_controllers_list)
     {
       cm_->add_controller(
@@ -1697,7 +1693,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
 
   // configure controllers
   {
-    ControllerManagerRunner cm_runner(this);
     for (auto random_ctrl : controllers_list)
     {
       cm_->configure_controller(random_ctrl);
@@ -2524,7 +2519,6 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
   old_counter_1 = test_controller_1->internal_counter;
   old_counter_2 = test_controller_2->internal_counter;
   {
-    ControllerManagerRunner cm_runner(this);
     auto res = cm_->switch_controller(
       {test_ctrl_3_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT,
       false, rclcpp::Duration(0, 0));
