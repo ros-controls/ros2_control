@@ -676,9 +676,9 @@ public:
    */
   rclcpp::Logger get_logger() const { return logger_; }
 
-  /// Get the clock of the HardwareComponentInterface.
+  /// Get the clock
   /**
-   * \return clock of the HardwareComponentInterface.
+   * \return clock that is shared with the controller manager
    */
   rclcpp::Clock::SharedPtr get_clock() const { return clock_; }
 
