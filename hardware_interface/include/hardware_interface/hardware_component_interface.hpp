@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "control_msgs/msg/hardware_status.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -43,6 +44,8 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/async_function_handler.hpp"
+#include "realtime_tools/realtime_publisher.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 
 namespace hardware_interface
 {
@@ -176,11 +179,111 @@ public:
         params.hardware_info.name.c_str());
     }
 
+    control_msgs::msg::HardwareStatus status_msg_template;
+    if (on_configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+    {
+      RCLCPP_ERROR(get_logger(), "User-defined 'on_configure_hardware_status_message' failed.");
+      return CallbackReturn::ERROR;
+    }
+
+    if (!status_msg_template.hardware_device_states.empty())
+    {
+      if (!hardware_component_node_)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Hardware status message was configured, but no node is available for the publisher. "
+          "Publishing will be disabled.");
+      }
+      else
+      {
+        try
+        {
+          hardware_status_publisher_ =
+            hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
+              "~/hardware_status", rclcpp::SystemDefaultsQoS());
+
+          double publish_rate = 1.0;  // Default to 1 Hz
+          // auto it = info_.hardware_parameters.find("status_publish_rate");
+          // if (it != info_.hardware_parameters.end())
+          // {
+          //   try
+          //   {
+          //     publish_rate = hardware_interface::stod(it->second);
+          //   }
+          //   catch (const std::invalid_argument &)
+          //   {
+          //     RCLCPP_WARN(
+          //       get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          //       publish_rate);
+          //   }
+          // }
+
+          hardware_status_timer_ = hardware_component_node_->create_wall_timer(
+            std::chrono::duration<double>(1.0 / publish_rate),
+            [this]()
+            {
+              std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
+              hardware_status_box_.get(msg_to_publish_opt);
+
+              if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
+              {
+                control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
+                msg.header.stamp = this->get_clock()->now();
+                hardware_status_publisher_->publish(msg);
+              }
+            });
+          hardware_status_box_.set(std::make_optional(status_msg_template));
+        }
+        catch (const std::exception & e)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Exception during publisher/timer setup for hardware status: %s",
+            e.what());
+          return CallbackReturn::ERROR;
+        }
+      }
+    }
+
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
     interface_params.executor = params.executor;
     return on_init(interface_params);
   };
+
+  /// User-overridable method to configure the structure of the HardwareStatus message.
+  /**
+   * To enable status publishing, override this method to pre-allocate the message structure
+   * and fill in static information like device IDs and interface names. This method is called
+   * once during the non-realtime `init()` phase. If the `hardware_device_states` vector is
+   * left empty, publishing will be disabled.
+   *
+   * \param[out] msg_template A reference to a HardwareStatus message to be configured.
+   * \returns CallbackReturn::SUCCESS if configured successfully, CallbackReturn::ERROR on failure.
+   */
+  virtual CallbackReturn on_configure_hardware_status_message(
+    control_msgs::msg::HardwareStatus & msg_template)
+  {
+    // Default implementation does nothing, disabling the feature.
+    (void)msg_template;
+    return CallbackReturn::SUCCESS;
+  }
+
+  /// User-overridable method to fill the hardware status message with real-time data.
+  /**
+   * This real-time safe method is called by the framework within the `trigger_read()` loop.
+   * Override this method to populate the `value` fields of the pre-allocated message with the
+   * latest hardware states that were updated in your `read()` method.
+   *
+   * \param[in,out] msg The pre-allocated message to be filled with the latest values.
+   * \returns return_type::OK on success, return_type::ERROR on failure.
+   */
+  virtual return_type on_update_hardware_status_message(control_msgs::msg::HardwareStatus & msg)
+  {
+    // Default implementation does nothing.
+    (void)msg;
+    return return_type::OK;
+  }
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
@@ -490,6 +593,21 @@ public:
       status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now() - start_time);
     }
+
+    if (hardware_status_publisher_)
+    {
+      auto status_msg_ptr = hardware_status_box_.get();
+      if (status_msg_ptr)
+      {
+        if (on_update_hardware_status_message(*status_msg_ptr) != return_type::OK)
+        {
+          RCLCPP_WARN_THROTTLE(
+            get_logger(), *clock_, 1000, "Failed to update hardware status message for '%s'.",
+            info_.name.c_str());
+        }
+      }
+    }
+
     return status;
   }
 
@@ -765,6 +883,10 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
+  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
+  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
+    hardware_status_box_;
+  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
 }  // namespace hardware_interface
