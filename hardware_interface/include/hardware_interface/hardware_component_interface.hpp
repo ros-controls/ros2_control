@@ -179,69 +179,94 @@ public:
         params.hardware_info.name.c_str());
     }
 
-    control_msgs::msg::HardwareStatus status_msg_template;
-    if (on_configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+    double publish_rate = 0.0;
+    auto it = info_.hardware_parameters.find("status_publish_rate");
+    if (it != info_.hardware_parameters.end())
     {
-      RCLCPP_ERROR(get_logger(), "User-defined 'on_configure_hardware_status_message' failed.");
-      return CallbackReturn::ERROR;
-    }
-
-    if (!status_msg_template.hardware_device_states.empty())
-    {
-      if (!hardware_component_node_)
+      try
+      {
+        publish_rate = hardware_interface::stod(it->second);
+      }
+      catch (const std::invalid_argument &)
       {
         RCLCPP_WARN(
-          get_logger(),
-          "Hardware status message was configured, but no node is available for the publisher. "
-          "Publishing will be disabled.");
+          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          publish_rate);
+      }
+    }
+
+    if (publish_rate == 0.0)
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
+    }
+    else
+    {
+      control_msgs::msg::HardwareStatus status_msg_template;
+      if (on_configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+      {
+        RCLCPP_ERROR(get_logger(), "User-defined 'on_configure_hardware_status_message' failed.");
+        return CallbackReturn::ERROR;
+      }
+
+      if (!status_msg_template.hardware_device_states.empty())
+      {
+        if (!hardware_component_node_)
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "Hardware status message was configured, but no node is available for the publisher. "
+            "Publisher will not be created.");
+        }
+        else
+        {
+          try
+          {
+            hardware_status_publisher_ =
+              hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
+                "~/hardware_status", rclcpp::SystemDefaultsQoS());
+
+            hardware_status_timer_ = hardware_component_node_->create_wall_timer(
+              std::chrono::duration<double>(1.0 / publish_rate),
+              [this]()
+              {
+                std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
+                hardware_status_box_.get(msg_to_publish_opt);
+
+                if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
+                {
+                  control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
+                  if (on_update_hardware_status_message(msg) != return_type::OK)
+                  {
+                    RCLCPP_WARN_THROTTLE(
+                      get_logger(), *clock_, 1000,
+                      "User's on_update_hardware_status_message() failed for '%s'.",
+                      info_.name.c_str());
+                    return;
+                  }
+                  msg.header.stamp = this->get_clock()->now();
+                  hardware_status_publisher_->publish(msg);
+                }
+              });
+            hardware_status_box_.set(std::make_optional(status_msg_template));
+          }
+          catch (const std::exception & e)
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Exception during publisher/timer setup for hardware status: %s",
+              e.what());
+            return CallbackReturn::ERROR;
+          }
+        }
       }
       else
       {
-        try
-        {
-          hardware_status_publisher_ =
-            hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
-              "~/hardware_status", rclcpp::SystemDefaultsQoS());
-
-          double publish_rate = 1.0;  // Default to 1 Hz
-          // auto it = info_.hardware_parameters.find("status_publish_rate");
-          // if (it != info_.hardware_parameters.end())
-          // {
-          //   try
-          //   {
-          //     publish_rate = hardware_interface::stod(it->second);
-          //   }
-          //   catch (const std::invalid_argument &)
-          //   {
-          //     RCLCPP_WARN(
-          //       get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
-          //       publish_rate);
-          //   }
-          // }
-
-          hardware_status_timer_ = hardware_component_node_->create_wall_timer(
-            std::chrono::duration<double>(1.0 / publish_rate),
-            [this]()
-            {
-              std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
-              hardware_status_box_.get(msg_to_publish_opt);
-
-              if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
-              {
-                control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
-                msg.header.stamp = this->get_clock()->now();
-                hardware_status_publisher_->publish(msg);
-              }
-            });
-          hardware_status_box_.set(std::make_optional(status_msg_template));
-        }
-        catch (const std::exception & e)
-        {
-          RCLCPP_ERROR(
-            get_logger(), "Exception during publisher/timer setup for hardware status: %s",
-            e.what());
-          return CallbackReturn::ERROR;
-        }
+        RCLCPP_WARN(
+          get_logger(),
+          "`status_publish_rate` was set to a non-zero value, but no hardware status message was "
+          "configured. Publisher will not be created. Are you sure "
+          "on_configure_hardware_status_message() is set up properly?");
       }
     }
 
@@ -593,21 +618,6 @@ public:
       status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now() - start_time);
     }
-
-    if (hardware_status_publisher_)
-    {
-      auto status_msg_ptr = hardware_status_box_.get();
-      if (status_msg_ptr)
-      {
-        if (on_update_hardware_status_message(*status_msg_ptr) != return_type::OK)
-        {
-          RCLCPP_WARN_THROTTLE(
-            get_logger(), *clock_, 1000, "Failed to update hardware status message for '%s'.",
-            info_.name.c_str());
-        }
-      }
-    }
-
     return status;
   }
 
