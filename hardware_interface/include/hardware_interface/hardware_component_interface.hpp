@@ -204,9 +204,9 @@ public:
     else
     {
       control_msgs::msg::HardwareStatus status_msg_template;
-      if (on_configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+      if (configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
       {
-        RCLCPP_ERROR(get_logger(), "User-defined 'on_configure_hardware_status_message' failed.");
+        RCLCPP_ERROR(get_logger(), "User-defined 'configure_hardware_status_message' failed.");
         return CallbackReturn::ERROR;
       }
 
@@ -237,11 +237,11 @@ public:
                 if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
                 {
                   control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
-                  if (on_update_hardware_status_message(msg) != return_type::OK)
+                  if (update_hardware_status_message(msg) != return_type::OK)
                   {
                     RCLCPP_WARN_THROTTLE(
                       get_logger(), *clock_, 1000,
-                      "User's on_update_hardware_status_message() failed for '%s'.",
+                      "User's update_hardware_status_message() failed for '%s'.",
                       info_.name.c_str());
                     return;
                   }
@@ -266,7 +266,7 @@ public:
           get_logger(),
           "`status_publish_rate` was set to a non-zero value, but no hardware status message was "
           "configured. Publisher will not be created. Are you sure "
-          "on_configure_hardware_status_message() is set up properly?");
+          "configure_hardware_status_message() is set up properly?");
       }
     }
 
@@ -286,11 +286,10 @@ public:
    * \param[out] msg_template A reference to a HardwareStatus message to be configured.
    * \returns CallbackReturn::SUCCESS if configured successfully, CallbackReturn::ERROR on failure.
    */
-  virtual CallbackReturn on_configure_hardware_status_message(
-    control_msgs::msg::HardwareStatus & msg_template)
+  virtual CallbackReturn configure_hardware_status_message(
+    control_msgs::msg::HardwareStatus & /*msg_template*/)
   {
     // Default implementation does nothing, disabling the feature.
-    (void)msg_template;
     return CallbackReturn::SUCCESS;
   }
 
@@ -303,10 +302,9 @@ public:
    * \param[in,out] msg The pre-allocated message to be filled with the latest values.
    * \returns return_type::OK on success, return_type::ERROR on failure.
    */
-  virtual return_type on_update_hardware_status_message(control_msgs::msg::HardwareStatus & msg)
+  virtual return_type update_hardware_status_message(control_msgs::msg::HardwareStatus & /*msg*/)
   {
     // Default implementation does nothing.
-    (void)msg;
     return return_type::OK;
   }
 
