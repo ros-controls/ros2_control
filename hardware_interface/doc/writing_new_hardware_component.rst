@@ -52,9 +52,13 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
          A common requirement for a hardware component is to publish status or diagnostic information without interfering with the real-time control loop.
 
-         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are two primary ways to achieve this.
+         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are three primary ways to achieve this.
 
-         **Method 1: Using the Framework-Managed Node (Recommended & Simplest)**
+         **Method 1: Using the Framework-Managed Publisher (Recommended & Simplest for ``HardwareStatus`` Messages)**
+
+         Refer :ref:`Framework Managed Publisher <framework_managed_publisher>`
+
+         **Method 2: Using the Framework-Managed Node (Recommended & Simplest for Custom Messages)**
 
          The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
 
@@ -75,7 +79,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
                   });
                }
 
-         **Method 2: Using the Executor from `HardwareComponentInterfaceParams`**
+         **Method 3: Using the Executor from `HardwareComponentInterfaceParams`**
 
          For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentInterfaceParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
 
@@ -149,6 +153,12 @@ The following is a step-by-step guide to create source files, basic tests, and c
    #.  Implement the ``read`` method getting the states from the hardware and storing them to internal variables defined in ``export_state_interfaces``.
 
    #.  Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
+
+.. _framework_managed_publisher:
+
+   #.  (optional) Implement ``configure_hardware_status_message`` and ``update_hardware_status_message`` method to publish the framework supported hardware status reporting through ``HardwareStatus`` messages.
+
+      * The framework internally creates a dedicated ROS 2 publisher for each hardware component with ``HardwareStatus`` message type.
 
    #.  IMPORTANT: At the end of your file after the namespace is closed, add the ``PLUGINLIB_EXPORT_CLASS`` macro.
 
