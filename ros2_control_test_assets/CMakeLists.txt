@@ -11,18 +11,10 @@ target_include_directories(ros2_control_test_assets INTERFACE
 )
 
 install(
-<<<<<<< HEAD
   FILES urdf/test_hardware_components.urdf
   DESTINATION share/ros2_control_test_assets/urdf
 )
 
-ament_export_include_directories(
-  include
-=======
-  DIRECTORY include/
-  DESTINATION include/ros2_control_test_assets
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
-)
 install(TARGETS ros2_control_test_assets
   EXPORT export_ros2_control_test_assets
   ARCHIVE DESTINATION lib

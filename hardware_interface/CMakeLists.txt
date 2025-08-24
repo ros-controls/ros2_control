@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(hardware_interface LANGUAGES CXX)
 
-<<<<<<< HEAD
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
-=======
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra)
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -101,22 +96,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_component_parser hardware_interface)
   ament_target_dependencies(test_component_parser ros2_control_test_assets)
 
-<<<<<<< HEAD
-=======
-  add_library(test_components SHARED
-    test/test_components/test_actuator.cpp
-    test/test_components/test_sensor.cpp
-    test/test_components/test_system.cpp)
-  target_link_libraries(test_components hardware_interface)
-  ament_target_dependencies(test_components
-    pluginlib)
-  install(TARGETS test_components
-    DESTINATION lib
-  )
-  pluginlib_export_plugin_description_file(
-    hardware_interface test/test_components/test_components.xml)
-
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
@@ -132,14 +111,6 @@ if(BUILD_TESTING)
   pluginlib_export_plugin_description_file(
     hardware_interface test/test_hardware_components/test_hardware_components.xml
   )
-<<<<<<< HEAD
-=======
-
-  ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
-  target_link_libraries(test_resource_manager hardware_interface)
-  ament_target_dependencies(test_resource_manager ros2_control_test_assets)
-
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
   target_link_libraries(test_generic_system hardware_interface)

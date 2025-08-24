@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(controller_manager LANGUAGES CXX)
 
-<<<<<<< HEAD
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
 endif()
@@ -15,21 +14,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     rclcpp
     realtime_tools
     std_msgs
-=======
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra)
-endif()
-
-set(THIS_PACKAGE_INCLUDE_DEPENDS
-  ament_index_cpp
-  controller_interface
-  controller_manager_msgs
-  diagnostic_updater
-  hardware_interface
-  pluginlib
-  rclcpp
-  realtime_tools
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
 )
 
 find_package(ament_cmake REQUIRED)
@@ -116,21 +100,8 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-<<<<<<< HEAD
   ament_add_gmock(
     test_load_controller
-=======
-  ament_add_gmock(test_controller_manager_hardware_error_handling
-    test/test_controller_manager_hardware_error_handling.cpp
-  )
-  target_link_libraries(test_controller_manager_hardware_error_handling
-    controller_manager
-    test_controller
-    ros2_control_test_assets::ros2_control_test_assets
-  )
-
-  ament_add_gmock(test_load_controller
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
     test/test_load_controller.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
@@ -211,7 +182,6 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-<<<<<<< HEAD
   ament_add_gmock(test_hardware_spawner
     test/test_hardware_spawner.cpp
     TIMEOUT 120
@@ -220,19 +190,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_hardware_spawner ${PROJECT_NAME})
   ament_target_dependencies(test_hardware_spawner ros2_control_test_assets)
 
-  install(FILES
-          test/test_controller_spawner_with_type.yaml
-          test/test_controller_spawner_with_basic_controllers.yaml
-          test/test_controller_overriding_parameters.yaml
-          test/test_controller_spawner_wildcard_entries.yaml
-          test/test_controller_spawner_with_interfaces.yaml
-          DESTINATION test)
-
   ament_add_gmock(
     test_hardware_management_srvs
-=======
-  ament_add_gmock(test_hardware_management_srvs
->>>>>>> 727297e (Fix CMake install so overriding works (#926))
     test/test_hardware_management_srvs.cpp
   )
   target_link_libraries(test_hardware_management_srvs
