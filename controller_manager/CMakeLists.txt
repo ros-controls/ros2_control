@@ -204,7 +204,12 @@ if(BUILD_TESTING)
   )
 
   find_package(ament_cmake_pytest REQUIRED)
-  install(FILES test/test_ros2_control_node.yaml
+  install(FILES
+    test/test_ros2_control_node.yaml
+    test/test_controller_spawner_wildcard_entries.yaml
+    test/test_controller_spawner_with_basic_controllers.yaml
+    test/test_controller_spawner_with_interfaces.yaml
+    test/test_controller_spawner_with_type.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
 endif()
