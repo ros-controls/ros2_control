@@ -659,7 +659,7 @@ public:
     }
     auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
-    const auto opt_value = handle->get_optional<double>(lock);
+    const auto opt_value = handle->get_optional<T>(lock);
     if (!opt_value)
     {
       throw std::runtime_error(
