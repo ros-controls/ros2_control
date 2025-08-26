@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.6.0 (2025-08-26)
+------------------
 * Remove extra semicolons (`#2478 <https://github.com/ros-controls/ros2_control/issues/2478>`_)
 * Docs: clarify getter comments to reference HardwareComponentInterface (`#2471 <https://github.com/ros-controls/ros2_control/issues/2471>`_)
 * Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (`#2451 <https://github.com/ros-controls/ros2_control/issues/2451>`_) (`#2459 <https://github.com/ros-controls/ros2_control/issues/2459>`_)
