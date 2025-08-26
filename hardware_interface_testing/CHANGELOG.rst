@@ -2,6 +2,12 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Supress deprecated RM API warnings in the tests (`#2428 <https://github.com/ros-controls/ros2_control/issues/2428>`_) (`#2455 <https://github.com/ros-controls/ros2_control/issues/2455>`_)
+* Unify `write` behavior between Actuator and System hardware interfaces (`#2453 <https://github.com/ros-controls/ros2_control/issues/2453>`_) (`#2457 <https://github.com/ros-controls/ros2_control/issues/2457>`_)
+* Contributors: mergify[bot]
+
 4.35.0 (2025-07-31)
 -------------------
 * Fix the prepare_command_mode_switch behaviour when HW is INACTIVE (`#2347 <https://github.com/ros-controls/ros2_control/issues/2347>`_) (`#2418 <https://github.com/ros-controls/ros2_control/issues/2418>`_)

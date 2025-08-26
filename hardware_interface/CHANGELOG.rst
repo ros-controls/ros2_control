@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (backport `#2451 <https://github.com/ros-controls/ros2_control/issues/2451>`_) (`#2460 <https://github.com/ros-controls/ros2_control/issues/2460>`_)
+* Unify `write` behavior between Actuator and System hardware interfaces (`#2453 <https://github.com/ros-controls/ros2_control/issues/2453>`_) (`#2457 <https://github.com/ros-controls/ros2_control/issues/2457>`_)
+* Fix docstring for hardware lifecycle (`#2429 <https://github.com/ros-controls/ros2_control/issues/2429>`_) (`#2430 <https://github.com/ros-controls/ros2_control/issues/2430>`_)
+* Contributors: mergify[bot]
+
 4.35.0 (2025-07-31)
 -------------------
 * Fix the joint limiter exception while configuring component (`#2416 <https://github.com/ros-controls/ros2_control/issues/2416>`_) (`#2417 <https://github.com/ros-controls/ros2_control/issues/2417>`_)
