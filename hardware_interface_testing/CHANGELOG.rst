@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.36.0 (2025-08-26)
+-------------------
 * Supress deprecated RM API warnings in the tests (`#2428 <https://github.com/ros-controls/ros2_control/issues/2428>`_) (`#2455 <https://github.com/ros-controls/ros2_control/issues/2455>`_)
 * Unify `write` behavior between Actuator and System hardware interfaces (`#2453 <https://github.com/ros-controls/ros2_control/issues/2453>`_) (`#2457 <https://github.com/ros-controls/ros2_control/issues/2457>`_)
 * Contributors: mergify[bot]
