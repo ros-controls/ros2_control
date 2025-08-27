@@ -2,6 +2,17 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.6.0 (2025-08-26)
+------------------
+* Remove extra semicolons (`#2478 <https://github.com/ros-controls/ros2_control/issues/2478>`_)
+* Docs: clarify getter comments to reference HardwareComponentInterface (`#2471 <https://github.com/ros-controls/ros2_control/issues/2471>`_)
+* Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (`#2451 <https://github.com/ros-controls/ros2_control/issues/2451>`_) (`#2459 <https://github.com/ros-controls/ros2_control/issues/2459>`_)
+* Unify `write` behavior between Actuator and System hardware interfaces (`#2453 <https://github.com/ros-controls/ros2_control/issues/2453>`_)
+* Revert "Start of Unification for `Sensor`, `Actuator`, and `System` into a Si…" (`#2456 <https://github.com/ros-controls/ros2_control/issues/2456>`_)
+* Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (`#2451 <https://github.com/ros-controls/ros2_control/issues/2451>`_)
+* Fix docstring for hardware lifecycle (`#2429 <https://github.com/ros-controls/ros2_control/issues/2429>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Soham Patil, Tapia Danish, rishitej04
+
 5.5.0 (2025-07-31)
 ------------------
 * Fix the prepare_command_mode_switch behaviour when HW is INACTIVE (`#2347 <https://github.com/ros-controls/ros2_control/issues/2347>`_)
