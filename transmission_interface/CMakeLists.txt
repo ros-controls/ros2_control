@@ -63,6 +63,11 @@ if(BUILD_TESTING)
     test/differential_transmission_loader_test.cpp
   )
   target_link_libraries(test_differential_transmission_loader transmission_interface)
+
+  ament_add_gmock(test_utils
+    test/utils_test.cpp
+  )
+  target_link_libraries(test_utils transmission_interface)
 endif()
 
 install(
