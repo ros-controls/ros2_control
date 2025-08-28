@@ -17,7 +17,6 @@
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>realtime_tools</build_depend>
   <build_depend>ros2_control_cmake</build_depend>
-  <build_depend>sensor_msgs</build_depend>
   <build_depend>fmt</build_depend>
 
   <build_export_depend>hardware_interface</build_export_depend>
@@ -29,6 +28,7 @@
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>geometry_msgs</test_depend>
   <test_depend>sensor_msgs</test_depend>
+  <test_depend>std_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
