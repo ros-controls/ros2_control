@@ -10,13 +10,15 @@ jobs:
   default:
 
     env:
-      ROS_DISTRO: rolling
-      PRERELEASE: true
-      BASEDIR: ${{ github.workspace }}/.work
+      ROS_DISTRO: humble
 
-    name: "rolling"
+    name: ${{ github.env.ROS_DISTRO }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - name: industrial_ci
+        env:
+          PRERELEASE: true
+          BASEDIR: ${{ github.workspace }}/.work
+          DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-ubuntu-testing
         uses: ros-industrial/industrial_ci@master
