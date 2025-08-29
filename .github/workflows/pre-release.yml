@@ -19,6 +19,7 @@ jobs:
       - name: industrial_ci
         env:
           PRERELEASE: true
+          PRERELEASE_DOWNSTREAM_DEPTH: 1
           BASEDIR: ${{ github.workspace }}/.work
           DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-ubuntu-testing
         uses: ros-industrial/industrial_ci@master
