@@ -38,6 +38,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
+  find_package(std_msgs REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
   target_link_libraries(test_controller_interface
@@ -68,25 +69,28 @@ if(BUILD_TESTING)
   target_link_libraries(test_force_torque_sensor
     controller_interface
     hardware_interface::hardware_interface
+    ${geometry_msgs_TARGETS}
   )
 
   ament_add_gmock(test_imu_sensor test/test_imu_sensor.cpp)
   target_link_libraries(test_imu_sensor
     controller_interface
     hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
   )
-  target_link_libraries(test_imu_sensor ${sensor_msgs_TARGETS})
 
   ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
   target_link_libraries(test_pose_sensor
     controller_interface
     hardware_interface::hardware_interface
+    ${geometry_msgs_TARGETS}
   )
-  target_link_libraries(test_pose_sensor ${geometry_msgs_TARGETS})
+
   ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
   target_link_libraries(test_gps_sensor
     controller_interface
     hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
   )
 
   # Semantic component command interface tests
@@ -97,14 +101,15 @@ if(BUILD_TESTING)
   target_link_libraries(test_semantic_component_command_interface
     controller_interface
     hardware_interface::hardware_interface
+    ${geometry_msgs_TARGETS}
   )
 
   ament_add_gmock(test_led_rgb_device test/test_led_rgb_device.cpp)
   target_link_libraries(test_led_rgb_device
     controller_interface
     hardware_interface::hardware_interface
+    ${std_msgs_TARGETS}
   )
-  target_link_libraries(test_led_rgb_device ${std_msgs_TARGETS})
 endif()
 
 install(
