@@ -24,10 +24,13 @@ on:
 jobs:
   get_prerelease_depth:
     runs-on: ubuntu-latest
+    outputs:
+      PRERELEASE_DEPTH: ${{ steps.set_depth.outputs.PRERELEASE_DEPTH }}
     steps:
       - name: Set prerelease depth
         # Use 0 for pull_request, otherwise the provided input.
         # The with: field is very restrictive, so we need this job
+        id: set_depth
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "PRERELEASE_DEPTH=0" >> $GITHUB_OUTPUT
