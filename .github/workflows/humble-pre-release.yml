@@ -9,8 +9,8 @@ on:
       downstream_depth:
         description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
         required: false
-        default: '0'
-        type: string
+        default: 0
+        type: number
   pull_request:
     branches:
       - humble
@@ -19,13 +19,10 @@ on:
       - reopened # default
       - synchronize # default
       - labeled # also if a label changes
-env:
-  # downstream_depth is not set on pull_request event
-  PRERELEASE_DEPTH: ${{ inputs.downstream_depth || '0'}}
 
 jobs:
   default:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: humble
-      prerelease_downstream_depth: ${{ github.env.PRERELEASE_DEPTH }}
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}

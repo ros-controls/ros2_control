@@ -9,7 +9,7 @@ on:
       downstream_depth:
         description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
         required: false
-        default: -1
+        default: 0
         type: number
   pull_request:
     branches:
