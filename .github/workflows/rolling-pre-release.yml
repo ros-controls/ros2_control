@@ -26,7 +26,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set prerelease depth
-        run: echo "PRERELEASE_DEPTH=${{ github.event_name == 'pull_request' && 0 || github.event.inputs.downstream_depth }}" >> $GITHUB_OUTPUT
+        # Use 0 for pull_request, otherwise the provided input.
+        # The with: field is very restrictive, so we need this job
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PRERELEASE_DEPTH=0" >> $GITHUB_OUTPUT
+          else
+            echo "PRERELEASE_DEPTH=${{ github.event.inputs.downstream_depth }}" >> $GITHUB_OUTPUT
+          fi
   default:
     strategy:
       fail-fast: false
@@ -37,5 +44,4 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
-      # Use 0 for pull_request, otherwise the provided input
       prerelease_downstream_depth: ${{ needs.get_prerelease_depth.outputs.PRERELEASE_DEPTH }}
