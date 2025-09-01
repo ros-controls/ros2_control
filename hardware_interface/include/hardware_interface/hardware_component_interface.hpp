@@ -54,9 +54,6 @@ static inline rclcpp::NodeOptions get_hardware_component_node_options()
 // \note The versions conditioning is added here to support the source-compatibility with Humble
 #if RCLCPP_VERSION_MAJOR >= 21
   node_options.enable_logger_service(true);
-#else
-  node_options.allow_undeclared_parameters(true);
-  node_options.automatically_declare_parameters_from_overrides(true);
 #endif
   return node_options;
 }
