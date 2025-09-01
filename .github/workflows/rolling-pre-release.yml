@@ -47,4 +47,4 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
-      prerelease_downstream_depth: 0
+      prerelease_downstream_depth: '2'
