@@ -28,7 +28,7 @@ env:
 jobs:
   default:
     if: |
-      (github.event_name == 'pull_request' && (contains(github.event.label.name, 'check-prerelease') || contains(github.event.label.name, 'check-prerelease-downstream'))) ||
+      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
