@@ -28,4 +28,5 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: jazzy
-      prerelease_downstream_depth: ${{ inputs.dependency_level }}
+      # downstream_depth is not set on pull_request event
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && 0 || inputs.downstream_depth }}
