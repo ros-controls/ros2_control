@@ -29,4 +29,4 @@ jobs:
     with:
       ros_distro: jazzy
       # downstream_depth is not set on pull_request event
-      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && 0 || inputs.downstream_depth }}
+      prerelease_downstream_depth: ${{ inputs.downstream_depth || 0}}
