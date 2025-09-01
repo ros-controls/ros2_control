@@ -34,7 +34,7 @@ jobs:
       matrix:
         ROS_DISTRO: [kilted, rolling]
 
-    name: ${{ github.env.ROS_DISTRO }}
+    name: ${{ matrix.ROS_DISTRO }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
