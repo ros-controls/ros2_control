@@ -19,14 +19,13 @@ on:
       - reopened # default
       - synchronize # default
       - labeled # also if a label changes
-
 env:
-  ROS_DISTRO: humble
+  # downstream_depth is not set on pull_request event
+  PRERELEASE_DEPTH: ${{ inputs.downstream_depth || '0'}}
 
 jobs:
   default:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: humble
-      # downstream_depth is not set on pull_request event
-      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || (github.event_name == 'workflow_dispatch' && inputs.downstream_depth) }}
+      prerelease_downstream_depth: ${{ github.env.PRERELEASE_DEPTH }}
