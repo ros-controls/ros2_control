@@ -23,23 +23,12 @@ on:
 
 jobs:
   default:
-    if: |
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease'))
-
     strategy:
       fail-fast: false
       matrix:
         ROS_DISTRO: [kilted, rolling]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: industrial_ci
-        env:
-          PRERELEASE: true
-          # hardcode to 1 if label is check-prerelease-downstream, otherwise use input from workflow_dispatch (unset for pull_request event, which is properly handled as 0 by ICI)
-          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease-downstream')) && 1 || inputs.dependency_level}}
-          BASEDIR: ${{ github.workspace }}/.work
-          ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
-          DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ matrix.ROS_DISTRO }}-ubuntu-testing
-        uses: ros-industrial/industrial_ci@master
+
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@reusable_prerelease
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      dependency_level: ${{ inputs.dependency_level }}
