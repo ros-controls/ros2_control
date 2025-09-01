@@ -33,9 +33,9 @@ jobs:
         id: set_depth
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PRERELEASE_DEPTH='0'" >> $GITHUB_OUTPUT
+            echo "PRERELEASE_DEPTH=0" >> $GITHUB_OUTPUT
           else
-            echo "PRERELEASE_DEPTH='${{ github.event.inputs.downstream_depth }}'" >> $GITHUB_OUTPUT
+            echo "PRERELEASE_DEPTH=${{ github.event.inputs.downstream_depth }}" >> $GITHUB_OUTPUT
           fi
   default:
     strategy:
@@ -47,4 +47,4 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
-      prerelease_downstream_depth: '2'
+      prerelease_downstream_depth: ${{ needs.get_prerelease_depth.outputs.PRERELEASE_DEPTH }}
