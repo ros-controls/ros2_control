@@ -1,0 +1,46 @@
+# This config uses industrial_ci (https://github.com/ros-industrial/industrial_ci.git).
+# For troubleshooting, see readme (https://github.com/ros-industrial/industrial_ci/blob/master/README.rst)
+
+name: Rolling - pre-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dependency_level:
+        description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
+        required: false
+        default: 0
+        type: number
+  pull_request:
+    branches:
+      - master
+    types:
+      - labeled
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  default:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease')) ||
+      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||
+      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream')) ||
+      (github.event_name == 'workflow_dispatch')
+
+    env:
+      ROS_DISTRO: rolling
+
+    name: ${{ github.env.ROS_DISTRO }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: industrial_ci
+        env:
+          PRERELEASE: true
+          # hardcode to 1 if check-prerelease-downstream is triggered, otherwise use input
+          PRERELEASE_DOWNSTREAM_DEPTH: ${{ ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||  (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream'))) && 1 || inputs.dependency_level}}
+          BASEDIR: ${{ github.workspace }}/.work
+          DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-ubuntu-testing
+        uses: ros-industrial/industrial_ci@master
