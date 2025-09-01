@@ -24,9 +24,9 @@ on:
 jobs:
   default:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease')) ||
+      (github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease')) ||
       (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||
+      (github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||
       (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream')) ||
       (github.event_name == 'workflow_dispatch')
 
@@ -43,7 +43,7 @@ jobs:
         env:
           PRERELEASE: true
           # hardcode to 1 if check-prerelease-downstream is triggered, otherwise use input
-          PRERELEASE_DOWNSTREAM_DEPTH: ${{ ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||  (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream'))) && 1 || inputs.dependency_level}}
+          PRERELEASE_DOWNSTREAM_DEPTH: ${{ ((github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||  (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream'))) && 1 || inputs.dependency_level}}
           BASEDIR: ${{ github.workspace }}/.work
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ matrix.ROS_DISTRO }}-ubuntu-testing
