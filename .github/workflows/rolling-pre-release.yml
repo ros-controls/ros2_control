@@ -22,14 +22,20 @@ on:
 
 
 jobs:
+  get_prerelease_depth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set prerelease depth
+        run: echo "PRERELEASE_DEPTH=${{ github.event_name == 'pull_request' && 0 || github.event.inputs.downstream_depth }}" >> $GITHUB_OUTPUT
   default:
     strategy:
       fail-fast: false
       matrix:
         ROS_DISTRO: [kilted, rolling]
+    needs: get_prerelease_depth
 
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       # Use 0 for pull_request, otherwise the provided input
-      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || github.event_name == 'workflow_dispatch' && github.event.inputs.downstream_depth }}
+      prerelease_downstream_depth: ${{ needs.get_prerelease_depth.outputs.PRERELEASE_DEPTH }}
