@@ -17,21 +17,20 @@ on:
     types:
       - labeled
   issue_comment:
-    #note: This event will only trigger a workflow run if the workflow file exists on the default branch.
+    # This event will only trigger a workflow run if the workflow file exists on the default branch.
+    # we have to check if the comment is a) from a PR and b) if it is targeting correct branch
     types:
       - created
+
+env:
+  ROS_DISTRO: jazzy
 
 jobs:
   default:
     if: |
-      (github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease')) ||
-      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
-      (github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||
-      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream')) ||
+      (github.head_ref == ${{ github.env.ROS_DISTRO }} && github.event.issue.pull_request && github.event_name == 'issue_comment' && (contains(github.event.comment.body, '/check-prerelease') || contains(github.event.label.name, 'check-prerelease-downstream'))) ||
+      (github.event_name == 'pull_request' && (contains(github.event.label.name, 'check-prerelease') || contains(github.event.label.name, 'check-prerelease-downstream'))) ||
       (github.event_name == 'workflow_dispatch')
-
-    env:
-      ROS_DISTRO: jazzy
 
     name: ${{ github.env.ROS_DISTRO }}
     runs-on: ubuntu-latest
@@ -41,7 +40,7 @@ jobs:
         env:
           PRERELEASE: true
           # hardcode to 1 if check-prerelease-downstream is triggered, otherwise use input
-          PRERELEASE_DOWNSTREAM_DEPTH: ${{ ((github.event.issue.pull_request && github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||  (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream'))) && 1 || inputs.dependency_level}}
+          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (( github.event_name == 'issue_comment' && contains(github.event.comment.body, '/check-prerelease-downstream')) ||  (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream'))) && 1 || inputs.dependency_level}}
           BASEDIR: ${{ github.workspace }}/.work
           DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-ubuntu-testing
         uses: ros-industrial/industrial_ci@master
