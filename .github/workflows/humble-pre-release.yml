@@ -15,12 +15,10 @@ on:
     branches:
       - humble
     types:
-      - labeled
-  issue_comment:
-    # This event will only trigger a workflow run if the workflow file exists on the default branch.
-    # we have to check if the comment is a) from a PR and b) if it is targeting correct branch
-    types:
-      - created
+      - opened # default
+      - reopened # default
+      - synchronize # default
+      - labeled # also if a label changes
 
 env:
   ROS_DISTRO: humble
@@ -28,16 +26,16 @@ env:
 jobs:
   default:
     if: |
-      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - name: industrial_ci
         env:
           PRERELEASE: true
-          # hardcode to 1 if check-prerelease-downstream is triggered, otherwise use input
-          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream')) && 1 || inputs.dependency_level}}
+          # hardcode to 1 if label is check-prerelease-downstream, otherwise use input from workflow_dispatch (unset for pull_request event, which is properly handled as 0 by ICI)
+          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease-downstream')) && 1 || inputs.dependency_level}}
           BASEDIR: ${{ github.workspace }}/.work
           DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-ubuntu-testing
         uses: ros-industrial/industrial_ci@master
