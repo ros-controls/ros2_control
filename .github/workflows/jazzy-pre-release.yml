@@ -6,7 +6,7 @@ name: Jazzy - pre-release
 on:
   workflow_dispatch:
     inputs:
-      dependency_level:
+      downstream_depth:
         description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
         required: false
         default: 0
@@ -25,7 +25,7 @@ env:
 
 jobs:
   default:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@reusable_prerelease
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
     with:
       ros_distro: jazzy
-      dependency_level: ${{ inputs.dependency_level }}
+      prerelease_downstream_depth: ${{ inputs.dependency_level }}
