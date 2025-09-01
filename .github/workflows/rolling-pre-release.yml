@@ -32,4 +32,4 @@ jobs:
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       # Use 0 for pull_request, otherwise the provided input
-      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && 0 || github.event.inputs.downstream_depth }}
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && 0 || github.event_name == 'workflow_dispatch' && github.event.inputs.downstream_depth }}
