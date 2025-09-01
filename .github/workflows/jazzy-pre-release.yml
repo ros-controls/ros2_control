@@ -9,8 +9,8 @@ on:
       downstream_depth:
         description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
         required: false
-        default: 0
-        type: number
+        default: '0'
+        type: string
   pull_request:
     branches:
       - jazzy
@@ -29,4 +29,4 @@ jobs:
     with:
       ros_distro: jazzy
       # downstream_depth is not set on pull_request event
-      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && 0 || (github.event_name == 'workflow_dispatch' && inputs.downstream_depth) }}
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || (github.event_name == 'workflow_dispatch' && inputs.downstream_depth) }}
