@@ -15,13 +15,17 @@ on:
     branches:
       - master
     types:
-      - labeled
+      - opened # default
+      - reopened # default
+      - synchronize # default
+      - labeled # also if a label changes
+
 
 jobs:
   default:
     if: |
-      (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease')) ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease'))
 
     strategy:
       fail-fast: false
@@ -34,7 +38,7 @@ jobs:
         env:
           PRERELEASE: true
           # hardcode to 1 if check-prerelease-downstream is triggered, otherwise use input
-          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (github.event_name == 'pull_request' && contains(github.event.label.name, 'check-prerelease-downstream')) && 1 || inputs.dependency_level}}
+          PRERELEASE_DOWNSTREAM_DEPTH: ${{ (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'check-prerelease-downstream')) && 1 || inputs.dependency_level}}
           BASEDIR: ${{ github.workspace }}/.work
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           DOCKER_IMAGE: ghcr.io/ros-controls/ros:${{ matrix.ROS_DISTRO }}-ubuntu-testing
