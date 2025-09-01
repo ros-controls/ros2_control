@@ -33,9 +33,9 @@ jobs:
         id: set_depth
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PRERELEASE_DEPTH=0" >> $GITHUB_OUTPUT
+            echo "PRERELEASE_DEPTH='0'" >> $GITHUB_OUTPUT
           else
-            echo "PRERELEASE_DEPTH=${{ github.event.inputs.downstream_depth }}" >> $GITHUB_OUTPUT
+            echo "PRERELEASE_DEPTH='${{ github.event.inputs.downstream_depth }}'" >> $GITHUB_OUTPUT
           fi
   default:
     strategy:
