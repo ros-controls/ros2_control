@@ -20,7 +20,7 @@ on:
 
 jobs:
   default:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@reusable_prerelease
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
     with:
       ros_distro: humble
       # downstream_depth is not set on pull_request event
