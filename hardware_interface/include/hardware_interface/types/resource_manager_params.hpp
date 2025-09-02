@@ -64,9 +64,9 @@ struct ResourceManagerParams
   /**
    * @brief If true, controllers are allowed to claim resources from inactive hardware components.
    * If false, controllers can only claim resources from active hardware components.
-   * Moreover, when the hardware component returns DEACTIVATE on read/write cycle,
-   * the controllers using those interfaces will continue to run, when the parameter is set to
-   * false. If set to true, the controllers using those interfaces will be deactivated.
+   * Moreover, when the hardware component returns DEACTIVATE on read/write cycle: If set to true,
+   * the controllers using those interfaces will continue to run. If set to false, the controllers
+   * using those interfaces will be deactivated.
    * @warning Allowing control with inactive hardware is not recommended for safety reasons.
    * Use with caution only if you really know what you are doing.
    * @note This parameter might be deprecated or removed in the future releases. Please use with

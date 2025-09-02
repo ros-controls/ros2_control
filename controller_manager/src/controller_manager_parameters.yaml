@@ -57,7 +57,11 @@ controller_manager:
       type: bool,
       default_value: false,
       read_only: true,
-      description: "If true, controllers are allowed to claim resources from inactive hardware components. If false, controllers can only claim resources from active hardware components. Moreover, when the hardware component returns DEACTIVATE on read/write cycle, the controllers using those interfaces will continue to run, when the parameter is set to true. If set to false, the controllers using those interfaces will be deactivated. However, It is not recommended to set this parameter to true for the safety reasons with the hardware, this is purely added for backward compatibility reasons.",
+      description: "If true, controllers are allowed to claim resources from inactive hardware components. If false, controllers can only claim resources from active hardware components.
+      \n\n
+      Moreover, when the hardware component returns DEACTIVATE on read/write cycle: If set to true, the controllers using those interfaces will continue to run. If set to false, the controllers using those interfaces will be deactivated.
+      \n\n
+      However, It is not recommended to set this parameter to true for the safety reasons with the hardware, this is purely added for backward compatibility reasons.",
     }
 
   diagnostics:
