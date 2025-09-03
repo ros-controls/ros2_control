@@ -67,6 +67,13 @@ int main(int argc, char ** argv)
     }
   }
 
+<<<<<<< HEAD
+=======
+  // wait for the clock to be available
+  cm->get_clock()->wait_until_started();
+  cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
+
+>>>>>>> 94e610a (Fix the CPU affinity of the ros2_control_node (#2509))
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
@@ -76,6 +83,30 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm, thread_priority, use_sim_time]()
     {
+      rclcpp::Parameter cpu_affinity_param;
+      if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
+      {
+        std::vector<int> cpus = {};
+        if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+        {
+          cpus = {static_cast<int>(cpu_affinity_param.as_int())};
+        }
+        else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+        {
+          const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+          std::for_each(
+            cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
+            [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+        }
+        const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
+        if (!affinity_result.first)
+        {
+          RCLCPP_WARN(
+            cm->get_logger(), "Unable to set the CPU affinity : '%s'",
+            affinity_result.second.c_str());
+        }
+      }
+
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
         RCLCPP_WARN(
