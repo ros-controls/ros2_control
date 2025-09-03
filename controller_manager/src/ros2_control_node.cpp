@@ -45,17 +45,7 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
-
-  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
-  if (cpu_affinity >= 0)
-  {
-    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpu_affinity);
-    if (!affinity_result.first)
-    {
-      RCLCPP_WARN(
-        cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
-    }
-  }
+  
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   if (lock_memory)
@@ -76,6 +66,30 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm, thread_priority, use_sim_time]()
     {
+      rclcpp::Parameter cpu_affinity_param;
+      if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
+      {
+        std::vector<int> cpus = {};
+        if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+        {
+          cpus = {static_cast<int>(cpu_affinity_param.as_int())};
+        }
+        else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+        {
+          const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+          std::for_each(
+            cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
+            [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+        }
+        const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
+        if (!affinity_result.first)
+        {
+          RCLCPP_WARN(
+            cm->get_logger(), "Unable to set the CPU affinity : '%s'",
+            affinity_result.second.c_str());
+        }
+      }
+
       if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
         RCLCPP_WARN(
