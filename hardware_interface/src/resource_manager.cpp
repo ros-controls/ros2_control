@@ -89,7 +89,7 @@ std::string interfaces_to_string(
   }
   ss << "]" << std::endl;
   return ss.str();
-};
+}
 
 void find_common_hardware_interfaces(
   const std::vector<std::string> & hw_command_itfs,
