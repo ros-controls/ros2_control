@@ -20,8 +20,9 @@ on:
 
 jobs:
   default:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@prerelease_exclude_pkg
     with:
       ros_distro: humble
       # downstream_depth is not set on pull_request event
       prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}
+      prerelease_exclude_pkg: nmea_hardware_interface
