@@ -149,6 +149,17 @@ class TestControllerManagerSrvs
 public:
   TestControllerManagerSrvs() {}
 
+  ~TestControllerManagerSrvs() override
+  {
+    RCLCPP_DEBUG(cm_->get_logger(), "Stopping controller manager updater thread");
+    stop_runner_ = true;
+    if (cm_rt_thread_.joinable())
+    {
+      cm_rt_thread_.join();
+    }
+    RCLCPP_DEBUG(cm_->get_logger(), "Controller manager updater thread stopped");
+  }
+
   void SetUp() override
   {
     ControllerManagerFixture::SetUp();
@@ -157,13 +168,32 @@ public:
 
   void SetUpSrvsCMExecutor()
   {
-    update_timer_ = cm_->create_wall_timer(
-      std::chrono::milliseconds(10),
-      [&]()
+    cm_rt_thread_ = std::thread(
+      [&]
       {
-        cm_->read(time_, PERIOD);
-        cm_->update(time_, PERIOD);
-        cm_->write(time_, PERIOD);
+        // for calculating sleep time
+        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_->get_update_rate());
+
+        // for calculating the measured period of the loop
+        rclcpp::Time previous_time = cm_->get_clock()->now();
+        std::this_thread::sleep_for(period);
+        std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
+
+        while (rclcpp::ok() && !stop_runner_)
+        {
+          auto const current_time = cm_->get_clock()->now();
+          auto const measured_period = current_time - previous_time;
+          previous_time = current_time;
+          cm_->read(time_, PERIOD);
+          cm_->update(time_, PERIOD);
+          cm_->write(time_, PERIOD);
+          next_iteration_time += period;
+          if (next_iteration_time < std::chrono::steady_clock::now())
+          {
+            next_iteration_time = std::chrono::steady_clock::now();
+          }
+          std::this_thread::sleep_until(next_iteration_time);
+        }
       });
 
     executor_->add_node(cm_);
@@ -202,7 +232,8 @@ public:
   }
 
 protected:
-  rclcpp::TimerBase::SharedPtr update_timer_;
+  std::atomic_bool stop_runner_ = false;
+  std::thread cm_rt_thread_;
   std::future<void> executor_spin_future_;
 };
 
