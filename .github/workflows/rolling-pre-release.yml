@@ -1,0 +1,32 @@
+name: Rolling - pre-release
+# author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_dispatch:
+    inputs:
+      downstream_depth:
+        description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
+        required: false
+        default: 0
+        type: number
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened # default
+      - reopened # default
+      - synchronize # default
+      - labeled # also if a label changes
+
+jobs:
+  default:
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [kilted, rolling]
+
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      # downstream_depth is not set on pull_request event
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}
