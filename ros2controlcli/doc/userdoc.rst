@@ -19,6 +19,7 @@ Currently supported commands are
     - ros2 control set_hardware_component_state
     - ros2 control switch_controllers
     - ros2 control unload_controller
+    - ros2 control cleanup_controller
     - ros2 control view_controller_chains
 
 
@@ -329,6 +330,30 @@ unload_controller
     usage: ros2 control unload_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name
 
     Unload a controller in a controller manager
+
+    positional arguments:
+      controller_name       Name of the controller
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node (default: controller_manager)
+      --include-hidden-nodes
+                            Consider hidden nodes as well
+      --ros-args ...        Pass arbitrary arguments to the executable
+
+cleanup_controller
+----------------------
+
+.. code-block:: console
+
+    $ ros2 control cleanup_controller -h
+    usage: ros2 control cleanup_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name
+
+    Cleanup a controller in a controller manager
 
     positional arguments:
       controller_name       Name of the controller
