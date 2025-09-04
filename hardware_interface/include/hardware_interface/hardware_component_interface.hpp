@@ -40,12 +40,23 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
+
+static inline rclcpp::NodeOptions get_hardware_component_node_options()
+{
+  rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
+  return node_options;
+}
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -164,7 +175,8 @@ public:
         node_name.begin(), node_name.end(), node_name.begin(),
         [](unsigned char c) { return std::tolower(c); });
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      hardware_component_node_ =
+        std::make_shared<rclcpp::Node>(node_name, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
