@@ -17,13 +17,37 @@
 #ifndef HARDWARE_INTERFACE__INTROSPECTION_HPP_
 #define HARDWARE_INTERFACE__INTROSPECTION_HPP_
 
+#include <string>
+
+#include "hardware_interface/types/statistics_types.hpp"
 #include "pal_statistics/pal_statistics_macros.hpp"
 #include "pal_statistics/pal_statistics_utils.hpp"
+
+namespace pal_statistics
+{
+template <>
+inline IdType customRegister(
+  StatisticsRegistry & registry, const std::string & name,
+  const libstatistics_collector::moving_average_statistics::StatisticData * variable,
+  RegistrationsRAII * bookkeeping, bool enabled)
+{
+  registry.registerVariable(name + "/max", &variable->max, bookkeeping, enabled);
+  registry.registerVariable(name + "/min", &variable->min, bookkeeping, enabled);
+  registry.registerVariable(name + "/average", &variable->average, bookkeeping, enabled);
+  registry.registerVariable(
+    name + "/standard_deviation", &variable->standard_deviation, bookkeeping, enabled);
+  std::function<double()> sample_func = [variable]
+  { return static_cast<double>(variable->sample_count); };
+  return registry.registerFunction(name + "/sample_count", sample_func, bookkeeping, enabled);
+}
+}  // namespace pal_statistics
 
 namespace hardware_interface
 {
 constexpr char DEFAULT_REGISTRY_KEY[] = "ros2_control";
 constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "~/introspection_data";
+constexpr char CM_STATISTICS_KEY[] = "cm_execution_statistics";
+constexpr char CM_STATISTICS_TOPIC[] = "~/statistics";
 
 #define REGISTER_ROS2_CONTROL_INTROSPECTION(ID, ENTITY)                      \
   REGISTER_ENTITY(                                                           \
