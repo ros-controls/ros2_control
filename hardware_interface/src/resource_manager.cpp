@@ -2011,16 +2011,6 @@ bool ResourceManager::prepare_command_mode_switch(
         continue;
       }
       if (
-        !start_interfaces_buffer.empty() &&
-        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-      {
-        RCLCPP_WARN(
-          logger, "Component '%s' is in INACTIVE state, but has start interfaces to switch: \n%s",
-          component.get_name().c_str(),
-          interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
-        return false;
-      }
-      if (
         component.get_lifecycle_state().id() ==
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -2109,16 +2099,6 @@ bool ResourceManager::perform_command_mode_switch(
           logger, "Component '%s' after filtering has no command interfaces to perform switch",
           component.get_name().c_str());
         continue;
-      }
-      if (
-        !start_interfaces_buffer.empty() &&
-        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-      {
-        RCLCPP_WARN(
-          logger, "Component '%s' is in INACTIVE state, but has start interfaces to switch: \n%s",
-          component.get_name().c_str(),
-          interfaces_to_string(start_interfaces_buffer, stop_interfaces_buffer).c_str());
-        return false;
       }
       if (
         component.get_lifecycle_state().id() ==
