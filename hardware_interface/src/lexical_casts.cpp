@@ -62,12 +62,19 @@ double stod(const std::string & s)
   throw std::invalid_argument("Failed converting string to real number");
 }
 
+std::string to_lower_case(const std::string & string)
+{
+  std::string lower_case_string = string;
+  std::transform(
+    lower_case_string.begin(), lower_case_string.end(), lower_case_string.begin(),
+    [](unsigned char c) { return std::tolower(c); });
+  return lower_case_string;
+}
+
 bool parse_bool(const std::string & bool_string)
 {
   // Copy input to temp and make lowercase
-  std::string temp = bool_string;
-  std::transform(
-    temp.begin(), temp.end(), temp.begin(), [](unsigned char c) { return std::tolower(c); });
+  std::string temp = to_lower_case(bool_string);
 
   if (temp == "true")
   {
