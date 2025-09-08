@@ -427,8 +427,14 @@ ControllerManager::ControllerManager(
   robot_description_(urdf)
 {
   initialize_parameters();
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
-    urdf, trigger_clock_, this->get_logger(), activate_all_hw_components, params_->update_rate);
+  hardware_interface::ResourceManagerParams params;
+  params.robot_description = urdf;
+  params.clock = trigger_clock_;
+  params.logger = this->get_logger();
+  params.activate_all = activate_all_hw_components;
+  params.update_rate = static_cast<unsigned int>(params_->update_rate);
+  params.executor = executor_;
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
   init_controller_manager();
 }
 
