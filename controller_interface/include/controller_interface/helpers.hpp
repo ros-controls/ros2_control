@@ -17,6 +17,8 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -37,7 +39,8 @@ namespace controller_interface
  *  If joint names are used for ordering, \p interface_type specifies valid interface.
  *  If full interface names are used for ordering, \p interface_type should be empty string ("").
  * \param[in] interface_type used for ordering interfaces with respect to joint names.
- * \param[out] ordered_interfaces vector with ordered interfaces.
+ * \param[out] ordered_interfaces vector with ordered interfaces. Has to have the same capacity as
+ * \p ordered_names size. Throws otherwise.
  * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
  */
 template <typename T>
@@ -45,7 +48,10 @@ bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,
   const std::string & interface_type, std::vector<std::reference_wrapper<T>> & ordered_interfaces)
 {
-  ordered_interfaces.reserve(ordered_names.size());
+  if (ordered_interfaces.capacity() != ordered_names.size())
+  {
+    throw std::range_error("ordered_interfaces capacity has to be equal to ordered_names size.");
+  }
   for (const auto & name : ordered_names)
   {
     for (auto & interface : unordered_interfaces)
