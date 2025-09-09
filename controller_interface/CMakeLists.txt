@@ -35,6 +35,15 @@ target_link_libraries(controller_interface PUBLIC
                       fmt::fmt)
 
 if(BUILD_TESTING)
+  function(add_atomic_link_options target)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+      target_link_options(${target} PRIVATE
+        "LINKER:--no-as-needed"
+        "LINKER:-latomic"
+        "LINKER:--as-needed"
+      )
+    endif()
+  endfunction()
   find_package(ament_cmake_gmock REQUIRED)
   find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
@@ -44,11 +53,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_interface
     controller_interface
   )
+  add_atomic_link_options(test_controller_interface)
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
   target_link_libraries(test_controller_with_options
     controller_interface
   )
+  add_atomic_link_options(test_controller_with_options)
   target_compile_definitions(
     test_controller_with_options
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
@@ -58,6 +69,7 @@ if(BUILD_TESTING)
     controller_interface
     hardware_interface::hardware_interface
   )
+  add_atomic_link_options(test_chainable_controller_interface)
 
   ament_add_gmock(test_semantic_component_interface test/test_semantic_component_interface.cpp)
   target_link_libraries(test_semantic_component_interface
