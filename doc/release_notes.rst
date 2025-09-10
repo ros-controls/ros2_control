@@ -95,6 +95,7 @@ controller_manager
 * The controller manager will use a monotonic clock for triggering read-update-write cycles, but when the ``use_sim_time`` parameter is set to true, it will use the ROS Clock for triggering. When monotonic clock is being used, all the hardware components will receive the monotonic time in their read and write method, instead the controllers will always receive the ROS time in their update method irrespective of the clock being used. (`#2046 <https://github.com/ros-controls/ros2_control/pull/2046>`_).
 * The default strictness of the ``switch_controllers`` can now we be chosen using ROS 2 parameters. The default behaviour is still left to ``BEST_EFFORT`` (`#2168 <https://github.com/ros-controls/ros2_control/pull/2168>`_).
 * Parameter ``shutdown_on_initial_state_failure`` was added to avoid shutting down on hardware initial state failure  (`#2230 <https://github.com/ros-controls/ros2_control/pull/2230>`_).
+* The controller manager now publishes ``~/statistics/names`` and ``~/statistics/values`` topics to introspect the execution time and periodicity of the different entities running in the realtime loop (`#2449 <https://github.com/ros-controls/ros2_control/pull/2449>`_).
 
 hardware_interface
 ******************
