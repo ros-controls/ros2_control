@@ -55,7 +55,7 @@ bool get_ordered_interfaces(
     throw std::range_error(
       "Capacity of ordered_interfaces (" + std::to_string(ordered_interfaces.capacity()) +
       ") has to be equal or higher as size of ordered_names (" +
-      std::to_string(ordered_names.size()) + " for the realtime reasons).");
+      std::to_string(ordered_names.size()) + ") for realtime reasons.");
   }
   for (const auto & name : ordered_names)
   {
