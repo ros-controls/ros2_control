@@ -41,6 +41,7 @@ namespace controller_interface
  * \param[in] interface_type used for ordering interfaces with respect to joint names.
  * \param[out] ordered_interfaces vector with ordered interfaces. Has to have the same capacity as
  * \p ordered_names size. Throws otherwise.
+ * \throws std::range_error if the capacity of ordered_interfaces is less than the size of ordered_names.
  * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
  */
 template <typename T>
@@ -53,7 +54,7 @@ bool get_ordered_interfaces(
     throw std::range_error(
       "Capacity of ordered_interfaces (" + std::to_string(ordered_interfaces.capacity()) +
       ") has to be equal or higher as size of ordered_names (" +
-      std::to_string(ordered_names.size()) + ").");
+      std::to_string(ordered_names.size()) + " for the realtime reasons).");
   }
   for (const auto & name : ordered_names)
   {
