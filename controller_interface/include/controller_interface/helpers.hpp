@@ -48,11 +48,12 @@ bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,
   const std::string & interface_type, std::vector<std::reference_wrapper<T>> & ordered_interfaces)
 {
-  if (ordered_interfaces.capacity() != ordered_names.size())
+  if (ordered_interfaces.capacity() < ordered_names.size())
   {
     throw std::range_error(
-      "ordered_interfaces capacity (" + std::to_string(ordered_interfaces.capacity()) +
-      ") has to be equal to ordered_names size (" + std::to_string(ordered_names.size()) + ").");
+      "Capacity of ordered_interfaces (" + std::to_string(ordered_interfaces.capacity()) +
+      ") has to be equal or higher as size of ordered_names (" +
+      std::to_string(ordered_names.size()) + ").");
   }
   for (const auto & name : ordered_names)
   {
