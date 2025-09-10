@@ -50,7 +50,9 @@ bool get_ordered_interfaces(
 {
   if (ordered_interfaces.capacity() != ordered_names.size())
   {
-    throw std::range_error("ordered_interfaces capacity has to be equal to ordered_names size.");
+    throw std::range_error(
+      "ordered_interfaces capacity (" + std::to_string(ordered_interfaces.capacity()) +
+      ") has to be equal to ordered_names size (" + std::to_string(ordered_names.size()) + ").");
   }
   for (const auto & name : ordered_names)
   {
