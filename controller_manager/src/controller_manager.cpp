@@ -3179,7 +3179,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
   const double expected_cycle_time = 1.e6 / static_cast<double>(get_update_rate());
-  if (execution_time_.total_time > expected_cycle_time)
+  if (execution_time_.total_time > expected_cycle_time && params_->enable_overrun)
   {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), 1000,
