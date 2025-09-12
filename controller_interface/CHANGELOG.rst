@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.37.0 (2025-09-12)
+-------------------
 * Update message dependencies for tests (`#2497 <https://github.com/ros-controls/ros2_control/issues/2497>`_) (`#2500 <https://github.com/ros-controls/ros2_control/issues/2500>`_)
 * Contributors: mergify[bot]
 

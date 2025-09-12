@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.37.0 (2025-09-12)
+-------------------
 * Publish controller manager statistics to better introspect the timings (backport `#2449 <https://github.com/ros-controls/ros2_control/issues/2449>`_) (`#2521 <https://github.com/ros-controls/ros2_control/issues/2521>`_)
 * Fix the CPU affinity of the ros2_control_node (`#2509 <https://github.com/ros-controls/ros2_control/issues/2509>`_) (`#2511 <https://github.com/ros-controls/ros2_control/issues/2511>`_)
 * Contributors: mergify[bot]
