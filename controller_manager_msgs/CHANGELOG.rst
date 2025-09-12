@@ -2,6 +2,12 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix CMake install so overriding works (backport `#926 <https://github.com/ros-controls/ros2_control/issues/926>`_) (`#2480 <https://github.com/ros-controls/ros2_control/issues/2480>`_)
+* Fix typos in the documentation of SwitchController strictness (backport `#2445 <https://github.com/ros-controls/ros2_control/issues/2445>`_) (`#2446 <https://github.com/ros-controls/ros2_control/issues/2446>`_)
+* Contributors: mergify[bot]
+
 2.51.0 (2025-06-06)
 -------------------
 
