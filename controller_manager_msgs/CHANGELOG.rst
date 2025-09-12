@@ -2,6 +2,9 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.36.0 (2025-08-26)
 -------------------
 * Update doc to clarify BEST_EFFORT behavior when switching controllers (`#2448 <https://github.com/ros-controls/ros2_control/issues/2448>`_) (`#2450 <https://github.com/ros-controls/ros2_control/issues/2450>`_)

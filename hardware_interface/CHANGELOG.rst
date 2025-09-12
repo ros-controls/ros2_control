@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix interface configuration docs (`#2537 <https://github.com/ros-controls/ros2_control/issues/2537>`_) (`#2538 <https://github.com/ros-controls/ros2_control/issues/2538>`_)
+* Publish controller manager statistics to better introspect the timings (backport `#2449 <https://github.com/ros-controls/ros2_control/issues/2449>`_) (`#2521 <https://github.com/ros-controls/ros2_control/issues/2521>`_)
+* Contributors: mergify[bot]
+
 4.36.0 (2025-08-26)
 -------------------
 * Start of Unification for `Sensor`, `Actuator`, and `System` into a Single Class (backport `#2451 <https://github.com/ros-controls/ros2_control/issues/2451>`_) (`#2460 <https://github.com/ros-controls/ros2_control/issues/2460>`_)
