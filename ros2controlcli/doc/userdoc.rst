@@ -20,6 +20,7 @@ Currently supported commands are
     - ros2 control switch_controllers
     - ros2 control unload_controller
     - ros2 control view_controller_chains
+    - ros2 control view_hardware_status
 
 
 list_controllers
@@ -364,3 +365,24 @@ view_controller_chains
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
+
+
+view_hardware_status
+----------------------
+
+.. code-block:: console
+
+    $ ros2 control view_hardware_status -h
+    usage: ros2 control view_hardware_status [-h] [--spin-time SPIN_TIME] [-s] [-i HARDWARE_ID] [-d DEVICE_ID]
+
+    Echo hardware status messages with filtering capabilities
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
+      -i HARDWARE_ID, --hardware-id HARDWARE_ID
+                            Filter by a specific hardware component ID.
+      -d DEVICE_ID, --device-id DEVICE_ID
+                            Filter by a specific device ID within a hardware component.
