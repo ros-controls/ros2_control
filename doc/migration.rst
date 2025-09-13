@@ -5,6 +5,10 @@ Migration Guides: Jazzy to Kilted
 
 This list summarizes important changes between Jazzy (previous) and Kilted (current) releases, where changes to user code might be necessary.
 
+controller_interface
+********************
+* ``get_ordered_interfaces`` now throws if the size of the output vector does not match the size of the input names vector (`#2528 <https://github.com/ros-controls/ros2_control/pull/2528>`__).
+
 hardware_interface
 ******************
 
