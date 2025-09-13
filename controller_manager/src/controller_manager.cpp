@@ -595,9 +595,9 @@ void ControllerManager::initialize_parameters()
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
-    const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
     trigger_clock_ =
-      use_sim_time.as_bool() ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+      use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     RCLCPP_INFO(
       get_logger(), "Using %s clock for triggering controller manager cycles.",
       trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
@@ -3179,19 +3179,32 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
   const double expected_cycle_time = 1.e6 / static_cast<double>(get_update_rate());
-  if (execution_time_.total_time > expected_cycle_time)
+  if (execution_time_.total_time > expected_cycle_time && !use_sim_time_)
   {
-    RCLCPP_WARN_THROTTLE(
-      get_logger(), *get_clock(), 1000,
-      "Overrun might occur, Total time : %.3f us (Expected < %.3f us) --> Read time : %.3f us, "
-      "Update time : %.3f us (Switch time : %.3f us (Switch chained mode time : %.3f us, perform "
-      "mode change time : %.3f us, Activation time : %.3f us, Deactivation time : %.3f us)), Write "
-      "time : %.3f us",
-      execution_time_.total_time, expected_cycle_time, execution_time_.read_time,
-      execution_time_.update_time, execution_time_.switch_time,
-      execution_time_.switch_chained_mode_time, execution_time_.switch_perform_mode_time,
-      execution_time_.activation_time, execution_time_.deactivation_time,
-      execution_time_.write_time);
+    if (execution_time_.switch_time > 0.0)
+    {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *get_clock(), 1000,
+        "Overrun might occur, Total time : %.3f us (Expected < %.3f us) --> Read time : %.3f us, "
+        "Update time : %.3f us (Switch time : %.3f us (Switch chained mode time : %.3f us, perform "
+        "mode change time : %.3f us, Activation time : %.3f us, Deactivation time : %.3f us)), "
+        "Write "
+        "time : %.3f us",
+        execution_time_.total_time, expected_cycle_time, execution_time_.read_time,
+        execution_time_.update_time, execution_time_.switch_time,
+        execution_time_.switch_chained_mode_time, execution_time_.switch_perform_mode_time,
+        execution_time_.activation_time, execution_time_.deactivation_time,
+        execution_time_.write_time);
+    }
+    else
+    {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *get_clock(), 1000,
+        "Overrun might occur, Total time : %.3f us (Expected < %.3f us) --> Read time : %.3f us, "
+        "Update time : %.3f us, Write time : %.3f us",
+        execution_time_.total_time, expected_cycle_time, execution_time_.read_time,
+        execution_time_.update_time, execution_time_.write_time);
+    }
   }
 }
 
@@ -4350,8 +4363,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   }
 
   // ensure controller's `use_sim_time` parameter matches controller_manager's
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-  if (use_sim_time.as_bool())
+  if (use_sim_time_)
   {
     if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
     {
