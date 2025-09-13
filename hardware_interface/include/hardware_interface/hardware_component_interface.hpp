@@ -40,12 +40,23 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
+
+static inline rclcpp::NodeOptions get_hardware_component_node_options()
+{
+  rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
+  return node_options;
+}
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -177,7 +188,8 @@ public:
         node_name.begin(), node_name.end(), node_name.begin(),
         [](unsigned char c) { return std::tolower(c); });
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      hardware_component_node_ =
+        std::make_shared<rclcpp::Node>(node_name, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
@@ -595,6 +607,14 @@ public:
     lifecycle_state_ = new_state;
   }
 
+  /// Set the value of a state interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param[in] interface_name The name of the state interface to access.
+   * \param[in] value The value to store.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface.
+   */
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
@@ -613,6 +633,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  /// Get the value from a state interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the state interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface or its stored value.
+   */
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
@@ -639,6 +667,15 @@ public:
     return opt_value.value();
   }
 
+  /// Set the value of a command interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param interface_name The name of the command
+   * interface to access.
+   * \param value The value to store.
+   * \throws This method throws a runtime error if it
+   * cannot access the command interface.
+   */
   template <typename T>
   void set_command(const std::string & interface_name, const T & value)
   {
@@ -657,6 +694,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  ///  Get the value from a command interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the command interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the command interface or its stored value.
+   */
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
@@ -672,7 +717,7 @@ public:
     }
     auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
-    const auto opt_value = handle->get_optional<double>(lock);
+    const auto opt_value = handle->get_optional<T>(lock);
     if (!opt_value)
     {
       throw std::runtime_error(
