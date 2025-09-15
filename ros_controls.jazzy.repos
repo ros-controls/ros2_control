@@ -6,7 +6,7 @@ repositories:
   ros-controls/ros2_control_demos:
     type: git
     url: https://github.com/ros-controls/ros2_control_demos.git
-    version: master
+    version: jazzy
   ros-controls/ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
@@ -19,3 +19,7 @@ repositories:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git
     version: jazzy
+  ros-controls/topic_based_hardware_interfaces:
+    type: git
+    url: https://github.com/ros-controls/topic_based_hardware_interfaces.git
+    version: main

@@ -912,21 +912,21 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
       testing::AllOf(testing::Ge(0.7 / cm_update_rate), testing::Lt((1.6 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
-      cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+      cm_->get_loaded_controllers()[0].execution_time_statistics->get_count());
     ASSERT_EQ(
       test_controller->internal_counter - 1,
-      cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+      cm_->get_loaded_controllers()[0].periodicity_statistics->get_count())
       << "The first update is not counted in periodicity statistics";
     EXPECT_THAT(
-      cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+      cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
       testing::AllOf(
         testing::Ge(0.90 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
     EXPECT_THAT(
-      cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+      cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
       testing::AllOf(
         testing::Ge(0.70 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     EXPECT_THAT(
-      cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+      cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
       testing::AllOf(
         testing::Ge(0.75 * cm_->get_update_rate()), testing::Lt((2.0 * cm_->get_update_rate()))));
     loop_rate.sleep();
@@ -1085,22 +1085,22 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         actual_counter, testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter + 1)));
       ASSERT_EQ(
         test_controller->internal_counter,
-        cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+        cm_->get_loaded_controllers()[0].execution_time_statistics->get_count());
       ASSERT_EQ(
         test_controller->internal_counter - 1,
-        cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_count())
         << "The first update is not counted in periodicity statistics";
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
         testing::AllOf(testing::Ge(0.92 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
         testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
         testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((2.0 * exp_periodicity))));
       EXPECT_LT(
-        cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
+        cm_->get_loaded_controllers()[0].execution_time_statistics->get_average(),
         50.0);  // 50 microseconds
     }
   }
@@ -1231,22 +1231,22 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
       EXPECT_THAT(
         actual_counter, testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter + 1)));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount(),
+        cm_->get_loaded_controllers()[0].execution_time_statistics->get_count(),
         testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter)));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_count(),
         testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter)));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
         testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.1 * exp_periodicity))));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
         testing::AllOf(testing::Ge(0.5 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
       EXPECT_THAT(
-        cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+        cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
         testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((2.0 * exp_periodicity))));
       EXPECT_LT(
-        cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
+        cm_->get_loaded_controllers()[0].execution_time_statistics->get_average(),
         12000);  // more or less 12 milliseconds considering the waittime in the controller
     }
   }
