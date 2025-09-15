@@ -63,7 +63,7 @@ public:
       get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     RCLCPP_WARN_EXPRESSION(
       rclcpp::get_logger(get_name()),
@@ -73,7 +73,7 @@ public:
       get_name().c_str(), set_value_statistics_.timeout_counter,
       (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.failed_counter,
-      (set_value_statistics_.failed_counter * 10.0) / set_value_statistics_.total_counter,
+      (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.total_counter);
     if (deleter_)
     {
