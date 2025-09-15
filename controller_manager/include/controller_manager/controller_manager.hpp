@@ -630,6 +630,7 @@ private:
     std::function<void()> on_switch_callback_ = nullptr;
   };
 
+  bool use_sim_time_;
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
