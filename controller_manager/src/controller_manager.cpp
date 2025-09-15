@@ -1216,6 +1216,8 @@ controller_interface::return_type ControllerManager::configure_controller(
       return controller_interface::return_type::ERROR;
     }
   }
+  // For cases, when the controller ends up in the unconfigured state from any other state
+  cleanup_controller_exported_interfaces(*found_it);
 
   try
   {
@@ -4403,7 +4405,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
 void ControllerManager::cleanup_controller_exported_interfaces(const ControllerSpec & controller)
 {
-  if (is_controller_inactive(controller.c) && controller.c->is_chainable())
+  if (!is_controller_active(controller.c) && controller.c->is_chainable())
   {
     RCLCPP_DEBUG(
       get_logger(), "Removing controller '%s' exported interfaces from resource manager.",
