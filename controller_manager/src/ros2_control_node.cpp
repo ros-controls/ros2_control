@@ -151,34 +151,31 @@ int main(int argc, char ** argv)
         {
           cm->get_clock()->sleep_until(current_time + period);
         }
-        else
+        else if(enable_overrun)
         {
           next_iteration_time += period;
 
-          if (enable_overrun)
+          const auto time_now = std::chrono::steady_clock::now();
+          if (next_iteration_time < time_now)
           {
-            const auto time_now = std::chrono::steady_clock::now();
-            if (next_iteration_time < time_now)
-            {
-              const double time_diff =
-                static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                      time_now - next_iteration_time)
-                                      .count()) /
-                1.e6;
-              const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
-              const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
+            const double time_diff =
+              static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                    time_now - next_iteration_time)
+                                    .count()) /
+              1.e6;
+            const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
+            const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
 
-              RCLCPP_WARN_THROTTLE(
-                cm->get_logger(), *cm->get_clock(), 1000,
-                "Overrun detected! The controller manager missed its desired rate of %d Hz. The "
-                "loop "
-                "took %f ms (missed cycles : %d).",
-                cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
+            RCLCPP_WARN_THROTTLE(
+              cm->get_logger(), *cm->get_clock(), 1000,
+              "Overrun detected! The controller manager missed its desired rate of %d Hz. The "
+              "loop "
+              "took %f ms (missed cycles : %d).",
+              cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
 
-              next_iteration_time += (overrun_count * period);
-            }
+            next_iteration_time += (overrun_count * period);
           }
-
+          
           std::this_thread::sleep_until(next_iteration_time);
         }
       }
