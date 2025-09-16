@@ -58,6 +58,7 @@ int main(int argc, char ** argv)
     executor, manager_node_name, "", cm_node_options);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
+  const bool enable_overrun = cm->get_parameter_or("enable_overrun", true);
 
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
@@ -75,13 +76,14 @@ int main(int argc, char ** argv)
   cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+  RCLCPP_INFO(cm->get_logger(), "Overrun logic: %s", enable_overrun ? "enabled " : "disabled");
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time]()
+    [cm, thread_priority, use_sim_time, enable_overrun]()
     {
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
@@ -152,23 +154,31 @@ int main(int argc, char ** argv)
         else
         {
           next_iteration_time += period;
-          const auto time_now = std::chrono::steady_clock::now();
-          if (next_iteration_time < time_now)
+
+          if (enable_overrun)
           {
-            const double time_diff =
-              static_cast<double>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(time_now - next_iteration_time)
-                  .count()) /
-              1.e6;
-            const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
-            const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
-            RCLCPP_WARN_THROTTLE(
-              cm->get_logger(), *cm->get_clock(), 1000,
-              "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
-              "took %f ms (missed cycles : %d).",
-              cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
-            next_iteration_time += (overrun_count * period);
+            const auto time_now = std::chrono::steady_clock::now();
+            if (next_iteration_time < time_now)
+            {
+              const double time_diff =
+                static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                      time_now - next_iteration_time)
+                                      .count()) /
+                1.e6;
+              const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
+              const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
+
+              RCLCPP_WARN_THROTTLE(
+                cm->get_logger(), *cm->get_clock(), 1000,
+                "Overrun detected! The controller manager missed its desired rate of %d Hz. The "
+                "loop "
+                "took %f ms (missed cycles : %d).",
+                cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
+
+              next_iteration_time += (overrun_count * period);
+            }
           }
+
           std::this_thread::sleep_until(next_iteration_time);
         }
       }
