@@ -1652,6 +1652,12 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
 void ResourceManager::remove_controller_exported_state_interfaces(
   const std::string & controller_name)
 {
+  if (
+    resource_storage_->controllers_exported_state_interfaces_map_.find(controller_name) ==
+    resource_storage_->controllers_exported_state_interfaces_map_.end())
+  {
+    return;
+  }
   auto interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   resource_storage_->controllers_exported_state_interfaces_map_.erase(controller_name);
@@ -1714,6 +1720,12 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::remove_controller_reference_interfaces(const std::string & controller_name)
 {
+  if (
+    resource_storage_->controllers_reference_interfaces_map_.find(controller_name) ==
+    resource_storage_->controllers_reference_interfaces_map_.end())
+  {
+    return;
+  }
   auto interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
