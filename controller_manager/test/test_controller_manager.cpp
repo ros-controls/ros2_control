@@ -2169,3 +2169,102 @@ TEST_F(
     EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
   }
 }
+
+class TestControllerManagerChainableControllerFailedActivation
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(
+  TestControllerManagerChainableControllerFailedActivation,
+  test_chainable_controllers_failed_activation_and_then_reconfiguring_it)
+{
+  const std::string test_controller_name = "test_chainable_controller_2";
+
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  controller_interface::InterfaceConfiguration itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+
+  // controller 4
+  auto test_chainable_controller =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {"joint1/position"};
+  itfs_cfg.names = {"joint2/velocity"};
+  test_chainable_controller->set_command_interface_configuration(cmd_itfs_cfg);
+  test_chainable_controller->set_state_interface_configuration(itfs_cfg);
+  test_chainable_controller->set_reference_interface_names({"modified_joint1/position"});
+  test_chainable_controller->set_exported_state_interface_names({"modified_joint2/velocity"});
+  test_chainable_controller->fail_on_activate = true;
+
+  cm_->add_controller(
+    test_chainable_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_chainable_controller.use_count());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  // configure controllers
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME));
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller->get_lifecycle_state().id());
+
+  std::vector<std::string> start_controllers = {test_chainable_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  {
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+    ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+    {
+      ControllerManagerRunner cm_runner(this);
+      EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
+    }
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller->get_lifecycle_state().id());
+  // Now, after reconfiguring it, it should work
+  test_chainable_controller->fail_on_activate = false;
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME));
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      test_chainable_controller->get_lifecycle_state().id());
+
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      test_chainable_controller->get_lifecycle_state().id());
+  }
+}
