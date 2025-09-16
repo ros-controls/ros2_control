@@ -172,7 +172,7 @@ CallbackReturn TestChainableController::on_activate(
     (*msg)->data = reference_interfaces_;
   }
 
-  return CallbackReturn::SUCCESS;
+  return fail_on_activate ? CallbackReturn::ERROR : CallbackReturn::SUCCESS;
 }
 
 CallbackReturn TestChainableController::on_cleanup(
