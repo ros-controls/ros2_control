@@ -383,6 +383,12 @@ thread_priority (optional; int; default: 50)
 use_sim_time (optional; bool; default: false)
   Enables the use of simulation time in the ``controller_manager`` node.
 
+overruns.manage (optional; bool; default: true)
+  Enables or disables the handling of overruns in the real-time loop of the ``controller_manager`` node.
+  If set to true, the controller manager will detect overruns caused by system time changes or longer execution times of the controllers and hardware components.
+  If an overrun is detected, the controller manager will print a warning message to the console.
+  When used with ``use_sim_time`` set to true, this parameter is ignored and the overrun handling is disabled.
+
 Concepts
 -----------
 
