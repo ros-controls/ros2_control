@@ -123,15 +123,15 @@ CallbackReturn GenericSystem::on_init(
 
   // Initialize storage for standard interfaces
   initialize_storage_vectors(
-    joint_commands_, joint_states_, standard_interfaces_, get_hardware_info().joints);
+    joint_command_values_, joint_state_values_, standard_interfaces_, get_hardware_info().joints);
   // set all values without initial values to 0
   for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
     for (auto j = 0u; j < standard_interfaces_.size(); j++)
     {
-      if (std::isnan(joint_states_[j][i]))
+      if (std::isnan(joint_state_values_[j][i]))
       {
-        joint_states_[j][i] = 0.0;
+        joint_state_values_[j][i] = 0.0;
       }
     }
   }
@@ -148,7 +148,7 @@ CallbackReturn GenericSystem::on_init(
 
   // Initialize storage for non-standard interfaces
   initialize_storage_vectors(
-    other_commands_, other_states_, other_interfaces_, get_hardware_info().joints);
+    other_command_values_, other_state_values_, other_interfaces_, get_hardware_info().joints);
 
   // when following offset is used on custom interface then find its index
   if (!custom_interface_with_following_offset_.empty())
@@ -186,7 +186,8 @@ CallbackReturn GenericSystem::on_init(
     }
   }
   initialize_storage_vectors(
-    sensor_mock_commands_, sensor_states_, sensor_interfaces_, get_hardware_info().sensors);
+    sensor_mock_command_values_, sensor_state_values_, sensor_interfaces_,
+    get_hardware_info().sensors);
 
   // search for gpio interfaces
   for (const auto & gpio : get_hardware_info().gpios)
@@ -202,13 +203,13 @@ CallbackReturn GenericSystem::on_init(
   if (use_mock_gpio_command_interfaces_)
   {
     initialize_storage_vectors(
-      gpio_mock_commands_, gpio_states_, gpio_interfaces_, get_hardware_info().gpios);
+      gpio_mock_command_values_, gpio_state_values_, gpio_interfaces_, get_hardware_info().gpios);
   }
   // Real gpio command interfaces
   else
   {
     initialize_storage_vectors(
-      gpio_commands_, gpio_states_, gpio_interfaces_, get_hardware_info().gpios);
+      gpio_command_values_, gpio_state_values_, gpio_interfaces_, get_hardware_info().gpios);
   }
 
   return CallbackReturn::SUCCESS;
@@ -226,10 +227,12 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
     {
       // Add interface: if not in the standard list then use "other" interface list
       if (!get_interface(
-            joint.name, standard_interfaces_, interface.name, i, joint_states_, state_interfaces))
+            joint.name, standard_interfaces_, interface.name, i, joint_state_values_,
+            state_interfaces))
       {
         if (!get_interface(
-              joint.name, other_interfaces_, interface.name, i, other_states_, state_interfaces))
+              joint.name, other_interfaces_, interface.name, i, other_state_values_,
+              state_interfaces))
         {
           throw std::runtime_error(
             "Interface is not found in the standard nor other list. "
@@ -241,7 +244,8 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 
   // Sensor state interfaces
   if (!populate_interfaces(
-        get_hardware_info().sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
+        get_hardware_info().sensors, sensor_interfaces_, sensor_state_values_, state_interfaces,
+        true))
   {
     throw std::runtime_error(
       "Interface is not found in the standard nor other list. This should never happen!");
@@ -249,7 +253,7 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 
   // GPIO state interfaces
   if (!populate_interfaces(
-        get_hardware_info().gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
+        get_hardware_info().gpios, gpio_interfaces_, gpio_state_values_, state_interfaces, true))
   {
     throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
   }
@@ -269,11 +273,11 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
     {
       // Add interface: if not in the standard list than use "other" interface list
       if (!get_interface(
-            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
+            joint.name, standard_interfaces_, interface.name, i, joint_command_values_,
             command_interfaces))
       {
         if (!get_interface(
-              joint.name, other_interfaces_, interface.name, i, other_commands_,
+              joint.name, other_interfaces_, interface.name, i, other_command_values_,
               command_interfaces))
         {
           throw std::runtime_error(
@@ -290,7 +294,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_mock_sensor_command_interfaces_)
   {
     if (!populate_interfaces(
-          get_hardware_info().sensors, sensor_interfaces_, sensor_mock_commands_,
+          get_hardware_info().sensors, sensor_interfaces_, sensor_mock_command_values_,
           command_interfaces, true))
     {
       throw std::runtime_error(
@@ -302,8 +306,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_mock_gpio_command_interfaces_)
   {
     if (!populate_interfaces(
-          get_hardware_info().gpios, gpio_interfaces_, gpio_mock_commands_, command_interfaces,
-          true))
+          get_hardware_info().gpios, gpio_interfaces_, gpio_mock_command_values_,
+          command_interfaces, true))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -313,7 +317,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   else
   {
     if (!populate_interfaces(
-          get_hardware_info().gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
+          get_hardware_info().gpios, gpio_interfaces_, gpio_command_values_, command_interfaces,
+          false))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -487,7 +492,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     return return_type::OK;
   };
 
-  for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
+  for (size_t j = 0; j < joint_state_values_[POSITION_INTERFACE_INDEX].size(); ++j)
   {
     if (calculate_dynamics_)
     {
@@ -496,58 +501,58 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         case ACCELERATION_INTERFACE_INDEX:
         {
           // currently we do backward integration
-          joint_states_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
-            joint_states_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
+          joint_state_values_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
+            joint_state_values_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
 
-          joint_states_[VELOCITY_INTERFACE_INDEX][j] +=
-            joint_states_[ACCELERATION_INTERFACE_INDEX][j] * period.seconds();
+          joint_state_values_[VELOCITY_INTERFACE_INDEX][j] +=
+            joint_state_values_[ACCELERATION_INTERFACE_INDEX][j] * period.seconds();
 
-          if (!std::isnan(joint_commands_[ACCELERATION_INTERFACE_INDEX][j]))
+          if (!std::isnan(joint_command_values_[ACCELERATION_INTERFACE_INDEX][j]))
           {
-            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
-              joint_commands_[ACCELERATION_INTERFACE_INDEX][j];
+            joint_state_values_[ACCELERATION_INTERFACE_INDEX][j] =
+              joint_command_values_[ACCELERATION_INTERFACE_INDEX][j];
           }
           break;
         }
         case VELOCITY_INTERFACE_INDEX:
         {
           // currently we do backward integration
-          joint_states_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
-            joint_states_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
+          joint_state_values_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
+            joint_state_values_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
 
-          if (!std::isnan(joint_commands_[VELOCITY_INTERFACE_INDEX][j]))
+          if (!std::isnan(joint_command_values_[VELOCITY_INTERFACE_INDEX][j]))
           {
-            const double old_velocity = joint_states_[VELOCITY_INTERFACE_INDEX][j];
+            const double old_velocity = joint_state_values_[VELOCITY_INTERFACE_INDEX][j];
 
-            joint_states_[VELOCITY_INTERFACE_INDEX][j] =
-              joint_commands_[VELOCITY_INTERFACE_INDEX][j];
+            joint_state_values_[VELOCITY_INTERFACE_INDEX][j] =
+              joint_command_values_[VELOCITY_INTERFACE_INDEX][j];
 
-            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
-              (joint_states_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
+            joint_state_values_[ACCELERATION_INTERFACE_INDEX][j] =
+              (joint_state_values_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
           }
           break;
         }
         case POSITION_INTERFACE_INDEX:
         {
-          if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+          if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX][j]))
           {
-            const double old_position = joint_states_[POSITION_INTERFACE_INDEX][j];
-            const double old_velocity = joint_states_[VELOCITY_INTERFACE_INDEX][j];
+            const double old_position = joint_state_values_[POSITION_INTERFACE_INDEX][j];
+            const double old_velocity = joint_state_values_[VELOCITY_INTERFACE_INDEX][j];
 
-            joint_states_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
-              joint_commands_[POSITION_INTERFACE_INDEX][j] +
+            joint_state_values_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
+              joint_command_values_[POSITION_INTERFACE_INDEX][j] +
               (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                                : 0.0);
 
-            joint_states_[VELOCITY_INTERFACE_INDEX][j] =
-              (joint_states_[POSITION_INTERFACE_INDEX][j] - old_position) / period.seconds();
+            joint_state_values_[VELOCITY_INTERFACE_INDEX][j] =
+              (joint_state_values_[POSITION_INTERFACE_INDEX][j] - old_position) / period.seconds();
 
-            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
-              (joint_states_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
+            joint_state_values_[ACCELERATION_INTERFACE_INDEX][j] =
+              (joint_state_values_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
           }
           break;
         }
@@ -555,12 +560,12 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
     else
     {
-      for (size_t k = 0; k < joint_states_[POSITION_INTERFACE_INDEX].size(); ++k)
+      for (size_t k = 0; k < joint_state_values_[POSITION_INTERFACE_INDEX].size(); ++k)
       {
-        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][k]))
+        if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX][k]))
         {
-          joint_states_[POSITION_INTERFACE_INDEX][k] =  // apply offset to positions only
-            joint_commands_[POSITION_INTERFACE_INDEX][k] +
+          joint_state_values_[POSITION_INTERFACE_INDEX][k] =  // apply offset to positions only
+            joint_command_values_[POSITION_INTERFACE_INDEX][k] +
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
         }
@@ -571,53 +576,53 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
   // velocity, and acceleration interface
   if (
-    mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) !=
-    return_type::OK)
+    mirror_command_to_state(
+      joint_state_values_, joint_command_values_, calculate_dynamics_ ? 3 : 1) != return_type::OK)
   {
     return return_type::ERROR;
   }
 
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
-    for (auto i = 0u; i < joint_states_.size(); ++i)
+    for (auto i = 0u; i < joint_state_values_.size(); ++i)
     {
-      joint_states_[i][mimic_joint.joint_index] =
+      joint_state_values_[i][mimic_joint.joint_index] =
         mimic_joint.offset +
-        mimic_joint.multiplier * joint_states_[i][mimic_joint.mimicked_joint_index];
+        mimic_joint.multiplier * joint_state_values_[i][mimic_joint.mimicked_joint_index];
     }
   }
 
-  for (size_t i = 0; i < other_states_.size(); ++i)
+  for (size_t i = 0; i < other_state_values_.size(); ++i)
   {
-    for (size_t j = 0; j < other_states_[i].size(); ++j)
+    for (size_t j = 0; j < other_state_values_[i].size(); ++j)
     {
       if (
         i == index_custom_interface_with_following_offset_ &&
-        !std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+        !std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX][j]))
       {
-        other_states_[i][j] =
-          joint_commands_[POSITION_INTERFACE_INDEX][j] + position_state_following_offset_;
+        other_state_values_[i][j] =
+          joint_command_values_[POSITION_INTERFACE_INDEX][j] + position_state_following_offset_;
       }
-      else if (!std::isnan(other_commands_[i][j]))
+      else if (!std::isnan(other_command_values_[i][j]))
       {
-        other_states_[i][j] = other_commands_[i][j];
+        other_state_values_[i][j] = other_command_values_[i][j];
       }
     }
   }
 
   if (use_mock_sensor_command_interfaces_)
   {
-    mirror_command_to_state(sensor_states_, sensor_mock_commands_);
+    mirror_command_to_state(sensor_state_values_, sensor_mock_command_values_);
   }
 
   if (use_mock_gpio_command_interfaces_)
   {
-    mirror_command_to_state(gpio_states_, gpio_mock_commands_);
+    mirror_command_to_state(gpio_state_values_, gpio_mock_command_values_);
   }
   else
   {
     // do loopback on all gpio interfaces
-    mirror_command_to_state(gpio_states_, gpio_commands_);
+    mirror_command_to_state(gpio_state_values_, gpio_command_values_);
   }
 
   return return_type::OK;
