@@ -7,10 +7,7 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: master
-<<<<<<< HEAD
-=======
   ros2_control_cmake:
     type: git
     url: https://github.com/ros-controls/ros2_control_cmake.git
     version: master
->>>>>>> 498a052 (Use auto dependency management for windows workflow (#2560))
