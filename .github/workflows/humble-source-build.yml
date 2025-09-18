@@ -17,7 +17,7 @@ on:
     branches:
       - humble
     paths:
-      - .github/workflows/humble-build-source.yml
+      - .github/workflows/humble-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * MON-FRI'
