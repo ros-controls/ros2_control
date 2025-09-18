@@ -592,7 +592,18 @@ void ControllerManager::initialize_parameters()
   try
   {
     use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
-    this->declare_parameter("overruns.print_warnings", !use_sim_time_);
+
+    if (!this->has_parameter("overruns.print_warnings"))
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.description =
+        "If true, the controller manager will print a warning message to the console if an overrun "
+        "is detected in its real-time loop (read, update and write). By default, it is set to "
+        "true, except when used with use_sim_time parameter set to true.";
+      descriptor.read_only = false;
+      auto parameter = rclcpp::ParameterValue(!use_sim_time_);
+      this->declare_parameter("overruns.print_warnings", parameter, descriptor);
+    }
     cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
