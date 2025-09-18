@@ -347,6 +347,8 @@ def main(args=None):
         if not unload_controllers_upon_exit:
             return 0
 
+        # The lock has to be released to not block other spawner instances while waiting for the interrupt
+        lock.release()
         logger.info("Waiting until interrupt to unload controllers")
         while True:
             time.sleep(1)
@@ -402,7 +404,8 @@ def main(args=None):
     finally:
         if node:
             node.destroy_node()
-        lock.release()
+        if lock.is_locked:
+            lock.release()
         rclpy.shutdown()
 
 
