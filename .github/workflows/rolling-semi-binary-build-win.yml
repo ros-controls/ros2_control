@@ -42,7 +42,5 @@ jobs:
     with:
       ros_distro: rolling
       pixi_dependencies: typeguard jinja2 boost compilers
-      windows_dependencies: ros2_control.windows.rolling.repos
       ninja_packages: rsl
-      skip_packages: diagnostic_remote_logging generate_parameter_library_example_external generate_parameter_library_example
       target_cmake_args: -DBUILD_TESTING=OFF
