@@ -1,9 +1,16 @@
 repositories:
-  ros-controls/realtime_tools:
+  realtime_tools:
     type: git
     url: https://github.com/ros-controls/realtime_tools.git
     version: jazzy
-  ros-controls/control_msgs:
+  control_msgs:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: jazzy
+<<<<<<< HEAD
+=======
+  ros2_control_cmake:
+    type: git
+    url: https://github.com/ros-controls/ros2_control_cmake.git
+    version: master
+>>>>>>> 498a052 (Use auto dependency management for windows workflow (#2560))
