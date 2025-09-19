@@ -324,6 +324,27 @@ return_type GenericSystem::perform_command_mode_switch(
   return hardware_interface::return_type::OK;
 }
 
+hardware_interface::CallbackReturn GenericSystem::on_activate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  for (const auto & joint_state : joint_state_interfaces_)
+  {
+    const std::string & name = joint_state.second.get_name();
+    // TODO(anyone): consider initial value for non-double interfaces as well
+    double val = joint_state.second.interface_info.initial_value.empty()
+                   ? 0.0
+                   : hardware_interface::stod(joint_state.second.interface_info.initial_value);
+    if (
+      joint_state.second.get_interface_name() == standard_interfaces_[POSITION_INTERFACE_INDEX] &&
+      custom_interface_with_following_offset_.empty())
+    {
+      val += position_state_following_offset_;
+    }
+    set_state(name, val);
+  }
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)
