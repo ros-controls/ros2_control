@@ -618,9 +618,9 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     // do loopback on all gpio interfaces as we have exported them all
     // TODO(anyone): how to pass data_type?
     // from gpio_command_interfaces_ maybe?
-    for (const auto & gpio_command : gpio_commands_)
+    for (const auto & gpio_state : gpio_states_)
     {
-      const std::string & name = gpio_command.get()->get_name();
+      const std::string & name = gpio_state.get()->get_name();
       set_state(name, get_command(name));
     }
   }
@@ -652,17 +652,25 @@ bool GenericSystem::populate_interfaces(
 {
   for (const auto & component : components)
   {
-    for (const auto & interface : component.state_interfaces)
+    for (const auto & state_interface : component.state_interfaces)
     {
-      // add to list if not already there
+      // add to state interface to command interface list if not already there
       if (
         std::find_if(
           command_interface_descriptions.begin(), command_interface_descriptions.end(),
-          [&component, &interface](const auto & desc)
-          { return (desc.get_name() == (component.name + "/" + interface.name)); }) ==
-        command_interface_descriptions.end())
+          [&component, &state_interface](const auto & desc)
+          { return (desc.get_name() == (component.name + "/" + state_interface.name)); }) ==
+          command_interface_descriptions.end() &&
+        std::find_if(
+          component.command_interfaces.begin(), component.command_interfaces.end(),
+          [&component, &state_interface](const auto & cmd_if)
+          {
+            return (
+              (component.name + "/" + cmd_if.name) ==
+              (component.name + "/" + state_interface.name));
+          }) == component.command_interfaces.end())
       {
-        hardware_interface::InterfaceDescription description(component.name, interface);
+        hardware_interface::InterfaceDescription description(component.name, state_interface);
         command_interface_descriptions.push_back(description);
       }
     }
