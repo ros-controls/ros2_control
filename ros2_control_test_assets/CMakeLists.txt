@@ -15,7 +15,7 @@ install(
   DESTINATION include/ros2_control_test_assets
 )
 install(
-  FILES urdf/test_hardware_components.urdf
+  FILES urdf/test_hardware_components.urdf urdf/test_hardware_components_with_error.urdf
   DESTINATION share/ros2_control_test_assets/urdf
 )
 install(TARGETS ros2_control_test_assets
