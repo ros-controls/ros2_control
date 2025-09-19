@@ -873,14 +873,14 @@ void generic_system_functional_test(
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
 
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.11));
@@ -889,36 +889,36 @@ void generic_system_functional_test(
   ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
-  EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands + offset to states
-  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(0.11 + offset, j1p_s.get_optional().value());
-  ASSERT_EQ(0.22, j1v_s.get_optional().value());
-  ASSERT_EQ(0.33 + offset, j2p_s.get_optional().value());
-  ASSERT_EQ(0.44, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.22, j1v_s.get_optional().value());
+  EXPECT_EQ(0.33 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.44, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.55));
@@ -927,14 +927,14 @@ void generic_system_functional_test(
   ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
-  ASSERT_EQ(0.11 + offset, j1p_s.get_optional().value());
-  ASSERT_EQ(0.22, j1v_s.get_optional().value());
-  ASSERT_EQ(0.33 + offset, j2p_s.get_optional().value());
-  ASSERT_EQ(0.44, j2v_s.get_optional().value());
-  ASSERT_EQ(0.55, j1p_c.get_optional().value());
-  ASSERT_EQ(0.66, j1v_c.get_optional().value());
-  ASSERT_EQ(0.77, j2p_c.get_optional().value());
-  ASSERT_EQ(0.88, j2v_c.get_optional().value());
+  EXPECT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.22, j1v_s.get_optional().value());
+  EXPECT_EQ(0.33 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.44, j2v_s.get_optional().value());
+  EXPECT_EQ(0.55, j1p_c.get_optional().value());
+  EXPECT_EQ(0.66, j1v_c.get_optional().value());
+  EXPECT_EQ(0.77, j2p_c.get_optional().value());
+  EXPECT_EQ(0.88, j2v_c.get_optional().value());
 
   deactivate_components(rm, {component_name});
   status_map = rm.get_components_status();
@@ -979,10 +979,10 @@ void generic_system_error_group_test(
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
@@ -995,36 +995,36 @@ void generic_system_error_group_test(
   ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
-  EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(2.78, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands to states
-  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_EQ(0.22, j1v_s.get_optional().value());
-  ASSERT_EQ(0.33, j2p_s.get_optional().value());
-  ASSERT_EQ(0.44, j2v_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
-  ASSERT_EQ(0.22, j1v_c.get_optional().value());
-  ASSERT_EQ(0.33, j2p_c.get_optional().value());
-  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.22, j1v_s.get_optional().value());
+  EXPECT_EQ(0.33, j2p_s.get_optional().value());
+  EXPECT_EQ(0.44, j2v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(0.22, j1v_c.get_optional().value());
+  EXPECT_EQ(0.33, j2p_c.get_optional().value());
+  EXPECT_EQ(0.44, j2v_c.get_optional().value());
 
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.55));
@@ -1033,14 +1033,14 @@ void generic_system_error_group_test(
   ASSERT_TRUE(j2v_c.set_value(0.88));
 
   // state values should not be changed
-  ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_EQ(0.22, j1v_s.get_optional().value());
-  ASSERT_EQ(0.33, j2p_s.get_optional().value());
-  ASSERT_EQ(0.44, j2v_s.get_optional().value());
-  ASSERT_EQ(0.55, j1p_c.get_optional().value());
-  ASSERT_EQ(0.66, j1v_c.get_optional().value());
-  ASSERT_EQ(0.77, j2p_c.get_optional().value());
-  ASSERT_EQ(0.88, j2v_c.get_optional().value());
+  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(0.22, j1v_s.get_optional().value());
+  EXPECT_EQ(0.33, j2p_s.get_optional().value());
+  EXPECT_EQ(0.44, j2v_s.get_optional().value());
+  EXPECT_EQ(0.55, j1p_c.get_optional().value());
+  EXPECT_EQ(0.66, j1v_c.get_optional().value());
+  EXPECT_EQ(0.77, j2p_c.get_optional().value());
+  EXPECT_EQ(0.88, j2v_c.get_optional().value());
 
   // Error testing
   ASSERT_TRUE(j1p_c.set_value(std::numeric_limits<double>::infinity()));
