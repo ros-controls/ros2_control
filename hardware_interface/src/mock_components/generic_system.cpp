@@ -308,23 +308,14 @@ return_type GenericSystem::perform_command_mode_switch(
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
         joint_control_mode_[joint_index] = POSITION_INTERFACE_INDEX;
-        RCLCPP_INFO(
-          get_logger(), "Joint '%s' switched to position control mode.",
-          info.joints[joint_index].name.c_str());
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
         joint_control_mode_[joint_index] = VELOCITY_INTERFACE_INDEX;
-        RCLCPP_INFO(
-          get_logger(), "Joint '%s' switched to velocity control mode.",
-          info.joints[joint_index].name.c_str());
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
         joint_control_mode_[joint_index] = ACCELERATION_INTERFACE_INDEX;
-        RCLCPP_INFO(
-          get_logger(), "Joint '%s' switched to acceleration control mode.",
-          info.joints[joint_index].name.c_str());
       }
     }
   }
