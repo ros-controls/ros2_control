@@ -523,6 +523,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 2 are position,
   // velocity, and acceleration interface
   // Create a subvector of standard_interfaces_ with the given indices
+  // TODO(anyone): preallocate this
   std::vector<std::string> skip_interfaces;
   for (size_t i = 0; i < (calculate_dynamics_ ? 3 : 1); ++i)
   {
@@ -544,26 +545,61 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       { return state.get()->get_name() == full_interface_name; });
     if (it != joint_states_.end())
     {
-      if (
-        joint_command.get()->get_interface_name() ==
-          standard_interfaces_[POSITION_INTERFACE_INDEX] &&
-        custom_interface_with_following_offset_ == full_interface_name)
+      auto cmd = get_command(full_interface_name);
+      if (std::isinf(cmd))
       {
-        set_state(
-          full_interface_name, get_command(full_interface_name) + position_state_following_offset_);
+        return return_type::ERROR;
       }
-      else
+      if (std::isfinite(cmd))
       {
-        set_state(full_interface_name, get_command(full_interface_name));
+        if (
+          joint_command.get()->get_interface_name() ==
+            standard_interfaces_[POSITION_INTERFACE_INDEX] &&
+          custom_interface_with_following_offset_ == full_interface_name)
+        {
+          cmd += position_state_following_offset_;
+        }
+        set_state(full_interface_name, cmd);
       }
     }
   }
 
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
-    set_state(
-      mimic_joint.joint_name,
-      mimic_joint.offset + mimic_joint.multiplier * get_state(mimic_joint.mimicked_joint_name));
+    if (
+      joint_state_interfaces_.find(
+        mimic_joint.joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]) !=
+      joint_state_interfaces_.end())
+    {
+      set_state(
+        mimic_joint.joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX],
+        mimic_joint.offset +
+          mimic_joint.multiplier * get_state(
+                                     mimic_joint.mimicked_joint_name + "/" +
+                                     standard_interfaces_[POSITION_INTERFACE_INDEX]));
+    }
+    if (
+      joint_state_interfaces_.find(
+        mimic_joint.joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]) !=
+      joint_state_interfaces_.end())
+    {
+      set_state(
+        mimic_joint.joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX],
+        mimic_joint.multiplier * get_state(
+                                   mimic_joint.mimicked_joint_name + "/" +
+                                   standard_interfaces_[VELOCITY_INTERFACE_INDEX]));
+    }
+    if (
+      joint_state_interfaces_.find(
+        mimic_joint.joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]) !=
+      joint_state_interfaces_.end())
+    {
+      set_state(
+        mimic_joint.joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX],
+        mimic_joint.multiplier * get_state(
+                                   mimic_joint.mimicked_joint_name + "/" +
+                                   standard_interfaces_[ACCELERATION_INTERFACE_INDEX]));
+    }
   }
 
   if (use_mock_sensor_command_interfaces_)
