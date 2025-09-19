@@ -4369,6 +4369,13 @@ void ControllerManager::build_controllers_topology_info(
       controller_manager::ControllersListIterator ctrl_it;
       if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
       {
+        if (is_controller_unconfigured(*ctrl_it->c))
+        {
+          RCLCPP_DEBUG(
+            get_logger(), "Controller '%s' is unconfigured, skipping chain building.",
+            ctrl_it->info.name.c_str());
+          continue;
+        }
         ControllerPeerInfo succeeding_peer_info = get_controller_peer_info(*ctrl_it);
         controller_chain_dependency_graph_.add_dependency(
           controller_peer_info, succeeding_peer_info);
