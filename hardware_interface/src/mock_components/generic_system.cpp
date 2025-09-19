@@ -491,13 +491,6 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       {
         case ACCELERATION_INTERFACE_INDEX:
         {
-          RCLCPP_INFO(
-            get_logger(),
-            "Processing joint '%s' in acceleration control mode with commands: "
-            "pos: %f, vel: %f, acc: %f",
-            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
-            joint_command_values_[VELOCITY_INTERFACE_INDEX],
-            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           // currently we do backward integration
           joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
             joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds() +
@@ -516,13 +509,6 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
         case VELOCITY_INTERFACE_INDEX:
         {
-          RCLCPP_INFO(
-            get_logger(),
-            "Processing joint '%s' in velocity  control mode with commands: "
-            "pos: %f, vel: %f, acc: %f",
-            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
-            joint_command_values_[VELOCITY_INTERFACE_INDEX],
-            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           // currently we do backward integration
           joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
             joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds() +
@@ -543,13 +529,6 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
         case POSITION_INTERFACE_INDEX:
         {
-          RCLCPP_INFO(
-            get_logger(),
-            "Processing joint '%s' in position control mode with commands: "
-            "pos: %f, vel: %f, acc: %f",
-            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
-            joint_command_values_[VELOCITY_INTERFACE_INDEX],
-            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX]))
           {
             const double old_position = joint_state_values_[POSITION_INTERFACE_INDEX];
