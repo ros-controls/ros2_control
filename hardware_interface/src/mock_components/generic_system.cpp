@@ -305,18 +305,26 @@ return_type GenericSystem::perform_command_mode_switch(
     {
       const size_t joint_index =
         static_cast<size_t>(std::distance(info.joints.begin(), joint_it_found));
-
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
         joint_control_mode_[joint_index] = POSITION_INTERFACE_INDEX;
+        RCLCPP_INFO(
+          get_logger(), "Joint '%s' switched to position control mode.",
+          info.joints[joint_index].name.c_str());
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
         joint_control_mode_[joint_index] = VELOCITY_INTERFACE_INDEX;
+        RCLCPP_INFO(
+          get_logger(), "Joint '%s' switched to velocity control mode.",
+          info.joints[joint_index].name.c_str());
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
         joint_control_mode_[joint_index] = ACCELERATION_INTERFACE_INDEX;
+        RCLCPP_INFO(
+          get_logger(), "Joint '%s' switched to acceleration control mode.",
+          info.joints[joint_index].name.c_str());
       }
     }
   }
@@ -440,6 +448,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       {
         case ACCELERATION_INTERFACE_INDEX:
         {
+          RCLCPP_INFO(
+            get_logger(),
+            "Processing joint '%s' in acceleration control mode with commands: "
+            "pos: %f, vel: %f, acc: %f",
+            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
+            joint_command_values_[VELOCITY_INTERFACE_INDEX],
+            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           // currently we do backward integration
           joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
             joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds() +
@@ -458,6 +473,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
         case VELOCITY_INTERFACE_INDEX:
         {
+          RCLCPP_INFO(
+            get_logger(),
+            "Processing joint '%s' in velocity  control mode with commands: "
+            "pos: %f, vel: %f, acc: %f",
+            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
+            joint_command_values_[VELOCITY_INTERFACE_INDEX],
+            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           // currently we do backward integration
           joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
             joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds() +
@@ -478,6 +500,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
         case POSITION_INTERFACE_INDEX:
         {
+          RCLCPP_INFO(
+            get_logger(),
+            "Processing joint '%s' in position control mode with commands: "
+            "pos: %f, vel: %f, acc: %f",
+            joint_name.c_str(), joint_command_values_[POSITION_INTERFACE_INDEX],
+            joint_command_values_[VELOCITY_INTERFACE_INDEX],
+            joint_command_values_[ACCELERATION_INTERFACE_INDEX]);
           if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX]))
           {
             const double old_position = joint_state_values_[POSITION_INTERFACE_INDEX];
@@ -495,6 +524,14 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
               (joint_state_values_[VELOCITY_INTERFACE_INDEX] - old_velocity) / period.seconds();
           }
           break;
+        }
+      }
+      // mirror them back
+      for (size_t i = 0; i < 3; ++i)
+      {
+        if (!std::isnan(joint_state_values_[i]))
+        {
+          set_state(joint_name + "/" + standard_interfaces_[i], joint_state_values_[i]);
         }
       }
     }
