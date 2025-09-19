@@ -873,9 +873,9 @@ void generic_system_functional_test(
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
   // State interfaces without initial value are set to 0
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
   EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
   EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
@@ -889,9 +889,9 @@ void generic_system_functional_test(
   ASSERT_TRUE(j2v_c.set_value(0.44));
 
   // State values should not be changed
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
   EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());
@@ -900,9 +900,9 @@ void generic_system_functional_test(
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
   EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());

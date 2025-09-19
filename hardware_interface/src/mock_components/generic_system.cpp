@@ -530,20 +530,20 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     skip_interfaces.push_back(standard_interfaces_[i]);
   }
   // TODO(anyone): optimize by using joint_command_interfaces_/joint_state_interfaces_ map
-  for (const auto & joint_command : joint_commands_)
+  for (const auto & joint_state : joint_states_)
   {
     if (
       std::find(
-        skip_interfaces.begin(), skip_interfaces.end(),
-        joint_command.get()->get_interface_name()) != skip_interfaces.end())
+        skip_interfaces.begin(), skip_interfaces.end(), joint_state.get()->get_interface_name()) !=
+      skip_interfaces.end())
     {
       continue;
     }
-    const std::string & full_interface_name = joint_command.get()->get_name();
+    const std::string & full_interface_name = joint_state.get()->get_name();
     auto it = std::find_if(
-      joint_states_.begin(), joint_states_.end(), [&full_interface_name](const auto & state)
+      joint_commands_.begin(), joint_commands_.end(), [&full_interface_name](const auto & state)
       { return state.get()->get_name() == full_interface_name; });
-    if (it != joint_states_.end())
+    if (it != joint_commands_.end())
     {
       auto cmd = get_command(full_interface_name);
       if (std::isinf(cmd))
@@ -552,15 +552,16 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       }
       if (std::isfinite(cmd))
       {
-        if (
-          joint_command.get()->get_interface_name() ==
-            standard_interfaces_[POSITION_INTERFACE_INDEX] &&
-          custom_interface_with_following_offset_ == full_interface_name)
-        {
-          cmd += position_state_following_offset_;
-        }
         set_state(full_interface_name, cmd);
       }
+    }
+    if (custom_interface_with_following_offset_ == joint_state.get()->get_interface_name())
+    {
+      const auto cmd = get_command(
+                         joint_state.get()->get_prefix_name() + "/" +
+                         standard_interfaces_[POSITION_INTERFACE_INDEX]) +
+                       position_state_following_offset_;
+      set_state(full_interface_name, cmd);
     }
   }
 
