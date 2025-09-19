@@ -366,8 +366,10 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
       }
       default:
       {
+        RCLCPP_WARN(
+          get_logger(), "Data type of joint state interface '%s' will not be handled.",
+          joint_state.second.get_interface_name().c_str());
       }
-        // not handling other types
     }
   }
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -380,6 +382,36 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");
     return return_type::OK;
   }
+
+  auto mirror_command_to_state = [this](const auto & name, const auto & data_type) -> return_type
+  {
+    switch (data_type)
+    {
+      case hardware_interface::HandleDataType::DOUBLE:
+      {
+        auto cmd = get_command(name);
+        if (std::isinf(cmd))
+        {
+          return return_type::ERROR;
+        }
+        if (std::isfinite(cmd))
+        {
+          set_state(name, cmd);
+        }
+        break;
+      }
+      case hardware_interface::HandleDataType::BOOL:
+      {
+        set_state<bool>(name, get_command<bool>(name));
+        break;
+      }
+      default:
+      {
+      }
+        // not handling other types
+    }
+    return return_type::OK;
+  };
 
   for (size_t j = 0; j < get_hardware_info().joints.size(); ++j)
   {
@@ -602,14 +634,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       { return state.get()->get_name() == full_interface_name; });
     if (it != joint_commands_.end())
     {
-      auto cmd = get_command(full_interface_name);
-      if (std::isinf(cmd))
+      if (
+        mirror_command_to_state(full_interface_name, joint_state.get()->get_data_type()) !=
+        return_type::OK)
       {
         return return_type::ERROR;
-      }
-      if (std::isfinite(cmd))
-      {
-        set_state(full_interface_name, cmd);
       }
     }
     if (custom_interface_with_following_offset_ == joint_state.get()->get_interface_name())
@@ -666,7 +695,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & sensor_state : sensor_states_)
     {
       const std::string & name = sensor_state.get()->get_name();
-      set_state(name, get_command(name));
+      mirror_command_to_state(name, sensor_state.get()->get_data_type());
     }
   }
 
@@ -677,23 +706,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & gpio_state : gpio_states_)
     {
       const std::string & name = gpio_state.get()->get_name();
-      switch (gpio_state.get()->get_data_type())
-      {
-        case hardware_interface::HandleDataType::DOUBLE:
-        {
-          set_state(name, get_command<double>(name));
-          break;
-        }
-        case hardware_interface::HandleDataType::BOOL:
-        {
-          set_state<bool>(name, get_command<bool>(name));
-          break;
-        }
-        default:
-        {
-        }
-          // not handling other types
-      }
+      mirror_command_to_state(name, gpio_state.get()->get_data_type());
     }
   }
   else
@@ -707,23 +720,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         [&name](const auto & state) { return state.get()->get_name() == name; });
       if (it != gpio_states_.end())
       {
-        switch (gpio_command.get()->get_data_type())
-        {
-          case hardware_interface::HandleDataType::DOUBLE:
-          {
-            set_state(name, get_command<double>(name));
-            break;
-          }
-          case hardware_interface::HandleDataType::BOOL:
-          {
-            set_state<bool>(name, get_command<bool>(name));
-            break;
-          }
-          default:
-          {
-          }
-            // not handling other types
-        }
+        mirror_command_to_state(name, gpio_command.get()->get_data_type());
       }
     }
   }
