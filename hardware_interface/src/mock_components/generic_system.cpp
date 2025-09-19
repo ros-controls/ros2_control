@@ -338,17 +338,37 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
   for (const auto & joint_state : joint_state_interfaces_)
   {
     const std::string & name = joint_state.second.get_name();
-    // TODO(anyone): consider initial value for non-double interfaces as well
-    double val = joint_state.second.interface_info.initial_value.empty()
-                   ? 0.0
-                   : hardware_interface::stod(joint_state.second.interface_info.initial_value);
-    if (
-      joint_state.second.get_interface_name() == standard_interfaces_[POSITION_INTERFACE_INDEX] &&
-      custom_interface_with_following_offset_.empty())
+    switch (joint_state.second.get_data_type())
     {
-      val += position_state_following_offset_;
+      case hardware_interface::HandleDataType::DOUBLE:
+      {
+        double val = joint_state.second.interface_info.initial_value.empty()
+                       ? 0.0
+                       : hardware_interface::stod(joint_state.second.interface_info.initial_value);
+        if (
+          joint_state.second.get_interface_name() ==
+            standard_interfaces_[POSITION_INTERFACE_INDEX] &&
+          custom_interface_with_following_offset_.empty())
+        {
+          val += position_state_following_offset_;
+        }
+        set_state(name, val);
+        break;
+      }
+      case hardware_interface::HandleDataType::BOOL:
+      {
+        bool bval =
+          joint_state.second.interface_info.initial_value.empty()
+            ? false
+            : hardware_interface::parse_bool(joint_state.second.interface_info.initial_value);
+        set_state<bool>(name, bval);
+        break;
+      }
+      default:
+      {
+      }
+        // not handling other types
     }
-    set_state(name, val);
   }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -653,12 +673,27 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
   if (use_mock_gpio_command_interfaces_)
   {
     // do loopback on all gpio interfaces as we have exported them all
-    // TODO(anyone): how to pass data_type?
     // from gpio_command_interfaces_ maybe?
     for (const auto & gpio_state : gpio_states_)
     {
       const std::string & name = gpio_state.get()->get_name();
-      set_state(name, get_command(name));
+      switch (gpio_state.get()->get_data_type())
+      {
+        case hardware_interface::HandleDataType::DOUBLE:
+        {
+          set_state(name, get_command<double>(name));
+          break;
+        }
+        case hardware_interface::HandleDataType::BOOL:
+        {
+          set_state<bool>(name, get_command<bool>(name));
+          break;
+        }
+        default:
+        {
+        }
+          // not handling other types
+      }
     }
   }
   else
@@ -666,15 +701,29 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     // do loopback on all gpio interfaces, where they exist
     for (const auto & gpio_command : gpio_commands_)
     {
-      // TODO(anyone): how to pass data_type?
-      // from gpio_command_interfaces_ maybe?
       const std::string & name = gpio_command.get()->get_name();
       auto it = std::find_if(
         gpio_states_.begin(), gpio_states_.end(),
         [&name](const auto & state) { return state.get()->get_name() == name; });
       if (it != gpio_states_.end())
       {
-        set_state(name, get_command(name));
+        switch (gpio_command.get()->get_data_type())
+        {
+          case hardware_interface::HandleDataType::DOUBLE:
+          {
+            set_state(name, get_command<double>(name));
+            break;
+          }
+          case hardware_interface::HandleDataType::BOOL:
+          {
+            set_state<bool>(name, get_command<bool>(name));
+            break;
+          }
+          default:
+          {
+          }
+            // not handling other types
+        }
       }
     }
   }
