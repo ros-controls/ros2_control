@@ -1584,7 +1584,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       }
     }
     RCLCPP_DEBUG(
-      get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
+      get_logger(), "'%s' request vector has size %i", action.c_str(),
+      static_cast<int>(request_list.size()));
 
     return result;
   };
@@ -2557,7 +2558,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
       get_logger(),
       "Controller manager: Cannot reload controller libraries because"
       " there are still %i active controllers",
-      (int)active_controllers.size());
+      static_cast<int>(active_controllers.size()));
     response->ok = false;
     return;
   }
