@@ -847,18 +847,18 @@ void generic_system_functional_test(
   TestableResourceManager rm(node, urdf);
   // check is hardware is configured
   auto status_map = rm.get_components_status();
-  EXPECT_EQ(
+  ASSERT_EQ(
     status_map[component_name].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
   EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   configure_components(rm, {component_name});
   status_map = rm.get_components_status();
-  EXPECT_EQ(
+  ASSERT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
   EXPECT_EQ(status_map[component_name].rw_rate, 100u);
   activate_components(rm, {component_name});
   status_map = rm.get_components_status();
-  EXPECT_EQ(
+  ASSERT_EQ(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
   EXPECT_EQ(status_map[component_name].rw_rate, 100u);
 
@@ -953,17 +953,17 @@ void generic_system_error_group_test(
   auto status_map = rm.get_components_status();
   for (auto component : {component1, component2})
   {
-    EXPECT_EQ(
+    ASSERT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
     EXPECT_EQ(status_map[component].rw_rate, 200u);
     configure_components(rm, {component});
     status_map = rm.get_components_status();
-    EXPECT_EQ(
+    ASSERT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
     EXPECT_EQ(status_map[component].rw_rate, 200u);
     activate_components(rm, {component});
     status_map = rm.get_components_status();
-    EXPECT_EQ(
+    ASSERT_EQ(
       status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
     EXPECT_EQ(status_map[component].rw_rate, 200u);
   }
