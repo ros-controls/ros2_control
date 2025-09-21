@@ -409,11 +409,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     if (calculate_dynamics_)
     {
       std::array<double, 3> joint_state_values_ = {
-        std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN()};
+        {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+         std::numeric_limits<double>::quiet_NaN()}};
       std::array<double, 3> joint_command_values_ = {
-        std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN()};
+        {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+         std::numeric_limits<double>::quiet_NaN()}};
       const auto joint_name = get_hardware_info().joints[j].name;
       {
         auto it_pos = std::find_if(
