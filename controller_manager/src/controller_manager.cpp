@@ -1467,21 +1467,13 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       get_logger(),
       "Controller Manager: to switch controllers you need to specify a "
       "strictness level of controller_manager_msgs::SwitchController::STRICT "
-      "(%d) or ::BEST_EFFORT (%d). When unspecified, the default is %s",
+      "(%d) or ::BEST_EFFORT (%d) or ::AUTO (%d). When unspecified, the default is %s",
       controller_manager_msgs::srv::SwitchController::Request::STRICT,
       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
-      default_strictness.c_str());
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, default_strictness.c_str());
     strictness = params_->defaults.switch_controller.strictness == "strict"
                    ? controller_manager_msgs::srv::SwitchController::Request::STRICT
                    : controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
-  }
-  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "Controller Manager: AUTO is not currently implemented. "
-      "Defaulting to BEST_EFFORT");
-    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
   else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
   {
@@ -1491,63 +1483,61 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
-
-  if (!activate_controllers.empty())
+  else if (strictness > controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
   {
-    for (const auto & controller : activate_controllers)
-    {
-      const auto x = controller_chain_dependency_graph_.get_dependencies_to_activate(controller);
-      RCLCPP_INFO(
-        get_logger(),
-        fmt::format(
-          "Controller {} has '{}' dependencies to activate", controller, fmt::join(x, ", "))
-          .c_str());
-    }
+    message = fmt::format(
+      FMT_COMPILE(
+        "Unknown strictness level '%d'. Please use controller_manager_msgs::SwitchController::"
+        "STRICT (%d) or ::BEST_EFFORT (%d) or ::AUTO (%d) or ::FORCE_AUTO (%d)."),
+      strictness, controller_manager_msgs::srv::SwitchController::Request::STRICT,
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+      controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO);
+    RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+    return controller_interface::return_type::ERROR;
   }
 
-  if (!deactivate_controllers.empty())
-  {
-    for (const auto & controller : deactivate_controllers)
-    {
-      const auto x = controller_chain_dependency_graph_.get_dependencies_to_deactivate(controller);
-      RCLCPP_INFO(
-        get_logger(),
-        fmt::format(
-          "Controller {} has '{}' dependencies to deactivate", controller, fmt::join(x, ", "))
-          .c_str());
-    }
-  }
-
-  std::string activate_list, deactivate_list;
-  activate_list.reserve(500);
-  deactivate_list.reserve(500);
-  for (const auto & controller : activate_controllers)
-  {
-    activate_list.append(controller);
-    activate_list.append(" ");
-  }
-  for (const auto & controller : deactivate_controllers)
-  {
-    deactivate_list.append(controller);
-    deactivate_list.append(" ");
-  }
-  RCLCPP_INFO_EXPRESSION(
-    get_logger(), !activate_list.empty(), "Activating controllers: [ %s]", activate_list.c_str());
-  RCLCPP_INFO_EXPRESSION(
-    get_logger(), !deactivate_list.empty(), "Deactivating controllers: [ %s]",
-    deactivate_list.c_str());
+  const std::string strictness_string =
+    strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT
+      ? "STRICT"
+      : (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT
+           ? "BEST_EFFORT"
+           : (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO
+                ? "AUTO"
+                : "FORCE_AUTO"));
 
   const auto list_controllers =
-    [this, strictness](
+    [this, strictness, &strictness_string](
       const std::vector<std::string> & controller_list, std::vector<std::string> & request_list,
       const std::string & action, std::string & msg) -> controller_interface::return_type
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
     auto result = controller_interface::return_type::OK;
+    std::vector<std::string> new_controller_list = controller_list;
+
+    if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
+    {
+      const bool is_activate = (action == "activate");
+      std::vector<std::string> dependencies = {};
+      for (const auto & controller : controller_list)
+      {
+        const auto ctrl_dependencies =
+          is_activate
+            ? controller_chain_dependency_graph_.get_dependencies_to_activate(controller)
+            : controller_chain_dependency_graph_.get_dependencies_to_deactivate(controller);
+        RCLCPP_INFO(
+          get_logger(), fmt::format(
+                          "Controller {} has '{}' dependencies to {}", controller,
+                          fmt::join(ctrl_dependencies, ", "), action)
+                          .c_str());
+        ros2_control::add_unique_items(dependencies, ctrl_dependencies);
+      }
+      ros2_control::add_unique_items(new_controller_list, dependencies);
+    }
 
     // list all controllers to (de)activate
-    for (const auto & controller : controller_list)
+    for (const auto & controller : new_controller_list)
     {
       const auto & updated_controllers = rt_controllers_wrapper_.get_updated_list(guard);
 
@@ -1567,10 +1557,12 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         // not a critical error
         result = request_list.empty() ? controller_interface::return_type::ERROR
                                       : controller_interface::return_type::OK;
-        if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+        if (strictness != controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
         {
           msg = error_msg;
-          RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
+          RCLCPP_ERROR(
+            get_logger(), "Aborting, no controller is switched! ('%s' switch)",
+            strictness_string.c_str());
           return controller_interface::return_type::ERROR;
         }
       }
@@ -1606,6 +1598,14 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     activate_request_.clear();
     return ret;
   }
+
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !activate_request_.empty(),
+    fmt::format("Activating controllers: [ {} ]", fmt::join(activate_request_, " ")).c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !deactivate_request_.empty(),
+    fmt::format("Deactivating controllers: [ {} ]", fmt::join(deactivate_request_, " ")).c_str());
+
   // If it is a best effort switch, we can remove the controllers log that could not be activated
   message.clear();
 
@@ -1647,7 +1647,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message = fmt::format(
           FMT_COMPILE("Controller with name '{}' is already active."), controller_it->info.name);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
-        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         status = controller_interface::return_type::ERROR;
       }
     }
@@ -1680,7 +1679,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         "Check the state of the controllers and their required interfaces using "
         "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+      if (
+        strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT ||
+        strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
       {
         // TODO(destogl): automatic manipulation of the chain:
         // || strictness ==
@@ -1691,9 +1692,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message.clear();
         --ctrl_it;
       }
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      else
       {
-        RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
+        RCLCPP_ERROR(
+          get_logger(), "Aborting, no controller is switched! (::%s switch)",
+          strictness_string.c_str());
         // reset all lists
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -1732,7 +1735,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         "Check the state of the controllers and their required interfaces using "
         "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+      if (
+        strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT ||
+        strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
       {
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
@@ -1740,9 +1745,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message.clear();
         --ctrl_it;
       }
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      else
       {
-        RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
+        RCLCPP_ERROR(
+          get_logger(), "Aborting, no controller is switched! (::%s switch)",
+          strictness_string.c_str());
         // reset all lists
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -1798,10 +1805,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
     auto handle_conflict = [&](const std::string & msg)
     {
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      if (strictness != controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
         message = msg;
-        RCLCPP_ERROR(get_logger(), "%s", msg.c_str());
+        RCLCPP_ERROR(get_logger(), "%s (::%s switch)", message.c_str(), strictness_string.c_str());
         deactivate_request_.clear();
         deactivate_command_interface_request_.clear();
         activate_request_.clear();
@@ -2113,6 +2120,8 @@ void ControllerManager::deactivate_controllers(
         {
           resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+          // TODO(saikishor): Review this part later
+          controller->set_chained_mode(false);
         }
         if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
         {

@@ -88,6 +88,15 @@ void add_item(std::vector<T> & vector, const T & item)
   }
 }
 
+template <typename T>
+void add_unique_items(std::vector<T> & vector, const std::vector<T> & items)
+{
+  for (const auto & item : items)
+  {
+    add_item(vector, item);
+  }
+}
+
 /**
  * @brief Remove the item from the container if it is in it.
  * @param container The container to remove the item from.
