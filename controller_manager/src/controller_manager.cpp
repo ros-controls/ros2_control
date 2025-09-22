@@ -2173,10 +2173,44 @@ controller_interface::return_type ControllerManager::update(
     if (is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
+<<<<<<< HEAD
       const auto controller_update_factor =
         (controller_update_rate == 0) || (controller_update_rate >= update_rate_)
           ? 1u
           : update_rate_ / controller_update_rate;
+=======
+      const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
+      const auto controller_period =
+        run_controller_at_cm_rate ? period
+                                  : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
+
+      bool first_update_cycle = false;
+      const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      if (
+        *loaded_controller.last_update_cycle_time ==
+        rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
+      {
+        // last_update_cycle_time is zero after activation
+        first_update_cycle = true;
+        *loaded_controller.last_update_cycle_time = current_time;
+        RCLCPP_DEBUG(
+          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
+          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
+      }
+      const auto controller_actual_period =
+        (current_time - *loaded_controller.last_update_cycle_time);
+
+      const double error_now =
+        std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);
+      const double error_if_skipped = std::abs(
+        ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
+         controller_update_rate) -
+        1.0);
+      const bool controller_go =
+        run_controller_at_cm_rate ||
+        (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
+        (error_now <= error_if_skipped) || first_update_cycle;
+>>>>>>> 56fc052 (Fix the skipped cycles of controllers running at different rate (#2557))
 
       bool controller_go = ((update_loop_counter_ % controller_update_factor) == 0);
       RCLCPP_DEBUG(
