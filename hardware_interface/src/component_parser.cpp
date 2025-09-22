@@ -72,6 +72,7 @@ constexpr const auto kIsAsyncAttribute = "is_async";
 constexpr const auto kThreadPriorityAttribute = "thread_priority";
 constexpr const auto kAffinityCoresAttribute = "affinity";
 constexpr const auto kSchedulingPolicyAttribute = "scheduling_policy";
+constexpr const auto kPrintWarningsAttribute = "print_warnings";
 
 }  // namespace
 
@@ -726,6 +727,11 @@ HardwareInfo parse_resource_from_xml(
           {
             hardware.async_params.thread_priority = parse_thread_priority_attribute(async_it);
             hardware.thread_priority = hardware.async_params.thread_priority;
+          }
+          if (async_it->FindAttribute(kPrintWarningsAttribute))
+          {
+            hardware.async_params.print_warnings =
+              parse_bool(get_attribute_value(async_it, kPrintWarningsAttribute, kAsyncTag));
           }
         }
         catch (const std::exception & e)

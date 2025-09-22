@@ -1433,6 +1433,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_EQ(hardware_info.thread_priority, 30);
   ASSERT_EQ(hardware_info.async_params.thread_priority, 30);
   ASSERT_EQ(hardware_info.async_params.scheduling_policy, "detached");
+  ASSERT_FALSE(hardware_info.async_params.print_warnings);
   ASSERT_EQ(3u, hardware_info.async_params.cpu_affinity_cores.size());
   ASSERT_THAT(
     hardware_info.async_params.cpu_affinity_cores,
@@ -1452,6 +1453,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_EQ(hardware_info.thread_priority, 50);
   ASSERT_EQ(hardware_info.async_params.thread_priority, 50);
   ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_TRUE(hardware_info.async_params.print_warnings);
   ASSERT_TRUE(hardware_info.async_params.cpu_affinity_cores.empty());
 
   EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");

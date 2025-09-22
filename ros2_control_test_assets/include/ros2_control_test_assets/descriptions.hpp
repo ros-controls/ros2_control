@@ -699,7 +699,7 @@ const auto async_hardware_resources =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator" is_async="true" thread_priority="30">
     <properties>
-      <async affinity="[2, 4,6]" scheduling_policy="detached"/>
+      <async affinity="[2, 4,6]" scheduling_policy="detached" print_warnings="false"/>
     </properties>
     <hardware>
       <plugin>test_actuator</plugin>

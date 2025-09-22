@@ -498,8 +498,8 @@ public:
       status.successful = result.first;
       if (!status.successful)
       {
-        RCLCPP_WARN(
-          get_logger(),
+        RCLCPP_WARN_EXPRESSION(
+          get_logger(), info_.async_params.print_warnings,
           "Trigger read/write called while the previous async trigger is still in progress for "
           "hardware interface : '%s'. Failed to trigger read/write cycle!",
           info_.name.c_str());
