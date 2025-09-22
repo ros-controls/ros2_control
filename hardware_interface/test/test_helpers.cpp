@@ -78,4 +78,9 @@ TEST(TestHelper, test_helper_methods)
   ASSERT_FALSE(ros2_control::has_no_common_items(set2, set2));
   ASSERT_FALSE(ros2_control::has_no_common_items(vec1, set3));
   ASSERT_FALSE(ros2_control::has_no_common_items(set1, vec3));
+
+  std::vector<std::string> vec4 = vec3;
+  ASSERT_THAT(vec4, ::testing::ElementsAre("aa", "bb", "dd"));
+  ros2_control::add_unique_items(vec4, vec2);
+  ASSERT_THAT(vec4, ::testing::ElementsAre("aa", "bb", "dd", "ee"));
 }
