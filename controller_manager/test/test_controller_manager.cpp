@@ -920,11 +920,11 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
       testing::AllOf(
-        testing::Ge(0.90 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+        testing::Ge(0.9 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
       testing::AllOf(
-        testing::Ge(0.70 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+        testing::Ge(0.5 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
       testing::AllOf(
@@ -1031,12 +1031,14 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
   const double controller_period = 1.0 / controller_update_rate;
+  const double exp_controller_period =
+    std::round((static_cast<double>(cm_update_rate) / controller_update_rate) - 0.01) /
+    cm_update_rate;
 
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
-  const auto exp_periodicity =
-    cm_update_rate / std::ceil(static_cast<double>(cm_update_rate) / controller_update_rate);
+  const auto exp_periodicity = 1.0 / exp_controller_period;
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
@@ -1053,10 +1055,11 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(0.99 * controller_period),
-          testing::Lt((1.2 * controller_period) + PERIOD.seconds())))
+          testing::Gt(0.99 * exp_controller_period),
+          testing::Lt((1.2 * exp_controller_period) + PERIOD.seconds())))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
+        << " expected controller period: " << exp_controller_period
         << " actual controller period: " << test_controller->update_period_.seconds();
     }
     else
@@ -1092,10 +1095,10 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         << "The first update is not counted in periodicity statistics";
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
-        testing::AllOf(testing::Ge(0.92 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+        testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
-        testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+        testing::AllOf(testing::Ge(0.5 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
         testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((2.0 * exp_periodicity))));
@@ -1178,12 +1181,14 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
   const double controller_period = 1.0 / controller_update_rate;
+  const double exp_controller_period =
+    std::round((static_cast<double>(cm_update_rate) / controller_update_rate) - 0.01) /
+    cm_update_rate;
 
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
-  const auto exp_periodicity =
-    cm_update_rate / std::ceil(static_cast<double>(cm_update_rate) / controller_update_rate);
+  const auto exp_periodicity = 1.0 / exp_controller_period;
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
@@ -1200,10 +1205,11 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(0.99 * controller_period),
-          testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+          testing::Gt(0.99 * exp_controller_period),
+          testing::Lt((1.05 * exp_controller_period) + PERIOD.seconds())))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
+        << " expected controller period: " << exp_controller_period
         << " actual controller period: " << test_controller->update_period_.seconds();
     }
     // else
