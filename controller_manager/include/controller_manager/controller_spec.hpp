@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /*
- * Author: Wim Meeussen
+ * Author: Wim Meeussen, Sai Kishor Kothakota
  */
 
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
@@ -82,12 +82,11 @@ struct ControllerPeerInfo
           // interfaces, add it as individual group
           predecessor_group.insert(p->name);
           mutually_exclusive_predecessor_groups.push_back(predecessor_group);
-          RCLCPP_INFO_STREAM(
+          RCLCPP_INFO(
             rclcpp::get_logger("controller_manager"),
-            "Adding predecessor: "
-              << p->name
-              << " as individual group, as all its command "
-                 "interfaces are in the current controller's reference interfaces.");
+            "Adding predecessor: '%s' as individual group, as all its command interfaces are in "
+            "the current controller's reference interfaces.",
+            p->name.c_str());
         }
       });
 
@@ -221,12 +220,11 @@ struct ControllerPeerInfo
           // interfaces, add it as individual group
           successor_group.insert(s->name);
           mutually_exclusive_successor_groups.push_back(successor_group);
-          RCLCPP_INFO_STREAM(
+          RCLCPP_INFO(
             rclcpp::get_logger("controller_manager"),
-            "Adding successor: "
-              << s->name
-              << " as individual group, as all its command "
-                 "interfaces are in the current controller's reference interfaces.");
+            "Adding successor: '%s' as individual group, as all its command interfaces are in the "
+            "current controller's reference interfaces.",
+            s->name.c_str());
         }
       });
 
@@ -315,10 +313,10 @@ struct ControllerPeerInfo
           mutually_exclusive_successor_groups.push_back(group);
         }
       }
-      RCLCPP_INFO_STREAM(
+      RCLCPP_INFO(
         rclcpp::get_logger("controller_manager"),
-        "Mutually exclusive successor groups for controller: "
-          << name << " are: " << mutually_exclusive_successor_groups.size());
+        "Mutually exclusive successor groups for controller: '%s' are: %zu", name.c_str(),
+        mutually_exclusive_successor_groups.size());
     }
   }
 
@@ -336,9 +334,9 @@ struct ControllerPeerInfo
       {
         if (ros2_control::has_item(controllers_to_activate, predecessor->name))
         {
-          RCLCPP_ERROR_STREAM(
+          RCLCPP_INFO(
             rclcpp::get_logger("controller_manager"),
-            "The predecessor: " << predecessor->name << " is already in the active list.");
+            "The predecessor: '%s' is already in the active list.", predecessor->name.c_str());
           ros2_control::add_item(predecessor_in_active_list, predecessor->name);
 
           // Only insert those that has name of the current controller in their command interfaces
@@ -356,24 +354,24 @@ struct ControllerPeerInfo
         }
       });
 
-    RCLCPP_ERROR_STREAM(
+    RCLCPP_INFO(
       rclcpp::get_logger("controller_manager"),
-      "The predecessor command interfaces of the predecessor:"
-        << name << " are: " << predecessor_command_interfaces_set.size());
-    RCLCPP_ERROR_STREAM(
+      "The predecessor command interfaces of the predecessor: '%s' are: %zu", name.c_str(),
+      predecessor_command_interfaces_set.size());
+    RCLCPP_INFO(
       rclcpp::get_logger("controller_manager"),
-      "The reference interfaces of the controller:" << name
-                                                    << " are: " << reference_interfaces.size());
+      "The reference interfaces of the controller: '%s' are: %zu", name.c_str(),
+      reference_interfaces.size());
     if (
       !predecessor_in_active_list.empty() &&
       (predecessor_command_interfaces_set.size() != reference_interfaces.size()))
     {
-      RCLCPP_ERROR_STREAM(
+      RCLCPP_INFO(
         rclcpp::get_logger("controller_manager"),
-        "The predecessor command interfaces of the predecessor:"
-          << name << " are not equal to the reference interfaces of the controller:" << name
-          << " : " << predecessor_command_interfaces_set.size()
-          << " != " << reference_interfaces.size());
+        "The predecessor command interfaces of the predecessor: '%s' are not equal to the "
+        "reference interfaces of the controller: '%s' : %zu != %zu",
+        name.c_str(), name.c_str(), predecessor_command_interfaces_set.size(),
+        reference_interfaces.size());
       for (const auto & predecessor : predecessors)
       {
         if (!ros2_control::has_item(predecessor_in_active_list, predecessor->name))
@@ -407,23 +405,24 @@ struct ControllerPeerInfo
       // check if all the successors reference interfaces are in the current controller's command
       // interfaces If they are, add them to the list of controllers to activate
 
-      RCLCPP_ERROR_STREAM(
+      RCLCPP_INFO(
         rclcpp::get_logger("controller_manager"),
-        "The command interfaces of the predecessor:" << name
-                                                     << " are: " << command_interfaces_set.size());
+        "The command interfaces of the predecessor: '%s' are: %zu", name.c_str(),
+        command_interfaces_set.size());
       for (const auto & command_itf : command_interfaces_set)
       {
-        RCLCPP_ERROR_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "The command interfaces of the predecessor:" << name << " are: " << command_itf);
+          "The command interfaces of the predecessor: '%s' are: %s", name.c_str(),
+          command_itf.c_str());
       }
 
       for (const auto & reference_itf : successor->reference_interfaces)
       {
-        RCLCPP_ERROR_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "The reference interfaces of the successor:" << successor->name
-                                                       << " are: " << reference_itf);
+          "The reference interfaces of the successor: '%s' are: %s", successor->name.c_str(),
+          reference_itf.c_str());
       }
 
       bool all_successor_interfaces_match = false;
@@ -438,11 +437,11 @@ struct ControllerPeerInfo
             all_successor_interfaces_match = true;
           }
         });
-      RCLCPP_ERROR_STREAM(
+      RCLCPP_INFO(
         rclcpp::get_logger("controller_manager"),
-        "The reference interfaces of the successor: "
-          << successor->name << " are within the command interfaces of the predecessor: " << name
-          << " : " << std::boolalpha << all_successor_interfaces_match);
+        "The reference interfaces of the successor: '%s' are within the command interfaces of the "
+        "predecessor: '%s' : %s",
+        successor->name.c_str(), name.c_str(), all_successor_interfaces_match ? "true" : "false");
       if (all_successor_interfaces_match)
       {
         ros2_control::add_item(controllers_to_activate, successor->name);
@@ -451,7 +450,7 @@ struct ControllerPeerInfo
       }
       else
       {
-        RCLCPP_ERROR(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
           "Controller %s has a successor %s who has more reference interfaces that use different "
           "controllers. This is not supported now.",
@@ -467,9 +466,9 @@ struct ControllerPeerInfo
     {
       if (ros2_control::has_item(controllers_to_deactivate, predecessor->name))
       {
-        RCLCPP_ERROR_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "The predecessor: " << predecessor->name << " is already in the deactivation list.");
+          "The predecessor: '%s' is already in the deactivation list.", predecessor->name.c_str());
         continue;
       }
       ros2_control::add_item(controllers_to_deactivate, predecessor->name);
@@ -490,9 +489,9 @@ struct ControllerPeerInfo
     {
       if (ros2_control::has_item(controllers_to_deactivate, successor->name))
       {
-        RCLCPP_ERROR_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "The successor: " << successor->name << " is already in the deactivation list.");
+          "The successor: '%s' is already in the deactivation list.", successor->name.c_str());
         continue;
       }
       RCLCPP_INFO(
@@ -507,24 +506,24 @@ struct ControllerPeerInfo
             [&successor](const std::unordered_set<std::string> & group)
             { return group.find(successor->name) != group.end() && group.size() == 1; }))
       {
-        RCLCPP_INFO_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "The successor: " << successor->name
-                            << " is in a mutually exclusive group, skipping further deactivation.");
+          "The successor: '%s' is in a mutually exclusive group, skipping further deactivation.",
+          successor->name.c_str());
         continue;
       }
 
       if (successor->command_interfaces.empty())
       {
         ros2_control::add_item(controllers_to_deactivate, successor->name);
-        RCLCPP_INFO_STREAM(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
-          "Adding successor: " << successor->name
-                               << " to the deactivation list, as it has no command interfaces.");
+          "Adding successor: '%s' to the deactivation list, as it has no command interfaces.",
+          successor->name.c_str());
       }
       else
       {
-        RCLCPP_ERROR(
+        RCLCPP_INFO(
           rclcpp::get_logger("controller_manager"),
           "Controller %s has a successor %s who has command interfaces. This is not supported now.",
           name.c_str(), successor->name.c_str());
