@@ -1506,6 +1506,14 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
                 ? "AUTO"
                 : "FORCE_AUTO"));
 
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !activate_controllers.empty(),
+    fmt::format("Activating controllers: [ {} ]", fmt::join(activate_controllers, " ")).c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !deactivate_controllers.empty(),
+    fmt::format("Deactivating controllers: [ {} ]", fmt::join(deactivate_controllers, " "))
+      .c_str());
+
   const auto list_controllers =
     [this, strictness, &strictness_string](
       const std::vector<std::string> & controller_list, std::vector<std::string> & request_list,
@@ -1526,7 +1534,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
           is_activate
             ? controller_chain_dependency_graph_.get_dependencies_to_activate(controller)
             : controller_chain_dependency_graph_.get_dependencies_to_deactivate(controller);
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(), fmt::format(
                           "Controller {} has '{}' dependencies to {}", controller,
                           fmt::join(ctrl_dependencies, ", "), action)
@@ -1599,12 +1607,17 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     return ret;
   }
 
+  const bool print_updated_list =
+    (strictness != controller_manager_msgs::srv::SwitchController::Request::AUTO ||
+     strictness != controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO);
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), !activate_request_.empty(),
-    fmt::format("Activating controllers: [ {} ]", fmt::join(activate_request_, " ")).c_str());
+    get_logger(), !activate_request_.empty() && print_updated_list,
+    fmt::format("Updated Activating controllers: [ {} ]", fmt::join(activate_request_, " "))
+      .c_str());
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), !deactivate_request_.empty(),
-    fmt::format("Deactivating controllers: [ {} ]", fmt::join(deactivate_request_, " ")).c_str());
+    get_logger(), !deactivate_request_.empty() && print_updated_list,
+    fmt::format("Updated Deactivating controllers: [ {} ]", fmt::join(deactivate_request_, " "))
+      .c_str());
 
   // If it is a best effort switch, we can remove the controllers log that could not be activated
   message.clear();
@@ -4413,16 +4426,16 @@ void ControllerManager::build_controllers_topology_info(
   }
   for (const auto & [controller_name, controller_chain] : controller_chain_spec_)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "Controller '%s' has %ld following controllers and %ld preceding controllers.",
       controller_name.c_str(), controller_chain.following_controllers.size(),
       controller_chain.preceding_controllers.size());
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain.following_controllers.empty(),
       fmt::format(
         "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
         .c_str());
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain.preceding_controllers.empty(),
       fmt::format(
         "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
