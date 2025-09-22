@@ -1569,7 +1569,9 @@ TEST_F(TestComponentParser, gripper_mimic_true_valid_config)
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_name, "right_finger_joint");
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_name, "left_finger_joint");
   // when not set, rw_rate should be 0
   EXPECT_EQ(hw_info[0].rw_rate, 0u);
 }
@@ -1587,7 +1589,9 @@ TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
   EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_name, "right_finger_joint");
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_name, "left_finger_joint");
   // when not set, rw_rate should be 0
   EXPECT_EQ(hw_info[0].rw_rate, 0u);
 }
