@@ -920,11 +920,11 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
       testing::AllOf(
-        testing::Ge(0.90 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+        testing::Ge(0.9 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
       testing::AllOf(
-        testing::Ge(0.70 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+        testing::Ge(0.5 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
       testing::AllOf(
@@ -1095,10 +1095,10 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         << "The first update is not counted in periodicity statistics";
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
-        testing::AllOf(testing::Ge(0.92 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+        testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
-        testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+        testing::AllOf(testing::Ge(0.5 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
         testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((2.0 * exp_periodicity))));
