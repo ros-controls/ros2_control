@@ -994,7 +994,9 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         };
 
         MimicJoint mimic_joint;
+        mimic_joint.joint_name = joint.name;
         mimic_joint.joint_index = i;
+        mimic_joint.mimicked_joint_name = urdf_joint->mimic->joint_name;
         mimic_joint.mimicked_joint_index = find_joint(urdf_joint->mimic->joint_name);
         mimic_joint.multiplier = urdf_joint->mimic->multiplier;
         mimic_joint.offset = urdf_joint->mimic->offset;
