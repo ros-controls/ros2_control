@@ -55,9 +55,7 @@ struct InterfaceInfo
 /// @brief This structure stores information about a joint that is mimicking another joint
 struct MimicJoint
 {
-  std::string joint_name;
   std::size_t joint_index;
-  std::string mimicked_joint_name;
   std::size_t mimicked_joint_index;
   double multiplier = 1.0;
   double offset = 0.0;
