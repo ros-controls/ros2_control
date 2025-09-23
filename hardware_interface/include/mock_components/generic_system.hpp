@@ -77,6 +77,7 @@ protected:
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
+  std::vector<std::string> skip_interfaces_;
 
   std::vector<std::string> other_interfaces_;
   std::vector<std::string> sensor_interfaces_;
