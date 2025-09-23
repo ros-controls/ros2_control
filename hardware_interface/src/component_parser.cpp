@@ -677,7 +677,6 @@ HardwareInfo parse_resource_from_xml(
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
   hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
                                                : std::numeric_limits<int>::max();
-  hardware.async_params.thread_priority = hardware.thread_priority;
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
