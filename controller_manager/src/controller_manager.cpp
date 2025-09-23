@@ -1216,6 +1216,8 @@ controller_interface::return_type ControllerManager::configure_controller(
       return controller_interface::return_type::ERROR;
     }
   }
+  // For cases, when the controller ends up in the unconfigured state from any other state
+  cleanup_controller_exported_interfaces(*found_it);
 
   try
   {
@@ -1582,7 +1584,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       }
     }
     RCLCPP_DEBUG(
-      get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
+      get_logger(), "'%s' request vector has size %i", action.c_str(),
+      static_cast<int>(request_list.size()));
 
     return result;
   };
@@ -2555,7 +2558,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
       get_logger(),
       "Controller manager: Cannot reload controller libraries because"
       " there are still %i active controllers",
-      (int)active_controllers.size());
+      static_cast<int>(active_controllers.size()));
     response->ok = false;
     return;
   }
@@ -2961,16 +2964,16 @@ controller_interface::return_type ControllerManager::update(
       const auto controller_actual_period =
         (current_time - *loaded_controller.last_update_cycle_time);
 
-      /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
-      /// jitter in the system sleep cycles.
-      // For instance, A controller running at 50 Hz and the CM running at 100Hz, then when we have
-      // an update cycle at 0.019s (ideally, the controller should only trigger >= 0.02s), if we
-      // wait for next cycle, then trigger will happen at ~0.029 sec and this is creating an issue
-      // to keep up with the controller update rate (see issue #1769).
+      const double error_now =
+        std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);
+      const double error_if_skipped = std::abs(
+        ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
+         controller_update_rate) -
+        1.0);
       const bool controller_go =
         run_controller_at_cm_rate ||
         (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (controller_actual_period.seconds() * controller_update_rate >= 0.99) || first_update_cycle;
+        (error_now <= error_if_skipped) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -4403,7 +4406,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
 void ControllerManager::cleanup_controller_exported_interfaces(const ControllerSpec & controller)
 {
-  if (is_controller_inactive(controller.c) && controller.c->is_chainable())
+  if (!is_controller_active(controller.c) && controller.c->is_chainable())
   {
     RCLCPP_DEBUG(
       get_logger(), "Removing controller '%s' exported interfaces from resource manager.",

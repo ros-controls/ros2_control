@@ -77,24 +77,24 @@ protected:
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
 
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> joint_commands_;
-  std::vector<std::vector<double>> joint_states_;
+  std::vector<std::vector<double>> joint_command_values_;
+  std::vector<std::vector<double>> joint_state_values_;
 
   std::vector<std::string> other_interfaces_;
   /// The size of this vector is (other_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> other_commands_;
-  std::vector<std::vector<double>> other_states_;
+  std::vector<std::vector<double>> other_command_values_;
+  std::vector<std::vector<double>> other_state_values_;
 
   std::vector<std::string> sensor_interfaces_;
   /// The size of this vector is (sensor_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> sensor_mock_commands_;
-  std::vector<std::vector<double>> sensor_states_;
+  std::vector<std::vector<double>> sensor_mock_command_values_;
+  std::vector<std::vector<double>> sensor_state_values_;
 
   std::vector<std::string> gpio_interfaces_;
   /// The size of this vector is (gpio_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> gpio_mock_commands_;
-  std::vector<std::vector<double>> gpio_commands_;
-  std::vector<std::vector<double>> gpio_states_;
+  std::vector<std::vector<double>> gpio_mock_command_values_;
+  std::vector<std::vector<double>> gpio_command_values_;
+  std::vector<std::vector<double>> gpio_state_values_;
 
 private:
   template <typename HandleType>
