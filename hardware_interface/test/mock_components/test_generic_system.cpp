@@ -46,7 +46,7 @@ public:
   void test_generic_system_with_mock_sensor_commands(
     std::string & urdf, const std::string & component_name);
   void test_generic_system_with_mock_gpio_commands(
-    std::string & urdf, const std::string & component_name);
+    std::string & urdf, const std::string & component_name, const bool data_type_bool = false);
 
 protected:
   void SetUp() override
@@ -425,6 +425,42 @@ protected:
   </ros2_control>
 )";
 
+    valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="mock_gpio_commands">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1" data_type="double"/>
+      <state_interface name="analog_output1"/>
+      <state_interface name="analog_input1"/>
+      <state_interface name="analog_input2"/>
+    </gpio>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum" data_type="bool"/>
+      <state_interface name="vacuum" data_type="bool"/>
+    </gpio>
+  </ros2_control>
+)";
+
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
@@ -665,6 +701,7 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_;
+  std::string valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_;
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
@@ -1755,7 +1792,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 }
 
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
-  std::string & urdf, const std::string & component_name)
+  std::string & urdf, const std::string & component_name, const bool data_type_bool)
 {
   TestableResourceManager rm(node_, urdf);
 
@@ -1816,49 +1853,90 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  if (data_type_bool)
+  {
+    // for bool data type initial value is false
+    EXPECT_FALSE(gpio2_vac_s.get_optional<bool>().value());
+    EXPECT_FALSE(gpio2_vac_c.get_optional<bool>().value());
+  }
+  else
+  {
+    EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+    EXPECT_TRUE(std::isnan(gpio2_vac_c.get_optional().value()));
+  }
   EXPECT_TRUE(std::isnan(gpio1_a_o1_c.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_c.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i2_c.get_optional().value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_c.get_optional().value()));
 
   // set some new values in commands
   ASSERT_TRUE(gpio1_a_o1_c.set_value(0.11));
   ASSERT_TRUE(gpio1_a_i1_c.set_value(0.33));
   ASSERT_TRUE(gpio1_a_i2_c.set_value(1.11));
-  ASSERT_TRUE(gpio2_vac_c.set_value(2.22));
+  if (data_type_bool)
+  {
+    ASSERT_TRUE(gpio2_vac_c.set_value(true));
+  }
+  else
+  {
+    ASSERT_TRUE(gpio2_vac_c.set_value(2.22));
+  }
 
   // State values should not be changed
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  if (data_type_bool)
+  {
+    EXPECT_FALSE(gpio2_vac_s.get_optional<bool>().value());
+    EXPECT_TRUE(gpio2_vac_c.get_optional<bool>().value());
+  }
+  else
+  {
+    EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+    ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
+  }
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+  if (data_type_bool)
+  {
+    // for bool data type initial value is false
+    EXPECT_FALSE(gpio2_vac_s.get_optional<bool>().value());
+    EXPECT_TRUE(gpio2_vac_c.get_optional<bool>().value());
+  }
+  else
+  {
+    EXPECT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
+    ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
+  }
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, gpio1_a_o1_s.get_optional().value());
   ASSERT_EQ(0.33, gpio1_a_i1_s.get_optional().value());
   ASSERT_EQ(1.11, gpio1_a_o2_s.get_optional().value());
-  ASSERT_EQ(2.22, gpio2_vac_s.get_optional().value());
+  if (data_type_bool)
+  {
+    EXPECT_TRUE(gpio2_vac_s.get_optional<bool>().value());
+    EXPECT_TRUE(gpio2_vac_c.get_optional<bool>().value());
+  }
+  else
+  {
+    ASSERT_EQ(2.22, gpio2_vac_s.get_optional().value());
+    ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
+  }
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_optional().value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_optional().value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
-  ASSERT_EQ(2.22, gpio2_vac_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command)
@@ -1868,6 +1946,15 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mock_gpio_commands(urdf, "MockHardwareSystem");
+}
+
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command_ +
+              ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_mock_gpio_commands(urdf, "MockHardwareSystem", true);
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True)
@@ -2202,6 +2289,8 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(valid_urdf_ros2_control_system_robot_with_gpio_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_));
   ASSERT_TRUE(check_prepare_command_mode_switch(sensor_with_initial_value_));
