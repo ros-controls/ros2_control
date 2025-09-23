@@ -621,41 +621,42 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
+  const auto joints = get_hardware_info().joints;
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
+    const auto mimic_joint_name = joints.at(mimic_joint.joint_index).name;
+    const auto mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
     if (
       joint_state_interfaces_.find(
-        mimic_joint.joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]) !=
+        mimic_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint.joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX],
+        mimic_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX],
         mimic_joint.offset +
-          mimic_joint.multiplier * get_state(
-                                     mimic_joint.mimicked_joint_name + "/" +
-                                     standard_interfaces_[POSITION_INTERFACE_INDEX]));
+          mimic_joint.multiplier *
+            get_state(mimicked_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]));
     }
     if (
       joint_state_interfaces_.find(
-        mimic_joint.joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]) !=
+        mimic_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint.joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX],
-        mimic_joint.multiplier * get_state(
-                                   mimic_joint.mimicked_joint_name + "/" +
-                                   standard_interfaces_[VELOCITY_INTERFACE_INDEX]));
+        mimic_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX],
+        mimic_joint.multiplier *
+          get_state(mimicked_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]));
     }
     if (
       joint_state_interfaces_.find(
-        mimic_joint.joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]) !=
+        mimic_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint.joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX],
-        mimic_joint.multiplier * get_state(
-                                   mimic_joint.mimicked_joint_name + "/" +
-                                   standard_interfaces_[ACCELERATION_INTERFACE_INDEX]));
+        mimic_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX],
+        mimic_joint.multiplier *
+          get_state(
+            mimicked_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]));
     }
   }
 
