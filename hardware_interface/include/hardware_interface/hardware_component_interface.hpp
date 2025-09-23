@@ -141,6 +141,7 @@ public:
       async_thread_params.clock = params.clock;
       async_thread_params.logger = params.logger;
       async_thread_params.exec_rate = params.hardware_info.rw_rate;
+      async_thread_params.print_warnings = info_.async_params.print_warnings;
       RCLCPP_INFO(
         get_logger(), "Starting async handler with scheduler priority: %d and policy : %s",
         info_.async_params.thread_priority,
