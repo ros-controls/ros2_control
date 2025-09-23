@@ -421,76 +421,18 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       std::array<double, 3> joint_command_values_ = {
         {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
          std::numeric_limits<double>::quiet_NaN()}};
-      const auto joint_name = get_hardware_info().joints[j].name;
+      const auto & joint_name = get_hardware_info().joints[j].name;
+      for (size_t i = 0; i < 3; ++i)
       {
-        auto it_pos = std::find_if(
-          joint_commands_.begin(), joint_commands_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX];
-          });
-        if (it_pos != joint_commands_.end())
+        const auto full_name = joint_name + "/" + standard_interfaces_[i];
+        if (joint_command_interfaces_.find(full_name) != joint_command_interfaces_.end())
         {
-          joint_command_values_[POSITION_INTERFACE_INDEX] = get_command(it_pos->get()->get_name());
+          joint_command_values_[i] =
+            get_command(joint_command_interfaces_.at(full_name).get_name());
         }
-        auto it_vel = std::find_if(
-          joint_commands_.begin(), joint_commands_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX];
-          });
-        if (it_vel != joint_commands_.end())
+        if (joint_state_interfaces_.find(full_name) != joint_state_interfaces_.end())
         {
-          joint_command_values_[VELOCITY_INTERFACE_INDEX] = get_command(it_vel->get()->get_name());
-        }
-        auto it_acc = std::find_if(
-          joint_commands_.begin(), joint_commands_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX];
-          });
-        if (it_acc != joint_commands_.end())
-        {
-          joint_command_values_[ACCELERATION_INTERFACE_INDEX] =
-            get_command(it_acc->get()->get_name());
-        }
-      }
-      {
-        auto it_pos = std::find_if(
-          joint_states_.begin(), joint_states_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX];
-          });
-        if (it_pos != joint_states_.end())
-        {
-          joint_state_values_[POSITION_INTERFACE_INDEX] = get_state(it_pos->get()->get_name());
-        }
-        auto it_vel = std::find_if(
-          joint_states_.begin(), joint_states_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX];
-          });
-        if (it_vel != joint_states_.end())
-        {
-          joint_state_values_[VELOCITY_INTERFACE_INDEX] = get_state(it_vel->get()->get_name());
-        }
-        auto it_acc = std::find_if(
-          joint_states_.begin(), joint_states_.end(),
-          [this, &joint_name](const auto & command)
-          {
-            return command.get()->get_name() ==
-                   joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX];
-          });
-        if (it_acc != joint_states_.end())
-        {
-          joint_state_values_[ACCELERATION_INTERFACE_INDEX] = get_state(it_acc->get()->get_name());
+          joint_state_values_[i] = get_state(joint_state_interfaces_.at(full_name).get_name());
         }
       }
 
@@ -566,15 +508,14 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
     else
     {
-      for (const auto & joint_command : joint_command_interfaces_)
+      for (const auto & joint_command : joint_commands_)
       {
         if (
-          joint_command.second.get_interface_name() ==
+          joint_command.get()->get_interface_name() ==
           standard_interfaces_[POSITION_INTERFACE_INDEX])
         {
-          const std::string & name = joint_command.second.get_name();
-          auto it = joint_state_interfaces_.find(name);
-          if (it != joint_state_interfaces_.end())
+          const std::string & name = joint_command.get()->get_name();
+          if (joint_state_interfaces_.find(name) != joint_state_interfaces_.end())
           {
             set_state(
               name, get_command(name) + (custom_interface_with_following_offset_.empty()
@@ -597,10 +538,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       continue;
     }
     const std::string & full_interface_name = joint_state.get()->get_name();
-    auto it = std::find_if(
-      joint_commands_.begin(), joint_commands_.end(), [&full_interface_name](const auto & state)
-      { return state.get()->get_name() == full_interface_name; });
-    if (it != joint_commands_.end())
+    if (joint_command_interfaces_.find(full_interface_name) != joint_command_interfaces_.end())
     {
       if (
         mirror_command_to_state(full_interface_name, joint_state.get()->get_data_type()) !=
@@ -619,6 +557,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
+  // Update mimic joints
   const auto & joints = get_hardware_info().joints;
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
@@ -684,10 +623,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & gpio_command : gpio_commands_)
     {
       const std::string & name = gpio_command.get()->get_name();
-      auto it = std::find_if(
-        gpio_states_.begin(), gpio_states_.end(),
-        [&name](const auto & state) { return state.get()->get_name() == name; });
-      if (it != gpio_states_.end())
+      if (gpio_state_interfaces_.find(name) != gpio_state_interfaces_.end())
       {
         mirror_command_to_state(name, gpio_command.get()->get_data_type());
       }
