@@ -682,7 +682,6 @@ HardwareInfo parse_resource_from_xml(
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
-  std::cout << "The hardware name is: " << hardware.name << std::endl;
   while (ros2_control_child_it)
   {
     if (std::string(kHardwareTag) == ros2_control_child_it->Name())
