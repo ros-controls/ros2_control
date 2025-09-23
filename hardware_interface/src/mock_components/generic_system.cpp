@@ -104,6 +104,9 @@ CallbackReturn GenericSystem::on_init(
   {
     calculate_dynamics_ = false;
   }
+  // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 2 are position,
+  // velocity, and acceleration interface
+  // Create a subvector of standard_interfaces_ with the given indices
   for (size_t i = 0; i < (calculate_dynamics_ ? 3 : 1); ++i)
   {
     skip_interfaces_.push_back(standard_interfaces_[i]);
@@ -583,10 +586,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
-  // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 2 are position,
-  // velocity, and acceleration interface
-  // Create a subvector of standard_interfaces_ with the given indices
-  // TODO(anyone): optimize by using joint_command_interfaces_/joint_state_interfaces_ map
+  // do loopback on all other interfaces
   for (const auto & joint_state : joint_states_)
   {
     if (
