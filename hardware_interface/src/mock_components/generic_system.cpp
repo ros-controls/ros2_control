@@ -619,11 +619,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
-  const auto joints = get_hardware_info().joints;
+  const auto & joints = get_hardware_info().joints;
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
-    const auto mimic_joint_name = joints.at(mimic_joint.joint_index).name;
-    const auto mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
+    const auto & mimic_joint_name = joints.at(mimic_joint.joint_index).name;
+    const auto & mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
     if (
       joint_state_interfaces_.find(
         mimic_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]) !=
