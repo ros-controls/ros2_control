@@ -105,7 +105,6 @@ public:
   std::unique_ptr<hardware_interface::LoanedStateInterface> claimed_actuator_position_state_;
 
   // Scenarios defined by example criteria
-  rclcpp::Node node_{"ResourceManagerPreparePerformTest"};
   std::vector<std::string> empty_keys = {};
   std::vector<std::string> non_existing_keys = {"elbow_joint/position", "should_joint/position"};
   std::vector<std::string> legal_keys_system = {"joint1/position", "joint2/position"};

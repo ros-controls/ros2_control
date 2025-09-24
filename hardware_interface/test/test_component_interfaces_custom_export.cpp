@@ -42,7 +42,6 @@ namespace
 {
 const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
-constexpr unsigned int TRIGGER_READ_WRITE_ERROR_CALLS = 10000;
 }  // namespace
 
 using namespace ::testing;  // NOLINT
