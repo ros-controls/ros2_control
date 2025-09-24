@@ -1405,7 +1405,7 @@ ResourceManager::ResourceManager(
     "future releases and will be defaulted to false.");
   RCLCPP_WARN_EXPRESSION(
     params.logger, !params.return_failed_hardware_names_on_return_deactivate_write_cycle_,
-    "The parameter 'deactivate_controllers_on_hardware_return_deactivate' is set to true. It is "
+    "The parameter 'deactivate_controllers_on_hardware_self_deactivate' is set to true. It is "
     "recommended to use the settings to true in order to avoid controllers to use inactive "
     "hardware components and to avoid any unexpected behavior. This feature might be removed in "
     "future releases and will be defaulted to true.");

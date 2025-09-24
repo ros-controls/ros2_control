@@ -62,7 +62,7 @@ controller_manager:
       However, It is not recommended to set this parameter to true for the safety reasons with the hardware and unexpected movement, this is purely added for backward compatibility reasons.",
     }
 
-    deactivate_controllers_on_hardware_return_deactivate: {
+    deactivate_controllers_on_hardware_self_deactivate: {
       type: bool,
       default_value: true,
       read_only: true,
