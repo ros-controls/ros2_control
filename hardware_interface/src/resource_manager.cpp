@@ -1405,6 +1405,8 @@ ResourceManager::ResourceManager(
     "to avoid any unexpected behavior. This feature might be removed in future releases.");
   allow_controller_activation_with_inactive_hardware_ =
     params.allow_controller_activation_with_inactive_hardware;
+  return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params.return_failed_hardware_names_on_return_deactivate_write_cycle_;
   if (load)
   {
     load_and_initialize_components(params);
@@ -2523,7 +2525,7 @@ HardwareReadWriteStatus ResourceManager::write(
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
         set_component_state(component_name, inactive_state);
         read_write_status.result = ret_val;
-        if (!allow_controller_activation_with_inactive_hardware_)
+        if (!return_failed_hardware_names_on_return_deactivate_write_cycle_)
         {
           read_write_status.failed_hardware_names.push_back(component_name);
         }

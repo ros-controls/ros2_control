@@ -423,6 +423,8 @@ ControllerManager::ControllerManager(
   params.executor = executor_;
   params.allow_controller_activation_with_inactive_hardware =
     params_->defaults.allow_controller_activation_with_inactive_hardware;
+  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params_->defaults.deactivate_controllers_on_hardware_return_deactivate;
   resource_manager_ =
     std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();

@@ -632,6 +632,7 @@ protected:
 
   bool components_are_loaded_and_initialized_ = false;
   bool allow_controller_activation_with_inactive_hardware_ = false;
+  bool return_failed_hardware_names_on_return_deactivate_write_cycle_ = true;
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;

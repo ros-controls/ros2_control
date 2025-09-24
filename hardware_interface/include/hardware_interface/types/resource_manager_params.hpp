@@ -75,6 +75,16 @@ struct ResourceManagerParams
   bool allow_controller_activation_with_inactive_hardware = false;
 
   /**
+   * @brief If true, when a hardware component returns DEACTIVATE on the write cycle,
+   * its name will be included in the returned HardwareReadWriteStatus.failed_hardware_names list.
+   * If false, the names of such hardware components will not be included in that list.
+   * This can be useful when controllers are allowed to operate with inactive hardware components.
+   * @note This parameter might be deprecated or removed in future releases. Please use with
+   * caution.
+   */
+  bool return_failed_hardware_names_on_return_deactivate_write_cycle_ = true;
+
+  /**
    * @brief The update rate (in Hz) of the ControllerManager.
    * This can be used by ResourceManager to configure asynchronous hardware components
    * or for other timing considerations.
