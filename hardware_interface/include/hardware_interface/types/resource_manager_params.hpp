@@ -72,7 +72,7 @@ struct ResourceManagerParams
    * @note This parameter might be deprecated or removed in the future releases. Please use with
    * caution.
    */
-  bool allow_control_with_inactive_hardware = false;
+  bool allow_controller_activation_with_inactive_hardware = false;
 
   /**
    * @brief The update rate (in Hz) of the ControllerManager.

@@ -631,7 +631,7 @@ protected:
   rclcpp::Clock::SharedPtr get_clock() const;
 
   bool components_are_loaded_and_initialized_ = false;
-  bool allow_control_with_inactive_hardware_ = false;
+  bool allow_controller_activation_with_inactive_hardware_ = false;
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;

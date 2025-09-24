@@ -551,7 +551,7 @@ public:
     ResourceManagerTest::SetUp();
 
     hardware_interface::ResourceManagerParams params;
-    params.allow_control_with_inactive_hardware = true;
+    params.allow_controller_activation_with_inactive_hardware = true;
     params.logger = node_.get_logger();
     params.clock = node_.get_clock();
     params.robot_description = command_mode_urdf;
