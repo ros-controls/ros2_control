@@ -4436,7 +4436,7 @@ void ControllerManager::build_controllers_topology_info(
         "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
         .c_str());
     RCLCPP_DEBUG_EXPRESSION(
-      get_logger(), !controller_chain.preceding_controllers.empty(),
+      get_logger(), !controller_chain.preceding_controllers.empty(), "%s",
       fmt::format(
         "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
         .c_str());
