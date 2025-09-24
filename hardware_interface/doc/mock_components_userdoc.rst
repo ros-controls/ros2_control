@@ -76,7 +76,7 @@ calculate_dynamics (optional; boolean; default: false)
   Calculation of states from commands by using Euler-forward integration or finite differences.
 
 custom_interface_with_following_offset (optional; string; default: "")
-  Mapping of offsetted commands to a custom interface.
+  Mapping of offsetted commands to a custom interface (see ``position_state_following_offset``).
 
 disable_commands (optional; boolean; default: false)
   Disables mirroring commands to states.
@@ -92,7 +92,9 @@ mock_sensor_commands (optional; boolean; default: false)
   Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
 
 position_state_following_offset (optional; double; default: 0.0)
-  Following offset added to the commanded values when mirrored to states. Only applied, if ``custom_interface_with_following_offset`` is false.
+  Following offset added to the state values when commands are mirrored to states.
+  If ``custom_interface_with_following_offset`` is empty, the offset is applied to the ``position`` state interface.
+  If a custom interface is set, the ``position`` state value + offset is applied to that interface.
 
 Per-Interface Parameters
 ########################
