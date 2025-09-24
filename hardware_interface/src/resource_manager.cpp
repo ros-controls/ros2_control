@@ -1400,9 +1400,15 @@ ResourceManager::ResourceManager(
   RCLCPP_WARN_EXPRESSION(
     params.logger, params.allow_controller_activation_with_inactive_hardware,
     "The parameter 'allow_controller_activation_with_inactive_hardware' is set to true. It is "
-    "recommended to use "
-    "the settings to false in order to avoid controllers to use inactive hardware components and "
-    "to avoid any unexpected behavior. This feature might be removed in future releases.");
+    "recommended to use the settings to false in order to avoid controllers to use inactive "
+    "hardware components and to avoid any unexpected behavior. This feature might be removed in "
+    "future releases and will be defaulted to false.");
+  RCLCPP_WARN_EXPRESSION(
+    params.logger, !params.return_failed_hardware_names_on_return_deactivate_write_cycle_,
+    "The parameter 'deactivate_controllers_on_hardware_return_deactivate' is set to true. It is "
+    "recommended to use the settings to true in order to avoid controllers to use inactive "
+    "hardware components and to avoid any unexpected behavior. This feature might be removed in "
+    "future releases and will be defaulted to true.");
   allow_controller_activation_with_inactive_hardware_ =
     params.allow_controller_activation_with_inactive_hardware;
   return_failed_hardware_names_on_return_deactivate_write_cycle_ =
