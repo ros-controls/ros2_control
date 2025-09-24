@@ -14,6 +14,7 @@ controller_manager
 hardware_interface
 ******************
 * The ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` methods will now only receive the start/stop interfaces that belong to the hardware component instead of everything (`#2120 <https://github.com/ros-controls/ros2_control/pull/2120>`_)
+* The asynchronous components now support two scheduling policies: ``synchronized`` and ``detached`` and other properties to configure them (`#2477 <https://github.com/ros-controls/ros2_control/pull/2477>`_).
 
 ros2controlcli
 **************
