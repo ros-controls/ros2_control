@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_interface</name>
-  <version>5.3.0</version>
+  <version>5.6.0</version>
   <description>Base classes for controllers and syntax cookies for supporting common sensor types in controllers and broadcasters</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -17,7 +17,6 @@
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>realtime_tools</build_depend>
   <build_depend>ros2_control_cmake</build_depend>
-  <build_depend>sensor_msgs</build_depend>
   <build_depend>fmt</build_depend>
 
   <build_export_depend>hardware_interface</build_export_depend>
@@ -29,6 +28,7 @@
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>geometry_msgs</test_depend>
   <test_depend>sensor_msgs</test_depend>
+  <test_depend>std_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

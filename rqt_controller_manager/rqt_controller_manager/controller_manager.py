@@ -444,7 +444,7 @@ class ControllerManager(Plugin):
                 controller_manager_name=self._cm_name,
                 activate_controllers=activate,
                 deactivate_controllers=deactivate,
-                strict=SwitchController.Request.STRICT,
+                strictness=SwitchController.Request.STRICT,
                 activate_asap=False,
                 timeout=0.3,
             )

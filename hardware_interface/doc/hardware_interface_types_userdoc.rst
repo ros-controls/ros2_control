@@ -25,13 +25,12 @@ A generic example which shows the structure is provided below. More specific exa
         <param name="example_param">value</param>
       </hardware>
       <joint name="name_of_the_component">
-        <command_interface name="interface_name">
-          <!-- All of them are optional. `data_type` and `size` are used for GPIOs. Size is length of an array. -->
+        <!-- `data_type` argument is optional (defaults to double). -->
+        <command_interface name="interface_name" data_type="double">
+          <!-- All of them are optional. -->
           <param name="min">-1</param>
           <param name="max">1</param>
           <param name="initial_value">0.0</param>
-          <param name="data_type"></param>
-          <param name="size">5</param>
            <!-- Optional. Added to the key/value storage parameters -->
           <param name="own_param_1">some_value</param>
           <param name="own_param_2">other_value</param>

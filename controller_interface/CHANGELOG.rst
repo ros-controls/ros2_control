@@ -2,6 +2,18 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+* Fix missing include for std::find (`#2425 <https://github.com/ros-controls/ros2_control/issues/2425>`_)
+* Document order of interfaces (`#2394 <https://github.com/ros-controls/ros2_control/issues/2394>`_)
+* Contributors: Christoph Fröhlich, Guilhem Saurel
+
+5.4.0 (2025-07-21)
+------------------
+
 5.3.0 (2025-07-02)
 ------------------
 
