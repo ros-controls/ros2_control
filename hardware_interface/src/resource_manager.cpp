@@ -2531,7 +2531,7 @@ HardwareReadWriteStatus ResourceManager::write(
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
         set_component_state(component_name, inactive_state);
         read_write_status.result = ret_val;
-        if (!return_failed_hardware_names_on_return_deactivate_write_cycle_)
+        if (return_failed_hardware_names_on_return_deactivate_write_cycle_)
         {
           read_write_status.failed_hardware_names.push_back(component_name);
         }
