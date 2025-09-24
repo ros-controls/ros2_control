@@ -836,6 +836,133 @@ TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
   ASSERT_EQ(result->controller[4].name, TEST_CHAINED_CONTROLLER_2);
   ASSERT_EQ(result->controller[5].name, TEST_CHAINED_CONTROLLER_1);
   RCLCPP_ERROR(srv_node->get_logger(), "Check successful!");
+
+  auto check_lifecycle_state = [&](const std::vector<uint8_t> & expected_states)
+  {
+    ASSERT_EQ(expected_states[0], test_controller->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_controller->get_name();
+    ASSERT_EQ(expected_states[1], test_chained_controller_5->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_5->get_name();
+    ASSERT_EQ(expected_states[2], test_chained_controller_4->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_4->get_name();
+    ASSERT_EQ(expected_states[3], test_chained_controller_3->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_3->get_name();
+    ASSERT_EQ(expected_states[4], test_chained_controller_2->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_2->get_name();
+    ASSERT_EQ(expected_states[5], test_chained_controller_1->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_1->get_name();
+  };
+
+  // Activate the whole chain by activating the top level controller
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {"test_controller_name"}, {}, controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // redoing the switch should be a no-op and not change the states and it should be successful
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {"test_controller_name"}, {}, controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Now, deactivate the last controller in the chain and see that all controllers are deactivated
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_1},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE});
+
+  // Now activate the middle controller in the chain and see that all controllers below it are
+  // activated
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_4}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Now, deactivate 3, and see that 3 and 4 are deactivated
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_3},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Redoing it should be a no-op and not change the states and it should be successful
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_3},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_4}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {"test_controller_name"}, {}, controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
 }
 
 TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
@@ -1018,6 +1145,202 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   ASSERT_GT(ctrl_5_pos, ctrl_6_pos);
   ASSERT_GT(ctrl_4_pos, ctrl_5_pos);
   ASSERT_GT(ctrl_3_pos, ctrl_4_pos);
+
+  auto check_lifecycle_state = [&](const std::vector<uint8_t> & expected_states)
+  {
+    ASSERT_EQ(expected_states[0], test_controller->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_controller->get_name();
+    ASSERT_EQ(expected_states[1], test_chained_controller_7->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_7->get_name();
+    ASSERT_EQ(expected_states[2], test_chained_controller_6->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_6->get_name();
+    ASSERT_EQ(expected_states[3], test_chained_controller_5->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_5->get_name();
+    ASSERT_EQ(expected_states[4], test_chained_controller_4->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_4->get_name();
+    ASSERT_EQ(expected_states[5], test_chained_controller_3->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_3->get_name();
+    ASSERT_EQ(expected_states[6], test_chained_controller_2->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_2->get_name();
+    ASSERT_EQ(expected_states[7], test_chained_controller_1->get_lifecycle_state().id())
+      << "Unexpected state for controller: " << test_chained_controller_1->get_name();
+  };
+
+  // Now let's activate the top level controller and see if the whole chain is activated
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {"test_controller_name"}, {}, controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      true, rclcpp::Duration(0, 0)));
+
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Now deactivate the chained_controller_1 and everything should deactivate
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_1},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_6}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Now deactivate the chained_controller_1 and 3 and everything should deactivate
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_1, TEST_CHAINED_CONTROLLER_3},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_2}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_5}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_7}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // repeating the last should also result in same state and succeed
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_7}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
+
+  // Deactivate the whole chain by deactivating 1 and 3
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {TEST_CHAINED_CONTROLLER_1, TEST_CHAINED_CONTROLLER_3},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE});
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_5}, {},
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, true, rclcpp::Duration(0, 0)));
+  check_lifecycle_state(
+    {lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
 }
 
 TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)

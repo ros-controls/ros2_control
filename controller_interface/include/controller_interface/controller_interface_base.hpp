@@ -366,6 +366,10 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
+
+public:
+  using SharedPtr = std::shared_ptr<ControllerInterfaceBase>;
+  using WeakPtr = std::weak_ptr<ControllerInterfaceBase>;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;
