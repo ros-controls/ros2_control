@@ -75,13 +75,16 @@ int main(int argc, char ** argv)
   cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+  const bool manage_overruns = cm->get_parameter_or<bool>("overruns.manage", true);
+  RCLCPP_INFO(
+    cm->get_logger(), "Overruns handling is : %s", manage_overruns ? "enabled" : "disabled");
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time]()
+    [cm, thread_priority, use_sim_time, manage_overruns]()
     {
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
@@ -153,7 +156,7 @@ int main(int argc, char ** argv)
         {
           next_iteration_time += period;
           const auto time_now = std::chrono::steady_clock::now();
-          if (next_iteration_time < time_now)
+          if (manage_overruns && next_iteration_time < time_now)
           {
             const double time_diff =
               static_cast<double>(
