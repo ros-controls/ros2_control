@@ -59,7 +59,7 @@ controller_manager:
       default_value: false,
       read_only: true,
       description: "If true, controllers are allowed to claim resources from inactive hardware components. If false, controllers can only claim resources from active hardware components. \
-      However, It is not recommended to set this parameter to true for the safety reasons with the hardware, this is purely added for backward compatibility reasons.",
+      However, It is not recommended to set this parameter to true for the safety reasons with the hardware and unexpected movement, this is purely added for backward compatibility reasons.",
     }
 
     deactivate_controllers_on_hardware_return_deactivate: {
