@@ -51,7 +51,7 @@
 namespace controller_manager
 {
 class ParamListener;
-class Params;
+struct Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 rclcpp::NodeOptions get_cm_node_options();
