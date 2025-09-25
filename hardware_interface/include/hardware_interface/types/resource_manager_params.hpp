@@ -62,6 +62,29 @@ struct ResourceManagerParams
   bool activate_all = false;
 
   /**
+   * @brief If true, controllers are allowed to claim resources from inactive hardware components.
+   * If false, controllers can only claim resources from active hardware components.
+   * Moreover, when the hardware component returns DEACTIVATE on read/write cycle: If set to true,
+   * the controllers using those interfaces will continue to run. If set to false, the controllers
+   * using those interfaces will be deactivated.
+   * @warning Allowing control with inactive hardware is not recommended for safety reasons.
+   * Use with caution only if you really know what you are doing.
+   * @note This parameter might be deprecated or removed in the future releases. Please use with
+   * caution.
+   */
+  bool allow_controller_activation_with_inactive_hardware = false;
+
+  /**
+   * @brief If true, when a hardware component returns DEACTIVATE on the write cycle,
+   * its name will be included in the returned HardwareReadWriteStatus.failed_hardware_names list.
+   * If false, the names of such hardware components will not be included in that list.
+   * This can be useful when controllers are allowed to operate with inactive hardware components.
+   * @note This parameter might be deprecated or removed in future releases. Please use with
+   * caution.
+   */
+  bool return_failed_hardware_names_on_return_deactivate_write_cycle_ = true;
+
+  /**
    * @brief The update rate (in Hz) of the ControllerManager.
    * This can be used by ResourceManager to configure asynchronous hardware components
    * or for other timing considerations.

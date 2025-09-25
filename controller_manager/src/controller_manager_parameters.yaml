@@ -54,6 +54,23 @@ controller_manager:
         }
       }
 
+    allow_controller_activation_with_inactive_hardware: {
+      type: bool,
+      default_value: false,
+      read_only: true,
+      description: "If true, controllers are allowed to claim resources from inactive hardware components. If false, controllers can only claim resources from active hardware components. \
+      However, it is not recommended to set this parameter to true for the safety reasons with the hardware and unexpected movement, this is purely added for backward compatibility.",
+    }
+
+    deactivate_controllers_on_hardware_self_deactivate: {
+      type: bool,
+      default_value: true,
+      read_only: true,
+      description: "If set to true, when a hardware component returns DEACTIVATE on the write cycle, controllers using those interfaces will be deactivated. When set to false, controllers using \
+      those interfaces will continue to run. It is not recommended to set this parameter to false for safety reasons with hardware. This will be the default behaviour of the controller \
+      manager and this parameter will be removed in future releases. Please use with caution.",
+    }
+
   diagnostics:
     threshold:
       controller_manager:

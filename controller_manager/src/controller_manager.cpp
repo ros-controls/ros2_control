@@ -393,21 +393,8 @@ rclcpp::NodeOptions get_cm_node_options()
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
-: rclcpp::Node(manager_node_name, node_namespace, options),
-  diagnostics_updater_(this),
-  executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
-  chainable_loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+: ControllerManager(executor, "", false, manager_node_name, node_namespace, options)
 {
-  initialize_parameters();
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
-  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -428,13 +415,18 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
+  params.robot_description = robot_description_;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
+  params.allow_controller_activation_with_inactive_hardware =
+    params_->defaults.allow_controller_activation_with_inactive_hardware;
+  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();
 }
 
