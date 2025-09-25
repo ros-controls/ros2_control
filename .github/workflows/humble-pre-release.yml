@@ -25,3 +25,4 @@ jobs:
       ros_distro: humble
       # downstream_depth is not set on pull_request event
       prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}
+      prerelease_exclude_pkg: nmea_hardware_interface
