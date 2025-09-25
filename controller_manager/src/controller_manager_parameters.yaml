@@ -6,6 +6,12 @@ controller_manager:
     description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controllers and writes commands to hardware."
   }
 
+  enable_overrun: {
+    type: bool,
+    default_value: true,
+    description: "If true, the controller manager will detect timing overruns, log warnings, and adjust the next iteration time to compensate for missed cycles."
+  }
+
   enforce_command_limits: {
     type: bool,
     default_value: true,
