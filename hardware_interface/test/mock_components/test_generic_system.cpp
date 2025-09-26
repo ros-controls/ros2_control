@@ -895,7 +895,11 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
+<<<<<<< HEAD
   EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+=======
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(2.78, j2p_s.get_optional().value());
@@ -906,7 +910,11 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands + offset to states
+<<<<<<< HEAD
   EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+=======
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   ASSERT_EQ(0.11 + offset, j1p_s.get_optional().value());
   ASSERT_EQ(0.22, j1v_s.get_optional().value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_optional().value());
@@ -1001,7 +1009,11 @@ void generic_system_error_group_test(
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
+<<<<<<< HEAD
   EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+=======
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(2.78, j2p_s.get_optional().value());
@@ -1012,7 +1024,11 @@ void generic_system_error_group_test(
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands to states
+<<<<<<< HEAD
   EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+=======
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_EQ(0.22, j1v_s.get_optional().value());
   ASSERT_EQ(0.33, j2p_s.get_optional().value());

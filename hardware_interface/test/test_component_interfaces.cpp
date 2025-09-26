@@ -818,8 +818,14 @@ TEST(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(0.0, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(0.0, state_interfaces[1]->get_optional().value());  // velocity
+=======
+    EXPECT_EQ(
+      step * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -834,10 +840,16 @@ TEST(TestComponentInterfaces, dummy_actuator)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
+<<<<<<< HEAD
       step * velocity_value,
       state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(
       step ? velocity_value : 0.0, state_interfaces[1]->get_optional().value());  // velocity
+=======
+      (10 + step) * velocity_value,
+      state_interfaces[0]->get_optional().value());                          // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -851,7 +863,11 @@ TEST(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(10 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+=======
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_EQ(0, state_interfaces[1]->get_optional().value());                    // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
@@ -944,8 +960,17 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(0.0, state_interfaces[si_joint1_pos]->get_optional().value());  // position value
     EXPECT_EQ(0.0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+=======
+    EXPECT_EQ(
+      step * velocity_value,
+      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0,
+      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -960,11 +985,17 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
+<<<<<<< HEAD
       step * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());  // position value
     EXPECT_EQ(
       step ? velocity_value : 0.0,
       state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+=======
+      (10 + step) * velocity_value,
+      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -979,7 +1010,11 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
+<<<<<<< HEAD
       10 * velocity_value,
+=======
+      20 * velocity_value,
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       state_interfaces[si_joint1_pos]->get_optional().value());             // position value
     EXPECT_EQ(0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
@@ -1213,12 +1248,24 @@ TEST(TestComponentInterfaces, dummy_system)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(0, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[1]->get_optional().value());  // velocity
     EXPECT_EQ(0, state_interfaces[2]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[3]->get_optional().value());  // velocity
     EXPECT_EQ(0, state_interfaces[4]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[5]->get_optional().value());  // velocity
+=======
+    EXPECT_EQ(
+      step * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step * velocity_value, state_interfaces[2]->get_optional().value());  // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[3]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step * velocity_value, state_interfaces[4]->get_optional().value());  // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[5]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
   }
@@ -1233,6 +1280,7 @@ TEST(TestComponentInterfaces, dummy_system)
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
+<<<<<<< HEAD
       step * velocity_value, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1]->get_optional().value());  // velocity
     EXPECT_EQ(
@@ -1241,6 +1289,19 @@ TEST(TestComponentInterfaces, dummy_system)
     EXPECT_EQ(
       step * velocity_value, state_interfaces[4]->get_optional().value());  // position value
     EXPECT_EQ(step ? velocity_value : 0, state_interfaces[5]->get_optional().value());  // velocity
+=======
+      (10 + step) * velocity_value,
+      state_interfaces[0]->get_optional().value());                          // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      (10 + step) * velocity_value,
+      state_interfaces[2]->get_optional().value());                          // position value
+    EXPECT_EQ(velocity_value, state_interfaces[3]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      (10 + step) * velocity_value,
+      state_interfaces[4]->get_optional().value());                          // position value
+    EXPECT_EQ(velocity_value, state_interfaces[5]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
   }
@@ -1254,11 +1315,19 @@ TEST(TestComponentInterfaces, dummy_system)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(10 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(0.0, state_interfaces[1]->get_optional().value());                  // velocity
     EXPECT_EQ(10 * velocity_value, state_interfaces[2]->get_optional().value());  // position value
     EXPECT_EQ(0.0, state_interfaces[3]->get_optional().value());                  // velocity
     EXPECT_EQ(10 * velocity_value, state_interfaces[4]->get_optional().value());  // position value
+=======
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[1]->get_optional().value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[2]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[3]->get_optional().value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[4]->get_optional().value());  // position value
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_EQ(0.0, state_interfaces[5]->get_optional().value());                  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
@@ -1415,25 +1484,14 @@ TEST(TestComponentInterfaces, dummy_system_default)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
+<<<<<<< HEAD
     EXPECT_EQ(0, state_interfaces[si_joint1_pos]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
     EXPECT_EQ(0, state_interfaces[si_joint2_pos]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[si_joint2_vel]->get_optional().value());  // velocity
     EXPECT_EQ(0, state_interfaces[si_joint3_pos]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[si_joint3_vel]->get_optional().value());  // velocity
-
-    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
-  }
-
-  state = system_hw.activate();
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
-  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
-
-  // Read and Write are working because it is ACTIVE
-  for (auto step = 0u; step < 10; ++step)
-  {
-    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
-
+=======
     EXPECT_EQ(
       step * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());  // position value
@@ -1452,6 +1510,52 @@ TEST(TestComponentInterfaces, dummy_system_default)
     EXPECT_EQ(
       step ? velocity_value : 0,
       state_interfaces[si_joint3_vel]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
+
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+  }
+
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+
+    EXPECT_EQ(
+<<<<<<< HEAD
+      step * velocity_value,
+      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0,
+      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step * velocity_value,
+      state_interfaces[si_joint2_pos]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0,
+      state_interfaces[si_joint2_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step * velocity_value,
+      state_interfaces[si_joint3_pos]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0,
+      state_interfaces[si_joint3_vel]->get_optional().value());  // velocity
+=======
+      (10 + step) * velocity_value,
+      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      (10 + step) * velocity_value,
+      state_interfaces[si_joint2_pos]->get_optional().value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[si_joint2_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      (10 + step) * velocity_value,
+      state_interfaces[si_joint3_pos]->get_optional().value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[si_joint3_vel]->get_optional().value());  // velocity
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
   }
@@ -1466,6 +1570,7 @@ TEST(TestComponentInterfaces, dummy_system_default)
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
+<<<<<<< HEAD
       10 * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());               // position value
     EXPECT_EQ(0.0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
@@ -1475,6 +1580,17 @@ TEST(TestComponentInterfaces, dummy_system_default)
     EXPECT_EQ(0.0, state_interfaces[si_joint2_vel]->get_optional().value());  // velocity
     EXPECT_EQ(
       10 * velocity_value,
+=======
+      20 * velocity_value,
+      state_interfaces[si_joint1_pos]->get_optional().value());               // position value
+    EXPECT_EQ(0.0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      20 * velocity_value,
+      state_interfaces[si_joint2_pos]->get_optional().value());               // position value
+    EXPECT_EQ(0.0, state_interfaces[si_joint2_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      20 * velocity_value,
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       state_interfaces[si_joint3_pos]->get_optional().value());               // position value
     EXPECT_EQ(0.0, state_interfaces[si_joint3_vel]->get_optional().value());  // velocity
 

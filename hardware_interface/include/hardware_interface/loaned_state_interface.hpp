@@ -89,8 +89,13 @@ public:
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
   [[deprecated(
+<<<<<<< HEAD
     "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
     "removed by the ROS 2 Kilted Kaiju release.")]]
+=======
+    "Use std::optional<T> get_optional() or bool get_value(double & "
+    "value) instead to retrieve the value.")]]
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   double get_value() const
   {
     std::optional<double> opt_value = get_optional();

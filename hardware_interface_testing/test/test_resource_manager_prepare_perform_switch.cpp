@@ -152,6 +152,7 @@ TEST_F(
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator))
     << "The actuator HW component is unconfigured, so the perform should fail!";
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0)
@@ -175,6 +176,24 @@ TEST_F(
   EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0)
     << "Shouldn't change as the perform command mode switch is done only for actuator interfaces";
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 403.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+
+  EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 403.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 503.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+
+  EXPECT_FALSE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 503.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 603.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 };
 
@@ -190,6 +209,7 @@ TEST_F(
   // When TestSystemCommandModes is ACTIVE expect OK
   EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 1.0);
+<<<<<<< HEAD
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
   EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 101.0);
@@ -235,6 +255,48 @@ TEST_F(
     << "Inactive with empty start interfaces is OK";
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0);
   EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.101, 1e-7);
+=======
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 1.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 101.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 101.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 102.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 102.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 202.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 202.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 203.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 203.0);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 303.0);
+
+  // When TestActuatorHardware is INACTIVE expect OK
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 304.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 304.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 404.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 404.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 405.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 405.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 505.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 505.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 506.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 506.0);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 606.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 606.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 };
 
 // System  : INACTIVE
@@ -246,6 +308,7 @@ TEST_F(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive",
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
 
+<<<<<<< HEAD
   // When TestSystemCommandModes is INACTIVE expect not OK
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0)
@@ -299,6 +362,51 @@ TEST_F(
   EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 101.0);
   EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.303, 1e-7);
+=======
+  // When TestSystemCommandModes is INACTIVE expect OK
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 1.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 1.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 101.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 101.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 102.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 102.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 202.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 202.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 203.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 203.0);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 303.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 303.0);
+
+  // When TestActuatorHardware is ACTIVE expect OK
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 304.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 304.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 404.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 404.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 405.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 405.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 505.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 505.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 506.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 506.0);
+  EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 606.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 606.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 };
 
 // System  : UNCONFIGURED
@@ -315,6 +423,7 @@ TEST_F(
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system))
     << "The system HW component is unconfigured, so the perform should fail!";
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
@@ -335,10 +444,30 @@ TEST_F(
     << "The system HW component is unconfigured, so the perform should fail!";
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 100.0);
+
+  EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 100.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 200.0);
+
+  EXPECT_FALSE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 200.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_system));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 300.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 
   // When TestActuatorHardware is ACTIVE expect OK
   EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.001, 1e-7);
   EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
@@ -486,6 +615,26 @@ TEST_F(
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_NEAR(claimed_actuator_position_state_->get_optional().value(), 0.505, 1e-7);
+=======
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 301.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 401.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 402.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 502.0);
+
+  EXPECT_TRUE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 503.0);
+  EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+  EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
+  EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 603.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
 };
 
 // System  : UNCONFIGURED
@@ -502,21 +651,33 @@ TEST_F(
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, legal_keys_system));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_system, empty_keys));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_system, empty_keys));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_system, empty_keys));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
   EXPECT_FALSE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_system));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_system));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_system));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
@@ -524,21 +685,33 @@ TEST_F(
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
   EXPECT_FALSE(rm_->prepare_command_mode_switch(legal_keys_actuator, empty_keys));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(legal_keys_actuator, empty_keys));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 
   EXPECT_FALSE(rm_->prepare_command_mode_switch(empty_keys, legal_keys_actuator));
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
+<<<<<<< HEAD
   EXPECT_FALSE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+=======
+  EXPECT_TRUE(rm_->perform_command_mode_switch(empty_keys, legal_keys_actuator));
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   EXPECT_EQ(claimed_system_acceleration_state_->get_optional().value(), 0.0);
   EXPECT_EQ(claimed_actuator_position_state_->get_optional().value(), 0.0);
 };

@@ -1307,8 +1307,13 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     EXPECT_EQ(claimed_itf1.get_optional().value(), 1.0);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 3.0);
 
+<<<<<<< HEAD
     ASSERT_TRUE(claimed_itf1.set_value(11.1));
     ASSERT_TRUE(claimed_itf3.set_value(33.3));
+=======
+    claimed_itf1.set_value(11.1);
+    claimed_itf3.set_value(33.3);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
     EXPECT_EQ(claimed_itf1.get_optional().value(), 11.1);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 33.3);
 
@@ -1907,12 +1912,17 @@ public:
       {
         // The values are computations exactly within the test_components
         prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
+<<<<<<< HEAD
         ASSERT_TRUE(claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + 20.0));
+=======
+        claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + 20.0);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       }
       if (i % (cm_update_rate_ / actuator_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
         prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
+<<<<<<< HEAD
         ASSERT_TRUE(claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + 10.0));
       }
       // Even though we skip some read and write iterations, the state interfaces should be the same
@@ -1944,6 +1954,16 @@ public:
       }
       auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_EQ(write_result, hardware_interface::return_type::OK);
+=======
+        claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + 10.0);
+      }
+      // Even though we skip some read and write iterations, the state interfaces should be the same
+      // as previous updated one until the next cycle
+      ASSERT_EQ(state_itfs[0].get_optional().value(), prev_act_state_value);
+      ASSERT_EQ(state_itfs[1].get_optional().value(), prev_system_state_value);
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(ok_write);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       EXPECT_TRUE(failed_hardware_names_write.empty());
 
       if (test_for_changing_values && is_write_active)
@@ -2381,18 +2401,29 @@ public:
         prev_system_state_value = claimed_itfs[1].get_optional().value() / 2.0;
         prev_act_state_value = claimed_itfs[0].get_optional().value() / 2.0;
       }
+<<<<<<< HEAD
       ASSERT_TRUE(
         claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + actuator_increment));
       ASSERT_TRUE(
         claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + system_increment));
+=======
+      claimed_itfs[0].set_value(claimed_itfs[0].get_optional().value() + actuator_increment);
+      claimed_itfs[1].set_value(claimed_itfs[1].get_optional().value() + system_increment);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       // This is needed to account for any missing hits to the read and write cycles as the tests
       // are going to be run on a non-RT operating system
       ASSERT_NEAR(
         state_itfs[0].get_optional().value(), prev_act_state_value, actuator_increment / 2.0);
       ASSERT_NEAR(
         state_itfs[1].get_optional().value(), prev_system_state_value, system_increment / 2.0);
+<<<<<<< HEAD
       auto [write_result, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_EQ(write_result, hardware_interface::return_type::OK);
+=======
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      EXPECT_TRUE(ok_write);
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
       EXPECT_TRUE(failed_hardware_names_write.empty());
       node_.get_clock()->sleep_until(time + duration);
       time = node_.get_clock()->now();

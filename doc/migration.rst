@@ -97,7 +97,11 @@ Earlier code will issue compile-time warnings like:
 
 The old methods are deprecated and will be removed in the future. The new methods are:
 
+<<<<<<< HEAD
   * ``std::optional<T> get_optional()`` for getting the value.
+=======
+  * ``std::optional<T> get_optional()`` or ``bool get_value(T & value)`` for getting the value.
+>>>>>>> e7457a7 ([Handle] Use `get_optional` instead of `get_value<double>` (#2061))
   * ``bool set_value(const T & value)`` for setting the value.
 
 The return value ``bool`` or ``std::optional<T>`` with ``get_value`` can be used to check if the value is available or not. Similarly, the ``set_value`` method returns a ``bool`` to check if the value was set or not.
