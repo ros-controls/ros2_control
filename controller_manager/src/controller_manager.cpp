@@ -393,21 +393,8 @@ rclcpp::NodeOptions get_cm_node_options()
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
-: rclcpp::Node(manager_node_name, node_namespace, options),
-  diagnostics_updater_(this),
-  executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
-  chainable_loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+: ControllerManager(executor, "", false, manager_node_name, node_namespace, options)
 {
-  initialize_parameters();
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
-  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -428,13 +415,18 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
+  params.robot_description = robot_description_;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
+  params.allow_controller_activation_with_inactive_hardware =
+    params_->defaults.allow_controller_activation_with_inactive_hardware;
+  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();
 }
 
@@ -2189,6 +2181,7 @@ void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> controllers_to_activate)
 {
+  std::vector<std::string> failed_controllers_command_interfaces;
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(
@@ -2297,35 +2290,38 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
+    auto new_state = controller->get_lifecycle_state();
     try
     {
       found_it->periodicity_statistics->reset();
       found_it->execution_time_statistics->reset();
-      const auto new_state = controller->get_node()->activate();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-      {
-        RCLCPP_ERROR(
-          get_logger(),
-          "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
-          controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
-          hardware_interface::lifecycle_state_names::ACTIVE,
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      }
+      new_state = controller->get_node()->activate();
     }
     catch (const std::exception & e)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught exception of type : %s while activating the controller '%s': %s",
         typeid(e).name(), controller_name.c_str(), e.what());
-      controller->release_interfaces();
-      continue;
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught unknown exception while activating the controller '%s'",
         controller_name.c_str());
+    }
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
+        "interfaces!",
+        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+        hardware_interface::lifecycle_state_names::ACTIVE,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       controller->release_interfaces();
+      failed_controllers_command_interfaces.insert(
+        failed_controllers_command_interfaces.end(), command_interface_names.begin(),
+        command_interface_names.end());
       continue;
     }
 
@@ -2336,6 +2332,18 @@ void ControllerManager::activate_controllers(
       resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
+  }
+  // Now prepare and perform the stop interface switching as this is needed for exclusive
+  // interfaces
+  if (
+    !failed_controllers_command_interfaces.empty() &&
+    (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
+     !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Error switching back the interfaces in the hardware when the controller activation "
+      "failed.");
   }
 }
 
