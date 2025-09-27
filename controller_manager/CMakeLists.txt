@@ -162,6 +162,20 @@ if(BUILD_TESTING)
     DESTINATION lib
   )
 
+  add_library(test_controller_failed_activate SHARED
+  test/test_controller_failed_activate/test_controller_failed_activate.cpp
+  )
+  target_link_libraries(test_controller_failed_activate PUBLIC
+    controller_manager
+  )
+  target_compile_definitions(test_controller_failed_activate PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller_failed_activate/test_controller_failed_activate.xml)
+  install(
+    TARGETS test_controller_failed_activate
+    DESTINATION lib
+  )
+
   ament_add_gmock(test_release_interfaces
     test/test_release_interfaces.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
@@ -169,6 +183,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_release_interfaces
     controller_manager
     test_controller_with_interfaces
+    test_controller_failed_activate
     ros2_control_test_assets::ros2_control_test_assets
   )
 

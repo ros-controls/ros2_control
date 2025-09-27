@@ -1578,6 +1578,7 @@ void ControllerManager::activate_controllers()
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+  std::vector<std::string> failed_controllers_command_interfaces;
   for (const auto & controller_name : activate_request_)
   {
     auto found_it = std::find_if(
@@ -1682,10 +1683,16 @@ void ControllerManager::activate_controllers()
     {
       RCLCPP_ERROR(
         get_logger(),
-        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
+        "interfaces!",
         controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      controller->release_interfaces();
+      failed_controllers_command_interfaces.insert(
+        failed_controllers_command_interfaces.end(), command_interface_names.begin(),
+        command_interface_names.end());
+      continue;
     }
 
     // if it is a chainable controller, make the reference interfaces available on activation
@@ -1693,6 +1700,18 @@ void ControllerManager::activate_controllers()
     {
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
+  }
+  // Now prepare and perform the stop interface switching as this is needed for exclusive
+  // interfaces
+  if (
+    !failed_controllers_command_interfaces.empty() &&
+    (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
+     !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Error switching back the interfaces in the hardware when the controller activation "
+      "failed.");
   }
   // All controllers activated, switching done
   switch_params_.do_switch = false;
