@@ -1513,7 +1513,10 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   resource_storage_->executor_ = params.executor;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return load_and_initialize_components(params.robot_description, params.update_rate);
+#pragma GCC diagnostic pop
 }
 
 void ResourceManager::import_joint_limiters(const std::string & urdf)
