@@ -93,7 +93,10 @@ public:
     const HardwareInfo & hardware_info, rclcpp::Logger logger,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return this->init(hardware_info, logger, clock_interface->get_clock());
+#pragma GCC diagnostic pop
   }
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
