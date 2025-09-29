@@ -233,7 +233,8 @@ inline void SimpleTransmission::configure(
     !actuator_position_ && !actuator_velocity_ && !actuator_effort_ && !actuator_torque_ &&
     !actuator_force_ && !actuator_current_ && !actuator_absolute_position_)
   {
-    throw Exception("None of the provided joint handles are valid or from the required interfaces");
+    throw Exception(
+      "None of the provided actuator handles are valid or from the required interfaces");
   }
 }
 
