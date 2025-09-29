@@ -134,20 +134,6 @@ public:
    * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
    * \returns false if URDF validation has failed.
    */
-  [[deprecated("Use load_and_initialize_components(const ResourceManagerParams & params) instead")]]
-  virtual bool load_and_initialize_components(
-    const std::string & urdf, const unsigned int update_rate = 100);
-
-  /// Load resources from on a given URDF.
-  /**
-   * The resource manager can be post-initialized with a given URDF.
-   * This is mainly used in conjunction with the default constructor
-   * in which the URDF might not be present at first initialization.
-   *
-   * \param[in] urdf string containing the URDF.
-   * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
-   * \returns false if URDF validation has failed.
-   */
   virtual bool load_and_initialize_components(
     const hardware_interface::ResourceManagerParams & params);
 
@@ -412,44 +398,6 @@ public:
    * not be called when a controller is running.
    * \note given that no hardware_info is available, the component has to be configured
    * externally and prior to the call to import.
-   * \param[in] actuator pointer to the actuator interface.
-   * \param[in] hardware_info hardware info
-   */
-  [[deprecated(
-    "Use import_component(std::unique_ptr<ActuatorInterface> actuator, "
-    "const HardwareComponentParams & params) instead")]]
-  void import_component(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);
-
-  /// Import a hardware component which is not listed in the URDF
-  /**
-   * Components which are initialized outside a URDF can be added post initialization.
-   * Nevertheless, there should still be `HardwareInfo` available for this component,
-   * either parsed from a URDF string (easiest) or filled manually.
-   *
-   * \note this might invalidate existing state and command interfaces and should thus
-   * not be called when a controller is running.
-   * \note given that no hardware_info is available, the component has to be configured
-   * externally and prior to the call to import.
-   * \param[in] sensor pointer to the sensor interface.
-   * \param[in] hardware_info hardware info
-   */
-  [[deprecated(
-    "Use import_component(std::unique_ptr<SensorInterface> sensor, "
-    "const HardwareComponentParams & params) instead")]]
-  void import_component(
-    std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info);
-
-  /// Import a hardware component which is not listed in the URDF
-  /**
-   * Components which are initialized outside a URDF can be added post initialization.
-   * Nevertheless, there should still be `HardwareInfo` available for this component,
-   * either parsed from a URDF string (easiest) or filled manually.
-   *
-   * \note this might invalidate existing state and command interfaces and should thus
-   * not be called when a controller is running.
-   * \note given that no hardware_info is available, the component has to be configured
-   * externally and prior to the call to import.
    * \param[in] system pointer to the system interface.
    * \param[in] hardware_info hardware info
    */
@@ -489,26 +437,6 @@ public:
    */
   void import_component(
     std::unique_ptr<SensorInterface> sensor, const HardwareComponentParams & params);
-
-  /// Import a hardware component which is not listed in the URDF
-  /**
-   * Components which are initialized outside a URDF can be added post initialization.
-   * Nevertheless, there should still be `HardwareInfo` available for this component,
-   * either parsed from a URDF string (easiest) or filled manually.
-   *
-   * \note this might invalidate existing state and command interfaces and should thus
-   * not be called when a controller is running.
-   * \note given that no hardware_info is available, the component has to be configured
-   * externally and prior to the call to import.
-   * \param[in] system pointer to the system interface.
-   * \param[in] params Struct of type HardwareComponentParams containing the hardware info
-   * and other parameters for the component.
-   */
-  [[deprecated(
-    "Use import_component(std::unique_ptr<SystemInterface> system, "
-    "const HardwareComponentParams & params) instead")]]
-  void import_component(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info);
 
   /// Return status for all components.
   /**

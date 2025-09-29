@@ -1446,15 +1446,6 @@ bool ResourceManager::shutdown_components()
 
 // CM API: Called in "callback/slow"-thread
 bool ResourceManager::load_and_initialize_components(
-  const std::string & urdf, const unsigned int update_rate)
-{
-  hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
-  params.update_rate = update_rate;
-  return load_and_initialize_components(params);
-}
-
-bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
   components_are_loaded_and_initialized_ = true;
@@ -1881,30 +1872,6 @@ std::string ResourceManager::get_command_interface_data_type(const std::string &
     throw std::runtime_error(
       std::string("Command interface with '") + name + std::string("' does not exist"));
   }
-}
-
-void ResourceManager::import_component(
-  std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
-{
-  HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  import_component(std::move(actuator), params);
-}
-
-void ResourceManager::import_component(
-  std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
-{
-  HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  import_component(std::move(sensor), params);
-}
-
-void ResourceManager::import_component(
-  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
-{
-  HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  import_component(std::move(system), params);
 }
 
 void ResourceManager::import_component(
