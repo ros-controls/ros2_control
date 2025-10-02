@@ -133,6 +133,7 @@ To adapt to the new way of creating and exporting ``Command-/StateInterfaces`` f
       auto some_command = hw_commands_[i];
     }
 
+<<<<<<< HEAD
     // specific state/command
     hw_commands_[x] = hw_states_[y];
 
@@ -188,3 +189,13 @@ In case the default implementation (``on_export_command_interfaces()`` or ``on_e
 * If you want to have unlisted interfaces available you need to call the ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
 * Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``std::shared_ptr`` and the resource manager will not provide access to the created ``Command-/StateInterface`` for the hardware. So you must take care of storing them yourself.
 * Names must be unique!
+=======
+* The ``initialize`` methods of all hardware components (such as ``Actuator``, ``Sensor``, etc.)
+  have been updated from passing a ``const HardwareInfo &`` to passing a ``const
+  HardwareComponentParams &`` (`# 2323 <https://github.com/ros-controls/ros2_control/pull/2323>`_).
+  The old signatures are deprecated and will be removed in a future release.
+
+* The ``thread_priority`` variable in the ``HardwareInfo`` struct has been deprecated in favor of newly
+  introduced ``async_params`` variable that has more options in the ``HardwareComponentParams`` struct.
+  The deprecated ``thread_priority`` variable will be removed in a future release. (`# 2477 <https://github.com/ros-controls/ros2_control/pull/2477>`_).
+>>>>>>> aebc2b8 (Add detach async policy for rate critical frameworks (#2477))
