@@ -2895,7 +2895,7 @@ void ControllerManager::manage_switch()
   RCLCPP_DEBUG(
     get_logger(),
     "Switching  %lu controllers to chained mode and %lu controllers from chained mode",
-    to_chained_mode_request_.size(), from_chained_mode_request_.size());
+    switch_params_.to_chained_mode_request.size(), switch_params_.from_chained_mode_request.size());
   execution_time_.switch_chained_mode_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - chain_start_time)
       .count();
