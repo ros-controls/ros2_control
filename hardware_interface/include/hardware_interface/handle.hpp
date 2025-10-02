@@ -169,6 +169,24 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
+  // TODO(anyone): remove after branching for kilted
+  [[deprecated(
+    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
+    "removed by the ROS 2 Lyrical Luth release.")]]
+  double get_value() const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) return value_ if old functionality is removed
+    THROW_ON_NULLPTR(value_ptr_);
+    return *value_ptr_;
+    // END
+  }
+
   /**
    * @brief Get the value of the handle.
    * @tparam T The type of the value to be retrieved.
