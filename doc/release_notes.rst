@@ -10,6 +10,7 @@ controller_manager
 * The default strictness of the ``switch_controllers`` can now we be chosen using ROS 2 parameters. The default behaviour is still left to ``BEST_EFFORT`` (`#2168 <https://github.com/ros-controls/ros2_control/pull/2168>`_).
 * Parameter ``shutdown_on_initial_state_failure`` was added to avoid shutting down on hardware initial state failure  (`#2230 <https://github.com/ros-controls/ros2_control/pull/2230>`_).
 * The controller manager now publishes ``~/statistics/names`` and ``~/statistics/values`` topics to introspect the execution time and periodicity of the different entities running in the realtime loop (`#2449 <https://github.com/ros-controls/ros2_control/pull/2449>`_).
+* New parameters ``overruns.manage`` and ``overruns.print_warnings`` were added to control the behavior of the controller manager/ros2_control_node when overruns occur (`#2546 <https://github.com/ros-controls/ros2_control/pull/2546/files>`_).
 
 hardware_interface
 ******************
