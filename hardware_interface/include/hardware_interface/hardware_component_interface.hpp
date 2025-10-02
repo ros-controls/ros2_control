@@ -40,12 +40,23 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
+
+static inline rclcpp::NodeOptions get_hardware_component_node_options()
+{
+  rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
+  return node_options;
+}
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -120,13 +131,25 @@ public:
     logger_ = logger_copy.get_child(
       "hardware_component." + params.hardware_info.type + "." + params.hardware_info.name);
     info_ = params.hardware_info;
-    if (info_.is_async)
+    if (params.hardware_info.is_async)
     {
-      RCLCPP_INFO_STREAM(
-        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      realtime_tools::AsyncFunctionHandlerParams async_thread_params;
+      async_thread_params.thread_priority = info_.async_params.thread_priority;
+      async_thread_params.scheduling_policy =
+        realtime_tools::AsyncSchedulingPolicy(info_.async_params.scheduling_policy);
+      async_thread_params.cpu_affinity_cores = info_.async_params.cpu_affinity_cores;
+      async_thread_params.clock = params.clock;
+      async_thread_params.logger = params.logger;
+      async_thread_params.exec_rate = params.hardware_info.rw_rate;
+      async_thread_params.print_warnings = info_.async_params.print_warnings;
+      RCLCPP_INFO(
+        get_logger(), "Starting async handler with scheduler priority: %d and policy : %s",
+        info_.async_params.thread_priority,
+        async_thread_params.scheduling_policy.to_string().c_str());
       async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      const bool is_sensor_type = (info_.type == "sensor");
       async_handler_->init(
-        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        [this, is_sensor_type](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
           const auto read_start_time = std::chrono::steady_clock::now();
           const auto ret_read = read(time, period);
@@ -139,7 +162,9 @@ public:
           {
             return ret_read;
           }
-          if (info_.type != "sensor")
+          if (
+            !is_sensor_type &&
+            this->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
           {
             const auto write_start_time = std::chrono::steady_clock::now();
             const auto ret_write = write(time, period);
@@ -153,7 +178,7 @@ public:
           }
           return return_type::OK;
         },
-        info_.thread_priority);
+        async_thread_params);
       async_handler_->start_thread();
     }
 
@@ -164,7 +189,8 @@ public:
         node_name.begin(), node_name.end(), node_name.begin(),
         [](unsigned char c) { return std::tolower(c); });
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      hardware_component_node_ =
+        std::make_shared<rclcpp::Node>(node_name, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
@@ -473,8 +499,8 @@ public:
       status.successful = result.first;
       if (!status.successful)
       {
-        RCLCPP_WARN(
-          get_logger(),
+        RCLCPP_WARN_EXPRESSION(
+          get_logger(), info_.async_params.print_warnings,
           "Trigger read/write called while the previous async trigger is still in progress for "
           "hardware interface : '%s'. Failed to trigger read/write cycle!",
           info_.name.c_str());
@@ -726,6 +752,19 @@ public:
    * \return hardware info of the HardwareComponentInterface.
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
+
+  /// Pause any asynchronous operations.
+  /**
+   * This method is called to pause any ongoing asynchronous operations, such as read/write cycles.
+   * It is typically used during lifecycle transitions or when the hardware needs to be paused.
+   */
+  void pause_async_operations()
+  {
+    if (async_handler_)
+    {
+      async_handler_->pause_execution();
+    }
+  }
 
   /// Prepare for the activation of the hardware.
   /**

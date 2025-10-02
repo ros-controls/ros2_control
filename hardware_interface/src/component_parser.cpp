@@ -55,6 +55,8 @@ constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
 constexpr const auto kLimitsTag = "limits";
+constexpr const auto kPropertiesTag = "properties";
+constexpr const auto kAsyncTag = "async";
 constexpr const auto kEnableAttribute = "enable";
 constexpr const auto kInitialValueTag = "initial_value";
 constexpr const auto kMimicAttribute = "mimic";
@@ -68,6 +70,9 @@ constexpr const auto kOffsetAttribute = "offset";
 constexpr const auto kReadWriteRateAttribute = "rw_rate";
 constexpr const auto kIsAsyncAttribute = "is_async";
 constexpr const auto kThreadPriorityAttribute = "thread_priority";
+constexpr const auto kAffinityCoresAttribute = "affinity";
+constexpr const auto kSchedulingPolicyAttribute = "scheduling_policy";
+constexpr const auto kPrintWarningsAttribute = "print_warnings";
 
 }  // namespace
 
@@ -672,6 +677,7 @@ HardwareInfo parse_resource_from_xml(
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
   hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
                                                : std::numeric_limits<int>::max();
+  hardware.async_params.thread_priority = hardware.thread_priority;
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -696,6 +702,42 @@ HardwareInfo parse_resource_from_xml(
       if (params_it)
       {
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
+      }
+    }
+    else if (std::string(kPropertiesTag) == ros2_control_child_it->Name())
+    {
+      const auto * async_it = ros2_control_child_it->FirstChildElement(kAsyncTag);
+      if (async_it)
+      {
+        // Async properties are defined
+        try
+        {
+          if (async_it->FindAttribute(kAffinityCoresAttribute))
+          {
+            hardware.async_params.cpu_affinity_cores =
+              parse_array<int>(get_attribute_value(async_it, kAffinityCoresAttribute, kAsyncTag));
+          }
+          if (async_it->FindAttribute(kSchedulingPolicyAttribute))
+          {
+            hardware.async_params.scheduling_policy =
+              to_lower_case(get_attribute_value(async_it, kSchedulingPolicyAttribute, kAsyncTag));
+          }
+          if (async_it->FindAttribute(kThreadPriorityAttribute))
+          {
+            hardware.async_params.thread_priority = parse_thread_priority_attribute(async_it);
+            hardware.thread_priority = hardware.async_params.thread_priority;
+          }
+          if (async_it->FindAttribute(kPrintWarningsAttribute))
+          {
+            hardware.async_params.print_warnings =
+              parse_bool(get_attribute_value(async_it, kPrintWarningsAttribute, kAsyncTag));
+          }
+        }
+        catch (const std::exception & e)
+        {
+          throw std::runtime_error(
+            fmt::format(FMT_COMPILE("Error parsing {} tag: {}"), kAsyncTag, e.what()));
+        }
       }
     }
     else if (std::string(kJointTag) == ros2_control_child_it->Name())

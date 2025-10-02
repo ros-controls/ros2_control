@@ -52,7 +52,7 @@
 namespace controller_manager
 {
 class ParamListener;
-class Params;
+struct Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 rclcpp::NodeOptions get_cm_node_options();
@@ -616,6 +616,7 @@ private:
     std::function<void()> on_switch_callback_ = nullptr;
   };
 
+  bool use_sim_time_;
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
@@ -654,6 +655,21 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  struct ControllerManagerExecutionTime
+  {
+    double read_time = 0.0;
+    double update_time = 0.0;
+    double write_time = 0.0;
+    double switch_time = 0.0;
+    double total_time = 0.0;
+    double switch_chained_mode_time = 0.0;
+    double switch_perform_mode_time = 0.0;
+    double deactivation_time = 0.0;
+    double activation_time = 0.0;
+  };
+
+  ControllerManagerExecutionTime execution_time_;
 
   controller_manager::MovingAverageStatistics periodicity_stats_;
 
