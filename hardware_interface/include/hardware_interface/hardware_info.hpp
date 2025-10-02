@@ -272,7 +272,9 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
-  /// [[deprecated("Use async_params instead.")]] Async thread priority
+  // TODO(anyone): deprecate after branching for kilted
+  /// [[deprecated("Use async_params instead.")]]
+  /// Async thread priority
   int thread_priority;
   /// Async Parameters
   HardwareAsyncParams async_params;

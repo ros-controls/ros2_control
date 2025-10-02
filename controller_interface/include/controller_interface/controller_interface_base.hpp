@@ -153,9 +153,10 @@ public:
    */
   virtual void release_interfaces();
 
-  [[deprecated(
-    "Use the init(const controller_interface::ControllerInterfaceParams & params) method instead. "
-    "This method will be removed in the future ROS 2 releases.")]]
+  // TODO(anyone): deprecate after branching for kilted
+  // [[deprecated(
+  //   "Use the init(const controller_interface::ControllerInterfaceParams & params) method instead.
+  //   " "This method will be removed in the future ROS 2 releases.")]]
   return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
