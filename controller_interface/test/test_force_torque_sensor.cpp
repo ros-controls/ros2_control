@@ -233,12 +233,12 @@ TEST_F(ForceTorqueSensorTest, validate_all_custom_names)
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
 
   // insert the interfaces in jumbled sequence
-  temp_state_interfaces.emplace_back(torque_y, nullptr);
-  temp_state_interfaces.emplace_back(force_z, nullptr);
-  temp_state_interfaces.emplace_back(force_x, nullptr);
-  temp_state_interfaces.emplace_back(torque_z, nullptr);
-  temp_state_interfaces.emplace_back(torque_x, nullptr);
-  temp_state_interfaces.emplace_back(force_y, nullptr);
+  temp_state_interfaces.emplace_back(torque_y);
+  temp_state_interfaces.emplace_back(force_z);
+  temp_state_interfaces.emplace_back(force_x);
+  temp_state_interfaces.emplace_back(torque_z);
+  temp_state_interfaces.emplace_back(torque_x);
+  temp_state_interfaces.emplace_back(force_y);
 
   // now call the function to make them in order like interface_names
   force_torque_sensor_->assign_loaned_state_interfaces(temp_state_interfaces);
