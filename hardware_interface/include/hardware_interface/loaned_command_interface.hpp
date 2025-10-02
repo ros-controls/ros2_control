@@ -31,6 +31,11 @@ class LoanedCommandInterface
 public:
   using Deleter = std::function<void(void)>;
 
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface)
+  : LoanedCommandInterface(command_interface, nullptr)
+  {
+  }
+
   LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
   : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
   {
