@@ -1431,6 +1431,13 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
   ASSERT_EQ(hardware_info.thread_priority, 30);
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 30);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "detached");
+  ASSERT_FALSE(hardware_info.async_params.print_warnings);
+  ASSERT_EQ(3u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores,
+    testing::ContainerEq(std::vector<int>({2, 4, 6})));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
@@ -1444,6 +1451,10 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
   ASSERT_EQ(hardware_info.thread_priority, 50);
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 50);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_TRUE(hardware_info.async_params.print_warnings);
+  ASSERT_TRUE(hardware_info.async_params.cpu_affinity_cores.empty());
 
   EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
@@ -1468,6 +1479,11 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   ASSERT_TRUE(hardware_info.is_async);
   ASSERT_EQ(hardware_info.thread_priority, 70);
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 70);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_EQ(1u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores, testing::ContainerEq(std::vector<int>({1})));
 }
 
 TEST_F(TestComponentParser, successfully_parse_parameter_empty)
