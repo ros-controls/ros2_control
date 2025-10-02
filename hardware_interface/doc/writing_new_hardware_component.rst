@@ -52,54 +52,58 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
          A common requirement for a hardware component is to publish status or diagnostic information without interfering with the real-time control loop.
 
-         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are two primary ways to achieve this.
+         This allows you to add any standard ROS 2 component (publishers, subscribers, services, timers) to your hardware interface without compromising real-time performance. There are three primary ways to achieve this.
 
-         **Method 1: Using the Framework-Managed Node (Recommended & Simplest)**
+         **Method 1: Using the Framework-Managed Publisher (Recommended & Simplest for HardwareStatus Messages)**
 
-         The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
+            Refer :ref:`Framework Managed Publisher <framework_managed_publisher>`
 
-         #. **Access and using the Default Node**: You can get a ``shared_ptr`` to the node by calling the ``get_node()`` method and use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
+         **Method 2: Using the Framework-Managed Node (Recommended & Simplest for Custom Messages)**
 
-            .. code-block:: cpp
+            The framework internally creates a dedicated ROS 2 node for each hardware component. Your hardware plugin can then get a handle to this node and use it.
 
-               // Continuing inside on_configure()
-               if (get_node())
-               {
-                  my_publisher_ = get_node()->create_publisher<std_msgs::msg::String>("~/status", 10);
+            #. **Access and using the Default Node**: You can get a ``shared_ptr`` to the node by calling the ``get_node()`` method and use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
 
-                  using namespace std::chrono_literals;
-                  my_timer_ = get_node()->create_wall_timer(1s, [this]() {
-                     std_msgs::msg::String msg;
-                     msg.data = "Hardware status update!";
-                     my_publisher_->publish(msg);
-                  });
-               }
+               .. code-block:: cpp
 
-         **Method 2: Using the Executor from `HardwareComponentInterfaceParams`**
+                  // Continuing inside on_configure()
+                  if (get_node())
+                  {
+                     my_publisher_ = get_node()->create_publisher<std_msgs::msg::String>("~/status", 10);
 
-         For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentInterfaceParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
+                     using namespace std::chrono_literals;
+                     my_timer_ = get_node()->create_wall_timer(1s, [this]() {
+                        std_msgs::msg::String msg;
+                        msg.data = "Hardware status update!";
+                        my_publisher_->publish(msg);
+                     });
+                  }
 
-         #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentInterfaceParams``.
+         **Method 3: Using the Executor from `HardwareComponentInterfaceParams`**
 
-            .. code-block:: cpp
+            For more advanced use cases where you need direct control over node creation, the ``on_init`` method can be configured to receive a ``HardwareComponentInterfaceParams`` struct. This struct contains a ``weak_ptr`` to the ``ControllerManager``'s executor.
 
-               // In your <robot_hardware_interface_name>.hpp
-               hardware_interface::CallbackReturn on_init(
-               const hardware_interface::HardwareComponentInterfaceParams & params) override;
+            #. **Update ``on_init`` Signature**: First, your hardware interface must override the ``on_init`` version that takes ``HardwareComponentInterfaceParams``.
 
-         #. **Lock and Use the Executor**: Inside ``on_init``, you must safely "lock" the ``weak_ptr`` to get a usable ``shared_ptr``. You can then create your own node and add it to the executor.
+               .. code-block:: cpp
 
-            .. code-block:: cpp
+                  // In your <robot_hardware_interface_name>.hpp
+                  hardware_interface::CallbackReturn on_init(
+                  const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
-               // In your <robot_hardware_interface_name>.cpp, inside on_init(params)
-               if (auto locked_executor = params.executor.lock())
-               {
-                  my_custom_node_ = std::make_shared<rclcpp::Node>("my_custom_node");
-                  locked_executor->add_node(my_custom_node_->get_node_base_interface());
-                  // ... create publishers/timers on my_custom_node_ ...
-               }
+            #. **Lock and Use the Executor**: Inside ``on_init``, you must safely "lock" the ``weak_ptr`` to get a usable ``shared_ptr``. You can then create your own node and add it to the executor.
 
-         For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in example 17.
+               .. code-block:: cpp
+
+                  // In your <robot_hardware_interface_name>.cpp, inside on_init(params)
+                  if (auto locked_executor = params.executor.lock())
+                  {
+                     my_custom_node_ = std::make_shared<rclcpp::Node>("my_custom_node");
+                     locked_executor->add_node(my_custom_node_->get_node_base_interface());
+                     // ... create publishers/timers on my_custom_node_ ...
+                  }
+
+            For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in :ref:`Example 17 <ros2_control_demos_example_17_userdoc>`.
 
    #. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
@@ -149,6 +153,78 @@ The following is a step-by-step guide to create source files, basic tests, and c
    #.  Implement the ``read`` method getting the states from the hardware and storing them to internal variables defined in ``export_state_interfaces``.
 
    #.  Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
+
+   #. (optional) **Framework Managed Publisher**
+
+      .. _framework_managed_publisher:
+
+      Implement ``init_hardware_status_message`` and ``update_hardware_status_message`` methods to publish the framework-supported hardware status reporting through ``control_msgs/msg/HardwareStatus`` messages:
+
+      *   **`init_hardware_status_message`**: This non-realtime method is called once during initialization. You must override it to define the **static structure** of your status message. This includes setting the ``hardware_id``, resizing the ``hardware_device_states`` vector, and for each device, resizing its specific status vectors (e.g., ``generic_hardware_status``, ``canopen_states``) and populating static fields like ``device_id`` and interface ``name``. Pre-allocating the message structure here is crucial for real-time safety.
+
+         .. code-block:: cpp
+
+            // In your <robot_hardware_interface_name>.hpp
+            hardware_interface::CallbackReturn init_hardware_status_message(
+            control_msgs::msg::HardwareStatus & msg_template) override;
+
+            // In your <robot_hardware_interface_name>.cpp
+            hardware_interface::CallbackReturn MyHardware::init_hardware_status_message(
+            control_msgs::msg::HardwareStatus & msg)
+            {
+               msg.hardware_id = get_hardware_info().name;
+               msg.hardware_device_states.resize(get_hardware_info().joints.size());
+
+               for (size_t i = 0; i < get_hardware_info().joints.size(); ++i)
+               {
+                  msg.hardware_device_states[i].device_id = get_hardware_info().joints[i].name;
+                  // This example uses one generic status per joint
+                  msg.hardware_device_states[i].generic_hardware_status.resize(1);
+               }
+               return hardware_interface::CallbackReturn::SUCCESS;
+            }
+
+      *   **`update_hardware_status_message`**: This real-time safe method is called from the framework's timer callback. You must override it to **fill in the dynamic values** of the pre-structured message. This typically involves copying your internal state variables (updated in your `read()` method) into the fields of the message. This method must be fast and non-allocating.
+
+         .. code-block:: cpp
+
+            // In your <robot_hardware_interface_name>.hpp
+            hardware_interface::return_type update_hardware_status_message(
+            control_msgs::msg::HardwareStatus & msg) override;
+
+            // In your <robot_hardware_interface_name>.cpp
+            hardware_interface::return_type MyHardware::update_hardware_status_message(
+            control_msgs::msg::HardwareStatus & msg)
+            {
+               for (size_t i = 0; i < get_hardware_info().joints.size(); ++i)
+               {
+                  auto & generic_status = msg.hardware_device_states[i].generic_hardware_status;
+                  // Example: Map internal state to a standard status field
+                  if (std::abs(hw_positions_[i]) > joint_limits_[i].max_position)
+                  {
+                     generic_status.health_status = control_msgs::msg::GenericState::HEALTH_ERROR;
+                  }
+                  else
+                  {
+                     generic_status.health_status = control_msgs::msg::GenericState::HEALTH_OK;
+                  }
+               }
+               return hardware_interface::return_type::OK;
+            }
+
+      *   **Enable in URDF**: Finally, to activate the publisher, add the ``status_publish_rate`` parameter to your ``<hardware>`` tag in the URDF. Setting it to 0.0 disables the feature.
+
+         .. code-block:: xml
+
+            <ros2_control name="MyHardware" type="system">
+            <hardware>
+               <plugin>my_package/MyHardware</plugin>
+               <param name="status_publish_rate">20.0</param>
+            </hardware>
+            ...
+            </ros2_control>
+
+      For a complete, working implementation that uses the framework-managed node to publish diagnostic messages, see the demo in :ref:`Example 17 <ros2_control_demos_example_17_userdoc>`.
 
    #.  IMPORTANT: At the end of your file after the namespace is closed, add the ``PLUGINLIB_EXPORT_CLASS`` macro.
 
