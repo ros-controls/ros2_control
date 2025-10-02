@@ -36,7 +36,7 @@ public:
   {
   }
 
-  LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
   : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }

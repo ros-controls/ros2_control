@@ -35,7 +35,7 @@ public:
   {
   }
 
-  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
+  explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
   : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
