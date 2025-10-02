@@ -93,9 +93,8 @@ public:
    */
   [[deprecated(
     "Replaced by CallbackReturn init(const hardware_interface::HardwareComponentParams & "
-    "params). Initialization is handled by the Framework.")]]
-  CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+    "params). Initialization is handled by the Framework.")]] CallbackReturn
+  init(const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
   {
     hardware_interface::HardwareComponentParams params;
     params.hardware_info = hardware_info;
@@ -204,9 +203,9 @@ public:
     else
     {
       control_msgs::msg::HardwareStatus status_msg_template;
-      if (configure_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+      if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
       {
-        RCLCPP_ERROR(get_logger(), "User-defined 'configure_hardware_status_message' failed.");
+        RCLCPP_ERROR(get_logger(), "User-defined 'init_hardware_status_message' failed.");
         return CallbackReturn::ERROR;
       }
 
@@ -266,7 +265,7 @@ public:
           get_logger(),
           "`status_publish_rate` was set to a non-zero value, but no hardware status message was "
           "configured. Publisher will not be created. Are you sure "
-          "configure_hardware_status_message() is set up properly?");
+          "init_hardware_status_message() is set up properly?");
       }
     }
 
@@ -286,7 +285,7 @@ public:
    * \param[out] msg_template A reference to a HardwareStatus message to be configured.
    * \returns CallbackReturn::SUCCESS if configured successfully, CallbackReturn::ERROR on failure.
    */
-  virtual CallbackReturn configure_hardware_status_message(
+  virtual CallbackReturn init_hardware_status_message(
     control_msgs::msg::HardwareStatus & /*msg_template*/)
   {
     // Default implementation does nothing, disabling the feature.
@@ -314,8 +313,10 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  [[deprecated("Use on_init(const HardwareComponentInterfaceParams & params) instead.")]]
-  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  [[deprecated(
+    "Use on_init(const HardwareComponentInterfaceParams & params) "
+    "instead.")]] virtual CallbackReturn
+  on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
     if (info_.type == "actuator")
@@ -373,8 +374,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]]
-  virtual std::vector<StateInterface> export_state_interfaces()
+    "Exporting is handled by the Framework.")]] virtual std::vector<StateInterface>
+  export_state_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_state_interfaces() and only when empty vector is returned call
@@ -463,8 +464,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is handled by the Framework.")]]
-  virtual std::vector<CommandInterface> export_command_interfaces()
+    "Exporting is handled by the Framework.")]] virtual std::vector<CommandInterface>
+  export_command_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_command_interfaces() and only when empty vector is returned call
