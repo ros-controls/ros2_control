@@ -516,6 +516,19 @@ public:
    */
   const std::unordered_map<std::string, HardwareComponentInfo> & get_components_status();
 
+  /// Return the unordered map of hard joint limits.
+  /**
+   * \return unordered map of hard joint limits.
+   */
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
+
+  /// Return the unordered map of soft joint limits.
+  /**
+   * \return unordered map of soft joint limits.
+   */
+  const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
+    const;
+
   /// Prepare the hardware components for a new command interface mode
   /**
    * Hardware components are asked to prepare a new command interface claim.
@@ -631,6 +644,8 @@ protected:
   rclcpp::Clock::SharedPtr get_clock() const;
 
   bool components_are_loaded_and_initialized_ = false;
+  bool allow_controller_activation_with_inactive_hardware_ = false;
+  bool return_failed_hardware_names_on_return_deactivate_write_cycle_ = true;
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;

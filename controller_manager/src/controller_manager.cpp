@@ -393,21 +393,8 @@ rclcpp::NodeOptions get_cm_node_options()
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
-: rclcpp::Node(manager_node_name, node_namespace, options),
-  diagnostics_updater_(this),
-  executor_(executor),
-  loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      kControllerInterfaceNamespace, kControllerInterfaceClassName)),
-  chainable_loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options)
+: ControllerManager(executor, "", false, manager_node_name, node_namespace, options)
 {
-  initialize_parameters();
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, this->get_logger());
-  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -428,13 +415,18 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
+  params.robot_description = robot_description_;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
+  params.allow_controller_activation_with_inactive_hardware =
+    params_->defaults.allow_controller_activation_with_inactive_hardware;
+  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();
 }
 
@@ -1596,7 +1588,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       }
     }
     RCLCPP_DEBUG(
-      get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
+      get_logger(), "'%s' request vector has size %i", action.c_str(),
+      static_cast<int>(request_list.size()));
 
     return result;
   };
@@ -2043,10 +2036,15 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   // Catch whatever exception the controller might throw
   try
   {
-    if (
-      controller.c->init(
-        controller.info.name, robot_description_, get_update_rate(), get_namespace(),
-        controller_node_options) == controller_interface::return_type::ERROR)
+    controller_interface::ControllerInterfaceParams controller_params;
+    controller_params.controller_name = controller.info.name;
+    controller_params.robot_description = robot_description_;
+    controller_params.update_rate = get_update_rate();
+    controller_params.node_namespace = get_namespace();
+    controller_params.node_options = controller_node_options;
+    controller_params.hard_joint_limits = resource_manager_->get_hard_joint_limits();
+    controller_params.soft_joint_limits = resource_manager_->get_soft_joint_limits();
+    if (controller.c->init(controller_params) == controller_interface::return_type::ERROR)
     {
       to.clear();
       RCLCPP_ERROR(
@@ -2200,6 +2198,7 @@ void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> controllers_to_activate)
 {
+  std::vector<std::string> failed_controllers_command_interfaces;
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(
@@ -2308,35 +2307,38 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
+    auto new_state = controller->get_lifecycle_state();
     try
     {
       found_it->periodicity_statistics->reset();
       found_it->execution_time_statistics->reset();
-      const auto new_state = controller->get_node()->activate();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-      {
-        RCLCPP_ERROR(
-          get_logger(),
-          "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
-          controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
-          hardware_interface::lifecycle_state_names::ACTIVE,
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      }
+      new_state = controller->get_node()->activate();
     }
     catch (const std::exception & e)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught exception of type : %s while activating the controller '%s': %s",
         typeid(e).name(), controller_name.c_str(), e.what());
-      controller->release_interfaces();
-      continue;
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught unknown exception while activating the controller '%s'",
         controller_name.c_str());
+    }
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
+        "interfaces!",
+        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+        hardware_interface::lifecycle_state_names::ACTIVE,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       controller->release_interfaces();
+      failed_controllers_command_interfaces.insert(
+        failed_controllers_command_interfaces.end(), command_interface_names.begin(),
+        command_interface_names.end());
       continue;
     }
 
@@ -2347,6 +2349,18 @@ void ControllerManager::activate_controllers(
       resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
+  }
+  // Now prepare and perform the stop interface switching as this is needed for exclusive
+  // interfaces
+  if (
+    !failed_controllers_command_interfaces.empty() &&
+    (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
+     !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Error switching back the interfaces in the hardware when the controller activation "
+      "failed.");
   }
 }
 
@@ -2569,7 +2583,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
       get_logger(),
       "Controller manager: Cannot reload controller libraries because"
       " there are still %i active controllers",
-      (int)active_controllers.size());
+      static_cast<int>(active_controllers.size()));
     response->ok = false;
     return;
   }
@@ -2975,16 +2989,16 @@ controller_interface::return_type ControllerManager::update(
       const auto controller_actual_period =
         (current_time - *loaded_controller.last_update_cycle_time);
 
-      /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
-      /// jitter in the system sleep cycles.
-      // For instance, A controller running at 50 Hz and the CM running at 100Hz, then when we have
-      // an update cycle at 0.019s (ideally, the controller should only trigger >= 0.02s), if we
-      // wait for next cycle, then trigger will happen at ~0.029 sec and this is creating an issue
-      // to keep up with the controller update rate (see issue #1769).
+      const double error_now =
+        std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);
+      const double error_if_skipped = std::abs(
+        ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
+         controller_update_rate) -
+        1.0);
       const bool controller_go =
         run_controller_at_cm_rate ||
         (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (controller_actual_period.seconds() * controller_update_rate >= 0.99) || first_update_cycle;
+        (error_now <= error_if_skipped) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
