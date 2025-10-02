@@ -1996,7 +1996,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   if (switch_params_.activate_asap)
   {
     RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-    std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
+    std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
     if (!switch_params_.cv.wait_for(
           switch_params_guard, switch_params_.timeout,
           [this] { return !switch_params_.do_switch; }))
