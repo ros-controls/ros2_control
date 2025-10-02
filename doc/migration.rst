@@ -54,3 +54,7 @@ hardware_interface
   have been updated from passing a ``const HardwareInfo &`` to passing a ``const
   HardwareComponentParams &`` (`# 2323 <https://github.com/ros-controls/ros2_control/pull/2323>`_).
   The old signatures are deprecated and will be removed in a future release.
+
+* The ``thread_priority`` variable in the ``HardwareInfo`` struct has been deprecated in favor of newly
+  introduced ``async_params`` variable that has more options in the ``HardwareComponentParams`` struct.
+  The deprecated ``thread_priority`` variable will be removed in a future release. (`# 2477 <https://github.com/ros-controls/ros2_control/pull/2477>`_).
