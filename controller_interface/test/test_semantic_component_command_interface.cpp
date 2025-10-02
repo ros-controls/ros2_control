@@ -49,9 +49,9 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
   temp_command_interfaces.reserve(3);
   // insert the interfaces in jumbled sequence
-  temp_command_interfaces.emplace_back(cmd_interface_1, nullptr);
-  temp_command_interfaces.emplace_back(cmd_interface_3, nullptr);
-  temp_command_interfaces.emplace_back(cmd_interface_2, nullptr);
+  temp_command_interfaces.emplace_back(cmd_interface_1);
+  temp_command_interfaces.emplace_back(cmd_interface_3);
+  temp_command_interfaces.emplace_back(cmd_interface_2);
 
   // now call the function to make them in order like interface_names
   EXPECT_TRUE(semantic_component_->assign_loaned_command_interfaces(temp_command_interfaces));

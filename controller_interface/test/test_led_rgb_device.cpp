@@ -57,9 +57,9 @@ TEST_F(LedDeviceTest, validate_all)
   // Create command interface vector in jumbled order
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
   temp_command_interfaces.reserve(3);
-  temp_command_interfaces.emplace_back(led_r, nullptr);
-  temp_command_interfaces.emplace_back(led_g, nullptr);
-  temp_command_interfaces.emplace_back(led_b, nullptr);
+  temp_command_interfaces.emplace_back(led_r);
+  temp_command_interfaces.emplace_back(led_g);
+  temp_command_interfaces.emplace_back(led_b);
 
   // Assign interfaces
   led_device_->assign_loaned_command_interfaces(temp_command_interfaces);
