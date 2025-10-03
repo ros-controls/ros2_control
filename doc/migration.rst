@@ -2,6 +2,13 @@
 
 Humble to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
+=======
+
+This list summarizes important changes between Jazzy (previous) and Kilted (current) releases, where changes to user code might be necessary.
+
+
+>>>>>>> 17d95f6 ([CM] Ability to switch controllers in non-realtime loop (#2452))
 controller_interface
 ********************
 * ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
@@ -72,6 +79,13 @@ controller_manager
         <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
 * The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
+
+controller_manager
+******************
+
+* The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop.
+   By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_)
+   If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
 
 hardware_interface
 ******************
