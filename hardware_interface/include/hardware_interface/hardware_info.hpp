@@ -229,6 +229,18 @@ struct InterfaceDescription
   HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
 };
 
+struct HardwareAsyncParams
+{
+  /// Thread priority for the async worker thread
+  int thread_priority = 50;
+  /// Scheduling policy for the async worker thread
+  std::string scheduling_policy = "synchronized";
+  /// CPU affinity cores for the async worker thread
+  std::vector<int> cpu_affinity_cores = {};
+  /// Whether to print warnings when the async thread doesn't meet its deadline
+  bool print_warnings = true;
+};
+
 /// This structure stores information about hardware defined in a robot's URDF.
 struct HardwareInfo
 {
@@ -243,7 +255,9 @@ struct HardwareInfo
   /// Component is async
   bool is_async;
   /// Async thread priority
-  int thread_priority;
+  [[deprecated("Use async_params instead.")]] int thread_priority;
+  /// Async Parameters
+  HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
   std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.
