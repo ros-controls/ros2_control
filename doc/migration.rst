@@ -5,9 +5,17 @@ Migration Guides: Jazzy to Kilted
 
 This list summarizes important changes between Jazzy (previous) and Kilted (current) releases, where changes to user code might be necessary.
 
+
 controller_interface
 ********************
 * ``get_ordered_interfaces`` now throws if the size of the output vector does not match the size of the input names vector (`#2528 <https://github.com/ros-controls/ros2_control/pull/2528>`__).
+
+controller_manager
+******************
+
+* The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop.
+   By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_)
+   If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
 
 hardware_interface
 ******************
