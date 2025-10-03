@@ -2976,21 +2976,13 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      bool first_update_cycle = false;
+      const bool first_update_cycle =
+        (*loaded_controller.last_update_cycle_time ==
+         rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
       const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
-      if (
-        *loaded_controller.last_update_cycle_time ==
-        rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
-      {
-        // last_update_cycle_time is zero after activation
-        first_update_cycle = true;
-        *loaded_controller.last_update_cycle_time = current_time;
-        RCLCPP_DEBUG(
-          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
-          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
-      }
       const auto controller_actual_period =
-        (current_time - *loaded_controller.last_update_cycle_time);
+        first_update_cycle ? controller_period
+                           : (current_time - *loaded_controller.last_update_cycle_time);
 
       const double error_now =
         std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);

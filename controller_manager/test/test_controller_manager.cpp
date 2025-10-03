@@ -472,8 +472,11 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   std::this_thread::sleep_for(
     std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
   EXPECT_EQ(test_controller->internal_counter, 1u);
-  EXPECT_EQ(test_controller->update_period_.seconds(), 0.0)
-    << "The first trigger cycle should have zero period";
+  EXPECT_NEAR(
+    test_controller->update_period_.seconds(),
+    1.0 / (static_cast<double>(test_controller->get_update_rate())), 1.e-6)
+    << "The first trigger cycle should have non-zero period to allow for integration in the "
+       "controllers";
 
   const double exp_period = (cm_->get_trigger_clock()->now() - time_).seconds();
   time_ = cm_->get_trigger_clock()->now();
@@ -1064,8 +1067,11 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     }
     else
     {
-      // Check that the first cycle update period is zero
-      EXPECT_EQ(test_controller->update_period_.seconds(), 0.0);
+      EXPECT_NEAR(
+        test_controller->update_period_.seconds(),
+        1.0 / (static_cast<double>(test_controller->get_update_rate())), 1.e-6)
+        << "The first trigger cycle should have non-zero period to allow for integration in the "
+           "controllers";
     }
 
     if (update_counter > 0 && update_counter % cm_update_rate == 0)
