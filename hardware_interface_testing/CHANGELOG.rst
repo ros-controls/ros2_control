@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.7.0 (2025-10-03)
+------------------
 * Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
 * Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_)
 * Fix exclusive hardware control mode switching on controller failed activation (`#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_)

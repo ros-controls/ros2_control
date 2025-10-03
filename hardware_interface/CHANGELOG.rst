@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.7.0 (2025-10-03)
+------------------
 * Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
 * [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)
 * Addition of Default Publisher for `HardwareStatus` Messages (`#2476 <https://github.com/ros-controls/ros2_control/issues/2476>`_)

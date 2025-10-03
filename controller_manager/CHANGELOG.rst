@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.7.0 (2025-10-03)
+------------------
 * [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)
 * Added parameters to handle the overruns behaviour and prints (`#2546 <https://github.com/ros-controls/ros2_control/issues/2546>`_)
 * [Controllers] Receive a valid period on the first update cycle (`#2572 <https://github.com/ros-controls/ros2_control/issues/2572>`_)
