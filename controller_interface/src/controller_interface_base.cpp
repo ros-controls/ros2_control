@@ -43,16 +43,29 @@ return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
 {
-  urdf_ = urdf;
-  update_rate_ = cm_update_rate;
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = controller_name;
+  params.robot_description = urdf;
+  params.update_rate = cm_update_rate;
+  params.node_namespace = node_namespace;
+  params.node_options = node_options;
+
+  return init(params);
+}
+
+return_type ControllerInterfaceBase::init(
+  const controller_interface::ControllerInterfaceParams & params)
+{
+  ctrl_itf_params_ = params;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, node_namespace, node_options,
+    ctrl_itf_params_.controller_name, ctrl_itf_params_.node_namespace,
+    ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
 
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
+    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.update_rate));
 
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", 50);
@@ -149,17 +162,17 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
       return get_lifecycle_state();
     }
-    if (update_rate_ != 0u && update_rate > update_rate_)
+    if (ctrl_itf_params_.update_rate != 0u && update_rate > ctrl_itf_params_.update_rate)
     {
       RCLCPP_WARN(
         get_node()->get_logger(),
         "The update rate of the controller : '%ld Hz' cannot be higher than the update rate of the "
         "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
-        update_rate, update_rate_);
+        update_rate, ctrl_itf_params_.update_rate);
     }
     else
     {
-      update_rate_ = static_cast<unsigned int>(update_rate);
+      ctrl_itf_params_.update_rate = static_cast<unsigned int>(update_rate);
     }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
@@ -273,11 +286,29 @@ std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::
   return node_;
 }
 
-unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
+unsigned int ControllerInterfaceBase::get_update_rate() const
+{
+  return ctrl_itf_params_.update_rate;
+}
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
-const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
+const std::string & ControllerInterfaceBase::get_robot_description() const
+{
+  return ctrl_itf_params_.robot_description;
+}
+
+const std::unordered_map<std::string, joint_limits::JointLimits> &
+ControllerInterfaceBase::get_hard_joint_limits() const
+{
+  return ctrl_itf_params_.hard_joint_limits;
+}
+
+const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
+ControllerInterfaceBase::get_soft_joint_limits() const
+{
+  return ctrl_itf_params_.soft_joint_limits;
+}
 
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {

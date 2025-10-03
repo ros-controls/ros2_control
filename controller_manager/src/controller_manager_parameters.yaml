@@ -251,3 +251,8 @@ controller_manager:
                 gt<>: 0.0,
               }
             }
+  overruns:
+    print_warnings: {
+      type: bool,
+      description: "If true, the controller manager will print a warning message to the console if an overrun is detected in its real-time loop (``read``, ``update`` and ``write``). By default, it is set to true, except when used with ``use_sim_time`` parameter set to true.",
+    }
