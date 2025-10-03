@@ -2,13 +2,10 @@
 
 Humble to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-<<<<<<< HEAD
-=======
 
-This list summarizes important changes between Jazzy (previous) and Kilted (current) releases, where changes to user code might be necessary.
+This list summarizes important changes between Humble (previous) and Jazzy (current) releases, where changes to user code might be necessary.
 
 
->>>>>>> 17d95f6 ([CM] Ability to switch controllers in non-realtime loop (#2452))
 controller_interface
 ********************
 * ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
