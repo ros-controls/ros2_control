@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.6.0 (2025-08-26)
 ------------------
 * Remove extra semicolons (`#2478 <https://github.com/ros-controls/ros2_control/issues/2478>`_)

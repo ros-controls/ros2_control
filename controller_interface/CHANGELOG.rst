@@ -2,6 +2,14 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (`#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_)
+* Let `get_ordered_interfaces` throw if input vector size does not fit (`#2528 <https://github.com/ros-controls/ros2_control/issues/2528>`_)
+* Update message dependencies for tests (`#2497 <https://github.com/ros-controls/ros2_control/issues/2497>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 5.6.0 (2025-08-26)
 ------------------
 

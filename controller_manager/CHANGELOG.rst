@@ -2,6 +2,24 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)
+* Added parameters to handle the overruns behaviour and prints (`#2546 <https://github.com/ros-controls/ros2_control/issues/2546>`_)
+* [Controllers] Receive a valid period on the first update cycle (`#2572 <https://github.com/ros-controls/ros2_control/issues/2572>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (`#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_)
+* Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_)
+* Fix exclusive hardware control mode switching on controller failed activation (`#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_)
+* Fix the skipped cycles of controllers running at different rate (`#2557 <https://github.com/ros-controls/ros2_control/issues/2557>`_)
+* Fix shadowed variables, redefinition and old-style casts (`#2569 <https://github.com/ros-controls/ros2_control/issues/2569>`_)
+* [Spawner] Release the lock while waiting for the interrupt (`#2559 <https://github.com/ros-controls/ros2_control/issues/2559>`_)
+* Fix the reloading controller with failed activation (`#2544 <https://github.com/ros-controls/ros2_control/issues/2544>`_)
+* Don't print the overrun warnings for the simulations (`#2539 <https://github.com/ros-controls/ros2_control/issues/2539>`_)
+* Readd the ResourceManagerParams initialization to ControllerManager (`#2522 <https://github.com/ros-controls/ros2_control/issues/2522>`_)
+* Publish controller manager statistics to better introspect the timings (`#2449 <https://github.com/ros-controls/ros2_control/issues/2449>`_)
+* Fix the CPU affinity of the ros2_control_node (`#2509 <https://github.com/ros-controls/ros2_control/issues/2509>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 5.6.0 (2025-08-26)
 ------------------
 
