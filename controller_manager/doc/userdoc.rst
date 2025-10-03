@@ -437,6 +437,21 @@ The async update support is transparent to each controller implementation. A con
         update_rate: 20  # Hz
         ...
 
+You can set further more parameters of the ``AsyncFunctionHandler`` which handles the thread of the controller using the ``async_parameters`` namespace. For example:
+
+.. code-block:: yaml
+
+    example_async_controller:
+      ros__parameters:
+        type: example_controller/ExampleAsyncController
+        update_rate: 20  # Hz
+        is_async: true
+        async_parameters:
+          cpu_affinity: [2, 4]
+          thread_priority: 50
+          wait_until_initial_trigger: false
+          ...
+
 will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
 
 Scheduling Behavior

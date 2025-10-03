@@ -178,16 +178,27 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   }
   if (is_async_)
   {
-    const int thread_priority =
+    realtime_tools::AsyncFunctionHandlerParams async_params;
+    async_params.thread_priority =
       static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
+    async_params.initialize(node_, "async_parameters.");
+    if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::DETACHED)
+    {
+      const rclcpp_lifecycle::State unconfigured_state(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
+      RCLCPP_ERROR(
+        get_node()->get_logger(),
+        "The controllers are not supported to run asynchronously in detached mode!");
+      return unconfigured_state;
+    }
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
-      thread_priority);
+      async_params.thread_priority);
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     async_handler_->init(
       std::bind(
         &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
-      thread_priority);
+      async_params);
     async_handler_->start_thread();
   }
   REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
