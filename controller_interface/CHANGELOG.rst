@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add `ControllerInterfaceParams` to initialize the Controllers (backport `#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_) (`#2601 <https://github.com/ros-controls/ros2_control/issues/2601>`_)
+* Contributors: mergify[bot]
+
 4.37.0 (2025-09-12)
 -------------------
 * Update message dependencies for tests (`#2497 <https://github.com/ros-controls/ros2_control/issues/2497>`_) (`#2500 <https://github.com/ros-controls/ros2_control/issues/2500>`_)

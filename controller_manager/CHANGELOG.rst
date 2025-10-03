@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ability to switch controllers in non-realtime loop (backport `#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_) (`#2610 <https://github.com/ros-controls/ros2_control/issues/2610>`_)
+* Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_) (`#2584 <https://github.com/ros-controls/ros2_control/issues/2584>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (backport `#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_) (`#2601 <https://github.com/ros-controls/ros2_control/issues/2601>`_)
+* [Controllers] Receive a valid period on the first update cycle (`#2572 <https://github.com/ros-controls/ros2_control/issues/2572>`_) (`#2602 <https://github.com/ros-controls/ros2_control/issues/2602>`_)
+* Added parameters to handle the overruns behaviour and prints (`#2546 <https://github.com/ros-controls/ros2_control/issues/2546>`_) (`#2603 <https://github.com/ros-controls/ros2_control/issues/2603>`_)
+* Fix exclusive hardware control mode switching on controller failed activation (`#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2580 <https://github.com/ros-controls/ros2_control/issues/2580>`_)
+* Fix the skipped cycles of controllers running at different rate (`#2557 <https://github.com/ros-controls/ros2_control/issues/2557>`_) (`#2573 <https://github.com/ros-controls/ros2_control/issues/2573>`_)
+* Fix shadowed variables, redefinition and old-style casts (`#2569 <https://github.com/ros-controls/ros2_control/issues/2569>`_) (`#2570 <https://github.com/ros-controls/ros2_control/issues/2570>`_)
+* [Spawner] Release the lock while waiting for the interrupt (`#2559 <https://github.com/ros-controls/ros2_control/issues/2559>`_) (`#2567 <https://github.com/ros-controls/ros2_control/issues/2567>`_)
+* Fix the reloading controller with failed activation (`#2544 <https://github.com/ros-controls/ros2_control/issues/2544>`_) (`#2545 <https://github.com/ros-controls/ros2_control/issues/2545>`_)
+* Don't print the overrun warnings for the simulations (`#2539 <https://github.com/ros-controls/ros2_control/issues/2539>`_) (`#2541 <https://github.com/ros-controls/ros2_control/issues/2541>`_)
+* Contributors: mergify[bot]
+
 4.37.0 (2025-09-12)
 -------------------
 * Publish controller manager statistics to better introspect the timings (backport `#2449 <https://github.com/ros-controls/ros2_control/issues/2449>`_) (`#2521 <https://github.com/ros-controls/ros2_control/issues/2521>`_)
