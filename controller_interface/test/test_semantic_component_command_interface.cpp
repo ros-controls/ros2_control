@@ -38,9 +38,12 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   std::vector<double> interface_values = {
     std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN()};
-  hardware_interface::CommandInterface cmd_interface_1{component_name_, "1", &interface_values[0]};
-  hardware_interface::CommandInterface cmd_interface_2{component_name_, "2", &interface_values[1]};
-  hardware_interface::CommandInterface cmd_interface_3{component_name_, "3", &interface_values[2]};
+  auto cmd_interface_1 = std::make_shared<hardware_interface::CommandInterface>(
+    component_name_, "1", &interface_values[0]);
+  auto cmd_interface_2 = std::make_shared<hardware_interface::CommandInterface>(
+    component_name_, "2", &interface_values[1]);
+  auto cmd_interface_3 = std::make_shared<hardware_interface::CommandInterface>(
+    component_name_, "3", &interface_values[2]);
 
   // create local command interface vector
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
