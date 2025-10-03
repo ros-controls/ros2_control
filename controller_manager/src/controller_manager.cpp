@@ -591,11 +591,23 @@ void ControllerManager::initialize_parameters()
   // Initialize parameters
   try
   {
+    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
+
+    if (!this->has_parameter("overruns.print_warnings"))
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.description =
+        "If true, the controller manager will print a warning message to the console if an overrun "
+        "is detected in its real-time loop (read, update and write). By default, it is set to "
+        "true, except when used with use_sim_time parameter set to true.";
+      descriptor.read_only = false;
+      auto parameter = rclcpp::ParameterValue(!use_sim_time_);
+      this->declare_parameter("overruns.print_warnings", parameter, descriptor);
+    }
     cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
-    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
     trigger_clock_ =
       use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     RCLCPP_INFO(
@@ -3198,7 +3210,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
   const double expected_cycle_time = 1.e6 / static_cast<double>(get_update_rate());
-  if (execution_time_.total_time > expected_cycle_time && !use_sim_time_)
+  if (params_->overruns.print_warnings && execution_time_.total_time > expected_cycle_time)
   {
     if (execution_time_.switch_time > 0.0)
     {
