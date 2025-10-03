@@ -591,11 +591,23 @@ void ControllerManager::initialize_parameters()
   // Initialize parameters
   try
   {
+    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
+
+    if (!this->has_parameter("overruns.print_warnings"))
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.description =
+        "If true, the controller manager will print a warning message to the console if an overrun "
+        "is detected in its real-time loop (read, update and write). By default, it is set to "
+        "true, except when used with use_sim_time parameter set to true.";
+      descriptor.read_only = false;
+      auto parameter = rclcpp::ParameterValue(!use_sim_time_);
+      this->declare_parameter("overruns.print_warnings", parameter, descriptor);
+    }
     cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
-    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
     trigger_clock_ =
       use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     RCLCPP_INFO(
@@ -2969,21 +2981,13 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      bool first_update_cycle = false;
+      const bool first_update_cycle =
+        (*loaded_controller.last_update_cycle_time ==
+         rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
       const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
-      if (
-        *loaded_controller.last_update_cycle_time ==
-        rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
-      {
-        // last_update_cycle_time is zero after activation
-        first_update_cycle = true;
-        *loaded_controller.last_update_cycle_time = current_time;
-        RCLCPP_DEBUG(
-          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
-          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
-      }
       const auto controller_actual_period =
-        (current_time - *loaded_controller.last_update_cycle_time);
+        first_update_cycle ? controller_period
+                           : (current_time - *loaded_controller.last_update_cycle_time);
 
       const double error_now =
         std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);
@@ -3203,7 +3207,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   execution_time_.total_time =
     execution_time_.write_time + execution_time_.update_time + execution_time_.read_time;
   const double expected_cycle_time = 1.e6 / static_cast<double>(get_update_rate());
-  if (execution_time_.total_time > expected_cycle_time && !use_sim_time_)
+  if (params_->overruns.print_warnings && execution_time_.total_time > expected_cycle_time)
   {
     if (execution_time_.switch_time > 0.0)
     {
