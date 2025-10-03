@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.38.0 (2025-10-03)
+-------------------
 * Ability to switch controllers in non-realtime loop (backport `#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_) (`#2610 <https://github.com/ros-controls/ros2_control/issues/2610>`_)
 * Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_) (`#2584 <https://github.com/ros-controls/ros2_control/issues/2584>`_)
 * Add detach async policy for rate critical frameworks (backport `#2477 <https://github.com/ros-controls/ros2_control/issues/2477>`_) (`#2600 <https://github.com/ros-controls/ros2_control/issues/2600>`_)
