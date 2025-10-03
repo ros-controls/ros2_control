@@ -149,6 +149,13 @@ def main(args=None):
         required=False,
     )
     parser.add_argument(
+        "--switch-asap",
+        help="Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.",
+        required=False,
+        default=True,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
         "--controller-ros-args",
         help="The --ros-args to be passed to the controller node, e.g., for remapping topics. "
         "Pass multiple times for every argument.",
@@ -167,6 +174,7 @@ def main(args=None):
     switch_timeout = args.switch_timeout
     strictness = SwitchController.Request.STRICT
     unload_controllers_upon_exit = False
+    switch_asap = args.switch_asap
     node = None
 
     if param_files:
@@ -303,7 +311,7 @@ def main(args=None):
                         [],
                         [controller_name],
                         strictness,
-                        True,
+                        switch_asap,
                         switch_timeout,
                         service_call_timeout,
                     )
@@ -328,7 +336,7 @@ def main(args=None):
                 [],
                 controller_names,
                 strictness,
-                True,
+                switch_asap,
                 switch_timeout,
                 service_call_timeout,
             )
@@ -364,7 +372,7 @@ def main(args=None):
                     controller_names,
                     [],
                     strictness,
-                    True,
+                    switch_asap,
                     switch_timeout,
                     service_call_timeout,
                 )
