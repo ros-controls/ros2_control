@@ -78,6 +78,9 @@ hardware_interface
 * ``test_components`` was moved to its own package. Update the dependencies if you are using them. (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
 * A new ``get_optional`` that returns a ``std::optional`` was added to the ``CommandInterface`` and ``StateInterface``. This can be used to check if the value is available or not. (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
+* The ``thread_priority`` variable in the ``HardwareInfo`` struct has been deprecated in favor of newly
+  introduced ``async_params`` variable that has more options in the ``HardwareComponentParams`` struct.
+  The deprecated ``thread_priority`` variable will be removed in a future release. (`# 2477 <https://github.com/ros-controls/ros2_control/pull/2477>`_).
 
 Adaption of Command-/StateInterfaces
 ***************************************
