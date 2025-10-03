@@ -8,14 +8,28 @@ This list summarizes important changes between Humble (previous) and Jazzy (curr
 
 controller_interface
 ********************
+
 * ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
 * The changes from `(PR #1694) <https://github.com/ros-controls/ros2_control/pull/1694>`__ will affect how the controllers will be loading the parameters. Defining parameters in a single yaml file and loading it to the controller_manager node alone will no longer work.
   In order to load the parameters to the controllers properly, it is needed to use ``--param-file`` option from the spawner. This is because the controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments.
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
 * The ``exported_state_interfaces_`` and ``exported_reference_interfaces_`` now uses the the full interface name as the key to the unordered_map, instead of the interface type. This is related to (`#2038 <https://github.com/ros-controls/ros2_control/pull/2038>`_). For instance, the key would be ``joint_1/position`` instead of ``position``.
+* ``controller_interface::init()`` has been deprecated, use the ``init(const controller_interface::ControllerInterfaceParams & params)`` method instead. (`#2390 <https://github.com/ros-controls/ros2_control/pull/2390>`__).
+  For example, the following code:
+
+  .. code-block:: cpp
+
+    controller_interface::ControllerInterfaceParams params;
+    params.controller_name = "controller_name";
+    params.robot_description = "";
+    params.update_rate = 50;
+    params.node_namespace = "";
+    params.node_options = controller.define_custom_node_options();
+    controller.init(params);
 
 controller_manager
 ******************
+
 * Rename ``class_type`` to ``plugin_name`` (`#780 <https://github.com/ros-controls/ros2_control/pull/780>`_)
 * CM now subscribes to ``robot_description`` topic instead of ``~/robot_description`` (`#1410 <https://github.com/ros-controls/ros2_control/pull/1410>`_). As a consequence, when using multiple controller managers, you have to remap the topic within the launch file, an example for a python launch file:
 
@@ -76,16 +90,13 @@ controller_manager
         <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
 * The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
-
-controller_manager
-******************
-
 * The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop.
-   By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_)
-   If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
+  By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_).
+  If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
 
 hardware_interface
 ******************
+
 * ``test_components`` was moved to its own package. Update the dependencies if you are using them. (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
 * A new ``get_optional`` that returns a ``std::optional`` was added to the ``CommandInterface`` and ``StateInterface``. This can be used to check if the value is available or not. (`#1976 <https://github.com/ros-controls/ros2_control/pull/1976>`_ and `#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_)
