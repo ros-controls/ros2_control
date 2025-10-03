@@ -152,7 +152,7 @@ def main(args=None):
         "--switch-asap",
         help="Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.",
         required=False,
-        default=False,
+        default=True,
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
