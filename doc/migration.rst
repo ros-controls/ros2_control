@@ -8,6 +8,7 @@ This list summarizes important changes between Humble (previous) and Jazzy (curr
 
 controller_interface
 ********************
+<<<<<<< HEAD
 * ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
 * The changes from `(PR #1694) <https://github.com/ros-controls/ros2_control/pull/1694>`__ will affect how the controllers will be loading the parameters. Defining parameters in a single yaml file and loading it to the controller_manager node alone will no longer work.
   In order to load the parameters to the controllers properly, it is needed to use ``--param-file`` option from the spawner. This is because the controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments.
@@ -76,13 +77,29 @@ controller_manager
         <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
 * The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
+=======
+
+* ``get_ordered_interfaces`` now throws if the size of the output vector does not match the size of the input names vector (`#2528 <https://github.com/ros-controls/ros2_control/pull/2528>`__).
+* ``controller_interface::init()`` has been deprecated, use the ``init(const controller_interface::ControllerInterfaceParams & params)`` method instead. (`#2390 <https://github.com/ros-controls/ros2_control/pull/2390>`__).
+  For example, the following code:
+
+  .. code-block:: cpp
+
+    controller_interface::ControllerInterfaceParams params;
+    params.controller_name = "controller_name";
+    params.robot_description = "";
+    params.update_rate = 50;
+    params.node_namespace = "";
+    params.node_options = controller.define_custom_node_options();
+    controller.init(params);
+>>>>>>> ed23c13 (Update migration guide (and fix format) (#2611))
 
 controller_manager
 ******************
 
 * The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop.
-   By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_)
-   If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
+  By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_).
+  If it is needed to switch controllers in realtime loop, then the argument ``--switch-asap`` need to be parsed to the spawner.
 
 hardware_interface
 ******************
