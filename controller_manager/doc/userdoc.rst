@@ -437,7 +437,7 @@ The async update support is transparent to each controller implementation. A con
         update_rate: 20  # Hz
         ...
 
-You can set further more parameters of the ``AsyncFunctionHandler`` which handles the thread of the controller using the ``async_parameters`` namespace. For example:
+You can set more parameters of the ``AsyncFunctionHandler``, which handles the thread of the controller, using the ``async_parameters`` namespace. For example:
 
 .. code-block:: yaml
 
