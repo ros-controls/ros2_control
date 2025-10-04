@@ -18,7 +18,9 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
 
+using hardware_interface::HW_IF_CURRENT;
 using hardware_interface::HW_IF_EFFORT;
+using hardware_interface::HW_IF_FORCE;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_TORQUE;
 using hardware_interface::HW_IF_VELOCITY;
@@ -164,6 +166,18 @@ TEST_P(BlackBoxTest, IdentityMap)
   reset_values();
   testIdentityMap(trans, HW_IF_TORQUE, -1.0);
 
+  testIdentityMap(trans, HW_IF_FORCE, 1.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_FORCE, 0.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_FORCE, -1.0);
+
+  testIdentityMap(trans, HW_IF_CURRENT, 1.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_CURRENT, 0.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_CURRENT, -1.0);
+
   testIdentityMap(trans, HW_IF_ABSOLUTE_POSITION, 1.0);
   reset_values();
   testIdentityMap(trans, HW_IF_ABSOLUTE_POSITION, 0.0);
@@ -230,6 +244,26 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
     trans.actuator_to_joint();
     EXPECT_THAT(10.0, DoubleNear(j_val, EPS));
+  }
+
+  // Force interface
+  {
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_FORCE, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_FORCE, &j_val);
+    trans.configure({joint_handle}, {actuator_handle});
+
+    trans.actuator_to_joint();
+    EXPECT_THAT(10.0, DoubleNear(j_val, EPS));
+  }
+
+  // Current interface
+  {
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_CURRENT, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_CURRENT, &j_val);
+    trans.configure({joint_handle}, {actuator_handle});
+
+    trans.actuator_to_joint();
+    EXPECT_THAT(1.0, DoubleNear(j_val, EPS));
   }
 
   // Absolute position interface

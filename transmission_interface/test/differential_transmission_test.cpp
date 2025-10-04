@@ -20,7 +20,9 @@
 #include "random_generator_utils.hpp"
 #include "transmission_interface/differential_transmission.hpp"
 
+using hardware_interface::HW_IF_CURRENT;
 using hardware_interface::HW_IF_EFFORT;
+using hardware_interface::HW_IF_FORCE;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_TORQUE;
 using hardware_interface::HW_IF_VELOCITY;
@@ -128,6 +130,8 @@ TEST(ConfigureTest, FailsWithBadHandles)
   testConfigureWithBadHandles(HW_IF_VELOCITY);
   testConfigureWithBadHandles(HW_IF_EFFORT);
   testConfigureWithBadHandles(HW_IF_TORQUE);
+  testConfigureWithBadHandles(HW_IF_FORCE);
+  testConfigureWithBadHandles(HW_IF_CURRENT);
   testConfigureWithBadHandles(HW_IF_ABSOLUTE_POSITION);
 }
 
@@ -225,6 +229,9 @@ TEST_F(BlackBoxTest, IdentityMap)
       testIdentityMap(transmission, input_value, HW_IF_VELOCITY);
       testIdentityMap(transmission, input_value, HW_IF_EFFORT);
       testIdentityMap(transmission, input_value, HW_IF_TORQUE);
+      testIdentityMap(transmission, input_value, HW_IF_FORCE);
+      // testIdentityMap(transmission, input_value, HW_IF_CURRENT);
+      // testIdentityMap(transmission, input_value, HW_IF_ABSOLUTE_POSITION);
     }
   }
 }
@@ -287,6 +294,30 @@ TEST_F(WhiteBoxTest, DontMoveJoints)
     auto a2_handle = ActuatorHandle("act2", HW_IF_TORQUE, a_vec[1]);
     auto joint1_handle = JointHandle("joint1", HW_IF_TORQUE, j_vec[0]);
     auto joint2_handle = JointHandle("joint2", HW_IF_TORQUE, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Force interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_FORCE, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_FORCE, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_FORCE, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_FORCE, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Current interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_CURRENT, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_CURRENT, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_CURRENT, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_CURRENT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
     EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
@@ -365,6 +396,30 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
     EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
   }
 
+  // Force interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_FORCE, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_FORCE, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_FORCE, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_FORCE, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(400.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Current interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_CURRENT, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_CURRENT, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_CURRENT, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_CURRENT, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(20.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+  }
+
   // Absolute position interface
   {
     auto a1_handle = ActuatorHandle("act1", HW_IF_ABSOLUTE_POSITION, a_vec[0]);
@@ -435,6 +490,30 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
     trans.actuator_to_joint();
     EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
     EXPECT_THAT(400.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Force interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_FORCE, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_FORCE, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_FORCE, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_FORCE, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(400.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Current interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_CURRENT, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_CURRENT, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_CURRENT, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_CURRENT, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(20.0, DoubleNear(j_val[1], EPS));
   }
 
   // Absolute position interface
@@ -512,6 +591,30 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
     trans.actuator_to_joint();
     EXPECT_THAT(140.0, DoubleNear(j_val[0], EPS));
     EXPECT_THAT(520.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Force interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_FORCE, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_FORCE, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_FORCE, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_FORCE, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(140.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(520.0, DoubleNear(j_val[1], EPS));
+  }
+
+  // Current interface
+  {
+    auto a1_handle = ActuatorHandle("act1", HW_IF_CURRENT, a_vec[0]);
+    auto a2_handle = ActuatorHandle("act2", HW_IF_CURRENT, a_vec[1]);
+    auto joint1_handle = JointHandle("joint1", HW_IF_CURRENT, j_vec[0]);
+    auto joint2_handle = JointHandle("joint2", HW_IF_CURRENT, j_vec[1]);
+    trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
+    trans.actuator_to_joint();
+    EXPECT_THAT(8.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(-2.0, DoubleNear(j_val[1], EPS));
   }
 
   // Absolute position interface
