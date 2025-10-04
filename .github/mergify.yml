@@ -17,6 +17,15 @@ pull_request_rules:
         branches:
           - jazzy
 
+  - name: Backport to kilted at reviewers discretion
+    conditions:
+      - base=master
+      - "label=backport-kilted"
+    actions:
+      backport:
+        branches:
+          - kilted
+
   - name: Ask to resolve conflict
     conditions:
       - conflict

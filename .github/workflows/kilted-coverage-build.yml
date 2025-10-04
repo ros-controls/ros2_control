@@ -1,0 +1,34 @@
+name: Coverage Build - Kilted
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/kilted-coverage-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.kilted.repos'
+      - 'codecov.yml'
+  pull_request:
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/kilted-coverage-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.kilted.repos'
+      - 'codecov.yml'
+
+jobs:
+  coverage_kilted:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
+    secrets: inherit
+    with:
+      ros_distro: kilted
