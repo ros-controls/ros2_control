@@ -4,7 +4,7 @@ name: Humble Binary Build
 
 on:
   workflow_dispatch:
-  pull_request:
+  pull_request: &event
     branches:
       - humble
     paths:
@@ -16,18 +16,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.humble.repos'
-  push:
-    branches:
-      - humble
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '.github/workflows/humble-binary-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control-not-released.humble.repos'
+  push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * MON-FRI'
