@@ -163,9 +163,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
-                  [--controller-ros-args CONTROLLER_ROS_ARGS]
-                  controller_names [controller_names ...]
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
+               [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS]
+               controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -186,6 +186,8 @@ There are two scripts to interact with controller manager from launch files:
       --service-call-timeout SERVICE_CALL_TIMEOUT
                             Time to wait for the service response from the controller manager
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
+      --switch-asap, --no-switch-asap
+                            Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.
       --controller-ros-args CONTROLLER_ROS_ARGS
                             The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
 
@@ -434,6 +436,21 @@ The async update support is transparent to each controller implementation. A con
         is_async: true
         update_rate: 20  # Hz
         ...
+
+You can set more parameters of the ``AsyncFunctionHandler``, which handles the thread of the controller, using the ``async_parameters`` namespace. For example:
+
+.. code-block:: yaml
+
+    example_async_controller:
+      ros__parameters:
+        type: example_controller/ExampleAsyncController
+        update_rate: 20  # Hz
+        is_async: true
+        async_parameters:
+          cpu_affinity: [2, 4]
+          thread_priority: 50
+          wait_until_initial_trigger: false
+          ...
 
 will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
 

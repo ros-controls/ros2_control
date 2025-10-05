@@ -45,22 +45,22 @@ TEST_F(PoseSensorTest, validate_all)
   std::vector<std::string> interface_names = pose_sensor_->get_state_interface_names();
 
   // Assign values to position
-  hardware_interface::StateInterface position_x{
-    sensor_name_, interface_names_[0], &position_values_[0]};
-  hardware_interface::StateInterface position_y{
-    sensor_name_, interface_names_[1], &position_values_[1]};
-  hardware_interface::StateInterface position_z{
-    sensor_name_, interface_names_[2], &position_values_[2]};
+  auto position_x = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[0], &position_values_[0]);
+  auto position_y = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[1], &position_values_[1]);
+  auto position_z = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[2], &position_values_[2]);
 
   // Assign values to orientation
-  hardware_interface::StateInterface orientation_x{
-    sensor_name_, interface_names_[3], &orientation_values_[0]};
-  hardware_interface::StateInterface orientation_y{
-    sensor_name_, interface_names_[4], &orientation_values_[1]};
-  hardware_interface::StateInterface orientation_z{
-    sensor_name_, interface_names_[5], &orientation_values_[2]};
-  hardware_interface::StateInterface orientation_w{
-    sensor_name_, interface_names_[6], &orientation_values_[3]};
+  auto orientation_x = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[3], &orientation_values_[0]);
+  auto orientation_y = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[4], &orientation_values_[1]);
+  auto orientation_z = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[5], &orientation_values_[2]);
+  auto orientation_w = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, interface_names_[6], &orientation_values_[3]);
 
   // Create state interface vector in jumbled order
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
