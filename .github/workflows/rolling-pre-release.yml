@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [kilted, rolling]
+        ROS_DISTRO: [rolling]
 
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
     with:
