@@ -1,24 +1,23 @@
-name: Rolling Source Build
+name: Kilted Source Build
 on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - kilted
     paths:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
       - '**.py'
-      - '.github/workflows/rolling-source-build.yml'
+      - '.github/workflows/kilted-source-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control.rolling.repos'
       - 'ros2_control.kilted.repos'
   pull_request:
     branches:
-      - master
+      - kilted
     paths:
-      - .github/workflows/rolling-source-build.yml
+      - .github/workflows/kilted-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * MON-FRI'
@@ -26,11 +25,7 @@ on:
 jobs:
   source:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [rolling]
     with:
-      ros_distro: ${{ matrix.ROS_DISTRO }}
-      ref: master
+      ros_distro: kilted
+      ref: kilted
       container: ubuntu:24.04
