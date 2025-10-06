@@ -1,7 +1,7 @@
 name: Coverage Build - Humble
 on:
   workflow_dispatch:
-  push:
+  pull_request: &event
     branches:
       - humble
     paths:
@@ -14,19 +14,7 @@ on:
       - '**/CMakeLists.txt'
       - 'ros2_control.humble.repos'
       - 'codecov.yml'
-  pull_request:
-    branches:
-      - humble
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '.github/workflows/humble-coverage-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control.humble.repos'
-      - 'codecov.yml'
+  push: *event
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
