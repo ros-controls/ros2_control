@@ -4,7 +4,7 @@ name: Check Rolling Compatibility on Humble
 
 on:
   workflow_dispatch:
-  pull_request:
+  pull_request: &event
     branches:
       - master
     paths:
@@ -16,18 +16,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-  push:
-    branches:
-      - master
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '.github/workflows/rolling-compatibility-humble-binary-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control.rolling.repos'
+  push: *event
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
