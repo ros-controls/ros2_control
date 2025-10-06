@@ -4,7 +4,7 @@ name: Jazzy Binary Build
 
 on:
   workflow_dispatch:
-  pull_request:
+  pull_request: &event
     branches:
       - jazzy
     paths:
@@ -16,18 +16,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.jazzy.repos'
-  push:
-    branches:
-      - jazzy
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '.github/workflows/jazzy-binary-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control-not-released.jazzy.repos'
+  push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * MON-FRI'
