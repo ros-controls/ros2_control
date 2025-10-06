@@ -230,8 +230,6 @@ TEST_F(BlackBoxTest, IdentityMap)
       testIdentityMap(transmission, input_value, HW_IF_EFFORT);
       testIdentityMap(transmission, input_value, HW_IF_TORQUE);
       testIdentityMap(transmission, input_value, HW_IF_FORCE);
-      // testIdentityMap(transmission, input_value, HW_IF_CURRENT);
-      // testIdentityMap(transmission, input_value, HW_IF_ABSOLUTE_POSITION);
     }
   }
 }
