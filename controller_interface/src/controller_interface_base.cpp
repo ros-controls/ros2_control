@@ -194,12 +194,10 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     async_params.initialize(node_, "async_parameters.");
     if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::DETACHED)
     {
-      const rclcpp_lifecycle::State unconfigured_state(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
       RCLCPP_ERROR(
         get_node()->get_logger(),
         "The controllers are not supported to run asynchronously in detached mode!");
-      return unconfigured_state;
+      return get_node()->get_current_state();
     }
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
