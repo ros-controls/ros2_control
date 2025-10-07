@@ -37,7 +37,7 @@ public:
   }
 
   explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
-  : command_interface_(*command_interface),
+  : command_interface_(command_interface),
     interface_name_(command_interface->get_name()),
     deleter_(std::forward<Deleter>(deleter))
   {
@@ -76,11 +76,14 @@ public:
     }
   }
 
-  const std::string & get_name() const { return command_interface_.get_name(); }
+  const std::string & get_name() const { return command_interface_->get_name(); }
 
-  const std::string & get_interface_name() const { return command_interface_.get_interface_name(); }
+  const std::string & get_interface_name() const
+  {
+    return command_interface_->get_interface_name();
+  }
 
-  const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
+  const std::string & get_prefix_name() const { return command_interface_->get_prefix_name(); }
 
   /**
    * @brief Set the value of the command interface.
@@ -102,7 +105,7 @@ public:
   {
     unsigned int nr_tries = 0;
     ++set_value_statistics_.total_counter;
-    while (!command_interface_.set_limited_value(value))
+    while (!command_interface_->set_limited_value(value))
     {
       ++set_value_statistics_.failed_counter;
       ++nr_tries;
@@ -137,7 +140,7 @@ public:
     do
     {
       ++get_value_statistics_.total_counter;
-      const std::optional<T> data = command_interface_.get_optional<T>();
+      const std::optional<T> data = command_interface_->get_optional<T>();
       if (data.has_value())
       {
         return data;
@@ -155,16 +158,16 @@ public:
    * @brief Get the data type of the command interface.
    * @return The data type of the command interface.
    */
-  HandleDataType get_data_type() const { return command_interface_.get_data_type(); }
+  HandleDataType get_data_type() const { return command_interface_->get_data_type(); }
 
   /**
    * @brief Check if the state interface can be casted to double.
    * @return True if the state interface can be casted to double, false otherwise.
    */
-  bool is_castable_to_double() const { return command_interface_.is_castable_to_double(); }
+  bool is_castable_to_double() const { return command_interface_->is_castable_to_double(); }
 
 protected:
-  CommandInterface & command_interface_;
+  CommandInterface::SharedPtr command_interface_;
   std::string interface_name_;
   Deleter deleter_;
 
