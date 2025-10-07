@@ -99,8 +99,7 @@ public:
       {
         throw std::invalid_argument(
           fmt::format(
-            FMT_COMPILE(
-              "Invalid initial value : '{}' parsed for interface : '{}' with type : '{}'"),
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
@@ -114,7 +113,7 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Invalid data type : '{}' for interface : {}. Supported types are double and bool."),
+            "Invalid data type: '{}' for interface: {}. Supported types are double and bool."),
           data_type, handle_name_));
     }
   }
@@ -223,7 +222,7 @@ public:
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()),
-              "Casting bool to double for interface : %s. Better use get_optional<bool>().",
+              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
               get_name().c_str());
             notified_map[this] = true;
           }
@@ -231,7 +230,7 @@ public:
         default:
           throw std::runtime_error(
             fmt::format(
-              FMT_COMPILE("Data type : '{}' cannot be casted to double for interface : {}"),
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
               data_type_.to_string(), get_name()));
       }
     }
@@ -243,7 +242,7 @@ public:
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
           get_type_name<T>(), get_name(), data_type_.to_string()));
     }
     // END
@@ -300,7 +299,7 @@ public:
       {
         throw std::runtime_error(
           fmt::format(
-            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
             get_type_name<T>(), get_name(), data_type_.to_string()));
       }
       value_ = value;
