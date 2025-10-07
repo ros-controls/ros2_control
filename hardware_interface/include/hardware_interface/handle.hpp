@@ -208,23 +208,22 @@ public:
     // TODO(saikishor) return value_ if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
-      // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
-      // https://github.com/ros2/rclcpp/issues/2587
-      // is fixed
-      static std::unordered_map<const Handle *, bool> notified_map;
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
           THROW_ON_NULLPTR(value_ptr_);
           return *value_ptr_;
         case HandleDataType::BOOL:
-          if (notified_map.find(this) == notified_map.end() || !notified_map[this])
+          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
+          // https://github.com/ros2/rclcpp/issues/2587
+          // is fixed
+          if (!notified_)
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()),
               "Casting bool to double for interface: %s. Better use get_optional<bool>().",
               get_name().c_str());
-            notified_map[this] = true;
+            notified_ = true;
           }
           return static_cast<double>(std::get<bool>(value_));
         default:
@@ -354,6 +353,12 @@ protected:
   double * value_ptr_;
   // END
   mutable std::shared_mutex handle_mutex_;
+
+private:
+  // TODO(christophfroehlich): remove once
+  // https://github.com/ros2/rclcpp/issues/2587
+  // is fixed
+  mutable bool notified_ = false;
 };
 
 class StateInterface : public Handle
