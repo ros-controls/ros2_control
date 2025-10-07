@@ -27,7 +27,6 @@
 #include <shared_mutex>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -59,8 +58,6 @@ std::string get_type_name()
 
 namespace hardware_interface
 {
-
-using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -357,17 +354,26 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -431,10 +437,19 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
@@ -443,7 +458,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
