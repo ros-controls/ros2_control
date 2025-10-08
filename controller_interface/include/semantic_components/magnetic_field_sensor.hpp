@@ -36,7 +36,7 @@ public:
   /**
    * \return MagneticField message from values
    */
-  bool get_values_as_message(sensor_msgs::msg::MagneticField & message) const
+  bool get_values_as_message(sensor_msgs::msg::MagneticField & message)
   {
     update_data_from_interfaces();
     message.magnetic_field.x = data_[0];
