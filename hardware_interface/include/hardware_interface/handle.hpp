@@ -25,6 +25,7 @@
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
@@ -97,8 +98,7 @@ public:
       {
         throw std::invalid_argument(
           fmt::format(
-            FMT_COMPILE(
-              "Invalid initial value : '{}' parsed for interface : '{}' with type : '{}'"),
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
@@ -112,7 +112,7 @@ public:
       throw std::runtime_error(
         fmt::format(
           FMT_COMPILE(
-            "Invalid data type : '{}' for interface : {}. Supported types are double and bool."),
+            "Invalid data type: '{}' for interface: {}. Supported types are double and bool."),
           data_type, handle_name_));
     }
   }
@@ -213,15 +213,22 @@ public:
           THROW_ON_NULLPTR(value_ptr_);
           return *value_ptr_;
         case HandleDataType::BOOL:
-          RCLCPP_WARN_ONCE(
-            rclcpp::get_logger(get_name()),
-            "Casting bool to double for interface : %s. Better use get_optional<bool>().",
-            get_name().c_str());
+          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
+          // https://github.com/ros2/rclcpp/issues/2587
+          // is fixed
+          if (!notified_)
+          {
+            RCLCPP_WARN(
+              rclcpp::get_logger(get_name()),
+              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
+              get_name().c_str());
+            notified_ = true;
+          }
           return static_cast<double>(std::get<bool>(value_));
         default:
           throw std::runtime_error(
             fmt::format(
-              FMT_COMPILE("Data type : '{}' cannot be casted to double for interface : {}"),
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
               data_type_.to_string(), get_name()));
       }
     }
@@ -233,7 +240,7 @@ public:
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
           get_type_name<T>(), get_name(), data_type_.to_string()));
     }
     // END
@@ -290,7 +297,7 @@ public:
       {
         throw std::runtime_error(
           fmt::format(
-            FMT_COMPILE("Invalid data type : '{}' access for interface : {} expected : '{}'"),
+            FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
             get_type_name<T>(), get_name(), data_type_.to_string()));
       }
       value_ = value;
@@ -345,6 +352,12 @@ protected:
   double * value_ptr_;
   // END
   mutable std::shared_mutex handle_mutex_;
+
+private:
+  // TODO(christophfroehlich): remove once
+  // https://github.com/ros2/rclcpp/issues/2587
+  // is fixed
+  mutable bool notified_ = false;
 };
 
 class StateInterface : public Handle
