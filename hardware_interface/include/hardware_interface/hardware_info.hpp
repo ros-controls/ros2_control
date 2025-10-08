@@ -254,8 +254,8 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
-  /// Async thread priority
-  [[deprecated("Use async_params instead.")]] int thread_priority;
+  /// [[deprecated("Use async_params instead.")]] Async thread priority
+  int thread_priority;
   /// Async Parameters
   HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
