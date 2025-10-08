@@ -653,6 +653,10 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+      node_, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+      hardware_interface::DEFAULT_REGISTRY_KEY);
   }
 
   std::string hardware_robot_2dof_;
@@ -676,6 +680,12 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
+<<<<<<< HEAD
+=======
+  std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
+  std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
+  rclcpp::Node::SharedPtr node_ = std::make_shared<rclcpp::Node>("TestGenericSystem");
+>>>>>>> 096da1a (Fix warnings of uninitialized registry in GenericSystem tests (#2635))
 };
 
 // Forward declaration
@@ -700,11 +710,26 @@ public:
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
 
+<<<<<<< HEAD
   TestableResourceManager() : hardware_interface::ResourceManager() {}
 
   TestableResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
   : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+=======
+  explicit TestableResourceManager(rclcpp::Node::SharedPtr node)
+  : hardware_interface::ResourceManager(
+      node->get_node_clock_interface(), node->get_node_logging_interface())
+  {
+  }
+
+  explicit TestableResourceManager(
+    rclcpp::Node::SharedPtr node, const std::string & urdf, bool activate_all = false,
+    unsigned int cm_update_rate = 100)
+  : hardware_interface::ResourceManager(
+      urdf, node->get_node_clock_interface(), node->get_node_logging_interface(), activate_all,
+      cm_update_rate)
+>>>>>>> 096da1a (Fix warnings of uninitialized registry in GenericSystem tests (#2635))
   {
   }
 };
@@ -867,7 +892,12 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
 
 void generic_system_functional_test(const std::string & urdf, const double offset = 0)
 {
+<<<<<<< HEAD
   TestableResourceManager rm(urdf);
+=======
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_generic_system");
+  TestableResourceManager rm(node, urdf);
+>>>>>>> 096da1a (Fix warnings of uninitialized registry in GenericSystem tests (#2635))
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
@@ -961,8 +991,168 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   deactivate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
+<<<<<<< HEAD
     status_map["GenericSystem2dof"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
+=======
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+void generic_system_error_group_test(
+  const std::string & urdf, const std::string component_prefix, bool validate_same_group)
+{
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_generic_system");
+  TestableResourceManager rm(node, urdf, false, 200u);
+  const std::string component1 = component_prefix + "1";
+  const std::string component2 = component_prefix + "2";
+  // check is hardware is configured
+  auto status_map = rm.get_components_status();
+  for (auto component : {component1, component2})
+  {
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+    configure_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+    activate_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(status_map[component].rw_rate, 200u);
+  }
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
+
+  // State interfaces without initial value are set to 0
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // set some new values in commands
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j1v_c.set_value(0.22));
+  ASSERT_TRUE(j2p_c.set_value(0.33));
+  ASSERT_TRUE(j2v_c.set_value(0.44));
+
+  // State values should not be changed
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // write() does not change values
+  EXPECT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(3.45, j1p_s.get_optional().value());
+  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_EQ(2.78, j2p_s.get_optional().value());
+  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // read() mirrors commands to states
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.22, j1v_c.get_optional().value());
+  ASSERT_EQ(0.33, j2p_c.get_optional().value());
+  ASSERT_EQ(0.44, j2v_c.get_optional().value());
+
+  // set some new values in commands
+  ASSERT_TRUE(j1p_c.set_value(0.55));
+  ASSERT_TRUE(j1v_c.set_value(0.66));
+  ASSERT_TRUE(j2p_c.set_value(0.77));
+  ASSERT_TRUE(j2v_c.set_value(0.88));
+
+  // state values should not be changed
+  ASSERT_EQ(0.11, j1p_s.get_optional().value());
+  ASSERT_EQ(0.22, j1v_s.get_optional().value());
+  ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  ASSERT_EQ(0.44, j2v_s.get_optional().value());
+  ASSERT_EQ(0.55, j1p_c.get_optional().value());
+  ASSERT_EQ(0.66, j1v_c.get_optional().value());
+  ASSERT_EQ(0.77, j2p_c.get_optional().value());
+  ASSERT_EQ(0.88, j2v_c.get_optional().value());
+
+  // Error testing
+  ASSERT_TRUE(j1p_c.set_value(std::numeric_limits<double>::infinity()));
+  ASSERT_TRUE(j1v_c.set_value(std::numeric_limits<double>::infinity()));
+  // read() should now bring error in the first component
+  auto read_result = rm.read(TIME, PERIOD);
+  EXPECT_EQ(read_result.result, hardware_interface::return_type::ERROR);
+  if (validate_same_group)
+  {
+    // If they belong to the same group, show the error in all hardware components of same group
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1, component2));
+  }
+  else
+  {
+    // If they don't belong to the same group, show the error in only that hardware component
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1));
+  }
+
+  // Check initial values
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/velocity"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/velocity"));
+
+  if (validate_same_group)
+  {
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/velocity"));
+  }
+  else
+  {
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));
+  }
+
+  // Error should be recoverable only after reactivating the hardware component
+  ASSERT_TRUE(j1p_c.set_value(0.0));
+  ASSERT_TRUE(j1v_c.set_value(0.0));
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::ERROR);
+
+  // Now it should be recoverable
+  deactivate_components(rm, {component1});
+  activate_components(rm, {component1});
+  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+
+  deactivate_components(rm, {component1, component2});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map[component1].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map[component2].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+>>>>>>> 096da1a (Fix warnings of uninitialized registry in GenericSystem tests (#2635))
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
