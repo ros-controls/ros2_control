@@ -52,7 +52,7 @@ private:
    * @note This method might return stale data if the data is not updated. This is to ensure that
    * the data from the sensor is not discontinuous.
    */
-  void update_data_from_interfaces() const
+  void update_data_from_interfaces()
   {
     for (auto i = 0u; i < data_.size(); ++i)
     {
@@ -65,7 +65,7 @@ private:
   }
 
   // Array to store the data of the magnetic field sensor
-  mutable std::array<double, 3> data_{{0.0, 0.0, 0.0}};
+  std::array<double, 3> data_{{0.0, 0.0, 0.0}};
 };
 
 }  // namespace semantic_components
