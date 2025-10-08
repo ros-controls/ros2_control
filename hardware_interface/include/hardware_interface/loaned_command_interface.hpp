@@ -47,27 +47,32 @@ public:
 
   virtual ~LoanedCommandInterface()
   {
-    auto logger = rclcpp::get_logger(command_interface_->get_name());
-    RCLCPP_WARN_EXPRESSION(
-      rclcpp::get_logger(get_name()),
-      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
-      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and %u (~ %.4f %%) missed calls out of "
-      "%u get_value calls",
-      get_name().c_str(), get_value_statistics_.timeout_counter,
-      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.total_counter);
-    RCLCPP_WARN_EXPRESSION(
-      rclcpp::get_logger(get_name()),
-      (set_value_statistics_.failed_counter > 0 || set_value_statistics_.timeout_counter > 0),
-      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and  %u (~ %.4f %%) missed calls out of "
-      "%u set_value calls",
-      get_name().c_str(), set_value_statistics_.timeout_counter,
-      (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
-      set_value_statistics_.failed_counter,
-      (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
-      set_value_statistics_.total_counter);
+    if (command_interface_)
+    {
+      auto logger = rclcpp::get_logger(command_interface_->get_name());
+      RCLCPP_WARN_EXPRESSION(
+        rclcpp::get_logger(get_name()),
+        (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+        "LoanedCommandInterface %s has %u (%.4f %%) timeouts and %u (~ %.4f %%) missed calls out "
+        "of "
+        "%u get_value calls",
+        get_name().c_str(), get_value_statistics_.timeout_counter,
+        (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.failed_counter,
+        (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.total_counter);
+      RCLCPP_WARN_EXPRESSION(
+        rclcpp::get_logger(get_name()),
+        (set_value_statistics_.failed_counter > 0 || set_value_statistics_.timeout_counter > 0),
+        "LoanedCommandInterface %s has %u (%.4f %%) timeouts and  %u (~ %.4f %%) missed calls out "
+        "of "
+        "%u set_value calls",
+        get_name().c_str(), set_value_statistics_.timeout_counter,
+        (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
+        set_value_statistics_.failed_counter,
+        (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
+        set_value_statistics_.total_counter);
+    }
     if (deleter_)
     {
       deleter_();

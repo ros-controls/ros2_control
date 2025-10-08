@@ -46,17 +46,20 @@ public:
 
   virtual ~LoanedStateInterface()
   {
-    auto logger = rclcpp::get_logger(state_interface_->get_name());
-    RCLCPP_WARN_EXPRESSION(
-      logger,
-      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
-      "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
-      "get_value calls",
-      state_interface_->get_name().c_str(), get_value_statistics_.timeout_counter,
-      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.total_counter);
+    if (state_interface_)
+    {
+      auto logger = rclcpp::get_logger(state_interface_->get_name());
+      RCLCPP_WARN_EXPRESSION(
+        logger,
+        (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+        "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
+        "get_value calls",
+        state_interface_->get_name().c_str(), get_value_statistics_.timeout_counter,
+        (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.failed_counter,
+        (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.total_counter);
+    }
     if (deleter_)
     {
       deleter_();
