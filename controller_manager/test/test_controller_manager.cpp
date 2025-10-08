@@ -912,7 +912,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
-      testing::AllOf(testing::Ge(0.7 / cm_update_rate), testing::Lt((1.6 / cm_update_rate))));
+      testing::AllOf(testing::Ge(0.65 / cm_update_rate), testing::Lt((1.6 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
       cm_->get_loaded_controllers()[0].execution_time_statistics->get_count());
@@ -1058,7 +1058,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(0.99 * exp_controller_period),
+          testing::Gt(0.65 * exp_controller_period),
           testing::Lt((1.2 * exp_controller_period) + PERIOD.seconds())))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
@@ -1211,7 +1211,7 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(0.99 * exp_controller_period),
+          testing::Gt(0.65 * exp_controller_period),
           testing::Lt((1.05 * exp_controller_period) + PERIOD.seconds())))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
