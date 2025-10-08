@@ -646,6 +646,10 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+      node_, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+      hardware_interface::DEFAULT_REGISTRY_KEY);
   }
 
   std::string hardware_system_2dof_;
@@ -669,7 +673,7 @@ protected:
   std::string disabled_commands_;
   std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
   std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
-  rclcpp::Node node_ = rclcpp::Node("TestGenericSystem");
+  rclcpp::Node::SharedPtr node_ = std::make_shared<rclcpp::Node>("TestGenericSystem");
 };
 
 // Forward declaration
@@ -694,17 +698,17 @@ public:
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
 
-  explicit TestableResourceManager(rclcpp::Node & node)
+  explicit TestableResourceManager(rclcpp::Node::SharedPtr node)
   : hardware_interface::ResourceManager(
-      node.get_node_clock_interface(), node.get_node_logging_interface())
+      node->get_node_clock_interface(), node->get_node_logging_interface())
   {
   }
 
   explicit TestableResourceManager(
-    rclcpp::Node & node, const std::string & urdf, bool activate_all = false,
+    rclcpp::Node::SharedPtr node, const std::string & urdf, bool activate_all = false,
     unsigned int cm_update_rate = 100)
   : hardware_interface::ResourceManager(
-      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all,
+      urdf, node->get_node_clock_interface(), node->get_node_logging_interface(), activate_all,
       cm_update_rate)
   {
   }
@@ -839,7 +843,7 @@ void generic_system_functional_test(
   const std::string & urdf, const std::string component_name = "GenericSystem2dof",
   const double offset = 0)
 {
-  rclcpp::Node node("test_generic_system");
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_generic_system");
   TestableResourceManager rm(node, urdf);
   // check is hardware is configured
   auto status_map = rm.get_components_status();
@@ -941,7 +945,7 @@ void generic_system_functional_test(
 void generic_system_error_group_test(
   const std::string & urdf, const std::string component_prefix, bool validate_same_group)
 {
-  rclcpp::Node node("test_generic_system");
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_generic_system");
   TestableResourceManager rm(node, urdf, false, 200u);
   const std::string component1 = component_prefix + "1";
   const std::string component2 = component_prefix + "2";
