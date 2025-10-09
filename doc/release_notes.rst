@@ -5,6 +5,10 @@ Release Notes: Kilted Kaiju to Lyrical Luth
 
 This list summarizes important changes between Kilted Kaiju (previous) and Lyrical Luth (current) releases.
 
+controller_interface
+********************
+* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers.
+
 controller_manager
 ******************
 

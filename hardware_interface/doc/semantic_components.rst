@@ -12,6 +12,7 @@ List of existing ``SemanticComponentInterface`` `(link to header file) <https://
    * `IMUSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/imu_sensor.hpp>`__, used by :ref:`IMU Sensor Broadcaster <imu_sensor_broadcaster_userdoc>`
    * `ForceTorqueSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/force_torque_sensor.hpp>`__, used by :ref:`Force Torque Sensor Broadcaster <force_torque_sensor_broadcaster_userdoc>`
    * `GPSSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/gps_sensor.hpp>`__
+   * `MagneticFieldSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/magnetic_field_sensor.hpp>`__
    * `PoseSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/pose_sensor.hpp>`__, used by :ref:`Pose Broadcaster <pose_broadcaster_userdoc>`
    * `RangeSensor <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_interface/include/semantic_components/range_sensor.hpp>`__, used by :ref:`Range Sensor Broadcaster <range_sensor_broadcaster_userdoc>`
 
