@@ -169,7 +169,6 @@ protected:
   std::vector<JointHandle> joint_effort_;
   std::vector<JointHandle> joint_torque_;
   std::vector<JointHandle> joint_force_;
-  std::vector<JointHandle> joint_curret_;
   std::vector<JointHandle> joint_absolute_position_;
 
   std::vector<ActuatorHandle> actuator_position_;
@@ -177,7 +176,6 @@ protected:
   std::vector<ActuatorHandle> actuator_effort_;
   std::vector<ActuatorHandle> actuator_torque_;
   std::vector<ActuatorHandle> actuator_force_;
-  std::vector<ActuatorHandle> actuator_current_;
   std::vector<ActuatorHandle> actuator_absolute_position_;
 };
 
@@ -241,15 +239,12 @@ void DifferentialTransmission::configure(
   joint_effort_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_EFFORT);
   joint_torque_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_TORQUE);
   joint_force_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_FORCE);
-  joint_curret_ =
-    get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_CURRENT);
   joint_absolute_position_ =
     get_ordered_handles(joint_handles, joint_names, HW_IF_ABSOLUTE_POSITION);
 
   if (
     joint_position_.size() != 2 && joint_velocity_.size() != 2 && joint_effort_.size() != 2 &&
-    joint_torque_.size() != 2 && joint_force_.size() != 2 && joint_curret_.size() != 2 &&
-    joint_absolute_position_.size() != 2)
+    joint_torque_.size() != 2 && joint_force_.size() != 2 && joint_absolute_position_.size() != 2)
   {
     throw Exception("Not enough valid or required joint handles were presented.");
   }
@@ -264,15 +259,13 @@ void DifferentialTransmission::configure(
     get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_TORQUE);
   actuator_force_ =
     get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_FORCE);
-  actuator_current_ =
-    get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_CURRENT);
   actuator_absolute_position_ =
     get_ordered_handles(actuator_handles, actuator_names, HW_IF_ABSOLUTE_POSITION);
 
   if (
     actuator_position_.size() != 2 && actuator_velocity_.size() != 2 &&
     actuator_effort_.size() != 2 && actuator_torque_.size() != 2 && actuator_force_.size() != 2 &&
-    actuator_current_.size() != 2 && actuator_absolute_position_.size() != 2)
+    actuator_absolute_position_.size() != 2)
   {
     throw Exception(
       fmt::format(
@@ -286,7 +279,6 @@ void DifferentialTransmission::configure(
     joint_effort_.size() != actuator_effort_.size() &&
     joint_torque_.size() != actuator_torque_.size() &&
     joint_force_.size() != actuator_force_.size() &&
-    joint_curret_.size() != actuator_current_.size() &&
     joint_absolute_position_.size() != actuator_absolute_position_.size())
   {
     throw Exception(
@@ -359,16 +351,6 @@ inline void DifferentialTransmission::actuator_to_joint()
       jr[0] * (act_for[0].get_value() * ar[0] + act_for[1].get_value() * ar[1]));
     joint_for[1].set_value(
       jr[1] * (act_for[0].get_value() * ar[0] - act_for[1].get_value() * ar[1]));
-  }
-
-  auto & act_cur = actuator_current_;
-  auto & joint_cur = joint_curret_;
-  if (act_cur.size() == num_actuators() && joint_cur.size() == num_joints())
-  {
-    assert(act_cur[0] && act_cur[1] && joint_cur[0] && joint_cur[1]);
-
-    joint_cur[0].set_value(act_cur[0].get_value() + act_cur[1].get_value());
-    joint_cur[1].set_value(act_cur[0].get_value() - act_cur[1].get_value());
   }
 
   auto & act_abs_pos = actuator_absolute_position_;
@@ -452,16 +434,6 @@ inline void DifferentialTransmission::joint_to_actuator()
     act_for[1].set_value(
       (joint_for[0].get_value() / jr[0] - joint_for[1].get_value() / jr[1]) / (2.0 * ar[1]));
   }
-
-  auto & act_cur = actuator_current_;
-  auto & joint_cur = joint_curret_;
-  if (act_cur.size() == num_actuators() && joint_cur.size() == num_joints())
-  {
-    assert(act_cur[0] && act_cur[1] && joint_cur[0] && joint_cur[1]);
-
-    act_cur[0].set_value((joint_cur[0].get_value() + joint_cur[1].get_value()) / 2.0);
-    act_cur[1].set_value((joint_cur[0].get_value() - joint_cur[1].get_value()) / 2.0);
-  }
 }
 
 std::string DifferentialTransmission::get_handles_info() const
@@ -474,14 +446,12 @@ std::string DifferentialTransmission::get_handles_info() const
       "Joint effort: {}, Actuator effort: {}\n"
       "Joint torque: {}, Actuator torque: {}\n"
       "Joint force: {}, Actuator force: {}\n"
-      "Joint current: {}, Actuator current: {}\n"
       "Joint absolute position: {}, Actuator absolute position: {}"),
     to_string(get_names(joint_position_)), to_string(get_names(actuator_position_)),
     to_string(get_names(joint_velocity_)), to_string(get_names(actuator_velocity_)),
     to_string(get_names(joint_effort_)), to_string(get_names(actuator_effort_)),
     to_string(get_names(joint_torque_)), to_string(get_names(actuator_torque_)),
     to_string(get_names(joint_force_)), to_string(get_names(actuator_force_)),
-    to_string(get_names(joint_curret_)), to_string(get_names(actuator_current_)),
     to_string(get_names(joint_absolute_position_)),
     to_string(get_names(actuator_absolute_position_)));
 }
