@@ -47,27 +47,6 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 }
 
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
-  const HardwareInfo & hardware_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-{
-  // This is done for backward compatibility with the old initialize method.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  return this->initialize(hardware_info, logger, clock_interface->get_clock());
-#pragma GCC diagnostic pop
-}
-
-const rclcpp_lifecycle::State & HardwareComponent::initialize(
-  const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
-{
-  hardware_interface::HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  params.logger = logger;
-  params.clock = clock;
-  return initialize(params);
-}
-
-const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
