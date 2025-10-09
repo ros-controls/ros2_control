@@ -393,6 +393,19 @@ def main(args=None):
             node.destroy_node()
         if lock.is_locked:
             lock.release()
+        # workaround for https://github.com/ros-controls/ros2_control/issues/2330
+        # the lock file is not automatically removed after termination, which hinders other users to start ros2control
+        if os.path.isfile(lock.lock_file):
+            try:
+                os.remove(lock.lock_file)
+                logger.info(
+                    f"Lock file '{lock.lock_file}' explicitly removed after spawning "
+                    + bcolors.BOLD
+                    + controller_name
+                    + bcolors.ENDC
+                )
+            except PermissionError as err:
+                logger.fatal(str(err))
         rclpy.shutdown()
 
 
