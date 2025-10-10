@@ -70,10 +70,6 @@ int main(int argc, char ** argv)
     }
   }
 
-  // wait for the clock to be available
-  cm->get_clock()->wait_until_started();
-  cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
-
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const bool manage_overruns = cm->get_parameter_or<bool>("overruns.manage", true);
   RCLCPP_INFO(
@@ -125,6 +121,10 @@ int main(int argc, char ** argv)
           cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
           thread_priority);
       }
+
+      // wait for the clock to be available
+      cm->get_clock()->wait_until_started();
+      cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
       // for calculating sleep time
       auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
