@@ -79,6 +79,13 @@ if(BUILD_TESTING)
     ${sensor_msgs_TARGETS}
   )
 
+  ament_add_gmock(test_magnetic_field_sensor test/test_magnetic_field_sensor.cpp)
+  target_link_libraries(test_magnetic_field_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
+  )
+
   ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
   target_link_libraries(test_pose_sensor
     controller_interface
