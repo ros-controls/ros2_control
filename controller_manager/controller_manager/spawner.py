@@ -401,7 +401,7 @@ def main(args=None):
                 logger.info(
                     f"Lock file '{lock.lock_file}' explicitly removed after spawning "
                     + bcolors.BOLD
-                    + controller_name
+                    + f"{controller_names}"
                     + bcolors.ENDC
                 )
             except PermissionError as err:
