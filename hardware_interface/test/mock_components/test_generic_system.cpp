@@ -106,7 +106,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -114,7 +116,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -275,7 +279,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -283,7 +289,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
   </ros2_control>
 )";
@@ -334,7 +342,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
       <state_interface name="actual_position"/>
     </joint>
     <joint name="joint2">
@@ -366,7 +376,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -374,7 +386,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -402,7 +416,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -410,7 +426,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -438,7 +456,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -446,7 +466,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -474,7 +496,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">3.45</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
@@ -482,7 +506,9 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="velocity"/>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -909,7 +935,6 @@ void generic_system_functional_test(
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
-  // State interfaces without initial value are set to 0
   EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
@@ -1015,11 +1040,11 @@ void generic_system_error_group_test(
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
-  // State interfaces without initial value are set to 0
+  // State interfaces without initial value are set to nan
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
@@ -1033,9 +1058,9 @@ void generic_system_error_group_test(
 
   // State values should not be changed
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());
   EXPECT_EQ(0.33, j2p_c.get_optional().value());
@@ -1044,9 +1069,9 @@ void generic_system_error_group_test(
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());
   EXPECT_EQ(0.33, j2p_c.get_optional().value());
@@ -1290,10 +1315,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/tx"));
   EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/ty"));
 
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  // State interfaces without initial value are set to nan
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1306,10 +1332,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_TRUE(j2p_c.set_value(0.33));
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1319,10 +1345,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1333,13 +1359,13 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.33, j2p_c.get_optional().value());
 }
@@ -1393,10 +1419,11 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   hardware_interface::LoanedCommandInterface sty_c =
     rm.claim_command_interface("tcp_force_sensor/ty");
 
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  // State interfaces without initial value are set to nan
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1417,10 +1444,10 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   ASSERT_TRUE(sty_c.set_value(4.44));
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1434,10 +1461,10 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
 
   // write() does not change values
   rm.write(TIME, PERIOD);
-  ASSERT_EQ(0.0, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1452,9 +1479,9 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   // read() mirrors commands to states
   rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_EQ(1.11, sfx_s.get_optional().value());
   ASSERT_EQ(2.22, sfy_s.get_optional().value());
   ASSERT_EQ(3.33, stx_s.get_optional().value());
@@ -1511,10 +1538,11 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
   hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
 
+  // State interfaces without initial value are set to nan
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
 
@@ -1524,18 +1552,18 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
 
   // State values should not be changed
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
-  ASSERT_EQ(0.0, j2p_s.get_optional().value());
-  ASSERT_EQ(0.0, j2v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
@@ -1619,7 +1647,6 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   hardware_interface::LoanedStateInterface c_j2p_s =
     rm.claim_state_interface("joint2/actual_position");
 
-  // State interfaces without initial value are set to 0
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(2.78, j2p_s.get_optional().value());
@@ -1747,7 +1774,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
 
-  // State interfaces without initial value are set to 0
+  // State interfaces without initial value are set to nan
   ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(gpio1_a_o1_c.get_optional().value()));
@@ -2054,12 +2081,13 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   hardware_interface::LoanedCommandInterface j2a_c =
     rm.claim_command_interface("joint2/acceleration");
 
+  // State interfaces without initial value are set to nan
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
-  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2087,11 +2115,11 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // State values should not be changed
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
-  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2100,11 +2128,11 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   // write() does not change values
   rm.write(TIME, PERIOD);
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
-  EXPECT_EQ(0.0, j2a_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2232,7 +2260,7 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
 
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
 
   // set some new values in commands
@@ -2240,19 +2268,19 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 
   // State values should not be changed
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // write() does not change values
   rm.write(TIME, PERIOD);
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // read() also does not change values
   rm.read(TIME, PERIOD);
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_EQ(0.0, j1v_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
 }
 
