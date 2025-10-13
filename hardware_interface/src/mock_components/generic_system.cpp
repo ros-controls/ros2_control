@@ -336,37 +336,14 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
   for (const auto & joint_state : joint_state_interfaces_)
   {
     const std::string & name = joint_state.second.get_name();
-    switch (joint_state.second.get_data_type())
+    // initial values are set from the URDF. only apply offset
+    if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
     {
-      case hardware_interface::HandleDataType::DOUBLE:
+      if (
+        joint_state.second.get_interface_name() == standard_interfaces_[POSITION_INTERFACE_INDEX] &&
+        custom_interface_with_following_offset_.empty())
       {
-        double val = joint_state.second.interface_info.initial_value.empty()
-                       ? 0.0
-                       : hardware_interface::stod(joint_state.second.interface_info.initial_value);
-        if (
-          joint_state.second.get_interface_name() ==
-            standard_interfaces_[POSITION_INTERFACE_INDEX] &&
-          custom_interface_with_following_offset_.empty())
-        {
-          val += position_state_following_offset_;
-        }
-        set_state(name, val);
-        break;
-      }
-      case hardware_interface::HandleDataType::BOOL:
-      {
-        bool bval =
-          joint_state.second.interface_info.initial_value.empty()
-            ? false
-            : hardware_interface::parse_bool(joint_state.second.interface_info.initial_value);
-        set_state<bool>(name, bval);
-        break;
-      }
-      default:
-      {
-        RCLCPP_WARN(
-          get_logger(), "Data type of joint state interface '%s' will not be handled.",
-          joint_state.second.get_interface_name().c_str());
+        set_state(name, get_state(name) + position_state_following_offset_);
       }
     }
   }
@@ -446,8 +423,14 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
 
+          if (std::isnan(joint_state_values_[VELOCITY_INTERFACE_INDEX]))
+          {
+            joint_state_values_[VELOCITY_INTERFACE_INDEX] = 0.0;
+          }
           joint_state_values_[VELOCITY_INTERFACE_INDEX] +=
-            joint_state_values_[ACCELERATION_INTERFACE_INDEX] * period.seconds();
+            std::isnan(joint_state_values_[ACCELERATION_INTERFACE_INDEX])
+              ? 0.0
+              : joint_state_values_[ACCELERATION_INTERFACE_INDEX] * period.seconds();
 
           if (!std::isnan(joint_command_values_[ACCELERATION_INTERFACE_INDEX]))
           {
@@ -481,7 +464,9 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
           if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX]))
           {
             const double old_position = joint_state_values_[POSITION_INTERFACE_INDEX];
-            const double old_velocity = joint_state_values_[VELOCITY_INTERFACE_INDEX];
+            const double old_velocity = std::isnan(joint_state_values_[VELOCITY_INTERFACE_INDEX])
+                                          ? 0.0
+                                          : joint_state_values_[VELOCITY_INTERFACE_INDEX];
 
             joint_state_values_[POSITION_INTERFACE_INDEX] =  // apply offset to positions only
               joint_command_values_[POSITION_INTERFACE_INDEX] +
