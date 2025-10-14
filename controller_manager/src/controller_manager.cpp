@@ -3082,7 +3082,16 @@ controller_interface::return_type ControllerManager::update(
 
         if (controller_ret != controller_interface::return_type::OK)
         {
-          rt_buffer_.deactivate_controllers_list.push_back(loaded_controller.info.name);
+          const std::vector<std::string> & controller_chain =
+            controller_full_chain_info_cache_[loaded_controller.info.name];
+          RCLCPP_INFO_EXPRESSION(
+            get_logger(), controller_chain.size() > 1,
+            "Controller '%s' is part of a chain of %lu controllers that will be deactivated.",
+            loaded_controller.info.name.c_str(), controller_chain.size());
+          for (const auto & chained_controller : controller_chain)
+          {
+            ros2_control::add_item(rt_buffer_.deactivate_controllers_list, chained_controller);
+          }
           ret = controller_ret;
         }
       }
