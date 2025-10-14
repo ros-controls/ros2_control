@@ -229,6 +229,7 @@ public:
     component_params.clock = rm_clock_;
     component_params.logger = rm_logger_;
     component_params.executor = params.executor;
+    component_params.node_namespace = params.node_namespace;
     RCLCPP_INFO(
       get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
 
@@ -1298,6 +1299,7 @@ public:
   rclcpp::Clock::SharedPtr rm_clock_;
   rclcpp::Logger rm_logger_;
   rclcpp::Executor::WeakPtr executor_;
+  std::string node_namespace_;
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
@@ -1479,6 +1481,7 @@ bool ResourceManager::load_and_initialize_components(
     interface_params.executor = resource_storage_->executor_;
     interface_params.clock = resource_storage_->rm_clock_;
     interface_params.logger = resource_storage_->rm_logger_;
+    interface_params.node_namespace = resource_storage_->node_namespace_;
 
     if (individual_hardware_info.type == actuator_type)
     {
@@ -1535,6 +1538,7 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   resource_storage_->executor_ = params.executor;
+  resource_storage_->node_namespace_ = params.node_namespace;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return load_and_initialize_components(params.robot_description, params.update_rate);

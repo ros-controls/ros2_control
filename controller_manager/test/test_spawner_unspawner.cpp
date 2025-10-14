@@ -983,6 +983,14 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   EXPECT_EQ(
     call_spawner("ctrl_1 ctrl_2 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
 
+  const auto all_node_names = cm_->get_node_names();
+  ASSERT_THAT(
+    all_node_names,
+    testing::UnorderedElementsAreArray(
+      {"/foo_namespace/test_controller_manager", "/foo_namespace/ctrl_1", "/foo_namespace/ctrl_2",
+       "/ResourceManager", "/foo_namespace/testactuatorhardware",
+       "/foo_namespace/testsensorhardware", "/foo_namespace/testsystemhardware"}));
+
   auto validate_loaded_controllers = [&]()
   {
     auto loaded_controllers = cm_->get_loaded_controllers();
