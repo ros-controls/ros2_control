@@ -4449,16 +4449,16 @@ void ControllerManager::build_controllers_topology_info(
   }
   for (const auto & [controller_name, controller_chain] : controller_chain_spec_)
   {
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       get_logger(), "Controller '%s' has %ld following controllers and %ld preceding controllers.",
       controller_name.c_str(), controller_chain.following_controllers.size(),
       controller_chain.preceding_controllers.size());
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain.following_controllers.empty(),
       fmt::format(
         "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
         .c_str());
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain.preceding_controllers.empty(),
       fmt::format(
         "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
