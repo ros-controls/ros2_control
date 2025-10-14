@@ -97,6 +97,7 @@ const rclcpp_lifecycle::State & HardwareComponent::configure()
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -124,6 +125,7 @@ const rclcpp_lifecycle::State & HardwareComponent::cleanup()
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -149,6 +151,7 @@ const rclcpp_lifecycle::State & HardwareComponent::shutdown()
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_shutdown(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -177,6 +180,7 @@ const rclcpp_lifecycle::State & HardwareComponent::activate()
   }
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->pause_async_operations();
     impl_->prepare_for_activation();
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
@@ -205,6 +209,7 @@ const rclcpp_lifecycle::State & HardwareComponent::deactivate()
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -233,6 +238,7 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
