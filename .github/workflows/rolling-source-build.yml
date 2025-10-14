@@ -14,6 +14,11 @@ on:
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
       - 'ros2_control.kilted.repos'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/rolling-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * MON-FRI'
@@ -24,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [kilted, rolling]
+        ROS_DISTRO: [rolling]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ref: master

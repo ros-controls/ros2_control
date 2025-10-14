@@ -158,18 +158,18 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
       .. _framework_managed_publisher:
 
-      Implement ``configure_hardware_status_message`` and ``update_hardware_status_message`` methods to publish the framework-supported hardware status reporting through ``control_msgs/msg/HardwareStatus`` messages:
+      Implement ``init_hardware_status_message`` and ``update_hardware_status_message`` methods to publish the framework-supported hardware status reporting through ``control_msgs/msg/HardwareStatus`` messages:
 
-      *   **`configure_hardware_status_message`**: This non-realtime method is called once during initialization. You must override it to define the **static structure** of your status message. This includes setting the ``hardware_id``, resizing the ``hardware_device_states`` vector, and for each device, resizing its specific status vectors (e.g., ``generic_hardware_status``, ``canopen_states``) and populating static fields like ``device_id`` and interface ``name``. Pre-allocating the message structure here is crucial for real-time safety.
+      *   **`init_hardware_status_message`**: This non-realtime method is called once during initialization. You must override it to define the **static structure** of your status message. This includes setting the ``hardware_id``, resizing the ``hardware_device_states`` vector, and for each device, resizing its specific status vectors (e.g., ``generic_hardware_status``, ``canopen_states``) and populating static fields like ``device_id`` and interface ``name``. Pre-allocating the message structure here is crucial for real-time safety.
 
          .. code-block:: cpp
 
             // In your <robot_hardware_interface_name>.hpp
-            hardware_interface::CallbackReturn configure_hardware_status_message(
+            hardware_interface::CallbackReturn init_hardware_status_message(
             control_msgs::msg::HardwareStatus & msg_template) override;
 
             // In your <robot_hardware_interface_name>.cpp
-            hardware_interface::CallbackReturn MyHardware::configure_hardware_status_message(
+            hardware_interface::CallbackReturn MyHardware::init_hardware_status_message(
             control_msgs::msg::HardwareStatus & msg)
             {
                msg.hardware_id = get_hardware_info().name;

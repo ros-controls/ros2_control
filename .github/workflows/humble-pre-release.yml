@@ -1,0 +1,28 @@
+name: Humble - pre-release
+# author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_dispatch:
+    inputs:
+      downstream_depth:
+        description: 'The depth of the depends-on tree to be included in the overlay workspace (-1 implies unlimited, default: 0)'
+        required: false
+        default: 0
+        type: number
+  pull_request:
+    branches:
+      - humble
+    types:
+      - opened # default
+      - reopened # default
+      - synchronize # default
+      - labeled # also if a label changes
+
+jobs:
+  default:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
+    with:
+      ros_distro: humble
+      # downstream_depth is not set on pull_request event
+      prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}
+      prerelease_exclude_pkg: ackermann_steering_controller admittance_controller bicycle_steering_controller chained_filter_controller diff_drive_controller effort_controllers force_torque_sensor_broadcaster forward_command_controller gpio_controllers gps_sensor_broadcaster imu_sensor_broadcaster joint_state_broadcaster joint_trajectory_controller mecanum_drive_controller motion_primitives_controllers omni_wheel_drive_controller parallel_gripper_controller pid_controller pose_broadcaster position_controllers range_sensor_broadcaster ros2_controllers ros2_controllers_test_nodes rqt_joint_trajectory_controller steering_controllers_library tricycle_controller tricycle_steering_controller velocity_controllers gz_ros2_control gz_ros2_control_demos gz_ros2_control_tests
