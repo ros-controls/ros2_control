@@ -357,6 +357,50 @@ void get_controller_list_command_interfaces(
   }
 }
 
+void get_full_chain_spec(
+  const std::string & controller_name,
+  const std::unordered_map<std::string, controller_manager::ControllerChainSpec> & chain_spec,
+  std::vector<std::string> & full_chain_list)
+{
+  auto it = chain_spec.find(controller_name);
+  if (it == chain_spec.end())
+  {
+    RCLCPP_WARN(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Controller '%s' not found in the controller chain specification.", controller_name.c_str());
+    return;
+  }
+  ros2_control::add_item(full_chain_list, controller_name);
+  for (const auto & following_controller : it->second.following_controllers)
+  {
+    if (!ros2_control::has_item(full_chain_list, following_controller))
+    {
+      get_full_chain_spec(following_controller, chain_spec, full_chain_list);
+    }
+  }
+  for (const auto & preceding_controller : it->second.preceding_controllers)
+  {
+    if (!ros2_control::has_item(full_chain_list, preceding_controller))
+    {
+      get_full_chain_spec(preceding_controller, chain_spec, full_chain_list);
+    }
+  }
+}
+
+void build_controller_full_chain_map_cache(
+  const std::unordered_map<std::string, controller_manager::ControllerChainSpec> &
+    controller_chain_spec,
+  std::unordered_map<std::string, std::vector<std::string>> & controller_full_chain_info_cache)
+{
+  for (const auto & [controller_name, chain_spec] : controller_chain_spec)
+  {
+    // add the controller itself to the list
+    ros2_control::add_item(controller_full_chain_info_cache[controller_name], controller_name);
+    get_full_chain_spec(
+      controller_name, controller_chain_spec, controller_full_chain_info_cache[controller_name]);
+  }
+}
+
 void register_controller_manager_statistics(
   const std::string & name,
   const libstatistics_collector::moving_average_statistics::StatisticData * variable)
@@ -1343,6 +1387,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
 
   build_controllers_topology_info(controllers);
+
+  build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache_);
 
   // Now let's reorder the controllers
   // lock controllers
