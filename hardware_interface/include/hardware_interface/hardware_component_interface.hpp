@@ -186,13 +186,10 @@ public:
 
     if (auto locked_executor = params.executor.lock())
     {
-      std::string node_name = params.hardware_info.name;
-      std::transform(
-        node_name.begin(), node_name.end(), node_name.begin(),
-        [](unsigned char c) { return std::tolower(c); });
+      std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ =
-        std::make_shared<rclcpp::Node>(node_name, get_hardware_component_node_options());
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(
+        node_name, params.node_namespace, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
