@@ -30,24 +30,12 @@ class LoanedStateInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  [[deprecated("Replaced by the new version using shared_ptr")]] explicit LoanedStateInterface(
-    const StateInterface & state_interface)
-  : LoanedStateInterface(state_interface, nullptr)
-  {
-  }
-
-  [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
-    const StateInterface & state_interface, Deleter && deleter)
-  : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
-  {
-  }
-
   explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface)
   : LoanedStateInterface(state_interface, nullptr)
   {
   }
 
-  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
+  explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
   : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
@@ -67,7 +55,7 @@ public:
       state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     if (deleter_)
     {
@@ -83,7 +71,7 @@ public:
 
   [[deprecated(
     "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
-    "removed by the ROS 2 Kilted Kaiju release.")]]
+    "removed by the ROS 2 Lyrical Luth release.")]]
   double get_value() const
   {
     std::optional<double> opt_value = get_optional();

@@ -31,19 +31,12 @@ class LoanedCommandInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  [[deprecated("Replaced by the new version using shared_ptr")]] explicit LoanedCommandInterface(
-    CommandInterface & command_interface)
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface)
   : LoanedCommandInterface(command_interface, nullptr)
   {
   }
 
-  [[deprecated("Replaced by the new version using shared_ptr")]] LoanedCommandInterface(
-    CommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
-  {
-  }
-
-  LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
   : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
@@ -63,7 +56,7 @@ public:
       get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     RCLCPP_WARN_EXPRESSION(
       rclcpp::get_logger(get_name()),
@@ -73,7 +66,7 @@ public:
       get_name().c_str(), set_value_statistics_.timeout_counter,
       (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.failed_counter,
-      (set_value_statistics_.failed_counter * 10.0) / set_value_statistics_.total_counter,
+      (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.total_counter);
     if (deleter_)
     {
@@ -123,7 +116,7 @@ public:
 
   [[deprecated(
     "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
-    "removed by the ROS 2 Kilted Kaiju release.")]]
+    "removed by the ROS 2 Lyrical Luth release.")]]
   double get_value() const
   {
     std::optional<double> opt_value = get_optional();
