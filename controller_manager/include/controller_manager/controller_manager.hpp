@@ -94,6 +94,8 @@ public:
 
   void init_resource_manager(const std::string & robot_description);
 
+  void init_min_resource_manager();
+
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
@@ -242,6 +244,17 @@ public:
    */
   rclcpp::Clock::SharedPtr get_trigger_clock() const;
 
+  /**
+ * @brief Return the robot description timer.
+ * 
+ * It can be used to determine whether the Controller Manager 
+ * is currently waiting for a robot description to be published.
+ * 
+ * @return rclcpp::TimerBase::SharedPtr if the timer exists, nullptr otherwise
+ */
+  rclcpp::TimerBase::SharedPtr get_robot_description_timer() const {
+      return robot_description_notification_timer_;
+  }
 protected:
   void init_services();
 
