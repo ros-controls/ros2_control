@@ -1430,10 +1430,10 @@ controller_interface::return_type ControllerManager::configure_controller(
   for (const auto & [ctrl_name, full_chain_info] : controller_full_chain_info_cache)
   {
     RCLCPP_DEBUG(
-      get_logger(), fmt::format(
-                      FMT_COMPILE("The controller '{}' is in chain with: [{}]"), ctrl_name,
-                      fmt::join(full_chain_info, ", "))
-                      .c_str());
+      get_logger(), "%s",
+      fmt::format(
+        "The controller '{}' is in chain with: [{}]", ctrl_name, fmt::join(full_chain_info, ", "))
+        .c_str());
     auto controller_it = std::find_if(
       new_list.begin(), new_list.end(),
       std::bind(controller_name_compare, std::placeholders::_1, ctrl_name));
@@ -4475,12 +4475,12 @@ void ControllerManager::build_controllers_topology_info(
       controller_name.c_str(), controller_chain.following_controllers.size(),
       controller_chain.preceding_controllers.size());
     RCLCPP_DEBUG_EXPRESSION(
-      get_logger(), !controller_chain.following_controllers.empty(),
+      get_logger(), !controller_chain.following_controllers.empty(), "%s",
       fmt::format(
         "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
         .c_str());
     RCLCPP_DEBUG_EXPRESSION(
-      get_logger(), !controller_chain.preceding_controllers.empty(),
+      get_logger(), !controller_chain.preceding_controllers.empty(), "%s",
       fmt::format(
         "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
         .c_str());
