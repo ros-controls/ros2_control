@@ -29,4 +29,10 @@ hardware_interface
 
 ros2controlcli
 **************
+<<<<<<< HEAD
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
+=======
+transmission_interface
+**********************
+* The ``simple_transmission`` and ``differential_transmission`` now also support the ``force`` interface (`#2588 <https://github.com/ros-controls/ros2_control/pull/2588>`_).
+>>>>>>> b674ebb ([Transmissions] Add `force`  interface (#2588))
