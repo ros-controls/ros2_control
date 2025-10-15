@@ -2439,6 +2439,7 @@ TEST_F(
   const std::string test_chainable_controller_4_name = "test_chainable_controller_4";
   const std::string test_chainable_controller_5_name = "test_chainable_controller_5";
   const std::string test_chainable_controller_6_name = "test_chainable_controller_6";
+  const std::string test_chainable_controller_7_name = "test_chainable_controller_7";
   const std::string test_controller_1_name = "test_controller_1";
   const std::string test_controller_2_name = "test_controller_2";
 
@@ -2500,15 +2501,29 @@ TEST_F(
   cmd_itfs_cfg.names = {
     test_chainable_controller_3_name + "/modified_joint2/velocity",
     test_chainable_controller_4_name + "/modified_joint3/velocity"};
-  state_itfs_cfg.names = {"joint2/velocity", "joint3/velocity"};
+  state_itfs_cfg.names = {
+    "joint2/velocity", "joint3/velocity",
+    test_chainable_controller_7_name + "/joint2/max_acceleration"};
   test_chainable_controller_6->set_command_interface_configuration(cmd_itfs_cfg);
   test_chainable_controller_6->set_state_interface_configuration(state_itfs_cfg);
   test_chainable_controller_6->set_reference_interface_names({"modified_joint2/velocity"});
   test_chainable_controller_6->set_exported_state_interface_names({"modified_joint2/velocity"});
 
+  // chain controller 7
+  auto test_chainable_controller_7 =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {"joint2/max_acceleration"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  test_chainable_controller_7->set_command_interface_configuration(cmd_itfs_cfg);
+  test_chainable_controller_7->set_state_interface_configuration(state_itfs_cfg);
+  test_chainable_controller_7->set_reference_interface_names({"modified_joint2/max_acceleration"});
+  test_chainable_controller_7->set_exported_state_interface_names({"joint2/max_acceleration"});
+
   // controller 1
   auto test_controller_1 = std::make_shared<test_controller::TestController>();
   cmd_itfs_cfg.names = {test_chainable_controller_5_name + "/modified_joint1/position"};
+  // this is to create a closed-loop instance in the control design
+  state_itfs_cfg.names = {test_chainable_controller_1_name + "/modified_joint2/velocity"};
   test_controller_1->set_command_interface_configuration(cmd_itfs_cfg);
   test_controller_1->set_state_interface_configuration(state_itfs_cfg);
 
@@ -2542,15 +2557,19 @@ TEST_F(
     cm_->add_controller(
       test_chainable_controller_5, test_chainable_controller_5_name,
       test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chainable_controller_7, test_chainable_controller_7_name,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   }
 
-  EXPECT_EQ(8u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(9u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_chainable_controller_1.use_count());
   EXPECT_EQ(2, test_chainable_controller_2.use_count());
   EXPECT_EQ(2, test_chainable_controller_3.use_count());
   EXPECT_EQ(2, test_chainable_controller_4.use_count());
   EXPECT_EQ(2, test_chainable_controller_5.use_count());
   EXPECT_EQ(2, test_chainable_controller_6.use_count());
+  EXPECT_EQ(2, test_chainable_controller_7.use_count());
   EXPECT_EQ(2, test_controller_1.use_count());
   EXPECT_EQ(2, test_controller_2.use_count());
   EXPECT_EQ(
@@ -2565,11 +2584,12 @@ TEST_F(
     ASSERT_EQ(state[3], test_chainable_controller_4->get_lifecycle_state().id());
     ASSERT_EQ(state[4], test_chainable_controller_5->get_lifecycle_state().id());
     ASSERT_EQ(state[5], test_chainable_controller_6->get_lifecycle_state().id());
-    ASSERT_EQ(state[6], test_controller_1->get_lifecycle_state().id());
-    ASSERT_EQ(state[7], test_controller_2->get_lifecycle_state().id());
+    ASSERT_EQ(state[6], test_chainable_controller_7->get_lifecycle_state().id());
+    ASSERT_EQ(state[7], test_controller_1->get_lifecycle_state().id());
+    ASSERT_EQ(state[8], test_controller_2->get_lifecycle_state().id());
   };
   check_controllers_state(
-    std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED));
+    std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED));
 
   // configure controllers
   {
@@ -2580,6 +2600,9 @@ TEST_F(
     ASSERT_EQ(
       controller_interface::return_type::OK,
       cm_->configure_controller(test_chainable_controller_1_name));
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller_7_name));
     ASSERT_EQ(
       controller_interface::return_type::OK,
       cm_->configure_controller(test_chainable_controller_2_name));
@@ -2598,13 +2621,14 @@ TEST_F(
       controller_interface::return_type::OK, cm_->configure_controller(test_controller_2_name));
   }
 
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE));
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE));
 
   std::vector<std::string> start_controllers = {
     test_controller_1_name,           test_controller_2_name,
     test_chainable_controller_1_name, test_chainable_controller_2_name,
     test_chainable_controller_3_name, test_chainable_controller_4_name,
-    test_chainable_controller_5_name, test_chainable_controller_6_name};
+    test_chainable_controller_5_name, test_chainable_controller_6_name,
+    test_chainable_controller_7_name};
   auto activate_controllers = [&]()
   {
     std::vector<std::string> stop_controllers = {};
@@ -2625,12 +2649,12 @@ TEST_F(
   };
   activate_controllers();
 
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
 
-  auto run_10_update_cycles = [&]()
+  auto run_5_update_cycles = [&]()
   {
-    // Let's emulate 10 update cycles and it should be working
-    for (int i = 0; i < 10; ++i)
+    // Let's emulate 5 update cycles and it should be working
+    for (int i = 0; i < 5; ++i)
     {
       ASSERT_EQ(
         controller_interface::return_type::OK,
@@ -2651,6 +2675,7 @@ TEST_F(
        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE});
   };
@@ -2658,35 +2683,35 @@ TEST_F(
   start_controllers = {
     test_controller_1_name, test_chainable_controller_1_name, test_chainable_controller_2_name,
     test_chainable_controller_5_name};
-  run_10_update_cycles();
+  run_5_update_cycles();
   test_controller_1->set_external_commands_for_testing({std::numeric_limits<double>::quiet_NaN()});
   check_for_inactive_chain_1();
   test_controller_1->set_external_commands_for_testing({0.0});
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_1->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_1();
   test_chainable_controller_1->update_return_value = controller_interface::return_type::OK;
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_2->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_1();
   test_chainable_controller_2->update_return_value = controller_interface::return_type::OK;
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_5->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_1();
   test_chainable_controller_5->update_return_value = controller_interface::return_type::OK;
 
   activate_controllers();
-  run_10_update_cycles();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
 
   // Now let's check the 2nd chain
   auto check_for_inactive_chain_2 = [&]()
@@ -2702,35 +2727,36 @@ TEST_F(
        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE});
   };
   start_controllers = {
     test_controller_2_name, test_chainable_controller_3_name, test_chainable_controller_4_name,
-    test_chainable_controller_6_name};
+    test_chainable_controller_6_name, test_chainable_controller_7_name};
 
-  run_10_update_cycles();
+  run_5_update_cycles();
   test_controller_2->set_external_commands_for_testing({std::numeric_limits<double>::quiet_NaN()});
   check_for_inactive_chain_2();
   test_controller_2->set_external_commands_for_testing({0.0});
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_3->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_2();
   test_chainable_controller_3->update_return_value = controller_interface::return_type::OK;
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_4->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_2();
   test_chainable_controller_4->update_return_value = controller_interface::return_type::OK;
 
   activate_controllers();
-  check_controllers_state(std::vector<int>(8, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
-  run_10_update_cycles();
+  check_controllers_state(std::vector<int>(9, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
+  run_5_update_cycles();
   test_chainable_controller_6->update_return_value = controller_interface::return_type::ERROR;
   check_for_inactive_chain_2();
   test_chainable_controller_6->update_return_value = controller_interface::return_type::OK;
