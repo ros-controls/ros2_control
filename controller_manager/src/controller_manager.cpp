@@ -392,8 +392,10 @@ void build_controller_full_chain_map_cache(
     controller_chain_spec,
   std::unordered_map<std::string, std::vector<std::string>> & controller_full_chain_info_cache)
 {
+  controller_full_chain_info_cache.clear();
   for (const auto & [controller_name, chain_spec] : controller_chain_spec)
   {
+    controller_full_chain_info_cache[controller_name] = {};
     // add the controller itself to the list
     ros2_control::add_item(controller_full_chain_info_cache[controller_name], controller_name);
     get_full_chain_spec(
