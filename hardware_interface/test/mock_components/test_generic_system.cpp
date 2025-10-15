@@ -1145,12 +1145,12 @@ void generic_system_error_group_test(
   // Error should be recoverable only after reactivating the hardware component
   ASSERT_TRUE(j1p_c.set_value(0.0));
   ASSERT_TRUE(j1v_c.set_value(0.0));
-  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::ERROR);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::ERROR);
 
   // Now it should be recoverable
   deactivate_components(rm, {component1});
   activate_components(rm, {component1});
-  EXPECT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
 
   deactivate_components(rm, {component1, component2});
   status_map = rm.get_components_status();
@@ -1247,7 +1247,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   ASSERT_EQ(0.99, vo_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(1.55, j1p_s.get_optional().value());
   ASSERT_EQ(0.1, j1v_s.get_optional().value());
   ASSERT_EQ(0.65, j2p_s.get_optional().value());
@@ -1258,7 +1258,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   ASSERT_EQ(0.99, vo_c.get_optional().value());
 
   // read() mirrors commands to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_EQ(0.1, j1v_s.get_optional().value());
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
@@ -1344,7 +1344,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
@@ -1357,7 +1357,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_optional().value());
 
   // read() mirrors commands to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
@@ -1460,7 +1460,7 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   ASSERT_EQ(4.44, sty_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
@@ -1477,7 +1477,7 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   ASSERT_EQ(4.44, sty_c.get_optional().value());
 
   // read() mirrors commands to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
@@ -1559,7 +1559,7 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
@@ -1568,7 +1568,7 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // read() mirrors commands to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_EQ(0.05, j1v_s.get_optional().value());
   ASSERT_EQ(-0.22, j2p_s.get_optional().value());
@@ -1673,7 +1673,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(2.78, j2p_s.get_optional().value());
@@ -1684,7 +1684,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.44, j2v_c.get_optional().value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
   ASSERT_EQ(0.11 + offset, c_j1p_s.get_optional().value());
   ASSERT_EQ(0.22, j1v_s.get_optional().value());
@@ -1791,14 +1791,14 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   ASSERT_EQ(0.222, gpio2_vac_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(gpio2_vac_s.get_optional().value()));
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_optional().value());
   ASSERT_EQ(0.222, gpio2_vac_c.get_optional().value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.111, gpio1_a_o1_s.get_optional().value());
   ASSERT_EQ(0.222, gpio2_vac_s.get_optional().value());
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_optional().value());
@@ -1927,7 +1927,7 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_optional().value()));
@@ -1947,7 +1947,7 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_optional().value());
 
   // read() mirrors commands to states
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, gpio1_a_o1_s.get_optional().value());
   ASSERT_EQ(0.33, gpio1_a_i1_s.get_optional().value());
   ASSERT_EQ(1.11, gpio1_a_o2_s.get_optional().value());
@@ -2126,7 +2126,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
@@ -2139,7 +2139,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
   EXPECT_EQ(-33.4, j1v_s.get_optional().value());
   EXPECT_NEAR(-334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
@@ -2152,7 +2152,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_NEAR(334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
@@ -2165,7 +2165,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(0.0, j1a_s.get_optional().value());
@@ -2198,7 +2198,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(0.0, j1a_s.get_optional().value());
@@ -2211,7 +2211,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
   EXPECT_EQ(0.5, j1v_s.get_optional().value());
   EXPECT_EQ(5.0, j1a_s.get_optional().value());
@@ -2224,7 +2224,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_EQ(3.5, j2a_c.get_optional().value());
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.16, j1p_s.get_optional().value());
   EXPECT_EQ(0.5, j1v_s.get_optional().value());
   EXPECT_EQ(0.0, j1a_s.get_optional().value());
@@ -2272,13 +2272,13 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
 
   // read() also does not change values
-  rm.read(TIME, PERIOD);
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(3.45, j1p_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());

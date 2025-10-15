@@ -365,13 +365,17 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       case hardware_interface::HandleDataType::DOUBLE:
       {
         auto cmd = get_command(name);
-        if (!std::isfinite(cmd))
+        if (std::isinf(cmd))
         {
           return return_type::ERROR;
         }
-        else
+        else if (std::isfinite(cmd))
         {
           set_state(name, cmd);
+        }
+        else
+        {
+          // NaN - do nothing. Command might not be set yet
         }
         break;
       }
@@ -592,18 +596,24 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & sensor_state : sensor_states_)
     {
       const std::string & name = sensor_state.get()->get_name();
-      mirror_command_to_state(name, sensor_state.get()->get_data_type());
+      if (mirror_command_to_state(name, sensor_state.get()->get_data_type()) != return_type::OK)
+      {
+        return return_type::ERROR;
+      }
     }
   }
 
   if (use_mock_gpio_command_interfaces_)
   {
     // do loopback on all gpio interfaces as we have exported them all
-    // from gpio_command_interfaces_ maybe?
+    // commands are created for all state interfaces, but in unlisted_commands_
     for (const auto & gpio_state : gpio_states_)
     {
       const std::string & name = gpio_state.get()->get_name();
-      mirror_command_to_state(name, gpio_state.get()->get_data_type());
+      if (mirror_command_to_state(name, gpio_state.get()->get_data_type()) != return_type::OK)
+      {
+        return return_type::ERROR;
+      }
     }
   }
   else
@@ -614,7 +624,10 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       const std::string & name = gpio_command.get()->get_name();
       if (gpio_state_interfaces_.find(name) != gpio_state_interfaces_.end())
       {
-        mirror_command_to_state(name, gpio_command.get()->get_data_type());
+        if (mirror_command_to_state(name, gpio_command.get()->get_data_type()) != return_type::OK)
+        {
+          return return_type::ERROR;
+        }
       }
     }
   }
