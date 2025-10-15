@@ -262,27 +262,88 @@ void DifferentialTransmission::configure(
   actuator_absolute_position_ =
     get_ordered_handles(actuator_handles, actuator_names, HW_IF_ABSOLUTE_POSITION);
 
-  if (
-    actuator_position_.size() != 2 && actuator_velocity_.size() != 2 &&
-    actuator_effort_.size() != 2 && actuator_torque_.size() != 2 && actuator_force_.size() != 2 &&
-    actuator_absolute_position_.size() != 2)
+  if (!actuator_position_.empty() && actuator_position_.size() != 2)
   {
     throw Exception(
       fmt::format(
-        FMT_COMPILE("Not enough valid or required actuator handles were presented. \n{}"),
+        FMT_COMPILE("Not enough valid or required actuator position handles were presented. \n{}"),
+        get_handles_info()));
+  }
+  if (!actuator_velocity_.empty() && actuator_velocity_.size() != 2)
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Not enough valid or required actuator velocity handles were presented. \n{}"),
+        get_handles_info()));
+  }
+  if (!actuator_effort_.empty() && actuator_effort_.size() != 2)
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Not enough valid or required actuator effort handles were presented. \n{}"),
+        get_handles_info()));
+  }
+  if (!actuator_torque_.empty() && actuator_torque_.size() != 2)
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Not enough valid or required actuator torque handles were presented. \n{}"),
+        get_handles_info()));
+  }
+  if (!actuator_force_.empty() && actuator_force_.size() != 2)
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Not enough valid or required actuator force handles were presented. \n{}"),
+        get_handles_info()));
+  }
+  if (!actuator_absolute_position_.empty() && actuator_absolute_position_.size() != 2)
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE(
+          "Not enough valid or required actuator absolute position handles were "
+          "presented. \n{}"),
         get_handles_info()));
   }
 
+  if (!joint_position_.empty() && joint_position_.size() != actuator_position_.size())
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Pair-wise mismatch on position interfaces. \n{}"), get_handles_info()));
+  }
+  if (!joint_velocity_.empty() && joint_velocity_.size() != actuator_velocity_.size())
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Pair-wise mismatch on velocity interfaces. \n{}"), get_handles_info()));
+  }
+  if (!joint_effort_.empty() && joint_effort_.size() != actuator_effort_.size())
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Pair-wise mismatch on effort interfaces. \n{}"), get_handles_info()));
+  }
+  if (!joint_torque_.empty() && joint_torque_.size() != actuator_torque_.size())
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("Pair-wise mismatch on torque interfaces. \n{}"), get_handles_info()));
+  }
+  if (!joint_force_.empty() && joint_force_.size() != actuator_force_.size())
+  {
+    throw Exception(
+      fmt::format(FMT_COMPILE("Pair-wise mismatch on force interfaces. \n{}"), get_handles_info()));
+  }
   if (
-    joint_position_.size() != actuator_position_.size() &&
-    joint_velocity_.size() != actuator_velocity_.size() &&
-    joint_effort_.size() != actuator_effort_.size() &&
-    joint_torque_.size() != actuator_torque_.size() &&
-    joint_force_.size() != actuator_force_.size() &&
+    !joint_absolute_position_.empty() &&
     joint_absolute_position_.size() != actuator_absolute_position_.size())
   {
     throw Exception(
-      fmt::format(FMT_COMPILE("Pair-wise mismatch on interfaces. \n{}"), get_handles_info()));
+      fmt::format(
+        FMT_COMPILE("Pair-wise mismatch on absolute position interfaces. \n{}"),
+        get_handles_info()));
   }
 }
 
