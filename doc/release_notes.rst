@@ -30,9 +30,6 @@ For details see the controller_manager section.
 * The controllers can be easily introspect the internal member variables using the macro ``REGISTER_ROS2_CONTROL_INTROSPECTION`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_)
 * A new ``SemanticComponentCommandInterface`` semantic component provides capabilities analogous to the ``SemanticComponentInterface``, but for write-only devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
 * The new semantic command interface ``LedRgbDevice`` provides standard (command) interfaces for 3-channel LED devices (`#1945 <https://github.com/ros-controls/ros2_control/pull/1945>`_)
-
-controller_interface
-********************
 * The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
 
 controller_manager
