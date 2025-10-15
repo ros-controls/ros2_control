@@ -365,11 +365,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       case hardware_interface::HandleDataType::DOUBLE:
       {
         auto cmd = get_command(name);
-        if (std::isinf(cmd))
+        if (!std::isfinite(cmd))
         {
           return return_type::ERROR;
         }
-        if (std::isfinite(cmd))
+        else
         {
           set_state(name, cmd);
         }
@@ -432,7 +432,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
               ? 0.0
               : joint_state_values_[ACCELERATION_INTERFACE_INDEX] * period.seconds();
 
-          if (!std::isnan(joint_command_values_[ACCELERATION_INTERFACE_INDEX]))
+          if (std::isfinite(joint_command_values_[ACCELERATION_INTERFACE_INDEX]))
           {
             joint_state_values_[ACCELERATION_INTERFACE_INDEX] =
               joint_command_values_[ACCELERATION_INTERFACE_INDEX];
@@ -447,7 +447,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
 
-          if (!std::isnan(joint_command_values_[VELOCITY_INTERFACE_INDEX]))
+          if (std::isfinite(joint_command_values_[VELOCITY_INTERFACE_INDEX]))
           {
             const double old_velocity = joint_state_values_[VELOCITY_INTERFACE_INDEX];
 
@@ -461,7 +461,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
         case POSITION_INTERFACE_INDEX:
         {
-          if (!std::isnan(joint_command_values_[POSITION_INTERFACE_INDEX]))
+          if (std::isfinite(joint_command_values_[POSITION_INTERFACE_INDEX]))
           {
             const double old_position = joint_state_values_[POSITION_INTERFACE_INDEX];
             const double old_velocity = std::isnan(joint_state_values_[VELOCITY_INTERFACE_INDEX])
@@ -485,7 +485,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       // mirror them back
       for (size_t i = 0; i < 3; ++i)
       {
-        if (!std::isnan(joint_state_values_[i]))
+        if (std::isfinite(joint_state_values_[i]))
         {
           set_state(joint_name + "/" + standard_interfaces_[i], joint_state_values_[i]);
         }
