@@ -340,7 +340,7 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
     if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
     {
       if (
-        joint_state.second.get_interface_name() == standard_interfaces_[POSITION_INTERFACE_INDEX] &&
+        joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
         custom_interface_with_following_offset_.empty())
       {
         set_state(name, get_state(name) + position_state_following_offset_);
@@ -503,9 +503,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     {
       for (const auto & joint_command : joint_commands_)
       {
-        if (
-          joint_command.get()->get_interface_name() ==
-          standard_interfaces_[POSITION_INTERFACE_INDEX])
+        if (joint_command.get()->get_interface_name() == hardware_interface::HW_IF_POSITION)
         {
           const std::string & name = joint_command.get()->get_name();
           if (joint_state_interfaces_.find(name) != joint_state_interfaces_.end())
@@ -542,10 +540,10 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
     if (custom_interface_with_following_offset_ == joint_state.get()->get_interface_name())
     {
-      const auto cmd = get_command(
-                         joint_state.get()->get_prefix_name() + "/" +
-                         standard_interfaces_[POSITION_INTERFACE_INDEX]) +
-                       position_state_following_offset_;
+      const auto cmd =
+        get_command(
+          joint_state.get()->get_prefix_name() + "/" + hardware_interface::HW_IF_POSITION) +
+        position_state_following_offset_;
       set_state(full_interface_name, cmd);
     }
   }
@@ -557,36 +555,33 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     const auto & mimic_joint_name = joints.at(mimic_joint.joint_index).name;
     const auto & mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
     if (
-      joint_state_interfaces_.find(
-        mimic_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]) !=
+      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX],
+        mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION,
         mimic_joint.offset +
           mimic_joint.multiplier *
-            get_state(mimicked_joint_name + "/" + standard_interfaces_[POSITION_INTERFACE_INDEX]));
+            get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_POSITION));
     }
     if (
-      joint_state_interfaces_.find(
-        mimic_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]) !=
+      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX],
+        mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY,
         mimic_joint.multiplier *
-          get_state(mimicked_joint_name + "/" + standard_interfaces_[VELOCITY_INTERFACE_INDEX]));
+          get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_VELOCITY));
     }
     if (
       joint_state_interfaces_.find(
-        mimic_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]) !=
+        mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
       joint_state_interfaces_.end())
     {
       set_state(
-        mimic_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX],
+        mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION,
         mimic_joint.multiplier *
-          get_state(
-            mimicked_joint_name + "/" + standard_interfaces_[ACCELERATION_INTERFACE_INDEX]));
+          get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION));
     }
   }
 
