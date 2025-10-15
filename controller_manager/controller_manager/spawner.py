@@ -178,7 +178,11 @@ def main(args=None):
 
     try:
         spawner_node_name = "spawner_" + controller_names[0]
-        lock = FileLock("/tmp/ros2-control-controller-spawner.lock")
+        # Get the environment variable $ROS_HOME or default to ~/.ros
+        ros_home = os.getenv("ROS_HOME", os.path.join(os.path.expanduser("~"), ".ros"))
+        if not os.path.exists(ros_home):
+            os.makedirs(ros_home)
+        lock = FileLock(f"{ros_home}/ros2-control-controller-spawner.lock")
         max_retries = 5
         retry_delay = 3  # seconds
         for attempt in range(max_retries):
