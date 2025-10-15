@@ -377,7 +377,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       }
       case hardware_interface::HandleDataType::BOOL:
       {
-        set_state<bool>(name, get_command<bool>(name));
+        set_state(name, get_command<bool>(name));
         break;
       }
       default:
