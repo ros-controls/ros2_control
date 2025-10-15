@@ -17,3 +17,6 @@ hardware_interface
 
 ros2controlcli
 **************
+transmission_interface
+**********************
+* The ``simple_transmission`` and ``differential_transmission`` now also support the ``force`` interface (`#2588 <https://github.com/ros-controls/ros2_control/pull/2588>`_).
