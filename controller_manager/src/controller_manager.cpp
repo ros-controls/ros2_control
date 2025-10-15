@@ -1390,7 +1390,8 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   build_controllers_topology_info(controllers);
 
-  build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache_);
+  std::unordered_map<std::string, std::vector<std::string>> controller_full_chain_info_cache;
+  build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache);
 
   // Now let's reorder the controllers
   // lock controllers
@@ -1422,6 +1423,23 @@ controller_interface::return_type ControllerManager::configure_controller(
     if (controller_it != to.end())
     {
       new_list.push_back(*controller_it);
+    }
+  }
+
+  // Update the controllers chain groups in the ControllerSpec
+  for (const auto & [ctrl_name, full_chain_info] : controller_full_chain_info_cache)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), fmt::format(
+                      FMT_COMPILE("The controller '{}' is in chain with: [{}]"), ctrl_name,
+                      fmt::join(full_chain_info, ", "))
+                      .c_str());
+    auto controller_it = std::find_if(
+      new_list.begin(), new_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, ctrl_name));
+    if (controller_it != new_list.end())
+    {
+      controller_it->controllers_chain_group = full_chain_info;
     }
   }
 
@@ -3086,7 +3104,7 @@ controller_interface::return_type ControllerManager::update(
         if (controller_ret != controller_interface::return_type::OK)
         {
           const std::vector<std::string> & controller_chain =
-            controller_full_chain_info_cache_[loaded_controller.info.name];
+            loaded_controller.controllers_chain_group;
           RCLCPP_INFO_EXPRESSION(
             get_logger(), controller_chain.size() > 1,
             "Controller '%s' is part of a chain of %lu controllers that will be deactivated.",
