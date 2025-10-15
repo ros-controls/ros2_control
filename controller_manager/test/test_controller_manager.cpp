@@ -2182,6 +2182,214 @@ TEST_F(
   }
 }
 
+class TestControllerManagerControllerChainFailedUpdateCycle
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(
+  TestControllerManagerControllerChainFailedUpdateCycle,
+  test_failing_update_cycle_in_a_controller_chain)
+{
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+
+  // Controller names
+  const std::string test_chainable_controller_1_name = "test_chainable_controller_1";
+  const std::string test_chainable_controller_2_name = "test_chainable_controller_2";
+  const std::string test_chainable_controller_3_name = "test_chainable_controller_3";
+  const std::string test_controller_1_name = "test_controller_1";
+  const std::string test_controller_2_name = "test_controller_2";
+
+  // chain controller 1
+  auto test_chainable_controller_1 =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {"joint1/position"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  test_chainable_controller_1->set_command_interface_configuration(cmd_itfs_cfg);
+  test_chainable_controller_1->set_state_interface_configuration(state_itfs_cfg);
+  test_chainable_controller_1->set_reference_interface_names({"modified_joint1/position"});
+  test_chainable_controller_1->set_exported_state_interface_names({"modified_joint2/velocity"});
+
+  // chain controller 2
+  auto test_chainable_controller_2 =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {test_chainable_controller_1_name + "/modified_joint1/position"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  test_chainable_controller_2->set_command_interface_configuration(cmd_itfs_cfg);
+  test_chainable_controller_2->set_state_interface_configuration(state_itfs_cfg);
+  test_chainable_controller_2->set_reference_interface_names({"modified_joint1/position"});
+  test_chainable_controller_2->set_exported_state_interface_names({"modified_joint2/velocity"});
+
+  // chain controller 3
+  auto test_chainable_controller_3 =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {test_chainable_controller_2_name + "/modified_joint1/position"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  test_chainable_controller_3->set_command_interface_configuration(cmd_itfs_cfg);
+  test_chainable_controller_3->set_state_interface_configuration(state_itfs_cfg);
+  test_chainable_controller_3->set_reference_interface_names({"modified_joint1/position"});
+  test_chainable_controller_3->set_exported_state_interface_names({"modified_joint2/velocity"});
+
+  // controller 1
+  auto test_controller_1 = std::make_shared<test_controller::TestController>();
+  cmd_itfs_cfg.names = {test_chainable_controller_3_name + "/modified_joint1/position"};
+  test_controller_1->set_command_interface_configuration(cmd_itfs_cfg);
+  test_controller_1->set_state_interface_configuration(state_itfs_cfg);
+
+  // controller 2
+  auto test_controller_2 = std::make_shared<test_controller::TestController>();
+  cmd_itfs_cfg.names = {"joint2/velocity"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  test_controller_2->set_state_interface_configuration(state_itfs_cfg);
+  test_controller_2->set_command_interface_configuration(cmd_itfs_cfg);
+
+  {
+    cm_->add_controller(
+      test_chainable_controller_1, test_chainable_controller_1_name,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chainable_controller_2, test_chainable_controller_2_name,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chainable_controller_3, test_chainable_controller_3_name,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, test_controller_1_name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, test_controller_2_name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
+
+  EXPECT_EQ(5u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_chainable_controller_1.use_count());
+  EXPECT_EQ(2, test_chainable_controller_2.use_count());
+  EXPECT_EQ(2, test_chainable_controller_3.use_count());
+  EXPECT_EQ(2, test_controller_1.use_count());
+  EXPECT_EQ(2, test_controller_2.use_count());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller_1->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller_2->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_chainable_controller_3->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller_1->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller_2->get_lifecycle_state().id());
+
+  // configure controllers
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller_1_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller_2_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_chainable_controller_3_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(test_controller_1_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(test_controller_2_name));
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_1->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_2->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_3->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  {
+    // Start controller, will take effect at the end of the update function
+    std::vector<std::string> start_controllers = {
+      test_controller_1_name, test_controller_2_name, test_chainable_controller_1_name,
+      test_chainable_controller_2_name, test_chainable_controller_3_name};
+    std::vector<std::string> stop_controllers = {};
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+    ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+    {
+      ControllerManagerRunner cm_runner(this);
+      EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+    }
+  }
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_chainable_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_chainable_controller_2->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_chainable_controller_3->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  // Now, let's emulate 10 update cycles and it should be working
+  for (int i = 0; i < 10; ++i)
+  {
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  }
+
+  test_controller_1->set_external_commands_for_testing({std::numeric_limits<double>::quiet_NaN()});
+  ASSERT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_2->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_chainable_controller_3->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+}
+
 class TestControllerManagerChainableControllerFailedActivation
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
