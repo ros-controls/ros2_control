@@ -38,7 +38,7 @@ template <typename Container, typename T>
 {
   if constexpr (std::is_same_v<Container, std::vector<T>>)
   {
-    return std::find(container.begin(), container.end(), item);
+    return std::find(container.cbegin(), container.cend(), item);
   }
   else if constexpr (
     std::is_same_v<Container, std::map<T, typename Container::mapped_type>> ||
@@ -68,7 +68,7 @@ template <typename Container, typename T>
 template <typename Container, typename T>
 [[nodiscard]] bool has_item(const Container & container, const T & item)
 {
-  return get_item_iterator(container, item) != container.end();
+  return get_item_iterator(container, item) != container.cend();
 }
 
 /**

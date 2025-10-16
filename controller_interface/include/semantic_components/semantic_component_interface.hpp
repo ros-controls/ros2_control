@@ -104,6 +104,10 @@ public:
    */
   bool get_values_as_message(MessageReturnType & /* message */) { return false; }
 
+  // delete copy constructor, because
+  // copy will change capacity of member variables
+  SemanticComponentInterface(const SemanticComponentInterface &) = delete;
+
 protected:
   std::string name_;
   std::vector<std::string> interface_names_;

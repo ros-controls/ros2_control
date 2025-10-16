@@ -99,11 +99,6 @@ TEST_F(ResourceManagerTest, initialization_with_urdf)
 TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
   TestableResourceManager rm(node_);
-// TODO(saikishor) : remove after the cleanup of deprecated API
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  ASSERT_NO_THROW(rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf));
-#pragma GCC diagnostic pop
   hardware_interface::ResourceManagerParams rm_params;
   rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
   rm_params.update_rate = 100;
@@ -114,11 +109,10 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
 {
   rclcpp::Node node = rclcpp::Node("TestableResourceManager");
   TestableResourceManager rm(node);
-// TODO(saikishor) : remove after the cleanup of deprecated API
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  ASSERT_FALSE(rm.load_and_initialize_components(urdf));
-#pragma GCC diagnostic pop
+  hardware_interface::ResourceManagerParams rm_params;
+  rm_params.robot_description = urdf;
+  rm_params.update_rate = 100;
+  ASSERT_NO_THROW(rm.load_and_initialize_components(rm_params));
 
   ASSERT_FALSE(rm.are_components_initialized());
 
@@ -274,18 +268,6 @@ TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_val
 TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_async_urdf_is_valid)
 {
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_async_robot_urdf);
-  ASSERT_TRUE(rm.are_components_initialized());
-}
-
-TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
-{
-  TestableResourceManager rm(node_);
-  ASSERT_FALSE(rm.are_components_initialized());
-// TODO(saikishor) : remove after the cleanup of deprecated API
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf);
-#pragma GCC diagnostic pop
   ASSERT_TRUE(rm.are_components_initialized());
 }
 

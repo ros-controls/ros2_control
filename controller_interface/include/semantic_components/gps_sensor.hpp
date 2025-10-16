@@ -52,6 +52,7 @@ public:
       interface_names_.emplace_back(name + "/" + "latitude_covariance");
       interface_names_.emplace_back(name + "/" + "longitude_covariance");
       interface_names_.emplace_back(name + "/" + "altitude_covariance");
+      state_interfaces_.reserve(state_interfaces_.capacity() + 3);
     }
   }
 

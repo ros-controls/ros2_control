@@ -24,13 +24,12 @@
 #include <vector>
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
-#include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
+#include "hardware_interface/types/statistics_types.hpp"
 
 namespace controller_manager
 {
 
-using MovingAverageStatistics =
-  libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
+using MovingAverageStatistics = ros2_control::MovingAverageStatistics;
 /// Controller Specification
 /**
  * This struct contains both a pointer to a given controller, \ref c, as well

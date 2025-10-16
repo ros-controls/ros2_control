@@ -13,7 +13,15 @@ Parameters
 The following parameters can be set in the ``ros2_control`` hardware configuration to run the hardware component asynchronously:
 
 * ``is_async``: (optional) If set to ``true``, the hardware component will run asynchronously. Default is ``false``.
+
+Under the ``ros2_control`` tag, a ``properties`` tag can be added to specify the following parameters of the asynchronous hardware component:
+
 * ``thread_priority``: (optional) The priority of the thread that runs the hardware component. The priority is an integer value between 0 and 99. The default value is 50.
+* ``affinity``: (optional) The CPU affinity of the thread that runs the hardware component. The affinity is a list of CPU core IDs. The default value is an empty list, which means that the thread can run on any CPU core.
+* ``scheduling_policy``: (optional) The scheduling policy of the thread that runs the hardware component. The scheduling policy can be one of the following values:
+  * ``synchronized`` (default): The thread will run with the synchronized with the main controller_manager thread. The controller_manager is responsible for triggering the read and write calls of the hardware component.
+  * ``detached``: The thread will run independently of the main controller_manager thread. The hardware component will manage its own timing for triggering the read and write calls.
+* ``print_warnings``: (optional) If set to ``true``, a warning will be printed if the thread is not able to meet its timing requirements. Default is ``true``.
 
 .. note::
   The thread priority is only used when the hardware component is run asynchronously.
@@ -59,7 +67,10 @@ For a RRBot with multimodal gripper and external sensor:
       <state_interface name="digital_input2"/>
     </gpio>
   </ros2_control>
-  <ros2_control name="MultimodalGripper" type="actuator" is_async="true" thread_priority="30">
+  <ros2_control name="MultimodalGripper" type="actuator" is_async="true">
+    <properties>
+      <async affinity="[2,4]" scheduling_policy="synchronized" print_warnings="true" thread_priority="30"/>
+    </properties>
     <hardware>
       <plugin>ros2_control_demo_hardware/MultimodalGripper</plugin>
     </hardware>

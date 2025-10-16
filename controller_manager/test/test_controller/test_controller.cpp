@@ -150,6 +150,19 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
   return CallbackReturn::SUCCESS;
 }
 
+CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  if (activation_processing_time > 0.0)
+  {
+    RCLCPP_INFO(
+      get_node()->get_logger(), "Sleeping for %.3f seconds to simulate activation processing time",
+      activation_processing_time);
+    std::this_thread::sleep_for(std::chrono::duration<double>(activation_processing_time));
+  }
+
+  return CallbackReturn::SUCCESS;
+}
+
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   if (simulate_cleanup_failure)

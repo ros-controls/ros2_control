@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "control_msgs/msg/hardware_status.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -40,12 +41,25 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/async_function_handler.hpp"
+#include "realtime_tools/realtime_publisher.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 
 namespace hardware_interface
 {
+
+static inline rclcpp::NodeOptions get_hardware_component_node_options()
+{
+  rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
+  return node_options;
+}
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -82,28 +96,6 @@ public:
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
   /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] clock pointer to the resource manager clock.
-   * \param[in] logger Logger for the hardware component.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  [[deprecated(
-    "Replaced by CallbackReturn init(const hardware_interface::HardwareComponentParams & "
-    "params). Initialization is handled by the Framework.")]]
-  CallbackReturn init(
-    const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    params.clock = clock;
-    params.logger = logger;
-    return init(params);
-  };
-
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
    * \param[in] params  A struct of type HardwareComponentParams containing all necessary
    * parameters for initializing this specific hardware component,
    * including its HardwareInfo, a dedicated logger, a clock, and a
@@ -120,13 +112,25 @@ public:
     logger_ = logger_copy.get_child(
       "hardware_component." + params.hardware_info.type + "." + params.hardware_info.name);
     info_ = params.hardware_info;
-    if (info_.is_async)
+    if (params.hardware_info.is_async)
     {
-      RCLCPP_INFO_STREAM(
-        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
+      realtime_tools::AsyncFunctionHandlerParams async_thread_params;
+      async_thread_params.thread_priority = info_.async_params.thread_priority;
+      async_thread_params.scheduling_policy =
+        realtime_tools::AsyncSchedulingPolicy(info_.async_params.scheduling_policy);
+      async_thread_params.cpu_affinity_cores = info_.async_params.cpu_affinity_cores;
+      async_thread_params.clock = params.clock;
+      async_thread_params.logger = params.logger;
+      async_thread_params.exec_rate = params.hardware_info.rw_rate;
+      async_thread_params.print_warnings = info_.async_params.print_warnings;
+      RCLCPP_INFO(
+        get_logger(), "Starting async handler with scheduler priority: %d and policy : %s",
+        info_.async_params.thread_priority,
+        async_thread_params.scheduling_policy.to_string().c_str());
       async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      const bool is_sensor_type = (info_.type == "sensor");
       async_handler_->init(
-        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        [this, is_sensor_type](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
           const auto read_start_time = std::chrono::steady_clock::now();
           const auto ret_read = read(time, period);
@@ -139,7 +143,9 @@ public:
           {
             return ret_read;
           }
-          if (info_.type != "sensor")
+          if (
+            !is_sensor_type &&
+            this->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
           {
             const auto write_start_time = std::chrono::steady_clock::now();
             const auto ret_write = write(time, period);
@@ -153,18 +159,16 @@ public:
           }
           return return_type::OK;
         },
-        info_.thread_priority);
+        async_thread_params);
       async_handler_->start_thread();
     }
 
     if (auto locked_executor = params.executor.lock())
     {
-      std::string node_name = params.hardware_info.name;
-      std::transform(
-        node_name.begin(), node_name.end(), node_name.begin(),
-        [](unsigned char c) { return std::tolower(c); });
+      std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ = std::make_shared<rclcpp::Node>(node_name);
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(
+        node_name, params.node_namespace, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
@@ -176,22 +180,149 @@ public:
         params.hardware_info.name.c_str());
     }
 
+    double publish_rate = 0.0;
+    auto it = info_.hardware_parameters.find("status_publish_rate");
+    if (it != info_.hardware_parameters.end())
+    {
+      try
+      {
+        publish_rate = hardware_interface::stod(it->second);
+      }
+      catch (const std::invalid_argument &)
+      {
+        RCLCPP_WARN(
+          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          publish_rate);
+      }
+    }
+
+    if (publish_rate == 0.0)
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
+    }
+    else
+    {
+      control_msgs::msg::HardwareStatus status_msg_template;
+      if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+      {
+        RCLCPP_ERROR(get_logger(), "User-defined 'init_hardware_status_message' failed.");
+        return CallbackReturn::ERROR;
+      }
+
+      if (!status_msg_template.hardware_device_states.empty())
+      {
+        if (!hardware_component_node_)
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "Hardware status message was configured, but no node is available for the publisher. "
+            "Publisher will not be created.");
+        }
+        else
+        {
+          try
+          {
+            hardware_status_publisher_ =
+              hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
+                "~/hardware_status", rclcpp::SystemDefaultsQoS());
+
+            hardware_status_timer_ = hardware_component_node_->create_wall_timer(
+              std::chrono::duration<double>(1.0 / publish_rate),
+              [this]()
+              {
+                std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
+                hardware_status_box_.get(msg_to_publish_opt);
+
+                if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
+                {
+                  control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
+                  if (update_hardware_status_message(msg) != return_type::OK)
+                  {
+                    RCLCPP_WARN_THROTTLE(
+                      get_logger(), *clock_, 1000,
+                      "User's update_hardware_status_message() failed for '%s'.",
+                      info_.name.c_str());
+                    return;
+                  }
+                  msg.header.stamp = this->get_clock()->now();
+                  hardware_status_publisher_->publish(msg);
+                }
+              });
+            hardware_status_box_.set(std::make_optional(status_msg_template));
+          }
+          catch (const std::exception & e)
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Exception during publisher/timer setup for hardware status: %s",
+              e.what());
+            return CallbackReturn::ERROR;
+          }
+        }
+      }
+      else
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "`status_publish_rate` was set to a non-zero value, but no hardware status message was "
+          "configured. Publisher will not be created. Are you sure "
+          "init_hardware_status_message() is set up properly?");
+      }
+    }
+
     hardware_interface::HardwareComponentInterfaceParams interface_params;
     interface_params.hardware_info = info_;
     interface_params.executor = params.executor;
     return on_init(interface_params);
   };
 
+  /// User-overridable method to configure the structure of the HardwareStatus message.
+  /**
+   * To enable status publishing, override this method to pre-allocate the message structure
+   * and fill in static information like device IDs and interface names. This method is called
+   * once during the non-realtime `init()` phase. If the `hardware_device_states` vector is
+   * left empty, publishing will be disabled.
+   *
+   * \param[out] msg_template A reference to a HardwareStatus message to be configured.
+   * \returns CallbackReturn::SUCCESS if configured successfully, CallbackReturn::ERROR on failure.
+   */
+  virtual CallbackReturn init_hardware_status_message(
+    control_msgs::msg::HardwareStatus & /*msg_template*/)
+  {
+    // Default implementation does nothing, disabling the feature.
+    return CallbackReturn::SUCCESS;
+  }
+
+  /// User-overridable method to fill the hardware status message with real-time data.
+  /**
+   * This real-time safe method is called by the framework within the `trigger_read()` loop.
+   * Override this method to populate the `value` fields of the pre-allocated message with the
+   * latest hardware states that were updated in your `read()` method.
+   *
+   * \param[in,out] msg The pre-allocated message to be filled with the latest values.
+   * \returns return_type::OK on success, return_type::ERROR on failure.
+   */
+  virtual return_type update_hardware_status_message(control_msgs::msg::HardwareStatus & /*msg*/)
+  {
+    // Default implementation does nothing.
+    return return_type::OK;
+  }
+
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
-   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
+   * containing all necessary parameters for initializing this specific hardware component,
+   * specifically its HardwareInfo, and a weak_ptr to the executor.
+   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
+   * such as `spin()`.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  [[deprecated("Use on_init(const HardwareComponentInterfaceParams & params) instead.")]]
-  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  virtual CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params)
   {
-    info_ = hardware_info;
+    info_ = params.hardware_info;
     if (info_.type == "actuator")
     {
       parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
@@ -213,26 +344,6 @@ public:
     return CallbackReturn::SUCCESS;
   };
 
-  /// Initialization of the hardware interface from data parsed from the robot's URDF.
-  /**
-   * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
-   * containing all necessary parameters for initializing this specific hardware component,
-   * specifically its HardwareInfo, and a weak_ptr to the executor.
-   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
-   * such as `spin()`.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  virtual CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & params)
-  {
-    // This is done for backward compatibility with the old on_init method.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    return on_init(params.hardware_info);
-#pragma GCC diagnostic pop
-  };
-
   /// Exports all state interfaces for this hardware interface.
   /**
    * Old way of exporting the StateInterfaces. If a empty vector is returned then
@@ -247,8 +358,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]]
-  virtual std::vector<StateInterface> export_state_interfaces()
+    "Exporting is handled by the Framework.")]] virtual std::vector<StateInterface>
+  export_state_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_state_interfaces() and only when empty vector is returned call
@@ -337,8 +448,8 @@ public:
    */
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is handled by the Framework.")]]
-  virtual std::vector<CommandInterface> export_command_interfaces()
+    "Exporting is handled by the Framework.")]] virtual std::vector<CommandInterface>
+  export_command_interfaces()
   {
     // return empty vector by default. For backward compatibility we try calling
     // export_command_interfaces() and only when empty vector is returned call
@@ -473,8 +584,8 @@ public:
       status.successful = result.first;
       if (!status.successful)
       {
-        RCLCPP_WARN(
-          get_logger(),
+        RCLCPP_WARN_EXPRESSION(
+          get_logger(), info_.async_params.print_warnings,
           "Trigger read/write called while the previous async trigger is still in progress for "
           "hardware interface : '%s'. Failed to trigger read/write cycle!",
           info_.name.c_str());
@@ -582,6 +693,14 @@ public:
     lifecycle_state_ = new_state;
   }
 
+  /// Set the value of a state interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param[in] interface_name The name of the state interface to access.
+   * \param[in] value The value to store.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface.
+   */
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
@@ -600,6 +719,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  /// Get the value from a state interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the state interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface or its stored value.
+   */
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
@@ -626,6 +753,15 @@ public:
     return opt_value.value();
   }
 
+  /// Set the value of a command interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param interface_name The name of the command
+   * interface to access.
+   * \param value The value to store.
+   * \throws This method throws a runtime error if it
+   * cannot access the command interface.
+   */
   template <typename T>
   void set_command(const std::string & interface_name, const T & value)
   {
@@ -644,6 +780,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  ///  Get the value from a command interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the command interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the command interface or its stored value.
+   */
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
@@ -659,7 +803,7 @@ public:
     }
     auto & handle = it->second;
     std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
-    const auto opt_value = handle->get_optional<double>(lock);
+    const auto opt_value = handle->get_optional<T>(lock);
     if (!opt_value)
     {
       throw std::runtime_error(
@@ -693,6 +837,19 @@ public:
    * \return hardware info of the HardwareComponentInterface.
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
+
+  /// Pause any asynchronous operations.
+  /**
+   * This method is called to pause any ongoing asynchronous operations, such as read/write cycles.
+   * It is typically used during lifecycle transitions or when the hardware needs to be paused.
+   */
+  void pause_async_operations()
+  {
+    if (async_handler_)
+    {
+      async_handler_->pause_execution();
+    }
+  }
 
   /// Prepare for the activation of the hardware.
   /**
@@ -765,6 +922,10 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
+  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
+  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
+    hardware_status_box_;
+  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
 }  // namespace hardware_interface

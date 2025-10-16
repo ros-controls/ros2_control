@@ -34,11 +34,16 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    hardware_interface::ResourceManagerParams params;
+    params.update_rate = 100;
+    params.clock = rm_node_->get_clock();
+    params.logger = rm_node_->get_logger();
+    params.executor = executor_;
+    params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    params.node_namespace = TEST_NAMESPACE;
     cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::minimal_robot_urdf, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME, TEST_NAMESPACE);
+      std::make_unique<hardware_interface::ResourceManager>(params, true), executor_, TEST_CM_NAME,
+      TEST_NAMESPACE);
     run_updater_ = false;
   }
 };
@@ -55,6 +60,15 @@ TEST_P(TestControllerManagerWithNamespace, cm_and_controller_in_namespace)
     test_controller2, TEST_CONTROLLER2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
+
+  const auto all_node_names = cm_->get_node_names();
+  ASSERT_THAT(
+    all_node_names,
+    testing::UnorderedElementsAreArray(
+      {"/test_namespace/test_controller_manager", "/test_namespace/test_controller_name",
+       "/test_namespace/test_controller2_name", "/test_namespace/testactuatorhardware",
+       "/test_namespace/testsensorhardware", "/test_namespace/testsystemhardware",
+       "/ResourceManager"}));
 
   // setup interface to claim from controllers
   controller_interface::InterfaceConfiguration cmd_itfs_cfg;

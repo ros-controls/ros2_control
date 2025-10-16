@@ -1,7 +1,7 @@
 name: Coverage Build - Jazzy
 on:
   workflow_dispatch:
-  push:
+  pull_request: &event
     branches:
       - jazzy
     paths:
@@ -13,18 +13,7 @@ on:
       - '**/CMakeLists.txt'
       - 'ros2_control.jazzy.repos'
       - 'codecov.yml'
-  pull_request:
-    branches:
-      - jazzy
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '.github/workflows/jazzy-coverage-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros2_control.jazzy.repos'
-      - 'codecov.yml'
+  push: *event
 
 jobs:
   coverage_jazzy:

@@ -30,24 +30,12 @@ class LoanedStateInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  [[deprecated("Replaced by the new version using shared_ptr")]] explicit LoanedStateInterface(
-    const StateInterface & state_interface)
-  : LoanedStateInterface(state_interface, nullptr)
-  {
-  }
-
-  [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
-    const StateInterface & state_interface, Deleter && deleter)
-  : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
-  {
-  }
-
   explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface)
   : LoanedStateInterface(state_interface, nullptr)
   {
   }
 
-  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
+  explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
   : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
@@ -67,7 +55,7 @@ public:
       state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     if (deleter_)
     {
@@ -80,22 +68,6 @@ public:
   const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
 
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
-
-  [[deprecated(
-    "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
-    "removed by the ROS 2 Kilted Kaiju release.")]]
-  double get_value() const
-  {
-    std::optional<double> opt_value = get_optional();
-    if (opt_value.has_value())
-    {
-      return opt_value.value();
-    }
-    else
-    {
-      return std::numeric_limits<double>::quiet_NaN();
-    }
-  }
 
   /**
    * @brief Get the value of the state interface.

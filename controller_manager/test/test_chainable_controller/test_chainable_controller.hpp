@@ -80,10 +80,10 @@ public:
   std::vector<double> get_state_interface_data() const;
 
   size_t internal_counter;
+  bool fail_on_activate = false;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
-  std::vector<std::string> exported_state_interface_names_;
   std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
