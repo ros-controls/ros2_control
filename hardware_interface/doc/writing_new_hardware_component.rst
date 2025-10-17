@@ -212,14 +212,14 @@ The following is a step-by-step guide to create source files, basic tests, and c
                return hardware_interface::return_type::OK;
             }
 
-      *   **Enable in URDF**: Finally, to activate the publisher, add the ``status_publish_rate`` parameter to your ``<hardware>`` tag in the URDF. Setting it to 0.0 disables the feature.
+      *   **Enable in URDF**: Finally, to activate the publisher, add the ``status_publish_rate`` parameter to your ``<hardware>`` tag in the URDF. Setting it to 0 disables the feature.
 
          .. code-block:: xml
 
             <ros2_control name="MyHardware" type="system">
             <hardware>
                <plugin>my_package/MyHardware</plugin>
-               <param name="status_publish_rate">20.0</param>
+               <param name="status_publish_rate">20</param>
             </hardware>
             ...
             </ros2_control>

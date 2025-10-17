@@ -201,7 +201,7 @@ public:
       catch (const std::invalid_argument &)
       {
         RCLCPP_WARN(
-          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.d Hz.",
           publish_rate);
       }
     }
