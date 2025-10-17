@@ -196,7 +196,7 @@ public:
       }
     }
 
-    if (publish_rate != 0.0)
+    if (publish_rate < std::numeric_limits<T>::epsilon())
     {
       control_msgs::msg::HardwareStatus status_msg_template;
       if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
