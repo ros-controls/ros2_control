@@ -1178,7 +1178,8 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     // all good nothing to do!
     return controller_interface::return_type::OK;
   }
-
+  
+  RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
   auto state = controller->get_lifecycle_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
