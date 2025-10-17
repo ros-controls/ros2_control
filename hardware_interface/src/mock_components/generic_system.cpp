@@ -464,6 +464,38 @@ return_type GenericSystem::perform_command_mode_switch(
   return hardware_interface::return_type::OK;
 }
 
+<<<<<<< HEAD
+=======
+hardware_interface::CallbackReturn GenericSystem::on_configure(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  // Set position control mode per default
+  // This will be populated by perform_command_mode_switch
+  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn GenericSystem::on_activate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  for (const auto & joint_state : joint_state_interfaces_)
+  {
+    const std::string & name = joint_state.second.get_name();
+    // initial values are set from the URDF. only apply offset
+    if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
+    {
+      if (
+        joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
+        custom_interface_with_following_offset_.empty())
+      {
+        set_state(name, get_state(name) + position_state_following_offset_);
+      }
+    }
+  }
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+>>>>>>> c99442e ([GenericSystem] Initialize joint_control_mode_ in on_configure (#2693))
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)
