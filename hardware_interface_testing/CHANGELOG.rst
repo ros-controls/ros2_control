@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix exclusive hardware control mode switching on controller failed activation (backport `#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2579 <https://github.com/ros-controls/ros2_control/issues/2579>`_)
+* Contributors: mergify[bot]
+
 2.52.0 (2025-09-12)
 -------------------
 
