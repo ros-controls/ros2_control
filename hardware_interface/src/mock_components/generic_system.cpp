@@ -297,9 +297,6 @@ return_type GenericSystem::perform_command_mode_switch(
     return hardware_interface::return_type::OK;
   }
 
-  // Set position control mode per default
-  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
-
   for (const auto & key : start_interfaces)
   {
     // check if interface is joint
@@ -328,6 +325,15 @@ return_type GenericSystem::perform_command_mode_switch(
   }
 
   return hardware_interface::return_type::OK;
+}
+
+hardware_interface::CallbackReturn GenericSystem::on_configure(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  // Set position control mode per default
+  // This will be populated by perform_command_mode_switch
+  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn GenericSystem::on_activate(
