@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_COMPONENT_PARAMS_HPP_
 
 #include <memory>
+#include <string>
 #include "hardware_interface/hardware_info.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -48,6 +49,12 @@ struct HardwareComponentParams
    * Typically, this is the same clock used by the ResourceManager/ControllerManager.
    */
   rclcpp::Clock::SharedPtr clock = nullptr;
+
+  /**
+   * @brief The namespace used by the hardware component's internal node.
+   * This is typically same as the controller manager's node namespace.
+   */
+  std::string node_namespace = "";
 
   /**
    * @brief Weak pointer to the rclcpp::Executor instance. Hardware components
