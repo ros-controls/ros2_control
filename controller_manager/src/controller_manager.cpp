@@ -1156,7 +1156,6 @@ controller_interface::return_type ControllerManager::cleanup_controller(
 controller_interface::return_type ControllerManager::cleanup_controller(
   const std::string & controller_name)
 {
-  RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
 
   const auto & controllers = get_loaded_controllers();
 
