@@ -45,7 +45,15 @@ public:
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
+<<<<<<< HEAD
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
+=======
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
+
+  hardware_interface::CallbackReturn on_activate(
+    const rclcpp_lifecycle::State & previous_state) override;
+>>>>>>> c99442e ([GenericSystem] Initialize joint_control_mode_ in on_configure (#2693))
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
