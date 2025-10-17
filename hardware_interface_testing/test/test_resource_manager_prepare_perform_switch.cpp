@@ -64,8 +64,12 @@ public:
   void SetUp()
   {
     ResourceManagerTest::SetUp();
-
-    rm_ = std::make_unique<TestableResourceManager>(node_, command_mode_urdf);
+    hardware_interface::ResourceManagerParams params;
+    params.robot_description = command_mode_urdf;
+    params.clock = node_.get_clock();
+    params.logger = node_.get_logger();
+    params.executor = executor_;
+    rm_ = std::make_unique<TestableResourceManager>(params, true);
     ASSERT_EQ(1u, rm_->actuator_components_size());
     ASSERT_EQ(1u, rm_->system_components_size());
 
@@ -555,7 +559,8 @@ public:
     params.logger = node_.get_logger();
     params.clock = node_.get_clock();
     params.robot_description = command_mode_urdf;
-    rm_ = std::make_unique<TestableResourceManager>(params);
+    params.executor = executor_;
+    rm_ = std::make_unique<TestableResourceManager>(params, true);
     ASSERT_EQ(1u, rm_->actuator_components_size());
     ASSERT_EQ(1u, rm_->system_components_size());
 

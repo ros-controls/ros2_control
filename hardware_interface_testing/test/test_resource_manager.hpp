@@ -17,12 +17,14 @@
 #ifndef TEST_RESOURCE_MANAGER_HPP_
 #define TEST_RESOURCE_MANAGER_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 
 class ResourceManagerTest : public ::testing::Test
@@ -33,6 +35,8 @@ public:
   void SetUp() {}
 
   rclcpp::Node node_{"ResourceManagerTest"};
+  std::shared_ptr<rclcpp::Executor> executor_ =
+    std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 };
 
 // Forward declaration
@@ -52,21 +56,9 @@ public:
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
   FRIEND_TEST(ResourceManagerTest, test_uninitializable_hardware_no_validation);
 
-  explicit TestableResourceManager(rclcpp::Node & node)
-  : hardware_interface::ResourceManager(
-      node.get_node_clock_interface(), node.get_node_logging_interface())
-  {
-  }
-
   explicit TestableResourceManager(
-    rclcpp::Node & node, const std::string & urdf, bool activate_all = false)
-  : hardware_interface::ResourceManager(
-      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
-  {
-  }
-
-  explicit TestableResourceManager(const hardware_interface::ResourceManagerParams & params)
-  : hardware_interface::ResourceManager(params, true)
+    const hardware_interface::ResourceManagerParams & params, bool load)
+  : hardware_interface::ResourceManager(params, load)
   {
   }
 };

@@ -111,11 +111,15 @@ public:
     const std::string velocity_replacement = R"(velocity="10000.0")";
     const std::string diffbot_urdf_large_limits = std::regex_replace(
       ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
+    hardware_interface::ResourceManagerParams rm_params;
+    rm_params.robot_description = diffbot_urdf_large_limits;
+    rm_params.clock = rm_node_->get_clock();
+    rm_params.logger = rm_node_->get_logger();
+    rm_params.executor = executor_;
+    rm_params.activate_all = true;
     cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      std::make_unique<hardware_interface::ResourceManager>(rm_params, true), executor_,
+      TEST_CM_NAME);
     run_updater_ = false;
   }
 
