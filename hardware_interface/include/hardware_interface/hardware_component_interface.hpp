@@ -732,6 +732,16 @@ public:
     lifecycle_state_ = new_state;
   }
 
+  /// Does the state interface exist?
+  /**
+   * \param[in] interface_name The name of the state interface.
+   * \return true if the state interface exists, false otherwise.
+   */
+  bool has_state(const std::string & interface_name) const
+  {
+    return hardware_states_.find(interface_name) != hardware_states_.end();
+  }
+
   /// Set the value of a state interface.
   /**
    * \tparam T The type of the value to be stored.
@@ -790,6 +800,16 @@ public:
           interface_name));
     }
     return opt_value.value();
+  }
+
+  /// Does the command interface exist?
+  /**
+   * \param[in] interface_name The name of the command interface.
+   * \return true if the command interface exists, false otherwise.
+   */
+  bool has_command(const std::string & interface_name) const
+  {
+    return hardware_commands_.find(interface_name) != hardware_commands_.end();
   }
 
   /// Set the value of a command interface.
