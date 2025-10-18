@@ -231,26 +231,10 @@ return_type GenericSystem::prepare_command_mode_switch(
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
-        if (!calculate_dynamics_)
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
-            "might lead to wrong feedback and unexpected behavior.",
-            info.joints[joint_index].name.c_str());
-        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
-        if (!calculate_dynamics_)
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
-            "this might lead to wrong feedback and unexpected behavior.",
-            info.joints[joint_index].name.c_str());
-        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
     }
