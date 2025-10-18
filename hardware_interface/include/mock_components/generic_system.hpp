@@ -83,8 +83,6 @@ protected:
   std::vector<std::string> skip_interfaces_;
 
   std::vector<std::string> other_interfaces_;
-  std::vector<std::string> sensor_interfaces_;
-  std::vector<std::string> gpio_mock_interfaces_;
 
 private:
   bool populate_interfaces(

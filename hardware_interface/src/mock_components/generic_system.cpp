@@ -157,19 +157,6 @@ CallbackReturn GenericSystem::on_init(
     }
   }
 
-  for (const auto & sensor : get_hardware_info().sensors)
-  {
-    for (const auto & interface : sensor.state_interfaces)
-    {
-      if (
-        std::find(sensor_interfaces_.begin(), sensor_interfaces_.end(), interface.name) ==
-        sensor_interfaces_.end())
-      {
-        sensor_interfaces_.emplace_back(interface.name);
-      }
-    }
-  }
-
   return CallbackReturn::SUCCESS;
 }
 
@@ -396,14 +383,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       for (size_t i = 0; i < 3; ++i)
       {
         const auto full_name = joint_name + "/" + standard_interfaces_[i];
-        if (joint_command_interfaces_.find(full_name) != joint_command_interfaces_.end())
+        if (has_command(full_name))
         {
-          joint_command_values_[i] =
-            get_command(joint_command_interfaces_.at(full_name).get_name());
+          joint_command_values_[i] = get_command(full_name);
         }
-        if (joint_state_interfaces_.find(full_name) != joint_state_interfaces_.end())
+        if (has_state(full_name))
         {
-          joint_state_values_[i] = get_state(joint_state_interfaces_.at(full_name).get_name());
+          joint_state_values_[i] = get_state(full_name);
         }
       }
 
@@ -496,7 +482,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         if (joint_command.get()->get_interface_name() == hardware_interface::HW_IF_POSITION)
         {
           const std::string & name = joint_command.get()->get_name();
-          if (joint_state_interfaces_.find(name) != joint_state_interfaces_.end())
+          if (has_state(name))
           {
             set_state(
               name, get_command(name) + (custom_interface_with_following_offset_.empty()
