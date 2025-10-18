@@ -505,7 +505,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       continue;
     }
     const std::string & full_interface_name = joint_state.get()->get_name();
-    if (joint_command_interfaces_.find(full_interface_name) != joint_command_interfaces_.end())
+    if (has_command(full_interface_name))
     {
       if (
         mirror_command_to_state(full_interface_name, joint_state.get()->get_data_type()) !=
@@ -530,9 +530,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
   {
     const auto & mimic_joint_name = joints.at(mimic_joint.joint_index).name;
     const auto & mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
-    if (
-      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION,
@@ -540,19 +538,14 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
           mimic_joint.multiplier *
             get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_POSITION));
     }
-    if (
-      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY,
         mimic_joint.multiplier *
           get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_VELOCITY));
     }
-    if (
-      joint_state_interfaces_.find(
-        mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION,
@@ -593,7 +586,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & gpio_command : gpio_commands_)
     {
       const std::string & name = gpio_command.get()->get_name();
-      if (gpio_state_interfaces_.find(name) != gpio_state_interfaces_.end())
+      if (has_state(name))
       {
         if (mirror_command_to_state(name, gpio_command.get()->get_data_type()) != return_type::OK)
         {
