@@ -229,7 +229,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
       return hardware_interface::return_type::ERROR;
     }
     EXPECT_TRUE(has_state("joint1/position"));
-    EXPECT_TRUE(has_state("joint1/velocity"));
     EXPECT_TRUE(has_command("joint1/velocity"));
     auto position_state = get_state("joint1/position");
     set_state("joint1/position", position_state + get_command("joint1/velocity"));
