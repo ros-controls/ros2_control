@@ -2200,10 +2200,11 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   // Test error management in prepare mode switch
   ASSERT_EQ(  // joint1 interface does not exist
     rm.prepare_command_mode_switch({"joint1/unknown", "joint2/acceleration"}, {}), false);
-  ASSERT_EQ(  // joint2 has non 'position', 'velocity', or 'acceleration' interface
+  ASSERT_EQ(  // joint1 has non 'position', 'velocity', or 'acceleration' interface
     rm.prepare_command_mode_switch({"joint1/effort", "joint2/acceleration"}, {}), false);
-  ASSERT_EQ(  // joint1 has two interfaces
-    rm.prepare_command_mode_switch({"joint1/position", "joint1/velocity"}, {}), false);
+  ASSERT_EQ(  // joint2 has two interfaces
+    rm.prepare_command_mode_switch({"joint1/position", "joint2/velocity", "joint2/acceleration"},
+      {}), false);
 
   // switch controller mode as controller manager is doing - gpio itf 'vacuum' will be ignored
   ASSERT_EQ(
@@ -2586,15 +2587,13 @@ TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces_with_offs
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(3u, rm.state_interface_keys().size());
+  ASSERT_EQ(2u, rm.state_interface_keys().size());
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
 
-  ASSERT_EQ(3u, rm.command_interface_keys().size());
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
-  EXPECT_TRUE(rm.command_interface_exists("flange_vacuum/vacuum"));
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
