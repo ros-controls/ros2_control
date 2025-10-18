@@ -592,7 +592,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_position_control_mode_position_state_only_ =
+    hardware_system_2dof_with_position_control_mode_position_state_only_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -618,11 +618,65 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_velocity_control_mode_position_state_only_ =
+    hardware_system_2dof_with_position_control_mode_position_state_only_with_offset_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <param name="position_state_following_offset">-3</param>
+      <param name="calculate_dynamics">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+    </joint>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_with_velocity_control_mode_position_state_only_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="calculate_dynamics">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+    </joint>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="position_state_following_offset">-3</param>
       <param name="calculate_dynamics">true</param>
     </hardware>
     <joint name="joint1">
@@ -787,12 +841,11 @@ protected:
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
-  std::string hardware_system_2dof_standard_interfaces_with_position_control_mode_;
-  std::string
-    hardware_system_2dof_standard_interfaces_with_position_control_mode_position_state_only_;
+  std::string hardware_system_2dof_with_position_control_mode_position_state_only_;
+  std::string hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_;
   std::string hardware_system_2dof_standard_interfaces_with_velocity_control_mode_;
-  std::string
-    hardware_system_2dof_standard_interfaces_with_velocity_control_mode_position_state_only_;
+  std::string hardware_system_2dof_with_velocity_control_mode_position_state_only_;
+  std::string hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_;
   std::string hardware_system_3dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
   std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
@@ -2306,10 +2359,9 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
 TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
 {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_with_position_control_mode_position_state_only_ +
-    ros2_control_test_assets::urdf_tail;
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_with_position_control_mode_position_state_only_ +
+              ros2_control_test_assets::urdf_tail;
 
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
@@ -2382,12 +2434,89 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
   ASSERT_EQ(3.5, j2p_c.get_optional().value());
 }
 
+TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces_w_offset)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_ +
+              ros2_control_test_assets::urdf_tail;
+  constexpr double offset = -3.0;
+
+  TestableResourceManager rm(node_, urdf);
+  // Activate components to get all interfaces available
+  activate_components(rm, {"MockHardwareSystem"});
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(3u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
+
+  ASSERT_EQ(3u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_vacuum/vacuum"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+
+  // State interfaces without initial value are set to nan
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
+
+  // switch controller mode as controller manager is doing
+  ASSERT_EQ(rm.prepare_command_mode_switch({"joint1/position", "joint2/position"}, {}), true);
+  ASSERT_EQ(rm.perform_command_mode_switch({"joint1/position", "joint2/position"}, {}), true);
+
+  // set some new values in commands
+  ASSERT_TRUE(j1p_c.set_value(0.11));
+  ASSERT_TRUE(j2p_c.set_value(3.5));
+
+  // State values should not be changed
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(3.5, j2p_c.get_optional().value());
+
+  // write() does not change values
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(3.5, j2p_c.get_optional().value());
+
+  // read() mirrors commands to states, no dynamics to calculate actually
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(3.5 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(3.5, j2p_c.get_optional().value());
+
+  // read() mirrors commands to states again, no dynamics to calculate actually
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(3.5 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(3.5, j2p_c.get_optional().value());
+
+  // read() mirrors commands to states again, no dynamics to calculate actually
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(0.11 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(3.5 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(3.5, j2p_c.get_optional().value());
+}
+
 TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
 {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_with_velocity_control_mode_position_state_only_ +
-    ros2_control_test_assets::urdf_tail;
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_with_velocity_control_mode_position_state_only_ +
+              ros2_control_test_assets::urdf_tail;
 
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
@@ -2456,6 +2585,84 @@ TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_NEAR(3.45 + 0.11 * 3 * PERIOD_SEC, j1p_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(2.78 + 3.5 * 3 * PERIOD_SEC, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2v_c.get_optional().value());
+}
+
+TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces_with_offset)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_ +
+              ros2_control_test_assets::urdf_tail;
+  constexpr double offset = -3.0;
+
+  TestableResourceManager rm(node_, urdf);
+  // Activate components to get all interfaces available
+  activate_components(rm, {"MockHardwareSystem"});
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(3u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
+
+  ASSERT_EQ(3u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_vacuum/vacuum"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
+
+  // State interfaces without initial value are set to nan
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // switch controller mode as controller manager is doing
+  ASSERT_EQ(rm.prepare_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
+  ASSERT_EQ(rm.perform_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
+
+  // set some new values in commands
+  ASSERT_TRUE(j1v_c.set_value(0.11));
+  ASSERT_TRUE(j2v_c.set_value(3.5));
+
+  // State values should not be changed
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2v_c.get_optional().value());
+
+  // write() does not change values
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2v_c.get_optional().value());
+
+  // read() mirrors commands to states and integrates positions
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + 0.11 * PERIOD_SEC + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(2.78 + 3.5 * PERIOD_SEC + offset, j2p_s.get_optional().value());
+  ASSERT_EQ(0.11, j1v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2v_c.get_optional().value());
+
+  // read() mirrors commands to states again and integrates positions
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_NEAR(3.45 + 0.11 * 2 * PERIOD_SEC + offset, j1p_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_NEAR(2.78 + 3.5 * 2 * PERIOD_SEC + offset, j2p_s.get_optional().value(), COMPARE_DELTA);
+  ASSERT_EQ(0.11, j1v_c.get_optional().value());
+  ASSERT_EQ(3.5, j2v_c.get_optional().value());
+
+  // read() mirrors commands to states again and integrates positions
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_NEAR(3.45 + 0.11 * 3 * PERIOD_SEC + offset, j1p_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_NEAR(2.78 + 3.5 * 3 * PERIOD_SEC + offset, j2p_s.get_optional().value(), COMPARE_DELTA);
   ASSERT_EQ(0.11, j1v_c.get_optional().value());
   ASSERT_EQ(3.5, j2v_c.get_optional().value());
 }
@@ -2551,9 +2758,9 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
     hardware_system_2dof_standard_interfaces_with_different_control_modes_));
 
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_position_control_mode_position_state_only_));
+    hardware_system_2dof_with_position_control_mode_position_state_only_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_velocity_control_mode_position_state_only_));
+    hardware_system_2dof_with_velocity_control_mode_position_state_only_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
     hardware_system_3dof_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
