@@ -39,27 +39,6 @@ CallbackReturn GenericSystem::on_init(
     return CallbackReturn::ERROR;
   }
 
-  auto populate_non_standard_interfaces =
-    [this](auto interface_list, auto & non_standard_interfaces)
-  {
-    for (const auto & interface : interface_list)
-    {
-      // add to list if non-standard interface
-      if (
-        std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name) ==
-        standard_interfaces_.end())
-      {
-        if (
-          std::find(
-            non_standard_interfaces.begin(), non_standard_interfaces.end(), interface.name) ==
-          non_standard_interfaces.end())
-        {
-          non_standard_interfaces.emplace_back(interface.name);
-        }
-      }
-    }
-  };
-
   // check if to create mock command interface for sensor
   auto it = get_hardware_info().hardware_parameters.find("mock_sensor_commands");
   if (it != get_hardware_info().hardware_parameters.end())
@@ -128,21 +107,44 @@ CallbackReturn GenericSystem::on_init(
   }
 
   // search for non-standard joint interfaces
+  std::vector<std::string> other_interfaces;
+  auto populate_non_standard_interfaces =
+    [this](auto interface_list, auto & non_standard_interfaces)
+  {
+    for (const auto & interface : interface_list)
+    {
+      // add to list if non-standard interface
+      if (
+        std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name) ==
+        standard_interfaces_.end())
+      {
+        // and does not exist yet
+        if (
+          std::find(
+            non_standard_interfaces.begin(), non_standard_interfaces.end(), interface.name) ==
+          non_standard_interfaces.end())
+        {
+          non_standard_interfaces.emplace_back(interface.name);
+        }
+      }
+    }
+  };
   for (const auto & joint : get_hardware_info().joints)
   {
-    // populate non-standard command interfaces to other_interfaces_
-    populate_non_standard_interfaces(joint.command_interfaces, other_interfaces_);
+    // populate non-standard command interfaces to other_interfaces
+    populate_non_standard_interfaces(joint.command_interfaces, other_interfaces);
 
-    // populate non-standard state interfaces to other_interfaces_
-    populate_non_standard_interfaces(joint.state_interfaces, other_interfaces_);
+    // populate non-standard state interfaces to other_interfaces
+    populate_non_standard_interfaces(joint.state_interfaces, other_interfaces);
   }
 
   // when following offset is used on custom interface then find its index
   if (!custom_interface_with_following_offset_.empty())
   {
-    auto if_it = std::find(
-      other_interfaces_.begin(), other_interfaces_.end(), custom_interface_with_following_offset_);
-    if (if_it != other_interfaces_.end())
+    if (
+      std::find(
+        other_interfaces.begin(), other_interfaces.end(),
+        custom_interface_with_following_offset_) != other_interfaces.end())
     {
       RCLCPP_INFO(
         get_logger(), "Custom interface with following offset '%s' found.",

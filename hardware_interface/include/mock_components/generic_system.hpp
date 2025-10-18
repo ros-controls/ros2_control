@@ -82,8 +82,6 @@ protected:
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
   std::vector<std::string> skip_interfaces_;
 
-  std::vector<std::string> other_interfaces_;
-
 private:
   bool populate_interfaces(
     const std::vector<hardware_interface::ComponentInfo> & components,
