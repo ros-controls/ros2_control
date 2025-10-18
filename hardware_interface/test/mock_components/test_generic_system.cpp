@@ -2143,10 +2143,12 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
     rm.claim_command_interface("joint2/acceleration");
 
   // State interfaces without initial value are set to nan
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  double j1p = 3.45;
+  double j2p = 2.78;
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(j2p, j2p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
@@ -2175,10 +2177,10 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_TRUE(j2a_c.set_value(3.5));
 
   // State values should not be changed
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(j2p, j2p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
@@ -2188,10 +2190,10 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(j2p, j2p_s.get_optional().value());
   EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
@@ -2201,12 +2203,15 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // read() mirrors commands to states and calculate dynamics
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(-33.4, j1v_s.get_optional().value());
-  EXPECT_NEAR(-334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(j1p = 0.11, j1p_s.get_optional().value());
+  double j1v = (j1p - 3.45) / PERIOD_SEC;
+  EXPECT_EQ(j1v, j1v_s.get_optional().value());
+  double j1a = (j1v - 0.0) / PERIOD_SEC;
+  EXPECT_NEAR(j1a, j1a_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  double j2v = 0.0 + 3.5 * PERIOD_SEC;
+  EXPECT_EQ(j2v, j2v_s.get_optional().value());
+  EXPECT_EQ(j2p += j2v * PERIOD_SEC, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2214,12 +2219,13 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // read() mirrors commands to states and calculate dynamics
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_NEAR(334.0, j1a_s.get_optional().value(), COMPARE_DELTA);
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_NEAR(0.35, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
+  const double j1v_old = j1v;
+  EXPECT_EQ(j1v = 0.0, j1v_s.get_optional().value());
+  EXPECT_NEAR(j1a = (j1v - j1v_old) / PERIOD_SEC, j1a_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  EXPECT_NEAR(j2v += 3.5 * PERIOD_SEC, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j2p += j2v * PERIOD_SEC, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2227,12 +2233,12 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // read() mirrors commands to states and calculate dynamics
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
-  EXPECT_EQ(2.815, j2p_s.get_optional().value());
-  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
+  EXPECT_EQ(j1v, j1v_s.get_optional().value());
+  EXPECT_EQ(j1a = 0.0, j1a_s.get_optional().value());
   EXPECT_EQ(3.5, j2a_s.get_optional().value());
+  EXPECT_NEAR(j2v += 3.5 * PERIOD_SEC, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j2p += j2v * PERIOD_SEC, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2247,55 +2253,55 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   ASSERT_TRUE(j2v_c.set_value(2.0));
 
   // State values should not be changed
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
-  EXPECT_EQ(2.815, j2p_s.get_optional().value());
-  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
+  EXPECT_EQ(j1v, j1v_s.get_optional().value());
+  EXPECT_EQ(j1a, j1a_s.get_optional().value());
+  EXPECT_EQ(j2p, j2p_s.get_optional().value());
+  EXPECT_NEAR(j2v, j2v_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(3.5, j2a_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());  // is not cleared, but not used anymore
   ASSERT_EQ(0.5, j1v_c.get_optional().value());
   ASSERT_EQ(2.0, j2v_c.get_optional().value());
-  ASSERT_EQ(3.5, j2a_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());  // is not cleared, but not used anymore
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(0.0, j1v_s.get_optional().value());
-  EXPECT_EQ(0.0, j1a_s.get_optional().value());
-  EXPECT_EQ(2.815, j2p_s.get_optional().value());
-  EXPECT_NEAR(0.7, j2v_s.get_optional().value(), COMPARE_DELTA);
+  EXPECT_EQ(j1p, j1p_s.get_optional().value());
+  EXPECT_EQ(j1v, j1v_s.get_optional().value());
+  EXPECT_EQ(j1a, j1a_s.get_optional().value());
+  EXPECT_EQ(j2p, j2p_s.get_optional().value());
+  EXPECT_NEAR(j2v, j2v_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(3.5, j2a_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());  // is not cleared, but not used anymore
   ASSERT_EQ(0.5, j1v_c.get_optional().value());
   ASSERT_EQ(2.0, j2v_c.get_optional().value());
-  ASSERT_EQ(3.5, j2a_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());  // is not cleared, but not used anymore
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.11, j1p_s.get_optional().value());
+  EXPECT_EQ(j1p += 0.5 * PERIOD_SEC, j1p_s.get_optional().value());
   EXPECT_EQ(0.5, j1v_s.get_optional().value());
-  EXPECT_EQ(5.0, j1a_s.get_optional().value());
-  EXPECT_EQ(2.885, j2p_s.get_optional().value());
+  EXPECT_EQ((0.5 - j1v) / PERIOD_SEC, j1a_s.get_optional().value());
+  EXPECT_EQ(j2p += 2.0 * PERIOD_SEC, j2p_s.get_optional().value());
   EXPECT_EQ(2.0, j2v_s.get_optional().value());
-  EXPECT_NEAR(13.0, j2a_s.get_optional().value(), COMPARE_DELTA);
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_NEAR((2.0 - j2v) / PERIOD_SEC, j2a_s.get_optional().value(), COMPARE_DELTA);
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());  // is not cleared, but not used anymore
   ASSERT_EQ(0.5, j1v_c.get_optional().value());
   ASSERT_EQ(2.0, j2v_c.get_optional().value());
-  ASSERT_EQ(3.5, j2a_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());  // is not cleared, but not used anymore
 
   // read() mirrors commands to states and calculate dynamics (both velocity mode)
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(0.16, j1p_s.get_optional().value());
+  EXPECT_EQ(j1p += 0.5 * PERIOD_SEC, j1p_s.get_optional().value());
   EXPECT_EQ(0.5, j1v_s.get_optional().value());
   EXPECT_EQ(0.0, j1a_s.get_optional().value());
-  EXPECT_EQ(3.085, j2p_s.get_optional().value());
+  EXPECT_EQ(j2p += 2.0 * PERIOD_SEC, j2p_s.get_optional().value());
   EXPECT_EQ(2.0, j2v_s.get_optional().value());
-  EXPECT_EQ(0.0, j2a_s.get_optional().value());
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_NEAR(0.0, j2a_s.get_optional().value(), COMPARE_DELTA);
+  ASSERT_EQ(0.11, j1p_c.get_optional().value());  // is not cleared, but not used anymore
   ASSERT_EQ(0.5, j1v_c.get_optional().value());
   ASSERT_EQ(2.0, j2v_c.get_optional().value());
-  ASSERT_EQ(3.5, j2a_c.get_optional().value());
+  ASSERT_EQ(3.5, j2a_c.get_optional().value());  // is not cleared, but not used anymore
 }
 
 TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
@@ -2333,11 +2339,9 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
 
-  // switch controller mode as controller manager is doing - gpio itf 'vacuum' will be ignored
-  ASSERT_EQ(
-    rm.prepare_command_mode_switch(
-      {"joint1/position", "joint2/position", "flange_vacuum/vacuum"}, {}),
-    true);
+  // switch controller mode as controller manager is doing
+  ASSERT_EQ(rm.prepare_command_mode_switch({"joint1/position", "joint2/position"}, {}), true);
+  ASSERT_EQ(rm.perform_command_mode_switch({"joint1/position", "joint2/position"}, {}), true);
 
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.11));
@@ -2413,11 +2417,9 @@ TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
 
-  // switch controller mode as controller manager is doing - gpio itf 'vacuum' will be ignored
-  ASSERT_EQ(
-    rm.prepare_command_mode_switch(
-      {"joint1/velocity", "joint2/velocity", "flange_vacuum/vacuum"}, {}),
-    true);
+  // switch controller mode as controller manager is doing
+  ASSERT_EQ(rm.prepare_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
+  ASSERT_EQ(rm.perform_command_mode_switch({"joint1/velocity", "joint2/velocity"}, {}), true);
 
   // set some new values in commands
   ASSERT_TRUE(j1v_c.set_value(0.11));
@@ -2445,14 +2447,14 @@ TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
 
   // read() mirrors commands to states again and integrates positions
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(3.45 + 0.11 * 2 * PERIOD_SEC, j1p_s.get_optional().value());
+  EXPECT_NEAR(3.45 + 0.11 * 2 * PERIOD_SEC, j1p_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(2.78 + 3.5 * 2 * PERIOD_SEC, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1v_c.get_optional().value());
   ASSERT_EQ(3.5, j2v_c.get_optional().value());
 
   // read() mirrors commands to states again and integrates positions
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  EXPECT_EQ(3.45 + 0.11 * 3 * PERIOD_SEC, j1p_s.get_optional().value());
+  EXPECT_NEAR(3.45 + 0.11 * 3 * PERIOD_SEC, j1p_s.get_optional().value(), COMPARE_DELTA);
   EXPECT_EQ(2.78 + 3.5 * 3 * PERIOD_SEC, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1v_c.get_optional().value());
   ASSERT_EQ(3.5, j2v_c.get_optional().value());
