@@ -180,29 +180,33 @@ public:
         params.hardware_info.name.c_str());
     }
 
-    double publish_rate = 0.0;
+    int publish_rate = 0;
     auto it = info_.hardware_parameters.find("status_publish_rate");
     if (it != info_.hardware_parameters.end())
     {
       try
       {
-        publish_rate = hardware_interface::stod(it->second);
+        publish_rate = std::stoi(it->second);
+
+        if (publish_rate < 0)
+        {
+          RCLCPP_ERROR(
+            get_logger(),
+            "'status_publish_rate' cannot be negative (got %d). Please fix your hardware "
+            "parameters.",
+            publish_rate);
+          return CallbackReturn::ERROR;
+        }
       }
       catch (const std::invalid_argument &)
       {
         RCLCPP_WARN(
-          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.d Hz.",
           publish_rate);
       }
     }
 
-    if (publish_rate == 0.0)
-    {
-      RCLCPP_INFO(
-        get_logger(),
-        "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
-    }
-    else
+    if (publish_rate > 0)
     {
       control_msgs::msg::HardwareStatus status_msg_template;
       if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)

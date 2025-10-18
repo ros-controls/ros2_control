@@ -32,6 +32,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
@@ -167,6 +168,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
   params.hardware_info = dummy_actuator;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  params.executor = executor;
   auto state = actuator_hw.initialize(params);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
@@ -236,6 +239,8 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
   params.hardware_info = voltage_sensor_res;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  params.executor = executor;
   auto state = sensor_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -276,6 +281,8 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
   params.hardware_info = dummy_system;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  params.executor = executor;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());

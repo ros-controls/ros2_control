@@ -34,16 +34,15 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    hardware_interface::ResourceManagerParams params;
-    params.update_rate = 100;
-    params.clock = rm_node_->get_clock();
-    params.logger = rm_node_->get_logger();
-    params.executor = executor_;
-    params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
-    params.node_namespace = TEST_NAMESPACE;
+    hardware_interface::ResourceManagerParams rm_params;
+    rm_params.clock = rm_node_->get_clock();
+    rm_params.logger = rm_node_->get_logger();
+    rm_params.executor = executor_;
+    rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    rm_params.node_namespace = TEST_NAMESPACE;
     cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(params, true), executor_, TEST_CM_NAME,
-      TEST_NAMESPACE);
+      std::make_unique<hardware_interface::ResourceManager>(rm_params, true), executor_,
+      TEST_CM_NAME, TEST_NAMESPACE);
     run_updater_ = false;
   }
 };
