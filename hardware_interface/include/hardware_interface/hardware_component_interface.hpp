@@ -625,8 +625,6 @@ public:
     lifecycle_state_ = new_state;
   }
 
-<<<<<<< HEAD
-=======
   /// Does the state interface exist?
   /**
    * \param[in] interface_name The name of the state interface.
@@ -645,7 +643,6 @@ public:
    * \throws std::runtime_error This method throws a runtime error if it cannot
    * access the state interface.
    */
->>>>>>> 6d27e9d (Add `has_state` and `has_command` methods to hardware_component_interface (#2701))
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
@@ -664,6 +661,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  /// Get the value from a state interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the state interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface or its stored value.
+   */
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
@@ -690,8 +695,6 @@ public:
     return opt_value.value();
   }
 
-<<<<<<< HEAD
-=======
   /// Does the command interface exist?
   /**
    * \param[in] interface_name The name of the command interface.
@@ -711,7 +714,6 @@ public:
    * \throws This method throws a runtime error if it
    * cannot access the command interface.
    */
->>>>>>> 6d27e9d (Add `has_state` and `has_command` methods to hardware_component_interface (#2701))
   template <typename T>
   void set_command(const std::string & interface_name, const T & value)
   {
@@ -730,6 +732,14 @@ public:
     std::ignore = handle->set_value(lock, value);
   }
 
+  ///  Get the value from a command interface.
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_name The name of the command interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the command interface or its stored value.
+   */
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
