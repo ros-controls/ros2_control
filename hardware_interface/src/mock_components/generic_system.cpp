@@ -497,9 +497,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
       }
       // mirror them back
-      for (size_t i = 0; i < 3; ++i)
+      for (size_t i = 0; i < standard_interfaces_.size(); ++i)
       {
-        if (std::isfinite(joint_state_values_[i]))
+        if (
+          std::isfinite(joint_state_values_[i]) &&
+          has_state(joint_name + "/" + standard_interfaces_[i]))
         {
           set_state(joint_name + "/" + standard_interfaces_[i], joint_state_values_[i]);
         }
