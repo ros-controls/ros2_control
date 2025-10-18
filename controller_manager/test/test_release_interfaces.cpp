@@ -176,7 +176,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
-  {  // Test starting both controllers at the same time
+  {  // Test starting both controllers at the same time, with STRICT both should fail
     RCLCPP_INFO(
       cm_->get_logger(),
       "Starting both controllers at the same time (should notify about resource conflict)");
@@ -185,6 +185,27 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     auto switch_future = std::async(
       std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      abstract_test_controller1.c->get_lifecycle_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      abstract_test_controller2.c->get_lifecycle_state().id());
+  }
+
+  {  // Test starting both controllers at the same time, with BEST_EFFORT one should activate
+    RCLCPP_INFO(
+      cm_->get_logger(),
+      "Starting both controllers at the same time (should notify about resource conflict)");
+    std::vector<std::string> start_controllers = {controller_name1, controller_name2};
+    std::vector<std::string> stop_controllers = {};
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, BEST_EFFORT, true, rclcpp::Duration(0, 0));
     ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
