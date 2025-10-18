@@ -618,7 +618,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_position_control_mode_position_state_only_with_offset_ =
+    hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
