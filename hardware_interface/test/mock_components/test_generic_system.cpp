@@ -2359,21 +2359,21 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
   // read() mirrors commands to states, no dynamics to calculate actually
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(3.5, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(3.5, j2p_c.get_optional().value());
 
   // read() mirrors commands to states again, no dynamics to calculate actually
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(3.5, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(3.5, j2p_c.get_optional().value());
 
   // read() mirrors commands to states again, no dynamics to calculate actually
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(0.11, j1p_s.get_optional().value());
-  EXPECT_EQ(2.78, j2p_s.get_optional().value());
+  EXPECT_EQ(3.5, j2p_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(3.5, j2p_c.get_optional().value());
 }
