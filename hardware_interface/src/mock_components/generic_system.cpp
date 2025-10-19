@@ -421,50 +421,49 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       {
         case ACCELERATION_INTERFACE_INDEX:
         {
-          // currently we do backward integration
-          joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
-            std::isfinite(joint_state_values_[VELOCITY_INTERFACE_INDEX])
-              ? joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds()
-              : 0.0 + (custom_interface_with_following_offset_.empty()
-                         ? position_state_following_offset_
-                         : 0.0);
-
           if (std::isnan(joint_state_values_[VELOCITY_INTERFACE_INDEX]))
           {
             joint_state_values_[VELOCITY_INTERFACE_INDEX] = 0.0;
           }
-          joint_state_values_[VELOCITY_INTERFACE_INDEX] +=
-            std::isnan(joint_state_values_[ACCELERATION_INTERFACE_INDEX])
-              ? 0.0
-              : joint_state_values_[ACCELERATION_INTERFACE_INDEX] * period.seconds();
 
           if (std::isfinite(joint_command_values_[ACCELERATION_INTERFACE_INDEX]))
           {
             joint_state_values_[ACCELERATION_INTERFACE_INDEX] =
               joint_command_values_[ACCELERATION_INTERFACE_INDEX];
           }
-          break;
-        }
-        case VELOCITY_INTERFACE_INDEX:
-        {
-          // currently we do backward integration
+          // currently we do backward Euler integration
+          joint_state_values_[VELOCITY_INTERFACE_INDEX] +=
+            std::isnan(joint_state_values_[ACCELERATION_INTERFACE_INDEX])
+              ? 0.0
+              : joint_state_values_[ACCELERATION_INTERFACE_INDEX] * period.seconds();
           joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
             std::isfinite(joint_state_values_[VELOCITY_INTERFACE_INDEX])
               ? joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds()
               : 0.0 + (custom_interface_with_following_offset_.empty()
                          ? position_state_following_offset_
                          : 0.0);
-
+          break;
+        }
+        case VELOCITY_INTERFACE_INDEX:
+        {
           if (std::isfinite(joint_command_values_[VELOCITY_INTERFACE_INDEX]))
           {
-            const double old_velocity = joint_state_values_[VELOCITY_INTERFACE_INDEX];
-
+            const double old_velocity = std::isfinite(joint_state_values_[VELOCITY_INTERFACE_INDEX])
+                                          ? joint_state_values_[VELOCITY_INTERFACE_INDEX]
+                                          : 0.0;
             joint_state_values_[VELOCITY_INTERFACE_INDEX] =
               joint_command_values_[VELOCITY_INTERFACE_INDEX];
 
             joint_state_values_[ACCELERATION_INTERFACE_INDEX] =
               (joint_state_values_[VELOCITY_INTERFACE_INDEX] - old_velocity) / period.seconds();
           }
+          // currently we do backward Euler integration
+          joint_state_values_[POSITION_INTERFACE_INDEX] +=  // apply offset to positions only
+            std::isfinite(joint_state_values_[VELOCITY_INTERFACE_INDEX])
+              ? joint_state_values_[VELOCITY_INTERFACE_INDEX] * period.seconds()
+              : 0.0 + (custom_interface_with_following_offset_.empty()
+                         ? position_state_following_offset_
+                         : 0.0);
           break;
         }
         case POSITION_INTERFACE_INDEX:
@@ -491,9 +490,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         }
       }
       // mirror them back
-      for (size_t i = 0; i < 3; ++i)
+      for (size_t i = 0; i < standard_interfaces_.size(); ++i)
       {
-        if (std::isfinite(joint_state_values_[i]))
+        if (
+          std::isfinite(joint_state_values_[i]) &&
+          has_state(joint_name + "/" + standard_interfaces_[i]))
         {
           set_state(joint_name + "/" + standard_interfaces_[i], joint_state_values_[i]);
         }
