@@ -808,6 +808,8 @@ protected:
       hardware_interface::DEFAULT_REGISTRY_KEY);
   }
 
+  void TearDown() override { node_.reset(); }
+
   std::string hardware_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
   std::string hardware_system_2dof_standard_interfaces_;
@@ -847,19 +849,6 @@ class ResourceStorage;
 class TestableResourceManager : public hardware_interface::ResourceManager
 {
 public:
-  friend TestGenericSystem;
-
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_mock_command);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_mock_command_True);
-  FRIEND_TEST(TestGenericSystem, hardware_system_2dof_with_mimic_joint);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
-
   explicit TestableResourceManager(rclcpp::Node::SharedPtr node)
   : hardware_interface::ResourceManager(
       node->get_node_clock_interface(), node->get_node_logging_interface())
