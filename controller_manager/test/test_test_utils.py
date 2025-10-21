@@ -1,4 +1,4 @@
-# Copyright (c) 2024 AIT - Austrian Institute of Technology GmbH
+# Copyright (c) 2025 AIT - Austrian Institute of Technology GmbH
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,6 @@ class TestFixture(unittest.TestCase):
         self.pub.publish(js_msg)
 
     def publish_joint_states(self):
-        # use a separate node to publish joint states, otherwise the test_node will be blocked
         self.pub = self.node.create_publisher(JointState, "/joint_states", 10)
         self.timer = self.node.create_timer(1.0, self.timer_callback)
         rclpy.spin(self.node)
