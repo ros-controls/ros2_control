@@ -112,9 +112,11 @@ class TestFixture(unittest.TestCase):
         self.pub.publish(js_msg)
 
     def publish_joint_states(self):
-        self.pub = self.node.create_publisher(JointState, "/joint_states", 10)
-        self.timer = self.node.create_timer(1.0, self.timer_callback)
-        rclpy.spin(self.node)
+        # use a separate node to publish joint states, otherwise the test_node will be blocked
+        node = rclpy.create_node("js_publisher_node")
+        self.pub = node.create_publisher(JointState, "/joint_states", 10)
+        self.timer = node.create_timer(1.0, self.timer_callback)
+        rclpy.spin(node)
 
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
