@@ -1158,7 +1158,6 @@ controller_interface::return_type ControllerManager::cleanup_controller(
 controller_interface::return_type ControllerManager::cleanup_controller(
   const std::string & controller_name)
 {
-
   const auto & controllers = get_loaded_controllers();
 
   auto found_it = std::find_if(
@@ -1180,7 +1179,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     // all good nothing to do!
     return controller_interface::return_type::OK;
   }
-  
+
   RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
   auto state = controller->get_lifecycle_state();
   if (
