@@ -247,6 +247,7 @@ if(BUILD_TESTING)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_test_utils test/test_test_utils.py)
 endif()
 
 install(
