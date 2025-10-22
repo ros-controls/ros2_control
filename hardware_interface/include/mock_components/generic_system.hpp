@@ -45,6 +45,9 @@ public:
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
+
   hardware_interface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
@@ -78,10 +81,6 @@ protected:
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
   std::vector<std::string> skip_interfaces_;
-
-  std::vector<std::string> other_interfaces_;
-  std::vector<std::string> sensor_interfaces_;
-  std::vector<std::string> gpio_mock_interfaces_;
 
 private:
   bool populate_interfaces(
