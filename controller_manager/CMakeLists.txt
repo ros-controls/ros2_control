@@ -227,6 +227,7 @@ if(BUILD_TESTING)
     test/test_controller_spawner_with_type.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_test_utils test/test_test_utils.py)
 endif()
 
 install(
