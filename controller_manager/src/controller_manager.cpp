@@ -421,6 +421,7 @@ ControllerManager::ControllerManager(
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
+  params.node_namespace = node_namespace;
   params.allow_controller_activation_with_inactive_hardware =
     params_->defaults.allow_controller_activation_with_inactive_hardware;
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
@@ -650,6 +651,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.executor = executor_;
+  params.node_namespace = this->get_namespace();
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   if (!resource_manager_->load_and_initialize_components(params))
   {
