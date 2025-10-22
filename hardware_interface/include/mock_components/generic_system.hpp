@@ -45,9 +45,14 @@ public:
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+  hardware_interface::CallbackReturn on_activate(
+    const rclcpp_lifecycle::State & previous_state) override;
+
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_command_interface_descriptions() override;
 
   return_type prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
@@ -75,51 +80,18 @@ protected:
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
-
-  /// The size of this vector is (standard_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> joint_command_values_;
-  std::vector<std::vector<double>> joint_state_values_;
-
-  std::vector<std::string> other_interfaces_;
-  /// The size of this vector is (other_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> other_command_values_;
-  std::vector<std::vector<double>> other_state_values_;
-
-  std::vector<std::string> sensor_interfaces_;
-  /// The size of this vector is (sensor_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> sensor_mock_command_values_;
-  std::vector<std::vector<double>> sensor_state_values_;
-
-  std::vector<std::string> gpio_interfaces_;
-  /// The size of this vector is (gpio_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> gpio_mock_command_values_;
-  std::vector<std::vector<double>> gpio_command_values_;
-  std::vector<std::vector<double>> gpio_state_values_;
+  std::vector<std::string> skip_interfaces_;
 
 private:
-  template <typename HandleType>
-  bool get_interface(
-    const std::string & name, const std::vector<std::string> & interface_list,
-    const std::string & interface_name, const size_t vector_index,
-    std::vector<std::vector<double>> & values, std::vector<HandleType> & interfaces);
-
-  void initialize_storage_vectors(
-    std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
-    const std::vector<std::string> & interfaces,
-    const std::vector<hardware_interface::ComponentInfo> & component_infos);
-
-  template <typename InterfaceType>
   bool populate_interfaces(
     const std::vector<hardware_interface::ComponentInfo> & components,
-    std::vector<std::string> & interfaces, std::vector<std::vector<double>> & storage,
-    std::vector<InterfaceType> & target_interfaces, bool using_state_interfaces);
+    std::vector<hardware_interface::InterfaceDescription> & command_interface_descriptions) const;
 
   bool use_mock_gpio_command_interfaces_;
   bool use_mock_sensor_command_interfaces_;
 
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
-  size_t index_custom_interface_with_following_offset_;
 
   bool calculate_dynamics_;
   std::vector<size_t> joint_control_mode_;
