@@ -86,6 +86,20 @@ void add_item(std::vector<T> & vector, const T & item)
 }
 
 /**
+ * @brief Add the items from one container to the other, if they are not already in it.
+ * @param vector The container to add the items to.
+ * @param items The container to add the items from.
+ */
+template <typename T>
+void add_items(std::vector<T> & vector, const std::vector<T> & items)
+{
+  for (const auto & item : items)
+  {
+    add_item(vector, item);
+  }
+}
+
+/**
  * @brief Remove the item from the container if it is in it.
  * @param container The container to remove the item from.
  * @param item The item to remove.
