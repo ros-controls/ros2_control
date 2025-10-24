@@ -283,10 +283,11 @@ protected:
    *
    * \param[in] rt_controller_list controllers in the real-time list.
    * \param[in] controllers_to_activate names of the controller that have to be activated.
+   * \param[in] strictness level of strictness for activation.
    */
   void activate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> & controllers_to_activate);
+    const std::vector<std::string> & controllers_to_activate, int strictness);
 
   void list_controllers_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
