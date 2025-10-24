@@ -788,11 +788,10 @@ protected:
     {
       rclcpp::init(0, nullptr);
     }
-    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   }
 
   void TearDown() override { rclcpp::shutdown(); }
-  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_ = nullptr;
 };
 // BEGIN (Handle export change): for backward compatibility
 TEST_F(TestComponentInterfaces, dummy_actuator)
