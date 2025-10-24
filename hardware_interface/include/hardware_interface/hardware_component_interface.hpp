@@ -96,27 +96,6 @@ public:
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
   /**
-   * \param[in] hardware_info structure with data from URDF.
-   * \param[in] clock pointer to the resource manager clock.
-   * \param[in] logger Logger for the hardware component.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  [[deprecated(
-    "Replaced by CallbackReturn init(const hardware_interface::HardwareComponentParams & "
-    "params). Initialization is handled by the Framework.")]] CallbackReturn
-  init(const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
-  {
-    hardware_interface::HardwareComponentParams params;
-    params.hardware_info = hardware_info;
-    params.clock = clock;
-    params.logger = logger;
-    return init(params);
-  };
-
-  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
-  /// clock and logger interfaces.
-  /**
    * \param[in] params  A struct of type HardwareComponentParams containing all necessary
    * parameters for initializing this specific hardware component,
    * including its HardwareInfo, a dedicated logger, a clock, and a
@@ -186,13 +165,10 @@ public:
 
     if (auto locked_executor = params.executor.lock())
     {
-      std::string node_name = params.hardware_info.name;
-      std::transform(
-        node_name.begin(), node_name.end(), node_name.begin(),
-        [](unsigned char c) { return std::tolower(c); });
+      std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
       std::replace(node_name.begin(), node_name.end(), '/', '_');
-      hardware_component_node_ =
-        std::make_shared<rclcpp::Node>(node_name, get_hardware_component_node_options());
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(
+        node_name, params.node_namespace, get_hardware_component_node_options());
       locked_executor->add_node(hardware_component_node_->get_node_base_interface());
     }
     else
@@ -335,16 +311,18 @@ public:
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
-   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
+   * containing all necessary parameters for initializing this specific hardware component,
+   * specifically its HardwareInfo, and a weak_ptr to the executor.
+   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
+   * such as `spin()`.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  [[deprecated(
-    "Use on_init(const HardwareComponentInterfaceParams & params) "
-    "instead.")]] virtual CallbackReturn
-  on_init(const HardwareInfo & hardware_info)
+  virtual CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params)
   {
-    info_ = hardware_info;
+    info_ = params.hardware_info;
     if (info_.type == "actuator")
     {
       parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
@@ -364,26 +342,6 @@ public:
       parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
     }
     return CallbackReturn::SUCCESS;
-  };
-
-  /// Initialization of the hardware interface from data parsed from the robot's URDF.
-  /**
-   * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
-   * containing all necessary parameters for initializing this specific hardware component,
-   * specifically its HardwareInfo, and a weak_ptr to the executor.
-   * \warning The parsed executor should not be used to call `cancel()` or use blocking callbacks
-   * such as `spin()`.
-   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
-   * \returns CallbackReturn::ERROR if any error happens or data are missing.
-   */
-  virtual CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & params)
-  {
-    // This is done for backward compatibility with the old on_init method.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    return on_init(params.hardware_info);
-#pragma GCC diagnostic pop
   };
 
   /// Exports all state interfaces for this hardware interface.
@@ -735,6 +693,16 @@ public:
     lifecycle_state_ = new_state;
   }
 
+  /// Does the state interface exist?
+  /**
+   * \param[in] interface_name The name of the state interface.
+   * \return true if the state interface exists, false otherwise.
+   */
+  bool has_state(const std::string & interface_name) const
+  {
+    return hardware_states_.find(interface_name) != hardware_states_.end();
+  }
+
   /// Set the value of a state interface.
   /**
    * \tparam T The type of the value to be stored.
@@ -793,6 +761,16 @@ public:
           interface_name));
     }
     return opt_value.value();
+  }
+
+  /// Does the command interface exist?
+  /**
+   * \param[in] interface_name The name of the command interface.
+   * \return true if the command interface exists, false otherwise.
+   */
+  bool has_command(const std::string & interface_name) const
+  {
+    return hardware_commands_.find(interface_name) != hardware_commands_.end();
   }
 
   /// Set the value of a command interface.

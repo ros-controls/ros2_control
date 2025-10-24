@@ -421,6 +421,7 @@ ControllerManager::ControllerManager(
   params.activate_all = activate_all_hw_components;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
+  params.node_namespace = node_namespace;
   params.allow_controller_activation_with_inactive_hardware =
     params_->defaults.allow_controller_activation_with_inactive_hardware;
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
@@ -650,6 +651,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
   params.executor = executor_;
+  params.node_namespace = this->get_namespace();
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   if (!resource_manager_->load_and_initialize_components(params))
   {
@@ -1305,6 +1307,10 @@ controller_interface::return_type ControllerManager::configure_controller(
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
     resource_manager_->import_controller_exported_state_interfaces(
       controller_name, state_interfaces);
+    // make all the exported interfaces of the controller unavailable
+    controller->set_chained_mode(false);
+    resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
   }
 
   // let's update the list of following and preceding controllers
@@ -2224,9 +2230,10 @@ void ControllerManager::switch_chained_mode(
 
 void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
-  const std::vector<std::string> & controllers_to_activate)
+  const std::vector<std::string> & controllers_to_activate, int strictness)
 {
   std::vector<std::string> failed_controllers_command_interfaces;
+  bool is_successful = true;
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(
@@ -2293,6 +2300,7 @@ void ControllerManager::activate_controllers(
     // something went wrong during command interfaces, go skip the controller
     if (!assignment_successful)
     {
+      is_successful = false;
       continue;
     }
 
@@ -2331,6 +2339,7 @@ void ControllerManager::activate_controllers(
     // something went wrong during state interfaces, go skip the controller
     if (!assignment_successful)
     {
+      is_successful = false;
       continue;
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
@@ -2363,10 +2372,15 @@ void ControllerManager::activate_controllers(
         controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      is_successful = false;
       controller->release_interfaces();
-      failed_controllers_command_interfaces.insert(
-        failed_controllers_command_interfaces.end(), command_interface_names.begin(),
-        command_interface_names.end());
+      ros2_control::add_items(failed_controllers_command_interfaces, command_interface_names);
+      if (controller->is_chainable())
+      {
+        // make all the exported interfaces of the controller unavailable
+        resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
+        resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+      }
       continue;
     }
 
@@ -2376,6 +2390,27 @@ void ControllerManager::activate_controllers(
       // make all the exported interfaces of the controller available
       resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
+    }
+  }
+  if (
+    !is_successful && strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "At least one controller failed to be activated. Releasing all interfaces and stopping all "
+      "activated controllers because the switch strictness is set to STRICT.");
+    // deactivate all controllers that were activated in this switch
+    deactivate_controllers(rt_controller_list, controllers_to_activate);
+    if (
+      !resource_manager_->prepare_command_mode_switch(
+        {}, switch_params_.activate_command_interface_request) ||
+      !resource_manager_->perform_command_mode_switch(
+        {}, switch_params_.activate_command_interface_request))
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Error switching back the interfaces in the hardware when the controller activation "
+        "failed.");
     }
   }
   // Now prepare and perform the stop interface switching as this is needed for exclusive
@@ -2914,7 +2949,8 @@ void ControllerManager::manage_switch()
 
   // activate controllers once the switch is fully complete
   const auto act_start_time = std::chrono::steady_clock::now();
-  activate_controllers(rt_controller_list, switch_params_.activate_request);
+  activate_controllers(
+    rt_controller_list, switch_params_.activate_request, switch_params_.strictness);
   execution_time_.activation_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - act_start_time)
       .count();
@@ -3114,7 +3150,9 @@ controller_interface::return_type ControllerManager::update(
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     if (!rt_buffer_.fallback_controllers_list.empty())
     {
-      activate_controllers(rt_controller_list, rt_buffer_.fallback_controllers_list);
+      activate_controllers(
+        rt_controller_list, rt_buffer_.fallback_controllers_list,
+        controller_manager_msgs::srv::SwitchController::Request::STRICT);
     }
     // To publish the activity of the failing controllers and the fallback controllers
     publish_activity();

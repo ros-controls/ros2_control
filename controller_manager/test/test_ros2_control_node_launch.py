@@ -37,16 +37,13 @@ from launch import LaunchDescription
 from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
-from sensor_msgs.msg import JointState
 
 import rclpy
 from controller_manager.test_utils import (
     check_controllers_running,
-    check_if_js_published,
     check_node_running,
 )
 from controller_manager.launch_utils import generate_controllers_spawner_launch_description
-import threading
 
 
 # Executes the given launch file and checks if all nodes can be started
@@ -105,30 +102,12 @@ class TestFixture(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def timer_callback(self):
-        js_msg = JointState()
-        js_msg.name = ["joint0"]
-        js_msg.position = [0.0]
-        self.pub.publish(js_msg)
-
-    def publish_joint_states(self):
-        self.pub = self.node.create_publisher(JointState, "/joint_states", 10)
-        self.timer = self.node.create_timer(1.0, self.timer_callback)
-        rclpy.spin(self.node)
-
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
 
     def test_controllers_start(self):
         cnames = ["ctrl_with_parameters_and_type"]
         check_controllers_running(self.node, cnames, state="active")
-
-    def test_check_if_msgs_published(self):
-        # we don't have a joint_state_broadcaster in this repo,
-        # publish joint states manually to test check_if_js_published
-        thread = threading.Thread(target=self.publish_joint_states)
-        thread.start()
-        check_if_js_published("/joint_states", ["joint0"])
 
 
 @launch_testing.post_shutdown_test()

@@ -193,6 +193,9 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       set_command("joint1/velocity", 0.0);
     }
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
+    EXPECT_FALSE(has_command("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
@@ -226,6 +229,10 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       return hardware_interface::return_type::ERROR;
     }
+    EXPECT_TRUE(has_state("joint1/position"));
+    EXPECT_TRUE(has_state("joint1/velocity"));
+    EXPECT_FALSE(has_command("joint1/position"));  // only velocity command interface
+    EXPECT_TRUE(has_command("joint1/velocity"));
     auto position_state = get_state("joint1/position");
     set_state("joint1/position", position_state + get_command("joint1/velocity"));
     set_state("joint1/velocity", get_command("joint1/velocity"));
@@ -345,6 +352,8 @@ class DummySensorDefault : public hardware_interface::SensorInterface
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     set_state("sens1/voltage", 0.0);
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(set_state("joint1/nonexisting/interface", 0.0), std::runtime_error);
@@ -363,6 +372,7 @@ class DummySensorDefault : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
+    EXPECT_TRUE(has_state("sens1/voltage"));
     set_state("sens1/voltage", voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
@@ -627,6 +637,9 @@ class DummySystemDefault : public hardware_interface::SystemInterface
         set_command(velocity_commands_[i], 0.0);
       }
     }
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
+    EXPECT_FALSE(has_command("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
@@ -663,6 +676,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 
     for (size_t i = 0; i < 3; ++i)
     {
+      EXPECT_TRUE(has_state(position_states_[i]));
+      EXPECT_TRUE(has_command(velocity_commands_[i]));
       auto current_pos = get_state(position_states_[i]);
       set_state(position_states_[i], current_pos + get_command(velocity_commands_[i]));
       set_state(velocity_states_[i], get_command(velocity_commands_[i]));
