@@ -13,23 +13,518 @@
 // limitations under the License.
 
 /*
- * Author: Wim Meeussen
+ * Author: Wim Meeussen, Sai Kishor Kothakota
  */
 
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/types/statistics_types.hpp"
 
 namespace controller_manager
 {
 
 using MovingAverageStatistics = ros2_control::MovingAverageStatistics;
+
+struct ControllerPeerInfo
+{
+  std::string name = "";
+  std::vector<ControllerPeerInfo *> predecessors = {};
+  std::vector<ControllerPeerInfo *> successors = {};
+  controller_interface::ControllerInterfaceBase::WeakPtr controller;
+  std::unordered_set<std::string> command_interfaces = {};
+  std::unordered_set<std::string> state_interfaces = {};
+  std::unordered_set<std::string> reference_interfaces = {};
+  std::vector<std::unordered_set<std::string>> mutually_exclusive_predecessor_groups = {};
+  std::vector<std::unordered_set<std::string>> mutually_exclusive_successor_groups = {};
+
+  void build_mutually_exclusive_predecessor_groups()
+  {
+    // Build mutually exclusive groups of predecessor controllers, that could utilize all the
+    // reference interfaces of the current controller. This is used to determine which predecessor
+    // controllers can be activated together with the current controller.
+
+    mutually_exclusive_predecessor_groups.clear();
+    const auto are_all_reference_interfaces_found =
+      [](
+        const std::unordered_set<std::string> & ref_itfs,
+        const std::unordered_set<std::string> & cmd_itfs)
+    {
+      return std::all_of(
+        ref_itfs.begin(), ref_itfs.end(), [&cmd_itfs](const std::string & reference_itf)
+        { return cmd_itfs.find(reference_itf) != cmd_itfs.end(); });
+    };
+    const auto & current_reference_interfaces = reference_interfaces;
+    std::for_each(
+      predecessors.begin(), predecessors.end(),
+      [this, &are_all_reference_interfaces_found](const ControllerPeerInfo * p)
+      {
+        // check if all the command interfaces of the predecessor are in the current controller's
+        // reference interfaces If they are, add them as individual group
+        std::unordered_set<std::string> predecessor_group = {};
+        bool all_predecessor_interfaces_match =
+          are_all_reference_interfaces_found(reference_interfaces, p->command_interfaces);
+        if (all_predecessor_interfaces_match)
+        {
+          // If the predecessor's command interfaces are all in the current controller's reference
+          // interfaces, add it as individual group
+          predecessor_group.insert(p->name);
+          mutually_exclusive_predecessor_groups.push_back(predecessor_group);
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("controller_manager"),
+            "Adding predecessor: '%s' as individual group, as all its command interfaces are in "
+            "the current controller's reference interfaces.",
+            p->name.c_str());
+        }
+      });
+
+    // If the predecessor's command interfaces are not all in the current controller's reference
+    // interfaces, then check other predecessors and see if they can be grouped together
+
+    // generate combinations of predecessors that can be grouped together
+    for (const auto & predecessor : predecessors)
+    {
+      // check if the predessort is already in the mutually exclusive group as single group
+      if (std::any_of(
+            mutually_exclusive_predecessor_groups.begin(),
+            mutually_exclusive_predecessor_groups.end(),
+            [&predecessor](const std::unordered_set<std::string> & group)
+            { return group.find(predecessor->name) != group.end() && group.size() == 1; }))
+      {
+        continue;  // skip this predecessor, as it is already in a group as individual
+      }
+
+      // create all combinations of predecessors that can be grouped together
+      // For instance, predecessors A,B,C,D. Get combinations like:
+      // A,B; A,C; A,D; B,C; B,D; C,D; A,B,C; A,B,D; A,C,D; B,C,D; A,B,C,D
+      // Note: This is a simplified version, in practice you would want to check if the
+      // command interfaces of the predecessors do not overlap and are unique
+
+      std::vector<std::vector<std::string>> combinations;
+      std::vector<std::string> current_combination;
+      std::function<void(size_t)> generate_combinations = [&](size_t start_index)
+      {
+        if (current_combination.size() > 1)
+        {
+          // check if the current combination's command interfaces are all in the
+          // current controller's reference interfaces
+          std::unordered_set<std::string> combined_command_interfaces;
+          for (const auto & predecessor_name : current_combination)
+          {
+            const auto & predecessor_itf = std::find_if(
+              predecessors.begin(), predecessors.end(),
+              [&predecessor_name](const ControllerPeerInfo * p)
+              { return p->name == predecessor_name; });
+            if (predecessor_itf != predecessors.end())
+            {
+              combined_command_interfaces.insert(
+                (*predecessor_itf)->command_interfaces.begin(),
+                (*predecessor_itf)->command_interfaces.end());
+            }
+          }
+          if (are_all_reference_interfaces_found(
+                current_reference_interfaces, combined_command_interfaces))
+          {
+            combinations.push_back(current_combination);
+          }
+        }
+        for (size_t i = start_index; i < predecessors.size(); ++i)
+        {
+          if (std::any_of(
+                mutually_exclusive_predecessor_groups.begin(),
+                mutually_exclusive_predecessor_groups.end(),
+                [&](const std::unordered_set<std::string> & group)
+                { return group.find(predecessors[i]->name) != group.end() && group.size() == 1; }))
+          {
+            continue;  // skip this predecessor, as it is already in a group as individual
+          }
+
+          if (
+            std::find(
+              current_combination.begin(), current_combination.end(), predecessors[i]->name) !=
+            current_combination.end())
+          {
+            continue;  // skip this predecessor, as it is already in the current combination
+          }
+
+          current_combination.push_back(predecessors[i]->name);
+          generate_combinations(i + 1);
+          current_combination.pop_back();
+        }
+      };
+
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "Generating combinations of predecessors for controller: %s (%s)",
+        predecessor->name.c_str(), name.c_str());
+      generate_combinations(0);
+      // Add the combinations to the mutually exclusive predecessor groups
+      for (const auto & combination : combinations)
+      {
+        std::unordered_set<std::string> group(combination.begin(), combination.end());
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          fmt::format(
+            "Adding predecessor group: [{}] with size: {}", fmt::join(combination, ", "),
+            combination.size())
+            .c_str());
+        if (!group.empty())
+        {
+          mutually_exclusive_predecessor_groups.push_back(group);
+        }
+      }
+    }
+  }
+
+  void build_mutually_exclusive_successor_groups()
+  {
+    // Build mutually exclusive groups of successor controllers, that could utilize all the
+    // reference interfaces of the current controller. This is used to determine which successor
+    // controllers can be activated together with the current controller.
+
+    mutually_exclusive_successor_groups.clear();
+    const auto are_all_command_interfaces_found =
+      [](
+        const std::unordered_set<std::string> & ref_itfs,
+        const std::unordered_set<std::string> & cmd_itfs)
+    {
+      return std::all_of(
+        cmd_itfs.begin(), cmd_itfs.end(), [&ref_itfs](const std::string & command_itf)
+        { return ref_itfs.find(command_itf) != ref_itfs.end(); });
+    };
+    const auto & current_reference_interfaces = reference_interfaces;
+    std::for_each(
+      successors.begin(), successors.end(),
+      [this, &are_all_command_interfaces_found](const ControllerPeerInfo * s)
+      {
+        // check if all the command interfaces of the successor are in the current controller's
+        // reference interfaces If they are, add them as individual group
+        std::unordered_set<std::string> successor_group = {};
+        bool all_successor_interfaces_match =
+          are_all_command_interfaces_found(s->reference_interfaces, command_interfaces);
+        if (all_successor_interfaces_match)
+        {
+          // If the successor's command interfaces are all in the current controller's reference
+          // interfaces, add it as individual group
+          successor_group.insert(s->name);
+          mutually_exclusive_successor_groups.push_back(successor_group);
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("controller_manager"),
+            "Adding successor: '%s' as individual group, as all its command interfaces are in the "
+            "current controller's reference interfaces.",
+            s->name.c_str());
+        }
+      });
+
+    // If the successor's command interfaces are not all in the current controller's reference
+    // interfaces, then check other successors and see if they can be grouped together
+
+    // generate combinations of successors that can be grouped together
+    for (const auto & successor : successors)
+    {
+      // check if the successor is already in the mutually exclusive group as single group
+      if (std::any_of(
+            mutually_exclusive_successor_groups.begin(), mutually_exclusive_successor_groups.end(),
+            [&successor](const std::unordered_set<std::string> & group)
+            { return group.find(successor->name) != group.end() && group.size() == 1; }))
+      {
+        continue;  // skip this successor, as it is already in a group as individual
+      }
+      // create all combinations of successors that can be grouped together
+      // For instance, successors A,B,C,D. Get combinations like:
+      // A,B; A,C; A,D; B,C; B,D; C,D; A,B,C; A,B,D; A,C,D; B,C,D; A,B,C,D
+      std::vector<std::vector<std::string>> combinations;
+      std::vector<std::string> current_combination;
+      std::function<void(size_t)> generate_combinations = [&](size_t start_index)
+      {
+        if (current_combination.size() > 1)
+        {
+          // check if the current combination's command interfaces are all in the
+          // current controller's reference interfaces
+          std::unordered_set<std::string> combined_reference_interfaces;
+          for (const auto & successor_name : current_combination)
+          {
+            const auto & successor_itf = std::find_if(
+              successors.begin(), successors.end(), [&successor_name](const ControllerPeerInfo * s)
+              { return s->name == successor_name; });
+            if (successor_itf != successors.end())
+            {
+              combined_reference_interfaces.insert(
+                (*successor_itf)->reference_interfaces.begin(),
+                (*successor_itf)->reference_interfaces.end());
+            }
+          }
+          if (are_all_command_interfaces_found(combined_reference_interfaces, command_interfaces))
+          {
+            combinations.push_back(current_combination);
+          }
+        }
+        for (size_t i = start_index; i < successors.size(); ++i)
+        {
+          if (std::any_of(
+                mutually_exclusive_successor_groups.begin(),
+                mutually_exclusive_successor_groups.end(),
+                [&](const std::unordered_set<std::string> & group)
+                { return group.find(successors[i]->name) != group.end() && group.size() == 1; }))
+          {
+            continue;  // skip this successor, as it is already in a group as individual
+          }
+
+          if (
+            std::find(
+              current_combination.begin(), current_combination.end(), successors[i]->name) !=
+            current_combination.end())
+          {
+            continue;  // skip this successor, as it is already in the current combination
+          }
+          current_combination.push_back(successors[i]->name);
+          generate_combinations(i + 1);
+          current_combination.pop_back();
+        }
+      };
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "Generating combinations of successors for controller: %s", name.c_str());
+      generate_combinations(0);
+      // Add the combinations to the mutually exclusive successor groups
+      for (const auto & combination : combinations)
+      {
+        std::unordered_set<std::string> group(combination.begin(), combination.end());
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          fmt::format(
+            "Adding successor group: [{}] with size: {}", fmt::join(combination, ", "),
+            combination.size())
+            .c_str());
+        if (!group.empty())
+        {
+          mutually_exclusive_successor_groups.push_back(group);
+        }
+      }
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "Mutually exclusive successor groups for controller: '%s' are: %zu", name.c_str(),
+        mutually_exclusive_successor_groups.size());
+    }
+  }
+
+  void get_controllers_to_activate(std::vector<std::string> & controllers_to_activate) const
+  {
+    // Check the predecessors of the controller and check if they belong to the controller's state
+    // interfaces If they do, add them to the list of controllers to activatestate_itf
+    /// @todo Handle the cases where the predecessor is not active in the current state
+    std::unordered_set<std::string> predecessor_command_interfaces_set = {};
+    std::vector<std::string> predecessor_in_active_list = {};
+    std::for_each(
+      predecessors.begin(), predecessors.end(),
+      [&predecessor_command_interfaces_set, &predecessor_in_active_list, &controllers_to_activate,
+       this](const ControllerPeerInfo * predecessor)
+      {
+        if (ros2_control::has_item(controllers_to_activate, predecessor->name))
+        {
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("controller_manager"),
+            "The predecessor: '%s' is already in the active list.", predecessor->name.c_str());
+          ros2_control::add_item(predecessor_in_active_list, predecessor->name);
+
+          // Only insert those that has name of the current controller in their command interfaces
+          std::for_each(
+            predecessor->command_interfaces.begin(), predecessor->command_interfaces.end(),
+            [&predecessor_command_interfaces_set, &predecessor,
+             this](const std::string & command_itf)
+            {
+              if (command_itf.find(name) != std::string::npos)
+              {
+                predecessor_command_interfaces_set.insert(command_itf);
+              }
+            });
+          // break;
+        }
+      });
+
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("controller_manager"),
+      "The predecessor command interfaces of the predecessor: '%s' are: %zu", name.c_str(),
+      predecessor_command_interfaces_set.size());
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("controller_manager"),
+      "The reference interfaces of the controller: '%s' are: %zu", name.c_str(),
+      reference_interfaces.size());
+    if (
+      !predecessor_in_active_list.empty() &&
+      (predecessor_command_interfaces_set.size() != reference_interfaces.size()))
+    {
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "The predecessor command interfaces of the predecessor: '%s' are not equal to the "
+        "reference interfaces of the controller: '%s' : %zu != %zu",
+        name.c_str(), name.c_str(), predecessor_command_interfaces_set.size(),
+        reference_interfaces.size());
+      for (const auto & predecessor : predecessors)
+      {
+        if (!ros2_control::has_item(predecessor_in_active_list, predecessor->name))
+        {
+          ros2_control::add_item(controllers_to_activate, predecessor->name);
+          predecessor->get_controllers_to_activate(controllers_to_activate);
+        }
+      }
+    }
+    for (const auto & predecessor : predecessors)
+    {
+      for (const auto & state_itf : state_interfaces)
+      {
+        if (state_itf.find(predecessor->name) != std::string::npos)
+        {
+          ros2_control::add_item(controllers_to_activate, predecessor->name);
+          break;
+        }
+      }
+    }
+
+    std::unordered_set<std::string> command_interfaces_set(
+      command_interfaces.begin(), command_interfaces.end());
+    size_t successors_reference_interfaces_count = 0;
+    for (const auto & successor : successors)
+    {
+      successors_reference_interfaces_count += successor->reference_interfaces.size();
+    }
+    for (const auto & successor : successors)
+    {
+      // check if all the successors reference interfaces are in the current controller's command
+      // interfaces If they are, add them to the list of controllers to activate
+
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "The command interfaces of the predecessor: '%s' are: %zu", name.c_str(),
+        command_interfaces_set.size());
+      for (const auto & command_itf : command_interfaces_set)
+      {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "The command interfaces of the predecessor: '%s' are: %s", name.c_str(),
+          command_itf.c_str());
+      }
+
+      for (const auto & reference_itf : successor->reference_interfaces)
+      {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "The reference interfaces of the successor: '%s' are: %s", successor->name.c_str(),
+          reference_itf.c_str());
+      }
+
+      bool all_successor_interfaces_match = false;
+      std::for_each(
+        command_interfaces.begin(), command_interfaces.end(),
+        [&successor, &all_successor_interfaces_match](const std::string & command_itf)
+        {
+          if (
+            successor->reference_interfaces.find(command_itf) !=
+            successor->reference_interfaces.end())
+          {
+            all_successor_interfaces_match = true;
+          }
+        });
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        "The reference interfaces of the successor: '%s' are within the command interfaces of the "
+        "predecessor: '%s' : %s",
+        successor->name.c_str(), name.c_str(), all_successor_interfaces_match ? "true" : "false");
+      if (all_successor_interfaces_match)
+      {
+        ros2_control::add_item(controllers_to_activate, successor->name);
+        successor->get_controllers_to_activate(controllers_to_activate);
+        continue;
+      }
+      else
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("controller_manager"),
+          "Controller %s has a successor %s who has more reference interfaces that use different "
+          "controllers. This is not supported now.",
+          name.c_str(), successor->name.c_str());
+      }
+    }
+  }
+
+  void get_controllers_to_deactivate(std::vector<std::string> & controllers_to_deactivate) const
+  {
+    // All predecessors of the controller should be deactivated except the state interface ones
+    for (const auto & predecessor : predecessors)
+    {
+      if (ros2_control::has_item(controllers_to_deactivate, predecessor->name))
+      {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "The predecessor: '%s' is already in the deactivation list.", predecessor->name.c_str());
+        continue;
+      }
+      ros2_control::add_item(controllers_to_deactivate, predecessor->name);
+      std::for_each(
+        state_interfaces.begin(), state_interfaces.end(),
+        [&predecessor, &controllers_to_deactivate](const std::string & state_itf)
+        {
+          if (state_itf.find(predecessor->name) != std::string::npos)
+          {
+            ros2_control::remove_item(controllers_to_deactivate, predecessor->name);
+          }
+        });
+      predecessor->get_controllers_to_deactivate(controllers_to_deactivate);
+    }
+
+    // All successors of controller with no command interfaces should be deactivated
+    for (const auto & successor : successors)
+    {
+      if (ros2_control::has_item(controllers_to_deactivate, successor->name))
+      {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "The successor: '%s' is already in the deactivation list.", successor->name.c_str());
+        continue;
+      }
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("controller_manager"),
+        fmt::format(
+          "The controllers to deactivate list is {}", fmt::join(controllers_to_deactivate, ", "))
+          .c_str());
+
+      // Check if the successor is an individual exclusive group, if so, then return
+      if (std::any_of(
+            mutually_exclusive_successor_groups.begin(), mutually_exclusive_successor_groups.end(),
+            [&successor](const std::unordered_set<std::string> & group)
+            { return group.find(successor->name) != group.end() && group.size() == 1; }))
+      {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "The successor: '%s' is in a mutually exclusive group, skipping further deactivation.",
+          successor->name.c_str());
+        continue;
+      }
+
+      if (successor->command_interfaces.empty())
+      {
+        ros2_control::add_item(controllers_to_deactivate, successor->name);
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("controller_manager"),
+          "Adding successor: '%s' to the deactivation list, as it has no command interfaces.",
+          successor->name.c_str());
+      }
+      successor->get_controllers_to_deactivate(controllers_to_deactivate);
+    }
+  }
+};
 /// Controller Specification
 /**
  * This struct contains both a pointer to a given controller, \ref c, as well
@@ -57,5 +552,78 @@ struct ControllerChainSpec
   std::vector<std::string> following_controllers;
   std::vector<std::string> preceding_controllers;
 };
+
+class ControllerChainDependencyGraph
+{
+public:
+  void add_dependency(const ControllerPeerInfo & predecessor, const ControllerPeerInfo & successor)
+  {
+    if (controller_graph_.count(predecessor.name) == 0)
+    {
+      controller_graph_[predecessor.name] = predecessor;
+    }
+    if (controller_graph_.count(successor.name) == 0)
+    {
+      controller_graph_[successor.name] = successor;
+    }
+    if (
+      std::find_if(
+        controller_graph_[predecessor.name].successors.begin(),
+        controller_graph_[predecessor.name].successors.end(),
+        [&successor](const ControllerPeerInfo * s) { return s->name == successor.name; }) ==
+      controller_graph_[predecessor.name].successors.end())
+    {
+      controller_graph_[predecessor.name].successors.push_back(&controller_graph_[successor.name]);
+    }
+    if (
+      std::find_if(
+        controller_graph_[successor.name].predecessors.begin(),
+        controller_graph_[successor.name].predecessors.end(),
+        [&predecessor](const ControllerPeerInfo * p) { return p->name == predecessor.name; }) ==
+      controller_graph_[successor.name].predecessors.end())
+    {
+      controller_graph_[successor.name].predecessors.push_back(
+        &controller_graph_[predecessor.name]);
+    }
+  }
+
+  std::vector<std::string> get_dependencies_to_activate(const std::string & controller_name)
+  {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("controller_manager"),
+      "+++++++++++++++++++++++++++++++ Getting dependencies to ACTIVATE "
+      "+++++++++++++++++++++++++++++++");
+    std::vector<std::string> controllers_to_activate({controller_name});
+    if (controller_graph_.count(controller_name) == 0)
+    {
+      return {};
+    }
+    controller_graph_[controller_name].build_mutually_exclusive_predecessor_groups();
+    controller_graph_[controller_name].build_mutually_exclusive_successor_groups();
+    controller_graph_[controller_name].get_controllers_to_activate(controllers_to_activate);
+    return controllers_to_activate;
+  }
+
+  std::vector<std::string> get_dependencies_to_deactivate(const std::string & controller_name)
+  {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("controller_manager"),
+      "+++++++++++++++++++++++++++++++ Getting dependencies to DEACTIVATE "
+      "+++++++++++++++++++++++++++++++");
+    std::vector<std::string> controllers_to_deactivate({controller_name});
+    if (controller_graph_.count(controller_name) == 0)
+    {
+      return {};
+    }
+    controller_graph_[controller_name].build_mutually_exclusive_predecessor_groups();
+    controller_graph_[controller_name].build_mutually_exclusive_successor_groups();
+    controller_graph_[controller_name].get_controllers_to_deactivate(controllers_to_deactivate);
+    return controllers_to_deactivate;
+  }
+
+private:
+  std::unordered_map<std::string, ControllerPeerInfo> controller_graph_;
+};
+
 }  // namespace controller_manager
 #endif  // CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_

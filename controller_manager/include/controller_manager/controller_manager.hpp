@@ -489,6 +489,14 @@ private:
     bool append_to_controller);
 
   /**
+   * @brief Build the controller chain topology information based on the provided controllers.
+   *  This method constructs a directed graph representing the dependencies between controllers.
+   *  It analyzes the relationships between controllers, such as which controllers depend on others,
+   *  and builds a directed graph to represent these dependencies.
+   */
+  void build_controllers_topology_info(const std::vector<ControllerSpec> & controllers);
+
+  /**
    * @brief Method to publish the state of the controller manager.
    * The state includes the list of controllers and the list of hardware interfaces along with
    * their states.
@@ -622,6 +630,7 @@ private:
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
+  ControllerChainDependencyGraph controller_chain_dependency_graph_;
   std::vector<std::string> ordered_controllers_names_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads

@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ros2_control
@@ -36,7 +37,8 @@ namespace ros2_control
 template <typename Container, typename T>
 [[nodiscard]] auto get_item_iterator(const Container & container, const T & item)
 {
-  if constexpr (std::is_same_v<Container, std::vector<T>>)
+  if constexpr (
+    std::is_same_v<Container, std::vector<T>> || std::is_same_v<Container, std::unordered_set<T>>)
   {
     return std::find(container.cbegin(), container.cend(), item);
   }
@@ -52,10 +54,11 @@ template <typename Container, typename T>
     using is_map = std::is_same<Container, std::map<T, typename Container::mapped_type>>;
     using is_unordered_map =
       std::is_same<Container, std::unordered_map<T, typename Container::mapped_type>>;
+    using is_unordered_set = std::is_same<Container, std::unordered_set<T>>;
     // Handle unsupported container types
     static_assert(
-      is_vector::value || is_map::value || is_unordered_map::value,
-      "Only std::vector, std::map and std::unordered_map are supported.");
+      is_vector::value || is_map::value || is_unordered_map::value || is_unordered_set::value,
+      "Only std::vector, std::unordered_set, std::map and std::unordered_map are supported.");
   }
 }
 
@@ -82,6 +85,15 @@ void add_item(std::vector<T> & vector, const T & item)
   if (!has_item(vector, item))
   {
     vector.push_back(item);
+  }
+}
+
+template <typename T>
+void add_unique_items(std::vector<T> & vector, const std::vector<T> & items)
+{
+  for (const auto & item : items)
+  {
+    add_item(vector, item);
   }
 }
 
@@ -187,6 +199,22 @@ template <typename Container>
 {
   std::sort(container.begin(), container.end());
   return std::adjacent_find(container.cbegin(), container.cend()) == container.cend();
+}
+
+// Create a function that checks that two containers do not have any common items
+/**
+ * @brief Check if the two containers have no common items.
+ * @param container1 The first container to search in.
+ * @param container2 The second container to search in.
+ * @return True if the two containers have no common items, false otherwise.
+ */
+template <typename Container1, typename Container2>
+[[nodiscard]] bool has_no_common_items(const Container1 & container1, const Container2 & container2)
+{
+  return std::none_of(
+    container1.cbegin(), container1.cend(),
+    [&container2](const typename Container1::value_type & item)
+    { return has_item(container2, item); });
 }
 
 }  // namespace ros2_control

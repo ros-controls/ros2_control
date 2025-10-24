@@ -1346,33 +1346,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  for (const auto & cmd_itf : cmd_itfs)
-  {
-    controller_manager::ControllersListIterator ctrl_it;
-    if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
-    {
-      ros2_control::add_item(
-        controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
-      ros2_control::add_item(
-        controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
-      ros2_control::add_item(
-        controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
-    }
-  }
-  // This is needed when we start exporting the state interfaces from the controllers
-  for (const auto & state_itf : state_itfs)
-  {
-    controller_manager::ControllersListIterator ctrl_it;
-    if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
-    {
-      ros2_control::add_item(
-        controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
-      ros2_control::add_item(
-        controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
-      ros2_control::add_item(
-        controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
-    }
-  }
+  build_controllers_topology_info(controllers);
 
   // Now let's reorder the controllers
   // lock controllers
@@ -1507,21 +1481,13 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       get_logger(),
       "Controller Manager: to switch controllers you need to specify a "
       "strictness level of controller_manager_msgs::SwitchController::STRICT "
-      "(%d) or ::BEST_EFFORT (%d). When unspecified, the default is %s",
+      "(%d) or ::BEST_EFFORT (%d) or ::AUTO (%d). When unspecified, the default is %s",
       controller_manager_msgs::srv::SwitchController::Request::STRICT,
       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
-      default_strictness.c_str());
+      controller_manager_msgs::srv::SwitchController::Request::AUTO, default_strictness.c_str());
     strictness = params_->defaults.switch_controller.strictness == "strict"
                    ? controller_manager_msgs::srv::SwitchController::Request::STRICT
                    : controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
-  }
-  else if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "Controller Manager: AUTO is not currently implemented. "
-      "Defaulting to BEST_EFFORT");
-    strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
   else if (strictness == controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
   {
@@ -1531,37 +1497,69 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       "Defaulting to BEST_EFFORT");
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
+  else if (strictness > controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO)
+  {
+    message = fmt::format(
+      FMT_COMPILE(
+        "Unknown strictness level '%d'. Please use controller_manager_msgs::SwitchController::"
+        "STRICT (%d) or ::BEST_EFFORT (%d) or ::AUTO (%d) or ::FORCE_AUTO (%d)."),
+      strictness, controller_manager_msgs::srv::SwitchController::Request::STRICT,
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+      controller_manager_msgs::srv::SwitchController::Request::AUTO,
+      controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO);
+    RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+    return controller_interface::return_type::ERROR;
+  }
 
-  std::string activate_list, deactivate_list;
-  activate_list.reserve(500);
-  deactivate_list.reserve(500);
-  for (const auto & controller : activate_controllers)
-  {
-    activate_list.append(controller);
-    activate_list.append(" ");
-  }
-  for (const auto & controller : deactivate_controllers)
-  {
-    deactivate_list.append(controller);
-    deactivate_list.append(" ");
-  }
+  const std::string strictness_string =
+    strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT
+      ? "STRICT"
+      : (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT
+           ? "BEST_EFFORT"
+           : (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO
+                ? "AUTO"
+                : "FORCE_AUTO"));
+
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), !activate_list.empty(), "Activating controllers: [ %s]", activate_list.c_str());
+    get_logger(), !activate_controllers.empty(),
+    fmt::format("Activating controllers: [ {} ]", fmt::join(activate_controllers, " ")).c_str());
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), !deactivate_list.empty(), "Deactivating controllers: [ %s]",
-    deactivate_list.c_str());
+    get_logger(), !deactivate_controllers.empty(),
+    fmt::format("Deactivating controllers: [ {} ]", fmt::join(deactivate_controllers, " "))
+      .c_str());
 
   const auto list_controllers =
-    [this, strictness](
+    [this, strictness, &strictness_string](
       const std::vector<std::string> & controller_list, std::vector<std::string> & request_list,
       const std::string & action, std::string & msg) -> controller_interface::return_type
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
     auto result = controller_interface::return_type::OK;
+    std::vector<std::string> new_controller_list = controller_list;
+
+    if (strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
+    {
+      const bool is_activate = (action == "activate");
+      std::vector<std::string> dependencies = {};
+      for (const auto & controller : controller_list)
+      {
+        const auto ctrl_dependencies =
+          is_activate
+            ? controller_chain_dependency_graph_.get_dependencies_to_activate(controller)
+            : controller_chain_dependency_graph_.get_dependencies_to_deactivate(controller);
+        RCLCPP_DEBUG(
+          get_logger(), fmt::format(
+                          "Controller {} has '{}' dependencies to {}", controller,
+                          fmt::join(ctrl_dependencies, ", "), action)
+                          .c_str());
+        ros2_control::add_unique_items(dependencies, ctrl_dependencies);
+      }
+      ros2_control::add_unique_items(new_controller_list, dependencies);
+    }
 
     // list all controllers to (de)activate
-    for (const auto & controller : controller_list)
+    for (const auto & controller : new_controller_list)
     {
       const auto & updated_controllers = rt_controllers_wrapper_.get_updated_list(guard);
 
@@ -1581,10 +1579,12 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         // not a critical error
         result = request_list.empty() ? controller_interface::return_type::ERROR
                                       : controller_interface::return_type::OK;
-        if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+        if (strictness != controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
         {
           msg = error_msg;
-          RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
+          RCLCPP_ERROR(
+            get_logger(), "Aborting, no controller is switched! ('%s' switch)",
+            strictness_string.c_str());
           return controller_interface::return_type::ERROR;
         }
       }
@@ -1622,6 +1622,19 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     switch_params_.activate_request.clear();
     return ret;
   }
+
+  const bool print_updated_list =
+    (strictness != controller_manager_msgs::srv::SwitchController::Request::AUTO ||
+     strictness != controller_manager_msgs::srv::SwitchController::Request::FORCE_AUTO);
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !activate_request_.empty() && print_updated_list,
+    fmt::format("Updated Activating controllers: [ {} ]", fmt::join(activate_request_, " "))
+      .c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !deactivate_request_.empty() && print_updated_list,
+    fmt::format("Updated Deactivating controllers: [ {} ]", fmt::join(deactivate_request_, " "))
+      .c_str());
+
   // If it is a best effort switch, we can remove the controllers log that could not be activated
   message.clear();
 
@@ -1664,7 +1677,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message = fmt::format(
           FMT_COMPILE("Controller with name '{}' is already active."), controller_it->info.name);
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
-        RCLCPP_WARN(get_logger(), "%s", message.c_str());
         status = controller_interface::return_type::ERROR;
       }
     }
@@ -1697,7 +1709,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         "Check the state of the controllers and their required interfaces using "
         "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+      if (
+        strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT ||
+        strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
       {
         // TODO(destogl): automatic manipulation of the chain:
         // || strictness ==
@@ -1708,9 +1722,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message.clear();
         --ctrl_it;
       }
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      else
       {
-        RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
+        RCLCPP_ERROR(
+          get_logger(), "Aborting, no controller is switched! (::%s switch)",
+          strictness_string.c_str());
         // reset all lists
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -1750,7 +1766,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         "Check the state of the controllers and their required interfaces using "
         "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+      if (
+        strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT ||
+        strictness == controller_manager_msgs::srv::SwitchController::Request::AUTO)
       {
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
@@ -1758,9 +1776,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         message.clear();
         --ctrl_it;
       }
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      else
       {
-        RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
+        RCLCPP_ERROR(
+          get_logger(), "Aborting, no controller is switched! (::%s switch)",
+          strictness_string.c_str());
         // reset all lists
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -1823,10 +1843,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
     auto handle_conflict = [&](const std::string & msg)
     {
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      if (strictness != controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
         message = msg;
-        RCLCPP_ERROR(get_logger(), "%s", msg.c_str());
+        RCLCPP_ERROR(get_logger(), "%s (::%s switch)", message.c_str(), strictness_string.c_str());
         switch_params_.deactivate_request.clear();
         switch_params_.deactivate_command_interface_request.clear();
         switch_params_.activate_request.clear();
@@ -2156,6 +2176,8 @@ void ControllerManager::deactivate_controllers(
         {
           resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+          // TODO(saikishor): Review this part later
+          controller->set_chained_mode(false);
         }
         if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
         {
@@ -4395,6 +4417,113 @@ void ControllerManager::update_list_with_controller_chain(
       RCLCPP_DEBUG(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
       update_list_with_controller_chain(preced_ctrl, new_ctrl_it, false);
     }
+  }
+}
+
+void ControllerManager::build_controllers_topology_info(
+  const std::vector<ControllerSpec> & controllers)
+{
+  std::for_each(
+    controller_chain_spec_.begin(), controller_chain_spec_.end(),
+    [](auto & pair)
+    {
+      pair.second.following_controllers.clear();
+      pair.second.preceding_controllers.clear();
+    });
+  std::for_each(
+    controller_chained_reference_interfaces_cache_.begin(),
+    controller_chained_reference_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+  std::for_each(
+    controller_chained_state_interfaces_cache_.begin(),
+    controller_chained_state_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+
+  const auto get_controller_peer_info = [&](const ControllerSpec & controller) -> ControllerPeerInfo
+  {
+    const auto cmd_itfs = controller.c->command_interface_configuration().names;
+    const auto state_itfs = controller.c->state_interface_configuration().names;
+    ControllerPeerInfo controller_peer_info;
+    controller_peer_info.name = controller.info.name;
+    controller_peer_info.command_interfaces =
+      std::unordered_set<std::string>(cmd_itfs.begin(), cmd_itfs.end());
+    controller_peer_info.state_interfaces =
+      std::unordered_set<std::string>(state_itfs.begin(), state_itfs.end());
+    controller_peer_info.controller = controller.c;
+    if (controller.c->is_chainable())
+    {
+      const auto ref_interface =
+        resource_manager_->get_controller_reference_interface_names(controller.info.name);
+      controller_peer_info.reference_interfaces =
+        std::unordered_set<std::string>(ref_interface.begin(), ref_interface.end());
+    }
+    return controller_peer_info;
+  };
+  for (const auto & controller : controllers)
+  {
+    if (is_controller_unconfigured(*controller.c))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Controller '%s' is unconfigured, skipping chain building.",
+        controller.info.name.c_str());
+      continue;
+    }
+    const auto cmd_itfs = controller.c->command_interface_configuration().names;
+    const auto state_itfs = controller.c->state_interface_configuration().names;
+
+    ControllerPeerInfo controller_peer_info = get_controller_peer_info(controller);
+    for (const auto & cmd_itf : cmd_itfs)
+    {
+      controller_manager::ControllersListIterator ctrl_it;
+      if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
+      {
+        if (is_controller_unconfigured(*ctrl_it->c))
+        {
+          RCLCPP_DEBUG(
+            get_logger(), "Controller '%s' is unconfigured, skipping chain building.",
+            ctrl_it->info.name.c_str());
+          continue;
+        }
+        ControllerPeerInfo succeeding_peer_info = get_controller_peer_info(*ctrl_it);
+        controller_chain_dependency_graph_.add_dependency(
+          controller_peer_info, succeeding_peer_info);
+        ros2_control::add_item(
+          controller_chain_spec_[controller.info.name].following_controllers, ctrl_it->info.name);
+        ros2_control::add_item(
+          controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller.info.name);
+        ros2_control::add_item(
+          controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller.info.name);
+      }
+    }
+    // This is needed when we start exporting the state interfaces from the controllers
+    for (const auto & state_itf : state_itfs)
+    {
+      controller_manager::ControllersListIterator ctrl_it;
+      if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
+      {
+        ros2_control::add_item(
+          controller_chain_spec_[controller.info.name].preceding_controllers, ctrl_it->info.name);
+        ros2_control::add_item(
+          controller_chain_spec_[ctrl_it->info.name].following_controllers, controller.info.name);
+        ros2_control::add_item(
+          controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller.info.name);
+      }
+    }
+  }
+  for (const auto & [controller_name, controller_chain] : controller_chain_spec_)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Controller '%s' has %ld following controllers and %ld preceding controllers.",
+      controller_name.c_str(), controller_chain.following_controllers.size(),
+      controller_chain.preceding_controllers.size());
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain.following_controllers.empty(),
+      fmt::format(
+        "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
+        .c_str());
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain.preceding_controllers.empty(), "%s",
+      fmt::format(
+        "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
+        .c_str());
   }
 }
 
