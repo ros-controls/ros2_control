@@ -20,7 +20,7 @@ from controller_manager import (
     list_hardware_components,
     set_hardware_component_state,
 )
-from controller_manager.controller_manager_services import ServiceNotFoundError
+from controller_manager.controller_manager_services import ServiceNotFoundError, bcolors
 
 from lifecycle_msgs.msg import State
 import rclpy
@@ -66,24 +66,15 @@ def handle_set_component_state_service_call(
     response = set_hardware_component_state(node, controller_manager_name, component, target_state)
     if response.ok and response.state == target_state:
         node.get_logger().info(
-            "%s component '%s'. Hardware now in state: %s.",
-            action,
-            component,
-            response.state,
+            f"{bcolors.OKGREEN}{action} component '{component}'. Hardware now in state: {response.state}.{bcolors.ENDC}"
         )
     elif response.ok and not response.state == target_state:
         node.get_logger().warning(
-            "Could not %s component '%s'. Service call returned ok=True, but state: %s is not equal to target state '%s'.",
-            action,
-            component,
-            response.state,
-            target_state,
+            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'.{bcolors.ENDC}"
         )
     else:
         node.get_logger().warning(
-            "Could not %s component '%s'. Service call failed. Wrong component name?",
-            action,
-            component,
+            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call failed. Wrong component name?{bcolors.ENDC}"
         )
 
 
@@ -101,7 +92,11 @@ def configure_component(node, controller_manager_name, component_to_configure):
     inactive_state.id = State.PRIMARY_STATE_INACTIVE
     inactive_state.label = "inactive"
     handle_set_component_state_service_call(
-        node, controller_manager_name, component_to_configure, inactive_state, "configured"
+        node,
+        controller_manager_name,
+        component_to_configure,
+        inactive_state,
+        "configured",
     )
 
 
@@ -162,10 +157,13 @@ def main(args=None):
     try:
         for hardware_component in hardware_components:
             if not is_hardware_component_loaded(
-                node, controller_manager_name, hardware_component, controller_manager_timeout
+                node,
+                controller_manager_name,
+                hardware_component,
+                controller_manager_timeout,
             ):
                 node.get_logger().warning(
-                    "Hardware Component is not loaded - state can not be changed."
+                    f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
                 )
             elif activate:
                 activate_component(node, controller_manager_name, hardware_component)
@@ -173,14 +171,14 @@ def main(args=None):
                 configure_component(node, controller_manager_name, hardware_component)
             else:
                 node.get_logger().error(
-                    'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
+                    f'{bcolors.FAIL}You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag{bcolors.ENDC}'
                 )
                 parser.print_help()
                 return 0
     except KeyboardInterrupt:
         pass
     except ServiceNotFoundError as err:
-        node.get_logger().fatal(str(err))
+        node.get_logger().fatal(f"{bcolors.FAIL}{str(err)}{bcolors.ENDC}")
         return 1
     finally:
         rclpy.shutdown()

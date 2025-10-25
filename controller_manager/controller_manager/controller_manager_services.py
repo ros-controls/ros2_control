@@ -52,19 +52,16 @@ def _color_enabled():
     return sys.stdout.isatty()
 
 
-COLOR_ENABLED = _color_enabled()
-
-
 class bcolors:
-    MAGENTA = "\033[95m" if COLOR_ENABLED else ""
-    OKBLUE = "\033[94m" if COLOR_ENABLED else ""
-    OKCYAN = "\033[96m" if COLOR_ENABLED else ""
-    OKGREEN = "\033[92m" if COLOR_ENABLED else ""
-    WARNING = "\033[93m" if COLOR_ENABLED else ""
-    FAIL = "\033[91m" if COLOR_ENABLED else ""
-    ENDC = "\033[0m" if COLOR_ENABLED else ""
-    BOLD = "\033[1m" if COLOR_ENABLED else ""
-    UNDERLINE = "\033[4m" if COLOR_ENABLED else ""
+    MAGENTA = "\033[95m" if _color_enabled() else ""
+    OKBLUE = "\033[94m" if _color_enabled() else ""
+    OKCYAN = "\033[96m" if _color_enabled() else ""
+    OKGREEN = "\033[92m" if _color_enabled() else ""
+    WARNING = "\033[93m" if _color_enabled() else ""
+    FAIL = "\033[91m" if _color_enabled() else ""
+    ENDC = "\033[0m" if _color_enabled() else ""
+    BOLD = "\033[1m" if _color_enabled() else ""
+    UNDERLINE = "\033[4m" if _color_enabled() else ""
 
 
 class ServiceNotFoundError(Exception):
@@ -91,15 +88,11 @@ class SingletonServiceCaller:
                 service_type, fully_qualified_service_name
             )
             node.get_logger().debug(
-                "Creating a new service client : %s with node : %s",
-                fully_qualified_service_name,
-                node.get_name(),
+                f"{bcolors.MAGENTA}Creating a new service client : {fully_qualified_service_name} with node : {node.get_name()}{bcolors.ENDC}"
             )
 
         node.get_logger().debug(
-            "Returning the existing service client : %s for node : %s",
-            fully_qualified_service_name,
-            node.get_name(),
+            f"{bcolors.OKBLUE}Returning the existing service client : {fully_qualified_service_name} for node : {node.get_name()}{bcolors.ENDC}"
         )
         return cls._clients[(node, fully_qualified_service_name)]
 
@@ -356,9 +349,7 @@ def get_params_files_with_controller_parameters(
                 if key in parameters:
                     if key == controller_name and namespace != "/":
                         node.get_logger().fatal(
-                            "Missing namespace : %s or wildcard in parameter file for controller : %s",
-                            namespace,
-                            controller_name,
+                            f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
                         )
                         break
                     controller_parameter_files.append(parameter_file)
@@ -391,9 +382,7 @@ def get_parameter_from_param_files(
                 if key in parameters:
                     if key == controller_name and namespace != "/":
                         node.get_logger().fatal(
-                            "Missing namespace : %s or wildcard in parameter file for controller : %s",
-                            namespace,
-                            controller_name,
+                            f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
                         )
                         break
                     controller_param_dict = parameters[key]
@@ -421,9 +410,7 @@ def get_parameter_from_param_files(
                 return controller_param_dict[ROS_PARAMS_KEY][parameter_name]
     if controller_param_dict is None:
         node.get_logger().fatal(
-            "Controller : %s parameters not found in parameter files : %s",
-            namespaced_controller,
-            parameter_files,
+            f"{bcolors.FAIL}Controller : {namespaced_controller} parameters not found in parameter files : {parameter_files}{bcolors.ENDC}"
         )
     return None
 
@@ -443,17 +430,27 @@ def set_controller_parameters(
     result = response.results[0]
     if result.successful:
         node.get_logger().info(
-            'Setting controller param "%s" to "%s" for %s',
-            parameter_name,
-            parameter_string,
-            controller_name,
+            bcolors.OKCYAN
+            + 'Setting controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_string
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
         )
     else:
         node.get_logger().fatal(
-            'Could not set controller param "%s" to "%s" for %s',
-            parameter_name,
-            parameter_string,
-            controller_name,
+            bcolors.FAIL
+            + 'Could not set controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_string
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
         )
         return False
     return True
