@@ -246,8 +246,13 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
-  ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py
+                        )
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+  ament_add_pytest_test(test_launch_utils test/test_launch_utils.py 
+                        APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}
+                        PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_SOURCE_DIR}:${PYTHONPATH}
+                        )
 endif()
 
 install(
