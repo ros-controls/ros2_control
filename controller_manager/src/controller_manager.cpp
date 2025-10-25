@@ -357,6 +357,52 @@ void get_controller_list_command_interfaces(
   }
 }
 
+void get_full_chain_spec(
+  const std::string & controller_name,
+  const std::unordered_map<std::string, controller_manager::ControllerChainSpec> & chain_spec,
+  std::vector<std::string> & full_chain_list)
+{
+  auto it = chain_spec.find(controller_name);
+  if (it == chain_spec.end())
+  {
+    RCLCPP_WARN(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Controller '%s' not found in the controller chain specification.", controller_name.c_str());
+    return;
+  }
+  ros2_control::add_item(full_chain_list, controller_name);
+  for (const auto & following_controller : it->second.following_controllers)
+  {
+    if (!ros2_control::has_item(full_chain_list, following_controller))
+    {
+      get_full_chain_spec(following_controller, chain_spec, full_chain_list);
+    }
+  }
+  for (const auto & preceding_controller : it->second.preceding_controllers)
+  {
+    if (!ros2_control::has_item(full_chain_list, preceding_controller))
+    {
+      get_full_chain_spec(preceding_controller, chain_spec, full_chain_list);
+    }
+  }
+}
+
+void build_controller_full_chain_map_cache(
+  const std::unordered_map<std::string, controller_manager::ControllerChainSpec> &
+    controller_chain_spec,
+  std::unordered_map<std::string, std::vector<std::string>> & controller_full_chain_info_cache)
+{
+  controller_full_chain_info_cache.clear();
+  for (const auto & [controller_name, chain_spec] : controller_chain_spec)
+  {
+    controller_full_chain_info_cache[controller_name] = {};
+    // add the controller itself to the list
+    ros2_control::add_item(controller_full_chain_info_cache[controller_name], controller_name);
+    get_full_chain_spec(
+      controller_name, controller_chain_spec, controller_full_chain_info_cache[controller_name]);
+  }
+}
+
 void register_controller_manager_statistics(
   const std::string & name,
   const libstatistics_collector::moving_average_statistics::StatisticData * variable)
@@ -1346,33 +1392,10 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  for (const auto & cmd_itf : cmd_itfs)
-  {
-    controller_manager::ControllersListIterator ctrl_it;
-    if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
-    {
-      ros2_control::add_item(
-        controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
-      ros2_control::add_item(
-        controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
-      ros2_control::add_item(
-        controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
-    }
-  }
-  // This is needed when we start exporting the state interfaces from the controllers
-  for (const auto & state_itf : state_itfs)
-  {
-    controller_manager::ControllersListIterator ctrl_it;
-    if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
-    {
-      ros2_control::add_item(
-        controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
-      ros2_control::add_item(
-        controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
-      ros2_control::add_item(
-        controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
-    }
-  }
+  build_controllers_topology_info(controllers);
+
+  std::unordered_map<std::string, std::vector<std::string>> controller_full_chain_info_cache;
+  build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache);
 
   // Now let's reorder the controllers
   // lock controllers
@@ -1404,6 +1427,23 @@ controller_interface::return_type ControllerManager::configure_controller(
     if (controller_it != to.end())
     {
       new_list.push_back(*controller_it);
+    }
+  }
+
+  // Update the controllers chain groups in the ControllerSpec
+  for (const auto & [ctrl_name, full_chain_info] : controller_full_chain_info_cache)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "%s",
+      fmt::format(
+        "The controller '{}' is in chain with: [{}]", ctrl_name, fmt::join(full_chain_info, ", "))
+        .c_str());
+    auto controller_it = std::find_if(
+      new_list.begin(), new_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, ctrl_name));
+    if (controller_it != new_list.end())
+    {
+      controller_it->controllers_chain_group = full_chain_info;
     }
   }
 
@@ -2154,6 +2194,7 @@ void ControllerManager::deactivate_controllers(
         // deactivation
         if (controller->is_chainable())
         {
+          controller->set_chained_mode(false);
           resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
         }
@@ -3096,7 +3137,16 @@ controller_interface::return_type ControllerManager::update(
 
         if (controller_ret != controller_interface::return_type::OK)
         {
-          rt_buffer_.deactivate_controllers_list.push_back(loaded_controller.info.name);
+          const std::vector<std::string> & controller_chain =
+            loaded_controller.controllers_chain_group;
+          RCLCPP_INFO_EXPRESSION(
+            get_logger(), controller_chain.size() > 1,
+            "Controller '%s' is part of a chain of %lu controllers that will be deactivated.",
+            loaded_controller.info.name.c_str(), controller_chain.size());
+          for (const auto & chained_controller : controller_chain)
+          {
+            ros2_control::add_item(rt_buffer_.deactivate_controllers_list, chained_controller);
+          }
           ret = controller_ret;
         }
       }
@@ -4395,6 +4445,81 @@ void ControllerManager::update_list_with_controller_chain(
       RCLCPP_DEBUG(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
       update_list_with_controller_chain(preced_ctrl, new_ctrl_it, false);
     }
+  }
+}
+
+void ControllerManager::build_controllers_topology_info(
+  const std::vector<ControllerSpec> & controllers)
+{
+  std::for_each(
+    controller_chain_spec_.begin(), controller_chain_spec_.end(),
+    [](auto & pair)
+    {
+      pair.second.following_controllers.clear();
+      pair.second.preceding_controllers.clear();
+    });
+  std::for_each(
+    controller_chained_reference_interfaces_cache_.begin(),
+    controller_chained_reference_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+  std::for_each(
+    controller_chained_state_interfaces_cache_.begin(),
+    controller_chained_state_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+  for (const auto & controller : controllers)
+  {
+    if (is_controller_unconfigured(*controller.c))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Controller '%s' is unconfigured, skipping chain building.",
+        controller.info.name.c_str());
+      continue;
+    }
+    const auto cmd_itfs = controller.c->command_interface_configuration().names;
+    const auto state_itfs = controller.c->state_interface_configuration().names;
+
+    for (const auto & cmd_itf : cmd_itfs)
+    {
+      controller_manager::ControllersListIterator ctrl_it;
+      if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
+      {
+        ros2_control::add_item(
+          controller_chain_spec_[controller.info.name].following_controllers, ctrl_it->info.name);
+        ros2_control::add_item(
+          controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller.info.name);
+        ros2_control::add_item(
+          controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller.info.name);
+      }
+    }
+    // This is needed when we start exporting the state interfaces from the controllers
+    for (const auto & state_itf : state_itfs)
+    {
+      controller_manager::ControllersListIterator ctrl_it;
+      if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
+      {
+        ros2_control::add_item(
+          controller_chain_spec_[controller.info.name].preceding_controllers, ctrl_it->info.name);
+        ros2_control::add_item(
+          controller_chain_spec_[ctrl_it->info.name].following_controllers, controller.info.name);
+        ros2_control::add_item(
+          controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller.info.name);
+      }
+    }
+  }
+  for (const auto & [controller_name, controller_chain] : controller_chain_spec_)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Controller '%s' has %ld following controllers and %ld preceding controllers.",
+      controller_name.c_str(), controller_chain.following_controllers.size(),
+      controller_chain.preceding_controllers.size());
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain.following_controllers.empty(), "%s",
+      fmt::format(
+        "\tFollowing controllers are : {}", fmt::join(controller_chain.following_controllers, ", "))
+        .c_str());
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain.preceding_controllers.empty(), "%s",
+      fmt::format(
+        "\tPreceding controllers are : {}", fmt::join(controller_chain.preceding_controllers, ", "))
+        .c_str());
   }
 }
 
