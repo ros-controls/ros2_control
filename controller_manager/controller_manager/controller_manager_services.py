@@ -38,17 +38,30 @@ except ImportError:
 from ros2param.api import call_set_parameters
 
 
-# from https://stackoverflow.com/a/287944
+import os
+import sys
+
+
+def _color_enabled():
+    """Respect RCUTILS_COLORIZED_OUTPUT: 0=off, 1=on, unset=auto-detect TTY."""
+    env = os.getenv("RCUTILS_COLORIZED_OUTPUT")
+    if env == "0":
+        return False
+    if env == "1":
+        return True
+    return sys.stdout.isatty()
+
+
 class bcolors:
-    MAGENTA = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
+    MAGENTA = "\033[95m" if _color_enabled() else ""
+    OKBLUE = "\033[94m" if _color_enabled() else ""
+    OKCYAN = "\033[96m" if _color_enabled() else ""
+    OKGREEN = "\033[92m" if _color_enabled() else ""
+    WARNING = "\033[93m" if _color_enabled() else ""
+    FAIL = "\033[91m" if _color_enabled() else ""
+    ENDC = "\033[0m" if _color_enabled() else ""
+    BOLD = "\033[1m" if _color_enabled() else ""
+    UNDERLINE = "\033[4m" if _color_enabled() else ""
 
 
 class ServiceNotFoundError(Exception):
