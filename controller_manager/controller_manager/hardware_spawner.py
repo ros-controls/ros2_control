@@ -19,7 +19,6 @@ import sys
 from controller_manager import (
     list_hardware_components,
     set_hardware_component_state,
-    bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
@@ -67,15 +66,24 @@ def handle_set_component_state_service_call(
     response = set_hardware_component_state(node, controller_manager_name, component, target_state)
     if response.ok and response.state == target_state:
         node.get_logger().info(
-            f"{bcolors.OKGREEN}{action} component '{component}'. Hardware now in state: {response.state}.{bcolors.ENDC}"
+            "%s component '%s'. Hardware now in state: %s.",
+            action,
+            component,
+            response.state,
         )
     elif response.ok and not response.state == target_state:
         node.get_logger().warning(
-            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'.{bcolors.ENDC}"
+            "Could not %s component '%s'. Service call returned ok=True, but state: %s is not equal to target state '%s'.",
+            action,
+            component,
+            response.state,
+            target_state,
         )
     else:
         node.get_logger().warning(
-            f"{bcolors.WARNING}Could not {action} component '{component}'. Service call failed. Wrong component name?{bcolors.ENDC}"
+            "Could not %s component '%s'. Service call failed. Wrong component name?",
+            action,
+            component,
         )
 
 
@@ -157,7 +165,7 @@ def main(args=None):
                 node, controller_manager_name, hardware_component, controller_manager_timeout
             ):
                 node.get_logger().warning(
-                    f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
+                    "Hardware Component is not loaded - state can not be changed."
                 )
             elif activate:
                 activate_component(node, controller_manager_name, hardware_component)
@@ -165,14 +173,14 @@ def main(args=None):
                 configure_component(node, controller_manager_name, hardware_component)
             else:
                 node.get_logger().error(
-                    f'{bcolors.FAIL}You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag{bcolors.ENDC}'
+                    'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
                 )
                 parser.print_help()
                 return 0
     except KeyboardInterrupt:
         pass
     except ServiceNotFoundError as err:
-        node.get_logger().fatal(f"{bcolors.FAIL}{str(err)}{bcolors.ENDC}")
+        node.get_logger().fatal(str(err))
         return 1
     finally:
         rclpy.shutdown()

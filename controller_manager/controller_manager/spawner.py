@@ -28,7 +28,6 @@ from controller_manager import (
     unload_controller,
     set_controller_parameters,
     set_controller_parameters_from_param_files,
-    bcolors,
 )
 from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import ServiceNotFoundError
@@ -191,24 +190,20 @@ def main(args=None):
         retry_delay = 3  # seconds
         for attempt in range(max_retries):
             try:
-                logger.debug(
-                    bcolors.OKGREEN + "Waiting for the spawner lock to be acquired!" + bcolors.ENDC
-                )
+                logger.debug("Waiting for the spawner lock to be acquired!")
                 # timeout after 20 seconds and try again
                 lock.acquire(timeout=20)
-                logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+                logger.debug("Spawner lock acquired!")
                 break
             except Timeout:
                 logger.warning(
-                    bcolors.WARNING
-                    + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
-                    + bcolors.ENDC
+                    "Attempt %d failed. Retrying in %d seconds...",
+                    attempt + 1,
+                    retry_delay,
                 )
                 time.sleep(retry_delay)
         else:
-            logger.error(
-                bcolors.FAIL + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
-            )
+            logger.error("Failed to acquire lock after multiple attempts.")
             return 1
 
         node = Node(spawner_node_name)
@@ -234,11 +229,7 @@ def main(args=None):
                 controller_manager_timeout,
                 service_call_timeout,
             ):
-                logger.warning(
-                    bcolors.WARNING
-                    + "Controller already loaded, skipping load_controller"
-                    + bcolors.ENDC
-                )
+                logger.warning("Controller already loaded, skipping load_controller")
             else:
                 if controller_ros_args := args.controller_ros_args:
                     if not set_controller_parameters(
@@ -267,17 +258,9 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    logger.fatal(
-                        bcolors.FAIL
-                        + "Failed loading controller "
-                        + bcolors.BOLD
-                        + controller_name
-                        + bcolors.ENDC
-                    )
+                    logger.fatal("Failed loading controller %s", controller_name)
                     return 1
-                logger.info(
-                    bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
-                )
+                logger.info("Loaded %s", controller_name)
 
             if not args.load_only:
                 ret = configure_controller(
@@ -288,7 +271,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    logger.error(bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC)
+                    logger.error("Failed to configure controller")
                     return 1
 
                 if not args.inactive and not args.activate_as_group:
@@ -303,18 +286,10 @@ def main(args=None):
                         service_call_timeout,
                     )
                     if not ret.ok:
-                        logger.error(
-                            f"{bcolors.FAIL}Failed to activate controller : {controller_name}{bcolors.ENDC}"
-                        )
+                        logger.error("Failed to activate controller : %s", controller_name)
                         return 1
 
-                    logger.info(
-                        bcolors.OKGREEN
-                        + "Configured and activated "
-                        + bcolors.BOLD
-                        + controller_name
-                        + bcolors.ENDC
-                    )
+                    logger.info("Configured and activated %s", controller_name)
 
         if not args.inactive and args.activate_as_group:
             ret = switch_controllers(
@@ -329,14 +304,12 @@ def main(args=None):
             )
             if not ret.ok:
                 logger.error(
-                    f"{bcolors.FAIL}Failed to activate the parsed controllers list : {controller_names}{bcolors.ENDC}"
+                    "Failed to activate the parsed controllers list : %s", controller_names
                 )
                 return 1
 
             logger.info(
-                bcolors.OKGREEN
-                + f"Configured and activated all the parsed controllers list : {controller_names}!"
-                + bcolors.ENDC
+                "Configured and activated all the parsed controllers list : %s!", controller_names
             )
         unload_controllers_upon_exit = args.unload_on_kill
         if not unload_controllers_upon_exit:
@@ -364,7 +337,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    logger.error(bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC)
+                    logger.error("Failed to deactivate controller")
                     return 1
 
                 logger.info(f"Successfully deactivated controllers : {controller_names}")
@@ -380,11 +353,7 @@ def main(args=None):
                 )
                 if not ret.ok:
                     unload_status = False
-                    logger.error(
-                        bcolors.FAIL
-                        + f"Failed to unload controller : {controller_name}"
-                        + bcolors.ENDC
-                    )
+                    logger.error("Failed to unload controller : %s", controller_name)
 
             if unload_status:
                 logger.info(f"Successfully unloaded controllers : {controller_names}")
