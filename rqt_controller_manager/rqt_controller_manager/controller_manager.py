@@ -316,7 +316,6 @@ class ControllerManager(Plugin):
                 is_async = "False (Default)"
         
         except Exception as e:
-            # Use the correct '.warning()' method and no exc_info
             self._node.get_logger().warning(
                 f"Could not get some parameters for controller {ctrl.name}: {e}")
         
