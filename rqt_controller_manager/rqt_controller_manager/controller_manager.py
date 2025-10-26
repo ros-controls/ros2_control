@@ -303,7 +303,7 @@ class ControllerManager(Plugin):
             if response.values[1].type == 1:  # Found per-controller is_async
                 is_async = str(response.values[1].bool_value)
         
-            # --- If per-controller update_rate not found, check global ---
+            # If per-controller update_rate not found, check global
             if update_rate == "N/A":
                 response_global = call_get_parameters(
                     node=self._node, node_name=self._cm_name, parameter_names=['update_rate'])
