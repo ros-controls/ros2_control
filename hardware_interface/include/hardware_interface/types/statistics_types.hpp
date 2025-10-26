@@ -169,7 +169,7 @@ public:
    *
    *  @param item The item that was observed
    */
-  virtual void add_measurement(const double item)
+  void add_measurement(const double item)
   {
     std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
 

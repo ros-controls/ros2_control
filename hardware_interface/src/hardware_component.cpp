@@ -47,27 +47,6 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 }
 
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
-  const HardwareInfo & hardware_info, rclcpp::Logger logger,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-{
-  // This is done for backward compatibility with the old initialize method.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  return this->initialize(hardware_info, logger, clock_interface->get_clock());
-#pragma GCC diagnostic pop
-}
-
-const rclcpp_lifecycle::State & HardwareComponent::initialize(
-  const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
-{
-  hardware_interface::HardwareComponentParams params;
-  params.hardware_info = hardware_info;
-  params.logger = logger;
-  params.clock = clock;
-  return initialize(params);
-}
-
-const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
@@ -97,6 +76,7 @@ const rclcpp_lifecycle::State & HardwareComponent::configure()
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -124,6 +104,7 @@ const rclcpp_lifecycle::State & HardwareComponent::cleanup()
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_cleanup(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -149,6 +130,7 @@ const rclcpp_lifecycle::State & HardwareComponent::shutdown()
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_shutdown(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -177,6 +159,7 @@ const rclcpp_lifecycle::State & HardwareComponent::activate()
   }
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
+    impl_->pause_async_operations();
     impl_->prepare_for_activation();
     switch (impl_->on_activate(impl_->get_lifecycle_state()))
     {
@@ -205,6 +188,7 @@ const rclcpp_lifecycle::State & HardwareComponent::deactivate()
   impl_->enable_introspection(false);
   if (impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_deactivate(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
@@ -233,6 +217,7 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
+    impl_->pause_async_operations();
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:

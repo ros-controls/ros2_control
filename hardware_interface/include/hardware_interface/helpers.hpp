@@ -38,7 +38,7 @@ template <typename Container, typename T>
 {
   if constexpr (std::is_same_v<Container, std::vector<T>>)
   {
-    return std::find(container.begin(), container.end(), item);
+    return std::find(container.cbegin(), container.cend(), item);
   }
   else if constexpr (
     std::is_same_v<Container, std::map<T, typename Container::mapped_type>> ||
@@ -68,7 +68,7 @@ template <typename Container, typename T>
 template <typename Container, typename T>
 [[nodiscard]] bool has_item(const Container & container, const T & item)
 {
-  return get_item_iterator(container, item) != container.end();
+  return get_item_iterator(container, item) != container.cend();
 }
 
 /**
@@ -82,6 +82,20 @@ void add_item(std::vector<T> & vector, const T & item)
   if (!has_item(vector, item))
   {
     vector.push_back(item);
+  }
+}
+
+/**
+ * @brief Add the items from one container to the other, if they are not already in it.
+ * @param vector The container to add the items to.
+ * @param items The container to add the items from.
+ */
+template <typename T>
+void add_items(std::vector<T> & vector, const std::vector<T> & items)
+{
+  for (const auto & item : items)
+  {
+    add_item(vector, item);
   }
 }
 
