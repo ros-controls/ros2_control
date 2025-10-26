@@ -320,11 +320,8 @@ class ControllerManager(Plugin):
             self._node.get_logger().warning(
                 f"Could not get some parameters for controller {ctrl.name}: {e}")
         
-        # Update the labels you created in the .ui file
         popup.label_update_rate_value.setText(update_rate)
         popup.label_async_setting_value.setText(is_async)
-
-          
           
         res_model = QStandardItemModel()
         model_root = QStandardItem("Claimed Interfaces")
