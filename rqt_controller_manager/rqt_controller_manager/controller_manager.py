@@ -285,10 +285,9 @@ class ControllerManager(Plugin):
         ctrl = self._controllers[index.row()]
         popup.ctrl_name.setText(ctrl.name)
         popup.ctrl_type.setText(ctrl.type)
-            
-        # Fetch the update_rate and is_async 
+
         update_rate = "N/A"
-        is_async = "N/A"  # Default to N/A for now
+        is_async = "N/A"  
         
         try:
             # Check for per-controller params first
