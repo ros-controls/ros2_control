@@ -286,7 +286,7 @@ class ControllerManager(Plugin):
         popup.ctrl_name.setText(ctrl.name)
         popup.ctrl_type.setText(ctrl.type)
             
-        #Fetch the update_rate and is_async 
+        # Fetch the update_rate and is_async 
         update_rate = "N/A"
         is_async = "N/A"  # Default to N/A for now
         
