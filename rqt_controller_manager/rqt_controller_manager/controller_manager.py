@@ -311,7 +311,7 @@ class ControllerManager(Plugin):
                 if response_global.values and response_global.values[0].type == 2:
                     update_rate = f"{response_global.values[0].integer_value} Hz (Global)"
         
-            # --- Set a default for is_async if not found ---
+            # Set a default for is_async if not found
             if is_async == "N/A":
                 is_async = "False (Default)"
         
