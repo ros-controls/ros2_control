@@ -287,40 +287,43 @@ class ControllerManager(Plugin):
         popup.ctrl_type.setText(ctrl.type)
 
         update_rate = "N/A"
-        is_async = "N/A"  
-        
+        is_async = "N/A"
+
         try:
             # Check for per-controller params first
             param_names = [f"{ctrl.name}.update_rate", f"{ctrl.name}.is_async"]
             response = call_get_parameters(
-                node=self._node, node_name=self._cm_name, parameter_names=param_names)
-        
+                node=self._node, node_name=self._cm_name, parameter_names=param_names
+            )
+
             # Check the response for valid types
             # INTEGER is type 2, BOOL is type 1, NOT_SET is 0
             if response.values[0].type == 2:  # Found per-controller update_rate
                 update_rate = f"{response.values[0].integer_value} Hz"
             if response.values[1].type == 1:  # Found per-controller is_async
                 is_async = str(response.values[1].bool_value)
-        
+
             # If per-controller update_rate not found, check global
             if update_rate == "N/A":
                 response_global = call_get_parameters(
-                    node=self._node, node_name=self._cm_name, parameter_names=['update_rate'])
+                    node=self._node, node_name=self._cm_name, parameter_names=["update_rate"]
+                )
                 # Check for a valid response and correct type (INTEGER = 2)
                 if response_global.values and response_global.values[0].type == 2:
                     update_rate = f"{response_global.values[0].integer_value} Hz (Global)"
-        
+
             # Set a default for is_async if not found
             if is_async == "N/A":
                 is_async = "False (Default)"
-        
+
         except Exception as e:
             self._node.get_logger().warning(
-                f"Could not get some parameters for controller {ctrl.name}: {e}")
-        
+                f"Could not get some parameters for controller {ctrl.name}: {e}"
+            )
+
         popup.label_update_rate_value.setText(update_rate)
         popup.label_async_setting_value.setText(is_async)
-          
+
         res_model = QStandardItemModel()
         model_root = QStandardItem("Claimed Interfaces")
         res_model.appendRow(model_root)
