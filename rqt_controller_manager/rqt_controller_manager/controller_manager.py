@@ -291,7 +291,7 @@ class ControllerManager(Plugin):
         is_async = "N/A"  # Default to N/A for now
         
         try:
-            # --- Check for per-controller params first ---
+            # Check for per-controller params first
             param_names = [f"{ctrl.name}.update_rate", f"{ctrl.name}.is_async"]
             response = call_get_parameters(
                 node=self._node, node_name=self._cm_name, parameter_names=param_names)
