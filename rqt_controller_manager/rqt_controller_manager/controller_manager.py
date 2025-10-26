@@ -297,7 +297,7 @@ class ControllerManager(Plugin):
                 node=self._node, node_name=self._cm_name, parameter_names=param_names)
         
             # Check the response for valid types
-            # In Rolling, INTEGER is type 2, BOOL is type 1, NOT_SET is 0
+            # INTEGER is type 2, BOOL is type 1, NOT_SET is 0
             if response.values[0].type == 2:  # Found per-controller update_rate
                 update_rate = f"{response.values[0].integer_value} Hz"
             if response.values[1].type == 1:  # Found per-controller is_async
