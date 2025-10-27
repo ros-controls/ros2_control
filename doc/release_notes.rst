@@ -7,10 +7,12 @@ This list summarizes important changes between Kilted Kaiju (previous) and Lyric
 
 controller_interface
 ********************
-* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
+* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. (`#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
 
 controller_manager
 ******************
+* The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
+
 
 hardware_interface
 ******************
