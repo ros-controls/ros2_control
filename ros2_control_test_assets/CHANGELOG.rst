@@ -2,6 +2,9 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.52.1 (2025-10-17)
 -------------------
 * Fix exclusive hardware control mode switching on controller failed activation (backport `#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2579 <https://github.com/ros-controls/ros2_control/issues/2579>`_)
