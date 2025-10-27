@@ -81,6 +81,7 @@ public:
 
   size_t internal_counter;
   bool fail_on_activate = false;
+  controller_interface::return_type update_return_value = controller_interface::return_type::OK;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
