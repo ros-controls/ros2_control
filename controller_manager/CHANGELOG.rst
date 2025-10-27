@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.0 (2025-10-27)
+------------------
+* Switch the default strictness to STRICT (`#2742 <https://github.com/ros-controls/ros2_control/issues/2742>`_)
+* Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_)
+* Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_)
+* Add test_test_utils to CMakeLists (`#2729 <https://github.com/ros-controls/ros2_control/issues/2729>`_)
+* Fix concurrent spinning of the test_node (`#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_)
+* [Spawner] Fix failing makedirs on multiple spawners at startup (`#2698 <https://github.com/ros-controls/ros2_control/issues/2698>`_)
+* [Spawner] Create the FileLock in the ROS_HOME location (`#2677 <https://github.com/ros-controls/ros2_control/issues/2677>`_)
+* Fix the same hardware component node naming issue with multiple controller managers setup (`#2657 <https://github.com/ros-controls/ros2_control/issues/2657>`_)
+* Move clock availability check to controller manager thread (`#2654 <https://github.com/ros-controls/ros2_control/issues/2654>`_)
+* increase tolerance of the controller manager tests (`#2629 <https://github.com/ros-controls/ros2_control/issues/2629>`_)
+* [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)
+* Contributors: Christoph Fröhlich, Erik Holum, Sai Kishor Kothakota
+
 5.7.0 (2025-10-03)
 ------------------
 * [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)

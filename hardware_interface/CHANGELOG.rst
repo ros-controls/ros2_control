@@ -2,6 +2,22 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.0 (2025-10-27)
+------------------
+* Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_)
+* Cleanup GenericSystem component code :broom:  (`#2706 <https://github.com/ros-controls/ros2_control/issues/2706>`_)
+* Fix dynamics calculation of GenericSystem component (`#2705 <https://github.com/ros-controls/ros2_control/issues/2705>`_)
+* Add `has_state` and `has_command` methods to hardware_component_interface (`#2701 <https://github.com/ros-controls/ros2_control/issues/2701>`_)
+* [GenericSystem] Initialize joint_control_mode\_ in on_configure (`#2693 <https://github.com/ros-controls/ros2_control/issues/2693>`_)
+* Cleanup deprecations (`#2589 <https://github.com/ros-controls/ros2_control/issues/2589>`_)
+* Prepare GenericSystem for other interface data types (`#2571 <https://github.com/ros-controls/ros2_control/issues/2571>`_)
+* Fix the same hardware component node naming issue with multiple controller managers setup (`#2657 <https://github.com/ros-controls/ros2_control/issues/2657>`_)
+* Deprecate thread_priority again (`#2644 <https://github.com/ros-controls/ros2_control/issues/2644>`_)
+* Add magnetic_field_sensor semantic component (`#2627 <https://github.com/ros-controls/ros2_control/issues/2627>`_)
+* Fix `RCLCPP_WARN_ONCE` within handle (`#2630 <https://github.com/ros-controls/ros2_control/issues/2630>`_)
+* Fix warnings of uninitialized registry in GenericSystem tests (`#2635 <https://github.com/ros-controls/ros2_control/issues/2635>`_)
+* Contributors: Aarav Gupta, Christoph Fröhlich, Felix Exner, Sai Kishor Kothakota
+
 5.7.0 (2025-10-03)
 ------------------
 * Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)

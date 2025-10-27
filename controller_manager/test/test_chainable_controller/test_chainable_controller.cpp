@@ -129,7 +129,7 @@ controller_interface::return_type TestChainableController::update_and_write_comm
     state_interfaces_values_[i] = state_interfaces_[i].get_optional().value();
   }
 
-  return controller_interface::return_type::OK;
+  return update_return_value;
 }
 
 CallbackReturn TestChainableController::on_init() { return CallbackReturn::SUCCESS; }

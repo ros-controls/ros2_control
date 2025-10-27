@@ -8,6 +8,8 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
+      - '**.py'
+      - '**.yaml'
       - '.github/workflows/kilted-coverage-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
