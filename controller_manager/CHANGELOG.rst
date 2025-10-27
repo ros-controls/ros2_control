@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_) (`#2744 <https://github.com/ros-controls/ros2_control/issues/2744>`_)
+* Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_) (`#2738 <https://github.com/ros-controls/ros2_control/issues/2738>`_)
+* Fix concurrent spinning of the test_node (backport `#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_) (`#2728 <https://github.com/ros-controls/ros2_control/issues/2728>`_)
+* [Spawner] Fix failing makedirs on multiple spawners at startup (`#2698 <https://github.com/ros-controls/ros2_control/issues/2698>`_) (`#2700 <https://github.com/ros-controls/ros2_control/issues/2700>`_)
+* [Spawner] Create the FileLock in the ROS_HOME location (`#2677 <https://github.com/ros-controls/ros2_control/issues/2677>`_) (`#2686 <https://github.com/ros-controls/ros2_control/issues/2686>`_)
+* Fix the same hardware component node naming issue with multiple controller managers setup (`#2657 <https://github.com/ros-controls/ros2_control/issues/2657>`_) (`#2667 <https://github.com/ros-controls/ros2_control/issues/2667>`_)
+* Move clock availability check to controller manager thread (`#2654 <https://github.com/ros-controls/ros2_control/issues/2654>`_) (`#2661 <https://github.com/ros-controls/ros2_control/issues/2661>`_)
+* increase tolerance of the controller manager tests (`#2629 <https://github.com/ros-controls/ros2_control/issues/2629>`_) (`#2637 <https://github.com/ros-controls/ros2_control/issues/2637>`_)
+* [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
 5.7.0 (2025-10-03)
 ------------------
 * [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)
