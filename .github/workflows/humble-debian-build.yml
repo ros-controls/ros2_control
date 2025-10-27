@@ -9,6 +9,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/humble-debian-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
