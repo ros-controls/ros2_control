@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.52.2 (2025-10-27)
+-------------------
 * Fix concurrent spinning of the test_node (backport `#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_) (`#2726 <https://github.com/ros-controls/ros2_control/issues/2726>`_)
 * Contributors: mergify[bot]
 
