@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.8.0 (2025-10-27)
+------------------
 * Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_) (`#2744 <https://github.com/ros-controls/ros2_control/issues/2744>`_)
 * Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_) (`#2738 <https://github.com/ros-controls/ros2_control/issues/2738>`_)
 * Fix concurrent spinning of the test_node (backport `#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_) (`#2728 <https://github.com/ros-controls/ros2_control/issues/2728>`_)
