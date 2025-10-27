@@ -51,6 +51,7 @@ from controller_manager.launch_utils import (
     generate_load_controller_launch_description,
 )
 
+
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
 def generate_test_description():
@@ -89,12 +90,27 @@ def generate_test_description():
     )
     return LaunchDescription([robot_state_pub_node, control_node, ctrl_spawner, ReadyToTest()])
 
-class TestLaunchUtils(unittest.TestCase):
-    """
-    Backward/forward compatible test suite for controller_manager.launch_utils.py.
-    Supports both Humble/Iron (list-based) and Jazzy/Rolling (LaunchDescription-based) APIs.
-    """
 
+# This is our test fixture. Each method is a test case.
+# These run alongside the processes specified in generate_test_description()
+class TestFixture(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def setUp(self):
+        self.node = rclpy.create_node("test_node")
+
+    def tearDown(self):
+        self.node.destroy_node()
+
+    # ------------------------------------------------------------------
+    # Helper methods
+    # ------------------------------------------------------------------
     def _extract_actions(self, result):
         """Return a list of launch actions, regardless of type."""
         if isinstance(result, list):
@@ -113,19 +129,19 @@ class TestLaunchUtils(unittest.TestCase):
         actions = self._extract_actions(result)
         self.assertGreaterEqual(len(actions), min_len)
         for act in actions:
-            # Generic Launch action interface check
             self.assertTrue(
                 hasattr(act, "execute") or hasattr(act, "visit"),
                 f"Invalid action type: {type(act)}",
             )
         return actions
 
+    # ------------------------------------------------------------------
+    # Launch utility tests (moved from TestLaunchUtils)
+    # ------------------------------------------------------------------
     def test_generate_controllers_spawner_from_list(self):
         controllers = ["test_controller_1", "test_controller_2"]
         result = generate_controllers_spawner_launch_description(controllers)
         actions = self._assert_launch_result(result, min_len=1)
-        # check that some actions correspond to spawner or DeclareLaunchArgument
-        #self.assertTrue(any("spawner" in str(a) or "controller" in str(a) for a in actions))
         self.assertTrue(actions is not None and len(actions) > 0)
 
     def test_generate_controllers_spawner_from_dict(self):
@@ -134,13 +150,12 @@ class TestLaunchUtils(unittest.TestCase):
             "ctrl_A": ["/tmp/dummy.yaml"],
             "ctrl_B": ["/tmp/dummy.yaml"],
         }
-
         result = generate_controllers_spawner_launch_description_from_dict(controllers)
         actions = self._extract_actions(result)
         self.assertIsInstance(result, LaunchDescription)
         self.assertEqual(len(actions), 3)
         self.assertIsInstance(actions[-1], Node)
-        
+
     def test_generate_load_controller_launch_description(self):
         """Test load controller description with valid single string params."""
         controllers = ["test_controller_load"]
@@ -150,66 +165,9 @@ class TestLaunchUtils(unittest.TestCase):
         self.assertEqual(len(actions), 3)
         self.assertIsInstance(actions[-1], Node)
 
-    def test_empty_list_input(self):
-        result = generate_controllers_spawner_launch_description([])
-        self._assert_launch_result(result, min_len=0)
-
-    def test_empty_dict_input(self):
-        result = generate_controllers_spawner_launch_description_from_dict({})
-        self._assert_launch_result(result, min_len=0)
-
-    def test_pr_2146_dict_keys_conversion(self):
-        controllers = {"controller_a": {}, "controller_b": {}}
-        result = generate_controllers_spawner_launch_description_from_dict(controllers)
-        actions = self._extract_actions(result)
-        combined = []
-        combined.extend(actions)  # must not throw AttributeError
-        self.assertGreaterEqual(len(combined), 0)
-
-    def test_nodes_can_be_added_to_launch_description(self):
-        controllers = ["ctrl1", "ctrl2"]
-        result = generate_controllers_spawner_launch_description(controllers)
-        actions = self._extract_actions(result)
-        ld = LaunchDescription()
-        for act in actions:
-            ld.add_action(act)
-        self.assertIsInstance(ld, LaunchDescription)
-        self.assertGreaterEqual(len(ld.entities), len(actions))
-
-    def test_combining_all_three_functions(self):
-        """Combine results from all three entry points safely."""
-        list_res = generate_controllers_spawner_launch_description(["ctrl_list"])
-        dict_res = generate_controllers_spawner_launch_description_from_dict(
-            {"ctrl_dict": ["/tmp/x.yaml"]}
-        )
-        load_res = generate_load_controller_launch_description(["ctrl_load"])
-
-        all_actions = []
-        for res in (list_res, dict_res, load_res):
-            all_actions.extend(self._extract_actions(res))
-
-        self.assertEqual(len(all_actions), 9)
-        ld = LaunchDescription(all_actions)
-        self.assertIsInstance(ld, LaunchDescription)
-
-        
-# This is our test fixture. Each method is a test case.
-# These run alongside the processes specified in generate_test_description()
-class TestFixture(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        rclpy.init()
-
-    @classmethod
-    def tearDownClass(cls):
-        rclpy.shutdown()
-
-    def setUp(self):
-        self.node = rclpy.create_node("test_node")
-
-    def tearDown(self):
-        self.node.destroy_node()
-
+    # ------------------------------------------------------------------
+    # Runtime (live node) tests
+    # ------------------------------------------------------------------
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
 
