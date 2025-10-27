@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.0.0 (2025-10-27)
+------------------
 * [Transmission] Fix the differential transmission configure checks (`#2682 <https://github.com/ros-controls/ros2_control/issues/2682>`_)
 * [Transmissions] Add `force`  interface (`#2588 <https://github.com/ros-controls/ros2_control/issues/2588>`_)
 * Contributors: Jordan Palacios, Sai Kishor Kothakota

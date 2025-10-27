@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.0.0 (2025-10-27)
+------------------
 * Add magnetic_field_sensor semantic component (`#2627 <https://github.com/ros-controls/ros2_control/issues/2627>`_)
 * Fix `-Wreturn-local-addr` compiler warning (`#2628 <https://github.com/ros-controls/ros2_control/issues/2628>`_)
 * [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)

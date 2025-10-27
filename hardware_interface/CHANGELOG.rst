@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.0.0 (2025-10-27)
+------------------
 * Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_)
 * Cleanup GenericSystem component code :broom:  (`#2706 <https://github.com/ros-controls/ros2_control/issues/2706>`_)
 * Fix dynamics calculation of GenericSystem component (`#2705 <https://github.com/ros-controls/ros2_control/issues/2705>`_)

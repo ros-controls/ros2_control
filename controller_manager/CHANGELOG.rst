@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.0.0 (2025-10-27)
+------------------
 * Switch the default strictness to STRICT (`#2742 <https://github.com/ros-controls/ros2_control/issues/2742>`_)
 * Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_)
 * Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_)
