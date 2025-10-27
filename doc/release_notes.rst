@@ -8,6 +8,7 @@ This list summarizes the changes between Jazzy (previous) and Kilted (current) r
 controller_interface
 ********************
 * The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
+* The controller_manager will now deactivate the entire controller chain if a controller in the chain fails during the update cycle. `(#2681 <https://github.com/ros-controls/ros2_control/pull/2681>`__)
 
 controller_manager
 ******************
