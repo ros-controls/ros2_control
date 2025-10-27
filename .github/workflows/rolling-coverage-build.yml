@@ -9,6 +9,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-coverage-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
