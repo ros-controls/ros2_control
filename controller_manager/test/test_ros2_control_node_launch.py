@@ -37,6 +37,7 @@ from launch import LaunchDescription
 from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
+from launch_ros.actions import Node
 
 import rclpy
 from controller_manager.test_utils import (
@@ -48,6 +49,7 @@ from controller_manager.launch_utils import (
     generate_controllers_spawner_launch_description_from_dict,
     generate_load_controller_launch_description,
 )
+
 
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
@@ -133,7 +135,7 @@ class TestFixture(unittest.TestCase):
         return actions
 
     # ------------------------------------------------------------------
-    # Launch utility tests 
+    # Launch utility tests
     # ------------------------------------------------------------------
     def test_generate_controllers_spawner_from_list(self):
         controllers = ["test_controller_1", "test_controller_2"]
