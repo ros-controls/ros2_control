@@ -3928,6 +3928,7 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
   const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
   std::string & message)
 {
+  std::vector<std::string> future_unavailable_cmd_interfaces = {};
   for (const auto & controller_name : activation_list)
   {
     auto controller_it = std::find_if(
@@ -3959,6 +3960,17 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
+      if (ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf))
+      {
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' will be used by another controller that is being activated."),
+          controller_it->info.name, cmd_itf);
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      future_unavailable_cmd_interfaces.push_back(cmd_itf);
     }
     for (const auto & state_itf : controller_state_interfaces)
     {
