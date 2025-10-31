@@ -1980,7 +1980,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   if (
     check_for_interfaces_availability_to_activate(
-      controllers, switch_params_.activate_request, message) !=
+      controllers, switch_params_.activate_request, strictness, message) !=
     controller_interface::return_type::OK)
   {
     clear_requests();
@@ -2456,7 +2456,7 @@ void ControllerManager::activate_controllers(
   }
   // Now prepare and perform the stop interface switching as this is needed for exclusive
   // interfaces
-  if (
+  else if (
     !failed_controllers_command_interfaces.empty() &&
     (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
      !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
@@ -2963,6 +2963,8 @@ void ControllerManager::manage_switch()
         switch_params_.deactivate_command_interface_request))
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
+    // If the hardware switching fails, there is no point in continuing to switch controllers
+    return;
   }
   execution_time_.switch_perform_mode_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3926,7 +3928,7 @@ void ControllerManager::publish_activity()
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
   const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-  std::string & message)
+  int strictness, std::string & message)
 {
   std::vector<std::string> future_unavailable_cmd_interfaces = {};
   for (const auto & controller_name : activation_list)
@@ -3960,7 +3962,9 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
-      if (ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf))
+      if (
+        ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf) &&
+        strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
         message = fmt::format(
           FMT_COMPILE(
