@@ -19,9 +19,8 @@ import sys
 from controller_manager import (
     list_hardware_components,
     set_hardware_component_state,
-    bcolors,
 )
-from controller_manager.controller_manager_services import ServiceNotFoundError
+from controller_manager.controller_manager_services import ServiceNotFoundError, bcolors
 
 from lifecycle_msgs.msg import State
 import rclpy
@@ -93,7 +92,11 @@ def configure_component(node, controller_manager_name, component_to_configure):
     inactive_state.id = State.PRIMARY_STATE_INACTIVE
     inactive_state.label = "inactive"
     handle_set_component_state_service_call(
-        node, controller_manager_name, component_to_configure, inactive_state, "configured"
+        node,
+        controller_manager_name,
+        component_to_configure,
+        inactive_state,
+        "configured",
     )
 
 
@@ -154,7 +157,10 @@ def main(args=None):
     try:
         for hardware_component in hardware_components:
             if not is_hardware_component_loaded(
-                node, controller_manager_name, hardware_component, controller_manager_timeout
+                node,
+                controller_manager_name,
+                hardware_component,
+                controller_manager_timeout,
             ):
                 node.get_logger().warning(
                     f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
