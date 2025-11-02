@@ -3963,6 +3963,18 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
         return controller_interface::return_type::ERROR;
       }
       if (
+        resource_manager_->command_interface_is_claimed(cmd_itf) &&
+        strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      {
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' is currently claimed by another controller."),
+          controller_it->info.name, cmd_itf);
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      if (
         ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf) &&
         strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
