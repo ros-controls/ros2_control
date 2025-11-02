@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>ros2controlcli</name>
-  <version>5.7.0</version>
+  <version>6.0.0</version>
   <description>The ROS 2 command line tools for ros2_control.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -18,6 +18,7 @@
   <depend>ros2param</depend>
   <depend>controller_manager</depend>
   <depend>controller_manager_msgs</depend>
+  <depend>control_msgs</depend>
   <exec_depend>rosidl_runtime_py</exec_depend>
   <exec_depend>python3-pygraphviz</exec_depend>
 

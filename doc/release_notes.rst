@@ -7,12 +7,16 @@ This list summarizes important changes between Kilted Kaiju (previous) and Lyric
 
 controller_interface
 ********************
-* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
+* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. (`#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
+* The controller_manager will now deactivate the entire controller chain if a controller in the chain fails during the update cycle. `(#2681 <https://github.com/ros-controls/ros2_control/pull/2681>`__)
 
 controller_manager
 ********************
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment variable
   to automatically disable colors in non-TTY and CI environments. (`#2741 <https://github.com/ros-controls/ros2_control/pull/2741>`__)
+******************
+* The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
+
 
 hardware_interface
 ******************
