@@ -1980,8 +1980,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   if (
     check_for_interfaces_availability_to_activate(
-      controllers, switch_params_.activate_request, switch_params_.deactivate_request, strictness,
-      message) != controller_interface::return_type::OK)
+      controllers, switch_params_.activate_request, switch_params_.deactivate_request, message) !=
+    controller_interface::return_type::OK)
   {
     clear_requests();
     return controller_interface::return_type::ERROR;
@@ -3928,7 +3928,7 @@ void ControllerManager::publish_activity()
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
   const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-  const std::vector<std::string> deactivation_list, int strictness, std::string & message)
+  const std::vector<std::string> deactivation_list, std::string & message)
 {
   std::vector<std::string> future_unavailable_cmd_interfaces = {};
   std::vector<std::string> future_available_cmd_interfaces = {};
@@ -3990,8 +3990,7 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
       }
       if (
         resource_manager_->command_interface_is_claimed(cmd_itf) &&
-        !ros2_control::has_item(future_available_cmd_interfaces, cmd_itf) &&
-        strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+        !ros2_control::has_item(future_available_cmd_interfaces, cmd_itf))
       {
         message = fmt::format(
           FMT_COMPILE(
@@ -4001,9 +4000,7 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
-      if (
-        ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf) &&
-        strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+      if (ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf))
       {
         message = fmt::format(
           FMT_COMPILE(
