@@ -458,13 +458,14 @@ private:
    *
    * \param[in] controllers list with controllers.
    * \param[in] activation_list list with controllers to activate.
+   * \param[in] deactivation_list list with controllers to deactivate.
    * \param[in] strictness strictness of the controller switching
    * \param[out] message describing the result of the check.
    * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
    */
   controller_interface::return_type check_for_interfaces_availability_to_activate(
     const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-    int strictness, std::string & message);
+    const std::vector<std::string> deactivation_list, int strictness, std::string & message);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the

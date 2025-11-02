@@ -1980,8 +1980,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   if (
     check_for_interfaces_availability_to_activate(
-      controllers, switch_params_.activate_request, strictness, message) !=
-    controller_interface::return_type::OK)
+      controllers, switch_params_.activate_request, switch_params_.deactivate_request, strictness,
+      message) != controller_interface::return_type::OK)
   {
     clear_requests();
     return controller_interface::return_type::ERROR;
@@ -3928,11 +3928,37 @@ void ControllerManager::publish_activity()
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
   const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-  int strictness, std::string & message)
+  const std::vector<std::string> deactivation_list, int strictness, std::string & message)
 {
   std::vector<std::string> future_unavailable_cmd_interfaces = {};
+  std::vector<std::string> future_available_cmd_interfaces = {};
+  for (const auto & controller_name : deactivation_list)
+  {
+    auto controller_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (controller_it == controllers.end())
+    {
+      message = fmt::format(
+        FMT_COMPILE("Unable to find the deactivation controller : '{}' within the controller list"),
+        controller_name);
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    const auto controller_cmd_interfaces =
+      controller_it->c->command_interface_configuration().names;
+    for (const auto & cmd_itf : controller_cmd_interfaces)
+    {
+      future_available_cmd_interfaces.push_back(cmd_itf);
+    }
+  }
   for (const auto & controller_name : activation_list)
   {
+    if (ros2_control::has_item(deactivation_list, controller_name))
+    {
+      // skip controllers that are being deactivated and activated in the same request
+      continue;
+    }
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, controller_name));
@@ -3964,6 +3990,7 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
       }
       if (
         resource_manager_->command_interface_is_claimed(cmd_itf) &&
+        !ros2_control::has_item(future_available_cmd_interfaces, cmd_itf) &&
         strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
         message = fmt::format(
