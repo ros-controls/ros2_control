@@ -10,7 +10,9 @@ controller_interface
 * The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
 
 controller_manager
-******************
+********************
+* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment variable
+  to automatically disable colors in non-TTY and CI environments. (`#2741 <https://github.com/ros-controls/ros2_control/pull/2741>`__)
 
 hardware_interface
 ******************
