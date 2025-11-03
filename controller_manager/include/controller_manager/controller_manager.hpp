@@ -94,8 +94,6 @@ public:
 
   void init_resource_manager(const std::string & robot_description);
 
-  void init_min_resource_manager();
-
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 

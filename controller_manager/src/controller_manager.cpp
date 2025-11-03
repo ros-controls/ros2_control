@@ -547,7 +547,7 @@ void ControllerManager::init_controller_manager()
   if (!is_resource_manager_initialized())
   {
     // fallback state
-    init_min_resource_manager();
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
     if (!robot_description_notification_timer_)
     {
       robot_description_notification_timer_ = create_wall_timer(
@@ -683,7 +683,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   {
     // The RM failed to init AFTER we received the description - a critical error.
     // don't finalize controller manager, instead keep waiting for robot description - fallback state
-    init_min_resource_manager();
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
   } else 
   {
     RCLCPP_INFO(
@@ -888,12 +888,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   }
 }
 
-void ControllerManager::init_min_resource_manager()
-{
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-  resource_manager_->set_on_component_state_switch_callback(
-      std::bind(&ControllerManager::publish_activity, this));
-}
 
 void ControllerManager::init_services()
 {
