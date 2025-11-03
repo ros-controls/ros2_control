@@ -1980,7 +1980,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
 
   if (
     check_for_interfaces_availability_to_activate(
-      controllers, switch_params_.activate_request, message) !=
+      controllers, switch_params_.activate_request, switch_params_.deactivate_request, message) !=
     controller_interface::return_type::OK)
   {
     clear_requests();
@@ -2456,7 +2456,7 @@ void ControllerManager::activate_controllers(
   }
   // Now prepare and perform the stop interface switching as this is needed for exclusive
   // interfaces
-  if (
+  else if (
     !failed_controllers_command_interfaces.empty() &&
     (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
      !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
@@ -2963,6 +2963,8 @@ void ControllerManager::manage_switch()
         switch_params_.deactivate_command_interface_request))
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
+    // If the hardware switching fails, there is no point in continuing to switch controllers
+    return;
   }
   execution_time_.switch_perform_mode_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3926,10 +3928,37 @@ void ControllerManager::publish_activity()
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
   const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-  std::string & message)
+  const std::vector<std::string> deactivation_list, std::string & message)
 {
+  std::vector<std::string> future_unavailable_cmd_interfaces = {};
+  std::vector<std::string> future_available_cmd_interfaces = {};
+  for (const auto & controller_name : deactivation_list)
+  {
+    auto controller_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (controller_it == controllers.end())
+    {
+      message = fmt::format(
+        FMT_COMPILE("Unable to find the deactivation controller : '{}' within the controller list"),
+        controller_name);
+      RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    const auto controller_cmd_interfaces =
+      controller_it->c->command_interface_configuration().names;
+    for (const auto & cmd_itf : controller_cmd_interfaces)
+    {
+      future_available_cmd_interfaces.push_back(cmd_itf);
+    }
+  }
   for (const auto & controller_name : activation_list)
   {
+    if (ros2_control::has_item(deactivation_list, controller_name))
+    {
+      // skip controllers that are being deactivated and activated in the same request
+      continue;
+    }
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, controller_name));
@@ -3959,6 +3988,29 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
         RCLCPP_WARN(get_logger(), "%s", message.c_str());
         return controller_interface::return_type::ERROR;
       }
+      if (
+        resource_manager_->command_interface_is_claimed(cmd_itf) &&
+        !ros2_control::has_item(future_available_cmd_interfaces, cmd_itf))
+      {
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' is currently claimed by another controller."),
+          controller_it->info.name, cmd_itf);
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      if (ros2_control::has_item(future_unavailable_cmd_interfaces, cmd_itf))
+      {
+        message = fmt::format(
+          FMT_COMPILE(
+            "Unable to activate controller '{}' since the "
+            "command interface '{}' will be used by another controller that is being activated."),
+          controller_it->info.name, cmd_itf);
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      future_unavailable_cmd_interfaces.push_back(cmd_itf);
     }
     for (const auto & state_itf : controller_state_interfaces)
     {
