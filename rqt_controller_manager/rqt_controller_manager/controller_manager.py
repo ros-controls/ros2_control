@@ -282,12 +282,12 @@ class ControllerManager(Plugin):
         popup = self._popup_widget
         popup.setWindowTitle("Controller Information")
 
+        popup.label_update_rate_value.setText("N/A")
+        popup.label_async_setting_value.setText("N/A")
+
         ctrl = self._controllers[index.row()]
         popup.ctrl_name.setText(ctrl.name)
         popup.ctrl_type.setText(ctrl.type)
-
-        update_rate = "N/A"
-        is_async = "N/A"
 
         try:
             # Check for per-controller params first
@@ -430,6 +430,9 @@ class ControllerManager(Plugin):
     def _on_hw_info(self, index):
         popup = self._popup_widget
         popup.setWindowTitle("Hardware Component Info")
+
+        popup.label_update_rate_value.setText("N/A")
+        popup.label_async_setting_value.setText("N/A")
 
         hw_component = self._hw_components[index.row()]
         popup.ctrl_name.setText(hw_component.name)
