@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 6.0.0 (2025-10-27)
 ------------------
 * Added `view_hardware_status` ros2cli verb (`#2495 <https://github.com/ros-controls/ros2_control/issues/2495>`_)
