@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fail early for the resource conflicts between the activating controllers (`#2760 <https://github.com/ros-controls/ros2_control/issues/2760>`_) (`#2772 <https://github.com/ros-controls/ros2_control/issues/2772>`_)
+* Contributors: mergify[bot]
+
 4.39.0 (2025-10-27)
 -------------------
 * Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_) (`#2743 <https://github.com/ros-controls/ros2_control/issues/2743>`_)

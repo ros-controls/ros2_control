@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.39.0 (2025-10-27)
 -------------------
 * [Transmission] Fix the differential transmission configure checks (`#2682 <https://github.com/ros-controls/ros2_control/issues/2682>`_) (`#2687 <https://github.com/ros-controls/ros2_control/issues/2687>`_)
