@@ -11,10 +11,9 @@ controller_interface
 * The controller_manager will now deactivate the entire controller chain if a controller in the chain fails during the update cycle. `(#2681 <https://github.com/ros-controls/ros2_control/pull/2681>`__)
 
 controller_manager
-********************
-* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment variable
-  to automatically disable colors in non-TTY and CI environments. (`#2741 <https://github.com/ros-controls/ros2_control/pull/2741>`__)
 ******************
+* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
+  variable to automatically disable colors in non-TTY and CI environments.
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
 
 
@@ -23,6 +22,9 @@ hardware_interface
 
 ros2controlcli
 **************
+
+No notable changes in this release.
+
 transmission_interface
 **********************
 * The ``simple_transmission`` and ``differential_transmission`` now also support the ``force`` interface (`#2588 <https://github.com/ros-controls/ros2_control/pull/2588>`_).

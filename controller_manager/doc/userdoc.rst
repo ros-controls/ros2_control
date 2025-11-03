@@ -501,6 +501,7 @@ Color Output Handling
 The helper scripts (``spawner`` and ``hardware_spawner``) now use an environment-aware ``bcolors`` class.
 The color output automatically adapts to the environment:
 
-* ``RCUTILS_COLORIZED_OUTPUT=0`` → disables color output
-* ``RCUTILS_COLORIZED_OUTPUT=1`` → forces color output
-* Unset → automatically detects TTY and enables color only in interactive terminals
+* ``RCUTILS_COLORIZED_OUTPUT=0`` -> disables color output
+* ``RCUTILS_COLORIZED_OUTPUT=1`` -> forces color output
+* Unset -> automatically detects TTY and enables color only in interactive
+  terminals
