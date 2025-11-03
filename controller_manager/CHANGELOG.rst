@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.8.1 (2025-11-03)
+------------------
 * Fail early for the resource conflicts between the activating controllers (`#2760 <https://github.com/ros-controls/ros2_control/issues/2760>`_) (`#2773 <https://github.com/ros-controls/ros2_control/issues/2773>`_)
 * Contributors: mergify[bot]
 
