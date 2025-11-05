@@ -15,8 +15,6 @@
 #ifndef HARDWARE_INTERFACE__COMPONENT_VALIDATOR_HPP_
 #define HARDWARE_INTERFACE__COMPONENT_VALIDATOR_HPP_
 
-// #include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <libxml/parser.h>
 #include <libxml/xmlschemas.h>
 
