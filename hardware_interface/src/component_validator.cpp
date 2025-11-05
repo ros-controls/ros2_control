@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include <fstream>
 #include <sstream>
 
@@ -85,6 +86,65 @@ bool validate_urdf_file_path_with_xsd(
   }
 
   return validate_urdf_with_xsd(urdf, xsd_file_path);
+}
+
+bool validate_urdf_with_xsd_tag(const std::string & urdf)
+{
+  if (urdf.empty())
+  {
+    throw std::runtime_error("empty URDF passed to robot");
+  }
+  // extract xmlns tag from the urdf
+  std::string ros2_control_xsd;
+  bool result = extract_ros2_control_xsd_tag(urdf, ros2_control_xsd);
+  if (!result)
+  {
+    return false;
+  }
+  return validate_urdf_with_xsd(urdf, ros2_control_xsd);
+}
+
+bool extract_ros2_control_xsd_tag(const std::string & urdf, std::string & ros2_control_xsd)
+{
+  if (urdf.empty())
+  {
+    throw std::runtime_error("empty URDF passed to robot");
+  }
+
+  xmlDocPtr doc = xmlReadMemory(urdf.c_str(), static_cast<int>(urdf.size()), nullptr, nullptr, 0);
+  if (!doc)
+  {
+    return {};
+  }
+
+  xmlNodePtr root = xmlDocGetRootElement(doc);
+  if (root)
+  {
+    auto check = [&](xmlNsPtr ns) -> bool
+    {
+      if (
+        ns && ns->prefix &&
+        std::strcmp(reinterpret_cast<const char *>(ns->prefix), "ros2_control") == 0)
+      {
+        ros2_control_xsd = ns->href ? reinterpret_cast<const char *>(ns->href) : "";
+        return true;
+      }
+      return false;
+    };
+    if (!check(root->ns))
+    {
+      for (xmlNsPtr cur = root->nsDef; cur; cur = cur->next)
+      {
+        if (check(cur))
+        {
+          break;
+        }
+      }
+    }
+  }
+
+  xmlFreeDoc(doc);
+  return false;
 }
 
 }  // namespace hardware_interface
