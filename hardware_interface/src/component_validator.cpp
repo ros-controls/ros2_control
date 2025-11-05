@@ -12,24 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ros2_control/hardware_interface/component_validator.hpp"
+#include <fstream>
+#include <sstream>
+
+#include "hardware_interface/component_validator.hpp"
 
 namespace hardware_interface
 {
 bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_file_path)
 {
+  if (urdf.empty())
+  {
+    throw std::runtime_error("empty URDF passed to robot");
+  }
+  // Load URDF
   xmlDocPtr doc = xmlReadMemory(urdf.c_str(), static_cast<int>(urdf.size()), nullptr, nullptr, 0);
   if (!doc)
   {
     return false;
   }
 
+  // Load XSD
   xmlSchemaParserCtxtPtr schemaCtx = xmlSchemaNewParserCtxt(xsd_file_path.c_str());
   if (!schemaCtx)
   {
     xmlFreeDoc(doc);
     return false;
   }
+  // Parse XSD
   xmlSchemaPtr schema = xmlSchemaParse(schemaCtx);
   if (!schema)
   {
@@ -37,7 +47,7 @@ bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_fi
     xmlFreeDoc(doc);
     return false;
   }
-
+  // Validate URDF against XSD
   xmlSchemaValidCtxtPtr validCtx = xmlSchemaNewValidCtxt(schema);
   if (!validCtx)
   {
@@ -46,6 +56,7 @@ bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_fi
     xmlFreeDoc(doc);
     return false;
   }
+  // Perform validation
   int ret = xmlSchemaValidateDoc(validCtx, doc);
   xmlSchemaFreeValidCtxt(validCtx);
   xmlSchemaFree(schema);
@@ -54,4 +65,26 @@ bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_fi
 
   return ret == 0;
 }
+
+bool validate_urdf_file_path_with_xsd(
+  const std::string & urdf_file_path, std::string & xsd_file_path)
+{
+  std::ifstream file(urdf_file_path);
+  if (!file)
+  {
+    return false;
+  }
+
+  std::ostringstream ss;
+  ss << file.rdbuf();
+  const std::string urdf = ss.str();
+
+  if (urdf.empty())
+  {
+    return false;
+  }
+
+  return validate_urdf_with_xsd(urdf, xsd_file_path);
+}
+
 }  // namespace hardware_interface

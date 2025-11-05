@@ -15,7 +15,7 @@
 #ifndef HARDWARE_INTERFACE__COMPONENT_VALIDATOR_HPP_
 #define HARDWARE_INTERFACE__COMPONENT_VALIDATOR_HPP_
 
-#include <gmock/gmock.h>
+// #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <libxml/parser.h>
 #include <libxml/xmlschemas.h>
@@ -34,6 +34,16 @@ namespace hardware_interface
  * \return true if the URDF is valid according to the XSD, false otherwise
  */
 bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_file_path);
+
+/// Validate URDF file path against an XML Schema Definition (XSD) file.
+/**
+ * \param[in] urdf_file_path path to URDF file
+ * \param[in] xsd_file_path path to the XSD file
+ * \return true if URDF is valid according to the XSD, false otherwise
+ *
+ */
+bool validate_urdf_file_path_with_xsd(
+  const std::string & urdf_file_path, std::string & xsd_file_path);
 
 }  // namespace hardware_interface
 
