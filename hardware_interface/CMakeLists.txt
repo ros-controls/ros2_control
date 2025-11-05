@@ -8,6 +8,7 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
+  LibXml2
   pluginlib
   rclcpp_lifecycle
   rcpputils
