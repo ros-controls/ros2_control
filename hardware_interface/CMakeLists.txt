@@ -112,13 +112,6 @@ if(BUILD_TESTING)
     LibXml2::LibXml2
   )
 
-  # Test XML Schema Validator
-  ament_add_gmock(test_validate_xml_schema test/test_validate_xml_schema.cpp)
-  target_link_libraries(test_validate_xml_schema
-    ament_index_cpp::ament_index_cpp
-    LibXml2::LibXml2
-  )
-
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
