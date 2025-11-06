@@ -465,12 +465,13 @@ private:
    *
    * \param[in] controllers list with controllers.
    * \param[in] activation_list list with controllers to activate.
+   * \param[in] deactivation_list list with controllers to deactivate.
    * \param[out] message describing the result of the check.
    * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
    */
   controller_interface::return_type check_for_interfaces_availability_to_activate(
     const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-    std::string & message);
+    const std::vector<std::string> deactivation_list, std::string & message);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
@@ -494,6 +495,14 @@ private:
   void update_list_with_controller_chain(
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
+
+  /**
+   * @brief Build the controller chain topology information based on the provided controllers.
+   *  This method constructs a directed graph representing the dependencies between controllers.
+   *  It analyzes the relationships between controllers, such as which controllers depend on others,
+   *  and builds a directed graph to represent these dependencies.
+   */
+  void build_controllers_topology_info(const std::vector<ControllerSpec> & controllers);
 
   /**
    * @brief Method to publish the state of the controller manager.
