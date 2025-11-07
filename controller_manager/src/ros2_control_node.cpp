@@ -76,31 +76,20 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm, thread_priority, use_sim_time]()
     {
-      if (realtime_tools::has_realtime_kernel())
-      {
-        if (!realtime_tools::configure_sched_fifo(thread_priority))
-        {
-          RCLCPP_WARN(
-            cm->get_logger(),
-            "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
-            "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
-            "for details on how to enable realtime scheduling.",
-            errno, strerror(errno));
-        }
-        else
-        {
-          RCLCPP_INFO(
-            cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-            thread_priority);
-        }
-      }
-      else
+      if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
         RCLCPP_WARN(
           cm->get_logger(),
-          "No real-time kernel detected on this system. See "
+          "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
           "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
-          "for details on how to enable realtime scheduling.");
+          "for details on how to enable realtime scheduling.",
+          errno, strerror(errno));
+      }
+      else
+      {
+        RCLCPP_INFO(
+          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+          thread_priority);
       }
 
       // for calculating sleep time
