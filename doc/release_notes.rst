@@ -35,11 +35,17 @@ For details see the controller_manager section.
 
 controller_manager
 ******************
+<<<<<<< HEAD
 * URDF is now passed to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/pull/1088>`_)
   This should help avoiding extra legwork in controllers to get access to the ``/robot_description``.
 * Pass controller manager update rate on the init of the controller interface (`#1141 <https://github.com/ros-controls/ros2_control/pull/1141>`_)
 * Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/pull/1184>`_)
 * Set chained controller interfaces 'available' for activated controllers (`#1098 <https://github.com/ros-controls/ros2_control/pull/1098>`_)
+=======
+* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
+  variable to automatically disable colors in non-TTY and CI environments.
+* The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
+>>>>>>> 38110f4 (Fix ANSI escape code pollution in log output (#2741))
 
   *  Configured chainable controller: Listed exported interfaces are unavailable and unclaimed
   *  Active chainable controller (not in chained mode): Listed exported interfaces are available but unclaimed
@@ -195,6 +201,7 @@ joint_limits
 
 ros2controlcli
 **************
+<<<<<<< HEAD
 * Spawner colours were added to ``list_controllers`` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/pull/1409>`_)
 * The ``set_hardware_component_state`` verb was added (`#1248 <https://github.com/ros-controls/ros2_control/pull/1248>`_). Use the following command to set the state of a hardware component
 
@@ -215,6 +222,10 @@ ros2controlcli
     ros2 control <verb> <arguments> --ros-args -r __ns:=<namespace>
 
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
+=======
+
+No notable changes in this release.
+>>>>>>> 38110f4 (Fix ANSI escape code pollution in log output (#2741))
 
 transmission_interface
 **********************
