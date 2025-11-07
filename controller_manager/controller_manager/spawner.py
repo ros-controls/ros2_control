@@ -28,10 +28,9 @@ from controller_manager import (
     unload_controller,
     set_controller_parameters,
     set_controller_parameters_from_param_files,
-    bcolors,
 )
 from controller_manager_msgs.srv import SwitchController
-from controller_manager.controller_manager_services import ServiceNotFoundError
+from controller_manager.controller_manager_services import ServiceNotFoundError, bcolors
 
 from filelock import Timeout, FileLock
 import rclpy
@@ -51,7 +50,8 @@ def combine_name_and_namespace(name_and_namespace):
 def find_node_and_namespace(node, full_node_name):
     node_names_and_namespaces = node.get_node_names_and_namespaces()
     return first_match(
-        node_names_and_namespaces, lambda n: combine_name_and_namespace(n) == full_node_name
+        node_names_and_namespaces,
+        lambda n: combine_name_and_namespace(n) == full_node_name,
     )
 
 
