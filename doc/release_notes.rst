@@ -18,6 +18,8 @@ controller_manager
 * The controller manager now supports switching (activating and deactivating) controllers in both realtime and non-realtime modes. This is controlled by the parameter ``activate_asap`` of the ``switch_controllers`` service (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_).
 * The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop. By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2453>`_).
 * New parameters ``overruns.manage`` and ``overruns.print_warnings`` were added to control the behavior of the controller manager/ros2_control_node when overruns occur (`#2546 <https://github.com/ros-controls/ros2_control/pull/2546/files>`_).
+* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
+  variable to automatically disable colors in non-TTY and CI environments.
 
 
 hardware_interface
@@ -31,6 +33,7 @@ hardware_interface
 ros2controlcli
 **************
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
+
 
 transmission_interface
 **********************
