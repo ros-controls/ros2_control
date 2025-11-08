@@ -43,8 +43,6 @@ bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_fi
 bool validate_urdf_file_path_with_xsd(
   const std::string & urdf_file_path, std::string & xsd_file_path);
 
-}  // namespace hardware_interface
-
 /// Validate URDF against an XSD file provides in URDF itself
 /**
  * \param[in] urdf string with robot's urdf
@@ -59,5 +57,7 @@ bool validate_urdf_with_xsd_tag(const std::string & urdf);
  * \return true if extraction successful else false
  */
 bool extract_ros2_control_xsd_tag(const std::string & urdf, std::string & ros2_control_xsd);
+
+}  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__COMPONENT_VALIDATOR_HPP_

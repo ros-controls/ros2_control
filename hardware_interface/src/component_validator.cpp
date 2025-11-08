@@ -101,6 +101,48 @@ bool validate_urdf_with_xsd_tag(const std::string & urdf)
   {
     return false;
   }
+  std::string xsd_package_share_dir =
+    ament_index_cpp::get_package_share_directory("hardware_interface");
+  // If the extracted XSD is a file URI (e.g. "file:///path/to/schema.xsd"), normalize to a local
+  // path
+  if (ros2_control_xsd.find("file") != std::string::npos)
+  {
+    ros2_control_xsd.replace(0, 8, xsd_package_share_dir);
+  }
+  else if (ros2_control_xsd.find("http") != std::string::npos)
+  {
+    {
+      // Download the remote XSD to a local temporary file and point to it
+      std::string filename;
+      auto pos = ros2_control_xsd.find_last_of('/');
+      if (pos == std::string::npos || pos + 1 >= ros2_control_xsd.size())
+      {
+        filename = "ros2_control_schema.xsd";
+      }
+      else
+      {
+        filename = ros2_control_xsd.substr(pos + 1);
+      }
+      std::string tmp_path = std::string("/tmp/") + filename;
+
+      // Use curl to fetch the XSD; require curl to be available on PATH.
+      std::ostringstream cmd;
+      cmd << "curl -sSfL -o '" << tmp_path << "' '" << ros2_control_xsd << "'";
+
+      int rc = std::system(cmd.str().c_str());
+      if (rc != 0)
+      {
+        // failed to download
+        return false;
+      }
+
+      ros2_control_xsd = tmp_path;
+    }
+  }
+  else
+  {
+    return false;
+  }
   return validate_urdf_with_xsd(urdf, ros2_control_xsd);
 }
 
@@ -114,10 +156,11 @@ bool extract_ros2_control_xsd_tag(const std::string & urdf, std::string & ros2_c
   xmlDocPtr doc = xmlReadMemory(urdf.c_str(), static_cast<int>(urdf.size()), nullptr, nullptr, 0);
   if (!doc)
   {
-    return {};
+    return false;
   }
 
   xmlNodePtr root = xmlDocGetRootElement(doc);
+  bool found = false;
   if (root)
   {
     auto check = [&](xmlNsPtr ns) -> bool
@@ -131,12 +174,17 @@ bool extract_ros2_control_xsd_tag(const std::string & urdf, std::string & ros2_c
       }
       return false;
     };
-    if (!check(root->ns))
+    if (check(root->ns))
+    {
+      found = true;
+    }
+    else
     {
       for (xmlNsPtr cur = root->nsDef; cur; cur = cur->next)
       {
         if (check(cur))
         {
+          found = true;
           break;
         }
       }
@@ -144,7 +192,7 @@ bool extract_ros2_control_xsd_tag(const std::string & urdf, std::string & ros2_c
   }
 
   xmlFreeDoc(doc);
-  return false;
+  return found;
 }
 
 }  // namespace hardware_interface
