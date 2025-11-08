@@ -50,6 +50,13 @@ bool validate_urdf_file_path_with_xsd(
  */
 bool validate_urdf_with_xsd_tag(const std::string & urdf);
 
+/// Validate URDF file path against an XSD file provides in URDF itself
+/**
+ * \param[in] urdf_file_path string
+ * \return true if the URDF is valid according to the XSD, false otherwise
+ */
+bool validate_urdf_file_with_xsd_tag(const std::string & urdf_file_path);
+
 /// Extract ROS2 Control XSD tag from URDF
 /**
  * \param[in] urdf string with robot's urdf contains xmlns:ros2_control

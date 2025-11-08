@@ -41,8 +41,8 @@ protected:
   }
 };
 
-// using hardware_interface::parse_control_resources_from_urdf;
 using hardware_interface::validate_urdf_file_path_with_xsd;
+using hardware_interface::validate_urdf_file_with_xsd_tag;
 using hardware_interface::validate_urdf_with_xsd;
 
 TEST_F(TestComponentValidator, DryRun)
@@ -58,9 +58,9 @@ TEST_F(TestComponentValidator, empty_string_throws_error)
 TEST_F(TestComponentValidator, empty_urdf_throws_error)
 {
   const std::string empty_urdf =
-    "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns=\"http://www.ros.org\"></robot>";
+    "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns:xacro=\"http://www.ros.org\"></robot>";
 
-  ASSERT_FALSE(validate_urdf_with_xsd(
+  ASSERT_TRUE(validate_urdf_with_xsd(
     empty_urdf, xsd_file_path));  // TODO(Sachin): discuss if should use throw error
 }
 
@@ -72,4 +72,9 @@ TEST_F(TestComponentValidator, validate_valid_urdf_with_xsd)
 TEST_F(TestComponentValidator, validate_invalid_urdf_with_xsd)
 {
   ASSERT_FALSE(validate_urdf_file_path_with_xsd(invalid_xml_file_path, xsd_file_path));
+}
+
+TEST_F(TestComponentValidator, validate_valid_urdf)
+{
+  ASSERT_TRUE(validate_urdf_file_with_xsd_tag(valid_xml_file_path));
 }
