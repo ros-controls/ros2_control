@@ -108,6 +108,8 @@ initial_value (optional; double)
        <param name="initial_value">3.45</param>
      </state_interface>
 
-  Note: This parameter is shared with the gazebo and gazebo classic plugins for
+  If unset, the initial value is set to 0.0 for state interfaces of joints in ``configure`` lifecycle transition.
+
+  Note: This parameter is shared with the gz_ros2_control plugins for
   joint interfaces. For Mock components it is also possible to set initial
   values for gpio or sensor state interfaces.
