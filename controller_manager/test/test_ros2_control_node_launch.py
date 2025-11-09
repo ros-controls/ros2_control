@@ -51,7 +51,6 @@ from controller_manager.launch_utils import (
 )
 
 
-
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
 def generate_test_description():
