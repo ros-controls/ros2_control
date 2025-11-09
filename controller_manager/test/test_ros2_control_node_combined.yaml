@@ -1,0 +1,22 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+joint_state_broadcaster:
+  ros__parameters:
+    type: "joint_state_broadcaster/JointStateBroadcaster"
+
+forward_position_controller:
+  ros__parameters:
+    type: position_controllers/JointGroupPositionController
+    joints: ["joint1"]
+
+ctrl_with_parameters_and_type:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    joint_names: ["joint1"]
+
+controller3:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    joint_names: ["joint3"]

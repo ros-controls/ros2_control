@@ -244,10 +244,34 @@ if(BUILD_TESTING)
   )
 
   find_package(ament_cmake_pytest REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  find_package(rclpy REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
+    test/test_controller_load.yaml
+    test/test_ros2_control_node_combined.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+  ament_add_pytest_test(test_launch_utils_unit test/test_launch_utils_unit.py
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}
+    PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_SOURCE_DIR}:${PYTHONPATH}
+  )
+  # ----------------------------------------------------------------------------
+  # Integration tests for individual launch_utils entry points
+  # ----------------------------------------------------------------------------
+  ament_add_pytest_test(test_launch_utils_integration_list
+    test/test_launch_utils_integration_list.py
+    TIMEOUT 60
+  )
+  ament_add_pytest_test(test_launch_utils_integration_dict
+    test/test_launch_utils_integration_dict.py
+    TIMEOUT 60
+  )
+  ament_add_pytest_test(test_launch_utils_integration_load
+    test/test_launch_utils_integration_load.py
+    TIMEOUT 60
+  )
+
 endif()
 
 install(

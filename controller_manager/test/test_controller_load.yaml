@@ -1,0 +1,8 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+test_controller_load:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    joint_names: ["joint1"]
