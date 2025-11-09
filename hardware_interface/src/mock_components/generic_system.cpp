@@ -303,6 +303,25 @@ return_type GenericSystem::perform_command_mode_switch(
 hardware_interface::CallbackReturn GenericSystem::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  for (const auto & joint_state : joint_state_interfaces_)
+  {
+    const std::string & name = joint_state.second.get_name();
+    if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
+    {
+      // if initial values are set not set from the URDF
+      if (std::isnan(get_state(name)))
+      {
+        set_state(name, 0.0);
+      }
+      // set offset anyways
+      if (
+        joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
+        custom_interface_with_following_offset_.empty())
+      {
+        set_state(name, get_state(name) + position_state_following_offset_);
+      }
+    }
+  }
   // Set position control mode per default
   // This will be populated by perform_command_mode_switch
   joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
@@ -312,20 +331,6 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
 hardware_interface::CallbackReturn GenericSystem::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  for (const auto & joint_state : joint_state_interfaces_)
-  {
-    const std::string & name = joint_state.second.get_name();
-    // initial values are set from the URDF. only apply offset
-    if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
-    {
-      if (
-        joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
-        custom_interface_with_following_offset_.empty())
-      {
-        set_state(name, get_state(name) + position_state_following_offset_);
-      }
-    }
-  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
