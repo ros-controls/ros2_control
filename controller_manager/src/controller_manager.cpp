@@ -2964,6 +2964,8 @@ void ControllerManager::manage_switch()
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
     // If the hardware switching fails, there is no point in continuing to switch controllers
+    switch_params_.do_switch = false;
+    switch_params_.cv.notify_all();
     return;
   }
   execution_time_.switch_perform_mode_time =
