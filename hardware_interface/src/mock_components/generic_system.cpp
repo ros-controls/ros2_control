@@ -328,12 +328,6 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn GenericSystem::on_activate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
-{
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
-
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)
