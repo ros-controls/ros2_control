@@ -26,6 +26,7 @@ class TestComponentValidator : public Test
 protected:
   std::string valid_xml_file_path;
   std::string valid_xml_file_path_with_tag;
+  std::string valid_xml_file_path_with_web_tag;
   std::string invalid_xml_file_path;
   std::string xsd_file_path;
   void SetUp() override
@@ -38,6 +39,8 @@ protected:
     valid_xml_file_path = urdf_package_share_dir + "/urdf/test_hardware_components.urdf";
     valid_xml_file_path_with_tag =
       urdf_package_share_dir + "/urdf/test_hardware_components_xsd_file.urdf";
+    valid_xml_file_path_with_web_tag =
+      urdf_package_share_dir + "/urdf/test_hardware_components_xsd_web.urdf";
     invalid_xml_file_path =
       urdf_package_share_dir + "/urdf/test_hardware_components_with_error.urdf";
     xsd_file_path = xsd_package_share_dir + "/schema/ros2_control.xsd";
@@ -77,7 +80,14 @@ TEST_F(TestComponentValidator, validate_invalid_urdf_with_xsd)
   ASSERT_FALSE(validate_urdf_file_path_with_xsd(invalid_xml_file_path, xsd_file_path));
 }
 
-TEST_F(TestComponentValidator, validate_valid_urdf)
+TEST_F(TestComponentValidator, validate_valid_urdf_including_xsd_file_tag)
 {
   ASSERT_TRUE(validate_urdf_file_with_xsd_tag(valid_xml_file_path_with_tag));
+}
+
+TEST_F(TestComponentValidator, validate_valid_urdf_including_xsd_web_tag)
+{
+  ASSERT_FALSE(validate_urdf_file_with_xsd_tag(
+    valid_xml_file_path_with_web_tag));  // TODO(Sachin): Update the test to assert true when xsd
+                                         // file is uploaded to web server
 }

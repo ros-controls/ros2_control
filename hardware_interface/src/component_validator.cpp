@@ -111,33 +111,32 @@ bool validate_urdf_with_xsd_tag(const std::string & urdf)
   }
   else if (ros2_control_xsd.find("http") != std::string::npos)
   {
+    // Download the remote XSD to a local temporary file and point to it
+    std::string filename;
+    auto pos = ros2_control_xsd.find_last_of('/');
+    if (pos == std::string::npos || pos + 1 >= ros2_control_xsd.size())
     {
-      // Download the remote XSD to a local temporary file and point to it
-      std::string filename;
-      auto pos = ros2_control_xsd.find_last_of('/');
-      if (pos == std::string::npos || pos + 1 >= ros2_control_xsd.size())
-      {
-        filename = "ros2_control_schema.xsd";
-      }
-      else
-      {
-        filename = ros2_control_xsd.substr(pos + 1);
-      }
-      std::string tmp_path = std::string("/tmp/") + filename;
-
-      // Use curl to fetch the XSD; require curl to be available on PATH.
-      std::ostringstream cmd;
-      cmd << "curl -sSfL -o '" << tmp_path << "' '" << ros2_control_xsd << "'";
-
-      int rc = std::system(cmd.str().c_str());
-      if (rc != 0)
-      {
-        // failed to download
-        return false;
-      }
-
-      ros2_control_xsd = tmp_path;
+      filename = "ros2_control_schema.xsd";
     }
+    else
+    {
+      filename = ros2_control_xsd.substr(pos + 1);
+    }
+    std::string tmp_path = std::string("/tmp/") + filename;
+
+    // Use curl to fetch the XSD; require curl to be available on PATH.
+    std::ostringstream cmd;
+    cmd << "curl -sSfL -o '" << tmp_path << "' '"
+        << ros2_control_xsd + std::string("ros2_control.xsd") << "'";
+
+    int rc = std::system(cmd.str().c_str());
+    if (rc != 0)
+    {
+      // failed to download
+      return false;
+    }
+
+    ros2_control_xsd = tmp_path;
   }
   else
   {
