@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.8.2 (2025-11-09)
+------------------
 * Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_) (`#2797 <https://github.com/ros-controls/ros2_control/issues/2797>`_)
 * Fix ANSI escape code pollution in log output (backport `#2741 <https://github.com/ros-controls/ros2_control/issues/2741>`_) (`#2784 <https://github.com/ros-controls/ros2_control/issues/2784>`_)
 * Contributors: mergify[bot]

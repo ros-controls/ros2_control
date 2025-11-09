@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.8.2 (2025-11-09)
+------------------
 * Auto-set joint state interfaces to zero in MockHardware (`#2788 <https://github.com/ros-controls/ros2_control/issues/2788>`_) (`#2795 <https://github.com/ros-controls/ros2_control/issues/2795>`_)
 * Don't update MockComponent's state interfaces if command interfaces are not finite (`#2786 <https://github.com/ros-controls/ros2_control/issues/2786>`_) (`#2791 <https://github.com/ros-controls/ros2_control/issues/2791>`_)
 * Rename hardware descriptions (`#2787 <https://github.com/ros-controls/ros2_control/issues/2787>`_) (`#2793 <https://github.com/ros-controls/ros2_control/issues/2793>`_)
