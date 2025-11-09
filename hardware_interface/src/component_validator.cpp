@@ -101,14 +101,13 @@ bool validate_urdf_with_xsd_tag(const std::string & urdf)
   {
     return false;
   }
-  return true;
   std::string xsd_package_share_dir =
     ament_index_cpp::get_package_share_directory("hardware_interface");
   // If the extracted XSD is a file URI (e.g. "file:///path/to/schema.xsd"), normalize to a local
   // path
   if (ros2_control_xsd.find("file") != std::string::npos)
   {
-    ros2_control_xsd.replace(0, 8, xsd_package_share_dir);
+    ros2_control_xsd.replace(0, 7, xsd_package_share_dir);
   }
   else if (ros2_control_xsd.find("http") != std::string::npos)
   {

@@ -25,6 +25,7 @@ class TestComponentValidator : public Test
 {
 protected:
   std::string valid_xml_file_path;
+  std::string valid_xml_file_path_with_tag;
   std::string invalid_xml_file_path;
   std::string xsd_file_path;
   void SetUp() override
@@ -35,6 +36,8 @@ protected:
     std::string xsd_package_share_dir =
       ament_index_cpp::get_package_share_directory("hardware_interface");
     valid_xml_file_path = urdf_package_share_dir + "/urdf/test_hardware_components.urdf";
+    valid_xml_file_path_with_tag =
+      urdf_package_share_dir + "/urdf/test_hardware_components_xsd_file.urdf";
     invalid_xml_file_path =
       urdf_package_share_dir + "/urdf/test_hardware_components_with_error.urdf";
     xsd_file_path = xsd_package_share_dir + "/schema/ros2_control.xsd";
@@ -76,5 +79,5 @@ TEST_F(TestComponentValidator, validate_invalid_urdf_with_xsd)
 
 TEST_F(TestComponentValidator, validate_valid_urdf)
 {
-  ASSERT_TRUE(validate_urdf_file_with_xsd_tag(valid_xml_file_path));
+  ASSERT_TRUE(validate_urdf_file_with_xsd_tag(valid_xml_file_path_with_tag));
 }
