@@ -1032,6 +1032,28 @@ void generic_system_functional_test(
   EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
 
+  // read() does not change values until commands are set (i.e, isfinite())
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // write() does not change values until commands are set (i.e, isfinite())
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.11));
   ASSERT_TRUE(j1v_c.set_value(0.22));
