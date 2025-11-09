@@ -485,7 +485,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         if (joint_command.get()->get_interface_name() == hardware_interface::HW_IF_POSITION)
         {
           const std::string & name = joint_command.get()->get_name();
-          if (has_state(name))
+          if (has_state(name) && std::isfinite(get_command(name)))
           {
             set_state(
               name, get_command(name) + (custom_interface_with_following_offset_.empty()
@@ -523,7 +523,10 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         get_command(
           joint_state.get()->get_prefix_name() + "/" + hardware_interface::HW_IF_POSITION) +
         position_state_following_offset_;
-      set_state(full_interface_name, cmd);
+      if (std::isfinite(cmd))
+      {
+        set_state(full_interface_name, cmd);
+      }
     }
   }
 
