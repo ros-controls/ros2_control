@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+* Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_)
+* Fix ANSI escape code pollution in log output (`#2741 <https://github.com/ros-controls/ros2_control/issues/2741>`_)
+* Contributors: Sai Kishor Kothakota, sauman raaj
+
+6.0.1 (2025-11-03)
+------------------
+* Fail early for the resource conflicts between the activating controllers (`#2760 <https://github.com/ros-controls/ros2_control/issues/2760>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.0.0 (2025-10-27)
 ------------------
 * Switch the default strictness to STRICT (`#2742 <https://github.com/ros-controls/ros2_control/issues/2742>`_)
