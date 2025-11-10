@@ -1099,6 +1099,148 @@ TEST_F(
   EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
 }
 
+TEST_F(TestComponentParser, urdf_with_datatypes_in_joints_are_parsed_correctly)
+{
+  std::string urdf = R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <robot name="robot">
+      <link name="world"/>
+      <link name="link1"/>
+      <joint name="joint1" type="revolute">
+        <parent link="world"/>
+        <child link="link1"/>
+        <limit effort="0.1" velocity="0.2" lower="-3.14" upper="3.14"/>
+      </joint>
+      <ros2_control name="test_robot_with_datatype_joints" type="system">
+        <hardware>
+          <plugin>test_hardware</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="command_1" data_type="bool"/>
+          <command_interface name="command_2" data_type="double" size="2">
+            <param name="min">0</param>
+            <param name="max">1</param>
+          </command_interface>
+          <command_interface name="command_3" data_type="int32"/>
+          <command_interface name="command_4" data_type="int16"/>
+          <command_interface name="command_5" data_type="uint16"/>
+          <command_interface name="command_6" data_type="uint32"/>
+          <command_interface name="command_7" data_type="int64"/>
+          <command_interface name="command_8" data_type="uint64"/>
+          <state_interface name="state_1" data_type="bool"/>
+          <state_interface name="state_2" data_type="double" size="2">
+            <param name="initial_value">3.14</param>
+          </state_interface>
+          <state_interface name="state_3" data_type="int32"/>
+          <state_interface name="state_4" data_type="int16"/>
+          <state_interface name="state_5" data_type="uint16"/>
+          <state_interface name="state_6" data_type="uint32"/>
+          <state_interface name="state_7" data_type="int64"/>
+          <state_interface name="state_8" data_type="uint64"/>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+  const auto hardware_info = parse_control_resources_from_urdf(urdf);
+  ASSERT_EQ(hardware_info.size(), 1u);
+  EXPECT_EQ(hardware_info[0].name, "test_robot_with_datatype_joints");
+  EXPECT_EQ(hardware_info[0].type, "system");
+  EXPECT_EQ(hardware_info[0].hardware_plugin_name, "test_hardware");
+  ASSERT_EQ(hardware_info[0].joints.size(), 1u);
+  EXPECT_EQ(hardware_info[0].joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces.size(), 8u);
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[0].name, "command_1");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[0].size, 1u);
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[1].name, "command_2");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[1].data_type, "double");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[1].size, 2u);
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[2].name, "command_3");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[2].data_type, "int32");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[3].name, "command_4");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[3].data_type, "int16");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[4].name, "command_5");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[4].data_type, "uint16");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[5].name, "command_6");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[5].data_type, "uint32");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[6].name, "command_7");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[6].data_type, "int64");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[7].name, "command_8");
+  EXPECT_EQ(hardware_info[0].joints[0].command_interfaces[7].data_type, "uint64");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces.size(), 8u);
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[0].name, "state_1");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[0].size, 1u);
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[1].name, "state_2");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[1].data_type, "double");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[1].size, 2u);
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[2].name, "state_3");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[2].data_type, "int32");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[3].name, "state_4");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[3].data_type, "int16");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[4].name, "state_5");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[4].data_type, "uint16");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[5].name, "state_6");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[5].data_type, "uint32");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[6].name, "state_7");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[6].data_type, "int64");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[7].name, "state_8");
+  EXPECT_EQ(hardware_info[0].joints[0].state_interfaces[7].data_type, "uint64");
+}
+
+TEST_F(TestComponentParser, urdf_with_datatypes_in_sensors_are_parsed_correctly)
+{
+  std::string urdf = R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <robot name="robot">
+      <link name="world"/>
+      <ros2_control name="test_robot_with_datatype_sensors" type="system">
+        <hardware>
+          <plugin>test_hardware</plugin>
+        </hardware>
+        <sensor name="sensor1">
+          <state_interface name="state_1" data_type="bool"/>
+          <state_interface name="state_2" data_type="double" size="2">
+            <param name="initial_value">3.14</param>
+          </state_interface>
+          <state_interface name="state_3" data_type="int32"/>
+          <state_interface name="state_4" data_type="int16"/>
+          <state_interface name="state_5" data_type="uint16"/>
+          <state_interface name="state_6" data_type="uint32"/>
+          <state_interface name="state_7" data_type="int64"/>
+          <state_interface name="state_8" data_type="uint64"/>
+        </sensor>
+      </ros2_control>
+    </robot>
+    )";
+  const auto hardware_info = parse_control_resources_from_urdf(urdf);
+  ASSERT_EQ(hardware_info.size(), 1u);
+  EXPECT_EQ(hardware_info[0].name, "test_robot_with_datatype_sensors");
+  EXPECT_EQ(hardware_info[0].type, "system");
+  EXPECT_EQ(hardware_info[0].hardware_plugin_name, "test_hardware");
+  ASSERT_EQ(hardware_info[0].sensors.size(), 1u);
+  EXPECT_EQ(hardware_info[0].sensors[0].name, "sensor1");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces.size(), 8u);
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[0].name, "state_1");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[0].size, 1u);
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[1].name, "state_2");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[1].data_type, "double");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[1].size, 2u);
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[2].name, "state_3");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[2].data_type, "int32");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[3].name, "state_4");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[3].data_type, "int16");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[4].name, "state_5");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[4].data_type, "uint16");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[5].name, "state_6");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[5].data_type, "uint32");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[6].name, "state_7");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[6].data_type, "int64");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[7].name, "state_8");
+  EXPECT_EQ(hardware_info[0].sensors[0].state_interfaces[7].data_type, "uint64");
+}
+
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_interfaces)
 {
   std::string urdf_to_test =

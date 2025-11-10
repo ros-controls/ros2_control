@@ -66,6 +66,20 @@ inline int8_t stoi8(const std::string & s) { return stoi_generic<int8_t>(s); }
 inline int16_t stoi16(const std::string & s) { return stoi_generic<int16_t>(s); }
 inline int32_t stoi32(const std::string & s) { return stoi_generic<int32_t>(s); }
 
+/** \brief Overflow-safe conversion from string to int64_t using std::stoll.
+ * \throws std::invalid_argument if no conversion could be performed
+ */
+inline int64_t stoi64(const std::string & s)
+{
+  size_t pos;
+  const auto v = std::stoll(s, &pos);
+  if (pos != s.length())
+  {
+    throw std::invalid_argument("Invalid characters in string");
+  }
+  return static_cast<int64_t>(v);
+}
+
 /** \brief Overflow-safe conversion from string to uint32_t.
  * \throws std::out_of_range if the converted value would fall out of the range of int32_t
  * \throws std::invalid_argument if no conversion could be performed
@@ -94,6 +108,20 @@ T stoui_generic(const std::string & s)
 inline uint8_t stoui8(const std::string & s) { return stoui_generic<uint8_t>(s); }
 inline uint16_t stoui16(const std::string & s) { return stoui_generic<uint16_t>(s); }
 inline uint32_t stoui32(const std::string & s) { return stoui_generic<uint32_t>(s); }
+
+/** \brief Overflow-safe conversion from string to uint64_t using std::stoull.
+ * \throws std::invalid_argument if no conversion could be performed
+ */
+inline uint64_t stoui64(const std::string & s)
+{
+  size_t pos;
+  const auto v = std::stoull(s, &pos);
+  if (pos != s.length())
+  {
+    throw std::invalid_argument("Invalid characters in string");
+  }
+  return static_cast<uint64_t>(v);
+}
 
 /**
  * \brief Convert a string to lower case.

@@ -63,6 +63,8 @@ A full example including all optional parameters (with default values):
     </joint>
     <gpio name="flange_vacuum">
       <command_interface name="vacuum"/>
+      <!-- data_type is optional, defaults to "double". -->
+      <!-- Supported types: double, bool, int16, uint16, int32, uint32, int64, uint64 -->
       <state_interface name="vacuum" data_type="double"/>
     </gpio>
   </ros2_control>

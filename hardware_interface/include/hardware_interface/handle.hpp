@@ -232,6 +232,40 @@ public:
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
+    else if (data_type_ == hardware_interface::HandleDataType::INT64)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<int64_t>(std::numeric_limits<int64_t>::max())
+                   : static_cast<int64_t>(hardware_interface::stoi64(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT64)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<uint64_t>(std::numeric_limits<uint64_t>::max())
+                   : static_cast<uint64_t>(hardware_interface::stoui64(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
     else
     {
       throw std::runtime_error(
@@ -359,6 +393,8 @@ public:
         case HandleDataType::INT16:    // fallthrough
         case HandleDataType::UINT32:   // fallthrough
         case HandleDataType::INT32:    // fallthrough
+        case HandleDataType::INT64:    // fallthrough
+        case HandleDataType::UINT64:   // fallthrough
           throw std::runtime_error(
             fmt::format(
               FMT_COMPILE(
@@ -372,11 +408,11 @@ public:
               data_type_.to_string(), get_name()));
       }
     }
-    try
+    if (std::holds_alternative<T>(value_))
     {
       return std::get<T>(value_);
     }
-    catch (const std::bad_variant_access & err)
+    else
     {
       throw std::runtime_error(
         fmt::format(
@@ -482,9 +518,18 @@ public:
     // TODO(Manuel) set value_ directly if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      *value_ptr_ = value;
+      if (data_type_ == hardware_interface::HandleDataType::DOUBLE)
+      {
+        // If the template is of type double, check if the value_ptr_ is not nullptr
+        THROW_ON_NULLPTR(value_ptr_);
+        *value_ptr_ = value;
+      }
+      else
+      {
+        throw std::runtime_error(fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
+      }
     }
     else
     {
@@ -561,6 +606,8 @@ protected:
         case HandleDataType::INT16:    // fallthrough
         case HandleDataType::UINT32:   // fallthrough
         case HandleDataType::INT32:    // fallthrough
+        case HandleDataType::INT64:    // fallthrough
+        case HandleDataType::UINT64:   // fallthrough
           throw std::runtime_error(
             fmt::format(
               FMT_COMPILE(
@@ -728,12 +775,12 @@ public:
   {
     if constexpr (std::is_same_v<T, double>)
     {
-      return set_value(on_set_command_limiter_(value, is_command_limited_));
+      if (data_type_ == hardware_interface::HandleDataType::DOUBLE)
+      {
+        return set_value(on_set_command_limiter_(value, is_command_limited_));
+      }
     }
-    else
-    {
-      return set_value(value);
-    }
+    return set_value(value);
   }
 
   const bool & is_limited() const { return is_command_limited_; }

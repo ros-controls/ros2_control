@@ -17,6 +17,8 @@
 
 #include <fmt/compile.h>
 
+
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -43,7 +45,8 @@ struct InterfaceInfo
   std::string max = "";
   /// (Optional) Initial value of the interface.
   std::string initial_value = "";
-  /// (Optional) The datatype of the interface, e.g. "bool", "int".
+  /// (Optional) The datatype of the interface. Defaults to "double".
+  /// Supported types: "double", "bool", "int16", "uint16", "int32", "uint32", "int64", "uint64".
   std::string data_type = "double";
   /// (Optional) If the handle is an array, the size of the array.
   int size;
@@ -137,11 +140,16 @@ struct TransmissionInfo
 };
 
 /**
- * Hardware handles supported types
+ * Hardware handles supported types.
+ *
+ * Supported types: DOUBLE (default), BOOL, INT16, UINT16, INT32, UINT32, INT64, UINT64.
+ * String representations: "double", "bool", "int16", "uint16", "int32", "uint32", "int64",
+ * "uint64".
  */
 
 using HANDLE_DATATYPE = std::variant<
-  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
+  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t,
+  int64_t, uint64_t>;
 class HandleDataType
 {
 public:
@@ -157,6 +165,8 @@ public:
     INT16,
     UINT32,
     INT32,
+    INT64,
+    UINT64,
   };
 
   HandleDataType() = default;
@@ -199,6 +209,14 @@ public:
     {
       value_ = INT32;
     }
+    else if (data_type == "int64")
+    {
+      value_ = INT64;
+    }
+    else if (data_type == "uint64")
+    {
+      value_ = UINT64;
+    }
     else
     {
       value_ = UNKNOWN;
@@ -237,6 +255,10 @@ public:
         return "uint32";
       case INT32:
         return "int32";
+      case INT64:
+        return "int64";
+      case UINT64:
+        return "uint64";
       default:
         return "unknown";
     }

@@ -39,6 +39,7 @@ if(BUILD_TESTING)
   find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
   find_package(std_msgs REQUIRED)
+  find_package(ros2_control_test_assets REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
   target_link_libraries(test_controller_interface
@@ -121,7 +122,16 @@ if(BUILD_TESTING)
   ament_add_gmock(test_controller_tf_prefix test/test_controller_tf_prefix.cpp)
   target_link_libraries(test_controller_tf_prefix
     controller_interface
+    hardware_interface::hardware_interface
   )
+
+  # TODO(add_standard_data_types): re-enable once TestControllerInterface fixture is available
+  # ament_add_gmock(test_controller_interface_custom_interfaces test/test_controller_interface_custom_interfaces.cpp)
+  # target_link_libraries(test_controller_interface_custom_interfaces
+  #   controller_interface
+  #   hardware_interface::hardware_interface
+  #   ros2_control_test_assets::ros2_control_test_assets
+  # )
 endif()
 
 install(

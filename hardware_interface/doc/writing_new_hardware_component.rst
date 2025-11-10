@@ -126,6 +126,8 @@ The following is a step-by-step guide to create source files, basic tests, and c
             InterfaceInfo unlisted_interface;
             unlisted_interface.name = "some_unlisted_interface";
             unlisted_interface.min = "-5.0";
+            // Supported data types: "double" (default), "bool",
+            // "int16", "uint16", "int32", "uint32", "int64", "uint64"
             unlisted_interface.data_type = "double";
             my_unlisted_interfaces.push_back(InterfaceDescription(info_.name, unlisted_interface));
 

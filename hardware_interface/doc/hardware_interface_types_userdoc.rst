@@ -26,6 +26,7 @@ A generic example which shows the structure is provided below. More specific exa
       </hardware>
       <joint name="name_of_the_component">
         <!-- `data_type` argument is optional (defaults to double). -->
+        <!-- Supported types: double, bool, int16, uint16, int32, uint32, int64, uint64 -->
         <command_interface name="interface_name" data_type="double">
           <!-- All of them are optional. -->
           <param name="min">-1</param>
