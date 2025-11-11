@@ -95,6 +95,39 @@ inline bool interface_list_contains_interface_type(
          interface_type_list.end();
 }
 
+/**
+ * @brief Apply tf prefix
+ * @param tf_prefix_enabled  Whether tf prefixing is enabled
+ * @param prefix The tf prefix to apply
+ * @param node_ns Node namespace to use as prefix if prefix is empty
+ * @return Slash normalized prefix
+ */
+inline std::string apply_tf_prefix(
+  const bool tf_prefix_enabled, const std::string & prefix, const std::string & node_ns)
+{
+  if (!tf_prefix_enabled)
+  {
+    return std::string{};
+  }
+  std::string nprefix = prefix.empty() ? node_ns : prefix;
+
+  // Normalize the prefix
+  if (!nprefix.empty())
+  {
+    // ensure trailing '/'
+    if (nprefix.back() != '/')
+    {
+      nprefix.push_back('/');
+    }
+    // remove leading '/'
+    if (nprefix.front() == '/')
+    {
+      nprefix.erase(0, 1);
+    }
+  }
+  return nprefix;
+}
+
 }  // namespace controller_interface
 
 #endif  // CONTROLLER_INTERFACE__HELPERS_HPP_
