@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+* Extend the reasoning for the capacity mismatch (`#2723 <https://github.com/ros-controls/ros2_control/issues/2723>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.0.1 (2025-11-03)
 ------------------
 

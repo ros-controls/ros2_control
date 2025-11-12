@@ -303,21 +303,17 @@ return_type GenericSystem::perform_command_mode_switch(
 hardware_interface::CallbackReturn GenericSystem::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // Set position control mode per default
-  // This will be populated by perform_command_mode_switch
-  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
-
-hardware_interface::CallbackReturn GenericSystem::on_activate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
-{
   for (const auto & joint_state : joint_state_interfaces_)
   {
     const std::string & name = joint_state.second.get_name();
-    // initial values are set from the URDF. only apply offset
     if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
     {
+      // if initial values are set not set from the URDF
+      if (std::isnan(get_state(name)))
+      {
+        set_state(name, 0.0);
+      }
+      // set offset anyways
       if (
         joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
         custom_interface_with_following_offset_.empty())
@@ -326,6 +322,9 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
       }
     }
   }
+  // Set position control mode per default
+  // This will be populated by perform_command_mode_switch
+  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -485,7 +484,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         if (joint_command.get()->get_interface_name() == hardware_interface::HW_IF_POSITION)
         {
           const std::string & name = joint_command.get()->get_name();
-          if (has_state(name))
+          if (has_state(name) && std::isfinite(get_command(name)))
           {
             set_state(
               name, get_command(name) + (custom_interface_with_following_offset_.empty()
@@ -523,7 +522,10 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         get_command(
           joint_state.get()->get_prefix_name() + "/" + hardware_interface::HW_IF_POSITION) +
         position_state_following_offset_;
-      set_state(full_interface_name, cmd);
+      if (std::isfinite(cmd))
+      {
+        set_state(full_interface_name, cmd);
+      }
     }
   }
 

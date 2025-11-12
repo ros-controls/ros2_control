@@ -48,9 +48,6 @@ public:
   hardware_interface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  hardware_interface::CallbackReturn on_activate(
-    const rclcpp_lifecycle::State & previous_state) override;
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_command_interface_descriptions() override;
 
