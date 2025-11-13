@@ -22,12 +22,6 @@ TEST_F(TestControllerTFPrefix, EmptyPrefixReturnsEmpty)
   EXPECT_EQ(controller_interface::resolve_tf_prefix("", "/ns"), "");
 }
 
-TEST_F(TestControllerTFPrefix, TildePrefixUsesNamespace)
-{
-  EXPECT_EQ(controller_interface::resolve_tf_prefix("~", "/ns"), "ns/");
-  EXPECT_EQ(controller_interface::resolve_tf_prefix("~", "/ns/"), "ns/");
-}
-
 TEST_F(TestControllerTFPrefix, ExplicitPrefixUsed)
 {
   EXPECT_EQ(controller_interface::resolve_tf_prefix("robot", "/ns"), "robot/");
@@ -39,4 +33,12 @@ TEST_F(TestControllerTFPrefix, NormalizePrefixSlashes)
   EXPECT_EQ(controller_interface::resolve_tf_prefix("robot2//", "/ns"), "robot2//");
   EXPECT_EQ(controller_interface::resolve_tf_prefix("/robot3/", "/ns"), "robot3/");
   EXPECT_EQ(controller_interface::resolve_tf_prefix("/", "/ns"), "");
+}
+
+TEST_F(TestControllerTFPrefix, TildePrefixResolvesToNamespace)
+{
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("~", "/ns"), "ns/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("~/", "/ns"), "ns/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("~/robot", "/ns"), "ns/robot/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("/~/robot/", "ns"), "ns/robot/");
 }

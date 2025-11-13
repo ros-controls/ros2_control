@@ -108,7 +108,12 @@ inline std::string resolve_tf_prefix(const std::string & prefix, const std::stri
     return std::string{};
   }
 
-  std::string nprefix = prefix == "~" ? node_ns : prefix;
+  std::string nprefix = prefix;
+  std::size_t pos = nprefix.find("~");
+  if (pos != std::string::npos)
+  {
+    nprefix.replace(pos, 1, node_ns);
+  }
 
   // ensure trailing '/'
   if (nprefix.back() != '/')
