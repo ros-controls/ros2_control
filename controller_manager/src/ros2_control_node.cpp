@@ -45,7 +45,7 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
-  
+
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   if (lock_memory)
