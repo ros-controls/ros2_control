@@ -96,34 +96,29 @@ inline bool interface_list_contains_interface_type(
 }
 
 /**
- * @brief Apply tf prefix
- * @param tf_prefix_enabled  Whether tf prefixing is enabled
- * @param prefix The tf prefix to apply
+ * @brief Resolve the TF prefix with normalized slashes
+ * @param prefix The TF prefix
  * @param node_ns Node namespace to use as prefix if prefix is empty
- * @return Slash normalized prefix
+ * @return Prefix to be prepended
  */
-inline std::string apply_tf_prefix(
-  const bool tf_prefix_enabled, const std::string & prefix, const std::string & node_ns)
+inline std::string resolve_tf_prefix(const std::string & prefix, const std::string & node_ns)
 {
-  if (!tf_prefix_enabled)
+  if (prefix.empty())
   {
     return std::string{};
   }
-  std::string nprefix = prefix.empty() ? node_ns : prefix;
 
-  // Normalize the prefix
-  if (!nprefix.empty())
+  std::string nprefix = prefix == "~" ? node_ns : prefix;
+
+  // ensure trailing '/'
+  if (nprefix.back() != '/')
   {
-    // ensure trailing '/'
-    if (nprefix.back() != '/')
-    {
-      nprefix.push_back('/');
-    }
-    // remove leading '/'
-    if (nprefix.front() == '/')
-    {
-      nprefix.erase(0, 1);
-    }
+    nprefix.push_back('/');
+  }
+  // remove leading '/'
+  if (nprefix.front() == '/')
+  {
+    nprefix.erase(0, 1);
   }
   return nprefix;
 }

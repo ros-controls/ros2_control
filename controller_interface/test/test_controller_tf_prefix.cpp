@@ -17,36 +17,26 @@
 #include "controller_interface/helpers.hpp"
 #include "test_controller_tf_prefix.hpp"
 
-TEST_F(TestControllerTFPrefix, DisabledPrefixReturnsEmpty)
+TEST_F(TestControllerTFPrefix, EmptyPrefixReturnsEmpty)
 {
-  EXPECT_EQ(controller_interface::apply_tf_prefix(false, "robot", "/ns"), "");
-  EXPECT_EQ(controller_interface::apply_tf_prefix(false, "", "/ns"), "");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("", "/ns"), "");
 }
 
-TEST_F(TestControllerTFPrefix, EmptyPrefixUsesNamespace)
+TEST_F(TestControllerTFPrefix, TildePrefixUsesNamespace)
 {
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "", "/ns"), "ns/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("~", "/ns"), "ns/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("~", "/ns/"), "ns/");
 }
 
 TEST_F(TestControllerTFPrefix, ExplicitPrefixUsed)
 {
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "robot", "/ns"), "robot/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("robot", "/ns"), "robot/");
 }
 
-TEST_F(TestControllerTFPrefix, NormalizesPrefixSlashes)
+TEST_F(TestControllerTFPrefix, NormalizePrefixSlashes)
 {
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "/robot1", "/ns"), "robot1/");
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "robot2//", "/ns"), "robot2//");
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "/robot3/", "/ns"), "robot3/");
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "/", "/ns"), "");
-}
-
-TEST_F(TestControllerTFPrefix, EmptyPrefixAndNamespace)
-{
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "", ""), "");
-}
-
-TEST_F(TestControllerTFPrefix, ComplexNamespace)
-{
-  EXPECT_EQ(controller_interface::apply_tf_prefix(true, "", "/ns/"), "ns/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("/robot1", "/ns"), "robot1/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("robot2//", "/ns"), "robot2//");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("/robot3/", "/ns"), "robot3/");
+  EXPECT_EQ(controller_interface::resolve_tf_prefix("/", "/ns"), "");
 }
