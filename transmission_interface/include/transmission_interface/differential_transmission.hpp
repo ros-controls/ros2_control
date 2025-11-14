@@ -344,40 +344,72 @@ void DifferentialTransmission::configure(
         get_handles_info()));
   }
 
-  if (joint_position_.size() != actuator_position_.size())
+  if (
+    !joint_position_.empty() && !actuator_position_.empty() &&
+    joint_position_.size() != actuator_position_.size())
   {
     throw Exception(
       fmt::format(
         FMT_COMPILE("Pair-wise mismatch on position interfaces. \n{}"), get_handles_info()));
   }
-  if (joint_velocity_.size() != actuator_velocity_.size())
+  if (
+    !joint_velocity_.empty() && !actuator_velocity_.empty() &&
+    joint_velocity_.size() != actuator_velocity_.size())
   {
     throw Exception(
       fmt::format(
         FMT_COMPILE("Pair-wise mismatch on velocity interfaces. \n{}"), get_handles_info()));
   }
-  if (joint_effort_.size() != actuator_effort_.size())
+  if (
+    !joint_effort_.empty() && !actuator_effort_.empty() &&
+    joint_effort_.size() != actuator_effort_.size())
   {
     throw Exception(
       fmt::format(
         FMT_COMPILE("Pair-wise mismatch on effort interfaces. \n{}"), get_handles_info()));
   }
-  if (joint_torque_.size() != actuator_torque_.size())
+  if (
+    !joint_torque_.empty() && !actuator_torque_.empty() &&
+    joint_torque_.size() != actuator_torque_.size())
   {
     throw Exception(
       fmt::format(
         FMT_COMPILE("Pair-wise mismatch on torque interfaces. \n{}"), get_handles_info()));
   }
-  if (joint_force_.size() != actuator_force_.size())
+  if (
+    !joint_force_.empty() && !actuator_force_.empty() &&
+    joint_force_.size() != actuator_force_.size())
   {
     throw Exception(
       fmt::format(FMT_COMPILE("Pair-wise mismatch on force interfaces. \n{}"), get_handles_info()));
   }
-  if (joint_absolute_position_.size() != actuator_absolute_position_.size())
+  if (
+    !joint_absolute_position_.empty() && !actuator_absolute_position_.empty() &&
+    joint_absolute_position_.size() != actuator_absolute_position_.size())
   {
     throw Exception(
       fmt::format(
         FMT_COMPILE("Pair-wise mismatch on absolute position interfaces. \n{}"),
+        get_handles_info()));
+  }
+
+  // Check at least one pair-wise interface is available
+  if (!((!joint_position_.empty() && !actuator_position_.empty() &&
+         joint_position_.size() == actuator_position_.size()) ||
+        (!joint_velocity_.empty() && !actuator_velocity_.empty() &&
+         joint_velocity_.size() == actuator_velocity_.size()) ||
+        (!joint_effort_.empty() && !actuator_effort_.empty() &&
+         joint_effort_.size() == actuator_effort_.size()) ||
+        (!joint_torque_.empty() && !actuator_torque_.empty() &&
+         joint_torque_.size() == actuator_torque_.size()) ||
+        (!joint_force_.empty() && !actuator_force_.empty() &&
+         joint_force_.size() == actuator_force_.size()) ||
+        (!joint_absolute_position_.empty() && !actuator_absolute_position_.empty() &&
+         joint_absolute_position_.size() == actuator_absolute_position_.size())))
+  {
+    throw Exception(
+      fmt::format(
+        FMT_COMPILE("No pair-wise interface available between joints and actuators. \n{}"),
         get_handles_info()));
   }
 }
