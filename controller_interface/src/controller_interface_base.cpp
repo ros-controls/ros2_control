@@ -167,7 +167,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     {
       RCLCPP_WARN(
         get_node()->get_logger(),
-        "The update rate of the controller : '%" PRId64 "Hz' cannot be higher than the update rate of the "
+        "The update rate of the controller : '%" PRId64
+        "Hz' cannot be higher than the update rate of the "
         "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
         update_rate, ctrl_itf_params_.update_rate);
     }
