@@ -17,7 +17,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros_controls.rolling.repos'
-      - 'ros_controls.kilted.repos'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
