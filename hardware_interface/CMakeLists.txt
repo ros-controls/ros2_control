@@ -8,6 +8,7 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
+  LibXml2
   pluginlib
   rclcpp_lifecycle
   rcpputils
@@ -30,6 +31,7 @@ endforeach()
 
 add_library(hardware_interface SHARED
   src/component_parser.cpp
+  src/component_validator.cpp
   src/resource_manager.cpp
   src/hardware_component.cpp
   src/lexical_casts.cpp
@@ -48,6 +50,7 @@ target_link_libraries(hardware_interface PUBLIC
                       realtime_tools::realtime_tools
                       rcutils::rcutils
                       rcpputils::rcpputils
+                      LibXml2::LibXml2
                       ${joint_limits_TARGETS}
                       ${TinyXML2_LIBRARIES}
                       ${tinyxml2_vendor_LIBRARIES}
@@ -73,6 +76,8 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(ament_index_cpp REQUIRED)
+  find_package(LibXml2)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
@@ -101,6 +106,14 @@ if(BUILD_TESTING)
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface ros2_control_test_assets::ros2_control_test_assets)
 
+  ament_add_gmock(test_component_validator test/test_component_validator.cpp)
+  target_link_libraries(test_component_validator
+    hardware_interface
+    ament_index_cpp::ament_index_cpp
+    ros2_control_test_assets::ros2_control_test_assets
+    LibXml2::LibXml2
+  )
+
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
@@ -125,6 +138,12 @@ install(
   DIRECTORY include/
   DESTINATION include/hardware_interface
 )
+
+install(
+  DIRECTORY schema
+  DESTINATION share/hardware_interface
+)
+
 install(
   TARGETS
     mock_components
