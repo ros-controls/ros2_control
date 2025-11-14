@@ -133,6 +133,37 @@ TEST(ConfigureTest, FailsWithBadHandles)
   testConfigureWithBadHandles(HW_IF_ABSOLUTE_POSITION);
 }
 
+TEST(ConfigureTest, SuccessWithOneGoodHandle)
+{
+  DifferentialTransmission trans({1.0, 1.0}, {1.0, 1.0});
+  double dummy;
+
+  auto a1_p_handle = ActuatorHandle("act1", HW_IF_POSITION, &dummy);
+  auto a2_p_handle = ActuatorHandle("act2", HW_IF_POSITION, &dummy);
+  auto a1_f_handle = ActuatorHandle("act1", HW_IF_FORCE, &dummy);
+  auto a2_f_handle = ActuatorHandle("act2", HW_IF_FORCE, &dummy);
+  auto j1_p_handle = JointHandle("joint1", HW_IF_POSITION, &dummy);
+  auto j2_p_handle = JointHandle("joint2", HW_IF_POSITION, &dummy);
+
+  // No exception should be thrown even though there is no force interface in the joints
+  ASSERT_NO_THROW(trans.configure(
+    {j1_p_handle, j2_p_handle}, {a1_p_handle, a2_p_handle, a1_f_handle, a2_f_handle}));
+}
+
+TEST(ConfigureTest, FailWhenGoodHandles)
+{
+  DifferentialTransmission trans({1.0, 1.0}, {1.0, 1.0});
+  double dummy;
+
+  auto a1_f_handle = ActuatorHandle("act1", HW_IF_FORCE, &dummy);
+  auto a2_f_handle = ActuatorHandle("act2", HW_IF_FORCE, &dummy);
+  auto j1_p_handle = JointHandle("joint1", HW_IF_POSITION, &dummy);
+  auto j2_p_handle = JointHandle("joint2", HW_IF_POSITION, &dummy);
+
+  // No pair-wise interfaces available
+  EXPECT_THROW(trans.configure({j1_p_handle, j2_p_handle}, {a1_f_handle, a2_f_handle}), Exception);
+}
+
 class TransmissionSetup : public ::testing::Test
 {
 protected:
