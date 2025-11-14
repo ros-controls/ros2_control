@@ -46,10 +46,6 @@ int main(int argc, char ** argv)
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
-<<<<<<< HEAD
-  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
-  if (cpu_affinity >= 0)
-=======
   const bool has_realtime = realtime_tools::has_realtime_kernel();
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   std::string message;
@@ -60,7 +56,6 @@ int main(int argc, char ** argv)
 
   rclcpp::Parameter cpu_affinity_param;
   if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
->>>>>>> 0ef99fe (Update CPU affinity parameter to be able to set multiple CPUs (#1915))
   {
     std::vector<int> cpus = {};
     if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
