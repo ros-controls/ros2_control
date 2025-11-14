@@ -46,14 +46,6 @@ int main(int argc, char ** argv)
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
-  const bool has_realtime = realtime_tools::has_realtime_kernel();
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
-  std::string message;
-  if (lock_memory && !realtime_tools::lock_memory(message))
-  {
-    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
-  }
-
   rclcpp::Parameter cpu_affinity_param;
   if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
   {
