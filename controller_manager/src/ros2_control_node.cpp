@@ -67,13 +67,6 @@ int main(int argc, char ** argv)
     }
   }
 
-<<<<<<< HEAD
-=======
-  // wait for the clock to be available
-  cm->get_clock()->wait_until_started();
-  cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
-
->>>>>>> 94e610a (Fix the CPU affinity of the ros2_control_node (#2509))
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
