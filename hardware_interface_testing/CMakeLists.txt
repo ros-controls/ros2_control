@@ -38,6 +38,15 @@ pluginlib_export_plugin_description_file(
 hardware_interface test/test_components/test_components.xml)
 
 if(BUILD_TESTING)
+  function(add_atomic_link_options target)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+      target_link_options(${target} PRIVATE
+        "LINKER:--no-as-needed"
+        "LINKER:-latomic"
+        "LINKER:--as-needed"
+      )
+    endif()
+  endfunction()
 
   find_package(ament_cmake_gmock REQUIRED)
 
@@ -47,6 +56,7 @@ if(BUILD_TESTING)
                         rclcpp_lifecycle::rclcpp_lifecycle
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})
+  add_atomic_link_options(test_resource_manager)
 
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
   target_link_libraries(test_resource_manager_prepare_perform_switch
@@ -54,6 +64,7 @@ if(BUILD_TESTING)
                         rclcpp_lifecycle::rclcpp_lifecycle
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})
+  add_atomic_link_options(test_resource_manager_prepare_perform_switch)
 
 endif()
 
