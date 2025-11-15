@@ -24,5 +24,10 @@ controller_manager
 * ``--switch-timeout`` was added as parameter to the helper scripts ``spawner.py`` and ``unspawner.py``. Useful if controllers cannot be switched immediately, e.g., paused simulations at startup (`#1790 <https://github.com/ros-controls/ros2_control/pull/1790>`_).
 * The spawner now supports parsing multiple ``-p`` or ``--param-file`` arguments, this should help in loading multiple parameter files for a controller or for multiple controllers (`#1805 <https://github.com/ros-controls/ros2_control/pull/1805>`_).
 * The ``--service-call-timeout`` was added as parameter to the helper scripts ``spawner.py``. Useful when the CPU load is high at startup and the service call does not return immediately (`#1808 <https://github.com/ros-controls/ros2_control/pull/1808>`_).
+<<<<<<< HEAD
+=======
+* The ``cpu_affinity`` parameter can now be of type ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
+* The ``pal_statistics`` is now integrated into the controller_manager, so that the controllers, hardware components and the controller_manager can be easily introspected and monitored using the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` (`#1918 <https://github.com/ros-controls/ros2_control/pull/1918>`_).
+>>>>>>> 8e7c322 (Fix typo in release notes (#2826))
 * A python module ``test_utils`` was added to the ``controller_manager`` package to help with integration testing (`#1955 <https://github.com/ros-controls/ros2_control/pull/1955>`_).
 * The ``cpu_affinity`` parameter can now accept of types ``int`` or ``int_array`` to bind the process to a specific CPU core or multiple CPU cores. (`#1915 <https://github.com/ros-controls/ros2_control/pull/1915>`_).
