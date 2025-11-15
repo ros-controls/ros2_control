@@ -1420,9 +1420,17 @@ ResourceManager::ResourceManager(
     params.allow_controller_activation_with_inactive_hardware;
   return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params.return_failed_hardware_names_on_return_deactivate_write_cycle_;
-  if (load)
+  
+ try
   {
-    load_and_initialize_components(params);
+    if (load && !load_and_initialize_components(params))
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Could not load and initialize hardware. Please check previous output for more details. "
+        "After you have corrected your URDF, try to publish robot description again.");
+      return;
+    }
     if (params.activate_all)
     {
       for (auto const & hw_info : resource_storage_->hardware_info_map_)
@@ -1433,6 +1441,14 @@ ResourceManager::ResourceManager(
       }
     }
   }
+  catch (const std::exception &e)
+  {
+    // Other possible errors when loading components
+    RCLCPP_ERROR(
+      get_logger(),
+      "Exception caught while loading and initializing components: %s", e.what());
+    return;
+  }  
 }
 
 bool ResourceManager::shutdown_components()
@@ -1455,8 +1471,6 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
-  components_are_loaded_and_initialized_ = true;
-
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
 
@@ -1473,6 +1487,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  components_are_loaded_and_initialized_ = true;
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
