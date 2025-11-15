@@ -15,15 +15,13 @@
 
 import pytest
 import unittest
-import os
 import tempfile
-
+from pathlib import Path
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
 import launch_testing.asserts
-import launch_testing.markers
 import launch_ros.actions
 
 import rclpy
@@ -67,21 +65,21 @@ def generate_test_description():
     print(f"Creating test files in: {temp_dir}")
 
     # Get URDF, without involving xacro
-    urdf = os.path.join(
-        get_package_share_directory("ros2_control_test_assets"),
-        "urdf",
-        "test_hardware_components.urdf",
+    urdf = (
+        Path(get_package_share_directory("ros2_control_test_assets"))
+        / "urdf"
+        / "test_hardware_components.urdf"
     )
     with open(urdf) as infp:
         robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = os.path.join(
-        get_package_prefix("controller_manager"), "test", "test_controller_load.yaml"
+    robot_controllers = (
+        Path(get_package_prefix("controller_manager")) / "test" / "test_controller_load.yaml"
     )
 
     # Verify both files exist
-    assert os.path.isfile(robot_controllers), f"Controller config not created: {robot_controllers}"
+    assert robot_controllers.is_file(), f"Controller config not created: {robot_controllers}"
 
     robot_state_pub_node = launch_ros.actions.Node(
         package="robot_state_publisher",
@@ -94,7 +92,7 @@ def generate_test_description():
     control_node = launch_ros.actions.Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[str(robot_controllers)],
         output="both",
     )
 
@@ -102,7 +100,7 @@ def generate_test_description():
 
     spawner_action = generate_load_controller_launch_description(
         controller_name="test_controller_load",
-        controller_params_file=[robot_controllers],
+        controller_params_file=[str(robot_controllers)],
     )
 
     ld = LaunchDescription(
@@ -117,7 +115,7 @@ def generate_test_description():
     return ld, {
         "temp_dir": temp_dir,
         "controller_name": "test_controller_load",
-        "urdf_file": urdf,
+        "urdf_file": str(urdf),
     }
 
 

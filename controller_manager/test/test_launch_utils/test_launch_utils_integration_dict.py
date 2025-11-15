@@ -15,15 +15,14 @@
 
 import pytest
 import unittest
-import os
 import tempfile
 import time
+from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
-import launch_testing.markers
 import launch_ros.actions
 
 import rclpy
@@ -45,23 +44,27 @@ def generate_test_description():
     temp_dir = tempfile.mkdtemp()
     print(f"Creating test files in: {temp_dir}")
 
-    # Get URDF, without involving xacro
-    urdf = os.path.join(
-        get_package_share_directory("ros2_control_test_assets"),
-        "urdf",
-        "test_hardware_components.urdf",
+    # URDF path (pathlib version, no xacro)
+    urdf = (
+        Path(get_package_share_directory("ros2_control_test_assets"))
+        / "urdf"
+        / "test_hardware_components.urdf"
     )
+
     with open(urdf) as infp:
         robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = os.path.join(
-        get_package_prefix("controller_manager"), "test", "test_ros2_control_node_combined.yaml"
+    # Path to combined YAML
+    robot_controllers = (
+        Path(get_package_prefix("controller_manager"))
+        / "test"
+        / "test_ros2_control_node_combined.yaml"
     )
 
-    # Verify both files exist
-    assert os.path.isfile(robot_controllers), f"Controller config not created: {robot_controllers}"
-    assert os.path.isfile(urdf), f"URDF not created: {urdf}"
+    # Verify files exist (Path method)
+    assert robot_controllers.is_file(), f"Controller config not found: {robot_controllers}"
+    assert urdf.is_file(), f"URDF not found: {urdf}"
 
     robot_state_pub_node = launch_ros.actions.Node(
         package="robot_state_publisher",
@@ -74,16 +77,16 @@ def generate_test_description():
     control_node = launch_ros.actions.Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],  # Use the combined config file
+        parameters=[str(robot_controllers)],  # Use the combined config file
         output="both",
     )
 
     # The dictionary keys are the controller names to be spawned/started.
     # Values can be empty lists since config is provided via the main YAML.
     ctrl_dict = {
-        "joint_state_broadcaster": [robot_controllers],
-        "ctrl_with_parameters_and_type": [robot_controllers],
-        "controller3": [robot_controllers],
+        "joint_state_broadcaster": [str(robot_controllers)],
+        "controller1": [str(robot_controllers)],
+        "controller2": [str(robot_controllers)],
     }
     controller_list = list(ctrl_dict.keys())
 
@@ -103,7 +106,7 @@ def generate_test_description():
     # Return tuple with launch description and test context
     return ld, {
         "controller_list": controller_list,  # Key name updated to match the test function
-        "robot_controllers": str(robot_controllers),
+        "robot_controllers": robot_controllers,
         "urdf_file": urdf,
         "temp_dir": temp_dir,
     }
@@ -224,7 +227,7 @@ class TestProcessOutput(unittest.TestCase):
 
         print("[POST-SHUTDOWN] ? All processes exited as expected")
 
-    def test_cleanup_temp_files(self, temp_dir, robot_controllers, urdf_file):
+    def test_cleanup_temp_files(self, temp_dir):
         """Clean up temporary test files."""
         import shutil
 
@@ -232,7 +235,7 @@ class TestProcessOutput(unittest.TestCase):
 
         # The original clean-up logic was commented out, enabling it for safety
         try:
-            if os.path.exists(temp_dir):
+            if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 
             print("[CLEANUP] ? Temporary files removed")

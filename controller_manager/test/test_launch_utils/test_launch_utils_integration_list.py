@@ -15,15 +15,14 @@
 
 import pytest
 import unittest
-import os
 import time
 import tempfile
+from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
-import launch_testing.markers
 import launch_ros.actions
 
 import rclpy
@@ -44,22 +43,24 @@ def generate_test_description():
     print(f"Creating test files in: {temp_dir}")
 
     # Get URDF, without involving xacro
-    urdf = os.path.join(
-        get_package_share_directory("ros2_control_test_assets"),
-        "urdf",
-        "test_hardware_components.urdf",
+    urdf = (
+        Path(get_package_share_directory("ros2_control_test_assets"))
+        / "urdf"
+        / "test_hardware_components.urdf"
     )
     with open(urdf) as infp:
         robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = os.path.join(
-        get_package_prefix("controller_manager"), "test", "test_ros2_control_node_combined.yaml"
+    robot_controllers = (
+        Path(get_package_prefix("controller_manager"))
+        / "test"
+        / "test_ros2_control_node_combined.yaml"
     )
 
-    # Verify both files exist
-    assert os.path.isfile(robot_controllers), f"Controller config not created: {robot_controllers}"
-    assert os.path.isfile(urdf), f"URDF not created: {urdf}"
+    # Verify files exist
+    assert robot_controllers.is_file(), f"Controller config missing: {robot_controllers}"
+    assert urdf.is_file(), f"URDF missing: {urdf}"
 
     robot_state_pub_node = launch_ros.actions.Node(
         package="robot_state_publisher",
@@ -72,12 +73,12 @@ def generate_test_description():
     control_node = launch_ros.actions.Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[str(robot_controllers)],
         output="both",
     )
 
     # ===== DEFINE CONTROLLERS TO SPAWN =====
-    controller_list = ["joint_state_broadcaster", "ctrl_with_parameters_and_type", "controller3"]
+    controller_list = ["joint_state_broadcaster", "controller1", "controller2"]
 
     # ===== GENERATE SPAWNER =====
     print(f"Spawning controllers: {controller_list}")
@@ -85,7 +86,7 @@ def generate_test_description():
 
     spawner_ld = generate_controllers_spawner_launch_description(
         controller_names=controller_list.copy(),
-        controller_params_files=[robot_controllers],
+        controller_params_files=[str(robot_controllers)],
     )
 
     # ===== CREATE LAUNCH DESCRIPTION =====
@@ -217,14 +218,14 @@ class TestProcessOutput(unittest.TestCase):
 
         print("[POST-SHUTDOWN] ? All processes exited as expected")
 
-    def test_cleanup_temp_files(self, temp_dir, robot_controllers, urdf_file):
+    def test_cleanup_temp_files(self, temp_dir):
         """Clean up temporary test files."""
         import shutil
 
         print(f"\n[CLEANUP] Removing temporary directory: {temp_dir}")
 
         try:
-            if os.path.exists(temp_dir):
+            if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 
             print("[CLEANUP] ? Temporary files removed")

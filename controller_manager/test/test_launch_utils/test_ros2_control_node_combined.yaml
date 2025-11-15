@@ -11,12 +11,12 @@ forward_position_controller:
     type: position_controllers/JointGroupPositionController
     joints: ["joint1"]
 
-ctrl_with_parameters_and_type:
+controller1:
   ros__parameters:
     type: "controller_manager/test_controller"
     joint_names: ["joint1"]
 
-controller3:
+controller2:
   ros__parameters:
     type: "controller_manager/test_controller"
     joint_names: ["joint3"]
