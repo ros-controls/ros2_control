@@ -17,7 +17,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
-      - 'ros2_control-not-released.kilted.repos'
   push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
