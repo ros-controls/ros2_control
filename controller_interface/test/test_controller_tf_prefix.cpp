@@ -14,7 +14,7 @@
 
 #include <gmock/gmock.h>
 
-#include "controller_interface/helpers.hpp"
+#include "controller_interface/tf_prefix.hpp"
 #include "test_controller_tf_prefix.hpp"
 
 TEST_F(TestControllerTFPrefix, EmptyPrefixReturnsEmpty)
