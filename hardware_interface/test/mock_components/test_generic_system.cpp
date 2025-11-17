@@ -52,7 +52,7 @@ public:
 protected:
   void SetUp() override
   {
-    hardware_system_2dof_ =
+    hw_sys_2dof_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -73,7 +73,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_asymetric_ =
+    hw_sys_2dof_asymmetric_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -94,7 +94,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_ =
+    hw_sys_2dof_standard_interfaces_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -124,7 +124,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_gpio_ =
+    hw_sys_2dof_with_gpio_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -160,7 +160,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_sensor_ =
+    hw_sys_2dof_with_sensor_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -188,7 +188,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_sensor_mock_command_ =
+    hw_sys_2dof_with_sensor_mock_command_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -217,7 +217,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_sensor_mock_command_True_ =
+    hw_sys_2dof_with_sensor_mock_command_True_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -246,7 +246,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_mimic_joint_ =
+    hw_sys_2dof_with_mimic_joint_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -267,7 +267,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_offset_ =
+    hw_sys_2dof_standard_interfaces_with_offset_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -297,7 +297,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ =
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -329,7 +329,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_ =
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -560,7 +560,7 @@ protected:
 
     // joint 1: position & velocity & effort control
     // joint 2: velocity & acceleration control
-    hardware_system_2dof_standard_interfaces_with_different_control_modes_ =
+    hw_sys_2dof_calc_dyn_standard_interfaces_with_different_control_modes_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -593,7 +593,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_position_control_mode_position_state_only_ =
+    hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -615,52 +615,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_ =
-      R"(
-  <ros2_control name="MockHardwareSystem" type="system">
-    <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
-      <param name="position_state_following_offset">-3</param>
-      <param name="calculate_dynamics">true</param>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">3.45</param>
-      </state_interface>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">2.78</param>
-      </state_interface>
-    </joint>
-  </ros2_control>
-)";
-
-    hardware_system_2dof_with_velocity_control_mode_position_state_only_ =
-      R"(
-  <ros2_control name="MockHardwareSystem" type="system">
-    <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
-      <param name="calculate_dynamics">true</param>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="velocity"/>
-      <state_interface name="position">
-        <param name="initial_value">3.45</param>
-      </state_interface>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="velocity"/>
-      <state_interface name="position">
-        <param name="initial_value">2.78</param>
-      </state_interface>
-    </joint>
-  </ros2_control>
-)";
-
-    hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_ =
+    hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_w_offset_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -669,6 +624,28 @@ protected:
       <param name="calculate_dynamics">true</param>
     </hardware>
     <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+    </joint>
+  </ros2_control>
+)";
+
+    hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="calculate_dynamics">true</param>
+    </hardware>
+    <joint name="joint1">
       <command_interface name="velocity"/>
       <state_interface name="position">
         <param name="initial_value">3.45</param>
@@ -683,7 +660,30 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_3dof_standard_interfaces_with_different_control_modes_ =
+    hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_w_offset_ =
+      R"(
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="position_state_following_offset">-3</param>
+      <param name="calculate_dynamics">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+    </joint>
+  </ros2_control>
+)";
+
+    hw_sys_3dof_calc_dyn_standard_interfaces_with_different_control_modes_ =
       R"(
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
@@ -739,7 +739,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_same_hardware_group_ =
+    hw_sys_2dof_standard_interfaces_with_same_hardware_group_ =
       R"(
   <ros2_control name="MockHardwareSystem1" type="system">
     <hardware>
@@ -771,7 +771,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ =
+    hw_sys_2dof_standard_interfaces_with_two_diff_hw_groups_ =
       R"(
   <ros2_control name="MockHardwareSystem1" type="system">
     <hardware>
@@ -810,33 +810,33 @@ protected:
 
   void TearDown() override { node_.reset(); }
 
-  std::string hardware_system_2dof_;
-  std::string hardware_system_2dof_asymetric_;
-  std::string hardware_system_2dof_standard_interfaces_;
-  std::string hardware_system_2dof_with_gpio_;
-  std::string hardware_system_2dof_with_sensor_;
-  std::string hardware_system_2dof_with_sensor_mock_command_;
-  std::string hardware_system_2dof_with_sensor_mock_command_True_;
-  std::string hardware_system_2dof_with_mimic_joint_;
-  std::string hardware_system_2dof_standard_interfaces_with_offset_;
-  std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_;
-  std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
+  std::string hw_sys_2dof_;
+  std::string hw_sys_2dof_asymmetric_;
+  std::string hw_sys_2dof_standard_interfaces_;
+  std::string hw_sys_2dof_with_gpio_;
+  std::string hw_sys_2dof_with_sensor_;
+  std::string hw_sys_2dof_with_sensor_mock_command_;
+  std::string hw_sys_2dof_with_sensor_mock_command_True_;
+  std::string hw_sys_2dof_with_mimic_joint_;
+  std::string hw_sys_2dof_standard_interfaces_with_offset_;
+  std::string hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_;
+  std::string hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_bool_mock_command_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_;
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
-  std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
-  std::string hardware_system_2dof_with_position_control_mode_position_state_only_;
-  std::string hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_;
-  std::string hardware_system_2dof_standard_interfaces_with_velocity_control_mode_;
-  std::string hardware_system_2dof_with_velocity_control_mode_position_state_only_;
-  std::string hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_;
-  std::string hardware_system_3dof_standard_interfaces_with_different_control_modes_;
+  std::string hw_sys_2dof_calc_dyn_standard_interfaces_with_different_control_modes_;
+  std::string hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_;
+  std::string hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_w_offset_;
+  std::string hw_sys_2dof_standard_interfaces_with_velocity_control_mode_;
+  std::string hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_;
+  std::string hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_w_offset_;
+  std::string hw_sys_3dof_calc_dyn_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
-  std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
-  std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
+  std::string hw_sys_2dof_standard_interfaces_with_same_hardware_group_;
+  std::string hw_sys_2dof_standard_interfaces_with_two_diff_hw_groups_;
   rclcpp::Node::SharedPtr node_ = std::make_shared<rclcpp::Node>("TestGenericSystem");
 };
 
@@ -905,16 +905,16 @@ auto deactivate_components = [](
 
 TEST_F(TestGenericSystem, load_generic_system_2dof)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-              ros2_control_test_assets::urdf_tail;
+  auto urdf =
+    ros2_control_test_assets::urdf_head + hw_sys_2dof_ + ros2_control_test_assets::urdf_tail;
   ASSERT_NO_THROW(TestableResourceManager rm(node_, urdf));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
+TEST_F(TestGenericSystem, generic_system_2dof_symmetric_interfaces)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-              ros2_control_test_assets::urdf_tail;
+  auto urdf =
+    ros2_control_test_assets::urdf_head + hw_sys_2dof_ + ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
@@ -942,9 +942,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
+TEST_F(TestGenericSystem, generic_system_2dof_asymmetric_interfaces)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_asymmetric_ +
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
@@ -1023,6 +1023,28 @@ void generic_system_functional_test(
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // read() does not change values until commands are set (i.e, isfinite())
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2p_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2v_c.get_optional().value()));
+
+  // write() does not change values until commands are set (i.e, isfinite())
+  ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(3.45 + offset, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(2.78 + offset, j2p_s.get_optional().value());
@@ -1128,11 +1150,11 @@ void generic_system_error_group_test(
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
-  // State interfaces without initial value are set to nan
+  // State interfaces without initial value are set to zero
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2p_c.get_optional().value()));
@@ -1146,9 +1168,9 @@ void generic_system_error_group_test(
 
   // State values should not be changed
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());
   EXPECT_EQ(0.33, j2p_c.get_optional().value());
@@ -1157,9 +1179,9 @@ void generic_system_error_group_test(
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(2.78, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
   EXPECT_EQ(0.22, j1v_c.get_optional().value());
   EXPECT_EQ(0.33, j2p_c.get_optional().value());
@@ -1250,7 +1272,7 @@ void generic_system_error_group_test(
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_standard_interfaces_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_functional_test(urdf, {"MockHardwareSystem"});
@@ -1259,7 +1281,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality)
 TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
+              hw_sys_2dof_standard_interfaces_with_two_diff_hw_groups_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_error_group_test(urdf, {"MockHardwareSystem"}, false);
@@ -1268,7 +1290,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
 TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
+              hw_sys_2dof_standard_interfaces_with_same_hardware_group_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_error_group_test(urdf, {"MockHardwareSystem"}, true);
@@ -1276,7 +1298,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
 
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_gpio_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_with_gpio_ +
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
@@ -1359,7 +1381,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_with_sensor_ +
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
@@ -1404,10 +1426,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/ty"));
 
   // State interfaces without initial value are set to nan
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1420,10 +1442,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_TRUE(j2p_c.set_value(0.33));
 
   // State values should not be changed
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1433,10 +1455,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1447,13 +1469,13 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   // read() mirrors commands to states
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sty_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.33, j2p_c.get_optional().value());
 }
@@ -1507,11 +1529,11 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   hardware_interface::LoanedCommandInterface sty_c =
     rm.claim_command_interface("tcp_force_sensor/ty");
 
-  // State interfaces without initial value are set to nan
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  // State interfaces without initial value are set to nan, except for joint interfaces
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1532,10 +1554,10 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   ASSERT_TRUE(sty_c.set_value(4.44));
 
   // State values should not be changed
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1549,10 +1571,10 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_TRUE(std::isnan(j1p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   EXPECT_TRUE(std::isnan(sfx_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(sfy_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(stx_s.get_optional().value()));
@@ -1567,9 +1589,9 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   // read() mirrors commands to states
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(0.11, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
   ASSERT_EQ(0.33, j2p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_EQ(1.11, sfx_s.get_optional().value());
   ASSERT_EQ(2.22, sfy_s.get_optional().value());
   ASSERT_EQ(3.33, stx_s.get_optional().value());
@@ -1584,7 +1606,7 @@ void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_with_sensor_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mock_sensor_commands(urdf, "MockHardwareSystem");
@@ -1592,8 +1614,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
 {
-  auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_sensor_mock_command_True_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mock_sensor_commands(urdf, "MockHardwareSystem");
@@ -1626,11 +1647,11 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
   hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
 
-  // State interfaces without initial value are set to nan
-  ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  // State interfaces without initial value are set to zero
+  EXPECT_EQ(1.57, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
 
@@ -1640,18 +1661,18 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
 
   // State values should not be changed
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   ASSERT_EQ(1.57, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2p_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j2v_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2p_s.get_optional().value());
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 
@@ -1665,9 +1686,9 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   ASSERT_EQ(0.05, j1v_c.get_optional().value());
 }
 
-TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
+TEST_F(TestGenericSystem, hw_sys_2dof_with_mimic_joint)
 {
-  auto urdf = ros2_control_test_assets::urdf_head_mimic + hardware_system_2dof_with_mimic_joint_ +
+  auto urdf = ros2_control_test_assets::urdf_head_mimic + hw_sys_2dof_with_mimic_joint_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mimic_joint(urdf, "MockHardwareSystem");
@@ -1675,8 +1696,7 @@ TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset)
 {
-  auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_offset_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hw_sys_2dof_standard_interfaces_with_offset_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_functional_test(urdf, "MockHardwareSystem", -3);
@@ -1685,7 +1705,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset)
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_interface_missing)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ +
+              hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ +
               ros2_control_test_assets::urdf_tail;
 
   // custom interface is missing so offset will not be applied
@@ -1695,7 +1715,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_interface)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_ +
+              hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_ +
               ros2_control_test_assets::urdf_tail;
 
   const double offset = -3;
@@ -2131,7 +2151,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
 TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_standard_interfaces_with_different_control_modes_ +
+              hw_sys_2dof_calc_dyn_standard_interfaces_with_different_control_modes_ +
               ros2_control_test_assets::urdf_tail;
 
   TestableResourceManager rm(node_, urdf);
@@ -2171,15 +2191,15 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   hardware_interface::LoanedCommandInterface j2a_c =
     rm.claim_command_interface("joint2/acceleration");
 
-  // State interfaces without initial value are set to nan
+  // State interfaces without initial value are set to zero
   double j1p = 3.45;
   double j2p = 2.78;
   EXPECT_EQ(j1p, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
   EXPECT_EQ(j2p, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
   ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j1e_c.get_optional().value()));  // not used in this test
@@ -2211,11 +2231,11 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   // State values should not be changed
   EXPECT_EQ(j1p, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
   EXPECT_EQ(j2p, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2224,11 +2244,11 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
   EXPECT_EQ(j1p, j1p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j1a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.0, j1a_s.get_optional().value());
   EXPECT_EQ(j2p, j2p_s.get_optional().value());
-  EXPECT_TRUE(std::isnan(j2v_s.get_optional().value()));
-  EXPECT_TRUE(std::isnan(j2a_s.get_optional().value()));
+  EXPECT_EQ(0.0, j2v_s.get_optional().value());
+  EXPECT_EQ(0.0, j2a_s.get_optional().value());
   ASSERT_EQ(0.11, j1p_c.get_optional().value());
   ASSERT_TRUE(std::isnan(j1v_c.get_optional().value()));
   ASSERT_TRUE(std::isnan(j2v_c.get_optional().value()));
@@ -2340,7 +2360,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_position_control_mode_position_state_only_ +
+              hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_ +
               ros2_control_test_assets::urdf_tail;
 
   TestableResourceManager rm(node_, urdf);
@@ -2415,7 +2435,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces)
 TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces_w_offset)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_position_control_mode_position_state_only_w_offset_ +
+              hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_w_offset_ +
               ros2_control_test_assets::urdf_tail;
   constexpr double offset = -3.0;
 
@@ -2491,7 +2511,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_control_modes_interfaces_w_offset)
 TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_velocity_control_mode_position_state_only_ +
+              hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_ +
               ros2_control_test_assets::urdf_tail;
 
   TestableResourceManager rm(node_, urdf);
@@ -2566,7 +2586,7 @@ TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces)
 TEST_F(TestGenericSystem, simple_dynamics_vel_control_modes_interfaces_with_offset)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_velocity_control_mode_position_state_only_w_offset_ +
+              hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_w_offset_ +
               ros2_control_test_assets::urdf_tail;
   constexpr double offset = -3.0;
 
@@ -2661,29 +2681,29 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
   hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
 
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_TRUE(std::isnan(j1p_c.get_optional().value()));
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_TRUE(std::isnan(j1p_c.get_optional().value()));
 
   // set some new values in commands
   ASSERT_TRUE(j1p_c.set_value(0.11));
 
   // State values should not be changed
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
 
   // write() does not change values
   ASSERT_EQ(rm.write(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
 
   // read() also does not change values
   ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
-  ASSERT_EQ(3.45, j1p_s.get_optional().value());
-  ASSERT_TRUE(std::isnan(j1v_s.get_optional().value()));
-  ASSERT_EQ(0.11, j1p_c.get_optional().value());
+  EXPECT_EQ(3.45, j1p_s.get_optional().value());
+  EXPECT_EQ(0.0, j1v_s.get_optional().value());
+  EXPECT_EQ(0.11, j1p_c.get_optional().value());
 }
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
@@ -2700,22 +2720,20 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
     return rm.prepare_command_mode_switch(start_interfaces, stop_interfaces);
   };
 
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_asymetric_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_gpio_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
-  ASSERT_TRUE(
-    check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_asymmetric_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_standard_interfaces_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_with_gpio_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_with_sensor_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_with_sensor_mock_command_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_with_sensor_mock_command_True_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
-  ASSERT_TRUE(
-    check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
+    hw_sys_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hw_sys_2dof_standard_interfaces_with_offset_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_));
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
   ASSERT_TRUE(check_prepare_command_mode_switch(valid_urdf_ros2_control_system_robot_with_gpio_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_));
@@ -2727,14 +2745,14 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(gpio_with_initial_value_));
 
   ASSERT_FALSE(check_prepare_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_different_control_modes_));
+    hw_sys_2dof_calc_dyn_standard_interfaces_with_different_control_modes_));
 
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_with_position_control_mode_position_state_only_));
+    hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_2dof_with_velocity_control_mode_position_state_only_));
+    hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_));
   ASSERT_TRUE(check_prepare_command_mode_switch(
-    hardware_system_3dof_standard_interfaces_with_different_control_modes_));
+    hw_sys_3dof_calc_dyn_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
 }
 
@@ -2752,22 +2770,20 @@ TEST_F(TestGenericSystem, perform_command_mode_switch_works_with_all_example_tag
     return rm.perform_command_mode_switch(start_interfaces, stop_interfaces);
   };
 
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_));
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_asymetric_));
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_standard_interfaces_));
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_with_gpio_));
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_with_sensor_));
-  ASSERT_TRUE(check_perform_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
-  ASSERT_TRUE(
-    check_perform_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_asymmetric_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_standard_interfaces_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_with_gpio_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_with_sensor_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_with_sensor_mock_command_));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_with_sensor_mock_command_True_));
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
-  ASSERT_TRUE(
-    check_perform_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
+    hw_sys_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
+  ASSERT_TRUE(check_perform_command_mode_switch(hw_sys_2dof_standard_interfaces_with_offset_));
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_));
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_));
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
+    hw_sys_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
   ASSERT_TRUE(check_perform_command_mode_switch(valid_urdf_ros2_control_system_robot_with_gpio_));
   ASSERT_TRUE(check_perform_command_mode_switch(
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_));
@@ -2779,11 +2795,11 @@ TEST_F(TestGenericSystem, perform_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_perform_command_mode_switch(gpio_with_initial_value_));
 
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_2dof_with_position_control_mode_position_state_only_));
+    hw_sys_2dof_calc_dyn_with_position_control_mode_position_state_only_));
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_2dof_with_velocity_control_mode_position_state_only_));
+    hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_));
   ASSERT_TRUE(check_perform_command_mode_switch(
-    hardware_system_3dof_standard_interfaces_with_different_control_modes_));
+    hw_sys_3dof_calc_dyn_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_perform_command_mode_switch(disabled_commands_));
 }
 

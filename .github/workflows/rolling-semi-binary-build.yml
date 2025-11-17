@@ -17,7 +17,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-      - 'ros2_control.kilted.repos'
   push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
