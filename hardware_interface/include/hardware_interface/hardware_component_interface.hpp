@@ -703,6 +703,48 @@ public:
     return hardware_states_.find(interface_name) != hardware_states_.end();
   }
 
+  /// Get the state interface handle
+  /**
+   * \param[in] interface_name The name of the state interface to access.
+   * \return Shared pointer to the state interface handle.
+   * \throws std::runtime_error This method throws a runtime error if it cannot find the state
+   * interface with the given name.
+   */
+  const StateInterface::SharedPtr & get_state_interface_handle(
+    const std::string & interface_name) const
+  {
+    auto it = hardware_states_.find(interface_name);
+    if (it == hardware_states_.end())
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "The requested state interface not found: '{}' in hardware component: '{}'.",
+          interface_name, info_.name));
+    }
+    return it->second;
+  }
+
+  /// Set the value of a state interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param interface_handle The shared pointer to the state interface to access.
+   * \param value The value to store.
+   */
+  template <typename T>
+  void set_state(const StateInterface::SharedPtr & interface_handle, const T & value)
+  {
+    if (!interface_handle)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "State interface handle is null in hardware component: {}, while calling set_state "
+          "method. This should not happen.",
+          info_.name));
+    }
+    std::unique_lock<std::shared_mutex> lock(interface_handle->get_mutex());
+    std::ignore = interface_handle->set_value(lock, value);
+  }
+
   /// Set the value of a state interface.
   /**
    * \tparam T The type of the value to be stored.
@@ -714,19 +756,37 @@ public:
   template <typename T>
   void set_state(const std::string & interface_name, const T & value)
   {
-    auto it = hardware_states_.find(interface_name);
-    if (it == hardware_states_.end())
+    set_state(get_state_interface_handle(interface_name), value);
+  }
+
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_handle The shared pointer to the state interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the state interface or its stored value.
+   */
+  template <typename T>
+  T get_state(const StateInterface::SharedPtr & interface_handle) const
+  {
+    if (!interface_handle)
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE(
-            "State interface not found: {} in hardware component: {}. "
-            "This should not happen."),
-          interface_name, info_.name));
+          "State interface handle is null in hardware component: {}, while calling get_state "
+          "method. This should not happen.",
+          info_.name));
     }
-    auto & handle = it->second;
-    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
-    std::ignore = handle->set_value(lock, value);
+    std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
+    const auto opt_value = interface_handle->get_optional<T>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "Failed to get state value from interface: {}. This should not happen.",
+          interface_handle->get_name()));
+    }
+    return opt_value.value();
   }
 
   /// Get the value from a state interface.
@@ -740,27 +800,7 @@ public:
   template <typename T = double>
   T get_state(const std::string & interface_name) const
   {
-    auto it = hardware_states_.find(interface_name);
-    if (it == hardware_states_.end())
-    {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE(
-            "State interface not found: {} in hardware component: {}. "
-            "This should not happen."),
-          interface_name, info_.name));
-    }
-    auto & handle = it->second;
-    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
-    const auto opt_value = handle->get_optional<T>(lock);
-    if (!opt_value)
-    {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE("Failed to get state value from interface: {}. This should not happen."),
-          interface_name));
-    }
-    return opt_value.value();
+    return get_state<T>(get_state_interface_handle(interface_name));
   }
 
   /// Does the command interface exist?
@@ -771,6 +811,49 @@ public:
   bool has_command(const std::string & interface_name) const
   {
     return hardware_commands_.find(interface_name) != hardware_commands_.end();
+  }
+
+  /// Get the command interface handle
+  /**
+   * \param[in] interface_name The name of the command interface to access.
+   * \return Shared pointer to the command interface handle.
+   * \throws std::runtime_error This method throws a runtime error if it cannot find the command
+   * interface with the given name.
+   */
+  const CommandInterface::SharedPtr & get_command_interface_handle(
+    const std::string & interface_name) const
+  {
+    auto it = hardware_commands_.find(interface_name);
+    if (it == hardware_commands_.end())
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "The requested command interface not found: '{}' in hardware component: '{}'.",
+          interface_name, info_.name));
+    }
+    return it->second;
+  }
+
+  /// Set the value of a command interface.
+  /**
+   * \tparam T The type of the value to be stored.
+   * \param interface_handle The shared pointer to the command interface to access.
+   * \param value The value to store.
+   * \throws This method throws a runtime error if it cannot access the command interface.
+   */
+  template <typename T>
+  void set_command(const CommandInterface::SharedPtr & interface_handle, const T & value)
+  {
+    if (!interface_handle)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "Command interface handle is null in hardware component: {}, while calling set_command "
+          "method. This should not happen.",
+          info_.name));
+    }
+    std::unique_lock<std::shared_mutex> lock(interface_handle->get_mutex());
+    std::ignore = interface_handle->set_value(lock, value);
   }
 
   /// Set the value of a command interface.
@@ -785,19 +868,37 @@ public:
   template <typename T>
   void set_command(const std::string & interface_name, const T & value)
   {
-    auto it = hardware_commands_.find(interface_name);
-    if (it == hardware_commands_.end())
+    set_command(get_command_interface_handle(interface_name), value);
+  }
+
+  /**
+   * \tparam T The type of the value to be retrieved.
+   * \param[in] interface_handle The shared pointer to the command interface to access.
+   * \return The value obtained from the interface.
+   * \throws std::runtime_error This method throws a runtime error if it cannot
+   * access the command interface or its stored value.
+   */
+  template <typename T>
+  T get_command(const CommandInterface::SharedPtr & interface_handle) const
+  {
+    if (!interface_handle)
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE(
-            "Command interface not found: {} in hardware component: {}. "
-            "This should not happen."),
-          interface_name, info_.name));
+          "Command interface handle is null in hardware component: {}, while calling get_command "
+          "method. This should not happen.",
+          info_.name));
     }
-    auto & handle = it->second;
-    std::unique_lock<std::shared_mutex> lock(handle->get_mutex());
-    std::ignore = handle->set_value(lock, value);
+    std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
+    const auto opt_value = interface_handle->get_optional<T>(lock);
+    if (!opt_value)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          "Failed to get command value from interface: {}. This should not happen.",
+          interface_handle->get_name()));
+    }
+    return opt_value.value();
   }
 
   ///  Get the value from a command interface.
@@ -811,27 +912,7 @@ public:
   template <typename T = double>
   T get_command(const std::string & interface_name) const
   {
-    auto it = hardware_commands_.find(interface_name);
-    if (it == hardware_commands_.end())
-    {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE(
-            "Command interface not found: {} in hardware component: {}. "
-            "This should not happen."),
-          interface_name, info_.name));
-    }
-    auto & handle = it->second;
-    std::shared_lock<std::shared_mutex> lock(handle->get_mutex());
-    const auto opt_value = handle->get_optional<T>(lock);
-    if (!opt_value)
-    {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE("Failed to get command value from interface: {}. This should not happen."),
-          interface_name));
-    }
-    return opt_value.value();
+    return get_command<T>(get_command_interface_handle(interface_name));
   }
 
   /// Get the logger of the HardwareComponentInterface.
