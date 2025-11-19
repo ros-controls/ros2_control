@@ -9,14 +9,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
   diagnostic_updater
+  fmt
+  generate_parameter_library
   hardware_interface
+  libstatistics_collector
+  lifecycle_msgs
   pluginlib
   rclcpp
   realtime_tools
   std_msgs
-  libstatistics_collector
-  generate_parameter_library
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -271,6 +272,11 @@ ament_python_install_package(controller_manager
   SCRIPTS_DESTINATION lib/controller_manager
 )
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} launch_testing_ros)
+ament_export_dependencies(
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  launch
+  launch_ros
+  launch_testing_ros
+)
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})
