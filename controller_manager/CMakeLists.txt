@@ -9,14 +9,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
   diagnostic_updater
+  fmt
+  generate_parameter_library
   hardware_interface
+  libstatistics_collector
+  lifecycle_msgs
   pluginlib
   rclcpp
   realtime_tools
   std_msgs
-  libstatistics_collector
-  generate_parameter_library
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
