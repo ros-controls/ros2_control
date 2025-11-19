@@ -14,7 +14,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rcutils
   realtime_tools
   TinyXML2
-  tinyxml2_vendor
   joint_limits
   urdf
   pal_statistics
@@ -50,7 +49,6 @@ target_link_libraries(hardware_interface PUBLIC
                       rcpputils::rcpputils
                       ${joint_limits_TARGETS}
                       ${TinyXML2_LIBRARIES}
-                      ${tinyxml2_vendor_LIBRARIES}
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}
