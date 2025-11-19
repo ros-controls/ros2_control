@@ -22,6 +22,7 @@
   <depend>hardware_interface</depend>
   <depend>launch</depend>
   <depend>launch_ros</depend>
+  <depend>launch_testing_ros</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
@@ -38,7 +39,6 @@
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>hardware_interface_testing</test_depend>
-  <test_depend>launch_testing_ros</test_depend>
   <test_depend>launch_testing</test_depend>
   <test_depend>launch</test_depend>
   <test_depend>python3-coverage</test_depend>

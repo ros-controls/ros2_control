@@ -271,6 +271,6 @@ ament_python_install_package(controller_manager
   SCRIPTS_DESTINATION lib/controller_manager
 )
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} launch_testing_ros)
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})
