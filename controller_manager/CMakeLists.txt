@@ -10,6 +10,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     controller_interface
     controller_manager_msgs
     hardware_interface
+    lifecycle_msgs
     pluginlib
     rclcpp
     realtime_tools
