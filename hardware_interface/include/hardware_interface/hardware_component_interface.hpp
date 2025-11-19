@@ -799,26 +799,20 @@ public:
     if (ensure_get)
     {
       std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      const auto opt_value = interface_handle->get_optional<T>(lock);
-      if (!opt_value)
+      const bool success = interface_handle->get_value(lock, state);
+      if (!success)
       {
         throw std::runtime_error(
           fmt::format(
-            "Failed to get state value from interface: {}. This should not happen.",
-            interface_handle->get_name()));
+            "Failed to get state value from interface: {} in hardware component: {}. This should "
+            "not happen",
+            interface_handle->get_name(), info_.name));
       }
-      state = opt_value.value();
       return true;
     }
     else
     {
-      const auto opt_value = interface_handle->get_optional<T>();
-      if (!opt_value.has_value())
-      {
-        return false;
-      }
-      state = opt_value.value();
-      return true;
+      return interface_handle->get_value(state);
     }
   }
 
@@ -943,26 +937,20 @@ public:
     if (ensure_get)
     {
       std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      const auto opt_value = interface_handle->get_optional<T>(lock);
-      if (!opt_value)
+      const bool success = interface_handle->get_value(lock, command);
+      if (!success)
       {
         throw std::runtime_error(
           fmt::format(
-            "Failed to get command value from interface: {}. This should not happen.",
-            interface_handle->get_name()));
+            "Failed to get command value from interface: {} in hardware component: {}. This should "
+            "not happen",
+            interface_handle->get_name(), info_.name));
       }
-      command = opt_value.value();
       return true;
     }
     else
     {
-      const auto opt_value = interface_handle->get_optional<T>();
-      if (!opt_value.has_value())
-      {
-        return false;
-      }
-      command = opt_value.value();
-      return true;
+      return interface_handle->get_value(command);
     }
   }
 
