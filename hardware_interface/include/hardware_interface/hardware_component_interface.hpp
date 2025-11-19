@@ -805,7 +805,7 @@ public:
         throw std::runtime_error(
           fmt::format(
             "Failed to get state value from interface: {} in hardware component: {}. This should "
-            "not happen",
+            "not happen.",
             interface_handle->get_name(), info_.name));
       }
       return true;
@@ -943,7 +943,7 @@ public:
         throw std::runtime_error(
           fmt::format(
             "Failed to get command value from interface: {} in hardware component: {}. This should "
-            "not happen",
+            "not happen.",
             interface_handle->get_name(), info_.name));
       }
       return true;
