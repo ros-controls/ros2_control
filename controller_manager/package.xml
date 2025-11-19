@@ -47,6 +47,7 @@
   <test_depend>python3-coverage</test_depend>
   <test_depend>robot_state_publisher</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>ros2pkg</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
