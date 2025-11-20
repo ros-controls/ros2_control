@@ -14,7 +14,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
-      - 'ros2_control-not-released.kilted.repos'
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
