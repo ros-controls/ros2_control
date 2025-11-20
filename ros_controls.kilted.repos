@@ -10,7 +10,7 @@ repositories:
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
-    version: master
+    version: kilted
   control_toolbox:
     type: git
     url: https://github.com/ros-controls/control_toolbox.git
