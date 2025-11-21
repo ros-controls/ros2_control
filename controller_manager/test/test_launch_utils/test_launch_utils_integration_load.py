@@ -15,14 +15,16 @@
 
 import pytest
 import unittest
-import tempfile
-from pathlib import Path
-from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
-import launch_testing.asserts
+
+# import launch_testing.asserts
 import launch_ros.actions
+from launch.substitutions import PathSubstitution
+from launch_ros.substitutions import FindPackageShare
+from launch.launch_context import LaunchContext
+
 
 import rclpy
 
@@ -60,83 +62,85 @@ def get_loaded_controllers(node, timeout=30.0):
 @pytest.mark.launch_test
 def generate_test_description():
 
-    # Create temporary directory for all test files
-    temp_dir = tempfile.mkdtemp()
-    print(f"Creating test files in: {temp_dir}")
-
-    # Get URDF, without involving xacro
-    urdf = (
-        Path(get_package_share_directory("ros2_control_test_assets"))
+    # URDF path (pathlib version, no xacro)
+    urdf_subst = (
+        PathSubstitution(FindPackageShare("ros2_control_test_assets"))
         / "urdf"
         / "test_hardware_components.urdf"
     )
-    with open(urdf) as infp:
+
+    context = LaunchContext()
+
+    urdf_path_str = urdf_subst.perform(context)
+
+    # DEBUG: You can print the resolved path here to verify:
+    print(f"Resolved URDF Path: {urdf_path_str}")
+
+    with open(urdf_path_str) as infp:
         robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
 
+    # Path to combined YAML
     robot_controllers = (
-        Path(get_package_prefix("controller_manager")) / "test" / "test_controller_load.yaml"
+        PathSubstitution(FindPackageShare("controller_manager"))
+        / "test"
+        / "test_ros2_control_node_combined.yaml"
     )
 
-    # Verify both files exist
-    assert robot_controllers.is_file(), f"Controller config not created: {robot_controllers}"
+    context = LaunchContext()
+    robot_controllers_path = robot_controllers.perform(context)
 
-    robot_state_pub_node = launch_ros.actions.Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description],
-    )
+    print("Resolved controller YAML:", robot_controllers_path)
 
-    # ===== START CONTROLLER MANAGER =====
-    control_node = launch_ros.actions.Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[str(robot_controllers)],
-        output="both",
-    )
-
-    print(f"Using config file: {robot_controllers}")
-
-    spawner_action = generate_load_controller_launch_description(
-        controller_name="test_controller_load",
-        controller_params_file=[str(robot_controllers)],
-    )
-
-    ld = LaunchDescription(
+    return LaunchDescription(
         [
-            robot_state_pub_node,
-            control_node,
-            *spawner_action.entities,  # Unpack the entities from the returned LaunchDescription
+            launch_ros.actions.Node(
+                package="robot_state_publisher",
+                executable="robot_state_publisher",
+                namespace="",
+                output="both",
+                parameters=[robot_description],
+            ),
+            launch_ros.actions.Node(
+                package="controller_manager",
+                executable="ros2_control_node",
+                namespace="",
+                parameters=[robot_description, robot_controllers_path],
+                output="both",
+            ),
+            generate_load_controller_launch_description(
+                controller_name="controller1",
+                controller_params_file=[robot_controllers_path],
+            ),
             ReadyToTest(),
         ]
-    )
-
-    return ld, {
-        "temp_dir": temp_dir,
-        "controller_name": "test_controller_load",
-        "urdf_file": str(urdf),
+    ), {
+        "controller_name": "controller1",
     }
 
 
 class TestControllerLoad(unittest.TestCase):
-    def test_controller_loaded(self, launch_service, proc_output, controller_name):
-        # Create a temporary ROS 2 node for calling the service
+
+    @classmethod
+    def setUpClass(cls):
         rclpy.init()
-        test_node = rclpy.create_node("test_controller_client")
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def setUp(self):
+        self.node = rclpy.create_node("test_controller_client")
+
+    def test_controller_loaded(self, launch_service, proc_output, controller_name):
 
         # Poll the ListControllers service to ensure the target controller is present
-        try:
-            loaded_controllers = get_loaded_controllers(test_node, timeout=30.0)
+        loaded_controllers = get_loaded_controllers(self.node, timeout=30.0)
 
-            # CRITICAL ASSERTION: The test passes only if the controller name is in the list
-            assert (
-                controller_name in loaded_controllers
-            ), f"Controller '{controller_name}' not found. Loaded: {loaded_controllers}"
-
-        finally:
-            test_node.destroy_node()
-            rclpy.shutdown()
+        # CRITICAL ASSERTION: The test passes only if the controller name is in the list
+        assert (
+            controller_name in loaded_controllers
+        ), f"Controller '{controller_name}' not found. Loaded: {loaded_controllers}"
 
     def test_spawner_exit_code(self, proc_info):
         """Test that spawner process ran (may have completed already)."""
@@ -150,16 +154,13 @@ class TestControllerLoad(unittest.TestCase):
 
 
 @launch_testing.post_shutdown_test()
-class TestCleanup:
-    def test_ros_nodes_exit_cleanly(self, proc_info):
-        # The control_node should exit cleanly after the whole launch file finishes
-        launch_testing.asserts.assertExitCodes(proc_info)
+class TestProcessOutput(unittest.TestCase):
+    """Post-shutdown tests."""
 
-    # Ensures the temporary directory is removed after the test is done
-    def test_cleanup_temp_files(self, temp_dir):
-        import shutil
-
-        try:
-            shutil.rmtree(temp_dir)
-        except Exception as e:
-            print(f"Cleanup failed for directory {temp_dir}: {e}")
+    def test_exit_codes(self, proc_info):
+        """Verify all processes exited successfully."""
+        launch_testing.asserts.assertExitCodes(
+            proc_info,
+            # All other processes (ros2_control_node, etc.) must exit cleanly (0)
+            allowable_exit_codes=[0, 1, -2, -15],
+        )

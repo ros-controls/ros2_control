@@ -4,13 +4,21 @@ find_package(ament_cmake_pytest REQUIRED)
 find_package(launch_testing_ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
 
+# Install the URDF files into the 'share' directory
+#install(
+#  DIRECTORY urdf
+#  DESTINATION share/${PROJECT_NAME}
+#  FILES_MATCHING
+#  PATTERN "*.urdf"
+#)
+
 # Install YAML test files
 #
 install(
   FILES
     test_controller_load.yaml
     test_ros2_control_node_combined.yaml
-  DESTINATION test
+  DESTINATION share/${PROJECT_NAME}/test
 )
 
 # Make sure test files get installed into the test tree
@@ -20,7 +28,7 @@ install(
     test_launch_utils_integration_list.py
     test_launch_utils_integration_dict.py
     test_launch_utils_integration_load.py
-  DESTINATION test
+  DESTINATION share/${PROJECT_NAME}/test
 )
 
 # Register each test with ament
@@ -30,13 +38,10 @@ ament_add_pytest_test(test_launch_utils_unit test_launch_utils_unit.py
 )
 ament_add_pytest_test(test_launch_utils_integration_list
   test_launch_utils_integration_list.py
-  TIMEOUT 60
 )
 ament_add_pytest_test(test_launch_utils_integration_dict
   test_launch_utils_integration_dict.py
-  TIMEOUT 60
 )
 ament_add_pytest_test(test_launch_utils_integration_load
   test_launch_utils_integration_load.py
-  TIMEOUT 60
 )
