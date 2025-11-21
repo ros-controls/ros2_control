@@ -14,7 +14,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rcutils
   realtime_tools
   TinyXML2
-  tinyxml2_vendor
   joint_limits
   urdf
   pal_statistics
@@ -29,11 +28,9 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
 endforeach()
 
 add_library(hardware_interface SHARED
-  src/actuator.cpp
   src/component_parser.cpp
   src/resource_manager.cpp
-  src/sensor.cpp
-  src/system.cpp
+  src/hardware_component.cpp
   src/lexical_casts.cpp
 )
 target_compile_features(hardware_interface PUBLIC cxx_std_17)
@@ -52,7 +49,6 @@ target_link_libraries(hardware_interface PUBLIC
                       rcpputils::rcpputils
                       ${joint_limits_TARGETS}
                       ${TinyXML2_LIBRARIES}
-                      ${tinyxml2_vendor_LIBRARIES}
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}

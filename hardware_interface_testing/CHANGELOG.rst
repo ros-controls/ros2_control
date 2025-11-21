@@ -2,6 +2,36 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+* Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
+5.7.0 (2025-10-03)
+------------------
+* Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
+* Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_)
+* Fix exclusive hardware control mode switching on controller failed activation (`#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_)
+* Fix shadowed variables, redefinition and old-style casts (`#2569 <https://github.com/ros-controls/ros2_control/issues/2569>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+5.6.0 (2025-08-26)
+------------------
+* Unify `write` behavior between Actuator and System hardware interfaces (`#2453 <https://github.com/ros-controls/ros2_control/issues/2453>`_)
+* Supress deprecated RM API warnings in the tests (`#2428 <https://github.com/ros-controls/ros2_control/issues/2428>`_)
+* Contributors: Sai Kishor Kothakota, Soham Patil
+
+5.5.0 (2025-07-31)
+------------------
+* Fix the prepare_command_mode_switch behaviour when HW is INACTIVE (`#2347 <https://github.com/ros-controls/ros2_control/issues/2347>`_)
+* Contributors: Sai Kishor Kothakota
+
 5.4.0 (2025-07-21)
 ------------------
 * Addition of a Default Node for Hardware Component (`#2348 <https://github.com/ros-controls/ros2_control/issues/2348>`_)

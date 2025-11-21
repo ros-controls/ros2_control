@@ -40,6 +40,7 @@
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
 #include "diagnostic_updater/diagnostic_updater.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
 #include "pluginlib/class_loader.hpp"
@@ -51,7 +52,7 @@
 namespace controller_manager
 {
 class ParamListener;
-class Params;
+struct Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 rclcpp::NodeOptions get_cm_node_options();
@@ -259,7 +260,7 @@ protected:
    */
   void deactivate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_deactivate);
+    const std::vector<std::string> & controllers_to_deactivate);
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
@@ -279,25 +280,11 @@ protected:
    *
    * \param[in] rt_controller_list controllers in the real-time list.
    * \param[in] controllers_to_activate names of the controller that have to be activated.
+   * \param[in] strictness level of strictness for activation.
    */
   void activate_controllers(
     const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_activate);
-
-  /// Activate chosen controllers from real-time controller list.
-  /**
-   * Activate controllers with names \p controllers_to_activate from list \p rt_controller_list.
-   * The controller list will be iterated as many times as there are controller names.
-   *
-   * *NOTE*: There is currently not difference to `activate_controllers` method.
-   * Check https://github.com/ros-controls/ros2_control/issues/263 for more information.
-   *
-   * \param[in] rt_controller_list controllers in the real-time list.
-   * \param[in] controllers_to_activate names of the controller that have to be activated.
-   */
-  void activate_controllers_asap(
-    const std::vector<ControllerSpec> & rt_controller_list,
-    const std::vector<std::string> controllers_to_activate);
+    const std::vector<std::string> & controllers_to_activate, int strictness);
 
   void list_controllers_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
@@ -471,12 +458,13 @@ private:
    *
    * \param[in] controllers list with controllers.
    * \param[in] activation_list list with controllers to activate.
+   * \param[in] deactivation_list list with controllers to deactivate.
    * \param[out] message describing the result of the check.
    * \return return_type::OK if all interfaces are available, otherwise return_type::ERROR.
    */
   controller_interface::return_type check_for_interfaces_availability_to_activate(
     const std::vector<ControllerSpec> & controllers, const std::vector<std::string> activation_list,
-    std::string & message);
+    const std::vector<std::string> deactivation_list, std::string & message);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
@@ -500,6 +488,14 @@ private:
   void update_list_with_controller_chain(
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
+
+  /**
+   * @brief Build the controller chain topology information based on the provided controllers.
+   *  This method constructs a directed graph representing the dependencies between controllers.
+   *  It analyzes the relationships between controllers, such as which controllers depend on others,
+   *  and builds a directed graph to represent these dependencies.
+   */
+  void build_controllers_topology_info(const std::vector<ControllerSpec> & controllers);
 
   /**
    * @brief Method to publish the state of the controller manager.
@@ -630,6 +626,7 @@ private:
     std::function<void()> on_switch_callback_ = nullptr;
   };
 
+  bool use_sim_time_;
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
@@ -661,11 +658,6 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 
-  std::vector<std::string> activate_request_, deactivate_request_;
-  std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
-  std::vector<std::string> activate_command_interface_request_,
-    deactivate_command_interface_request_;
-
   std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
   std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
 
@@ -673,6 +665,21 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  struct ControllerManagerExecutionTime
+  {
+    double read_time = 0.0;
+    double update_time = 0.0;
+    double write_time = 0.0;
+    double switch_time = 0.0;
+    double total_time = 0.0;
+    double switch_chained_mode_time = 0.0;
+    double switch_perform_mode_time = 0.0;
+    double deactivation_time = 0.0;
+    double activation_time = 0.0;
+  };
+
+  ControllerManagerExecutionTime execution_time_;
 
   controller_manager::MovingAverageStatistics periodicity_stats_;
 
@@ -686,17 +693,34 @@ private:
       activate_asap = false;
     }
 
-    bool do_switch;
+    std::atomic_bool do_switch;
     bool started;
 
     // Switch options
     int strictness;
-    bool activate_asap;
+    std::atomic_bool activate_asap;
     std::chrono::nanoseconds timeout;
 
     // conditional variable and mutex to wait for the switch to complete
     std::condition_variable cv;
     std::mutex mutex;
+
+    bool skip_cycle(const controller_manager::ControllerSpec & spec) const
+    {
+      const std::string controller_name = spec.info.name;
+      return ros2_control::has_item(activate_request, controller_name) ||
+             ros2_control::has_item(deactivate_request, controller_name) ||
+             ros2_control::has_item(to_chained_mode_request, controller_name) ||
+             ros2_control::has_item(from_chained_mode_request, controller_name);
+    }
+
+    // The controllers list to activate and deactivate
+    std::vector<std::string> activate_request;
+    std::vector<std::string> deactivate_request;
+    std::vector<std::string> to_chained_mode_request;
+    std::vector<std::string> from_chained_mode_request;
+    std::vector<std::string> activate_command_interface_request;
+    std::vector<std::string> deactivate_command_interface_request;
   };
 
   SwitchParams switch_params_;

@@ -163,9 +163,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
-                  [--controller-ros-args CONTROLLER_ROS_ARGS]
-                  controller_names [controller_names ...]
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
+               [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS]
+               controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -186,6 +186,8 @@ There are two scripts to interact with controller manager from launch files:
       --service-call-timeout SERVICE_CALL_TIMEOUT
                             Time to wait for the service response from the controller manager
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
+      --switch-asap, --no-switch-asap
+                            Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.
       --controller-ros-args CONTROLLER_ROS_ARGS
                             The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
 
@@ -383,6 +385,12 @@ thread_priority (optional; int; default: 50)
 use_sim_time (optional; bool; default: false)
   Enables the use of simulation time in the ``controller_manager`` node.
 
+overruns.manage (optional; bool; default: true)
+  Enables or disables the handling of overruns in the real-time loop of the ``controller_manager`` node.
+  If set to true, the controller manager will detect overruns caused by system time changes or longer execution times of the controllers and hardware components.
+  If an overrun is detected, the controller manager will print a warning message to the console.
+  When used with ``use_sim_time`` set to true, this parameter is ignored and the overrun handling is disabled.
+
 Concepts
 -----------
 
@@ -401,7 +409,14 @@ Hardware and Controller Errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
-Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller (or) the entire controller chain it is part of, then the controller manager will try to start any available fallback controllers.
+
+Factors that affect Determinism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When run under the conditions determined in the above section, the determinism is assured up to the limitations of the hardware and the real-time kernel. However, there are some situations that can affect determinism:
+
+* When a controller fails to activate in the realtime loop, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
+* If a controller does not complete a successful update cycle in the realtime loop (for example, returns ``return_type::ERROR``), the controller manager will deactivate that controller (or) the entire controller chain it is part of. It will then invoke ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the interfaces used by the affected controller(s). These actions can introduce jitter into the main control loop.
 
 Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -422,6 +437,21 @@ The async update support is transparent to each controller implementation. A con
         is_async: true
         update_rate: 20  # Hz
         ...
+
+You can set more parameters of the ``AsyncFunctionHandler``, which handles the thread of the controller, using the ``async_parameters`` namespace. For example:
+
+.. code-block:: yaml
+
+    example_async_controller:
+      ros__parameters:
+        type: example_controller/ExampleAsyncController
+        update_rate: 20  # Hz
+        is_async: true
+        async_parameters:
+          cpu_affinity: [2, 4]
+          thread_priority: 50
+          wait_until_initial_trigger: false
+          ...
 
 will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
 
@@ -464,3 +494,14 @@ The ``time`` argument in the ``read`` and ``write`` methods of the hardware comp
 The ``period`` argument in the ``read``, ``update`` and ``write`` methods is calculated using the trigger clock of type ``RCL_STEADY_TIME`` so it is always monotonic.
 
 The reason behind using different clocks is to avoid the issues related to the affect of system time changes in the realtime loops. The ``ros2_control_node`` now also detects the overruns caused by the system time changes and longer execution times of the controllers and hardware components. The controller manager will print a warning message if the controller or hardware component misses the update cycle due to the system time changes or longer execution times.
+
+Color Output Handling
+^^^^^^^^^^^^^^^^^^^^^
+
+The helper scripts (``spawner`` and ``hardware_spawner``) now use an environment-aware ``bcolors`` class.
+The color output automatically adapts to the environment:
+
+* ``RCUTILS_COLORIZED_OUTPUT=0`` -> disables color output
+* ``RCUTILS_COLORIZED_OUTPUT=1`` -> forces color output
+* Unset -> automatically detects TTY and enables color only in interactive
+  terminals

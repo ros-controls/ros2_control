@@ -2,6 +2,38 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+* Extend the reasoning for the capacity mismatch (`#2723 <https://github.com/ros-controls/ros2_control/issues/2723>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+* Add magnetic_field_sensor semantic component (`#2627 <https://github.com/ros-controls/ros2_control/issues/2627>`_)
+* Fix `-Wreturn-local-addr` compiler warning (`#2628 <https://github.com/ros-controls/ros2_control/issues/2628>`_)
+* [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)
+* Contributors: Aarav Gupta, Christoph Fröhlich, Sai Kishor Kothakota
+
+5.7.0 (2025-10-03)
+------------------
+* Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (`#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_)
+* Let `get_ordered_interfaces` throw if input vector size does not fit (`#2528 <https://github.com/ros-controls/ros2_control/issues/2528>`_)
+* Update message dependencies for tests (`#2497 <https://github.com/ros-controls/ros2_control/issues/2497>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+* Fix missing include for std::find (`#2425 <https://github.com/ros-controls/ros2_control/issues/2425>`_)
+* Document order of interfaces (`#2394 <https://github.com/ros-controls/ros2_control/issues/2394>`_)
+* Contributors: Christoph Fröhlich, Guilhem Saurel
+
 5.4.0 (2025-07-21)
 ------------------
 

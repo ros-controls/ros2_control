@@ -9,6 +9,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/jazzy-debian-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
@@ -18,9 +19,9 @@ on:
     - cron: '03 1 * * MON-FRI'
 
 concurrency:
-  # cancel previous runs of the same workflow, except for pushes on jazzy branch
+  # cancel previous runs of the same workflow, except for pushes on given branches
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
 
 jobs:
   debian_semi_binary_build:

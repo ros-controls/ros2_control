@@ -9,16 +9,16 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-abi-compatibility.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
-      - 'ros2_control-not-released.kilted.repos'
 
 concurrency:
-  # cancel previous runs of the same workflow, except for pushes on master branch
+  # cancel previous runs of the same workflow, except for pushes on given branches
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
 
 jobs:
   abi_check:
@@ -26,6 +26,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [kilted, rolling]
+        ROS_DISTRO: [rolling]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}

@@ -1,0 +1,42 @@
+name: Kilted Binary Build
+# author: Denis Štogl <denis@stoglrobotics.de>
+# description: 'Build & test all dependencies from released (binary) packages.'
+
+on:
+  workflow_dispatch:
+  pull_request: &event
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/kilted-binary-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.kilted.repos'
+  push: *event
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '03 1 * * MON-FRI'
+
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on given branches
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
+
+jobs:
+  binary:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [kilted]
+        ROS_REPO: [main, testing]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: ${{ matrix.ROS_REPO }}
+      upstream_workspace: ros2_control-not-released.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: kilted

@@ -32,6 +32,19 @@ namespace hardware_interface
 */
 double stod(const std::string & s);
 
+/**
+ * \brief Convert a string to lower case.
+ * \param string The input string.
+ * \return The lower case version of the input string.
+ */
+std::string to_lower_case(const std::string & string);
+
+/**
+ * \brief Parse a boolean value from a string.
+ * \param bool_string The input string, can be "true", "false" (case insensitive)
+ * \return The parsed boolean value.
+ * \throws std::invalid_argument if the string is not a valid boolean representation.
+ */
 bool parse_bool(const std::string & bool_string);
 
 template <typename T>

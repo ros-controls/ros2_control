@@ -2,6 +2,26 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
+5.7.0 (2025-10-03)
+------------------
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+* Fix wrong strict arg of switch_controllers method (`#2410 <https://github.com/ros-controls/ros2_control/issues/2410>`_)
+* Contributors: Sai Kishor Kothakota
+
 5.4.0 (2025-07-21)
 ------------------
 * Fix setuptools deprecations (`#2395 <https://github.com/ros-controls/ros2_control/issues/2395>`_)

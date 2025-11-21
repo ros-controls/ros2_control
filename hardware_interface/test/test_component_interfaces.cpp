@@ -192,6 +192,9 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       set_command("joint1/velocity", 0.0);
     }
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
+    EXPECT_FALSE(has_command("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
@@ -225,6 +228,10 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       return hardware_interface::return_type::ERROR;
     }
+    EXPECT_TRUE(has_state("joint1/position"));
+    EXPECT_TRUE(has_state("joint1/velocity"));
+    EXPECT_FALSE(has_command("joint1/position"));  // only velocity command interface
+    EXPECT_TRUE(has_command("joint1/velocity"));
     auto position_state = get_state("joint1/position");
     set_state("joint1/position", position_state + get_command("joint1/velocity"));
     set_state("joint1/velocity", get_command("joint1/velocity"));
@@ -344,6 +351,8 @@ class DummySensorDefault : public hardware_interface::SensorInterface
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     set_state("sens1/voltage", 0.0);
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(set_state("joint1/nonexisting/interface", 0.0), std::runtime_error);
@@ -362,6 +371,7 @@ class DummySensorDefault : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
+    EXPECT_TRUE(has_state("sens1/voltage"));
     set_state("sens1/voltage", voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
@@ -626,6 +636,9 @@ class DummySystemDefault : public hardware_interface::SystemInterface
         set_command(velocity_commands_[i], 0.0);
       }
     }
+    // interfaces are not available
+    EXPECT_FALSE(has_state("joint1/nonexisting/interface"));
+    EXPECT_FALSE(has_command("joint1/nonexisting/interface"));
     // Should throw as the interface is unknown
     EXPECT_THROW(get_state("joint1/nonexisting/interface"), std::runtime_error);
     EXPECT_THROW(get_command("joint1/nonexisting/interface"), std::runtime_error);
@@ -662,6 +675,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 
     for (size_t i = 0; i < 3; ++i)
     {
+      EXPECT_TRUE(has_state(position_states_[i]));
+      EXPECT_TRUE(has_command(velocity_commands_[i]));
       auto current_pos = get_state(position_states_[i]);
       set_state(position_states_[i], current_pos + get_command(velocity_commands_[i]));
       set_state(velocity_states_[i], get_command(velocity_commands_[i]));
@@ -813,14 +828,13 @@ TEST(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
 
-  // Read and Write are working because it is INACTIVE
+  // Read should work but write should not update the state because it is INACTIVE
   for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(
-      step * velocity_value, state_interfaces[0]->get_optional().value());  // position value
-    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1]->get_optional().value());  // velocity
+    EXPECT_EQ(0.0, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[1]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -835,9 +849,10 @@ TEST(TestComponentInterfaces, dummy_actuator)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      (10 + step) * velocity_value,
-      state_interfaces[0]->get_optional().value());                          // position value
-    EXPECT_EQ(velocity_value, state_interfaces[1]->get_optional().value());  // velocity
+      step * velocity_value,
+      state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(
+      step ? velocity_value : 0.0, state_interfaces[1]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -851,7 +866,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(20 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
+    EXPECT_EQ(10 * velocity_value, state_interfaces[0]->get_optional().value());  // position value
     EXPECT_EQ(0, state_interfaces[1]->get_optional().value());                    // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
@@ -939,17 +954,13 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
 
-  // Read and Write are working because it is INACTIVE
+  // Read should work but write should not update the state because it is INACTIVE
   for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    EXPECT_EQ(
-      step * velocity_value,
-      state_interfaces[si_joint1_pos]->get_optional().value());  // position value
-    EXPECT_EQ(
-      step ? velocity_value : 0,
-      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(0.0, state_interfaces[si_joint1_pos]->get_optional().value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -964,9 +975,11 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      (10 + step) * velocity_value,
+      step * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());  // position value
-    EXPECT_EQ(velocity_value, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
+    EXPECT_EQ(
+      step ? velocity_value : 0.0,
+      state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -981,7 +994,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(
-      20 * velocity_value,
+      10 * velocity_value,
       state_interfaces[si_joint1_pos]->get_optional().value());             // position value
     EXPECT_EQ(0, state_interfaces[si_joint1_vel]->get_optional().value());  // velocity
 

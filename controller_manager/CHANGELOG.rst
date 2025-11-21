@@ -2,6 +2,58 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+* Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_)
+* Fix ANSI escape code pollution in log output (`#2741 <https://github.com/ros-controls/ros2_control/issues/2741>`_)
+* Contributors: Sai Kishor Kothakota, sauman raaj
+
+6.0.1 (2025-11-03)
+------------------
+* Fail early for the resource conflicts between the activating controllers (`#2760 <https://github.com/ros-controls/ros2_control/issues/2760>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.0.0 (2025-10-27)
+------------------
+* Switch the default strictness to STRICT (`#2742 <https://github.com/ros-controls/ros2_control/issues/2742>`_)
+* Deactivate the whole controller chain if one of the update results in ERROR (`#2681 <https://github.com/ros-controls/ros2_control/issues/2681>`_)
+* Deactivate the controller chain upon failed group activation (`#2669 <https://github.com/ros-controls/ros2_control/issues/2669>`_)
+* Add test_test_utils to CMakeLists (`#2729 <https://github.com/ros-controls/ros2_control/issues/2729>`_)
+* Fix concurrent spinning of the test_node (`#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_)
+* [Spawner] Fix failing makedirs on multiple spawners at startup (`#2698 <https://github.com/ros-controls/ros2_control/issues/2698>`_)
+* [Spawner] Create the FileLock in the ROS_HOME location (`#2677 <https://github.com/ros-controls/ros2_control/issues/2677>`_)
+* Fix the same hardware component node naming issue with multiple controller managers setup (`#2657 <https://github.com/ros-controls/ros2_control/issues/2657>`_)
+* Move clock availability check to controller manager thread (`#2654 <https://github.com/ros-controls/ros2_control/issues/2654>`_)
+* increase tolerance of the controller manager tests (`#2629 <https://github.com/ros-controls/ros2_control/issues/2629>`_)
+* [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)
+* Contributors: Christoph Fröhlich, Erik Holum, Sai Kishor Kothakota
+
+5.7.0 (2025-10-03)
+------------------
+* [CM] Ability to switch controllers in non-realtime loop (`#2452 <https://github.com/ros-controls/ros2_control/issues/2452>`_)
+* Added parameters to handle the overruns behaviour and prints (`#2546 <https://github.com/ros-controls/ros2_control/issues/2546>`_)
+* [Controllers] Receive a valid period on the first update cycle (`#2572 <https://github.com/ros-controls/ros2_control/issues/2572>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (`#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_)
+* Add parameter to allow controllers with inactive hardware components (`#2501 <https://github.com/ros-controls/ros2_control/issues/2501>`_)
+* Fix exclusive hardware control mode switching on controller failed activation (`#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_)
+* Fix the skipped cycles of controllers running at different rate (`#2557 <https://github.com/ros-controls/ros2_control/issues/2557>`_)
+* Fix shadowed variables, redefinition and old-style casts (`#2569 <https://github.com/ros-controls/ros2_control/issues/2569>`_)
+* [Spawner] Release the lock while waiting for the interrupt (`#2559 <https://github.com/ros-controls/ros2_control/issues/2559>`_)
+* Fix the reloading controller with failed activation (`#2544 <https://github.com/ros-controls/ros2_control/issues/2544>`_)
+* Don't print the overrun warnings for the simulations (`#2539 <https://github.com/ros-controls/ros2_control/issues/2539>`_)
+* Readd the ResourceManagerParams initialization to ControllerManager (`#2522 <https://github.com/ros-controls/ros2_control/issues/2522>`_)
+* Publish controller manager statistics to better introspect the timings (`#2449 <https://github.com/ros-controls/ros2_control/issues/2449>`_)
+* Fix the CPU affinity of the ros2_control_node (`#2509 <https://github.com/ros-controls/ros2_control/issues/2509>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+* Fix the prepare_command_mode_switch behaviour when HW is INACTIVE (`#2347 <https://github.com/ros-controls/ros2_control/issues/2347>`_)
+* Contributors: Sai Kishor Kothakota
+
 5.4.0 (2025-07-21)
 ------------------
 * Increase controller period tolerance further (`#2405 <https://github.com/ros-controls/ros2_control/issues/2405>`_)
