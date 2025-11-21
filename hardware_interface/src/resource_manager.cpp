@@ -1027,8 +1027,10 @@ public:
   {
     if (interface)
     {
-      for (auto & [hw_name, limiters] : joint_limiters_interface_)
+      for (auto & entry : joint_limiters_interface_)
       {
+        auto & limiters = entry.second;
+
         // If the prefix is a joint name, then bind the limiter to the command interface
         if (limiters.find(interface->get_prefix_name()) != limiters.end())
         {
