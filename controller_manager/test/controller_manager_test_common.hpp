@@ -57,14 +57,19 @@ class ControllerManagerFixture : public ::testing::Test
 public:
   explicit ControllerManagerFixture(
     const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
-    const std::string & cm_namespace = "")
+    const std::string & cm_namespace = "", std::vector<rclcpp::Parameter> cm_parameters = {})
   : robot_description_(robot_description)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
+    if (!cm_parameters.empty())
+    {
+      cm_node_options.parameter_overrides(cm_parameters);
+    }
     cm_ = std::make_shared<CtrlMgr>(
       std::make_unique<hardware_interface::ResourceManager>(
         rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
-      executor_, TEST_CM_NAME, cm_namespace);
+      executor_, TEST_CM_NAME, cm_namespace, cm_node_options);
     // We want to be able to not pass robot description immediately
     if (!robot_description_.empty())
     {

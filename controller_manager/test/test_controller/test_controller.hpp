@@ -83,6 +83,9 @@ public:
   // errors
   double set_first_command_interface_value_to;
   rclcpp::Duration update_period_ = rclcpp::Duration::from_seconds(0.);
+
+  bool throw_on_initialize = false;
+  bool throw_on_update = false;
 };
 
 }  // namespace test_controller
