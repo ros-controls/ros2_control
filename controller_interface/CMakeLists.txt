@@ -117,6 +117,11 @@ if(BUILD_TESTING)
     hardware_interface::hardware_interface
     ${std_msgs_TARGETS}
   )
+
+  ament_add_gmock(test_controller_tf_prefix test/test_controller_tf_prefix.cpp)
+  target_link_libraries(test_controller_tf_prefix
+    controller_interface
+  )
 endif()
 
 install(
