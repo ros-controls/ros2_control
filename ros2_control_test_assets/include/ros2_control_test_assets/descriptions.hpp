@@ -2171,6 +2171,54 @@ const auto diff_drive_robot_sdf =
 </sdf>
 )";
 
+const auto invalid_urdf_without_hardware_plugin = 
+  R"(
+  <robot name="minimal_robot">
+    <link name="base_link"/>
+    <joint name="joint1" type="revolute">
+      <parent link="base_link"/>
+      <child link="link1"/>
+      <origin xyz="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="10" lower="-1.57" upper="1.57" velocity="1.0"/>
+    </joint>
+    <link name="link1"/>
+    <ros2_control name="default" type="system">
+    </ros2_control>
+  </robot>
+)";
+
+const auto invalid_urdf_with_wrong_plugin = 
+ R"(
+  <robot name="minimal_robot">
+    <link name="base_link"/>
+    <joint name="joint1" type="revolute">
+      <parent link="base_link"/>
+      <child link="link1"/>
+      <origin xyz="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="10" lower="-1.57" upper="1.57" velocity="1.0"/>
+    </joint>
+    <link name="link1"/>
+    <ros2_control name="default" type="system">
+      <hardware>
+        <plugin>mock_components/NonExistentSystem</plugin>        
+      </hardware>
+    </ros2_control>
+  </robot>
+)";
+
+const auto invalid_urdf_no_geometry = 
+R"(
+  <robot name="minimal_robot">
+    <ros2_control name="default" type="system">
+      <hardware>
+        <plugin>mock_components/NonExistentSystem</plugin>        
+      </hardware>
+    </ros2_control>
+  </robot>
+)";
+
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +
