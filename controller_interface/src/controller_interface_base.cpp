@@ -63,11 +63,26 @@ return_type ControllerInterfaceBase::init(
     ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
 
+  if (ctrl_itf_params_.controller_manager_update_rate == 0 && ctrl_itf_params_.update_rate != 0)
+  {
+    RCLCPP_WARN(
+      node_->get_logger(), "%s",
+      fmt::format(
+        "The 'controller_manager_update_rate' variable of the ControllerInterfaceParams is unset "
+        "or set to 0 Hz while the 'update_rate' variable is set to a non-zero value of '{} Hz'. "
+        "Using the controller's update rate as the controller manager update rate. Please fix in "
+        "the tests by initializing the 'controller_manager_update_rate' instead of the "
+        "'update_rate' variable within the ControllerInterfaceParams struct",
+        ctrl_itf_params_.update_rate)
+        .c_str());
+    ctrl_itf_params_.controller_manager_update_rate = ctrl_itf_params_.update_rate;
+  }
+
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.update_rate));
-
+    auto_declare<int>(
+      "update_rate", static_cast<int>(ctrl_itf_params_.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
   }
@@ -169,8 +184,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         get_node()->get_logger(), "%s",
         fmt::format(
           "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
-          "the "
-          "controller manager : '{} Hz'. Setting it to the update rate of the controller manager.",
+          "the controller manager : '{} Hz'. Setting it to the update rate of the controller "
+          "manager.",
           update_rate, ctrl_itf_params_.update_rate)
           .c_str());
     }
