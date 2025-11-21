@@ -165,10 +165,13 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     if (ctrl_itf_params_.update_rate != 0u && update_rate > ctrl_itf_params_.update_rate)
     {
       RCLCPP_WARN(
-        get_node()->get_logger(),
-        "The update rate of the controller : '%ld Hz' cannot be higher than the update rate of the "
-        "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
-        update_rate, ctrl_itf_params_.update_rate);
+        get_node()->get_logger(), "%s",
+        fmt::format(
+          "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
+          "the "
+          "controller manager : '{} Hz'. Setting it to the update rate of the controller manager.",
+          update_rate, ctrl_itf_params_.update_rate)
+          .c_str());
     }
     else
     {
