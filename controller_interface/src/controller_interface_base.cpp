@@ -173,23 +173,26 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     }
     else
     {
-      // Calculate the update rate corresponding the periodicity of the controller manager
-      const bool is_frequency_achievable = (ctrl_itf_params_.controller_manager_update_rate %
-                                            static_cast<unsigned int>(update_rate)) == 0;
-      const unsigned int ticks_per_controller_per_second = static_cast<unsigned int>(std::round(
-        static_cast<double>(ctrl_itf_params_.controller_manager_update_rate) /
-        static_cast<double>(update_rate)));
-      const unsigned int achievable_hz =
-        is_frequency_achievable
-          ? static_cast<unsigned int>(update_rate)
-          : ctrl_itf_params_.controller_manager_update_rate / ticks_per_controller_per_second;
+      if (update_rate > 0 && ctrl_itf_params_.controller_manager_update_rate > 0)
+      {
+        // Calculate the update rate corresponding the periodicity of the controller manager
+        const bool is_frequency_achievable = (ctrl_itf_params_.controller_manager_update_rate %
+                                              static_cast<unsigned int>(update_rate)) == 0;
+        const unsigned int ticks_per_controller_per_second = static_cast<unsigned int>(std::round(
+          static_cast<double>(ctrl_itf_params_.controller_manager_update_rate) /
+          static_cast<double>(update_rate)));
+        const unsigned int achievable_hz =
+          is_frequency_achievable
+            ? static_cast<unsigned int>(update_rate)
+            : ctrl_itf_params_.controller_manager_update_rate / ticks_per_controller_per_second;
 
-      RCLCPP_WARN_EXPRESSION(
-        get_node()->get_logger(), !is_frequency_achievable,
-        "The requested update rate of '%ld Hz' is not achievable with the controller manager "
-        "update rate of '%d Hz'. Setting it to the closest achievable frequency '%d Hz'.",
-        update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz);
-      ctrl_itf_params_.update_rate = achievable_hz;
+        RCLCPP_WARN_EXPRESSION(
+          get_node()->get_logger(), !is_frequency_achievable,
+          "The requested update rate of '%ld Hz' is not achievable with the controller manager "
+          "update rate of '%d Hz'. Setting it to the closest achievable frequency '%d Hz'.",
+          update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz);
+        ctrl_itf_params_.update_rate = achievable_hz;
+      }
     }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
