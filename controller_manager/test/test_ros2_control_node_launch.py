@@ -38,13 +38,17 @@ from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
 
+
 import rclpy
 from controller_manager.test_utils import (
     check_controllers_running,
     check_node_running,
 )
-from controller_manager.launch_utils import generate_controllers_spawner_launch_description
-
+from controller_manager.launch_utils import (
+    generate_controllers_spawner_launch_description,
+    generate_controllers_spawner_launch_description_from_dict,
+    generate_load_controller_launch_description,
+)
 
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
@@ -101,6 +105,33 @@ class TestFixture(unittest.TestCase):
 
     def tearDown(self):
         self.node.destroy_node()
+
+    # ------------------------------------------------------------------
+    # Helper methods
+    # ------------------------------------------------------------------
+    def _extract_actions(self, result):
+        """Return a list of launch actions, regardless of type."""
+        if isinstance(result, list):
+            return result
+        elif hasattr(result, "entities"):  # LaunchDescription in newer ROS2
+            return list(result.entities)
+        else:
+            return [result]
+
+    def _assert_launch_result(self, result, min_len=0):
+        """Verify that result is list- or LaunchDescription-like."""
+        self.assertTrue(
+            isinstance(result, (list, LaunchDescription)),
+            f"Unexpected result type: {type(result)}",
+        )
+        actions = self._extract_actions(result)
+        self.assertGreaterEqual(len(actions), min_len)
+        for act in actions:
+            self.assertTrue(
+                hasattr(act, "execute") or hasattr(act, "visit"),
+                f"Invalid action type: {type(act)}",
+            )
+        return actions
 
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
