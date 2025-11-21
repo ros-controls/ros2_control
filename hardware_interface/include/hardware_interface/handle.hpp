@@ -247,6 +247,82 @@ public:
   }
 
   /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param lock The lock to access the value.
+   * @param value The variable to store the retrieved value.
+   * @return true if the value is retrieved successfully, false otherwise.
+   * @note The method is thread-safe and non-blocking.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <typename T>
+  [[nodiscard]] bool get_value(std::shared_lock<std::shared_mutex> & lock, T & value) const
+  {
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(saikishor) get value_ if old functionality is removed
+    if constexpr (std::is_same_v<T, double>)
+    {
+      switch (data_type_)
+      {
+        case HandleDataType::DOUBLE:
+          THROW_ON_NULLPTR(value_ptr_);
+          value = *value_ptr_;
+          return true;
+        case HandleDataType::BOOL:
+          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
+          // https://github.com/ros2/rclcpp/issues/2587
+          // is fixed
+          if (!notified_)
+          {
+            RCLCPP_WARN(
+              rclcpp::get_logger(get_name()),
+              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
+              get_name().c_str());
+            notified_ = true;
+          }
+          value = static_cast<double>(std::get<bool>(value_));
+          return true;
+        default:
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
+              data_type_.to_string(), get_name()));
+      }
+    }
+    try
+    {
+      value = std::get<T>(value_);
+      return true;
+    }
+    catch (const std::bad_variant_access & err)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
+    }
+  }
+
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The variable to store the retrieved value.
+   * @return true if the value is retrieved successfully, false otherwise.
+   * @note The method is thread-safe and non-blocking.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <typename T>
+  [[nodiscard]] bool get_value(T & value) const
+  {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    return get_value(lock, value);
+  }
+
+  /**
    * @brief Set the value of the handle.
    * @tparam T The type of the value to be set.
    * @param value The value to be set.
