@@ -30,13 +30,13 @@
 
 import pytest
 import unittest
-import os
+import launch_testing
 
-from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 from launch_testing.actions import ReadyToTest
-import launch_testing.markers
 import launch_ros.actions
+from launch.substitutions import PathSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 import rclpy
 from controller_manager.test_utils import (
@@ -45,27 +45,32 @@ from controller_manager.test_utils import (
 )
 from controller_manager.launch_utils import generate_controllers_spawner_launch_description
 
-
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
 def generate_test_description():
 
-    robot_controllers = os.path.join(
-        get_package_prefix("controller_manager"), "test", "test_ros2_control_node.yaml"
+    robot_controllers = (
+        PathSubstitution(FindPackageShare("controller_manager"))
+        / "test"
+        / "test_ros2_control_node.yaml"
     )
 
     control_node = launch_ros.actions.Node(
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_controllers],
+        remappings=[
+            ("~/robot_description", "/robot_description"),
+        ],
         output="both",
     )
-    # Get URDF, without involving xacro
-    urdf = os.path.join(
-        get_package_share_directory("ros2_control_test_assets"),
-        "urdf",
-        "test_hardware_components.urdf",
+
+    urdf = (
+        PathSubstitution(FindPackageShare("ros2_control_test_assets"))
+        / "urdf"
+        / "test_hardware_components.urdf"
     )
+
     with open(urdf) as infp:
         robot_description_content = infp.read()
     robot_description = {"robot_description": robot_description_content}
