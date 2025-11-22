@@ -115,6 +115,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   params.controller_name = TEST_CONTROLLER_NAME;
   params.robot_description = "";
   params.update_rate = 5000;  // set a different update rate than the one in the node options
+  params.controller_manager_update_rate = 5000;
   params.node_namespace = "";
   params.node_options = node_options;
   joint_limits::JointLimits joint_limits;
@@ -159,7 +160,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
 
   // Even after configure is 0
   controller.configure();
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u) << "Needs to be achievable rate based on cm rate";
 
   // Test updating of update_rate parameter
   auto res = controller.get_node()->set_parameter(rclcpp::Parameter("update_rate", 623));
@@ -167,28 +168,29 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   // Keep the same update rate until transition from 'UNCONFIGURED' TO 'INACTIVE' does not happen
   controller.configure();  // No transition so the update rate should stay intact
   ASSERT_NE(controller.get_update_rate(), 623u);
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u);
 
   controller.get_node()->activate();
   controller.configure();  // No transition so the update rate should stay intact
   ASSERT_NE(controller.get_update_rate(), 623u);
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u);
 
   controller.update(controller.get_node()->now(), rclcpp::Duration::from_seconds(0.1));
   controller.configure();  // No transition so the update rate should stay intact
   ASSERT_NE(controller.get_update_rate(), 623u);
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u);
 
   controller.get_node()->deactivate();
   controller.configure();  // No transition so the update rate should stay intact
   ASSERT_NE(controller.get_update_rate(), 623u);
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u);
 
   controller.get_node()->cleanup();
-  ASSERT_EQ(controller.get_update_rate(), 2812u);
+  ASSERT_EQ(controller.get_update_rate(), 2500u);
   // It is first changed after controller is configured again.
   controller.configure();
-  ASSERT_EQ(controller.get_update_rate(), 623u);
+  ASSERT_EQ(controller.get_update_rate(), 625u)
+    << "It needs to be 625 as it is closest achievable rate wrt to the CM rate";
 
   // Should stay same after multiple cleanups as it is set during initialization
   const auto hard_limits_final = controller.get_hard_joint_limits();
