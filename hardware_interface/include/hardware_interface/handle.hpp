@@ -310,6 +310,11 @@ public:
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
+  bool is_valid() const
+  {
+    return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
+  }
+
 private:
   void copy(const Handle & other) noexcept
   {
@@ -346,7 +351,7 @@ protected:
   HandleDataType data_type_ = HandleDataType::DOUBLE;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
-  double * value_ptr_;
+  double * value_ptr_ = nullptr;
   // END
   mutable std::shared_mutex handle_mutex_;
 
@@ -367,6 +372,15 @@ public:
 
   void registerIntrospection() const
   {
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register state introspection for state interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
     if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
@@ -386,7 +400,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || data_type_.is_castable_to_double())
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -450,6 +464,15 @@ public:
 
   void registerIntrospection() const
   {
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register command introspection for command interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
     if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
@@ -471,7 +494,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || data_type_.is_castable_to_double())
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
