@@ -9,14 +9,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
   diagnostic_updater
+  fmt
+  generate_parameter_library
   hardware_interface
+  libstatistics_collector
+  lifecycle_msgs
   pluginlib
   rclcpp
   realtime_tools
   std_msgs
-  libstatistics_collector
-  generate_parameter_library
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -161,6 +162,7 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
   set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
+
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )
@@ -247,6 +249,7 @@ if(BUILD_TESTING)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_test_utils test/test_test_utils.py)
 endif()
 
 install(

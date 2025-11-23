@@ -409,13 +409,14 @@ Hardware and Controller Errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
-Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller (or) the entire controller chain it is part of, then the controller manager will try to start any available fallback controllers.
 
 Factors that affect Determinism
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When run under the conditions determined in the above section, the determinism is assured up to the limitations of the hardware and the real-time kernel. However, there are some situations that can affect determinism:
 
-* When a controller fails to activate, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
+* When a controller fails to activate in the realtime loop, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
+* If a controller does not complete a successful update cycle in the realtime loop (for example, returns ``return_type::ERROR``), the controller manager will deactivate that controller (or) the entire controller chain it is part of. It will then invoke ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the interfaces used by the affected controller(s). These actions can introduce jitter into the main control loop.
 
 Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -493,3 +494,14 @@ The ``time`` argument in the ``read`` and ``write`` methods of the hardware comp
 The ``period`` argument in the ``read``, ``update`` and ``write`` methods is calculated using the trigger clock of type ``RCL_STEADY_TIME`` so it is always monotonic.
 
 The reason behind using different clocks is to avoid the issues related to the affect of system time changes in the realtime loops. The ``ros2_control_node`` now also detects the overruns caused by the system time changes and longer execution times of the controllers and hardware components. The controller manager will print a warning message if the controller or hardware component misses the update cycle due to the system time changes or longer execution times.
+
+Color Output Handling
+^^^^^^^^^^^^^^^^^^^^^
+
+The helper scripts (``spawner`` and ``hardware_spawner``) now use an environment-aware ``bcolors`` class.
+The color output automatically adapts to the environment:
+
+* ``RCUTILS_COLORIZED_OUTPUT=0`` -> disables color output
+* ``RCUTILS_COLORIZED_OUTPUT=1`` -> forces color output
+* Unset -> automatically detects TTY and enables color only in interactive
+  terminals

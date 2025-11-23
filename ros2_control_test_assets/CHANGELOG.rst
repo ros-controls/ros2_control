@@ -2,6 +2,15 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
 5.7.0 (2025-10-03)
 ------------------
 * Add detach async policy for rate critical frameworks (`#2477 <https://github.com/ros-controls/ros2_control/issues/2477>`_)

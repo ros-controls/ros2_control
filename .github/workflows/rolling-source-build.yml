@@ -9,11 +9,11 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-source-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-      - 'ros2_control.kilted.repos'
   pull_request:
     branches:
       - master

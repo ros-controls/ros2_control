@@ -111,6 +111,14 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
+    if (get_hardware_info().hardware_parameters.count("fail_on_perform_mode_switch"))
+    {
+      if (hardware_interface::parse_bool(
+            get_hardware_info().hardware_parameters.at("fail_on_perform_mode_switch")))
+      {
+        return hardware_interface::return_type::ERROR;
+      }
+    }
     position_state_ += 0.1;
     return hardware_interface::return_type::OK;
   }

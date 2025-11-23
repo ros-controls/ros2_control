@@ -48,6 +48,7 @@ struct ControllerSpec
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> last_update_cycle_time;
+  std::vector<std::string> controllers_chain_group = {};
   std::shared_ptr<MovingAverageStatistics> execution_time_statistics;
   std::shared_ptr<MovingAverageStatistics> periodicity_statistics;
 };

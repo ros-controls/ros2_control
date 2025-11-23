@@ -39,27 +39,6 @@ CallbackReturn GenericSystem::on_init(
     return CallbackReturn::ERROR;
   }
 
-  auto populate_non_standard_interfaces =
-    [this](auto interface_list, auto & non_standard_interfaces)
-  {
-    for (const auto & interface : interface_list)
-    {
-      // add to list if non-standard interface
-      if (
-        std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name) ==
-        standard_interfaces_.end())
-      {
-        if (
-          std::find(
-            non_standard_interfaces.begin(), non_standard_interfaces.end(), interface.name) ==
-          non_standard_interfaces.end())
-        {
-          non_standard_interfaces.emplace_back(interface.name);
-        }
-      }
-    }
-  };
-
   // check if to create mock command interface for sensor
   auto it = get_hardware_info().hardware_parameters.find("mock_sensor_commands");
   if (it != get_hardware_info().hardware_parameters.end())
@@ -128,21 +107,44 @@ CallbackReturn GenericSystem::on_init(
   }
 
   // search for non-standard joint interfaces
+  std::vector<std::string> other_interfaces;
+  auto populate_non_standard_interfaces =
+    [this](auto interface_list, auto & non_standard_interfaces)
+  {
+    for (const auto & interface : interface_list)
+    {
+      // add to list if non-standard interface
+      if (
+        std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name) ==
+        standard_interfaces_.end())
+      {
+        // and does not exist yet
+        if (
+          std::find(
+            non_standard_interfaces.begin(), non_standard_interfaces.end(), interface.name) ==
+          non_standard_interfaces.end())
+        {
+          non_standard_interfaces.emplace_back(interface.name);
+        }
+      }
+    }
+  };
   for (const auto & joint : get_hardware_info().joints)
   {
-    // populate non-standard command interfaces to other_interfaces_
-    populate_non_standard_interfaces(joint.command_interfaces, other_interfaces_);
+    // populate non-standard command interfaces to other_interfaces
+    populate_non_standard_interfaces(joint.command_interfaces, other_interfaces);
 
-    // populate non-standard state interfaces to other_interfaces_
-    populate_non_standard_interfaces(joint.state_interfaces, other_interfaces_);
+    // populate non-standard state interfaces to other_interfaces
+    populate_non_standard_interfaces(joint.state_interfaces, other_interfaces);
   }
 
   // when following offset is used on custom interface then find its index
   if (!custom_interface_with_following_offset_.empty())
   {
-    auto if_it = std::find(
-      other_interfaces_.begin(), other_interfaces_.end(), custom_interface_with_following_offset_);
-    if (if_it != other_interfaces_.end())
+    if (
+      std::find(
+        other_interfaces.begin(), other_interfaces.end(),
+        custom_interface_with_following_offset_) != other_interfaces.end())
     {
       RCLCPP_INFO(
         get_logger(), "Custom interface with following offset '%s' found.",
@@ -154,19 +156,6 @@ CallbackReturn GenericSystem::on_init(
         get_logger(),
         "Custom interface with following offset '%s' does not exist. Offset will not be applied",
         custom_interface_with_following_offset_.c_str());
-    }
-  }
-
-  for (const auto & sensor : get_hardware_info().sensors)
-  {
-    for (const auto & interface : sensor.state_interfaces)
-    {
-      if (
-        std::find(sensor_interfaces_.begin(), sensor_interfaces_.end(), interface.name) ==
-        sensor_interfaces_.end())
-      {
-        sensor_interfaces_.emplace_back(interface.name);
-      }
     }
   }
 
@@ -231,26 +220,10 @@ return_type GenericSystem::prepare_command_mode_switch(
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
-        if (!calculate_dynamics_)
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
-            "might lead to wrong feedback and unexpected behavior.",
-            info.joints[joint_index].name.c_str());
-        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
       if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
-        if (!calculate_dynamics_)
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
-            "this might lead to wrong feedback and unexpected behavior.",
-            info.joints[joint_index].name.c_str());
-        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
     }
@@ -330,21 +303,17 @@ return_type GenericSystem::perform_command_mode_switch(
 hardware_interface::CallbackReturn GenericSystem::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // Set position control mode per default
-  // This will be populated by perform_command_mode_switch
-  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
-
-hardware_interface::CallbackReturn GenericSystem::on_activate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
-{
   for (const auto & joint_state : joint_state_interfaces_)
   {
     const std::string & name = joint_state.second.get_name();
-    // initial values are set from the URDF. only apply offset
     if (joint_state.second.get_data_type() == hardware_interface::HandleDataType::DOUBLE)
     {
+      // if initial values are set not set from the URDF
+      if (std::isnan(get_state(name)))
+      {
+        set_state(name, 0.0);
+      }
+      // set offset anyways
       if (
         joint_state.second.get_interface_name() == hardware_interface::HW_IF_POSITION &&
         custom_interface_with_following_offset_.empty())
@@ -353,6 +322,9 @@ hardware_interface::CallbackReturn GenericSystem::on_activate(
       }
     }
   }
+  // Set position control mode per default
+  // This will be populated by perform_command_mode_switch
+  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -412,14 +384,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       for (size_t i = 0; i < 3; ++i)
       {
         const auto full_name = joint_name + "/" + standard_interfaces_[i];
-        if (joint_command_interfaces_.find(full_name) != joint_command_interfaces_.end())
+        if (has_command(full_name))
         {
-          joint_command_values_[i] =
-            get_command(joint_command_interfaces_.at(full_name).get_name());
+          joint_command_values_[i] = get_command(full_name);
         }
-        if (joint_state_interfaces_.find(full_name) != joint_state_interfaces_.end())
+        if (has_state(full_name))
         {
-          joint_state_values_[i] = get_state(joint_state_interfaces_.at(full_name).get_name());
+          joint_state_values_[i] = get_state(full_name);
         }
       }
 
@@ -513,7 +484,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         if (joint_command.get()->get_interface_name() == hardware_interface::HW_IF_POSITION)
         {
           const std::string & name = joint_command.get()->get_name();
-          if (joint_state_interfaces_.find(name) != joint_state_interfaces_.end())
+          if (has_state(name) && std::isfinite(get_command(name)))
           {
             set_state(
               name, get_command(name) + (custom_interface_with_following_offset_.empty()
@@ -536,7 +507,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       continue;
     }
     const std::string & full_interface_name = joint_state.get()->get_name();
-    if (joint_command_interfaces_.find(full_interface_name) != joint_command_interfaces_.end())
+    if (has_command(full_interface_name))
     {
       if (
         mirror_command_to_state(full_interface_name, joint_state.get()->get_data_type()) !=
@@ -551,7 +522,10 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         get_command(
           joint_state.get()->get_prefix_name() + "/" + hardware_interface::HW_IF_POSITION) +
         position_state_following_offset_;
-      set_state(full_interface_name, cmd);
+      if (std::isfinite(cmd))
+      {
+        set_state(full_interface_name, cmd);
+      }
     }
   }
 
@@ -561,9 +535,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
   {
     const auto & mimic_joint_name = joints.at(mimic_joint.joint_index).name;
     const auto & mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
-    if (
-      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION,
@@ -571,19 +543,14 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
           mimic_joint.multiplier *
             get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_POSITION));
     }
-    if (
-      joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY,
         mimic_joint.multiplier *
           get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_VELOCITY));
     }
-    if (
-      joint_state_interfaces_.find(
-        mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-      joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION))
     {
       set_state(
         mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION,
@@ -624,7 +591,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     for (const auto & gpio_command : gpio_commands_)
     {
       const std::string & name = gpio_command.get()->get_name();
-      if (gpio_state_interfaces_.find(name) != gpio_state_interfaces_.end())
+      if (has_state(name))
       {
         if (mirror_command_to_state(name, gpio_command.get()->get_data_type()) != return_type::OK)
         {

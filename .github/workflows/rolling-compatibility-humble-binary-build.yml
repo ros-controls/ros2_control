@@ -12,6 +12,7 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-compatibility-humble-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
