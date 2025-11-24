@@ -977,6 +977,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       get_logger(),
       "Caught exception of type : %s while loading the controller '%s' of plugin type '%s':\n%s",
       typeid(e).name(), controller_name.c_str(), controller_type.c_str(), e.what());
+    params_->handle_exceptions ? void() : throw;
     return nullptr;
   }
   catch (...)
@@ -1187,6 +1188,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     RCLCPP_ERROR(
       get_logger(), "Caught exception while cleaning-up the controller '%s'",
       controller.info.name.c_str());
+    params_->handle_exceptions ? void() : throw;
     return controller_interface::return_type::ERROR;
   }
   return controller_interface::return_type::OK;
@@ -1211,12 +1213,14 @@ void ControllerManager::shutdown_controller(
       get_logger(),
       "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
       typeid(e).name(), controller.info.name.c_str(), e.what());
+    params_->handle_exceptions ? void() : throw;
   }
   catch (...)
   {
     RCLCPP_ERROR(
       get_logger(), "Failed to shutdown the controller '%s' before unloading",
       controller.info.name.c_str());
+    params_->handle_exceptions ? void() : throw;
   }
 }
 
@@ -1287,6 +1291,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     RCLCPP_ERROR(
       get_logger(), "Caught exception of type : %s while configuring controller '%s': %s",
       typeid(e).name(), controller_name.c_str(), e.what());
+    params_->handle_exceptions ? void() : throw;
     return controller_interface::return_type::ERROR;
   }
   catch (...)
@@ -1294,6 +1299,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     RCLCPP_ERROR(
       get_logger(), "Caught unknown exception while configuring controller '%s'",
       controller_name.c_str());
+    params_->handle_exceptions ? void() : throw;
     return controller_interface::return_type::ERROR;
   }
 
@@ -1348,6 +1354,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       RCLCPP_FATAL(
         get_logger(), "Export of the state or reference interfaces failed with following error: %s",
         e.what());
+      params_->handle_exceptions ? void() : throw;
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
@@ -2133,6 +2140,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     RCLCPP_ERROR(
       get_logger(), "Caught exception of type : %s while initializing controller '%s': %s",
       typeid(e).name(), controller.info.name.c_str(), e.what());
+    params_->handle_exceptions ? void() : throw;
     return nullptr;
   }
   catch (...)
@@ -2141,6 +2149,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     RCLCPP_ERROR(
       get_logger(), "Caught unknown exception while initializing controller '%s'",
       controller.info.name.c_str());
+    params_->handle_exceptions ? void() : throw;
     return nullptr;
   }
 
@@ -2210,6 +2219,7 @@ void ControllerManager::deactivate_controllers(
         RCLCPP_ERROR(
           get_logger(), "Caught exception of type : %s while deactivating the  controller '%s': %s",
           typeid(e).name(), controller_name.c_str(), e.what());
+        params_->handle_exceptions ? void() : throw;
         continue;
       }
       catch (...)
@@ -2217,6 +2227,7 @@ void ControllerManager::deactivate_controllers(
         RCLCPP_ERROR(
           get_logger(), "Caught unknown exception while deactivating the controller '%s'",
           controller_name.c_str());
+        params_->handle_exceptions ? void() : throw;
         continue;
       }
     }
@@ -2333,6 +2344,7 @@ void ControllerManager::activate_controllers(
           "Caught exception of type : %s while claiming the command interfaces. Can't activate "
           "controller '%s': %s",
           typeid(e).name(), controller_name.c_str(), e.what());
+        params_->handle_exceptions ? void() : throw;
         command_loans.clear();
         assignment_successful = false;
         break;
@@ -2374,6 +2386,7 @@ void ControllerManager::activate_controllers(
           "controller '%s': %s",
           typeid(e).name(), controller_name.c_str(), e.what());
         assignment_successful = false;
+        params_->handle_exceptions ? void() : throw;
         break;
       }
     }
@@ -2397,12 +2410,14 @@ void ControllerManager::activate_controllers(
       RCLCPP_ERROR(
         get_logger(), "Caught exception of type : %s while activating the controller '%s': %s",
         typeid(e).name(), controller_name.c_str(), e.what());
+      params_->handle_exceptions ? void() : throw;
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught unknown exception while activating the controller '%s'",
         controller_name.c_str());
+      params_->handle_exceptions ? void() : throw;
     }
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
@@ -3127,6 +3142,7 @@ controller_interface::return_type ControllerManager::update(
           RCLCPP_ERROR(
             get_logger(), "Caught exception of type : %s while updating controller '%s': %s",
             typeid(e).name(), loaded_controller.info.name.c_str(), e.what());
+          params_->handle_exceptions ? void() : throw;
           controller_ret = controller_interface::return_type::ERROR;
         }
         catch (...)
@@ -3134,6 +3150,7 @@ controller_interface::return_type ControllerManager::update(
           RCLCPP_ERROR(
             get_logger(), "Caught unknown exception while updating controller '%s'",
             loaded_controller.info.name.c_str());
+          params_->handle_exceptions ? void() : throw;
           controller_ret = controller_interface::return_type::ERROR;
         }
 

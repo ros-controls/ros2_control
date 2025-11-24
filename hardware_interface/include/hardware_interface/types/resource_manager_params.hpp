@@ -96,6 +96,13 @@ struct ResourceManagerParams
    * or for other timing considerations.
    */
   unsigned int update_rate = 100;
+
+  /**
+   * @brief If true, the ResourceManager will catch exceptions thrown during the different
+   * operations of controllers and hardware components. If false, exceptions will propagate up
+   * and will cause the ResourceManager to crash.
+   */
+  bool handle_exceptions = true;
 };
 
 }  // namespace hardware_interface
