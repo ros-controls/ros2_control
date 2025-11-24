@@ -28,7 +28,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -60,8 +59,6 @@ std::string get_type_name()
 
 namespace hardware_interface
 {
-
-using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -313,6 +310,11 @@ public:
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
+  bool is_valid() const
+  {
+    return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
+  }
+
 private:
   void copy(const Handle & other) noexcept
   {
@@ -349,7 +351,7 @@ protected:
   HandleDataType data_type_ = HandleDataType::DOUBLE;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
-  double * value_ptr_;
+  double * value_ptr_ = nullptr;
   // END
   mutable std::shared_mutex handle_mutex_;
 
@@ -370,17 +372,35 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register state introspection for state interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -444,10 +464,28 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register command introspection for command interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
@@ -456,7 +494,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(

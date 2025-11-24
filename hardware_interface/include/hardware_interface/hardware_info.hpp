@@ -15,8 +15,11 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <fmt/compile.h>
+
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
@@ -133,6 +136,8 @@ struct TransmissionInfo
 /**
  * Hardware handles supported types
  */
+
+using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 class HandleDataType
 {
 public:
@@ -199,6 +204,27 @@ public:
         return true;  // bool can be converted to double
       default:
         return false;  // unknown type cannot be converted
+    }
+  }
+
+  /**
+   * @brief Cast the given value to double.
+   * @param value The value to be casted.
+   * @return The casted value.
+   * @throw std::runtime_error if the HandleDataType cannot be casted to double.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  double cast_to_double(const HANDLE_DATATYPE & value) const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return std::get<double>(value);
+      case BOOL:
+        return static_cast<double>(std::get<bool>(value));
+      default:
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));
     }
   }
 
