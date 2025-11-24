@@ -3037,3 +3037,264 @@ TEST_F(
       test_controller->get_lifecycle_state().id());
   }
 }
+
+class TestControllerManagerWithHandlingExceptions
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestControllerManagerWithHandlingExceptions, controller_lifecycle_on_exceptions)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+
+  test_controller->throw_on_initialize = true;
+
+  EXPECT_NO_THROW(cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME));
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+
+  test_controller->throw_on_initialize = false;
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_controller.use_count());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter)
+    << "Update should not reach an unconfigured controller";
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+
+  // configure controller
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  test_controller->throw_on_update = true;
+  EXPECT_NO_THROW(cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  test_controller->throw_on_update = false;
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      stop_controllers, start_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+}
+
+class TestControllerManagerNotHandlingExceptions
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+public:
+  TestControllerManagerNotHandlingExceptions()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, "",
+      {rclcpp::Parameter("handle_exceptions", false)})
+  {
+  }
+};
+
+TEST_F(TestControllerManagerNotHandlingExceptions, controller_lifecycle_on_exceptions)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+
+  test_controller->throw_on_initialize = true;
+
+  EXPECT_THROW(
+    cm_->add_controller(
+      test_controller, test_controller::TEST_CONTROLLER_NAME,
+      test_controller::TEST_CONTROLLER_CLASS_NAME),
+    std::runtime_error);
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+
+  test_controller->throw_on_initialize = false;
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_controller.use_count());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter)
+    << "Update should not reach an unconfigured controller";
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+
+  // configure controller
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  test_controller->throw_on_update = true;
+  EXPECT_THROW(cm_->update(time_, rclcpp::Duration::from_seconds(0.01)), std::runtime_error);
+
+  test_controller->throw_on_update = false;
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      stop_controllers, start_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+}
