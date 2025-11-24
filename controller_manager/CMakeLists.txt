@@ -245,7 +245,7 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
 
-  ament_add_gmock(test_controller_manager_with_resource_manager 
+  ament_add_gmock(test_controller_manager_with_resource_manager
   test/test_controller_manager_with_resource_manager.cpp
   )
   target_link_libraries(test_controller_manager_with_resource_manager

@@ -546,20 +546,26 @@ void ControllerManager::init_controller_manager()
 
   if (!is_resource_manager_initialized())
   {
-    // fallback state
-    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+    // The RM failed to initialize after receiving the robot description, or no description was
+    // received at all. This is a critical error. Don't finalize controller manager, instead keep
+    // waiting for robot description - fallback state
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
     if (!robot_description_notification_timer_)
     {
       robot_description_notification_timer_ = create_wall_timer(
         std::chrono::seconds(1),
         [&]()
         {
-          RCLCPP_WARN(get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+          RCLCPP_WARN(
+            get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
         });
     }
-  }else
+  }
+  else
   {
-    RCLCPP_INFO(get_logger(),
+    RCLCPP_INFO(
+      get_logger(),
       "Resource Manager successfully initialized. Starting Controller Manager services...");
     init_services();
   }
@@ -675,15 +681,15 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       get_logger(),
       "ResourceManager has already loaded a urdf. Ignoring attempt to reload a robot description.");
     return;
-  }  
+  }
 
   init_resource_manager(robot_description_);
   if (!is_resource_manager_initialized())
   {
-    // The RM failed to init AFTER we received the description - a critical error.
-    // don't finalize controller manager, instead keep waiting for robot description - fallback state
-    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-  } else 
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+  }
+  else
   {
     RCLCPP_INFO(
       get_logger(),
@@ -705,7 +711,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
 
   RCLCPP_INFO_EXPRESSION(
-  get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
+    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
   if (params_->enforce_command_limits)
   {
     try
@@ -730,16 +736,16 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       return;
     }
   }
-  catch (const std::exception &e)
+  catch (const std::exception & e)
   {
     // Other possible errors when loading components
     RCLCPP_ERROR(
-      get_logger(),
-      "Exception caught while loading and initializing components: %s", e.what());
+      get_logger(), "Exception caught while loading and initializing components: %s", e.what());
     return;
   }
-  resource_manager_->set_on_component_state_switch_callback(std::bind(&ControllerManager::publish_activity, this));
-        
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
+
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();
 

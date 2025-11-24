@@ -2171,7 +2171,7 @@ const auto diff_drive_robot_sdf =
 </sdf>
 )";
 
-const auto invalid_urdf_without_hardware_plugin = 
+const auto invalid_urdf_without_hardware_plugin =
   R"(
   <robot name="minimal_robot">
     <link name="base_link"/>
@@ -2188,8 +2188,8 @@ const auto invalid_urdf_without_hardware_plugin =
   </robot>
 )";
 
-const auto invalid_urdf_with_wrong_plugin = 
- R"(
+const auto invalid_urdf_with_wrong_plugin =
+  R"(
   <robot name="minimal_robot">
     <link name="base_link"/>
     <joint name="joint1" type="revolute">
@@ -2202,18 +2202,18 @@ const auto invalid_urdf_with_wrong_plugin =
     <link name="link1"/>
     <ros2_control name="default" type="system">
       <hardware>
-        <plugin>mock_components/NonExistentSystem</plugin>        
+        <plugin>mock_components/NonExistentSystem</plugin>
       </hardware>
     </ros2_control>
   </robot>
 )";
 
-const auto invalid_urdf_no_geometry = 
-R"(
+const auto invalid_urdf_no_geometry =
+  R"(
   <robot name="minimal_robot">
     <ros2_control name="default" type="system">
       <hardware>
-        <plugin>mock_components/NonExistentSystem</plugin>        
+        <plugin>mock_components/NonExistentSystem</plugin>
       </hardware>
     </ros2_control>
   </robot>
