@@ -356,8 +356,6 @@ public:
 
   HandleDataType get_data_type() const { return data_type_; }
 
-<<<<<<< HEAD
-=======
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
@@ -366,7 +364,6 @@ public:
     return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
   }
 
->>>>>>> fd12e90 (Publish all castable data types to pal_statistics (#2633))
 private:
   void copy(const Handle & other) noexcept
   {

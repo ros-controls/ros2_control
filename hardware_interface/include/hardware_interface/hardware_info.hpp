@@ -189,8 +189,6 @@ public:
     }
   }
 
-<<<<<<< HEAD
-=======
   /**
    * @brief Check if the HandleDataType can be casted to double.
    * @return True if the HandleDataType can be casted to double, false otherwise.
@@ -230,7 +228,6 @@ public:
     }
   }
 
->>>>>>> fd12e90 (Publish all castable data types to pal_statistics (#2633))
   HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
 
 private:
