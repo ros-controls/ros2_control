@@ -16,7 +16,7 @@ controller_manager
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
-
+* A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 
 hardware_interface
 ******************
