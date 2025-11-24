@@ -52,6 +52,21 @@ How-To
 
     ld.add_action(controller_manager)
 
+Catching Exceptions
+************************
+
+* The controller manager by default catches most of the exceptions thrown by controllers and hardware components to avoid crashing the whole system. However, it does print the exception type and message to the console.
+  This can make debugging difficult as the debugger might not catch the exception and also when the exception message is not clear enough to identify the root cause.
+  This behaviour can be disabled by setting the parameter ``handle_exceptions`` to ``false`` in the controller manager node, this way the exceptions will propagate up to the controller manager and can be caught by the debugger (or) crash by printing the stacktrace during normal execution.
+
+  Example controller manager config file:
+
+  .. code-block:: yaml
+
+    controller_manager:
+      ros__parameters:
+        update_rate: 1000
+        handle_exceptions: false
 
 Additional notes
 *****************
