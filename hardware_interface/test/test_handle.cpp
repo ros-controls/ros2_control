@@ -426,3 +426,51 @@ TEST(TestHandle, move_assignment)
   EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
 }
 #pragma GCC diagnostic pop
+
+class TestableHandle : public hardware_interface::Handle
+{
+  FRIEND_TEST(TestHandle, handle_castable);
+  // Use generation of interface names
+  explicit TestableHandle(const InterfaceDescription & interface_description)
+  : hardware_interface::Handle(interface_description)
+  {
+  }
+};
+
+TEST(TestHandle, handle_castable)
+{
+  hardware_interface::InterfaceInfo info;
+  info.name = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  {
+    info.data_type = "double";
+    info.initial_value = "23.0";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 23.0);
+  }
+  {
+    info.data_type = "bool";
+    info.initial_value = "false";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 0.0);
+
+    handle.value_ = true;
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 1.0);
+  }
+  {
+    // handle with unsupported datatype can't be created right now
+    // extend with more datatypes once supported in Handle
+    hardware_interface::HandleDataType dt{"string"};
+    EXPECT_FALSE(dt.is_castable_to_double());
+    hardware_interface::HANDLE_DATATYPE value = std::monostate{};
+    EXPECT_THROW(dt.cast_to_double(value), std::runtime_error);
+  }
+}
