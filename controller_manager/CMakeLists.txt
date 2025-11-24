@@ -64,7 +64,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(example_interfaces REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
@@ -246,7 +245,7 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
 
-  ament_add_gtest(test_controller_manager_with_resource_manager 
+  ament_add_gmock(test_controller_manager_with_resource_manager 
   test/test_controller_manager_with_resource_manager.cpp
   )
   target_link_libraries(test_controller_manager_with_resource_manager
