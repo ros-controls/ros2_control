@@ -21,6 +21,7 @@ controller_manager
 * New parameters ``overruns.manage`` and ``overruns.print_warnings`` were added to control the behavior of the controller manager/ros2_control_node when overruns occur (`#2546 <https://github.com/ros-controls/ros2_control/pull/2546/files>`_).
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
+* A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 
 
 hardware_interface
