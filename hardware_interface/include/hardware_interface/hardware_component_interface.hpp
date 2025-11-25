@@ -108,9 +108,7 @@ public:
   CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
   {
     clock_ = params.clock;
-    auto logger_copy = params.logger;
-    logger_ = logger_copy.get_child(
-      "hardware_component." + params.hardware_info.type + "." + params.hardware_info.name);
+    logger_ = params.logger;
     info_ = params.hardware_info;
     if (params.hardware_info.is_async)
     {
