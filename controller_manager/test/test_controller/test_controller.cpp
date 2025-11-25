@@ -163,6 +163,10 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
 
 CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  if (external_commands_for_testing_.empty())
+  {
+    external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
+  }
   if (activation_processing_time > 0.0)
   {
     RCLCPP_INFO(
