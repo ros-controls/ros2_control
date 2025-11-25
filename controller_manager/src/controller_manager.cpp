@@ -3965,8 +3965,11 @@ controller_interface::return_type ControllerManager::check_for_interfaces_availa
       RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       return controller_interface::return_type::ERROR;
     }
+    const auto cmd_itf_cfg = controller_it->c->command_interface_configuration();
     const auto controller_cmd_interfaces =
-      controller_it->c->command_interface_configuration().names;
+      (cmd_itf_cfg.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+        ? cmd_itf_cfg.names
+        : controller_it->info.claimed_interfaces;
     for (const auto & cmd_itf : controller_cmd_interfaces)
     {
       future_available_cmd_interfaces.push_back(cmd_itf);
