@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
+#include "controller_manager/controller_manager_parameters.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -31,8 +32,6 @@
 #include "rcl/arguments.h"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
-
-#include "controller_manager/controller_manager_parameters.hpp"
 
 namespace  // utility
 {
@@ -544,7 +543,20 @@ void ControllerManager::init_controller_manager()
     init_resource_manager(robot_description_);
   }
 
-  if (!is_resource_manager_initialized())
+  if (
+    is_resource_manager_initialized() && !(resource_manager_->get_joint_limiters_imported()) &&
+    params_->enforce_command_limits)
+  {
+    try
+    {
+      resource_manager_->import_joint_limiters(robot_description_);
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+    }
+  }
+  else if (!is_resource_manager_initialized())
   {
     // The RM failed to initialize after receiving the robot description, or no description was
     // received at all. This is a critical error. Don't finalize controller manager, instead keep
@@ -596,15 +608,6 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
-
-  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
-    this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
-    hardware_interface::DEFAULT_REGISTRY_KEY);
-  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
-  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
-    this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
-  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
-
   // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
   preshutdown_cb_handle_ =
