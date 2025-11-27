@@ -729,15 +729,15 @@ public:
    * \tparam T The type of the value to be stored.
    * \param interface_handle The shared pointer to the state interface to access.
    * \param value The value to store.
-   * \param ensure_set If true, the method ensures that the value is set successfully
-   * \note This method is not real-time safe, when used with ensure_set = true.
+   * \param wait_until_set If true, the method ensures that the value is set successfully
+   * \note This method is not real-time safe, when used with wait_until_set = true.
    * \throws std::runtime_error This method throws a runtime error if it cannot
    * access the state interface.
    * \return True if the value was set successfully, false otherwise.
    */
   template <typename T>
   bool set_state(
-    const StateInterface::SharedPtr & interface_handle, const T & value, bool ensure_set = true)
+    const StateInterface::SharedPtr & interface_handle, const T & value, bool wait_until_set)
   {
     if (!interface_handle)
     {
@@ -747,15 +747,7 @@ public:
           "method. This should not happen.",
           info_.name));
     }
-    if (ensure_set)
-    {
-      std::unique_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      return interface_handle->set_value(lock, value);
-    }
-    else
-    {
-      return interface_handle->set_value(value);
-    }
+    return interface_handle->set_value(value, wait_until_set);
   }
 
   /// Set the value of a state interface.
@@ -763,30 +755,29 @@ public:
    * \tparam T The type of the value to be stored.
    * \param[in] interface_name The name of the state interface to access.
    * \param[in] value The value to store.
-   * \param ensure_set If true, the method ensures that the value is set successfully
-   * \note This method is not real-time safe, when used with ensure_set = true.
+   * \note This method is not real-time safe.
    * \throws std::runtime_error This method throws a runtime error if it cannot
    * access the state interface.
    */
   template <typename T>
-  void set_state(const std::string & interface_name, const T & value, bool ensure_set = true)
+  void set_state(const std::string & interface_name, const T & value)
   {
-    std::ignore = set_state(get_state_interface_handle(interface_name), value, ensure_set);
+    std::ignore = set_state(get_state_interface_handle(interface_name), value, true);
   }
 
   /**
    * \tparam T The type of the value to be retrieved.
    * \param[in] interface_handle The shared pointer to the state interface to access.
    * \param[out] state The variable to store the retrieved value.
-   * \param[in] ensure_get If true, the method ensures that the value is retrieved successfully
-   * \note This method is not real-time safe, when used with ensure_get = true.
+   * \param[in] wait_until_get If true, the method ensures that the value is retrieved successfully
+   * \note This method is not real-time safe, when used with wait_until_get = true.
    * \throws std::runtime_error This method throws a runtime error if it cannot
-   * access the state interface or its stored value, when ensure_get is true.
+   * access the state interface or its stored value, when wait_until_get is true.
    * \return True if the value was retrieved successfully, false otherwise.
    */
   template <typename T>
   bool get_state(
-    const StateInterface::SharedPtr & interface_handle, T & state, bool ensure_get = true) const
+    const StateInterface::SharedPtr & interface_handle, T & state, bool wait_until_get) const
   {
     if (!interface_handle)
     {
@@ -796,24 +787,16 @@ public:
           "method. This should not happen.",
           info_.name));
     }
-    if (ensure_get)
+    const bool success = interface_handle->get_value(state, wait_until_get);
+    if (!success && wait_until_get)
     {
-      std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      const bool success = interface_handle->get_value(lock, state);
-      if (!success)
-      {
-        throw std::runtime_error(
-          fmt::format(
-            "Failed to get state value from interface: {} in hardware component: {}. This should "
-            "not happen.",
-            interface_handle->get_name(), info_.name));
-      }
-      return true;
+      throw std::runtime_error(
+        fmt::format(
+          "Failed to get state value from interface: {} in hardware component: {}. This should "
+          "not happen.",
+          interface_handle->get_name(), info_.name));
     }
-    else
-    {
-      return interface_handle->get_value(state);
-    }
+    return success;
   }
 
   /// Get the value from a state interface.
@@ -821,6 +804,7 @@ public:
    * \tparam T The type of the value to be retrieved.
    * \param[in] interface_name The name of the state interface to access.
    * \return The value obtained from the interface.
+   * \note This method is not real-time safe.
    * \throws std::runtime_error This method throws a runtime error if it cannot
    * access the state interface or its stored value.
    */
@@ -828,7 +812,7 @@ public:
   T get_state(const std::string & interface_name) const
   {
     T state;
-    get_state<T>(get_state_interface_handle(interface_name), state);
+    get_state<T>(get_state_interface_handle(interface_name), state, true);
     return state;
   }
 
@@ -868,14 +852,14 @@ public:
    * \tparam T The type of the value to be stored.
    * \param interface_handle The shared pointer to the command interface to access.
    * \param value The value to store.
-   * \param ensure_set If true, the method ensures that the value is set successfully
-   * \note This method is not real-time safe, when used with ensure_set = true
+   * \param wait_until_set If true, the method ensures that the value is set successfully
+   * \note This method is not real-time safe, when used with wait_until_set = true
    * \throws This method throws a runtime error if it cannot access the command interface.
    * \return True if the value was set successfully, false otherwise.
    */
   template <typename T>
   bool set_command(
-    const CommandInterface::SharedPtr & interface_handle, const T & value, bool ensure_set = true)
+    const CommandInterface::SharedPtr & interface_handle, const T & value, bool wait_until_set)
   {
     if (!interface_handle)
     {
@@ -885,15 +869,7 @@ public:
           "method. This should not happen.",
           info_.name));
     }
-    if (ensure_set)
-    {
-      std::unique_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      return interface_handle->set_value(lock, value);
-    }
-    else
-    {
-      return interface_handle->set_value(value);
-    }
+    return interface_handle->set_value(value, wait_until_set);
   }
 
   /// Set the value of a command interface.
@@ -902,29 +878,28 @@ public:
    * \param interface_name The name of the command
    * interface to access.
    * \param value The value to store.
-   * \param ensure_set If true, the method ensures that the value is set successfully
-   * \note This method is not real-time safe, when used with ensure_set = true
+   * \note This method is not real-time safe.
    * \throws This method throws a runtime error if it cannot access the command interface.
    */
   template <typename T>
-  void set_command(const std::string & interface_name, const T & value, bool ensure_set = true)
+  void set_command(const std::string & interface_name, const T & value)
   {
-    std::ignore = set_command(get_command_interface_handle(interface_name), value, ensure_set);
+    std::ignore = set_command(get_command_interface_handle(interface_name), value, true);
   }
 
   /**
    * \tparam T The type of the value to be retrieved.
    * \param[in] interface_handle The shared pointer to the command interface to access.
    * \param[out] command The variable to store the retrieved value.
-   * \param[in] ensure_get If true, the method ensures that the value is retrieved successfully
-   * \note This method is not real-time safe, when used with ensure_get = true.
+   * \param[in] wait_until_get If true, the method ensures that the value is retrieved successfully
+   * \note This method is not real-time safe, when used with wait_until_get = true.
    * \return True if the value was retrieved successfully, false otherwise.
    * \throws std::runtime_error This method throws a runtime error if it cannot
-   * access the command interface or its stored value, when ensure_get is true.
+   * access the command interface or its stored value, when wait_until_get is true.
    */
   template <typename T>
   bool get_command(
-    const CommandInterface::SharedPtr & interface_handle, T & command, bool ensure_get = true) const
+    const CommandInterface::SharedPtr & interface_handle, T & command, bool wait_until_get) const
   {
     if (!interface_handle)
     {
@@ -934,24 +909,16 @@ public:
           "method. This should not happen.",
           info_.name));
     }
-    if (ensure_get)
+    const bool success = interface_handle->get_value(command, wait_until_get);
+    if (!success && wait_until_get)
     {
-      std::shared_lock<std::shared_mutex> lock(interface_handle->get_mutex());
-      const bool success = interface_handle->get_value(lock, command);
-      if (!success)
-      {
-        throw std::runtime_error(
-          fmt::format(
-            "Failed to get command value from interface: {} in hardware component: {}. This should "
-            "not happen.",
-            interface_handle->get_name(), info_.name));
-      }
-      return true;
+      throw std::runtime_error(
+        fmt::format(
+          "Failed to get command value from interface: {} in hardware component: {}. This should "
+          "not happen.",
+          interface_handle->get_name(), info_.name));
     }
-    else
-    {
-      return interface_handle->get_value(command);
-    }
+    return success;
   }
 
   ///  Get the value from a command interface.
@@ -959,6 +926,7 @@ public:
    * \tparam T The type of the value to be retrieved.
    * \param[in] interface_name The name of the command interface to access.
    * \return The value obtained from the interface.
+   * \note This method is not real-time safe.
    * \throws std::runtime_error This method throws a runtime error if it cannot
    * access the command interface or its stored value.
    */
@@ -966,7 +934,7 @@ public:
   T get_command(const std::string & interface_name) const
   {
     T command;
-    get_command<T>(get_command_interface_handle(interface_name), command);
+    get_command<T>(get_command_interface_handle(interface_name), command, true);
     return command;
   }
 
