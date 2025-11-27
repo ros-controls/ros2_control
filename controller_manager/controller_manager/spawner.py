@@ -73,7 +73,7 @@ def is_controller_loaded(
 
 
 def parse_type_from_controllers(controller_names: list[str]) -> dict[str, str]:
-    controller_to_type = dict()
+    controller_to_type : dict[str, str] = dict()
     for name in controller_names:
         # We expect controller:some/type
         # -> split[0]=controller AND split[1]=some/type
@@ -220,16 +220,18 @@ def main(args=None):
     # If we have remote flag given we want to parse the controller_names from
     # controller:controller/type to a dict[controller] = controller/type
     # the controller_names are then overwritten with only the controller names
-    controller_to_type = {}
+    controller_to_type :dict[str,str] = {}
     if param_file_remote:
         controller_to_type = parse_type_from_controllers(controller_names)
         if not controller_to_type:
             raise ValueError(
                 "Invalid format for controller_name.Expected format is 'controller_name:some/controller_type' if '--param-file-remote-only' flag is used."
             )
-        controller_names = list(controller_to_type.keys())
+        # Overwrite controller_names with the parsed controller names
+        controller_names = list(controller_to_type.keys()) 
 
-    node = Node("spawner_" + controller_names[0])
+    spawner_node_name = "spawner_" + controller_names[0]
+    node = Node(spawner_node_name)
 
     if node.get_namespace() != "/" and args.namespace:
         raise RuntimeError(
@@ -257,7 +259,6 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        spawner_node_name = "spawner_" + controller_names[0]
         # Get the environment variable $ROS_HOME or default to ~/.ros
         ros_home = os.getenv("ROS_HOME", os.path.join(os.path.expanduser("~"), ".ros"))
         ros_control_lock_dir = os.path.join(ros_home, "locks")
@@ -291,7 +292,6 @@ def main(args=None):
             )
             return 1
 
-        node = Node(spawner_node_name)
         logger = node.get_logger()
 
         spawner_namespace = node.get_namespace()
