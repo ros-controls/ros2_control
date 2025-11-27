@@ -108,9 +108,7 @@ public:
   CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
   {
     clock_ = params.clock;
-    auto logger_copy = params.logger;
-    logger_ = logger_copy.get_child(
-      "hardware_component." + params.hardware_info.type + "." + params.hardware_info.name);
+    logger_ = params.logger;
     info_ = params.hardware_info;
     if (params.hardware_info.is_async)
     {
@@ -120,7 +118,7 @@ public:
         realtime_tools::AsyncSchedulingPolicy(info_.async_params.scheduling_policy);
       async_thread_params.cpu_affinity_cores = info_.async_params.cpu_affinity_cores;
       async_thread_params.clock = params.clock;
-      async_thread_params.logger = params.logger;
+      async_thread_params.logger = get_logger();
       async_thread_params.exec_rate = params.hardware_info.rw_rate;
       async_thread_params.print_warnings = info_.async_params.print_warnings;
       RCLCPP_INFO(
