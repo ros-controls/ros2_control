@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
+#include "controller_manager/controller_manager_parameters.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -31,8 +32,6 @@
 #include "rcl/arguments.h"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
-
-#include "controller_manager/controller_manager_parameters.hpp"
 
 namespace  // utility
 {
@@ -541,33 +540,55 @@ bool ControllerManager::shutdown_controllers()
 
 void ControllerManager::init_controller_manager()
 {
+  if (!resource_manager_ && !robot_description_.empty())
+  {
+    init_resource_manager(robot_description_);
+  }
+
+  if (
+    is_resource_manager_initialized() && !(resource_manager_->get_joint_limiters_imported()) &&
+    params_->enforce_command_limits)
+  {
+    try
+    {
+      resource_manager_->import_joint_limiters(robot_description_);
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+    }
+  }
+  else if (!is_resource_manager_initialized())
+  {
+    // The RM failed to initialize after receiving the robot description, or no description was
+    // received at all. This is a critical error. Don't finalize controller manager, instead keep
+    // waiting for robot description - fallback state
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+    if (!robot_description_notification_timer_)
+    {
+      robot_description_notification_timer_ = create_wall_timer(
+        std::chrono::seconds(1),
+        [&]()
+        {
+          RCLCPP_WARN(
+            get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+        });
+    }
+  }
+  else
+  {
+    RCLCPP_INFO(
+      get_logger(),
+      "Resource Manager successfully initialized. Starting Controller Manager services...");
+    init_services();
+  }
+
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
       "~/activity", rclcpp::QoS(1).reliable().transient_local());
   rt_controllers_wrapper_.set_on_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
-  resource_manager_->set_on_component_state_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
-
-  // Get parameters needed for RT "update" loop to work
-  if (is_resource_manager_initialized())
-  {
-    if (params_->enforce_command_limits)
-    {
-      resource_manager_->import_joint_limiters(robot_description_);
-    }
-    init_services();
-  }
-  else
-  {
-    robot_description_notification_timer_ = create_wall_timer(
-      std::chrono::seconds(1),
-      [&]()
-      {
-        RCLCPP_WARN(
-          get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
-      });
-  }
 
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
@@ -589,15 +610,6 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
-
-  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
-    this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
-    hardware_interface::DEFAULT_REGISTRY_KEY);
-  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
-  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
-    this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
-  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
-
   // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
   preshutdown_cb_handle_ =
@@ -675,8 +687,14 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       "ResourceManager has already loaded a urdf. Ignoring attempt to reload a robot description.");
     return;
   }
+
   init_resource_manager(robot_description_);
-  if (is_resource_manager_initialized())
+  if (!is_resource_manager_initialized())
+  {
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+  }
+  else
   {
     RCLCPP_INFO(
       get_logger(),
@@ -688,10 +706,6 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  if (params_->enforce_command_limits)
-  {
-    resource_manager_->import_joint_limiters(robot_description_);
-  }
   hardware_interface::ResourceManagerParams params;
   params.robot_description = robot_description;
   params.clock = trigger_clock_;
@@ -699,14 +713,43 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
-  if (!resource_manager_->load_and_initialize_components(params))
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
+  if (params_->enforce_command_limits)
   {
-    RCLCPP_WARN(
-      get_logger(),
-      "Could not load and initialize hardware. Please check previous output for more details. "
-      "After you have corrected your URDF, try to publish robot description again.");
+    try
+    {
+      resource_manager_->import_joint_limiters(robot_description);
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+      return;
+    }
+  }
+
+  try
+  {
+    if (!resource_manager_->load_and_initialize_components(params))
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Could not load and initialize hardware. Please check previous output for more details. "
+        "After you have corrected your URDF, try to publish robot description again.");
+      return;
+    }
+  }
+  catch (const std::exception & e)
+  {
+    // Other possible errors when loading components
+    RCLCPP_ERROR(
+      get_logger(), "Exception caught while loading and initializing components: %s", e.what());
     return;
   }
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
 
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();

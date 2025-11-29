@@ -242,6 +242,16 @@ public:
    */
   rclcpp::Clock::SharedPtr get_trigger_clock() const;
 
+  /**
+   * @brief Returns true if we have a valid robot description, currently based on whether the timer
+   * for waiting on description is still on.
+   */
+  bool has_valid_robot_description() const
+  {
+    return robot_description_notification_timer_ &&
+           !robot_description_notification_timer_->is_canceled();
+  }
+
 protected:
   void init_services();
 
