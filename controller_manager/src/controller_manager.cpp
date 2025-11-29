@@ -3238,7 +3238,6 @@ controller_interface::return_type ControllerManager::update(
   }
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
-  PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::CM_STATISTICS_KEY);
 
   execution_time_.update_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3340,8 +3339,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
         "Overrun might occur, Total time : %.3f us (Expected < %.3f us) --> Read time : %.3f us, "
         "Update time : %.3f us (Switch time : %.3f us (Switch chained mode time : %.3f us, perform "
         "mode change time : %.3f us, Activation time : %.3f us, Deactivation time : %.3f us)), "
-        "Write "
-        "time : %.3f us",
+        "Write time : %.3f us",
         execution_time_.total_time, expected_cycle_time, execution_time_.read_time,
         execution_time_.update_time, execution_time_.switch_time,
         execution_time_.switch_chained_mode_time, execution_time_.switch_perform_mode_time,
@@ -3358,6 +3356,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
         execution_time_.update_time, execution_time_.write_time);
     }
   }
+
+  PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::CM_STATISTICS_KEY);
 }
 
 std::vector<ControllerSpec> &
