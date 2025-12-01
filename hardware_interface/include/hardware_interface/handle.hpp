@@ -448,16 +448,12 @@ protected:
           return true;
         case HandleDataType::BOOL:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
-          // https://github.com/ros2/rclcpp/issues/2587
-          // is fixed
-          if (!notified_)
-          {
-            RCLCPP_WARN(
-              rclcpp::get_logger(get_name()),
-              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
-              get_name().c_str());
-            notified_ = true;
-          }
+          // https://github.com/ros2/rclcpp/issues/2587 is fixed
+          RCLCPP_WARN_ONCE(
+            rclcpp::get_logger(get_name()),
+            "Casting bool to double for interface: %s. Better use get_optional<bool>(). This will "
+            "only print once for all interfaces with this issue.",
+            get_name().c_str());
           value = static_cast<double>(std::get<bool>(value_));
           return true;
         default:
