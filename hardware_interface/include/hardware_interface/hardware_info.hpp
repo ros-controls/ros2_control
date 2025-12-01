@@ -228,6 +228,27 @@ public:
     }
   }
 
+  /**
+   * @brief Cast the given value from double.
+   * @param value The value to be casted (double).
+   * @return The casted value (std::variant).
+   * @throw std::runtime_error if the HandleDataType cannot be casted from double.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  std::variant<double, bool> cast_from_double(double value) const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return value;
+      case BOOL:
+        return static_cast<bool>(value);
+      default:
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted from double."), to_string()));
+    }
+  }
+
   HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
 
 private:
