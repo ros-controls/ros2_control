@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.1.0 (2025-12-01)
+------------------
 * [HardwareComponentInterface] Add get state and command interface handle methods (`#2831 <https://github.com/ros-controls/ros2_control/issues/2831>`_)
 * Use proper hardware component logger for async components (`#2860 <https://github.com/ros-controls/ros2_control/issues/2860>`_)
 * Publish all castable data types to pal_statistics (`#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_)

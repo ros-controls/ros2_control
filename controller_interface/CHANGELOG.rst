@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.1.0 (2025-12-01)
+------------------
 * Add tf prefix helper and test (`#2803 <https://github.com/ros-controls/ros2_control/issues/2803>`_)
 * Calculate achievable update rate of controllers (`#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_)
 * Use fmt for correct int64_t format specifier across platforms (`#2817 <https://github.com/ros-controls/ros2_control/issues/2817>`_)
