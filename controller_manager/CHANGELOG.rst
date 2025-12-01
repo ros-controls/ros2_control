@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.53.0 (2025-12-01)
+-------------------
 * Fix dependencies of controller_manager (backport `#2836 <https://github.com/ros-controls/ros2_control/issues/2836>`_) (`#2837 <https://github.com/ros-controls/ros2_control/issues/2837>`_)
 * Update CPU affinity parameter to be able to set multiple CPUs (backport `#1915 <https://github.com/ros-controls/ros2_control/issues/1915>`_, `#2509 <https://github.com/ros-controls/ros2_control/issues/2509>`_) (`#2823 <https://github.com/ros-controls/ros2_control/issues/2823>`_)
 * [Docs] Update determinism section (`#2131 <https://github.com/ros-controls/ros2_control/issues/2131>`_) (`#2785 <https://github.com/ros-controls/ros2_control/issues/2785>`_)
