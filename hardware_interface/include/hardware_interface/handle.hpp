@@ -293,6 +293,61 @@ public:
   }
 
   /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The variable to store the retrieved value.
+   * @param wait_for_lock If true, the method will wait for the lock to be available, else it will
+   * try to get the lock without blocking.
+   * @return true if the value is retrieved successfully, false otherwise.
+   *
+   * @note The method is thread-safe.
+   * @note This method is real-time safe or non-blocking, only if wait_for_lock is set to false.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <
+    typename T, typename = std::enable_if_t<
+                  !std::is_same_v<std::decay_t<T>, std::shared_lock<std::shared_mutex>>>>
+  [[nodiscard]] bool get_value(T & value, bool wait_for_lock) const
+  {
+    if (wait_for_lock)
+    {
+      std::shared_lock<std::shared_mutex> lock(handle_mutex_);
+      return get_value(lock, value);
+    }
+    else
+    {
+      std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+      return get_value(lock, value);
+    }
+  }
+
+  /**
+   * @brief Set the value of the handle.
+   * @tparam T The type of the value to be set.
+   * @param value The value to be set.
+   * @param wait_for_lock If true, the method will wait for the lock to be available, else it will
+   * try to get the lock without blocking.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe.
+   * @note This method is real-time safe or non-blocking, only if wait_for_lock is set to false.
+   */
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value, bool wait_for_lock)
+  {
+    if (wait_for_lock)
+    {
+      std::unique_lock<std::shared_mutex> lock(handle_mutex_);
+      return set_value(lock, value);
+    }
+    else
+    {
+      std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+      return set_value(lock, value);
+    }
+  }
+
+  /**
    * @brief Set the value of the handle.
    * @tparam T The type of the value to be set.
    * @param value The value to be set.
@@ -362,6 +417,64 @@ public:
   bool is_valid() const
   {
     return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
+  }
+
+protected:
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param lock The lock to access the value.
+   * @param value The variable to store the retrieved value.
+   * @return true if the value is retrieved successfully, false otherwise.
+   * @note The method is thread-safe and non-blocking.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <typename T>
+  [[nodiscard]] bool get_value(std::shared_lock<std::shared_mutex> & lock, T & value) const
+  {
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(saikishor) get value_ if old functionality is removed
+    if constexpr (std::is_same_v<T, double>)
+    {
+      switch (data_type_)
+      {
+        case HandleDataType::DOUBLE:
+          THROW_ON_NULLPTR(value_ptr_);
+          value = *value_ptr_;
+          return true;
+        case HandleDataType::BOOL:
+          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
+          // https://github.com/ros2/rclcpp/issues/2587 is fixed
+          RCLCPP_WARN_ONCE(
+            rclcpp::get_logger(get_name()),
+            "Casting bool to double for interface: %s. Better use get_optional<bool>(). This will "
+            "only print once for all interfaces with this issue.",
+            get_name().c_str());
+          value = static_cast<double>(std::get<bool>(value_));
+          return true;
+        default:
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
+              data_type_.to_string(), get_name()));
+      }
+    }
+    try
+    {
+      value = std::get<T>(value_);
+      return true;
+    }
+    catch (const std::bad_variant_access & err)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
+    }
   }
 
 private:
