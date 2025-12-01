@@ -20,7 +20,7 @@ package_name = "rqt_controller_manager"
 
 setup(
     name=package_name,
-    version="6.0.2",
+    version="6.1.0",
     packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
