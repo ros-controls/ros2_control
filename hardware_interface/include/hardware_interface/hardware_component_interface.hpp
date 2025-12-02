@@ -142,8 +142,8 @@ public:
             return ret_read;
           }
           if (
-            !is_sensor_type &&
-            this->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
+                                 lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
           {
             const auto write_start_time = std::chrono::steady_clock::now();
             const auto ret_write = write(time, period);
@@ -689,7 +689,10 @@ public:
   void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
   {
     lifecycle_state_ = new_state;
+    lifecycle_id_cache_.store(new_state.id(), std::memory_order_release);
   }
+
+  uint8_t get_lifecycle_id() const { return lifecycle_id_cache_.load(std::memory_order_acquire); }
 
   /// Does the state interface exist?
   /**
@@ -1016,6 +1019,7 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
