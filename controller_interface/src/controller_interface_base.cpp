@@ -206,9 +206,14 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 
         RCLCPP_WARN_EXPRESSION(
           get_node()->get_logger(), !is_frequency_achievable,
-          "The requested update rate of '%ld Hz' is not achievable with the controller manager "
-          "update rate of '%d Hz'. Setting it to the closest achievable frequency '%d Hz'.",
-          update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz);
+          "%s",
+          fmt::format(
+            "The requested update rate of '{}' Hz is not achievable with the controller manager "
+            "update rate of '{}' Hz. Setting it to the closest achievable frequency '{}' Hz.",
+            update_rate,
+            ctrl_itf_params_.controller_manager_update_rate
+          ).c_str()
+        );
         ctrl_itf_params_.update_rate = achievable_hz;
       }
     }
