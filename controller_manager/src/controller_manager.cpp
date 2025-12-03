@@ -3073,7 +3073,7 @@ controller_interface::return_type ControllerManager::update(
     }
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_active(*loaded_controller.c))
+    if (loaded_controller.c->get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       if (
         switch_params_.do_switch && loaded_controller.c->is_async() &&

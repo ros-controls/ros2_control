@@ -29,8 +29,10 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/managed_entity.hpp"
 
 namespace controller_interface
 {
@@ -201,6 +203,8 @@ public:
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
+
+  uint8_t get_lifecycle_id() const;
 
   unsigned int get_update_rate() const;
 
@@ -380,6 +384,7 @@ private:
   controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
+  std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;

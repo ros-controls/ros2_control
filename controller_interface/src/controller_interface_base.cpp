@@ -116,27 +116,33 @@ return_type ControllerInterfaceBase::init(
       // it in `on_configure` and `on_deactivate` - see the docs for details
       enable_introspection(false);
       this->stop_async_handler_thread();
-      return on_cleanup(previous_state);
+      const auto return_value = on_cleanup(previous_state);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      return return_value;
     });
 
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
-      skip_async_triggers_.store(false);
+      skip_async_triggers_.store(false, std::memory_order_release);
       enable_introspection(true);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
         async_handler_->reset_variables();
       }
-      return on_activate(previous_state);
+      const auto return_value = on_activate(previous_state);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      return return_value;
     });
 
   node_->register_on_deactivate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       enable_introspection(false);
-      return on_deactivate(previous_state);
+      const auto return_value = on_deactivate(previous_state);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      return return_value;
     });
 
   node_->register_on_shutdown(
@@ -144,6 +150,7 @@ return_type ControllerInterfaceBase::init(
     {
       this->stop_async_handler_thread();
       auto transition_state_status = on_shutdown(previous_state);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       this->release_interfaces();
       return transition_state_status;
     });
@@ -153,6 +160,7 @@ return_type ControllerInterfaceBase::init(
     {
       this->stop_async_handler_thread();
       auto transition_state_status = on_error(previous_state);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       this->release_interfaces();
       return transition_state_status;
     });
@@ -253,7 +261,9 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
   trigger_stats_.reset();
 
-  return get_node()->configure();
+  const auto & return_value = get_node()->configure();
+  lifecycle_id_.store(return_value.id(), std::memory_order_release);
+  return return_value;
 }
 
 void ControllerInterfaceBase::assign_interfaces(
@@ -277,6 +287,11 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
     throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
   }
   return node_->get_current_state();
+}
+
+uint8_t ControllerInterfaceBase::get_lifecycle_id() const
+{
+  return lifecycle_id_.load(std::memory_order_acquire);
 }
 
 ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
@@ -379,7 +394,7 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 
 void ControllerInterfaceBase::prepare_for_deactivation()
 {
-  skip_async_triggers_.store(true);
+  skip_async_triggers_.store(true, std::memory_order_release);
   this->wait_for_trigger_update_to_finish();
 }
 
