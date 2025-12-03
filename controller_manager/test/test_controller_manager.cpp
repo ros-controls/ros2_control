@@ -1030,18 +1030,18 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
-  EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
   const double controller_period = 1.0 / controller_update_rate;
   const double exp_controller_period =
     std::round((static_cast<double>(cm_update_rate) / controller_update_rate) - 0.01) /
     cm_update_rate;
+  const auto exp_periodicity = 1.0 / exp_controller_period;
+  EXPECT_EQ(test_controller->get_update_rate(), std::floor(exp_periodicity));
 
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
-  const auto exp_periodicity = 1.0 / exp_controller_period;
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
@@ -1183,18 +1183,18 @@ TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_an
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
-  EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
   const double controller_period = 1.0 / controller_update_rate;
   const double exp_controller_period =
     std::round((static_cast<double>(cm_update_rate) / controller_update_rate) - 0.01) /
     cm_update_rate;
+  const auto exp_periodicity = 1.0 / exp_controller_period;
+  EXPECT_EQ(test_controller->get_update_rate(), std::round(exp_periodicity));
 
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
-  const auto exp_periodicity = 1.0 / exp_controller_period;
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
