@@ -384,7 +384,7 @@ private:
   controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
-  std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+  mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;

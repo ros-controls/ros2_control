@@ -291,7 +291,19 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
 
 uint8_t ControllerInterfaceBase::get_lifecycle_id() const
 {
-  return lifecycle_id_.load(std::memory_order_acquire);
+  const auto id = lifecycle_id_.load(std::memory_order_acquire);
+  if (id == lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_DEACTIVATING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_CLEANINGUP ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_SHUTTINGDOWN ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING)
+  {
+    const auto new_id = this->get_lifecycle_state().id();
+    lifecycle_id_.store(new_id, std::memory_order_release);
+    return new_id;
+  }
+  return id;
 }
 
 ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
