@@ -62,6 +62,7 @@ return_type ControllerInterfaceBase::init(
     ctrl_itf_params_.controller_name, ctrl_itf_params_.node_namespace,
     ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
+  lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
 
   if (ctrl_itf_params_.controller_manager_update_rate == 0 && ctrl_itf_params_.update_rate != 0)
   {
@@ -92,6 +93,70 @@ return_type ControllerInterfaceBase::init(
     return return_type::ERROR;
   }
 
+  node_->register_on_configure(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      const auto return_value = on_configure(previous_state);
+      return return_value;
+    });
+
+  node_->register_on_cleanup(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      // make sure introspection is disabled on controller cleanup as users may manually enable
+      // it in `on_configure` and `on_deactivate` - see the docs for details
+      enable_introspection(false);
+      this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      const auto return_value = on_cleanup(previous_state);
+      return return_value;
+    });
+
+  node_->register_on_activate(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      skip_async_triggers_.store(false, std::memory_order_release);
+      enable_introspection(true);
+      if (is_async() && async_handler_ && async_handler_->is_running())
+      {
+        // This is needed if it is disabled due to a thrown exception in the async callback thread
+        async_handler_->reset_variables();
+      }
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      const auto return_value = on_activate(previous_state);
+      return return_value;
+    });
+
+  node_->register_on_deactivate(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      enable_introspection(false);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      const auto return_value = on_deactivate(previous_state);
+      return return_value;
+    });
+
+  node_->register_on_shutdown(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      auto transition_state_status = on_shutdown(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
+
+  node_->register_on_error(
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      auto transition_state_status = on_error(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
+
   switch (on_init())
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
@@ -106,70 +171,12 @@ return_type ControllerInterfaceBase::init(
       return return_type::ERROR;
   }
 
-  node_->register_on_configure(
-    std::bind(&ControllerInterfaceBase::on_configure, this, std::placeholders::_1));
-
-  node_->register_on_cleanup(
-    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
-    {
-      // make sure introspection is disabled on controller cleanup as users may manually enable
-      // it in `on_configure` and `on_deactivate` - see the docs for details
-      enable_introspection(false);
-      this->stop_async_handler_thread();
-      const auto return_value = on_cleanup(previous_state);
-      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      return return_value;
-    });
-
-  node_->register_on_activate(
-    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
-    {
-      skip_async_triggers_.store(false, std::memory_order_release);
-      enable_introspection(true);
-      if (is_async() && async_handler_ && async_handler_->is_running())
-      {
-        // This is needed if it is disabled due to a thrown exception in the async callback thread
-        async_handler_->reset_variables();
-      }
-      const auto return_value = on_activate(previous_state);
-      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      return return_value;
-    });
-
-  node_->register_on_deactivate(
-    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
-    {
-      enable_introspection(false);
-      const auto return_value = on_deactivate(previous_state);
-      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      return return_value;
-    });
-
-  node_->register_on_shutdown(
-    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
-    {
-      this->stop_async_handler_thread();
-      auto transition_state_status = on_shutdown(previous_state);
-      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      this->release_interfaces();
-      return transition_state_status;
-    });
-
-  node_->register_on_error(
-    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
-    {
-      this->stop_async_handler_thread();
-      auto transition_state_status = on_error(previous_state);
-      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      this->release_interfaces();
-      return transition_state_status;
-    });
-
   return return_type::OK;
 }
 
 const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
+  lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
   // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
   // overrides correctly in combination with std::bind. The goal is to have the following calls:
   // 1. CM: controller.get_node()->configure()
