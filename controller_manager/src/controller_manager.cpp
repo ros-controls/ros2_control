@@ -543,17 +543,28 @@ void ControllerManager::init_controller_manager()
     init_resource_manager(robot_description_);
   }
 
-  if (
-    is_resource_manager_initialized() && !(resource_manager_->get_joint_limiters_imported()) &&
-    params_->enforce_command_limits)
+  if (is_resource_manager_initialized())
   {
-    try
+    resource_manager_->set_on_component_state_switch_callback(
+      std::bind(&ControllerManager::publish_activity, this));
+
+    if (!(resource_manager_->are_joint_limiters_imported()) && params_->enforce_command_limits)
     {
-      resource_manager_->import_joint_limiters(robot_description_);
+      try
+      {
+        resource_manager_->import_joint_limiters(robot_description_);
+      }
+      catch (const std::exception & e)
+      {
+        RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+      }
     }
-    catch (const std::exception & e)
+    if (resource_manager_->are_joint_limiters_imported() || !params_->enforce_command_limits)
     {
-      RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+      RCLCPP_INFO(
+        get_logger(),
+        "Resource Manager successfully initialized. Starting Controller Manager services...");
+      init_services();
     }
   }
   else if (!is_resource_manager_initialized())
@@ -573,13 +584,6 @@ void ControllerManager::init_controller_manager()
             get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
         });
     }
-  }
-  else
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "Resource Manager successfully initialized. Starting Controller Manager services...");
-    init_services();
   }
 
   controller_manager_activity_publisher_ =
@@ -608,6 +612,15 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+    this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+    hardware_interface::DEFAULT_REGISTRY_KEY);
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+    this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
+  START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
+
   // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
   preshutdown_cb_handle_ =
