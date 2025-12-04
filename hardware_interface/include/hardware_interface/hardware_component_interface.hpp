@@ -678,12 +678,17 @@ public:
 
   /// Get life-cycle state of the hardware.
   /**
+   * \note This method is not real-time safe and should not be called in the control loop.
+   * \note This method is thread safe.
    * \return state.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the hardware.
   /**
+   * Get the lifecycle id of the hardware component interface that is cached internally to avoid
+   * calls to get_lifecycle_state() in the real-time control loop.
+   * \note This method is real-time safe and thread safe and can be called in the control loop.
    * \return state.
    */
   void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
