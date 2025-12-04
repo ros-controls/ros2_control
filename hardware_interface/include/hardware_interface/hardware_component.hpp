@@ -84,6 +84,8 @@ public:
 
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
+  uint8_t get_lifecycle_id() const;
+
   const rclcpp::Time & get_last_read_time() const;
 
   const rclcpp::Time & get_last_write_time() const;
