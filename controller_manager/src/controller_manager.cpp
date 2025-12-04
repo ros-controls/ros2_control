@@ -65,14 +65,12 @@ static const rmw_qos_profile_t qos_services = {
 inline bool is_controller_unconfigured(
   const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_lifecycle_id() ==
-         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+  return controller.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 }
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_lifecycle_id() ==
-         lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+  return controller.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
 inline bool is_controller_inactive(

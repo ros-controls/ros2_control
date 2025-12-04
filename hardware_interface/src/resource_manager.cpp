@@ -2061,8 +2061,7 @@ bool ResourceManager::prepare_command_mode_switch(
       }
       if (
         !start_interfaces_buffer.empty() &&
-        component.get_lifecycle_id() ==
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
+        component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
         !allow_controller_activation_with_inactive_hardware)
       {
         RCLCPP_WARN(
@@ -2072,8 +2071,7 @@ bool ResourceManager::prepare_command_mode_switch(
         return false;
       }
       if (
-        component.get_lifecycle_id() ==
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         try
@@ -2168,8 +2166,7 @@ bool ResourceManager::perform_command_mode_switch(
       }
       if (
         !start_interfaces_buffer.empty() &&
-        component.get_lifecycle_id() ==
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
+        component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
         !allow_controller_activation_with_inactive_hardware)
       {
         RCLCPP_WARN(
@@ -2179,8 +2176,7 @@ bool ResourceManager::perform_command_mode_switch(
         return false;
       }
       if (
-        component.get_lifecycle_id() ==
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         try

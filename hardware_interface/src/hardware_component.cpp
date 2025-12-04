@@ -321,10 +321,7 @@ const rclcpp_lifecycle::State & HardwareComponent::get_lifecycle_state() const
   return impl_->get_lifecycle_state();
 }
 
-uint8_t HardwareComponent::get_lifecycle_id() const
-{
-  return impl_->get_lifecycle_id();
-}
+uint8_t HardwareComponent::get_lifecycle_id() const { return impl_->get_lifecycle_id(); }
 
 const rclcpp::Time & HardwareComponent::get_last_read_time() const { return last_read_cycle_time_; }
 

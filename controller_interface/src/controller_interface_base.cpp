@@ -292,7 +292,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
 uint8_t ControllerInterfaceBase::get_lifecycle_id() const
 {
   const auto id = lifecycle_id_.load(std::memory_order_acquire);
-  if (id == lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING ||
+  if (
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING ||
     id == lifecycle_msgs::msg::State::TRANSITION_STATE_DEACTIVATING ||
     id == lifecycle_msgs::msg::State::TRANSITION_STATE_CLEANINGUP ||
     id == lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING ||
