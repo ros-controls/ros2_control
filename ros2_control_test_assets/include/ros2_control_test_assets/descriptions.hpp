@@ -2244,7 +2244,7 @@ const auto invalid_urdf_without_hardware_plugin =
   </robot>
 )";
 
-const auto invalid_urdf_with_wrong_plugin =
+const auto invalid_urdf_with_nonexistent_plugin =
   R"(
   <robot name="minimal_robot">
     <link name="base_link"/>
@@ -2269,7 +2269,7 @@ const auto invalid_urdf_no_geometry =
   <robot name="minimal_robot">
     <ros2_control name="default" type="system">
       <hardware>
-        <plugin>mock_components/NonExistentSystem</plugin>
+        <plugin>mock_components/GenericSystem</plugin>
       </hardware>
     </ros2_control>
   </robot>
