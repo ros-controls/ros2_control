@@ -1593,14 +1593,10 @@ void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
   std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  bool success = resource_storage_->import_joint_limiters(hardware_info);
-  if (success)
-  {
-    joint_limiters_imported_ = true;
-  }
+  joint_limiters_are_imported_ = resource_storage_->import_joint_limiters(hardware_info);
 }
 
-bool ResourceManager::get_joint_limiters_imported() const { return joint_limiters_imported_; }
+bool ResourceManager::are_joint_limiters_imported() const { return joint_limiters_are_imported_; }
 
 bool ResourceManager::are_components_initialized() const
 {

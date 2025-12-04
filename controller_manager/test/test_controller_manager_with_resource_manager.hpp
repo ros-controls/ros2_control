@@ -1,4 +1,4 @@
-// Copyright 2022 Stogl Robotics Consulting UG (haftungsbeschränkt)
+// Copyright 2025 b»robotized group
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public:
 
   using ControllerManager::resource_manager_;
 
-  using ControllerManager::has_valid_robot_description;
+  using ControllerManager::has_invalid_robot_description;
 };
 
 class ControllerManagerTest : public ::testing::Test
