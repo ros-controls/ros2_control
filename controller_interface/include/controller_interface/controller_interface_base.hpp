@@ -32,7 +32,6 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "rclcpp_lifecycle/managed_entity.hpp"
 
 namespace controller_interface
 {
