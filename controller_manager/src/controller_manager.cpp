@@ -65,13 +65,13 @@ static const rmw_qos_profile_t qos_services = {
 inline bool is_controller_unconfigured(
   const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_lifecycle_state().id() ==
+  return controller.get_lifecycle_id() ==
          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 }
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_lifecycle_state().id() ==
+  return controller.get_lifecycle_id() ==
          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
@@ -83,7 +83,7 @@ inline bool is_controller_inactive(
 
 inline bool is_controller_active(const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  return controller.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
 inline bool is_controller_active(
@@ -1251,7 +1251,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  auto state = controller->get_lifecycle_state();
+  const auto & state = controller->get_lifecycle_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -1262,7 +1262,6 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  auto new_state = controller->get_lifecycle_state();
   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_DEBUG(
@@ -1277,7 +1276,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   try
   {
-    new_state = controller->configure();
+    const auto & new_state = controller->configure();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
     {
       RCLCPP_ERROR(
