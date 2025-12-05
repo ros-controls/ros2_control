@@ -3068,8 +3068,6 @@ controller_interface::return_type ControllerManager::update(
         loaded_controller.info.name.c_str());
       continue;
     }
-    // TODO(v-lopez) we could cache this information
-    // https://github.com/ros-controls/ros2_control/issues/153
     if (loaded_controller.c->get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       if (

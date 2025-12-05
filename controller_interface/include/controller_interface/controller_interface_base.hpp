@@ -203,7 +203,7 @@ public:
 
   /**
    * Get the current lifecycle state of the controller node.
-   * \note This method is not real-time safe and should not be called in the control loop.
+   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and should not be called in the control loop.
    * \note This method is thread safe.
    * \returns lifecycle state of the controller node.
    */

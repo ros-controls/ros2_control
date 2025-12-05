@@ -97,8 +97,7 @@ return_type ControllerInterfaceBase::init(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      const auto return_value = on_configure(previous_state);
-      return return_value;
+      return on_configure(previous_state);
     });
 
   node_->register_on_cleanup(
