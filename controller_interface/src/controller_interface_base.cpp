@@ -163,7 +163,7 @@ return_type ControllerInterfaceBase::init(
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      RCLCPP_DEBUG(
+      RCLCPP_ERROR(
         get_node()->get_logger(),
         "Calling shutdown transition of controller node '%s' due to init failure.",
         get_node()->get_name());
