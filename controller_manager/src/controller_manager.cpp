@@ -3068,7 +3068,7 @@ controller_interface::return_type ControllerManager::update(
         loaded_controller.info.name.c_str());
       continue;
     }
-    if (loaded_controller.c->get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    if (is_controller_active(*loaded_controller.c))
     {
       if (
         switch_params_.do_switch && loaded_controller.c->is_async() &&
