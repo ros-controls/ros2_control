@@ -61,6 +61,10 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 controller_interface::return_type TestController::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (throw_on_update)
+  {
+    throw std::runtime_error("Exception from TestController::update() as requested.");
+  }
   if (time.get_clock_type() != RCL_ROS_TIME)
   {
     throw std::runtime_error("ROS Time is required for the controller to operate.");
@@ -101,7 +105,14 @@ controller_interface::return_type TestController::update(
   return controller_interface::return_type::OK;
 }
 
-CallbackReturn TestController::on_init() { return CallbackReturn::SUCCESS; }
+CallbackReturn TestController::on_init()
+{
+  if (throw_on_initialize)
+  {
+    throw std::runtime_error("Exception from TestController::on_init() as requested.");
+  }
+  return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
@@ -152,6 +163,10 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
 
 CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  if (external_commands_for_testing_.empty())
+  {
+    external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
+  }
   if (activation_processing_time > 0.0)
   {
     RCLCPP_INFO(
