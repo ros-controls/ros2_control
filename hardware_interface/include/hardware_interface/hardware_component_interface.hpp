@@ -678,7 +678,8 @@ public:
 
   /// Get life-cycle state of the hardware.
   /**
-   * \note This method is not real-time safe and should not be called in the control loop.
+   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
+   * should not be called in the control loop.
    * \note This method is thread safe.
    * \return state.
    */

@@ -108,8 +108,7 @@ return_type ControllerInterfaceBase::init(
       enable_introspection(false);
       this->stop_async_handler_thread();
       lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      const auto return_value = on_cleanup(previous_state);
-      return return_value;
+      return on_cleanup(previous_state);
     });
 
   node_->register_on_activate(
@@ -123,8 +122,7 @@ return_type ControllerInterfaceBase::init(
         async_handler_->reset_variables();
       }
       lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      const auto return_value = on_activate(previous_state);
-      return return_value;
+      return on_activate(previous_state);
     });
 
   node_->register_on_deactivate(
@@ -132,8 +130,7 @@ return_type ControllerInterfaceBase::init(
     {
       enable_introspection(false);
       lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
-      const auto return_value = on_deactivate(previous_state);
-      return return_value;
+      return on_deactivate(previous_state);
     });
 
   node_->register_on_shutdown(
