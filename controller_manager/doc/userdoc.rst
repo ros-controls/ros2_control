@@ -59,6 +59,9 @@ Alternatives to the standard kernel include
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
 
+.. note::
+  Avoid using the get_lifecycle_state() method in the real-time control loop of the controllers and the hardware components as it is not real-time safe.
+
 Publishers
 -----------
 

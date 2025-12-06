@@ -71,6 +71,7 @@ public:
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void configure_and_try_switch_that_returns_error()
@@ -80,6 +81,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
 
     // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
     cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
@@ -91,6 +93,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void try_successful_switch()
@@ -102,6 +105,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   std::shared_ptr<test_controller::TestController> test_controller_;
