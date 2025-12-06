@@ -19,6 +19,19 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
+namespace
+{
+void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
+{
+  if (expected_id != actual_id)
+  {
+    throw std::runtime_error(
+      "Internal lifecycle ID does not match the expected lifecycle ID. Expected: " +
+      std::to_string(expected_id) + ", Actual: " + std::to_string(actual_id));
+  }
+}
+}  // namespace
+
 namespace test_controller
 {
 TestController::TestController()
@@ -30,6 +43,7 @@ TestController::TestController()
 
 controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -45,6 +59,7 @@ controller_interface::InterfaceConfiguration TestController::command_interface_c
 
 controller_interface::InterfaceConfiguration TestController::state_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -61,6 +76,7 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 controller_interface::return_type TestController::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (throw_on_update)
   {
     throw std::runtime_error("Exception from TestController::update() as requested.");
@@ -107,6 +123,7 @@ controller_interface::return_type TestController::update(
 
 CallbackReturn TestController::on_init()
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (throw_on_initialize)
   {
     throw std::runtime_error("Exception from TestController::on_init() as requested.");
@@ -117,6 +134,7 @@ CallbackReturn TestController::on_init()
 CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   auto ctrl_node = get_node();
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (!ctrl_node->has_parameter("command_interfaces"))
   {
     ctrl_node->declare_parameter("command_interfaces", std::vector<std::string>({}));
@@ -163,6 +181,7 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
 
 CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (external_commands_for_testing_.empty())
   {
     external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
@@ -180,6 +199,7 @@ CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*pre
 
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (simulate_cleanup_failure)
   {
     return CallbackReturn::FAILURE;
@@ -194,6 +214,7 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
 
 CallbackReturn TestController::on_shutdown(const rclcpp_lifecycle::State &)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (shutdown_calls)
   {
     (*shutdown_calls)++;
