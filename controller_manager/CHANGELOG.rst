@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.40.0 (2025-12-01)
+-------------------
+* Fix the CM statistics async publish placement (`#2865 <https://github.com/ros-controls/ros2_control/issues/2865>`_) (`#2868 <https://github.com/ros-controls/ros2_control/issues/2868>`_)
+* Fix failing controller switch when using ::ALL command interface configuration (`#2856 <https://github.com/ros-controls/ros2_control/issues/2856>`_) (`#2858 <https://github.com/ros-controls/ros2_control/issues/2858>`_)
+* Add `handle_exceptions` parameter to controller manager (`#2807 <https://github.com/ros-controls/ros2_control/issues/2807>`_) (`#2849 <https://github.com/ros-controls/ros2_control/issues/2849>`_)
+* Fix dependencies of controller_manager (backport `#2836 <https://github.com/ros-controls/ros2_control/issues/2836>`_) (`#2838 <https://github.com/ros-controls/ros2_control/issues/2838>`_)
+* Contributors: mergify[bot]
+
 4.39.2 (2025-11-09)
 -------------------
 * Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_) (`#2796 <https://github.com/ros-controls/ros2_control/issues/2796>`_)

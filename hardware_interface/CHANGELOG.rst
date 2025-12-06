@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.40.0 (2025-12-01)
+-------------------
+* [HardwareComponentInterface] Add get state and command interface handle methods (backport `#2831 <https://github.com/ros-controls/ros2_control/issues/2831>`_) (`#2876 <https://github.com/ros-controls/ros2_control/issues/2876>`_)
+* Use proper hardware component logger for async components (`#2860 <https://github.com/ros-controls/ros2_control/issues/2860>`_) (`#2861 <https://github.com/ros-controls/ros2_control/issues/2861>`_)
+* Publish all castable data types to pal_statistics (backport `#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_) (`#2855 <https://github.com/ros-controls/ros2_control/issues/2855>`_)
+* Add `handle_exceptions` parameter to controller manager (`#2807 <https://github.com/ros-controls/ros2_control/issues/2807>`_) (`#2849 <https://github.com/ros-controls/ros2_control/issues/2849>`_)
+* Avoid C++20 structured binding capture (`#2832 <https://github.com/ros-controls/ros2_control/issues/2832>`_) (`#2834 <https://github.com/ros-controls/ros2_control/issues/2834>`_)
+* Contributors: mergify[bot]
+
 4.39.2 (2025-11-09)
 -------------------
 * Auto-set joint state interfaces to zero in MockHardware (`#2788 <https://github.com/ros-controls/ros2_control/issues/2788>`_) (`#2794 <https://github.com/ros-controls/ros2_control/issues/2794>`_)

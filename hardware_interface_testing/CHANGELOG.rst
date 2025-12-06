@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.40.0 (2025-12-01)
+-------------------
+* Publish all castable data types to pal_statistics (backport `#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_) (`#2855 <https://github.com/ros-controls/ros2_control/issues/2855>`_)
+* Contributors: mergify[bot]
+
 4.39.2 (2025-11-09)
 -------------------
 * Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_) (`#2796 <https://github.com/ros-controls/ros2_control/issues/2796>`_)

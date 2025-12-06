@@ -33,6 +33,8 @@ For details see the controller_manager section.
 * The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. `(#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
 * The controller_manager will now deactivate the entire controller chain if a controller in the chain fails during the update cycle. `(#2681 <https://github.com/ros-controls/ros2_control/pull/2681>`__)
 * The update rate of the controller will now be approximated to a closer achievable frequency, when its frequency is not achievable with the current controller manager update rate. (`#2828 <https://github.com/ros-controls/ros2_control/pull/2828>`__)
+* The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
+
 
 controller_manager
 ******************
@@ -104,6 +106,7 @@ controller_manager
 * New parameters ``overruns.manage`` and ``overruns.print_warnings`` were added to control the behavior of the controller manager/ros2_control_node when overruns occur (`#2546 <https://github.com/ros-controls/ros2_control/pull/2546/files>`_).
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
+* A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 
 hardware_interface
 ******************
@@ -191,6 +194,7 @@ hardware_interface
 * The hardware interface is now treated similarly as ERROR, when a hardware component returns ERROR on the read cycle (`#2334 <https://github.com/ros-controls/ros2_control/pull/2334>`_).
 * The controllers are now deactivated when a hardware component returns DEACTIVATE on the write cycle. The parameter ``deactivate_controllers_on_hardware_self_deactivate`` is added to control this behavior temporarily. It is recommended to set this parameter to true in order to avoid controllers to use inactive hardware components and to avoid any unexpected behavior. This feature parameter will be removed in future releases and will be defaulted to true (`#2334 <https://github.com/ros-controls/ros2_control/pull/2334>`_ & `#2501 <https://github.com/ros-controls/ros2_control/pull/2501>`_).
 * The controllers are not allowed to be activated when the hardware component is in INACTIVE state. The parameter ``allow_controller_activation_with_inactive_hardware`` is added to control this behavior temporarily. It is recommended to set this parameter to false in order to avoid controllers to use inactive hardware components and to avoid any unexpected behavior. This feature parameter will be removed in future releases and will be defaulted to false (`#2347 <https://github.com/ros-controls/ros2_control/pull/2347>`_).
+* The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
 
 joint_limits
 ************
