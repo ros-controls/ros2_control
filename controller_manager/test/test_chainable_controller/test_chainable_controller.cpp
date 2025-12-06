@@ -20,6 +20,19 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
+namespace
+{
+void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
+{
+  if (expected_id != actual_id)
+  {
+    throw std::runtime_error(
+      "Internal lifecycle ID does not match the expected lifecycle ID. Expected: " +
+      std::to_string(expected_id) + ", Actual: " + std::to_string(actual_id));
+  }
+}
+}  // namespace
+
 namespace test_chainable_controller
 {
 TestChainableController::TestChainableController()
@@ -32,6 +45,7 @@ TestChainableController::TestChainableController()
 controller_interface::InterfaceConfiguration
 TestChainableController::command_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -48,6 +62,7 @@ TestChainableController::command_interface_configuration() const
 controller_interface::InterfaceConfiguration
 TestChainableController::state_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -71,6 +86,7 @@ TestChainableController::state_interface_configuration() const
 controller_interface::return_type TestChainableController::update_reference_from_subscribers(
   const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (time.get_clock_type() != RCL_ROS_TIME)
   {
     throw std::runtime_error(
@@ -102,6 +118,7 @@ controller_interface::return_type TestChainableController::update_reference_from
 controller_interface::return_type TestChainableController::update_and_write_commands(
   const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (time.get_clock_type() != RCL_ROS_TIME)
   {
     throw std::runtime_error(
@@ -132,11 +149,16 @@ controller_interface::return_type TestChainableController::update_and_write_comm
   return update_return_value;
 }
 
-CallbackReturn TestChainableController::on_init() { return CallbackReturn::SUCCESS; }
+CallbackReturn TestChainableController::on_init()
+{
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn TestChainableController::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
     "~/commands", rclcpp::SystemDefaultsQoS(),
     [this](const CmdType::SharedPtr msg)
@@ -166,6 +188,7 @@ CallbackReturn TestChainableController::on_configure(
 CallbackReturn TestChainableController::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (!is_in_chained_mode())
   {
     auto msg = rt_command_ptr_.readFromRT();
@@ -178,6 +201,7 @@ CallbackReturn TestChainableController::on_activate(
 CallbackReturn TestChainableController::on_cleanup(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   joints_command_subscriber_.reset();
   return CallbackReturn::SUCCESS;
 }
@@ -185,6 +209,7 @@ CallbackReturn TestChainableController::on_cleanup(
 std::vector<hardware_interface::StateInterface>
 TestChainableController::on_export_state_interfaces()
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
@@ -200,6 +225,7 @@ TestChainableController::on_export_state_interfaces()
 std::vector<hardware_interface::CommandInterface>
 TestChainableController::on_export_reference_interfaces()
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   std::vector<hardware_interface::CommandInterface> reference_interfaces;
 
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)

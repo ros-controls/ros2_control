@@ -233,6 +233,7 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
 
   ASSERT_EQ(
     controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  ASSERT_EQ(controller.get_lifecycle_id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 
@@ -255,6 +256,7 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
 
   ASSERT_EQ(
     controller.get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  ASSERT_EQ(controller.get_lifecycle_id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   rclcpp::shutdown();
 }
 

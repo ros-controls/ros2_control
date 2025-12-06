@@ -25,6 +25,19 @@ using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 using hardware_interface::SystemInterface;
 
+namespace
+{
+void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
+{
+  if (expected_id != actual_id)
+  {
+    throw std::runtime_error(
+      "Internal lifecycle ID does not match the expected lifecycle ID. Expected: " +
+      std::to_string(expected_id) + ", Actual: " + std::to_string(actual_id));
+  }
+}
+}  // namespace
+
 class TestSystem : public SystemInterface
 {
   CallbackReturn on_init(
@@ -34,6 +47,7 @@ class TestSystem : public SystemInterface
     {
       return CallbackReturn::ERROR;
     }
+    verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
 
     // Simulating initialization error
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
@@ -54,6 +68,7 @@ class TestSystem : public SystemInterface
 
   std::vector<StateInterface> export_state_interfaces() override
   {
+    verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
@@ -82,6 +97,7 @@ class TestSystem : public SystemInterface
 
   std::vector<CommandInterface> export_command_interfaces() override
   {
+    verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
@@ -109,6 +125,7 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
@@ -138,6 +155,7 @@ class TestSystem : public SystemInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
