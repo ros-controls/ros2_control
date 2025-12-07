@@ -268,6 +268,33 @@ TEST(TestHandle, handle_constructor_double_data_type)
     << "Invalid double value should throw";
 }
 
+TEST(TestHandle, handle_constructor_float_data_type)
+{
+  const std::string POSITION_INTERFACE = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "float", "23.0"};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<float>(); });
+  ASSERT_EQ(handle.get_optional<float>().value(), 23.0);
+  ASSERT_TRUE(handle.get_optional<float>().has_value());
+  ASSERT_TRUE(handle.set_value(static_cast<float>(0.0)));
+  ASSERT_EQ(handle.get_optional<float>().value(), 0.0);
+  ASSERT_TRUE(handle.set_value(static_cast<float>(1.0)));
+  ASSERT_EQ(handle.get_optional<float>().value(), 1.0);
+
+  // Test the assertions
+  ASSERT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(true); }, std::runtime_error);
+  ASSERT_THROW(
+    { std::ignore = handle.set_value(std::numeric_limits<double>::max()); }, std::runtime_error);
+  EXPECT_ANY_THROW({ StateInterface bad_itf("joint1", POSITION_INTERFACE, "double", "233NaN0"); })
+    << "Invalid double value should throw";
+}
+
 TEST(TestHandle, handle_constructor_bool_data_type)
 {
   const std::string collision_interface = "collision";
@@ -310,11 +337,10 @@ TEST(TestHandle, interface_description_uint8_data_type)
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ handle.get_optional<uint8_t>(); });
   ASSERT_EQ(handle.get_optional<uint8_t>().value(), std::numeric_limits<uint8_t>::max());
-  EXPECT_NO_THROW({ handle.set_value(255); });
-  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 255);
-  EXPECT_NO_THROW({ handle.set_value(0); });
-  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 0);
-
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint8_t>(255)); });
+  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 255u);
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint8_t>(0)); });
+  ASSERT_EQ(handle.get_optional<uint8_t>().value(), 0u);
   // Test the assertions
   ASSERT_THROW({ handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ handle.set_value(256); }, std::runtime_error);
@@ -338,9 +364,9 @@ TEST(TestHandle, interface_description_int8_data_type)
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ handle.get_optional<int8_t>(); });
   ASSERT_EQ(handle.get_optional<int8_t>().value(), std::numeric_limits<int8_t>::max());
-  EXPECT_NO_THROW({ handle.set_value(127); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int8_t>(127)); });
   ASSERT_EQ(handle.get_optional<int8_t>().value(), 127);
-  EXPECT_NO_THROW({ handle.set_value(-128); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int8_t>(-128)); });
   ASSERT_EQ(handle.get_optional<int8_t>().value(), -128);
 
   // Test the assertions
@@ -366,9 +392,9 @@ TEST(TestHandle, interface_description_uint16_data_type)
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ handle.get_optional<uint16_t>(); });
   ASSERT_EQ(handle.get_optional<uint16_t>().value(), std::numeric_limits<uint16_t>::max());
-  EXPECT_NO_THROW({ handle.set_value(65535); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint16_t>(65535)); });
   ASSERT_EQ(handle.get_optional<uint16_t>().value(), 65535);
-  EXPECT_NO_THROW({ handle.set_value(0); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint16_t>(0)); });
   ASSERT_EQ(handle.get_optional<uint16_t>().value(), 0);
 
   // Test the assertions
@@ -394,9 +420,9 @@ TEST(TestHandle, interface_description_int16_data_type)
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ handle.get_optional<int16_t>(); });
   ASSERT_EQ(handle.get_optional<int16_t>().value(), std::numeric_limits<int16_t>::max());
-  EXPECT_NO_THROW({ handle.set_value(32767); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int16_t>(32767)); });
   ASSERT_EQ(handle.get_optional<int16_t>().value(), 32767);
-  EXPECT_NO_THROW({ handle.set_value(-32768); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int16_t>(-32768)); });
   ASSERT_EQ(handle.get_optional<int16_t>().value(), -32768);
 
   // Test the assertions
@@ -424,7 +450,7 @@ TEST(TestHandle, interface_description_uint32_data_type)
   ASSERT_EQ(handle.get_optional<uint32_t>().value(), std::numeric_limits<uint32_t>::max());
   EXPECT_NO_THROW({ handle.set_value(static_cast<uint32_t>(4294967295)); });
   ASSERT_EQ(handle.get_optional<uint32_t>().value(), 4294967295);
-  EXPECT_NO_THROW({ handle.set_value(0); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<uint32_t>(0)); });
   ASSERT_EQ(handle.get_optional<uint32_t>().value(), 0);
 
   // Test the assertions
@@ -450,7 +476,7 @@ TEST(TestHandle, interface_description_int32_data_type)
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
   EXPECT_NO_THROW({ handle.get_optional<int32_t>(); });
   ASSERT_EQ(handle.get_optional<int32_t>().value(), std::numeric_limits<int32_t>::max());
-  EXPECT_NO_THROW({ handle.set_value(2147483647); });
+  EXPECT_NO_THROW({ handle.set_value(static_cast<int32_t>(2147483647)); });
   ASSERT_EQ(handle.get_optional<int32_t>().value(), 2147483647);
   EXPECT_NO_THROW({ handle.set_value(static_cast<int32_t>(-2147483648)); });
   ASSERT_EQ(handle.get_optional<int32_t>().value(), -2147483648);
@@ -482,6 +508,29 @@ TEST(TestHandle, interface_description_double_data_type)
   ASSERT_DOUBLE_EQ(handle.get_optional<double>().value(), 1.337);
   EXPECT_NO_THROW({ handle.set_value(0.0); });
   ASSERT_DOUBLE_EQ(handle.get_optional<double>().value(), 0.0);
+}
+
+TEST(TestHandle, interface_description_float_data_type)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "float";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, handle.get_data_type());
+  EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ handle.get_optional<float>(); });
+  ASSERT_TRUE(std::isnan(handle.get_optional<float>().value()));
+  EXPECT_NO_THROW({ handle.set_value(static_cast<float>(1.337)); });
+  ASSERT_DOUBLE_EQ(handle.get_optional<float>().value(), 1.337);
+  EXPECT_NO_THROW({ handle.set_value(static_cast<float>(0.0)); });
+  ASSERT_DOUBLE_EQ(handle.get_optional<float>().value(), 0.0);
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
@@ -645,6 +694,16 @@ TEST(TestHandle, handle_castable)
     EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 23.0);
   }
   {
+    info.data_type = "float";
+    info.initial_value = "23.0";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 23.0);
+  }
+  {
     info.data_type = "uint8";
     info.initial_value = "123";
     hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
@@ -652,6 +711,9 @@ TEST(TestHandle, handle_castable)
 
     EXPECT_TRUE(handle.is_valid());
     EXPECT_TRUE(handle.is_castable_to_double());
+    uint8_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, 123);
     EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 123.0);
   }
   {
