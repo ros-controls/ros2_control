@@ -628,6 +628,7 @@ class TestableHandle : public hardware_interface::Handle
   }
 };
 
+// @note Once we add support for more data types, this function should be updated
 TEST(TestHandle, handle_castable)
 {
   hardware_interface::InterfaceInfo info;
@@ -642,6 +643,66 @@ TEST(TestHandle, handle_castable)
     EXPECT_TRUE(handle.is_valid());
     EXPECT_TRUE(handle.is_castable_to_double());
     EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 23.0);
+  }
+  {
+    info.data_type = "uint8";
+    info.initial_value = "123";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 123.0);
+  }
+  {
+    info.data_type = "int8";
+    info.initial_value = "-45";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), -45.0);
+  }
+  {
+    info.data_type = "uint16";
+    info.initial_value = "32000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 32000.0);
+  }
+  {
+    info.data_type = "int16";
+    info.initial_value = "-16000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), -16000.0);
+  }
+  {
+    info.data_type = "uint32";
+    info.initial_value = "2000000000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 2000000000.0);
+  }
+  {
+    info.data_type = "int32";
+    info.initial_value = "-1000000000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    TestableHandle handle{interface_description};
+
+    EXPECT_TRUE(handle.is_valid());
+    EXPECT_TRUE(handle.is_castable_to_double());
+    EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), -1000000000.0);
   }
   {
     info.data_type = "bool";
