@@ -243,8 +243,14 @@ public:
     {
       case DOUBLE:
         return true;
-      case BOOL:
-        return true;  // bool can be converted to double
+      case BOOL:    // fallthrough
+      case UINT8:   // fallthrough
+      case INT8:    // fallthrough
+      case UINT16:  // fallthrough
+      case INT16:   // fallthrough
+      case UINT32:  // fallthrough
+      case INT32:
+        return true;
       default:
         return false;  // unknown type cannot be converted
     }
@@ -265,6 +271,18 @@ public:
         return std::get<double>(value);
       case BOOL:
         return static_cast<double>(std::get<bool>(value));
+      case UINT8:
+        return static_cast<double>(std::get<uint8_t>(value));
+      case INT8:
+        return static_cast<double>(std::get<int8_t>(value));
+      case UINT16:
+        return static_cast<double>(std::get<uint16_t>(value));
+      case INT16:
+        return static_cast<double>(std::get<int16_t>(value));
+      case UINT32:
+        return static_cast<double>(std::get<uint32_t>(value));
+      case INT32:
+        return static_cast<double>(std::get<int32_t>(value));
       default:
         throw std::runtime_error(
           fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));
