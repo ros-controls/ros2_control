@@ -2118,6 +2118,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     controller_params.controller_name = controller.info.name;
     controller_params.robot_description = robot_description_;
     controller_params.update_rate = get_update_rate();
+    controller_params.controller_manager_update_rate = get_update_rate();
     controller_params.node_namespace = get_namespace();
     controller_params.node_options = controller_node_options;
     controller_params.hard_joint_limits = resource_manager_->get_hard_joint_limits();

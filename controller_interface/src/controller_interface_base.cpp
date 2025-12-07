@@ -47,6 +47,7 @@ return_type ControllerInterfaceBase::init(
   params.controller_name = controller_name;
   params.robot_description = urdf;
   params.update_rate = cm_update_rate;
+  params.controller_manager_update_rate = cm_update_rate;
   params.node_namespace = node_namespace;
   params.node_options = node_options;
 
@@ -63,11 +64,26 @@ return_type ControllerInterfaceBase::init(
     false);  // disable LifecycleNode service interfaces
   lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
 
+  if (ctrl_itf_params_.controller_manager_update_rate == 0 && ctrl_itf_params_.update_rate != 0)
+  {
+    RCLCPP_WARN(
+      node_->get_logger(), "%s",
+      fmt::format(
+        "The 'controller_manager_update_rate' variable of the ControllerInterfaceParams is unset "
+        "or set to 0 Hz while the 'update_rate' variable is set to a non-zero value of '{} Hz'. "
+        "Using the controller's update rate as the controller manager update rate. Please fix in "
+        "the tests by initializing the 'controller_manager_update_rate' instead of the "
+        "'update_rate' variable within the ControllerInterfaceParams struct",
+        ctrl_itf_params_.update_rate)
+        .c_str());
+    ctrl_itf_params_.controller_manager_update_rate = ctrl_itf_params_.update_rate;
+  }
+
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(ctrl_itf_params_.update_rate));
-
+    auto_declare<int>(
+      "update_rate", static_cast<int>(ctrl_itf_params_.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
   }
@@ -179,14 +195,35 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         get_node()->get_logger(), "%s",
         fmt::format(
           "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
-          "the "
-          "controller manager : '{} Hz'. Setting it to the update rate of the controller manager.",
+          "the controller manager : '{} Hz'. Setting it to the update rate of the controller "
+          "manager.",
           update_rate, ctrl_itf_params_.update_rate)
           .c_str());
     }
     else
     {
-      ctrl_itf_params_.update_rate = static_cast<unsigned int>(update_rate);
+      if (update_rate > 0 && ctrl_itf_params_.controller_manager_update_rate > 0)
+      {
+        // Calculate the update rate corresponding the periodicity of the controller manager
+        const bool is_frequency_achievable = (ctrl_itf_params_.controller_manager_update_rate %
+                                              static_cast<unsigned int>(update_rate)) == 0;
+        const unsigned int ticks_per_controller_per_second = static_cast<unsigned int>(std::round(
+          static_cast<double>(ctrl_itf_params_.controller_manager_update_rate) /
+          static_cast<double>(update_rate)));
+        const unsigned int achievable_hz =
+          is_frequency_achievable
+            ? static_cast<unsigned int>(update_rate)
+            : ctrl_itf_params_.controller_manager_update_rate / ticks_per_controller_per_second;
+
+        RCLCPP_WARN_EXPRESSION(
+          get_node()->get_logger(), !is_frequency_achievable, "%s",
+          fmt::format(
+            "The requested update rate of '{}' Hz is not achievable with the controller manager "
+            "update rate of '{}' Hz. Setting it to the closest achievable frequency '{}' Hz.",
+            update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz)
+            .c_str());
+        ctrl_itf_params_.update_rate = achievable_hz;
+      }
     }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
