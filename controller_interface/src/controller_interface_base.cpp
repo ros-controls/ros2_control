@@ -43,19 +43,48 @@ return_type ControllerInterfaceBase::init(
   const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
 {
-  urdf_ = urdf;
-  update_rate_ = cm_update_rate;
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = controller_name;
+  params.robot_description = urdf;
+  params.update_rate = cm_update_rate;
+  params.controller_manager_update_rate = cm_update_rate;
+  params.node_namespace = node_namespace;
+  params.node_options = node_options;
+
+  return init(params);
+}
+
+return_type ControllerInterfaceBase::init(
+  const controller_interface::ControllerInterfaceParams & params)
+{
+  ctrl_itf_params_ = params;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, node_namespace, node_options,
+    ctrl_itf_params_.controller_name, ctrl_itf_params_.node_namespace,
+    ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
+
+  if (ctrl_itf_params_.controller_manager_update_rate == 0 && ctrl_itf_params_.update_rate != 0)
+  {
+    RCLCPP_WARN(
+      node_->get_logger(), "%s",
+      fmt::format(
+        "The 'controller_manager_update_rate' variable of the ControllerInterfaceParams is unset "
+        "or set to 0 Hz while the 'update_rate' variable is set to a non-zero value of '{} Hz'. "
+        "Using the controller's update rate as the controller manager update rate. Please fix in "
+        "the tests by initializing the 'controller_manager_update_rate' instead of the "
+        "'update_rate' variable within the ControllerInterfaceParams struct",
+        ctrl_itf_params_.update_rate)
+        .c_str());
+    ctrl_itf_params_.controller_manager_update_rate = ctrl_itf_params_.update_rate;
+  }
 
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
-
+    auto_declare<int>(
+      "update_rate", static_cast<int>(ctrl_itf_params_.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
-    auto_declare<int>("thread_priority", 50);
+    auto_declare<int>("thread_priority", -100);
   }
   catch (const std::exception & e)
   {
@@ -86,16 +115,14 @@ return_type ControllerInterfaceBase::init(
       // make sure introspection is disabled on controller cleanup as users may manually enable
       // it in `on_configure` and `on_deactivate` - see the docs for details
       enable_introspection(false);
-      if (is_async() && async_handler_ && async_handler_->is_running())
-      {
-        async_handler_->stop_thread();
-      }
+      this->stop_async_handler_thread();
       return on_cleanup(previous_state);
     });
 
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      skip_async_triggers_.store(false);
       enable_introspection(true);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
@@ -113,10 +140,22 @@ return_type ControllerInterfaceBase::init(
     });
 
   node_->register_on_shutdown(
-    std::bind(&ControllerInterfaceBase::on_shutdown, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_shutdown(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   node_->register_on_error(
-    std::bind(&ControllerInterfaceBase::on_error, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      this->stop_async_handler_thread();
+      auto transition_state_status = on_error(previous_state);
+      this->release_interfaces();
+      return transition_state_status;
+    });
 
   return return_type::OK;
 }
@@ -139,32 +178,75 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
       return get_lifecycle_state();
     }
-    if (update_rate_ != 0u && update_rate > update_rate_)
+    if (ctrl_itf_params_.update_rate != 0u && update_rate > ctrl_itf_params_.update_rate)
     {
       RCLCPP_WARN(
-        get_node()->get_logger(),
-        "The update rate of the controller : '%ld Hz' cannot be higher than the update rate of the "
-        "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
-        update_rate, update_rate_);
+        get_node()->get_logger(), "%s",
+        fmt::format(
+          "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
+          "the controller manager : '{} Hz'. Setting it to the update rate of the controller "
+          "manager.",
+          update_rate, ctrl_itf_params_.update_rate)
+          .c_str());
     }
     else
     {
-      update_rate_ = static_cast<unsigned int>(update_rate);
+      if (update_rate > 0 && ctrl_itf_params_.controller_manager_update_rate > 0)
+      {
+        // Calculate the update rate corresponding the periodicity of the controller manager
+        const bool is_frequency_achievable = (ctrl_itf_params_.controller_manager_update_rate %
+                                              static_cast<unsigned int>(update_rate)) == 0;
+        const unsigned int ticks_per_controller_per_second = static_cast<unsigned int>(std::round(
+          static_cast<double>(ctrl_itf_params_.controller_manager_update_rate) /
+          static_cast<double>(update_rate)));
+        const unsigned int achievable_hz =
+          is_frequency_achievable
+            ? static_cast<unsigned int>(update_rate)
+            : ctrl_itf_params_.controller_manager_update_rate / ticks_per_controller_per_second;
+
+        RCLCPP_WARN_EXPRESSION(
+          get_node()->get_logger(), !is_frequency_achievable, "%s",
+          fmt::format(
+            "The requested update rate of '{}' Hz is not achievable with the controller manager "
+            "update rate of '{}' Hz. Setting it to the closest achievable frequency '{}' Hz.",
+            update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz)
+            .c_str());
+        ctrl_itf_params_.update_rate = achievable_hz;
+      }
     }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
   if (is_async_)
   {
-    const int thread_priority =
+    realtime_tools::AsyncFunctionHandlerParams async_params;
+    async_params.thread_priority = 50;  // default value
+    const int thread_priority_param =
       static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
+    if (thread_priority_param >= 0 && thread_priority_param <= 99)
+    {
+      async_params.thread_priority = thread_priority_param;
+      RCLCPP_WARN(
+        get_node()->get_logger(),
+        "The parsed 'thread_priority' parameter will be deprecated and not be functional from "
+        "ROS 2 Lyrical Luth release. Please use the 'async_parameters.thread_priority' parameter "
+        "instead.");
+    }
+    async_params.initialize(node_, "async_parameters.");
+    if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::DETACHED)
+    {
+      RCLCPP_ERROR(
+        get_node()->get_logger(),
+        "The controllers are not supported to run asynchronously in detached mode!");
+      return get_node()->get_current_state();
+    }
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
-      thread_priority);
+      async_params.thread_priority);
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     async_handler_->init(
       std::bind(
         &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
-      thread_priority);
+      async_params);
     async_handler_->start_thread();
   }
   REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
@@ -204,6 +286,13 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   trigger_stats_.total_triggers++;
   if (is_async())
   {
+    if (skip_async_triggers_.load())
+    {
+      // Skip further async triggers if the controller is being deactivated
+      status.successful = false;
+      status.result = return_type::OK;
+      return status;
+    }
     const rclcpp::Time last_trigger_time = async_handler_->get_current_callback_time();
     const auto result = async_handler_->trigger_async_callback(time, period);
     if (!result.first)
@@ -256,17 +345,49 @@ std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::
   return node_;
 }
 
-unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
+unsigned int ControllerInterfaceBase::get_update_rate() const
+{
+  return ctrl_itf_params_.update_rate;
+}
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
-const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
+const std::string & ControllerInterfaceBase::get_robot_description() const
+{
+  return ctrl_itf_params_.robot_description;
+}
+
+const std::unordered_map<std::string, joint_limits::JointLimits> &
+ControllerInterfaceBase::get_hard_joint_limits() const
+{
+  return ctrl_itf_params_.hard_joint_limits;
+}
+
+const std::unordered_map<std::string, joint_limits::SoftJointLimits> &
+ControllerInterfaceBase::get_soft_joint_limits() const
+{
+  return ctrl_itf_params_.soft_joint_limits;
+}
 
 void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {
   if (is_async() && async_handler_ && async_handler_->is_running())
   {
     async_handler_->wait_for_trigger_cycle_to_finish();
+  }
+}
+
+void ControllerInterfaceBase::prepare_for_deactivation()
+{
+  skip_async_triggers_.store(true);
+  this->wait_for_trigger_update_to_finish();
+}
+
+void ControllerInterfaceBase::stop_async_handler_thread()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_thread();
   }
 }
 

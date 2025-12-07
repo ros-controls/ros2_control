@@ -1,26 +1,23 @@
 cmake_minimum_required(VERSION 3.16)
 project(controller_manager LANGUAGES CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
-          -Werror=missing-braces)
-endif()
-
-# using this instead of visibility macros
-# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
   diagnostic_updater
+  fmt
+  generate_parameter_library
   hardware_interface
+  libstatistics_collector
+  lifecycle_msgs
   pluginlib
   rclcpp
   realtime_tools
   std_msgs
-  libstatistics_collector
-  generate_parameter_library
 )
 
 find_package(ament_cmake REQUIRED)
@@ -45,9 +42,18 @@ target_include_directories(controller_manager PUBLIC
   $<INSTALL_INTERFACE:include/controller_manager>
 )
 target_link_libraries(controller_manager PUBLIC
-  controller_manager_parameters
-)
-ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+                      controller_manager_parameters
+                      controller_interface::controller_interface
+                      diagnostic_updater::diagnostic_updater
+                      hardware_interface::hardware_interface
+                      pluginlib::pluginlib
+                      rclcpp::rclcpp
+                      rclcpp_lifecycle::rclcpp_lifecycle
+                      realtime_tools::realtime_tools
+                      libstatistics_collector::libstatistics_collector
+                      fmt::fmt
+                      ${std_msgs_TARGETS}
+                      ${controller_manager_msgs_TARGETS})
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_link_libraries(ros2_control_node PRIVATE
@@ -61,8 +67,9 @@ if(BUILD_TESTING)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
-  target_link_libraries(test_controller PUBLIC controller_manager)
-  ament_target_dependencies(test_controller PUBLIC example_interfaces)
+  target_link_libraries(test_controller PUBLIC
+                        controller_manager
+                        ${example_interfaces_TARGETS})
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
     TARGETS test_controller
@@ -83,8 +90,9 @@ if(BUILD_TESTING)
   add_library(test_chainable_controller SHARED
     test/test_chainable_controller/test_chainable_controller.cpp
   )
-  ament_target_dependencies(test_chainable_controller PUBLIC realtime_tools)
-  target_link_libraries(test_chainable_controller PUBLIC controller_manager)
+  target_link_libraries(test_chainable_controller PUBLIC
+                        controller_manager
+                        realtime_tools::realtime_tools)
   pluginlib_export_plugin_description_file(
     controller_interface test/test_chainable_controller/test_chainable_controller.xml)
   install(
@@ -151,11 +159,10 @@ if(BUILD_TESTING)
     test_controller
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
+    ${controller_manager_msgs_TARGETS}
   )
   set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
-  ament_target_dependencies(test_controller_manager_srvs
-    controller_manager_msgs
-  )
+
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )
@@ -163,9 +170,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
-  )
-  ament_target_dependencies(test_controller_manager_urdf_passing
-    controller_manager_msgs
+    ${controller_manager_msgs_TARGETS}
   )
 
   add_library(test_controller_with_interfaces SHARED
@@ -181,6 +186,20 @@ if(BUILD_TESTING)
     DESTINATION lib
   )
 
+  add_library(test_controller_failed_activate SHARED
+  test/test_controller_failed_activate/test_controller_failed_activate.cpp
+  )
+  target_link_libraries(test_controller_failed_activate PUBLIC
+    controller_manager
+  )
+  target_compile_definitions(test_controller_failed_activate PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller_failed_activate/test_controller_failed_activate.xml)
+  install(
+    TARGETS test_controller_failed_activate
+    DESTINATION lib
+  )
+
   ament_add_gmock(test_release_interfaces
     test/test_release_interfaces.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
@@ -189,6 +208,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_with_interfaces
+    test_controller_failed_activate
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -222,15 +242,14 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
-  )
-  ament_target_dependencies(test_hardware_management_srvs
-    controller_manager_msgs
+    ${controller_manager_msgs_TARGETS}
   )
 
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_test_utils test/test_test_utils.py)
 endif()
 
 install(

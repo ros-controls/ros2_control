@@ -23,9 +23,10 @@ using hardware_interface::StateInterface;
 
 class TestSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SensorInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -48,9 +49,10 @@ class TestSensor : public SensorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name,
-      &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().sensors[0].name,
+        get_hardware_info().sensors[0].state_interfaces[0].name, &velocity_state_));
 
     return state_interfaces;
   }
@@ -66,9 +68,10 @@ private:
 
 class TestUninitializableSensor : public TestSensor
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    SensorInterface::on_init(info);
+    SensorInterface::on_init(params);
     return CallbackReturn::ERROR;
   }
 };

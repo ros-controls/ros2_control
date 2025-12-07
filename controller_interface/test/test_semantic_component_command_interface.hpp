@@ -18,12 +18,11 @@
 #ifndef TEST_SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 #define TEST_SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 
-#include <gmock/gmock.h>
-
 #include <memory>
 #include <string>
 
 #include "geometry_msgs/msg/pose.hpp"
+#include "gmock/gmock.h"
 #include "semantic_components/semantic_component_command_interface.hpp"
 
 // implementing and friending so we can access member variables

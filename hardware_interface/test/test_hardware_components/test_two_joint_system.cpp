@@ -27,9 +27,10 @@ namespace test_hardware_components
 {
 class TestTwoJointSystem : public SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & system_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS)
+    if (SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -67,31 +68,41 @@ class TestTwoJointSystem : public SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-        &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+          &position_state_[i]));
     }
 
     return state_interfaces;
   }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-        &position_command_[i]));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+          &position_command_[i]));
     }
 
     return command_interfaces;
   }
+#pragma GCC diagnostic pop
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {

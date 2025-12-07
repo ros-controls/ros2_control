@@ -2,6 +2,83 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2025-12-01)
+------------------
+* Add tf prefix helper and test (`#2803 <https://github.com/ros-controls/ros2_control/issues/2803>`_)
+* Calculate achievable update rate of controllers (`#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_)
+* Use fmt for correct int64_t format specifier across platforms (`#2817 <https://github.com/ros-controls/ros2_control/issues/2817>`_)
+* Contributors: Dhruv Patel, Ege Kural, Sai Kishor Kothakota
+
+6.0.2 (2025-11-09)
+------------------
+* Extend the reasoning for the capacity mismatch (`#2723 <https://github.com/ros-controls/ros2_control/issues/2723>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+* Add magnetic_field_sensor semantic component (`#2627 <https://github.com/ros-controls/ros2_control/issues/2627>`_)
+* Fix `-Wreturn-local-addr` compiler warning (`#2628 <https://github.com/ros-controls/ros2_control/issues/2628>`_)
+* [Controllers] Set async thread properties via parameters (`#2613 <https://github.com/ros-controls/ros2_control/issues/2613>`_)
+* Contributors: Aarav Gupta, Christoph Fröhlich, Sai Kishor Kothakota
+
+5.7.0 (2025-10-03)
+------------------
+* Cleanup deprecations for kilted release (`#2605 <https://github.com/ros-controls/ros2_control/issues/2605>`_)
+* Add `ControllerInterfaceParams` to initialize the Controllers (`#2390 <https://github.com/ros-controls/ros2_control/issues/2390>`_)
+* Let `get_ordered_interfaces` throw if input vector size does not fit (`#2528 <https://github.com/ros-controls/ros2_control/issues/2528>`_)
+* Update message dependencies for tests (`#2497 <https://github.com/ros-controls/ros2_control/issues/2497>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+* Fix missing include for std::find (`#2425 <https://github.com/ros-controls/ros2_control/issues/2425>`_)
+* Document order of interfaces (`#2394 <https://github.com/ros-controls/ros2_control/issues/2394>`_)
+* Contributors: Christoph Fröhlich, Guilhem Saurel
+
+5.4.0 (2025-07-21)
+------------------
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+* Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_)
+* Cleanup deprecations in `ros_control`  (`#2258 <https://github.com/ros-controls/ros2_control/issues/2258>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_)
+* Contributors: mini-1235
+
+4.29.0 (2025-05-04)
+-------------------
+* Add common reusable helper methods header (`#2099 <https://github.com/ros-controls/ros2_control/issues/2099>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Fix async controllers deactivation regime (`#2017 <https://github.com/ros-controls/ros2_control/issues/2017>`_)
+* Bump version of pre-commit hooks (`#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* [Handle] Add support for booleans in the handles (`#2065 <https://github.com/ros-controls/ros2_control/issues/2065>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Soham Patil, github-actions[bot]
+
 4.27.0 (2025-03-01)
 -------------------
 * [Handle] Use `get_optional` instead of `get_value<double>` (`#2061 <https://github.com/ros-controls/ros2_control/issues/2061>`_)

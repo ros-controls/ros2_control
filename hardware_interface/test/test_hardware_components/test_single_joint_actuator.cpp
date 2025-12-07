@@ -26,9 +26,10 @@ namespace test_hardware_components
 {
 class TestSingleJointActuator : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & actuator_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (ActuatorInterface::on_init(actuator_info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -72,11 +73,15 @@ class TestSingleJointActuator : public ActuatorInterface
     std::vector<StateInterface> state_interfaces;
 
     const auto & joint_name = get_hardware_info().joints[0].name;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
+#pragma GCC diagnostic pop
     return state_interfaces;
   }
 
@@ -85,8 +90,12 @@ class TestSingleJointActuator : public ActuatorInterface
     std::vector<CommandInterface> command_interfaces;
 
     const auto & joint_name = get_hardware_info().joints[0].name;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
+#pragma GCC diagnostic pop
 
     return command_interfaces;
   }

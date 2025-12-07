@@ -15,9 +15,6 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <chrono>
 #include <memory>
 #include <string>
@@ -25,16 +22,13 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
-
+#include "gmock/gmock.h"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/utilities.hpp"
-
-#include "std_msgs/msg/string.hpp"
-
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace
 {
@@ -63,14 +57,19 @@ class ControllerManagerFixture : public ::testing::Test
 public:
   explicit ControllerManagerFixture(
     const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
-    const std::string & cm_namespace = "")
+    const std::string & cm_namespace = "", std::vector<rclcpp::Parameter> cm_parameters = {})
   : robot_description_(robot_description)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
+    if (!cm_parameters.empty())
+    {
+      cm_node_options.parameter_overrides(cm_parameters);
+    }
     cm_ = std::make_shared<CtrlMgr>(
       std::make_unique<hardware_interface::ResourceManager>(
         rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
-      executor_, TEST_CM_NAME, cm_namespace);
+      executor_, TEST_CM_NAME, cm_namespace, cm_node_options);
     // We want to be able to not pass robot description immediately
     if (!robot_description_.empty())
     {
@@ -155,6 +154,17 @@ class TestControllerManagerSrvs
 public:
   TestControllerManagerSrvs() {}
 
+  ~TestControllerManagerSrvs() override
+  {
+    RCLCPP_DEBUG(cm_->get_logger(), "Stopping controller manager updater thread");
+    stop_runner_ = true;
+    if (cm_rt_thread_.joinable())
+    {
+      cm_rt_thread_.join();
+    }
+    RCLCPP_DEBUG(cm_->get_logger(), "Controller manager updater thread stopped");
+  }
+
   void SetUp() override
   {
     ControllerManagerFixture::SetUp();
@@ -163,13 +173,32 @@ public:
 
   void SetUpSrvsCMExecutor()
   {
-    update_timer_ = cm_->create_wall_timer(
-      std::chrono::milliseconds(10),
-      [&]()
+    cm_rt_thread_ = std::thread(
+      [&]
       {
-        cm_->read(time_, PERIOD);
-        cm_->update(time_, PERIOD);
-        cm_->write(time_, PERIOD);
+        // for calculating sleep time
+        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_->get_update_rate());
+
+        // for calculating the measured period of the loop
+        rclcpp::Time previous_time = cm_->get_clock()->now();
+        std::this_thread::sleep_for(period);
+        std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
+
+        while (rclcpp::ok() && !stop_runner_)
+        {
+          auto const current_time = cm_->get_clock()->now();
+          auto const measured_period = current_time - previous_time;
+          previous_time = current_time;
+          cm_->read(time_, PERIOD);
+          cm_->update(time_, PERIOD);
+          cm_->write(time_, PERIOD);
+          next_iteration_time += period;
+          if (next_iteration_time < std::chrono::steady_clock::now())
+          {
+            next_iteration_time = std::chrono::steady_clock::now();
+          }
+          std::this_thread::sleep_until(next_iteration_time);
+        }
       });
 
     executor_->add_node(cm_);
@@ -208,7 +237,8 @@ public:
   }
 
 protected:
-  rclcpp::TimerBase::SharedPtr update_timer_;
+  std::atomic_bool stop_runner_ = false;
+  std::thread cm_rt_thread_;
   std::future<void> executor_spin_future_;
 };
 

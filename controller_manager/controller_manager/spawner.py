@@ -28,10 +28,11 @@ from controller_manager import (
     unload_controller,
     set_controller_parameters,
     set_controller_parameters_from_param_files,
-    bcolors,
 )
-from controller_manager.controller_manager_services import ServiceNotFoundError
+from controller_manager_msgs.srv import SwitchController
+from controller_manager.controller_manager_services import ServiceNotFoundError, bcolors
 
+from filelock import Timeout, FileLock
 import rclpy
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
@@ -49,7 +50,8 @@ def combine_name_and_namespace(name_and_namespace):
 def find_node_and_namespace(node, full_node_name):
     node_names_and_namespaces = node.get_node_names_and_namespaces()
     return first_match(
-        node_names_and_namespaces, lambda n: combine_name_and_namespace(n) == full_node_name
+        node_names_and_namespaces,
+        lambda n: combine_name_and_namespace(n) == full_node_name,
     )
 
 
@@ -89,13 +91,6 @@ def main(args=None):
         "override the parameters of the same controller.",
         default=None,
         action="append",
-        required=False,
-    )
-    parser.add_argument(
-        "-n",
-        "--namespace",
-        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
-        default=None,
         required=False,
     )
     parser.add_argument(
@@ -147,9 +142,18 @@ def main(args=None):
         required=False,
     )
     parser.add_argument(
+        "--switch-asap",
+        help="Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.",
+        required=False,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
         "--controller-ros-args",
-        help="The --ros-args to be passed to the controller node for remapping topics etc",
+        help="The --ros-args to be passed to the controller node, e.g., for remapping topics. "
+        "Pass multiple times for every argument.",
         default=None,
+        action="append",
         required=False,
     )
 
@@ -161,40 +165,66 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
+    strictness = SwitchController.Request.STRICT
+    unload_controllers_upon_exit = False
+    switch_asap = args.switch_asap
+    node = None
 
     if param_files:
         for param_file in param_files:
             if not os.path.isfile(param_file):
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
-
-    node = Node("spawner_" + controller_names[0])
-
-    if node.get_namespace() != "/" and args.namespace:
-        raise RuntimeError(
-            f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
-            f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
-        )
-
-    if args.namespace:
-        warnings.filterwarnings("always")
-        warnings.warn(
-            "The '--namespace' argument is deprecated and will be removed in future releases."
-            " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
-            DeprecationWarning,
-        )
-
-    spawner_namespace = args.namespace if args.namespace else node.get_namespace()
-
-    if not spawner_namespace.startswith("/"):
-        spawner_namespace = f"/{spawner_namespace}"
-
-    if not controller_manager_name.startswith("/"):
-        if spawner_namespace and spawner_namespace != "/":
-            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
-        else:
-            controller_manager_name = f"/{controller_manager_name}"
+    logger = rclpy.logging.get_logger("ros2_control_controller_spawner_" + controller_names[0])
 
     try:
+        spawner_node_name = "spawner_" + controller_names[0]
+        # Get the environment variable $ROS_HOME or default to ~/.ros
+        ros_home = os.getenv("ROS_HOME", os.path.join(os.path.expanduser("~"), ".ros"))
+        ros_control_lock_dir = os.path.join(ros_home, "locks")
+        if not os.path.exists(ros_control_lock_dir):
+            try:
+                os.makedirs(ros_control_lock_dir)
+            except FileExistsError:
+                pass
+        lock = FileLock(f"{ros_control_lock_dir}/ros2-control-controller-spawner.lock")
+        max_retries = 5
+        retry_delay = 3  # seconds
+        for attempt in range(max_retries):
+            try:
+                logger.debug(
+                    bcolors.OKGREEN + "Waiting for the spawner lock to be acquired!" + bcolors.ENDC
+                )
+                # timeout after 20 seconds and try again
+                lock.acquire(timeout=20)
+                logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+                break
+            except Timeout:
+                logger.warning(
+                    bcolors.WARNING
+                    + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
+                    + bcolors.ENDC
+                )
+                time.sleep(retry_delay)
+        else:
+            logger.error(
+                bcolors.FAIL + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
+            )
+            return 1
+
+        node = Node(spawner_node_name)
+        logger = node.get_logger()
+
+        spawner_namespace = node.get_namespace()
+
+        if not spawner_namespace.startswith("/"):
+            spawner_namespace = f"/{spawner_namespace}"
+
+        if not controller_manager_name.startswith("/"):
+            if spawner_namespace and spawner_namespace != "/":
+                controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
+            else:
+                controller_manager_name = f"/{controller_manager_name}"
+
         for controller_name in controller_names:
 
             if is_controller_loaded(
@@ -204,7 +234,7 @@ def main(args=None):
                 controller_manager_timeout,
                 service_call_timeout,
             ):
-                node.get_logger().warn(
+                logger.warning(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
                     + bcolors.ENDC
@@ -216,7 +246,7 @@ def main(args=None):
                         controller_manager_name,
                         controller_name,
                         "node_options_args",
-                        controller_ros_args.split(),
+                        [arg for args in controller_ros_args for arg in args.split()],
                     ):
                         return 1
                 if param_files:
@@ -237,7 +267,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().fatal(
+                    logger.fatal(
                         bcolors.FAIL
                         + "Failed loading controller "
                         + bcolors.BOLD
@@ -245,7 +275,7 @@ def main(args=None):
                         + bcolors.ENDC
                     )
                     return 1
-                node.get_logger().info(
+                logger.info(
                     bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
 
@@ -258,9 +288,7 @@ def main(args=None):
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().error(
-                        bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
-                    )
+                    logger.error(bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC)
                     return 1
 
                 if not args.inactive and not args.activate_as_group:
@@ -269,18 +297,18 @@ def main(args=None):
                         controller_manager_name,
                         [],
                         [controller_name],
-                        True,
-                        True,
+                        strictness,
+                        switch_asap,
                         switch_timeout,
                         service_call_timeout,
                     )
                     if not ret.ok:
-                        node.get_logger().error(
+                        logger.error(
                             f"{bcolors.FAIL}Failed to activate controller : {controller_name}{bcolors.ENDC}"
                         )
                         return 1
 
-                    node.get_logger().info(
+                    logger.info(
                         bcolors.OKGREEN
                         + "Configured and activated "
                         + bcolors.BOLD
@@ -294,54 +322,52 @@ def main(args=None):
                 controller_manager_name,
                 [],
                 controller_names,
-                True,
-                True,
+                strictness,
+                switch_asap,
                 switch_timeout,
                 service_call_timeout,
             )
             if not ret.ok:
-                node.get_logger().error(
+                logger.error(
                     f"{bcolors.FAIL}Failed to activate the parsed controllers list : {controller_names}{bcolors.ENDC}"
                 )
                 return 1
 
-            node.get_logger().info(
+            logger.info(
                 bcolors.OKGREEN
                 + f"Configured and activated all the parsed controllers list : {controller_names}!"
                 + bcolors.ENDC
             )
-
-        if not args.unload_on_kill:
+        unload_controllers_upon_exit = args.unload_on_kill
+        if not unload_controllers_upon_exit:
             return 0
 
-        try:
-            node.get_logger().info("Waiting until interrupt to unload controllers")
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            node.get_logger().info("KeyboardInterrupt successfully captured!")
+        # The lock has to be released to not block other spawner instances while waiting for the interrupt
+        lock.release()
+        logger.info("Waiting until interrupt to unload controllers")
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        if unload_controllers_upon_exit:
+            logger.info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
-                node.get_logger().info("Deactivating and unloading controllers...")
+                logger.info("Deactivating and unloading controllers...")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
                     node,
                     controller_manager_name,
                     controller_names,
                     [],
-                    True,
-                    True,
+                    strictness,
+                    switch_asap,
                     switch_timeout,
                     service_call_timeout,
                 )
                 if not ret.ok:
-                    node.get_logger().error(
-                        bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC
-                    )
+                    logger.error(bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC)
                     return 1
 
-                node.get_logger().info(
-                    f"Successfully deactivated controllers : {controller_names}"
-                )
+                logger.info(f"Successfully deactivated controllers : {controller_names}")
 
             unload_status = True
             for controller_name in controller_names:
@@ -354,25 +380,27 @@ def main(args=None):
                 )
                 if not ret.ok:
                     unload_status = False
-                    node.get_logger().error(
+                    logger.error(
                         bcolors.FAIL
                         + f"Failed to unload controller : {controller_name}"
                         + bcolors.ENDC
                     )
 
             if unload_status:
-                node.get_logger().info(f"Successfully unloaded controllers : {controller_names}")
+                logger.info(f"Successfully unloaded controllers : {controller_names}")
             else:
                 return 1
-        return 0
-    except KeyboardInterrupt:
-        node.get_logger().info("KeyboardInterrupt received! Exiting....")
-        pass
+        else:
+            logger.info("KeyboardInterrupt received! Exiting....")
+            pass
     except ServiceNotFoundError as err:
-        node.get_logger().fatal(str(err))
+        logger.fatal(str(err))
         return 1
     finally:
-        node.destroy_node()
+        if node:
+            node.destroy_node()
+        if lock.is_locked:
+            lock.release()
         rclpy.shutdown()
 
 

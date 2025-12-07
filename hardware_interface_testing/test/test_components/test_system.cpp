@@ -27,9 +27,10 @@ using hardware_interface::SystemInterface;
 
 class TestSystem : public SystemInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+    if (SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -57,19 +58,23 @@ class TestSystem : public SystemInterface
     std::vector<StateInterface> state_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
     }
 
     return state_interfaces;
@@ -81,18 +86,22 @@ class TestSystem : public SystemInterface
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
     // Add max_acceleration command interface
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info.joints[0].name, info.joints[0].command_interfaces[1].name, &max_acceleration_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        info.joints[0].name, info.joints[0].command_interfaces[1].name,
+        &max_acceleration_command_));
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
     }
 
     return command_interfaces;
@@ -100,6 +109,11 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
+    }
     // simulate error on read
     if (velocity_command_[0] == test_constants::READ_FAIL_VALUE)
     {
@@ -124,6 +138,11 @@ class TestSystem : public SystemInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (get_hardware_info().is_async)
+    {
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
+    }
     // simulate error on write
     if (velocity_command_[0] == test_constants::WRITE_FAIL_VALUE)
     {
@@ -152,9 +171,10 @@ private:
 
 class TestUninitializableSystem : public TestSystem
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    SystemInterface::on_init(info);
+    SystemInterface::on_init(params);
     return CallbackReturn::ERROR;
   }
 };

@@ -38,17 +38,30 @@ except ImportError:
 from ros2param.api import call_set_parameters
 
 
-# from https://stackoverflow.com/a/287944
+import os
+import sys
+
+
+def _color_enabled():
+    """Respect RCUTILS_COLORIZED_OUTPUT: 0=off, 1=on, unset=auto-detect TTY."""
+    env = os.getenv("RCUTILS_COLORIZED_OUTPUT")
+    if env == "0":
+        return False
+    if env == "1":
+        return True
+    return sys.stdout.isatty()
+
+
 class bcolors:
-    MAGENTA = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
+    MAGENTA = "\033[95m" if _color_enabled() else ""
+    OKBLUE = "\033[94m" if _color_enabled() else ""
+    OKCYAN = "\033[96m" if _color_enabled() else ""
+    OKGREEN = "\033[92m" if _color_enabled() else ""
+    WARNING = "\033[93m" if _color_enabled() else ""
+    FAIL = "\033[91m" if _color_enabled() else ""
+    ENDC = "\033[0m" if _color_enabled() else ""
+    BOLD = "\033[1m" if _color_enabled() else ""
+    UNDERLINE = "\033[4m" if _color_enabled() else ""
 
 
 class ServiceNotFoundError(Exception):
@@ -133,7 +146,7 @@ def service_caller(
                     f"Could not contact service {fully_qualified_service_name}"
                 )
         elif not cli.wait_for_service(10.0):
-            node.get_logger().warn(f"Could not contact service {fully_qualified_service_name}")
+            node.get_logger().warning(f"Could not contact service {fully_qualified_service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
@@ -275,7 +288,7 @@ def switch_controllers(
     controller_manager_name,
     deactivate_controllers,
     activate_controllers,
-    strict,
+    strictness,
     activate_asap,
     timeout,
     call_timeout=10.0,
@@ -283,10 +296,7 @@ def switch_controllers(
     request = SwitchController.Request()
     request.activate_controllers = activate_controllers
     request.deactivate_controllers = deactivate_controllers
-    if strict:
-        request.strictness = SwitchController.Request.STRICT
-    else:
-        request.strictness = SwitchController.Request.BEST_EFFORT
+    request.strictness = strictness
     request.activate_asap = activate_asap
     request.timeout = rclpy.duration.Duration(seconds=timeout).to_msg()
     return service_caller(

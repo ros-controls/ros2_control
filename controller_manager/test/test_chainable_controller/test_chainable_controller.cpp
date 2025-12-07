@@ -129,7 +129,7 @@ controller_interface::return_type TestChainableController::update_and_write_comm
     state_interfaces_values_[i] = state_interfaces_[i].get_optional().value();
   }
 
-  return controller_interface::return_type::OK;
+  return update_return_value;
 }
 
 CallbackReturn TestChainableController::on_init() { return CallbackReturn::SUCCESS; }
@@ -172,7 +172,7 @@ CallbackReturn TestChainableController::on_activate(
     (*msg)->data = reference_interfaces_;
   }
 
-  return CallbackReturn::SUCCESS;
+  return fail_on_activate ? CallbackReturn::ERROR : CallbackReturn::SUCCESS;
 }
 
 CallbackReturn TestChainableController::on_cleanup(
@@ -189,8 +189,9 @@ TestChainableController::on_export_state_interfaces()
 
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    state_interfaces.push_back(
+      hardware_interface::StateInterface(
+        get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
   }
 
   return state_interfaces;
@@ -203,8 +204,9 @@ TestChainableController::on_export_reference_interfaces()
 
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)
   {
-    reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
+    reference_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
   }
 
   return reference_interfaces;

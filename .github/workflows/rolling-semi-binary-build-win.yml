@@ -1,0 +1,33 @@
+name: Rolling Windows Semi-Binary Build
+# author: Christoph Fröhlich <christoph.froehlich@ait.ac.at>
+# description: 'Build & test all dependencies from semi-binary packages.'
+
+on:
+  workflow_dispatch:
+  pull_request: &event
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/rolling-semi-binary-build-win.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+  push: *event
+
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on given branches
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
+
+jobs:
+  binary-windows:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
+    with:
+      ros_distro: rolling
+      pixi_dependencies: typeguard jinja2 boost compilers
+      ninja_packages: rsl
+      target_cmake_args: -DBUILD_TESTING=OFF

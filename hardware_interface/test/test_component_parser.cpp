@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <gmock/gmock.h>
 #include <string>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/component_parser.hpp"
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
@@ -880,7 +880,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
 
   ASSERT_FALSE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
@@ -952,7 +966,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
   ASSERT_FALSE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
@@ -966,6 +994,96 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
 
   ASSERT_THAT(hardware_info.gpios, SizeIs(1));
 
+  EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
+  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
+  EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].name, "digital_output");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].size, 2);
+  EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_input");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].size, 3);
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "image");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].data_type, "cv::Mat");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
+}
+
+TEST_F(
+  TestComponentParser,
+  successfully_parse_valid_urdf_system_with_bool_data_type_on_joint_sensor_and_gpio)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::
+      valid_urdf_ros2_control_system_robot_with_size_and_data_type_on_joint_sensor_and_gpio +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "RRBotSystemWithSizeAndDataType");
+  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(
+    hardware_info.hardware_plugin_name,
+    "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(1));
+  ASSERT_FALSE(hardware_info.is_async);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].name, "enable");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].data_type, "bool");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_cmd_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].command_interfaces[1]);
+  auto bool_cmd_itf = hardware_interface::CommandInterface(bool_cmd_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_cmd_itf.get_data_type());
+
+  EXPECT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, "status");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].data_type, "bool");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_state_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].state_interfaces[1]);
+  auto bool_state_itf = hardware_interface::StateInterface(bool_state_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_state_itf.get_data_type());
+
+  ASSERT_THAT(hardware_info.sensors, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].name, "trigger");
+  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].name, "safety");
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].size, 1);
+  EXPECT_THAT(hardware_info.sensors[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].name, "safety");
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].size, 1);
+
+  ASSERT_THAT(hardware_info.gpios, SizeIs(1));
   EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
@@ -1354,7 +1472,27 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.group, IsEmpty());
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 30);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 30);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "detached");
+  ASSERT_FALSE(hardware_info.async_params.print_warnings);
+  ASSERT_EQ(3u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores,
+    testing::ContainerEq(std::vector<int>({2, 4, 6})));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
@@ -1367,7 +1505,24 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.joints, IsEmpty());
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 50);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 50);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_TRUE(hardware_info.async_params.print_warnings);
+  ASSERT_TRUE(hardware_info.async_params.cpu_affinity_cores.empty());
 
   EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
@@ -1391,7 +1546,25 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   EXPECT_EQ(hardware_info.gpios[0].name, "configuration");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 70);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 70);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_EQ(1u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores, testing::ContainerEq(std::vector<int>({1})));
 }
 
 TEST_F(TestComponentParser, successfully_parse_parameter_empty)

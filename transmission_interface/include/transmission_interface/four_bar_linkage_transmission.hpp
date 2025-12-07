@@ -17,6 +17,8 @@
 #ifndef TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 
+#include <fmt/compile.h>
+
 #include <cassert>
 #include <string>
 #include <vector>
@@ -45,8 +47,8 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} \\
- * \tau_{j_2} & = & n_{j_2} (n_{a_2} \tau_{a_2} - n_{j_1} n_{a_1} \tau_{a_1})
+ * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} + n_{a_2} \tau_{a_2}  \\
+ * \tau_{j_2} & = & n_{j_2} n_{a_2} \tau_{a_2}2}
  * \f}
  * </td>
  * <td>
@@ -67,8 +69,8 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * \tau_{a_1} & = & \tau_{j_1} / (n_{j_1} n_{a_1}) \\
- * \tau_{a_2} & = & \frac{ \tau_{j_1} + \tau_{j_2} / n_{j_2} }{ n_{a_2} }
+ * \tau_{a_1} & = & \frac{\tau_{j_1} - \tau_{j_2}/n_{j_2}} {n_{j_1} n_{a_1}} \\
+ * \tau_{a_2} & = & \frac{\tau_{j_2}} {n_{j_2} n_{a_2}}
  * \f}
  * </td>
  * <td>
@@ -205,14 +207,17 @@ void FourBarLinkageTransmission::configure(
   if (joint_names.size() != 2)
   {
     throw Exception(
-      "There should be exactly two unique joint names but was given " + to_string(joint_names));
+      fmt::format(
+        FMT_COMPILE("There should be exactly two unique joint names but was given '{}'."),
+        to_string(joint_names)));
   }
   const auto actuator_names = get_names(actuator_handles);
   if (actuator_names.size() != 2)
   {
     throw Exception(
-      "There should be exactly two unique actuator names but was given " +
-      to_string(actuator_names));
+      fmt::format(
+        FMT_COMPILE("There should be exactly two unique actuator names but was given '{}'."),
+        to_string(actuator_names)));
   }
 
   joint_position_ =
@@ -238,7 +243,9 @@ void FourBarLinkageTransmission::configure(
     actuator_effort_.size() != 2)
   {
     throw Exception(
-      "Not enough valid or required actuator handles were presented. \n" + get_handles_info());
+      fmt::format(
+        FMT_COMPILE("Not enough valid or required actuator handles were presented. \n{}"),
+        get_handles_info()));
   }
 
   if (
@@ -246,7 +253,8 @@ void FourBarLinkageTransmission::configure(
     joint_velocity_.size() != actuator_velocity_.size() &&
     joint_effort_.size() != actuator_effort_.size())
   {
-    throw Exception("Pair-wise mismatch on interfaces. \n" + get_handles_info());
+    throw Exception(
+      fmt::format(FMT_COMPILE("Pair-wise mismatch on interfaces. \n{}"), get_handles_info()));
   }
 }
 
@@ -287,9 +295,8 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0]);
-    joint_eff[1].set_value(
-      jr[1] * (act_eff[1].get_value() * ar[1] - jr[0] * act_eff[0].get_value() * ar[0]));
+    joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0] + act_eff[1].get_value() * ar[1]);
+    joint_eff[1].set_value(jr[1] * act_eff[1].get_value() * ar[1]);
   }
 }
 
@@ -329,20 +336,23 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    act_eff[0].set_value(joint_eff[0].get_value() / (ar[0] * jr[0]));
-    act_eff[1].set_value((joint_eff[0].get_value() + joint_eff[1].get_value() / jr[1]) / ar[1]);
+    act_eff[0].set_value(
+      (joint_eff[0].get_value() - joint_eff[1].get_value() / jr[1]) / (jr[0] * ar[0]));
+    act_eff[1].set_value(joint_eff[1].get_value() / (ar[1] * jr[1]));
   }
 }
 
 std::string FourBarLinkageTransmission::get_handles_info() const
 {
-  return std::string("Got the following handles:\n") +
-         "Joint position: " + to_string(get_names(joint_position_)) +
-         ", Actuator position: " + to_string(get_names(actuator_position_)) + "\n" +
-         "Joint velocity: " + to_string(get_names(joint_velocity_)) +
-         ", Actuator velocity: " + to_string(get_names(actuator_velocity_)) + "\n" +
-         "Joint effort: " + to_string(get_names(joint_effort_)) +
-         ", Actuator effort: " + to_string(get_names(actuator_effort_));
+  return fmt::format(
+    FMT_COMPILE(
+      "Got the following handles:\n"
+      "Joint position: {}, Actuator position: {}\n"
+      "Joint velocity: {}, Actuator velocity: {}\n"
+      "Joint effort: {}, Actuator effort: {}"),
+    to_string(get_names(joint_position_)), to_string(get_names(actuator_position_)),
+    to_string(get_names(joint_velocity_)), to_string(get_names(actuator_velocity_)),
+    to_string(get_names(joint_effort_)), to_string(get_names(actuator_effort_)));
 }
 
 }  // namespace transmission_interface

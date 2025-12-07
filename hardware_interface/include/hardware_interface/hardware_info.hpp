@@ -15,8 +15,11 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <fmt/compile.h>
+
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
@@ -35,11 +38,11 @@ struct InterfaceInfo
    */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
-  std::string min;
+  std::string min = "";
   /// (Optional) Maximal allowed values of the interface.
-  std::string max;
+  std::string max = "";
   /// (Optional) Initial value of the interface.
-  std::string initial_value;
+  std::string initial_value = "";
   /// (Optional) The datatype of the interface, e.g. "bool", "int".
   std::string data_type = "double";
   /// (Optional) If the handle is an array, the size of the array.
@@ -133,6 +136,9 @@ struct TransmissionInfo
 /**
  * Hardware handles supported types
  */
+
+using HANDLE_DATATYPE =
+  std::variant<std::monostate, double, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
 class HandleDataType
 {
 public:
@@ -226,6 +232,45 @@ public:
     }
   }
 
+  /**
+   * @brief Check if the HandleDataType can be casted to double.
+   * @return True if the HandleDataType can be casted to double, false otherwise.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  bool is_castable_to_double() const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return true;
+      case BOOL:
+        return true;  // bool can be converted to double
+      default:
+        return false;  // unknown type cannot be converted
+    }
+  }
+
+  /**
+   * @brief Cast the given value to double.
+   * @param value The value to be casted.
+   * @return The casted value.
+   * @throw std::runtime_error if the HandleDataType cannot be casted to double.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  double cast_to_double(const HANDLE_DATATYPE & value) const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return std::get<double>(value);
+      case BOOL:
+        return static_cast<double>(std::get<bool>(value));
+      default:
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));
+    }
+  }
+
   HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
 
 private:
@@ -266,10 +311,31 @@ struct InterfaceDescription
 
   const std::string & get_name() const { return interface_name; }
 
+  const std::string & get_data_type_string() const { return interface_info.data_type; }
+
   HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
 };
 
+struct HardwareAsyncParams
+{
+  /// Thread priority for the async worker thread
+  int thread_priority = 50;
+  /// Scheduling policy for the async worker thread
+  std::string scheduling_policy = "synchronized";
+  /// CPU affinity cores for the async worker thread
+  std::vector<int> cpu_affinity_cores = {};
+  /// Whether to print warnings when the async thread doesn't meet its deadline
+  bool print_warnings = true;
+};
+
 /// This structure stores information about hardware defined in a robot's URDF.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 struct HardwareInfo
 {
   /// Name of the hardware.
@@ -283,7 +349,9 @@ struct HardwareInfo
   /// Component is async
   bool is_async;
   /// Async thread priority
-  int thread_priority;
+  [[deprecated("Use async_params instead.")]] int thread_priority;
+  /// Async Parameters
+  HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
   std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.
@@ -328,6 +396,11 @@ struct HardwareInfo
    */
   std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_

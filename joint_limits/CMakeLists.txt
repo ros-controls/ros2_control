@@ -1,14 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(joint_limits LANGUAGES CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
-          -Werror=missing-braces)
-endif()
-
-# using this instead of visibility macros
-# S1 from https://github.com/ros-controls/ros2_controllers/issues/1053
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
@@ -17,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   trajectory_msgs
   urdf
+  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -32,7 +28,12 @@ target_include_directories(joint_limits INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limits INTERFACE
+                      rclcpp::rclcpp
+                      rclcpp_lifecycle::rclcpp_lifecycle
+                      urdf::urdf
+                      realtime_tools::realtime_tools
+                      fmt::fmt)
 
 add_library(joint_limiter_interface SHARED
   src/joint_limiter_interface.cpp
@@ -42,7 +43,10 @@ target_include_directories(joint_limiter_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limiter_interface PUBLIC
+                      joint_limits
+                      pluginlib::pluginlib
+                      ${trajectory_msgs_TARGETS})
 
 add_library(joint_limits_helpers SHARED
   src/joint_limits_helpers.cpp
@@ -52,7 +56,7 @@ target_include_directories(joint_limits_helpers PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_limits_helpers PUBLIC joint_limits)
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
@@ -64,24 +68,26 @@ target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-target_link_libraries(joint_saturation_limiter PUBLIC joint_limits_helpers)
-
-ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(joint_saturation_limiter PUBLIC
+                      joint_limits_helpers
+                      joint_limiter_interface)
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_link_libraries(joint_limits_rosparam_test joint_limits)
+  ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  target_link_libraries(joint_limits_rosparam_test joint_limits fmt::fmt)
+  target_compile_definitions(
+    joint_limits_rosparam_test
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
-  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
@@ -98,30 +104,24 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/test/joint_saturation_limiter_param.yaml
   )
   target_include_directories(test_joint_saturation_limiter PRIVATE include)
-  target_link_libraries(test_joint_saturation_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_saturation_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_saturation_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
   target_include_directories(test_joint_range_limiter PRIVATE include)
-  target_link_libraries(test_joint_range_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_range_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_range_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
   target_include_directories(test_joint_soft_limiter PRIVATE include)
-  target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
-  ament_target_dependencies(
-    test_joint_soft_limiter
-    pluginlib
-    rclcpp
-  )
+  target_link_libraries(test_joint_soft_limiter
+                        joint_limiter_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp)
 
 endif()
 

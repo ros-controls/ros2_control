@@ -31,9 +31,10 @@ namespace test_hardware_components
 {
 class TestIMUSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & sensor_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SensorInterface::on_init(sensor_info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -66,6 +67,8 @@ class TestIMUSensor : public SensorInterface
     std::vector<StateInterface> state_interfaces;
 
     const std::string & sensor_name = get_hardware_info().sensors[0].name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "orientation.x", &orientation_.x));
     state_interfaces.emplace_back(
@@ -80,13 +83,16 @@ class TestIMUSensor : public SensorInterface
       hardware_interface::StateInterface(sensor_name, "angular_velocity.y", &angular_velocity_.y));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "angular_velocity.z", &angular_velocity_.z));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.x", &linear_acceleration_.x));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.y", &linear_acceleration_.y));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
-
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.x", &linear_acceleration_.x));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.y", &linear_acceleration_.y));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
+#pragma GCC diagnostic pop
     return state_interfaces;
   }
 

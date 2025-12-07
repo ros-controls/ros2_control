@@ -1,3 +1,4 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/introspection.rst
 
 Introspection of the ros2_control setup
 ***************************************
@@ -17,6 +18,15 @@ The topic ``~/introspection_data/full`` can be used to integrate with your custo
 
 .. note::
   If you have a high frequency of data, it is recommended to use the ``~/introspection_data/names`` and ``~/introspection_data/values`` topic. So, that the data transferred and stored is minimized.
+
+Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic.
+
+All the registered variables are published over 3 topics: ``~/statistics/full``, ``~/statistics/names``, and ``~/statistics/values``.
+- The ``~/statistics/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
+- The ``~/statistics/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a a variables is registered and unregistered.
+- The ``~/statistics/values`` topic publishes the values of the registered variables. This topic contains the values of the variables registered.
+
+This topic is mainly used to introspect the behaviour of the realtime loops, this is very crucial for hardware that need to meet strict deadlines and also to understand the which component of the ecosystem is consuming more time in the realtime loop.
 
 How to introspect internal variables of controllers and hardware components
 ============================================================================
@@ -70,12 +80,19 @@ Data Visualization
 
 Data can be visualized with any tools that display ROS topics, but we recommend `PlotJuggler <https://plotjuggler.io/>`_ for viewing high resolution live data, or data in bags.
 
-1. Open ``PlotJuggler`` running ``ros2 run plotjuggler plotjuggler``.
+1. Open ``PlotJuggler`` by running ``ros2 run plotjuggler plotjuggler`` from the command line.
+
    .. image:: images/plotjuggler.png
-2. Visualize the data:
-   - Importing from the ros2bag
-   - Subscribing to the ROS2 topics live with the ``ROS2 Topic Subscriber`` option under ``Streaming`` header.
+      :alt: PlotJuggler
+
+2. Visualize the data by importing from the ros2bag file or subscribing to the ROS2 topics live with the ``ROS2 Topic Subscriber`` option under ``Streaming`` header.
+
 3. Choose the topics ``~/introspection_data/names`` and ``~/introspection_data/values`` from the popup window.
+
    .. image:: images/plotjuggler_select_topics.png
-4. Now, select the variables that are of your interest and drag them to the plot.
+      :alt: PlotJuggler Select Topics
+
+4. Then, select the variables that are of your interest and drag them to the plot.
+
    .. image:: images/plotjuggler_visualizing_data.png
+      :alt: PlotJuggler Visualizing Data

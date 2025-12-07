@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -21,6 +21,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -91,9 +92,10 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
 };
@@ -106,9 +108,13 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    const std::regex velocity_pattern(R"(velocity\s*=\s*"-?[0-9]+(\.[0-9]+)?")");
+    const std::string velocity_replacement = R"(velocity="10000.0")";
+    const std::string diffbot_urdf_large_limits = std::regex_replace(
+      ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
     cm_ = std::make_shared<TestableControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::diffbot_urdf, rm_node_->get_node_clock_interface(),
+        diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
         rm_node_->get_node_logging_interface(), true),
       executor_, TEST_CM_NAME);
     run_updater_ = false;

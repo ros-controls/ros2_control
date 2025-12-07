@@ -17,6 +17,8 @@
 #ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
 #define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 
+#include <fmt/compile.h>
+
 #include <limits>
 #include <memory>
 #include <optional>
@@ -36,10 +38,10 @@
 namespace joint_limits
 {
 
-DEFINE_LIMIT_STRUCT(PositionLimits);
-DEFINE_LIMIT_STRUCT(VelocityLimits);
-DEFINE_LIMIT_STRUCT(EffortLimits);
-DEFINE_LIMIT_STRUCT(AccelerationLimits);
+DEFINE_LIMIT_STRUCT(PositionLimits)
+DEFINE_LIMIT_STRUCT(VelocityLimits)
+DEFINE_LIMIT_STRUCT(EffortLimits)
+DEFINE_LIMIT_STRUCT(AccelerationLimits)
 
 struct JointControlInterfacesData
 {
@@ -64,6 +66,42 @@ struct JointControlInterfacesData
   bool has_acceleration() const { return acceleration.has_value(); }
 
   bool has_jerk() const { return jerk.has_value(); }
+
+  std::string to_string() const
+  {
+    std::string str;
+    str += "Joint: '" + joint_name + "', ";
+    if (has_position())
+    {
+      str += "position: " + std::to_string(position.value()) + ", ";
+    }
+    if (has_velocity())
+    {
+      str += "velocity: " + std::to_string(velocity.value()) + ", ";
+    }
+    if (has_effort())
+    {
+      str += "effort: " + std::to_string(effort.value()) + ", ";
+    }
+    if (has_acceleration())
+    {
+      str += "acceleration: " + std::to_string(acceleration.value()) + ", ";
+    }
+    if (has_jerk())
+    {
+      str += "jerk: " + std::to_string(jerk.value());
+    }
+    // trim the last comma and space
+    if (!str.empty() && str.back() == ' ')
+    {
+      str.pop_back();
+    }
+    if (!str.empty() && str.back() == ',')
+    {
+      str.pop_back();
+    }
+    return str;
+  }
 };
 
 struct JointInterfacesCommandLimiterData
@@ -77,6 +115,24 @@ struct JointInterfacesCommandLimiterData
   bool has_actual_data() const { return actual.has_data(); }
 
   bool has_command_data() const { return command.has_data(); }
+
+  bool has_limited_data() const { return limited.has_data(); }
+
+  void set_joint_name(const std::string & name)
+  {
+    joint_name = name;
+    actual.joint_name = name;
+    command.joint_name = name;
+    limited.joint_name = name;
+    prev_command.joint_name = name;
+  }
+
+  std::string to_string() const
+  {
+    return fmt::format(
+      FMT_COMPILE("Joint: '{}', (actual: [{}], command: [{}], limited: [{}])"), joint_name,
+      actual.to_string(), command.to_string(), limited.to_string());
+  }
 };
 
 }  // namespace joint_limits

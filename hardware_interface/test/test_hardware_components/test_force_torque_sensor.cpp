@@ -26,9 +26,10 @@ namespace test_hardware_components
 {
 class TestForceTorqueSensor : public SensorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & sensor_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (SensorInterface::on_init(sensor_info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -58,6 +59,8 @@ class TestForceTorqueSensor : public SensorInterface
     std::vector<StateInterface> state_interfaces;
 
     const auto & sensor_name = get_hardware_info().sensors[0].name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "fx", &values_.fx));
     state_interfaces.emplace_back(
@@ -70,7 +73,7 @@ class TestForceTorqueSensor : public SensorInterface
       hardware_interface::StateInterface(sensor_name, "ty", &values_.ty));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "tz", &values_.tz));
-
+#pragma GCC diagnostic pop
     return state_interfaces;
   }
 

@@ -17,11 +17,13 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "realtime_tools/async_function_handler.hpp"
 
+#include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -151,9 +153,14 @@ public:
    */
   virtual void release_interfaces();
 
+  [[deprecated(
+    "Use the init(const controller_interface::ControllerInterfaceParams & params) method instead. "
+    "This method will be removed in the future ROS 2 releases.")]]
   return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
+
+  return_type init(const controller_interface::ControllerInterfaceParams & params);
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -200,6 +207,17 @@ public:
   bool is_async() const;
 
   const std::string & get_robot_description() const;
+
+  /**
+   * Get the unordered map of joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
+
+  /**
+   * Get the unordered map of soft joint limits that are defined in the robot description.
+   */
+  const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
+    const;
 
   /**
    * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
@@ -306,6 +324,19 @@ public:
    */
   void wait_for_trigger_update_to_finish();
 
+  /**
+   * Method to prepare the controller for deactivation. This method is called by the controller
+   * manager before deactivating the controller. The method is used to prepare the controller for
+   * deactivation, e.g., to stop triggering the update cycles further. This method is especially
+   * needed for controllers running in async mode and different frequency than the control manager.
+   *
+   * \note **The method is not real-time safe and shouldn't be called in the RT control loop.**
+   *
+   * If the controller is running in async mode, the method will stop the async update cycles. If
+   * the controller is not running in async mode, the method will do nothing.
+   */
+  void prepare_for_deactivation();
+
   std::string get_name() const;
 
   /// Enable or disable introspection of the controller.
@@ -315,15 +346,39 @@ public:
   void enable_introspection(bool enable);
 
 protected:
+  /** Loaned command interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref command_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  /** Loaned state interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref state_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
+  /**
+   * Method to stop the async handler thread. This method is called before the controller cleanup,
+   * error and shutdown lifecycle transitions.
+   */
+  void stop_async_handler_thread();
+
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
-  unsigned int update_rate_ = 0;
   bool is_async_ = false;
-  std::string urdf_ = "";
+  controller_interface::ControllerInterfaceParams ctrl_itf_params_;
+  std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
 
 protected:
