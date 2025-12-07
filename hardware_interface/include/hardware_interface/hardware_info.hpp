@@ -137,8 +137,8 @@ struct TransmissionInfo
  * Hardware handles supported types
  */
 
-using HANDLE_DATATYPE =
-  std::variant<std::monostate, double, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
+using HANDLE_DATATYPE = std::variant<
+  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
 class HandleDataType
 {
 public:
@@ -146,6 +146,7 @@ public:
   {
     UNKNOWN = -1,
     DOUBLE,
+    FLOAT,
     BOOL,
     UINT8,
     INT8,
@@ -166,6 +167,10 @@ public:
     else if (data_type == "bool")
     {
       value_ = BOOL;
+    }
+    else if (data_type == "float")
+    {
+      value_ = FLOAT;
     }
     else if (data_type == "uint8")
     {
@@ -215,6 +220,8 @@ public:
         return "double";
       case BOOL:
         return "bool";
+      case FLOAT:
+        return "float";
       case UINT8:
         return "uint8";
       case INT8:
@@ -241,7 +248,8 @@ public:
   {
     switch (value_)
     {
-      case DOUBLE:
+      case DOUBLE:  // fallthrough
+      case FLOAT:
         return true;
       case BOOL:    // fallthrough
       case UINT8:   // fallthrough
@@ -269,6 +277,8 @@ public:
     {
       case DOUBLE:
         return std::get<double>(value);
+      case FLOAT:
+        return static_cast<double>(std::get<float>(value));
       case BOOL:
         return static_cast<double>(std::get<bool>(value));
       case UINT8:

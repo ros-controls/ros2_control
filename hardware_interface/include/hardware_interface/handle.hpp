@@ -81,7 +81,6 @@ public:
     handle_name_(prefix_name_ + "/" + interface_name_),
     data_type_(data_type)
   {
-    // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
     if (data_type_ == hardware_interface::HandleDataType::DOUBLE)
     {
@@ -99,40 +98,138 @@ public:
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
+    else if (data_type_ == hardware_interface::HandleDataType::FLOAT)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? std::numeric_limits<double>::quiet_NaN()
+                   : static_cast<float>(hardware_interface::stod(initial_value));
+        float val = std::get<float>(value_);
+        if (val < std::numeric_limits<float>::lowest() || val > std::numeric_limits<float>::max())
+        {
+          throw std::out_of_range("value cannot be represented as float");
+        }
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
     else if (data_type_ == hardware_interface::HandleDataType::BOOL)
     {
-      value_ptr_ = nullptr;
-      value_ = initial_value.empty() ? false : hardware_interface::parse_bool(initial_value);
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? false : hardware_interface::parse_bool(initial_value);
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::UINT8)
     {
-      value_ = static_cast<uint8_t>(std::numeric_limits<uint8_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<uint8_t>(std::numeric_limits<uint8_t>::max())
+                                       : static_cast<uint8_t>(std::stoul(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::INT8)
     {
-      value_ = static_cast<int8_t>(std::numeric_limits<int8_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<int8_t>(std::numeric_limits<int8_t>::max())
+                                       : static_cast<int8_t>(std::stoi(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::UINT16)
     {
-      value_ = static_cast<uint16_t>(std::numeric_limits<uint16_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<uint16_t>(std::numeric_limits<uint16_t>::max())
+                                       : static_cast<uint16_t>(std::stoul(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::INT16)
     {
-      value_ = static_cast<int16_t>(std::numeric_limits<int16_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<int16_t>(std::numeric_limits<int16_t>::max())
+                                       : static_cast<int16_t>(std::stoi(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::UINT32)
     {
-      value_ = static_cast<uint32_t>(std::numeric_limits<uint32_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<uint32_t>(std::numeric_limits<uint32_t>::max())
+                                       : static_cast<uint32_t>(std::stoul(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else if (data_type_ == hardware_interface::HandleDataType::INT32)
     {
-      value_ = static_cast<int32_t>(std::numeric_limits<int32_t>::max());
-      value_ptr_ = nullptr;
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? static_cast<int32_t>(std::numeric_limits<int32_t>::max())
+                                       : static_cast<int32_t>(std::stol(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else
     {
