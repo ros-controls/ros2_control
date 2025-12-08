@@ -272,9 +272,9 @@ TEST(TestHandle, handle_constructor_float_data_type)
 {
   const std::string POSITION_INTERFACE = "position";
   const std::string JOINT_NAME_1 = "joint1";
-  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "float", "23.0"};
+  StateInterface handle{JOINT_NAME_1, POSITION_INTERFACE, "float32", "23.0"};
 
-  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, handle.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT32, handle.get_data_type());
   EXPECT_EQ(handle.get_name(), JOINT_NAME_1 + "/" + POSITION_INTERFACE);
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
@@ -516,12 +516,12 @@ TEST(TestHandle, interface_description_float_data_type)
   const std::string itf_name = "joint1";
   InterfaceInfo info;
   info.name = collision_interface;
-  info.data_type = "float";
+  info.data_type = "float32";
   InterfaceDescription interface_descr(itf_name, info);
   StateInterface handle{interface_descr};
 
-  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, interface_descr.get_data_type());
-  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT, handle.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT32, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::FLOAT32, handle.get_data_type());
   EXPECT_EQ(handle.get_name(), itf_name + "/" + collision_interface);
   EXPECT_EQ(handle.get_interface_name(), collision_interface);
   EXPECT_EQ(handle.get_prefix_name(), itf_name);
@@ -694,7 +694,7 @@ TEST(TestHandle, handle_castable)
     EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 23.0);
   }
   {
-    info.data_type = "float";
+    info.data_type = "float32";
     info.initial_value = "23.0";
     hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
     TestableHandle handle{interface_description};

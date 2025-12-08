@@ -146,7 +146,7 @@ public:
   {
     UNKNOWN = -1,
     DOUBLE,
-    FLOAT,
+    FLOAT32,
     BOOL,
     UINT8,
     INT8,
@@ -168,9 +168,9 @@ public:
     {
       value_ = BOOL;
     }
-    else if (data_type == "float")
+    else if (data_type == "float32")
     {
-      value_ = FLOAT;
+      value_ = FLOAT32;
     }
     else if (data_type == "uint8")
     {
@@ -220,8 +220,8 @@ public:
         return "double";
       case BOOL:
         return "bool";
-      case FLOAT:
-        return "float";
+      case FLOAT32:
+        return "float32";
       case UINT8:
         return "uint8";
       case INT8:
@@ -248,15 +248,14 @@ public:
   {
     switch (value_)
     {
-      case DOUBLE:  // fallthrough
-      case FLOAT:
-        return true;
-      case BOOL:    // fallthrough
-      case UINT8:   // fallthrough
-      case INT8:    // fallthrough
-      case UINT16:  // fallthrough
-      case INT16:   // fallthrough
-      case UINT32:  // fallthrough
+      case DOUBLE:   // fallthrough
+      case FLOAT32:  // fallthrough
+      case BOOL:     // fallthrough
+      case UINT8:    // fallthrough
+      case INT8:     // fallthrough
+      case UINT16:   // fallthrough
+      case INT16:    // fallthrough
+      case UINT32:   // fallthrough
       case INT32:
         return true;
       default:
@@ -277,7 +276,7 @@ public:
     {
       case DOUBLE:
         return std::get<double>(value);
-      case FLOAT:
+      case FLOAT32:
         return static_cast<double>(std::get<float>(value));
       case BOOL:
         return static_cast<double>(std::get<bool>(value));

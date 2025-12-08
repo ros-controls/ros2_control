@@ -98,7 +98,7 @@ public:
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
-    else if (data_type_ == hardware_interface::HandleDataType::FLOAT)
+    else if (data_type_ == hardware_interface::HandleDataType::FLOAT32)
     {
       try
       {
