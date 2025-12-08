@@ -44,6 +44,46 @@ TEST(TestLexicalCasts, test_stof)
   ASSERT_EQ(stof("1.0"), 1.0f);
 }
 
+TEST(TestLexicalCasts, test_stoi)
+{
+  using hardware_interface::stoi;
+
+  ASSERT_THROW(stoi(""), std::invalid_argument);
+  ASSERT_THROW(stoi("abc"), std::invalid_argument);
+  ASSERT_THROW(stoi("1.2"), std::invalid_argument);
+  ASSERT_THROW(stoi("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stoi("9999999999"), std::out_of_range);
+  ASSERT_THROW(stoi("-9999999999"), std::out_of_range);
+  ASSERT_THROW(stoi("2147483648"), std::out_of_range);   // INT32_MAX + 1
+  ASSERT_THROW(stoi("-2147483649"), std::out_of_range);  // INT32_MIN - 1
+
+  ASSERT_EQ(stoi("0"), 0);
+  ASSERT_EQ(stoi("123"), 123);
+  ASSERT_EQ(stoi("-123"), -123);
+  ASSERT_EQ(stoi("2147483647"), 2147483647);    // INT32_MAX
+  ASSERT_EQ(stoi("-2147483648"), -2147483648);  // INT32_MIN
+  ASSERT_EQ(stoi("+123"), 123);
+}
+
+TEST(TestLexicalCasts, test_stoui)
+{
+  using hardware_interface::stoui;
+
+  ASSERT_THROW(stoui(""), std::invalid_argument);
+  ASSERT_THROW(stoui("abc"), std::invalid_argument);
+  ASSERT_THROW(stoui("1.2"), std::invalid_argument);
+  ASSERT_THROW(stoui("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stoui("-1"), std::out_of_range);          // Negative values not allowed
+  ASSERT_THROW(stoui("-123"), std::out_of_range);        // Negative values not allowed
+  ASSERT_THROW(stoui("4294967296"), std::out_of_range);  // UINT32_MAX + 1
+  ASSERT_THROW(stoui("9999999999"), std::out_of_range);
+
+  ASSERT_EQ(stoui("0"), 0u);
+  ASSERT_EQ(stoui("123"), 123u);
+  ASSERT_EQ(stoui("4294967295"), 4294967295u);  // UINT32_MAX
+  ASSERT_EQ(stoui("+123"), 123u);
+}
+
 TEST(TestLexicalCasts, test_parse_bool)
 {
   using hardware_interface::parse_bool;

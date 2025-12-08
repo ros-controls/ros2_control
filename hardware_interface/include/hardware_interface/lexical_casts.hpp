@@ -37,6 +37,18 @@ double stod(const std::string & s);
  */
 float stof(const std::string & s);
 
+/** \brief Overflow-safe conversion from string to int32_t.
+ * \throws std::out_of_range if the converted value would fall out of the range of int32_t
+ * \throws std::invalid_argument if no conversion could be performed
+ */
+int32_t stoi(const std::string & s);
+
+/** \brief Overflow-safe conversion from string to uint32_t.
+ * \throws std::out_of_range if the converted value would fall out of the range of int32_t
+ * \throws std::invalid_argument if no conversion could be performed
+ */
+uint32_t stoui(const std::string & s);
+
 /**
  * \brief Convert a string to lower case.
  * \param string The input string.

@@ -199,8 +199,9 @@ public:
       try
       {
         value_ptr_ = nullptr;
-        value_ = initial_value.empty() ? static_cast<uint32_t>(std::numeric_limits<uint32_t>::max())
-                                       : static_cast<uint32_t>(std::stoul(initial_value));
+        value_ = initial_value.empty()
+                   ? static_cast<uint32_t>(std::numeric_limits<uint32_t>::max())
+                   : static_cast<uint32_t>(hardware_interface::stoui(initial_value));
       }
       catch (const std::invalid_argument & err)
       {
@@ -215,8 +216,9 @@ public:
       try
       {
         value_ptr_ = nullptr;
-        value_ = initial_value.empty() ? static_cast<int32_t>(std::numeric_limits<int32_t>::max())
-                                       : static_cast<int32_t>(std::stol(initial_value));
+        value_ = initial_value.empty()
+                   ? static_cast<int32_t>(std::numeric_limits<int32_t>::max())
+                   : static_cast<int32_t>(hardware_interface::stoi(initial_value));
       }
       catch (const std::invalid_argument & err)
       {
