@@ -344,12 +344,28 @@ public:
           if (!notified_)
           {
             RCLCPP_WARN(
-              rclcpp::get_logger(get_name()),
-              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
-              get_name().c_str());
+              rclcpp::get_logger(get_name()), "%s",
+              fmt::format(
+                FMT_COMPILE(
+                  "Casting bool to double for interface '{}'. Better use get_optional<bool>()."),
+                get_name())
+                .c_str());
             notified_ = true;
           }
           return static_cast<double>(std::get<bool>(value_));
+        case HandleDataType::FLOAT32:  // fallthrough
+        case HandleDataType::UINT8:    // fallthrough
+        case HandleDataType::INT8:     // fallthrough
+        case HandleDataType::UINT16:   // fallthrough
+        case HandleDataType::INT16:    // fallthrough
+        case HandleDataType::UINT32:   // fallthrough
+        case HandleDataType::INT32:    // fallthrough
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Data type: '{}' will not be casted to double for interface: {}. Use "
+                "get_optional<{}>() instead."),
+              data_type_.to_string(), get_name(), data_type_.to_string()));
         default:
           throw std::runtime_error(
             fmt::format(
