@@ -26,11 +26,16 @@ namespace hardware_interface
 {
 
 /** \brief Helper function to convert a std::string to double in a locale-independent way.
- \throws std::invalid_argument if not a valid number
+ * \throws std::invalid_argument if not a valid number or exceeds limits
  * from
  https://github.com/ros-planning/srdfdom/blob/ad17b8d25812f752c397a6011cec64aeff090c46/src/model.cpp#L53
 */
 double stod(const std::string & s);
+
+/** \brief Helper function to convert a std::string to float in a locale-independent way.
+ * \throws std::invalid_argument if not a valid number or exceeds limits
+ */
+float stof(const std::string & s);
 
 /**
  * \brief Convert a string to lower case.

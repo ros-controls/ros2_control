@@ -25,9 +25,23 @@ TEST(TestLexicalCasts, test_stod)
   ASSERT_THROW(stod(""), std::invalid_argument);
   ASSERT_THROW(stod("abc"), std::invalid_argument);
   ASSERT_THROW(stod("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stod("1.8e308"), std::invalid_argument);
   ASSERT_EQ(stod("1.2"), 1.2);
   ASSERT_EQ(stod("-1.2"), -1.2);
   ASSERT_EQ(stod("1.0"), 1.0);
+}
+
+TEST(TestLexicalCasts, test_stof)
+{
+  using hardware_interface::stof;
+
+  ASSERT_THROW(stof(""), std::invalid_argument);
+  ASSERT_THROW(stof("abc"), std::invalid_argument);
+  ASSERT_THROW(stof("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stof("3.4e39"), std::invalid_argument);
+  ASSERT_EQ(stof("1.2"), 1.2f);
+  ASSERT_EQ(stof("-1.2"), -1.2f);
+  ASSERT_EQ(stof("1.0"), 1.0f);
 }
 
 TEST(TestLexicalCasts, test_parse_bool)

@@ -105,12 +105,7 @@ public:
         value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? std::numeric_limits<float>::quiet_NaN()
-                   : static_cast<float>(hardware_interface::stod(initial_value));
-        float val = std::get<float>(value_);
-        if (val < std::numeric_limits<float>::lowest() || val > std::numeric_limits<float>::max())
-        {
-          throw std::out_of_range("value cannot be represented as float");
-        }
+                   : static_cast<float>(hardware_interface::stof(initial_value));
       }
       catch (const std::invalid_argument & err)
       {
