@@ -16,7 +16,6 @@
 #include <cctype>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <locale>
 #include <optional>
 #include <stdexcept>
@@ -99,38 +98,6 @@ float stof(const std::string & s)
     return *result;
   }
   throw std::invalid_argument("Failed converting string to float number");
-}
-
-int32_t stoi(const std::string & s)
-{
-  size_t pos;
-  const auto v = std::stol(s, &pos);  // stol returns long
-  if (pos != s.length())
-  {
-    throw std::invalid_argument("Invalid characters in string");
-  }
-  if (v < std::numeric_limits<int32_t>::min() || v > std::numeric_limits<int32_t>::max())
-  {
-    throw std::out_of_range("value not in int32_t range");
-  }
-
-  return static_cast<int32_t>(v);
-}
-
-uint32_t stoui(const std::string & s)
-{
-  size_t pos;
-  const auto v = std::stol(s, &pos);  // stol returns long
-  if (pos != s.length())
-  {
-    throw std::invalid_argument("Invalid characters in string");
-  }
-  if (v < 0 || v > std::numeric_limits<uint32_t>::max())
-  {
-    throw std::out_of_range("value not in int32_t range");
-  }
-
-  return static_cast<int32_t>(v);
 }
 
 std::string to_lower_case(const std::string & string)

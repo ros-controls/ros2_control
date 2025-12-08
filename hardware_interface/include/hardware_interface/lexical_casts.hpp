@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -41,13 +42,58 @@ float stof(const std::string & s);
  * \throws std::out_of_range if the converted value would fall out of the range of int32_t
  * \throws std::invalid_argument if no conversion could be performed
  */
-int32_t stoi(const std::string & s);
+template <typename T>
+T stoi_generic(const std::string & s)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>, "T must be a signed integral type");
+
+  size_t pos;
+  const auto v = std::stol(s, &pos);  // stol returns long
+  if (pos != s.length())
+  {
+    throw std::invalid_argument("Invalid characters in string");
+  }
+  if (v < std::numeric_limits<T>::min() || v > std::numeric_limits<T>::max())
+  {
+    throw std::out_of_range("value not in range of target type");
+  }
+
+  return static_cast<T>(v);
+}
+
+// Explicit instantiations for common signed integer types
+inline int8_t stoi8(const std::string & s) { return stoi_generic<int8_t>(s); }
+inline int16_t stoi16(const std::string & s) { return stoi_generic<int16_t>(s); }
+inline int32_t stoi32(const std::string & s) { return stoi_generic<int32_t>(s); }
 
 /** \brief Overflow-safe conversion from string to uint32_t.
  * \throws std::out_of_range if the converted value would fall out of the range of int32_t
  * \throws std::invalid_argument if no conversion could be performed
  */
-uint32_t stoui(const std::string & s);
+template <typename T>
+T stoui_generic(const std::string & s)
+{
+  static_assert(
+    std::is_integral_v<T> && std::is_unsigned_v<T>, "T must be an unsigned integral type");
+
+  size_t pos;
+  const auto v = std::stoul(s, &pos);  // stoul returns unsigned long
+  if (pos != s.length())
+  {
+    throw std::invalid_argument("Invalid characters in string");
+  }
+  if (v > std::numeric_limits<T>::max())
+  {
+    throw std::out_of_range("value not in range of target type");
+  }
+
+  return static_cast<T>(v);
+}
+
+// Explicit instantiations for common unsigned integer types
+inline uint8_t stoui8(const std::string & s) { return stoui_generic<uint8_t>(s); }
+inline uint16_t stoui16(const std::string & s) { return stoui_generic<uint16_t>(s); }
+inline uint32_t stoui32(const std::string & s) { return stoui_generic<uint32_t>(s); }
 
 /**
  * \brief Convert a string to lower case.
