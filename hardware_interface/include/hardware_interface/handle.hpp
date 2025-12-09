@@ -234,12 +234,7 @@ public:
     {
       throw std::runtime_error(
         fmt::format(
-<<<<<<< HEAD
-          FMT_COMPILE(
-            "Invalid data type : '{}' for interface : {}. Supported types are double and bool."),
-=======
           FMT_COMPILE("Invalid data type: '{}' for interface: {}. Check supported types."),
->>>>>>> 67f836d ([Handle] Add support to more data types (#2879))
           data_type, handle_name_));
     }
   }
@@ -358,32 +353,12 @@ public:
     // TODO(saikishor) return value_ if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
-<<<<<<< HEAD
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      return *value_ptr_;
-=======
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
           THROW_ON_NULLPTR(value_ptr_);
           return *value_ptr_;
-        case HandleDataType::BOOL:
-          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
-          // https://github.com/ros2/rclcpp/issues/2587
-          // is fixed
-          if (!notified_)
-          {
-            RCLCPP_WARN(
-              rclcpp::get_logger(get_name()), "%s",
-              fmt::format(
-                FMT_COMPILE(
-                  "Casting bool to double for interface '{}'. Better use get_optional<bool>()."),
-                get_name())
-                .c_str());
-            notified_ = true;
-          }
-          return static_cast<double>(std::get<bool>(value_));
+        case HandleDataType::BOOL:     // fallthrough
         case HandleDataType::FLOAT32:  // fallthrough
         case HandleDataType::UINT8:    // fallthrough
         case HandleDataType::INT8:     // fallthrough
@@ -403,7 +378,6 @@ public:
               FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
               data_type_.to_string(), get_name()));
       }
->>>>>>> 67f836d ([Handle] Add support to more data types (#2879))
     }
     try
     {
