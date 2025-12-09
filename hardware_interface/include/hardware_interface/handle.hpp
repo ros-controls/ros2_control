@@ -236,8 +236,7 @@ public:
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE(
-            "Invalid data type: '{}' for interface: {}. Supported types are double and bool."),
+          FMT_COMPILE("Invalid data type: '{}' for interface: {}. Check supported types."),
           data_type, handle_name_));
     }
   }
@@ -555,6 +554,19 @@ protected:
           }
           value = static_cast<double>(std::get<bool>(value_));
           return true;
+        case HandleDataType::FLOAT32:  // fallthrough
+        case HandleDataType::UINT8:    // fallthrough
+        case HandleDataType::INT8:     // fallthrough
+        case HandleDataType::UINT16:   // fallthrough
+        case HandleDataType::INT16:    // fallthrough
+        case HandleDataType::UINT32:   // fallthrough
+        case HandleDataType::INT32:    // fallthrough
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Data type: '{}' will not be casted to double for interface: {}. Use "
+                "get_optional<{}>() instead."),
+              data_type_.to_string(), get_name(), data_type_.to_string()));
         default:
           throw std::runtime_error(
             fmt::format(
