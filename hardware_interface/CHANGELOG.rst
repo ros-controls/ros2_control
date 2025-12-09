@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.10.0 (2025-12-09)
+-------------------
 * [Handle] Add support to more data types (`#2879 <https://github.com/ros-controls/ros2_control/issues/2879>`_) (`#2897 <https://github.com/ros-controls/ros2_control/issues/2897>`_)
 * Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2891 <https://github.com/ros-controls/ros2_control/issues/2891>`_)
 * Fix rst syntax (`#2892 <https://github.com/ros-controls/ros2_control/issues/2892>`_) (`#2894 <https://github.com/ros-controls/ros2_control/issues/2894>`_)
