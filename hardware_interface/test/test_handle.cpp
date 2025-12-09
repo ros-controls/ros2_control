@@ -231,12 +231,7 @@ TEST(TestHandle, interface_description_bool_data_type)
   // Test the assertions
   ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
-<<<<<<< HEAD
   ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
-=======
-
-  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
->>>>>>> 67f836d ([Handle] Add support to more data types (#2879))
 }
 
 TEST(TestHandle, handle_constructor_double_data_type)
@@ -314,11 +309,7 @@ TEST(TestHandle, handle_constructor_bool_data_type)
   // Test the assertions
   ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
-<<<<<<< HEAD
   ASSERT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
-=======
-
-  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
 }
 
 TEST(TestHandle, interface_description_uint8_data_type)
