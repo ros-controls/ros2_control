@@ -791,3 +791,65 @@ TEST(TestHandle, handle_castable)
     EXPECT_THROW(dt.cast_to_double(value), std::runtime_error);
   }
 }
+
+// @note Once we add support for more data types, this function should be updated
+TEST(TestHandle, handle_invalid_args)
+{
+  hardware_interface::InterfaceInfo info;
+  info.name = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  {
+    info.data_type = "double";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "float32";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "uint8";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "int8";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "uint16";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "int16";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "uint32";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "int32";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+  {
+    info.data_type = "bool";
+    info.initial_value = "wrong_value";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+}
