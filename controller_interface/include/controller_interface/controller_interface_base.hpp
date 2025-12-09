@@ -29,6 +29,7 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -200,7 +201,22 @@ public:
 
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
+  /**
+   * Get the current lifecycle state of the controller node.
+   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
+   * should not be called in the control loop.
+   * \note This method is thread safe.
+   * \returns lifecycle state of the controller node.
+   */
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
+
+  /**
+   * Get the lifecycle id of the controller node that is cached internally
+   * to avoid calls to get_lifecycle_state() in the real-time control loop.
+   * \note This method is real-time safe and thread safe and can be called in the control loop.
+   * \returns lifecycle id of the controller node.
+   */
+  uint8_t get_lifecycle_id() const;
 
   unsigned int get_update_rate() const;
 
@@ -380,6 +396,7 @@ private:
   controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
+  mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;

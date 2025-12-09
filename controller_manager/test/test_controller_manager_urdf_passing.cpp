@@ -46,9 +46,10 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
 };
@@ -70,6 +71,7 @@ public:
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void configure_and_try_switch_that_returns_error()
@@ -79,6 +81,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
 
     // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
     cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
@@ -90,6 +93,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void try_successful_switch()
@@ -101,6 +105,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   std::shared_ptr<test_controller::TestController> test_controller_;

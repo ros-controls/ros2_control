@@ -75,7 +75,7 @@ class TestActuator : public ActuatorInterface
         &velocity_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
+        get_hardware_info().joints[0].name, "some_unlisted_interface", &unlisted_interface_));
 
     return state_interfaces;
   }
@@ -187,6 +187,7 @@ private:
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
   double max_velocity_command_ = 0.0;
+  double unlisted_interface_ = std::numeric_limits<double>::quiet_NaN();
 };
 
 class TestUninitializableActuator : public TestActuator

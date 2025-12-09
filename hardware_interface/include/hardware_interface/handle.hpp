@@ -28,7 +28,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
@@ -60,8 +59,6 @@ std::string get_type_name()
 
 namespace hardware_interface
 {
-
-using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
@@ -247,6 +244,61 @@ public:
   }
 
   /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param value The variable to store the retrieved value.
+   * @param wait_for_lock If true, the method will wait for the lock to be available, else it will
+   * try to get the lock without blocking.
+   * @return true if the value is retrieved successfully, false otherwise.
+   *
+   * @note The method is thread-safe.
+   * @note This method is real-time safe or non-blocking, only if wait_for_lock is set to false.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <
+    typename T, typename = std::enable_if_t<
+                  !std::is_same_v<std::decay_t<T>, std::shared_lock<std::shared_mutex>>>>
+  [[nodiscard]] bool get_value(T & value, bool wait_for_lock) const
+  {
+    if (wait_for_lock)
+    {
+      std::shared_lock<std::shared_mutex> lock(handle_mutex_);
+      return get_value(lock, value);
+    }
+    else
+    {
+      std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+      return get_value(lock, value);
+    }
+  }
+
+  /**
+   * @brief Set the value of the handle.
+   * @tparam T The type of the value to be set.
+   * @param value The value to be set.
+   * @param wait_for_lock If true, the method will wait for the lock to be available, else it will
+   * try to get the lock without blocking.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe.
+   * @note This method is real-time safe or non-blocking, only if wait_for_lock is set to false.
+   */
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value, bool wait_for_lock)
+  {
+    if (wait_for_lock)
+    {
+      std::unique_lock<std::shared_mutex> lock(handle_mutex_);
+      return set_value(lock, value);
+    }
+    else
+    {
+      std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+      return set_value(lock, value);
+    }
+  }
+
+  /**
    * @brief Set the value of the handle.
    * @tparam T The type of the value to be set.
    * @param value The value to be set.
@@ -313,6 +365,73 @@ public:
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
+  bool is_valid() const
+  {
+    return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
+  }
+
+protected:
+  /**
+   * @brief Get the value of the handle.
+   * @tparam T The type of the value to be retrieved.
+   * @param lock The lock to access the value.
+   * @param value The variable to store the retrieved value.
+   * @return true if the value is retrieved successfully, false otherwise.
+   * @note The method is thread-safe and non-blocking.
+   * @note Ideal for the data types that are large in size to avoid copy during return.
+   */
+  template <typename T>
+  [[nodiscard]] bool get_value(std::shared_lock<std::shared_mutex> & lock, T & value) const
+  {
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(saikishor) get value_ if old functionality is removed
+    if constexpr (std::is_same_v<T, double>)
+    {
+      switch (data_type_)
+      {
+        case HandleDataType::DOUBLE:
+          THROW_ON_NULLPTR(value_ptr_);
+          value = *value_ptr_;
+          return true;
+        case HandleDataType::BOOL:
+          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
+          // https://github.com/ros2/rclcpp/issues/2587
+          // is fixed
+          if (!notified_)
+          {
+            RCLCPP_WARN(
+              rclcpp::get_logger(get_name()),
+              "Casting bool to double for interface: %s. Better use get_optional<bool>().",
+              get_name().c_str());
+            notified_ = true;
+          }
+          value = static_cast<double>(std::get<bool>(value_));
+          return true;
+        default:
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
+              data_type_.to_string(), get_name()));
+      }
+    }
+    try
+    {
+      value = std::get<T>(value_);
+      return true;
+    }
+    catch (const std::bad_variant_access & err)
+    {
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
+    }
+  }
+
 private:
   void copy(const Handle & other) noexcept
   {
@@ -349,7 +468,7 @@ protected:
   HandleDataType data_type_ = HandleDataType::DOUBLE;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
-  double * value_ptr_;
+  double * value_ptr_ = nullptr;
   // END
   mutable std::shared_mutex handle_mutex_;
 
@@ -370,17 +489,35 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register state introspection for state interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -444,10 +581,28 @@ public:
 
   void registerIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (!is_valid())
+    {
+      RCLCPP_WARN(
+        rclcpp::get_logger(get_name()),
+        "Cannot register command introspection for command interface: %s without a valid value "
+        "pointer or initialized value.",
+        get_name().c_str());
+      return;
+    }
+    if (value_ptr_ || data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]()
-      { return value_ptr_ ? *value_ptr_ : std::get<double>(value_); };
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
@@ -456,7 +611,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (value_ptr_ || std::holds_alternative<double>(value_))
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
