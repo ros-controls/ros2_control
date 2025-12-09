@@ -241,6 +241,8 @@ TEST(TestHandle, interface_description_bool_data_type)
   // Test the assertions
   ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
+
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
 }
 
 TEST(TestHandle, handle_constructor_double_data_type)
@@ -293,6 +295,8 @@ TEST(TestHandle, handle_constructor_float_data_type)
     { std::ignore = handle.set_value(std::numeric_limits<double>::max()); }, std::runtime_error);
   EXPECT_ANY_THROW({ StateInterface bad_itf("joint1", POSITION_INTERFACE, "double", "233NaN0"); })
     << "Invalid double value should throw";
+
+  EXPECT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
 }
 
 TEST(TestHandle, handle_constructor_bool_data_type)
@@ -318,6 +322,8 @@ TEST(TestHandle, handle_constructor_bool_data_type)
   // Test the assertions
   ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
   ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
+
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
 }
 
 TEST(TestHandle, interface_description_uint8_data_type)
@@ -534,6 +540,8 @@ TEST(TestHandle, interface_description_float_data_type)
   ASSERT_FLOAT_EQ(handle.get_optional<float>().value(), 1.337f);
   EXPECT_NO_THROW({ std::ignore = handle.set_value(static_cast<float>(0.0)); });
   ASSERT_FLOAT_EQ(handle.get_optional<float>().value(), 0.0f);
+
+  EXPECT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
@@ -714,9 +722,6 @@ TEST(TestHandle, handle_castable)
 
     EXPECT_TRUE(handle.is_valid());
     EXPECT_TRUE(handle.is_castable_to_double());
-    uint8_t val;
-    EXPECT_TRUE(handle.get_value(val, true));
-    EXPECT_EQ(val, 123);
     EXPECT_EQ(handle.data_type_.cast_to_double(handle.value_), 123.0);
   }
   {
@@ -851,5 +856,148 @@ TEST(TestHandle, handle_invalid_args)
     info.initial_value = "wrong_value";
     hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
     ASSERT_THROW(hardware_interface::Handle handle{interface_description}, std::invalid_argument);
+  }
+}
+
+// @note Once we add support for more data types, this function should be updated
+TEST(TestHandle, handle_getters)
+{
+  hardware_interface::InterfaceInfo info;
+  info.name = "position";
+  const std::string JOINT_NAME_1 = "joint1";
+  {
+    info.data_type = "double";
+    info.initial_value = "23.0";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
+    EXPECT_EQ(handle.get_optional<double>().value(), 23.0);
+    double val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_DOUBLE_EQ(val, 23.0);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_DOUBLE_EQ(val, 23.0);
+  }
+  {
+    info.data_type = "float32";
+    info.initial_value = "23.0";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<float>(); });
+    EXPECT_EQ(handle.get_optional<float>().value(), 23.0);
+    float val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_FLOAT_EQ(val, 23.0f);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_FLOAT_EQ(val, 23.0f);
+  }
+  {
+    info.data_type = "uint8";
+    info.initial_value = "123";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<uint8_t>(); });
+    EXPECT_EQ(handle.get_optional<uint8_t>().value(), 123);
+    uint8_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, 123);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, 123);
+  }
+  {
+    info.data_type = "int8";
+    info.initial_value = "-45";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<int8_t>(); });
+    EXPECT_EQ(handle.get_optional<int8_t>().value(), -45);
+    int8_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, -45);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, -45);
+  }
+  {
+    info.data_type = "uint16";
+    info.initial_value = "32000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<uint16_t>(); });
+    EXPECT_EQ(handle.get_optional<uint16_t>().value(), 32000);
+    uint16_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, 32000);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, 32000);
+  }
+  {
+    info.data_type = "int16";
+    info.initial_value = "-16000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<int16_t>(); });
+    EXPECT_EQ(handle.get_optional<int16_t>().value(), -16000);
+    int16_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, -16000);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, -16000);
+  }
+  {
+    info.data_type = "uint32";
+    info.initial_value = "2000000000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<uint32_t>(); });
+    EXPECT_EQ(handle.get_optional<uint32_t>().value(), 2000000000);
+    uint32_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, 2000000000);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, 2000000000);
+  }
+  {
+    info.data_type = "int32";
+    info.initial_value = "-1000000000";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<bool>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<int32_t>(); });
+    EXPECT_EQ(handle.get_optional<int32_t>().value(), -1000000000);
+    int32_t val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, -1000000000);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, -1000000000);
+  }
+  {
+    info.data_type = "bool";
+    info.initial_value = "true";
+    hardware_interface::InterfaceDescription interface_description{JOINT_NAME_1, info};
+    hardware_interface::Handle handle{interface_description};
+
+    EXPECT_THROW({ std::ignore = handle.get_optional<float>(); }, std::runtime_error);
+    EXPECT_NO_THROW({ std::ignore = handle.get_optional<bool>(); });
+    EXPECT_EQ(handle.get_optional<bool>().value(), true);
+    bool val;
+    EXPECT_TRUE(handle.get_value(val, true));
+    EXPECT_EQ(val, true);
+    EXPECT_TRUE(handle.get_value(val, false));
+    EXPECT_EQ(val, true);
   }
 }
