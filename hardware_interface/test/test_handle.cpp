@@ -528,7 +528,6 @@ TEST(TestHandle, interface_description_float_data_type)
   ASSERT_FLOAT_EQ(handle.get_optional<float>().value(), 0.0f);
 
   EXPECT_THROW({ std::ignore = handle.get_optional<double>(); }, std::runtime_error);
->>>>>>> 67f836d ([Handle] Add support to more data types (#2879))
 }
 
 TEST(TestHandle, interface_description_unknown_data_type)
