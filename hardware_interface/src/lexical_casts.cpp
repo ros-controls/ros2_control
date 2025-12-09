@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <cstdint>
 #include <locale>
 #include <optional>
 #include <stdexcept>
@@ -35,7 +37,7 @@ std::optional<double> stod(const std::string & s)
   stream.imbue(std::locale::classic());
   double result;
   stream >> result;
-  if (stream.fail() || !stream.eof())
+  if (stream.fail() || !stream.eof() || !std::isfinite(result))
   {
     return std::nullopt;
   }
@@ -51,6 +53,33 @@ std::optional<double> stod(const std::string & s)
   return std::nullopt;
 #endif
 }
+
+std::optional<float> stof(const std::string & s)
+{
+#if __cplusplus < 202002L
+  // convert from string using no locale
+  // Impl with std::istringstream
+  std::istringstream stream(s);
+  stream.imbue(std::locale::classic());
+  float result;
+  stream >> result;
+  if (stream.fail() || !stream.eof() || !std::isfinite(result))
+  {
+    return std::nullopt;
+  }
+  return result;
+#else
+  // Impl with std::from_chars
+  float result_value;
+  const auto parse_result = std::from_chars(s.data(), s.data() + s.size(), result_value);
+  if (parse_result.ec == std::errc())
+  {
+    return result_value;
+  }
+  return std::nullopt;
+#endif
+}
+
 }  // namespace impl
 
 double stod(const std::string & s)
@@ -60,6 +89,15 @@ double stod(const std::string & s)
     return *result;
   }
   throw std::invalid_argument("Failed converting string to real number");
+}
+
+float stof(const std::string & s)
+{
+  if (const auto result = impl::stof(s))
+  {
+    return *result;
+  }
+  throw std::invalid_argument("Failed converting string to float number");
 }
 
 std::string to_lower_case(const std::string & string)

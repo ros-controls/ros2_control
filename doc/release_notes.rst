@@ -33,6 +33,7 @@ hardware_interface
 * The controllers are not allowed to be activated when the hardware component is in INACTIVE state. The parameter ``allow_controller_activation_with_inactive_hardware`` is added to control this behavior temporarily. It is recommended to set this parameter to false in order to avoid controllers to use inactive hardware components and to avoid any unexpected behavior. This feature parameter will be removed in future releases and will be defaulted to false (`#2347 <https://github.com/ros-controls/ros2_control/pull/2347>`_).
 * The asynchronous components now support two scheduling policies: ``synchronized`` and ``detached`` and other properties to configure them (`#2477 <https://github.com/ros-controls/ros2_control/pull/2477>`_).
 * The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
+* Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 
 ros2controlcli
 **************
