@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.2.0 (2025-12-10)
+------------------
 * Fix the blocking calls of lifecycle_state in the real-time loop (`#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_)
 * Contributors: Sai Kishor Kothakota
 
