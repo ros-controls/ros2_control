@@ -611,16 +611,8 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
 private:
-  rclcpp::Clock::SharedPtr clock_;
-  rclcpp::Logger logger_;
-  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
-  // interface names to Handle accessed through getters/setters
-  std::unordered_map<std::string, StateInterface::SharedPtr> hardware_states_;
-  std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
-  std::atomic<return_type> read_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
-  std::atomic<return_type> write_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+  class HardwareComponentInterfaceImpl;
+  std::unique_ptr<HardwareComponentInterfaceImpl> impl_;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;

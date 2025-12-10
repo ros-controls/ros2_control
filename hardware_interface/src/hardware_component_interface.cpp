@@ -24,11 +24,28 @@
 namespace hardware_interface
 {
 
+class HardwareComponentInterface::HardwareComponentInterfaceImpl
+{
+public:
+  HardwareComponentInterfaceImpl() : logger_(rclcpp::get_logger("hardware_component_interface")) {}
+
+  rclcpp::Clock::SharedPtr clock_;
+  rclcpp::Logger logger_;
+  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
+  // interface names to Handle accessed through getters/setters
+  std::unordered_map<std::string, StateInterface::SharedPtr> hardware_states_;
+  std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
+  std::atomic<return_type> read_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
+  std::atomic<return_type> write_return_info_ = return_type::OK;
+  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+};
+
 HardwareComponentInterface::HardwareComponentInterface()
 : lifecycle_state_(
     rclcpp_lifecycle::State(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
-  logger_(rclcpp::get_logger("hardware_component_interface"))
+  impl_(std::make_unique<HardwareComponentInterfaceImpl>())
 {
 }
 
@@ -37,8 +54,8 @@ HardwareComponentInterface::~HardwareComponentInterface() = default;
 CallbackReturn HardwareComponentInterface::init(
   const hardware_interface::HardwareComponentParams & params)
 {
-  clock_ = params.clock;
-  logger_ = params.logger;
+  impl_->clock_ = params.clock;
+  impl_->logger_ = params.logger;
   info_ = params.hardware_info;
   if (params.hardware_info.is_async)
   {
@@ -63,8 +80,8 @@ CallbackReturn HardwareComponentInterface::init(
         const auto read_start_time = std::chrono::steady_clock::now();
         const auto ret_read = read(time, period);
         const auto read_end_time = std::chrono::steady_clock::now();
-        read_return_info_.store(ret_read, std::memory_order_release);
-        read_execution_time_.store(
+        impl_->read_return_info_.store(ret_read, std::memory_order_release);
+        impl_->read_execution_time_.store(
           std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
           std::memory_order_release);
         if (ret_read != return_type::OK)
@@ -78,8 +95,8 @@ CallbackReturn HardwareComponentInterface::init(
           const auto write_start_time = std::chrono::steady_clock::now();
           const auto ret_write = write(time, period);
           const auto write_end_time = std::chrono::steady_clock::now();
-          write_return_info_.store(ret_write, std::memory_order_release);
-          write_execution_time_.store(
+          impl_->write_return_info_.store(ret_write, std::memory_order_release);
+          impl_->write_execution_time_.store(
             std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
             std::memory_order_release);
           return ret_write;
@@ -94,9 +111,9 @@ CallbackReturn HardwareComponentInterface::init(
   {
     std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    hardware_component_node_ = std::make_shared<rclcpp::Node>(
+    impl_->hardware_component_node_ = std::make_shared<rclcpp::Node>(
       node_name, params.node_namespace, define_custom_node_options());
-    locked_executor->add_node(hardware_component_node_->get_node_base_interface());
+    locked_executor->add_node(impl_->hardware_component_node_->get_node_base_interface());
   }
   else
   {
@@ -140,7 +157,7 @@ CallbackReturn HardwareComponentInterface::init(
 
     if (!status_msg_template.hardware_device_states.empty())
     {
-      if (!hardware_component_node_)
+      if (!impl_->hardware_component_node_)
       {
         RCLCPP_WARN(
           get_logger(),
@@ -152,10 +169,10 @@ CallbackReturn HardwareComponentInterface::init(
         try
         {
           hardware_status_publisher_ =
-            hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
+            impl_->hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
               "~/hardware_status", rclcpp::SystemDefaultsQoS());
 
-          hardware_status_timer_ = hardware_component_node_->create_wall_timer(
+          hardware_status_timer_ = impl_->hardware_component_node_->create_wall_timer(
             std::chrono::duration<double>(1.0 / publish_rate),
             [this]()
             {
@@ -168,7 +185,7 @@ CallbackReturn HardwareComponentInterface::init(
                 if (update_hardware_status_message(msg) != return_type::OK)
                 {
                   RCLCPP_WARN_THROTTLE(
-                    get_logger(), *clock_, 1000,
+                    get_logger(), *impl_->clock_, 1000,
                     "User's update_hardware_status_message() failed for '%s'.", info_.name.c_str());
                   return;
                 }
@@ -285,7 +302,7 @@ std::vector<StateInterface::ConstSharedPtr> HardwareComponentInterface::on_expor
     auto name = description.get_name();
     unlisted_state_interfaces_.insert(std::make_pair(name, description));
     auto state_interface = std::make_shared<StateInterface>(description);
-    hardware_states_.insert(std::make_pair(name, state_interface));
+    impl_->hardware_states_.insert(std::make_pair(name, state_interface));
     unlisted_states_.push_back(state_interface);
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
@@ -293,21 +310,21 @@ std::vector<StateInterface::ConstSharedPtr> HardwareComponentInterface::on_expor
   for (const auto & [name, descr] : joint_state_interfaces_)
   {
     auto state_interface = std::make_shared<StateInterface>(descr);
-    hardware_states_.insert(std::make_pair(name, state_interface));
+    impl_->hardware_states_.insert(std::make_pair(name, state_interface));
     joint_states_.push_back(state_interface);
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
   for (const auto & [name, descr] : sensor_state_interfaces_)
   {
     auto state_interface = std::make_shared<StateInterface>(descr);
-    hardware_states_.insert(std::make_pair(name, state_interface));
+    impl_->hardware_states_.insert(std::make_pair(name, state_interface));
     sensor_states_.push_back(state_interface);
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
   for (const auto & [name, descr] : gpio_state_interfaces_)
   {
     auto state_interface = std::make_shared<StateInterface>(descr);
-    hardware_states_.insert(std::make_pair(name, state_interface));
+    impl_->hardware_states_.insert(std::make_pair(name, state_interface));
     gpio_states_.push_back(state_interface);
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
@@ -347,7 +364,7 @@ std::vector<CommandInterface::SharedPtr> HardwareComponentInterface::on_export_c
     auto name = description.get_name();
     unlisted_command_interfaces_.insert(std::make_pair(name, description));
     auto command_interface = std::make_shared<CommandInterface>(description);
-    hardware_commands_.insert(std::make_pair(name, command_interface));
+    impl_->hardware_commands_.insert(std::make_pair(name, command_interface));
     unlisted_commands_.push_back(command_interface);
     command_interfaces.push_back(command_interface);
   }
@@ -355,7 +372,7 @@ std::vector<CommandInterface::SharedPtr> HardwareComponentInterface::on_export_c
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
     auto command_interface = std::make_shared<CommandInterface>(descr);
-    hardware_commands_.insert(std::make_pair(name, command_interface));
+    impl_->hardware_commands_.insert(std::make_pair(name, command_interface));
     joint_commands_.push_back(command_interface);
     command_interfaces.push_back(command_interface);
   }
@@ -363,7 +380,7 @@ std::vector<CommandInterface::SharedPtr> HardwareComponentInterface::on_export_c
   for (const auto & [name, descr] : gpio_command_interfaces_)
   {
     auto command_interface = std::make_shared<CommandInterface>(descr);
-    hardware_commands_.insert(std::make_pair(name, command_interface));
+    impl_->hardware_commands_.insert(std::make_pair(name, command_interface));
     gpio_commands_.push_back(command_interface);
     command_interfaces.push_back(command_interface);
   }
@@ -391,8 +408,8 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
   status.result = return_type::ERROR;
   if (info_.is_async)
   {
-    status.result = read_return_info_.load(std::memory_order_acquire);
-    const auto read_exec_time = read_execution_time_.load(std::memory_order_acquire);
+    status.result = impl_->read_return_info_.load(std::memory_order_acquire);
+    const auto read_exec_time = impl_->read_execution_time_.load(std::memory_order_acquire);
     if (read_exec_time.count() > 0)
     {
       status.execution_time = read_exec_time;
@@ -429,12 +446,12 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
   if (info_.is_async)
   {
     status.successful = true;
-    const auto write_exec_time = write_execution_time_.load(std::memory_order_acquire);
+    const auto write_exec_time = impl_->write_execution_time_.load(std::memory_order_acquire);
     if (write_exec_time.count() > 0)
     {
       status.execution_time = write_exec_time;
     }
-    status.result = write_return_info_.load(std::memory_order_acquire);
+    status.result = impl_->write_return_info_.load(std::memory_order_acquire);
   }
   else
   {
@@ -475,14 +492,14 @@ uint8_t HardwareComponentInterface::get_lifecycle_id() const
 
 bool HardwareComponentInterface::has_state(const std::string & interface_name) const
 {
-  return hardware_states_.find(interface_name) != hardware_states_.end();
+  return impl_->hardware_states_.find(interface_name) != impl_->hardware_states_.end();
 }
 
 const StateInterface::SharedPtr & HardwareComponentInterface::get_state_interface_handle(
   const std::string & interface_name) const
 {
-  auto it = hardware_states_.find(interface_name);
-  if (it == hardware_states_.end())
+  auto it = impl_->hardware_states_.find(interface_name);
+  if (it == impl_->hardware_states_.end())
   {
     throw std::runtime_error(
       fmt::format(
@@ -494,14 +511,14 @@ const StateInterface::SharedPtr & HardwareComponentInterface::get_state_interfac
 
 bool HardwareComponentInterface::has_command(const std::string & interface_name) const
 {
-  return hardware_commands_.find(interface_name) != hardware_commands_.end();
+  return impl_->hardware_commands_.find(interface_name) != impl_->hardware_commands_.end();
 }
 
 const CommandInterface::SharedPtr & HardwareComponentInterface::get_command_interface_handle(
   const std::string & interface_name) const
 {
-  auto it = hardware_commands_.find(interface_name);
-  if (it == hardware_commands_.end())
+  auto it = impl_->hardware_commands_.find(interface_name);
+  if (it == impl_->hardware_commands_.end())
   {
     throw std::runtime_error(
       fmt::format(
@@ -511,13 +528,13 @@ const CommandInterface::SharedPtr & HardwareComponentInterface::get_command_inte
   return it->second;
 }
 
-rclcpp::Logger HardwareComponentInterface::get_logger() const { return logger_; }
+rclcpp::Logger HardwareComponentInterface::get_logger() const { return impl_->logger_; }
 
-rclcpp::Clock::SharedPtr HardwareComponentInterface::get_clock() const { return clock_; }
+rclcpp::Clock::SharedPtr HardwareComponentInterface::get_clock() const { return impl_->clock_; }
 
 rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 {
-  return hardware_component_node_;
+  return impl_->hardware_component_node_;
 }
 
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
@@ -533,10 +550,10 @@ void HardwareComponentInterface::pause_async_operations()
 
 void HardwareComponentInterface::prepare_for_activation()
 {
-  read_return_info_.store(return_type::OK, std::memory_order_release);
-  read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
-  write_return_info_.store(return_type::OK, std::memory_order_release);
-  write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  impl_->read_return_info_.store(return_type::OK, std::memory_order_release);
+  impl_->read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  impl_->write_return_info_.store(return_type::OK, std::memory_order_release);
+  impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
 }
 
 void HardwareComponentInterface::enable_introspection(bool enable)
