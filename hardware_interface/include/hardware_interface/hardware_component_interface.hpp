@@ -595,7 +595,6 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
-  std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
@@ -616,10 +615,6 @@ private:
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
-  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
-  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
-    hardware_status_box_;
-  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
 }  // namespace hardware_interface

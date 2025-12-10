@@ -35,10 +35,16 @@ public:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> hardware_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
+  std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::atomic<return_type> read_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+
+  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
+  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
+    hardware_status_box_;
+  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
 HardwareComponentInterface::HardwareComponentInterface()
@@ -89,7 +95,7 @@ CallbackReturn HardwareComponentInterface::init(
           return ret_read;
         }
         if (
-          !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
+          !is_sensor_type && impl_->lifecycle_id_cache_.load(std::memory_order_acquire) ==
                                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
           const auto write_start_time = std::chrono::steady_clock::now();
@@ -168,18 +174,18 @@ CallbackReturn HardwareComponentInterface::init(
       {
         try
         {
-          hardware_status_publisher_ =
+          impl_->hardware_status_publisher_ =
             impl_->hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
               "~/hardware_status", rclcpp::SystemDefaultsQoS());
 
-          hardware_status_timer_ = impl_->hardware_component_node_->create_wall_timer(
+          impl_->hardware_status_timer_ = impl_->hardware_component_node_->create_wall_timer(
             std::chrono::duration<double>(1.0 / publish_rate),
             [this]()
             {
               std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
-              hardware_status_box_.get(msg_to_publish_opt);
+              impl_->hardware_status_box_.get(msg_to_publish_opt);
 
-              if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
+              if (msg_to_publish_opt.has_value() && impl_->hardware_status_publisher_)
               {
                 control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
                 if (update_hardware_status_message(msg) != return_type::OK)
@@ -190,10 +196,10 @@ CallbackReturn HardwareComponentInterface::init(
                   return;
                 }
                 msg.header.stamp = this->get_clock()->now();
-                hardware_status_publisher_->publish(msg);
+                impl_->hardware_status_publisher_->publish(msg);
               }
             });
-          hardware_status_box_.set(std::make_optional(status_msg_template));
+          impl_->hardware_status_box_.set(std::make_optional(status_msg_template));
         }
         catch (const std::exception & e)
         {
@@ -482,12 +488,12 @@ const rclcpp_lifecycle::State & HardwareComponentInterface::get_lifecycle_state(
 void HardwareComponentInterface::set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
 {
   lifecycle_state_ = new_state;
-  lifecycle_id_cache_.store(new_state.id(), std::memory_order_release);
+  impl_->lifecycle_id_cache_.store(new_state.id(), std::memory_order_release);
 }
 
 uint8_t HardwareComponentInterface::get_lifecycle_id() const
 {
-  return lifecycle_id_cache_.load(std::memory_order_acquire);
+  return impl_->lifecycle_id_cache_.load(std::memory_order_acquire);
 }
 
 bool HardwareComponentInterface::has_state(const std::string & interface_name) const
