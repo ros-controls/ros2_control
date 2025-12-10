@@ -215,10 +215,7 @@ public:
    * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
-  bool is_resource_manager_initialized() const
-  {
-    return resource_manager_ && resource_manager_->are_components_initialized();
-  }
+  bool is_resource_manager_initialized() const { return is_resource_manager_initialized_; }
 
   /// Update rate of the main control loop in the controller manager.
   /**
@@ -676,6 +673,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  bool is_resource_manager_initialized_ = false;
   struct ControllerManagerExecutionTime
   {
     double read_time = 0.0;

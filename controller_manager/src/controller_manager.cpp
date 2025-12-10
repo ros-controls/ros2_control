@@ -457,20 +457,6 @@ ControllerManager::ControllerManager(
   robot_description_(urdf)
 {
   initialize_parameters();
-  hardware_interface::ResourceManagerParams params;
-  params.robot_description = robot_description_;
-  params.clock = trigger_clock_;
-  params.logger = this->get_logger();
-  params.activate_all = activate_all_hw_components;
-  params.update_rate = static_cast<unsigned int>(params_->update_rate);
-  params.executor = executor_;
-  params.node_namespace = node_namespace;
-  params.allow_controller_activation_with_inactive_hardware =
-    params_->defaults.allow_controller_activation_with_inactive_hardware;
-  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
-    params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();
 }
 
@@ -543,31 +529,7 @@ void ControllerManager::init_controller_manager()
     init_resource_manager(robot_description_);
   }
 
-  if (is_resource_manager_initialized())
-  {
-    resource_manager_->set_on_component_state_switch_callback(
-      std::bind(&ControllerManager::publish_activity, this));
-
-    if (!(resource_manager_->are_joint_limiters_imported()) && params_->enforce_command_limits)
-    {
-      try
-      {
-        resource_manager_->import_joint_limiters(robot_description_);
-      }
-      catch (const std::exception & e)
-      {
-        RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
-      }
-    }
-    if (resource_manager_->are_joint_limiters_imported() || !params_->enforce_command_limits)
-    {
-      RCLCPP_INFO(
-        get_logger(),
-        "Resource Manager successfully initialized. Starting Controller Manager services...");
-      init_services();
-    }
-  }
-  else if (!is_resource_manager_initialized())
+  if (!is_resource_manager_initialized())
   {
     // The RM failed to initialize after receiving the robot description, or no description was
     // received at all. This is a critical error. Don't finalize controller manager, instead keep
@@ -643,9 +605,6 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
-
-  RCLCPP_INFO_EXPRESSION(
-    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -695,7 +654,8 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   {
     RCLCPP_WARN(
       get_logger(),
-      "ResourceManager has already loaded a urdf. Ignoring attempt to reload a robot description.");
+      "ResourceManager has already loaded a urdf and is initialized. Ignoring attempt to reload a "
+      "robot description.");
     return;
   }
 
@@ -852,7 +812,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     }
   }
   robot_description_notification_timer_->cancel();
-
+  is_resource_manager_initialized_ = true;
   auto hw_components_info = resource_manager_->get_components_status();
 
   for (const auto & [component_name, component_info] : hw_components_info)

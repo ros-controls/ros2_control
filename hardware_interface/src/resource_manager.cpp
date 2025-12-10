@@ -1450,33 +1450,6 @@ ResourceManager::ResourceManager(
     params.allow_controller_activation_with_inactive_hardware;
   return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params.return_failed_hardware_names_on_return_deactivate_write_cycle_;
-
-  try
-  {
-    if (load && !load_and_initialize_components(params))
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "Could not load and initialize hardware. Please check previous output for more details. "
-        "After you have corrected your URDF, try to publish robot description again.");
-      throw std::runtime_error("Failed to load and initialize components");
-    }
-    if (params.activate_all)
-    {
-      for (auto const & hw_info : resource_storage_->hardware_info_map_)
-      {
-        using lifecycle_msgs::msg::State;
-        rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
-        set_component_state(hw_info.first, state);
-      }
-    }
-  }
-  catch (const std::exception & e)
-  {
-    // Other possible errors when loading components
-    RCLCPP_ERROR(
-      get_logger(), "Exception caught while loading and initializing components: %s", e.what());
-  }
 }
 
 bool ResourceManager::shutdown_components()
