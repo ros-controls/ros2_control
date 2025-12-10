@@ -31,6 +31,7 @@ add_library(hardware_interface SHARED
   src/component_parser.cpp
   src/resource_manager.cpp
   src/hardware_component.cpp
+  src/hardware_component_interface.cpp
   src/lexical_casts.cpp
 )
 target_compile_features(hardware_interface PUBLIC cxx_std_17)
