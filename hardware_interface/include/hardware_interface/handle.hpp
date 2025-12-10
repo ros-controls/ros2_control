@@ -78,7 +78,6 @@ public:
     handle_name_(prefix_name_ + "/" + interface_name_),
     data_type_(data_type)
   {
-    // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
     if (data_type_ == hardware_interface::HandleDataType::DOUBLE)
     {
@@ -97,17 +96,145 @@ public:
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
+    else if (data_type_ == hardware_interface::HandleDataType::FLOAT32)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? std::numeric_limits<float>::quiet_NaN()
+                   : static_cast<float>(hardware_interface::stof(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
     else if (data_type_ == hardware_interface::HandleDataType::BOOL)
     {
-      value_ptr_ = nullptr;
-      value_ = initial_value.empty() ? false : hardware_interface::parse_bool(initial_value);
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty() ? false : hardware_interface::parse_bool(initial_value);
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT8)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<uint8_t>(std::numeric_limits<uint8_t>::max())
+                   : static_cast<uint8_t>(hardware_interface::stoui8(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT8)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<int8_t>(std::numeric_limits<int8_t>::max())
+                   : static_cast<int8_t>(hardware_interface::stoi8(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT16)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<uint16_t>(std::numeric_limits<uint16_t>::max())
+                   : static_cast<uint16_t>(hardware_interface::stoui16(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT16)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<int16_t>(std::numeric_limits<int16_t>::max())
+                   : static_cast<int16_t>(hardware_interface::stoi16(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT32)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<uint32_t>(std::numeric_limits<uint32_t>::max())
+                   : static_cast<uint32_t>(hardware_interface::stoui32(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT32)
+    {
+      try
+      {
+        value_ptr_ = nullptr;
+        value_ = initial_value.empty()
+                   ? static_cast<int32_t>(std::numeric_limits<int32_t>::max())
+                   : static_cast<int32_t>(hardware_interface::stoi32(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
     }
     else
     {
       throw std::runtime_error(
         fmt::format(
-          FMT_COMPILE(
-            "Invalid data type : '{}' for interface : {}. Supported types are double and bool."),
+          FMT_COMPILE("Invalid data type: '{}' for interface: {}. Check supported types."),
           data_type, handle_name_));
     }
   }
@@ -226,9 +353,31 @@ public:
     // TODO(saikishor) return value_ if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      return *value_ptr_;
+      switch (data_type_)
+      {
+        case HandleDataType::DOUBLE:
+          THROW_ON_NULLPTR(value_ptr_);
+          return *value_ptr_;
+        case HandleDataType::BOOL:     // fallthrough
+        case HandleDataType::FLOAT32:  // fallthrough
+        case HandleDataType::UINT8:    // fallthrough
+        case HandleDataType::INT8:     // fallthrough
+        case HandleDataType::UINT16:   // fallthrough
+        case HandleDataType::INT16:    // fallthrough
+        case HandleDataType::UINT32:   // fallthrough
+        case HandleDataType::INT32:    // fallthrough
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Data type: '{}' will not be casted to double for interface: {}. Use "
+                "get_optional<{}>() instead."),
+              data_type_.to_string(), get_name(), data_type_.to_string()));
+        default:
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE("Data type: '{}' cannot be casted to double for interface: {}"),
+              data_type_.to_string(), get_name()));
+      }
     }
     try
     {
@@ -446,16 +595,20 @@ protected:
           THROW_ON_NULLPTR(value_ptr_);
           value = *value_ptr_;
           return true;
-        case HandleDataType::BOOL:
-          // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
-          // https://github.com/ros2/rclcpp/issues/2587 is fixed
-          RCLCPP_WARN_ONCE(
-            rclcpp::get_logger(get_name()),
-            "Casting bool to double for interface: %s. Better use get_optional<bool>(). This will "
-            "only print once for all interfaces with this issue.",
-            get_name().c_str());
-          value = static_cast<double>(std::get<bool>(value_));
-          return true;
+        case HandleDataType::BOOL:     // fallthrough
+        case HandleDataType::FLOAT32:  // fallthrough
+        case HandleDataType::UINT8:    // fallthrough
+        case HandleDataType::INT8:     // fallthrough
+        case HandleDataType::UINT16:   // fallthrough
+        case HandleDataType::INT16:    // fallthrough
+        case HandleDataType::UINT32:   // fallthrough
+        case HandleDataType::INT32:    // fallthrough
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Data type: '{}' will not be casted to double for interface: {}. Use "
+                "get_optional<{}>() instead."),
+              data_type_.to_string(), get_name(), data_type_.to_string()));
         default:
           throw std::runtime_error(
             fmt::format(
