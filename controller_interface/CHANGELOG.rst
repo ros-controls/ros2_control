@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Calculate achievable update rate of controllers (backport `#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_) (`#2843 <https://github.com/ros-controls/ros2_control/issues/2843>`_)
+* Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2890 <https://github.com/ros-controls/ros2_control/issues/2890>`_)
+* Contributors: mergify[bot]
+
 4.40.0 (2025-12-01)
 -------------------
 * Add tf prefix helper and test (`#2803 <https://github.com/ros-controls/ros2_control/issues/2803>`_) (`#2866 <https://github.com/ros-controls/ros2_control/issues/2866>`_)

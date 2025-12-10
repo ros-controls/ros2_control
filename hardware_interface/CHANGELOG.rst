@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2890 <https://github.com/ros-controls/ros2_control/issues/2890>`_)
+* Fix rst syntax (`#2892 <https://github.com/ros-controls/ros2_control/issues/2892>`_) (`#2893 <https://github.com/ros-controls/ros2_control/issues/2893>`_)
+* Contributors: mergify[bot]
+
 4.40.0 (2025-12-01)
 -------------------
 * [HardwareComponentInterface] Add get state and command interface handle methods (backport `#2831 <https://github.com/ros-controls/ros2_control/issues/2831>`_) (`#2876 <https://github.com/ros-controls/ros2_control/issues/2876>`_)

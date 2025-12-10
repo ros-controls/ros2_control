@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Calculate achievable update rate of controllers (backport `#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_) (`#2843 <https://github.com/ros-controls/ros2_control/issues/2843>`_)
+* Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2890 <https://github.com/ros-controls/ros2_control/issues/2890>`_)
+* Contributors: mergify[bot]
+
 4.40.0 (2025-12-01)
 -------------------
 * Fix the CM statistics async publish placement (`#2865 <https://github.com/ros-controls/ros2_control/issues/2865>`_) (`#2868 <https://github.com/ros-controls/ros2_control/issues/2868>`_)

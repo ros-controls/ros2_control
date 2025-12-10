@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2890 <https://github.com/ros-controls/ros2_control/issues/2890>`_)
+* Contributors: mergify[bot]
+
 4.40.0 (2025-12-01)
 -------------------
 * Publish all castable data types to pal_statistics (backport `#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_) (`#2855 <https://github.com/ros-controls/ros2_control/issues/2855>`_)
