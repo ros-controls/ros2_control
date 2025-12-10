@@ -24,16 +24,6 @@
 namespace hardware_interface
 {
 
-static rclcpp::NodeOptions get_hardware_component_node_options()
-{
-  rclcpp::NodeOptions node_options;
-// \note The versions conditioning is added here to support the source-compatibility with Humble
-#if RCLCPP_VERSION_MAJOR >= 21
-  node_options.enable_logger_service(true);
-#endif
-  return node_options;
-}
-
 HardwareComponentInterface::HardwareComponentInterface()
 : lifecycle_state_(
     rclcpp_lifecycle::State(
@@ -105,7 +95,7 @@ CallbackReturn HardwareComponentInterface::init(
     std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
     std::replace(node_name.begin(), node_name.end(), '/', '_');
     hardware_component_node_ = std::make_shared<rclcpp::Node>(
-      node_name, params.node_namespace, get_hardware_component_node_options());
+      node_name, params.node_namespace, define_custom_node_options());
     locked_executor->add_node(hardware_component_node_->get_node_base_interface());
   }
   else
@@ -250,6 +240,16 @@ CallbackReturn HardwareComponentInterface::on_init(
     parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
   }
   return CallbackReturn::SUCCESS;
+}
+
+rclcpp::NodeOptions HardwareComponentInterface::define_custom_node_options() const
+{
+  rclcpp::NodeOptions node_options;
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
+  return node_options;
 }
 
 std::vector<StateInterface> HardwareComponentInterface::export_state_interfaces()

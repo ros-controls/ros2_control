@@ -128,6 +128,13 @@ public:
   virtual CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params);
 
+  /// Define custom node options for the hardware component interface.
+  /**
+   * Method used by the hardware component to instantiate the Lifecycle node
+   * of the hardware component upon loading the hardware component.
+   */
+  virtual rclcpp::NodeOptions define_custom_node_options() const;
+
   /// Exports all state interfaces for this hardware interface.
   /**
    * Old way of exporting the StateInterfaces. If a empty vector is returned then
