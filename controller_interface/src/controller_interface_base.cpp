@@ -62,6 +62,7 @@ return_type ControllerInterfaceBase::init(
     ctrl_itf_params_.controller_name, ctrl_itf_params_.node_namespace,
     ctrl_itf_params_.node_options,
     false);  // disable LifecycleNode service interfaces
+  lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
 
   if (ctrl_itf_params_.controller_manager_update_rate == 0 && ctrl_itf_params_.update_rate != 0)
   {
@@ -92,22 +93,12 @@ return_type ControllerInterfaceBase::init(
     return return_type::ERROR;
   }
 
-  switch (on_init())
-  {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      RCLCPP_DEBUG(
-        get_node()->get_logger(),
-        "Calling shutdown transition of controller node '%s' due to init failure.",
-        get_node()->get_name());
-      node_->shutdown();
-      return return_type::ERROR;
-  }
-
   node_->register_on_configure(
-    std::bind(&ControllerInterfaceBase::on_configure, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+      return on_configure(previous_state);
+    });
 
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
@@ -116,19 +107,21 @@ return_type ControllerInterfaceBase::init(
       // it in `on_configure` and `on_deactivate` - see the docs for details
       enable_introspection(false);
       this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       return on_cleanup(previous_state);
     });
 
   node_->register_on_activate(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
-      skip_async_triggers_.store(false);
+      skip_async_triggers_.store(false, std::memory_order_release);
       enable_introspection(true);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
         async_handler_->reset_variables();
       }
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       return on_activate(previous_state);
     });
 
@@ -136,6 +129,7 @@ return_type ControllerInterfaceBase::init(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       enable_introspection(false);
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       return on_deactivate(previous_state);
     });
 
@@ -143,6 +137,7 @@ return_type ControllerInterfaceBase::init(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       auto transition_state_status = on_shutdown(previous_state);
       this->release_interfaces();
       return transition_state_status;
@@ -152,16 +147,32 @@ return_type ControllerInterfaceBase::init(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
       this->stop_async_handler_thread();
+      lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       auto transition_state_status = on_error(previous_state);
       this->release_interfaces();
       return transition_state_status;
     });
+
+  switch (on_init())
+  {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      RCLCPP_ERROR(
+        get_node()->get_logger(),
+        "Calling shutdown transition of controller node '%s' due to init failure.",
+        get_node()->get_name());
+      node_->shutdown();
+      return return_type::ERROR;
+  }
 
   return return_type::OK;
 }
 
 const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
+  lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
   // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
   // overrides correctly in combination with std::bind. The goal is to have the following calls:
   // 1. CM: controller.get_node()->configure()
@@ -205,10 +216,12 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
             : ctrl_itf_params_.controller_manager_update_rate / ticks_per_controller_per_second;
 
         RCLCPP_WARN_EXPRESSION(
-          get_node()->get_logger(), !is_frequency_achievable,
-          "The requested update rate of '%ld Hz' is not achievable with the controller manager "
-          "update rate of '%d Hz'. Setting it to the closest achievable frequency '%d Hz'.",
-          update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz);
+          get_node()->get_logger(), !is_frequency_achievable, "%s",
+          fmt::format(
+            "The requested update rate of '{}' Hz is not achievable with the controller manager "
+            "update rate of '{}' Hz. Setting it to the closest achievable frequency '{}' Hz.",
+            update_rate, ctrl_itf_params_.controller_manager_update_rate, achievable_hz)
+            .c_str());
         ctrl_itf_params_.update_rate = achievable_hz;
       }
     }
@@ -251,7 +264,9 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
   trigger_stats_.reset();
 
-  return get_node()->configure();
+  const auto & return_value = get_node()->configure();
+  lifecycle_id_.store(return_value.id(), std::memory_order_release);
+  return return_value;
 }
 
 void ControllerInterfaceBase::assign_interfaces(
@@ -275,6 +290,24 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
     throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
   }
   return node_->get_current_state();
+}
+
+uint8_t ControllerInterfaceBase::get_lifecycle_id() const
+{
+  const auto id = lifecycle_id_.load(std::memory_order_acquire);
+  if (
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_DEACTIVATING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_CLEANINGUP ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_SHUTTINGDOWN ||
+    id == lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING)
+  {
+    const auto new_id = this->get_lifecycle_state().id();
+    lifecycle_id_.store(new_id, std::memory_order_release);
+    return new_id;
+  }
+  return id;
 }
 
 ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
@@ -377,7 +410,7 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 
 void ControllerInterfaceBase::prepare_for_deactivation()
 {
-  skip_async_triggers_.store(true);
+  skip_async_triggers_.store(true, std::memory_order_release);
   this->wait_for_trigger_update_to_finish();
 }
 
