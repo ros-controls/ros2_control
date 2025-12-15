@@ -54,6 +54,8 @@ enum class interface_configuration_type : std::uint8_t
   ALL = 0,
   INDIVIDUAL = 1,
   NONE = 2,
+  INDIVIDUAL_FLEXIBLE = 3,
+  REGEX = 10
 };
 
 /// Configuring what command/state interfaces to claim.
@@ -370,6 +372,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_FLEXIBLE or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   /** Loaned state interfaces.
@@ -380,6 +386,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_FLEXIBLE or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
