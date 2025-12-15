@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <chrono>
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <string>
 #include <thread>
 
@@ -79,8 +80,11 @@ int main(int argc, char ** argv)
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
+  const bool syncronize_by_hardware = cm->get_parameter_or<bool>("synchronize_by_hardware", false);
+  RCLCPP_INFO_EXPRESSION(cm->get_logger(), syncronize_by_hardware, "Synchronizing control loop with hardware.");
+
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time, manage_overruns]()
+    [cm, thread_priority, use_sim_time, manage_overruns, syncronize_by_hardware]()
     {
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
@@ -160,7 +164,7 @@ int main(int argc, char ** argv)
             break;
           }
         }
-        else
+        else if (!syncronize_by_hardware)
         {
           next_iteration_time += period;
           const auto time_now = std::chrono::steady_clock::now();
