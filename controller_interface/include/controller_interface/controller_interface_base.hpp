@@ -61,7 +61,7 @@ enum class interface_configuration_type : std::uint8_t
 /// Configuring what command/state interfaces to claim.
 struct InterfaceConfiguration
 {
-  interface_configuration_type type;
+  interface_configuration_type type = interface_configuration_type::NONE;
   std::vector<std::string> names = {};
 };
 
