@@ -186,12 +186,12 @@ std::vector<std::string> get_command_interfaces_names(
   std::vector<std::string> command_interface_names = {};
   if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
   {
-    command_interface_names = resource_manager->available_command_interfaces();
+    return resource_manager->available_command_interfaces();
   }
   else if (
     command_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
   {
-    command_interface_names = command_interface_config.names;
+    return command_interface_config.names;
   }
   else if (
     command_interface_config.type ==
@@ -240,12 +240,12 @@ std::vector<std::string> get_state_interfaces_names(
   std::vector<std::string> state_interface_names = {};
   if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
   {
-    state_interface_names = resource_manager->available_state_interfaces();
+    return resource_manager->available_state_interfaces();
   }
   else if (
     state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
   {
-    state_interface_names = state_interface_config.names;
+    return state_interface_config.names;
   }
   else if (
     state_interface_config.type ==
