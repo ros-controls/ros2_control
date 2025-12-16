@@ -3017,13 +3017,17 @@ TEST_P(TestControllersWithVariousInterfaceTypes, list_controllers_with_different
 
   auto interface_type = GetParam();
   auto test_controller = std::make_shared<TestController>();
-  controller_interface::InterfaceConfiguration cmd_cfg = {
-    controller_interface::interface_configuration_type::INDIVIDUAL,
-    {"joint1/position", "joint2/velocity"}};
-  controller_interface::InterfaceConfiguration state_cfg = {
-    controller_interface::interface_configuration_type::INDIVIDUAL,
-    {"joint1/position", "joint1/velocity", "joint2/position"}};
-  if (interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
+  controller_interface::InterfaceConfiguration cmd_cfg, state_cfg;
+  if (interface_type == controller_interface::interface_configuration_type::INDIVIDUAL)
+  {
+    cmd_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {"joint1/position", "joint2/velocity"}};
+    state_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {"joint1/position", "joint1/velocity", "joint2/position"}};
+  }
+  else if (interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
   {
     cmd_cfg = {
       controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE,
@@ -3033,7 +3037,7 @@ TEST_P(TestControllersWithVariousInterfaceTypes, list_controllers_with_different
       {"joint1/position", "joint1/velocity", "joint2/position",
        "joint456/interface_does_not_exist"}};
   }
-  if (interface_type == controller_interface::interface_configuration_type::REGEX)
+  else if (interface_type == controller_interface::interface_configuration_type::REGEX)
   {
     cmd_cfg = {
       controller_interface::interface_configuration_type::REGEX, {"joint[12]/(position|velocity)"}};
