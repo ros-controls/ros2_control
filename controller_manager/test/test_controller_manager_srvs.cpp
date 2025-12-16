@@ -3027,7 +3027,8 @@ TEST_P(TestControllersWithVariousInterfaceTypes, list_controllers_with_different
       controller_interface::interface_configuration_type::INDIVIDUAL,
       {"joint1/position", "joint1/velocity", "joint2/position"}};
   }
-  else if (interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
+  else if (
+    interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
   {
     cmd_cfg = {
       controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE,
