@@ -671,11 +671,11 @@ public:
         }
         catch (const std::bad_variant_access & err)
         {
-          throw std::runtime_error(
-            fmt::format(
-              FMT_COMPILE(
-                "Invalid data type: '{}' access for interface: {} expected: double casting"),
-              data_type_.to_string(), get_name()));
+          RCLCPP_ERROR(
+            rclcpp::get_logger(get_name()),
+            "Invalid data type: '%s' access for interface: %s expected: double casting",
+            data_type_.to_string().c_str(), get_name().c_str());
+          return std::numeric_limits<double>::quiet_NaN();
         }
       };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
@@ -774,11 +774,11 @@ public:
         }
         catch (const std::bad_variant_access & err)
         {
-          throw std::runtime_error(
-            fmt::format(
-              FMT_COMPILE(
-                "Invalid data type: '{}' access for interface: {} expected: double casting"),
-              data_type_.to_string(), get_name()));
+          RCLCPP_ERROR(
+            rclcpp::get_logger(get_name()),
+            "Invalid data type: '%s' access for interface: %s expected: double casting",
+            data_type_.to_string().c_str(), get_name().c_str());
+          return std::numeric_limits<double>::quiet_NaN();
         }
       };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
