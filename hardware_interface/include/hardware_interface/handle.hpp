@@ -658,13 +658,24 @@ public:
     {
       std::function<double()> f = [this]()
       {
-        if (value_ptr_)
+        try
         {
-          return *value_ptr_;
+          if (value_ptr_)
+          {
+            return *value_ptr_;
+          }
+          else
+          {
+            return data_type_.cast_to_double(value_);
+          }
         }
-        else
+        catch (const std::bad_variant_access & err)
         {
-          return data_type_.cast_to_double(value_);
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Invalid data type: '{}' access for interface: {} expected: double casting"),
+              data_type_.to_string(), get_name()));
         }
       };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
@@ -750,13 +761,24 @@ public:
     {
       std::function<double()> f = [this]()
       {
-        if (value_ptr_)
+        try
         {
-          return *value_ptr_;
+          if (value_ptr_)
+          {
+            return *value_ptr_;
+          }
+          else
+          {
+            return data_type_.cast_to_double(value_);
+          }
         }
-        else
+        catch (const std::bad_variant_access & err)
         {
-          return data_type_.cast_to_double(value_);
+          throw std::runtime_error(
+            fmt::format(
+              FMT_COMPILE(
+                "Invalid data type: '{}' access for interface: {} expected: double casting"),
+              data_type_.to_string(), get_name()));
         }
       };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
