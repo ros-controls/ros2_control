@@ -245,6 +245,39 @@ TEST(TestHandle, interface_description_bool_data_type)
   EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
 }
 
+TEST(TestHandle, interface_description_bool_data_type_copy)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "bool";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+
+  auto handle_copy = handle;  // Copy constructor
+
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, interface_descr.get_data_type());
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, handle_copy.get_data_type());
+  EXPECT_EQ(handle_copy.get_name(), itf_name + "/" + collision_interface);
+  EXPECT_EQ(handle_copy.get_interface_name(), collision_interface);
+  EXPECT_EQ(handle_copy.get_prefix_name(), itf_name);
+  EXPECT_NO_THROW({ std::ignore = handle_copy.get_optional<bool>(); });
+  ASSERT_FALSE(handle_copy.get_optional<bool>().value()) << "Default value should be false";
+  ASSERT_TRUE(handle_copy.set_value(true));
+  ASSERT_TRUE(handle_copy.get_optional<bool>().value());
+  ASSERT_EQ(handle_copy.get_optional(), 1.0);
+  ASSERT_TRUE(handle_copy.set_value(false));
+  ASSERT_FALSE(handle_copy.get_optional<bool>().value());
+  ASSERT_EQ(handle_copy.get_optional(), 0.0);
+
+  // Test the assertions
+  ASSERT_THROW({ std::ignore = handle.set_value(-1.0); }, std::runtime_error);
+  ASSERT_THROW({ std::ignore = handle.set_value(0.0); }, std::runtime_error);
+
+  EXPECT_NO_THROW({ std::ignore = handle.get_optional<double>(); });
+}
+
 TEST(TestHandle, handle_constructor_double_data_type)
 {
   const std::string POSITION_INTERFACE = "position";
