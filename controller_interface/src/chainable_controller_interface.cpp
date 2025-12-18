@@ -62,6 +62,17 @@ ChainableControllerInterface::export_state_interfaces()
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
   {
+    if (interface.get_data_type() != hardware_interface::HandleDataType::DOUBLE)
+    {
+      const std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "The data type of the interface '{}' ({}) is not of type 'double'. "
+          "Unfortunately, only 'double' data type is supported for state interfaces. "
+          "No state interface will be exported. Please correct and recompile the controller "
+          "with name '{}' and try again."),
+        interface.get_name(), interface.get_data_type().to_string(), get_node()->get_name());
+      throw std::runtime_error(error_msg);
+    }
     if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
       const std::string error_msg = fmt::format(
@@ -143,6 +154,16 @@ ChainableControllerInterface::export_reference_interfaces()
   const auto ref_interface_size = reference_interfaces.size();
   for (auto & interface : reference_interfaces)
   {
+    if (interface.get_data_type() != hardware_interface::HandleDataType::DOUBLE)
+    {
+      std::string error_msg = fmt::format(
+        FMT_COMPILE(
+          "The data type of the interface '{}' ({}) is not of type 'double'. "
+          "Unfortunately, only 'double' data type is supported for reference interfaces. "
+          "Please correct and recompile the controller with name '{}' and try again."),
+        interface.get_name(), interface.get_data_type().to_string(), get_node()->get_name());
+      throw std::runtime_error(error_msg);
+    }
     if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
     {
       std::string error_msg = fmt::format(
