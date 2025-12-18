@@ -596,6 +596,7 @@ private:
     interface_name_ = other.interface_name_;
     handle_name_ = other.handle_name_;
     value_ = other.value_;
+    data_type_ = other.data_type_;
     if (std::holds_alternative<std::monostate>(value_))
     {
       value_ptr_ = other.value_ptr_;
@@ -613,10 +614,12 @@ private:
     std::swap(first.interface_name_, second.interface_name_);
     std::swap(first.handle_name_, second.handle_name_);
     std::swap(first.value_, second.value_);
+    std::swap(first.data_type_, second.data_type_);
     std::swap(first.value_ptr_, second.value_ptr_);
   }
 
 protected:
+  /// @note The methods copy and swap need to be updated, if new members are added.
   std::string prefix_name_;
   std::string interface_name_;
   std::string handle_name_;
