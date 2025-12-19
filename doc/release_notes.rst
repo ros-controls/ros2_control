@@ -102,11 +102,7 @@ controller_manager
 * Parameter ``shutdown_on_initial_state_failure`` was added to avoid shutting down on hardware initial state failure  (`#2230 <https://github.com/ros-controls/ros2_control/pull/2230>`_).
 * The controller manager now publishes ``~/statistics/names`` and ``~/statistics/values`` topics to introspect the execution time and periodicity of the different entities running in the realtime loop (`#2449 <https://github.com/ros-controls/ros2_control/pull/2449>`_).
 * The controller manager now supports switching (activating and deactivating) controllers in both realtime and non-realtime modes. This is controlled by the parameter ``activate_asap`` of the ``switch_controllers`` service (`#2452 <https://github.com/ros-controls/ros2_control/pull/2452>`_).
-<<<<<<< HEAD
 * The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop. By default, it is set to ``--switch-asap`` to keep the earlier behavior (`#2610 <https://github.com/ros-controls/ros2_control/pull/2610>`_).
-=======
-* The spawner now supports two new arguments ``--switch-asap`` and ``--no-switch-asap`` to control the behaviour of the spawner when switching controllers to be in realtime loop (or) non-realtime loop. By default, it is set to ``--no-switch-asap`` because when activating multiple controllers at same time might affect the realtime loop performance (`#2452 <https://github.com/ros-controls/ros2_control/pull/2452>`_).
->>>>>>> c043c43 (Fix links in release notes (#2910))
 * New parameters ``overruns.manage`` and ``overruns.print_warnings`` were added to control the behavior of the controller manager/ros2_control_node when overruns occur (`#2546 <https://github.com/ros-controls/ros2_control/pull/2546/files>`_).
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
