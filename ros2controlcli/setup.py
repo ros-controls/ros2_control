@@ -66,6 +66,11 @@ ROS2 Control command  interface.""",
                 ros2controlcli.verb.set_hardware_component_state:SetHardwareComponentStateVerb",
             "switch_controllers = ros2controlcli.verb.switch_controllers:SwitchControllersVerb",
             "unload_controller = ros2controlcli.verb.unload_controller:UnloadControllerVerb",
+<<<<<<< HEAD
+=======
+            "cleanup_controller = ros2controlcli.verb.cleanup_controller:CleanupControllerVerb",
+            "view_hardware_status = ros2controlcli.verb.view_hardware_status:ViewHardwareStatusVerb",
+>>>>>>> 67bffef (Add `cleanup_controller` lifecycle transition (#2414))
         ],
     },
 )
