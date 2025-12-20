@@ -38,12 +38,8 @@ hardware_interface
 
 ros2controlcli
 **************
-<<<<<<< HEAD
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
-
-=======
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
->>>>>>> 67bffef (Add `cleanup_controller` lifecycle transition (#2414))
 
 transmission_interface
 **********************
