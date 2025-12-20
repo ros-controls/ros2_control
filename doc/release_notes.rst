@@ -204,7 +204,6 @@ joint_limits
 
 ros2controlcli
 **************
-<<<<<<< HEAD
 * Spawner colours were added to ``list_controllers`` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/pull/1409>`_)
 * The ``set_hardware_component_state`` verb was added (`#1248 <https://github.com/ros-controls/ros2_control/pull/1248>`_). Use the following command to set the state of a hardware component
 
@@ -225,9 +224,7 @@ ros2controlcli
     ros2 control <verb> <arguments> --ros-args -r __ns:=<namespace>
 
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
-=======
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
->>>>>>> 67bffef (Add `cleanup_controller` lifecycle transition (#2414))
 
 transmission_interface
 **********************
