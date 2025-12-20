@@ -142,8 +142,8 @@ public:
             return ret_read;
           }
           if (
-            !is_sensor_type &&
-            this->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
+                                 lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
           {
             const auto write_start_time = std::chrono::steady_clock::now();
             const auto ret_write = write(time, period);
@@ -678,18 +678,27 @@ public:
 
   /// Get life-cycle state of the hardware.
   /**
+   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
+   * should not be called in the control loop.
+   * \note This method is thread safe.
    * \return state.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the hardware.
   /**
+   * Get the lifecycle id of the hardware component interface that is cached internally to avoid
+   * calls to get_lifecycle_state() in the real-time control loop.
+   * \note This method is real-time safe and thread safe and can be called in the control loop.
    * \return state.
    */
   void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
   {
     lifecycle_state_ = new_state;
+    lifecycle_id_cache_.store(new_state.id(), std::memory_order_release);
   }
+
+  uint8_t get_lifecycle_id() const { return lifecycle_id_cache_.load(std::memory_order_acquire); }
 
   /// Does the state interface exist?
   /**
@@ -1016,6 +1025,7 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.

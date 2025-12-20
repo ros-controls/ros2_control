@@ -137,7 +137,8 @@ struct TransmissionInfo
  * Hardware handles supported types
  */
 
-using HANDLE_DATATYPE = std::variant<std::monostate, double, bool>;
+using HANDLE_DATATYPE = std::variant<
+  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
 class HandleDataType
 {
 public:
@@ -145,7 +146,14 @@ public:
   {
     UNKNOWN = -1,
     DOUBLE,
-    BOOL
+    FLOAT32,
+    BOOL,
+    UINT8,
+    INT8,
+    UINT16,
+    INT16,
+    UINT32,
+    INT32,
   };
 
   HandleDataType() = default;
@@ -159,6 +167,34 @@ public:
     else if (data_type == "bool")
     {
       value_ = BOOL;
+    }
+    else if (data_type == "float32")
+    {
+      value_ = FLOAT32;
+    }
+    else if (data_type == "uint8")
+    {
+      value_ = UINT8;
+    }
+    else if (data_type == "int8")
+    {
+      value_ = INT8;
+    }
+    else if (data_type == "uint16")
+    {
+      value_ = UINT16;
+    }
+    else if (data_type == "int16")
+    {
+      value_ = INT16;
+    }
+    else if (data_type == "uint32")
+    {
+      value_ = UINT32;
+    }
+    else if (data_type == "int32")
+    {
+      value_ = INT32;
     }
     else
     {
@@ -184,6 +220,20 @@ public:
         return "double";
       case BOOL:
         return "bool";
+      case FLOAT32:
+        return "float32";
+      case UINT8:
+        return "uint8";
+      case INT8:
+        return "int8";
+      case UINT16:
+        return "uint16";
+      case INT16:
+        return "int16";
+      case UINT32:
+        return "uint32";
+      case INT32:
+        return "int32";
       default:
         return "unknown";
     }
@@ -198,10 +248,16 @@ public:
   {
     switch (value_)
     {
-      case DOUBLE:
+      case DOUBLE:   // fallthrough
+      case FLOAT32:  // fallthrough
+      case BOOL:     // fallthrough
+      case UINT8:    // fallthrough
+      case INT8:     // fallthrough
+      case UINT16:   // fallthrough
+      case INT16:    // fallthrough
+      case UINT32:   // fallthrough
+      case INT32:
         return true;
-      case BOOL:
-        return true;  // bool can be converted to double
       default:
         return false;  // unknown type cannot be converted
     }
@@ -220,8 +276,22 @@ public:
     {
       case DOUBLE:
         return std::get<double>(value);
+      case FLOAT32:
+        return static_cast<double>(std::get<float>(value));
       case BOOL:
         return static_cast<double>(std::get<bool>(value));
+      case UINT8:
+        return static_cast<double>(std::get<uint8_t>(value));
+      case INT8:
+        return static_cast<double>(std::get<int8_t>(value));
+      case UINT16:
+        return static_cast<double>(std::get<uint16_t>(value));
+      case INT16:
+        return static_cast<double>(std::get<int16_t>(value));
+      case UINT32:
+        return static_cast<double>(std::get<uint32_t>(value));
+      case INT32:
+        return static_cast<double>(std::get<int32_t>(value));
       default:
         throw std::runtime_error(
           fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));

@@ -200,7 +200,7 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 {
   bool result = false;
 
-  if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  if (get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     result = on_set_chained_mode(chained_mode);
 
