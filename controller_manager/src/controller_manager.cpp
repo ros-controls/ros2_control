@@ -1145,7 +1145,7 @@ controller_interface::return_type ControllerManager::unload_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  // find and clean controller if it is inactive
+  // call cleanup transition, if it is inactive
   if (cleanup_controller(controller_name) != controller_interface::return_type::OK)
   {
     return controller_interface::return_type::ERROR;
