@@ -1586,6 +1586,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   state = actuator_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, actuator_hw.get_lifecycle_id());
 
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
@@ -1600,6 +1601,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   state = actuator_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+  ASSERT_EQ(actuator_hw.get_lifecycle_id(), actuator_hw.get_lifecycle_state().id());
 
   // activate again and expect reset values
   state = actuator_hw.configure();
@@ -1609,6 +1611,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   state = actuator_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, actuator_hw.get_lifecycle_id());
 
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
@@ -1623,11 +1626,13 @@ TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   state = actuator_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, actuator_hw.get_lifecycle_id());
 
   // can not change state anymore
   state = actuator_hw.configure();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, actuator_hw.get_lifecycle_id());
 }
 // END
 
@@ -1871,6 +1876,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_hw.get_lifecycle_id());
 
   ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
 
@@ -1884,6 +1890,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, sensor_hw.get_lifecycle_id());
 
   // Noting should change because it is UNCONFIGURED
   for (auto step = 0u; step < 10; ++step)
@@ -1898,6 +1905,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_hw.get_lifecycle_id());
 
   // Initiate unrecoverable error - call read 99 times OK and on 100-time will return error
   for (auto i = 1ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
@@ -1909,6 +1917,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, sensor_hw.get_lifecycle_id());
 
   // Noting should change because it is FINALIZED
   for (auto step = 0u; step < 10; ++step)
@@ -1920,6 +1929,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.configure();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, sensor_hw.get_lifecycle_id());
 }
 // END
 
@@ -2230,6 +2240,7 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, system_hw.get_lifecycle_id());
 
   auto state_interfaces = system_hw.export_state_interfaces();
   auto command_interfaces = system_hw.export_command_interfaces();
@@ -2237,6 +2248,7 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   state = system_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, system_hw.get_lifecycle_id());
 
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
@@ -2251,6 +2263,7 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   state = system_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, system_hw.get_lifecycle_id());
 
   // activate again and expect reset values
   state = system_hw.configure();
@@ -2265,6 +2278,7 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   state = system_hw.activate();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, system_hw.get_lifecycle_id());
 
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
@@ -2279,11 +2293,13 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   state = system_hw.get_lifecycle_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, system_hw.get_lifecycle_id());
 
   // can not change state anymore
   state = system_hw.configure();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, system_hw.get_lifecycle_id());
 }
 
 int main(int argc, char ** argv)

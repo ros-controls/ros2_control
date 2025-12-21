@@ -75,7 +75,7 @@ class TestActuator : public ActuatorInterface
         &velocity_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
+        get_hardware_info().joints[0].name, "some_unlisted_interface", &unlisted_interface_));
 
     return state_interfaces;
   }
@@ -111,6 +111,14 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
+    if (get_hardware_info().hardware_parameters.count("fail_on_perform_mode_switch"))
+    {
+      if (hardware_interface::parse_bool(
+            get_hardware_info().hardware_parameters.at("fail_on_perform_mode_switch")))
+      {
+        return hardware_interface::return_type::ERROR;
+      }
+    }
     position_state_ += 0.1;
     return hardware_interface::return_type::OK;
   }
@@ -179,6 +187,7 @@ private:
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
   double max_velocity_command_ = 0.0;
+  double unlisted_interface_ = std::numeric_limits<double>::quiet_NaN();
 };
 
 class TestUninitializableActuator : public TestActuator

@@ -9,14 +9,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
   diagnostic_updater
+  fmt
+  generate_parameter_library
   hardware_interface
+  libstatistics_collector
+  lifecycle_msgs
   pluginlib
   rclcpp
   realtime_tools
   std_msgs
-  libstatistics_collector
-  generate_parameter_library
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -139,6 +140,17 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
+  ament_add_gmock(test_cleanup_controller
+    test/test_cleanup_controller.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_cleanup_controller
+    controller_manager
+    test_controller
+    test_controller_failed_init
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   ament_add_gmock(test_controllers_chaining_with_controller_manager
     test/test_controllers_chaining_with_controller_manager.cpp
   )
@@ -161,6 +173,7 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
   set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
+
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )

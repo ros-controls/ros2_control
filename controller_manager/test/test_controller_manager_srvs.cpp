@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <random>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -472,6 +473,77 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+}
+
+TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::CleanupController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::CleanupController>(
+      "test_controller_manager/cleanup_controller");
+
+  auto request = std::make_shared<controller_manager_msgs::srv::CleanupController::Request>();
+  request->name = test_controller::TEST_CONTROLLER_NAME;
+
+  // variation - 1:
+  // scenario: call the cleanup service when no controllers are loaded
+  // expected: it should return ERROR as no controllers will be found to cleanup
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
+
+  // variation - 2:
+  // scenario: call the cleanup service when one controller is loaded
+  // expected: it should return OK as one controller will be found to cleanup
+  auto test_controller = std::make_shared<TestController>();
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 3:
+  // scenario: call the cleanup service when controller state is ACTIVE
+  // expected: it should return ERROR as cleanup is restricted for ACTIVE controllers
+  test_controller = std::dynamic_pointer_cast<TestController>(cm_->load_controller(
+    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  // activate controllers
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller can not be cleaned in active state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 4:
+  // scenario: call the cleanup service when controller state is INACTIVE
+  // expected: it should return OK as cleanup will be done for INACTIVE controllers
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok) << "Controller cleaned in inactive state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 }
 
 TEST_F(TestControllerManagerSrvs, unload_controller_srv)
@@ -2666,6 +2738,323 @@ TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_s
 
   // Now try activating both the controllers at once, it should fail as they are using same
   // interface
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, false, rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::ERROR);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+}
+
+TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_all_interface)
+{
+  // create server client and request
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  // create set of controllers
+  static constexpr char TEST_CONTROLLER_1[] = "test_controller_1";
+  static constexpr char TEST_CONTROLLER_2[] = "test_controller_2";
+
+  // create non-chained controller
+  auto test_controller_1 = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/max_velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_controller_1->set_command_interface_configuration(cmd_cfg);
+  test_controller_1->set_state_interface_configuration(state_cfg);
+
+  auto test_controller_2 = std::make_shared<TestController>();
+  cmd_cfg = {controller_interface::interface_configuration_type::ALL, {}};
+  state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint2/velocity"}};
+  test_controller_2->set_command_interface_configuration(cmd_cfg);
+  test_controller_2->set_state_interface_configuration(state_cfg);
+
+  // add controllers
+  cm_->add_controller(
+    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  // get controller list before configure
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  // check chainable controller
+  ASSERT_EQ(2u, result->controller.size());
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
+
+  // configure controllers
+  for (const auto & controller : {TEST_CONTROLLER_1, TEST_CONTROLLER_2})
+  {
+    cm_->configure_controller(controller);
+  }
+
+  // get controller list after configure
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(2u, result->controller.size());
+
+  // reordered controllers
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+
+  // Check individual activation and they should work fine
+  auto res = cm_->switch_controller(
+    {TEST_CONTROLLER_1}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  res = cm_->switch_controller(
+    {}, {TEST_CONTROLLER_1}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  // Now test activating controller_2
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_2}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  res = cm_->switch_controller(
+    {}, {TEST_CONTROLLER_2}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  // Now try activating both the controllers at once, it should fail as they are using same
+  // interface
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, false, rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::ERROR);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  // Now activate controller 2 and then try to activate controller 1 while deactivating controller 2
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_2}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_1}, {TEST_CONTROLLER_2},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, false, rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+
+  // deactivate controller 2
+  res = cm_->switch_controller(
+    {}, {TEST_CONTROLLER_1}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+  cm_->update(cm_->now(), rclcpp::Duration::from_seconds(0.01));
+}
+
+class TestControllerManagerSrvsWithFailingPerformSwitch : public TestControllerManagerSrvs
+{
+  void SetUp()
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    const std::string robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    const std::regex plugin_regex(R"((<plugin>.*?</plugin>\s*))");
+    const std::string replacement = "$1<param name=\"fail_on_perform_mode_switch\">true</param>\n";
+    const std::string result = std::regex_replace(robot_description, plugin_regex, replacement);
+
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(
+        result, rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface(), true),
+      executor_, TEST_CM_NAME);
+    run_updater_ = false;
+    time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());
+    SetUpSrvsCMExecutor();
+  }
+};
+
+TEST_F(
+  TestControllerManagerSrvsWithFailingPerformSwitch, switch_controller_with_failing_perform_switch)
+{
+  // create server client and request
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  // create set of controllers
+  static constexpr char TEST_CONTROLLER_1[] = "test_controller_1";
+  static constexpr char TEST_CONTROLLER_2[] = "test_controller_2";
+
+  // create non-chained controller
+  auto test_controller_1 = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/max_velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_controller_1->set_command_interface_configuration(cmd_cfg);
+  test_controller_1->set_state_interface_configuration(state_cfg);
+
+  auto test_controller_2 = std::make_shared<TestController>();
+  cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint2/max_acceleration", "joint2/velocity"}};
+  state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint2/position", "joint2/velocity"}};
+  test_controller_2->set_command_interface_configuration(cmd_cfg);
+  test_controller_2->set_state_interface_configuration(state_cfg);
+
+  // add controllers
+  cm_->add_controller(
+    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  // get controller list before configure
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  // check chainable controller
+  ASSERT_EQ(2u, result->controller.size());
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
+
+  // configure controllers
+  for (const auto & controller : {TEST_CONTROLLER_1, TEST_CONTROLLER_2})
+  {
+    cm_->configure_controller(controller);
+  }
+
+  // get controller list after configure
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(2u, result->controller.size());
+
+  // reordered controllers
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+
+  // Check individual activation
+  auto res = cm_->switch_controller(
+    {TEST_CONTROLLER_1}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(100, 0));
+  ASSERT_EQ(res, controller_interface::return_type::ERROR);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_1}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::ERROR);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  // Now test activating controller_2
+  res = cm_->switch_controller(
+    {TEST_CONTROLLER_2}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  res = cm_->switch_controller(
+    {}, {TEST_CONTROLLER_2}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_1->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_2->get_lifecycle_state().id());
+
+  // Now try activating both the controllers at once, it should fail as the perform switch fails for
+  // one of the controller
   res = cm_->switch_controller(
     {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, false, rclcpp::Duration(0, 0));

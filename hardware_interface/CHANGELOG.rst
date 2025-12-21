@@ -2,6 +2,31 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2025-12-10)
+------------------
+* [Handle] Add support to more data types (`#2879 <https://github.com/ros-controls/ros2_control/issues/2879>`_)
+* Fix rst syntax (`#2892 <https://github.com/ros-controls/ros2_control/issues/2892>`_)
+* Fix the blocking calls of lifecycle_state in the real-time loop (`#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_)
+* remove unused async components header (`#2885 <https://github.com/ros-controls/ros2_control/issues/2885>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.1.0 (2025-12-01)
+------------------
+* [HardwareComponentInterface] Add get state and command interface handle methods (`#2831 <https://github.com/ros-controls/ros2_control/issues/2831>`_)
+* Use proper hardware component logger for async components (`#2860 <https://github.com/ros-controls/ros2_control/issues/2860>`_)
+* Publish all castable data types to pal_statistics (`#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_)
+* Add `handle_exceptions` parameter to controller manager (`#2807 <https://github.com/ros-controls/ros2_control/issues/2807>`_)
+* Avoid C++20 structured binding capture (`#2832 <https://github.com/ros-controls/ros2_control/issues/2832>`_)
+* Use tinyxml2 package instead of deprecated tinyxml2_vendor (`#2833 <https://github.com/ros-controls/ros2_control/issues/2833>`_)
+* Contributors: Christoph Fröhlich, James Cowsert, Noel Jiménez García, Sai Kishor Kothakota
+
+6.0.2 (2025-11-09)
+------------------
+* Auto-set joint state interfaces to zero in MockHardware (`#2788 <https://github.com/ros-controls/ros2_control/issues/2788>`_)
+* Rename hardware descriptions (`#2787 <https://github.com/ros-controls/ros2_control/issues/2787>`_)
+* Don't update MockComponent's state interfaces if command interfaces are not finite (`#2786 <https://github.com/ros-controls/ros2_control/issues/2786>`_)
+* Contributors: Christoph Fröhlich
+
 6.0.1 (2025-11-03)
 ------------------
 

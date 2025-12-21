@@ -13,6 +13,13 @@ controller_manager:
     description: "If true, the controller manager will enforce command limits defined in the robot description. If false, no limits will be enforced. If true, when the command is outside the limits, the command is clamped to be within the limits depending on the type of configured joint limits defined in the robot description. If the command is within the limits, the command is passed through without any changes.",
   }
 
+  handle_exceptions: {
+    type: bool,
+    default_value: true,
+    read_only: true,
+    description: "If true, the controller manager will catch exceptions thrown during the different operations of controllers and hardware components. If false, exceptions will propagate up and will cause the controller manager to crash.",
+  }
+
   hardware_components_initial_state:
     unconfigured: {
       type: string_array,
