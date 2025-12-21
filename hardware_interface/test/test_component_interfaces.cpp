@@ -788,7 +788,7 @@ protected:
     {
       rclcpp::init(0, nullptr);
     }
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
     spin_thread_ = std::thread([this]() { executor_->spin(); });
   }
   void TearDown() override
@@ -802,7 +802,7 @@ protected:
       spin_thread_.join();
     }
   }
-  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
   std::thread spin_thread_;
 };
 // BEGIN (Handle export change): for backward compatibility
