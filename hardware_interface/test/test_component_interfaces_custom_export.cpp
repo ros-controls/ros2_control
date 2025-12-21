@@ -174,7 +174,7 @@ protected:
       spin_thread_.join();
     }
   }
-  std::shared_ptr<rclcpp::executors::Executor> executor_;
+  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
   std::thread spin_thread_;
 };
 TEST_F(TestComponentInterfaces, dummy_actuator_default_custom_export)

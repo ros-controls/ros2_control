@@ -802,7 +802,7 @@ protected:
       spin_thread_.join();
     }
   }
-  std::shared_ptr<rclcpp::executors::Executor> executor_;
+  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
   std::thread spin_thread_;
 };
 // BEGIN (Handle export change): for backward compatibility
