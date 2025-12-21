@@ -245,13 +245,13 @@ set_controller_state
 .. code-block:: console
 
     $ ros2 control set_controller_state -h
-    usage: ros2 control set_controller_state [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name {inactive,active}
+    usage: ros2 control set_controller_state [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name {unconfigured,inactive,active}
 
     Adjust the state of the controller
 
     positional arguments:
       controller_name       Name of the controller to be changed
-      {inactive,active}     State in which the controller should be changed to
+      {unconfigured,inactive,active}     State in which the controller should be changed to
 
     options:
       -h, --help            show this help message and exit
