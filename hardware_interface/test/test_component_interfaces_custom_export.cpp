@@ -160,10 +160,22 @@ protected:
     {
       rclcpp::init(0, nullptr);
     }
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    spin_thread_ = std::thread([this]() { executor_->spin(); });
   }
-
-  void TearDown() override { rclcpp::shutdown(); }
-  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_ = nullptr;
+  void TearDown() override
+  {
+    if (executor_)
+    {
+      executor_->cancel();
+    }
+    if (spin_thread_.joinable())
+    {
+      spin_thread_.join();
+    }
+  }
+  std::shared_ptr<rclcpp::executors::Executor> executor_;
+  std::thread spin_thread_;
 };
 TEST_F(TestComponentInterfaces, dummy_actuator_default_custom_export)
 {
