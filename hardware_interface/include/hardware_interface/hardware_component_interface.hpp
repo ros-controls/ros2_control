@@ -130,17 +130,6 @@ public:
       async_handler_->init(
         [this, is_sensor_type](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
-          const auto read_start_time = std::chrono::steady_clock::now();
-          const auto ret_read = read(time, period);
-          const auto read_end_time = std::chrono::steady_clock::now();
-          read_return_info_.store(ret_read, std::memory_order_release);
-          read_execution_time_.store(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
-            std::memory_order_release);
-          if (ret_read != return_type::OK)
-          {
-            return ret_read;
-          }
           if (
             !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
                                  lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -153,9 +142,19 @@ public:
               std::chrono::duration_cast<std::chrono::nanoseconds>(
                 write_end_time - write_start_time),
               std::memory_order_release);
-            return ret_write;
+            if (ret_write != return_type::OK)
+            {
+              return ret_write;
+            }
           }
-          return return_type::OK;
+          const auto read_start_time = std::chrono::steady_clock::now();
+          const auto ret_read = read(time, period);
+          const auto read_end_time = std::chrono::steady_clock::now();
+          read_return_info_.store(ret_read, std::memory_order_release);
+          read_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
+            std::memory_order_release);
+          return ret_read;
         },
         async_thread_params);
       async_handler_->start_thread();
