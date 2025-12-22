@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <array>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
@@ -46,6 +47,7 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 }  // namespace
 
 using namespace ::testing;  // NOLINT
+using namespace std::chrono_literals;
 
 namespace test_components
 {
@@ -156,26 +158,15 @@ class TestComponentInterfaces : public ::testing::Test
 protected:
   void SetUp() override
   {
-    if (!rclcpp::ok())
-    {
-      rclcpp::init(0, nullptr);
-    }
-    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-    spin_thread_ = std::thread([this]() { executor_->spin(); });
+    executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    std::this_thread::sleep_for(50ms);
   }
-  void TearDown() override
-  {
-    if (executor_)
-    {
-      executor_->cancel();
-    }
-    if (spin_thread_.joinable())
-    {
-      spin_thread_.join();
-    }
-  }
+  void TearDown() override { executor_->cancel(); }
   std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
-  std::thread spin_thread_;
 };
 TEST_F(TestComponentInterfaces, dummy_actuator_default_custom_export)
 {
