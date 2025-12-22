@@ -34,7 +34,15 @@ target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(hardware_interface PUBLIC
+                      rclcpp::rclcpp
+                      rclcpp_lifecycle::rclcpp_lifecycle
+                      pluginlib::pluginlib
+                      rcutils::rcutils
+                      rcpputils::rcpputils
+                      ${TinyXML2_LIBRARIES}
+                      ${control_msgs_TARGETS}
+                      ${lifecycle_msgs_TARGETS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -47,7 +55,7 @@ target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-ament_target_dependencies(mock_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(mock_components PUBLIC hardware_interface)
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(mock_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -64,7 +72,7 @@ target_include_directories(fake_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-ament_target_dependencies(fake_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(fake_components PUBLIC hardware_interface)
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(fake_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
