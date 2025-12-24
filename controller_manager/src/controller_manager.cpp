@@ -477,6 +477,12 @@ ControllerManager::ControllerManager(
   cm_node_options_(options),
   robot_description_(resource_manager_->get_robot_description())
 {
+  if (
+    resource_manager_->are_components_initialized() &&
+    resource_manager_->are_joint_limiters_imported())
+  {
+    is_resource_manager_initialized_ = true;
+  }
   initialize_parameters();
   init_controller_manager();
 }
@@ -524,35 +530,16 @@ bool ControllerManager::shutdown_controllers()
 
 void ControllerManager::init_controller_manager()
 {
-  if (!resource_manager_ && !robot_description_.empty())
-  {
-    init_resource_manager(robot_description_);
-  }
-
-  if (!is_resource_manager_initialized())
-  {
-    // The RM failed to initialize after receiving the robot description, or no description was
-    // received at all. This is a critical error. Don't finalize controller manager, instead keep
-    // waiting for robot description
-    resource_manager_ =
-      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-    if (!robot_description_notification_timer_)
-    {
-      robot_description_notification_timer_ = create_wall_timer(
-        std::chrono::seconds(1),
-        [&]()
-        {
-          RCLCPP_WARN(
-            get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
-        });
-    }
-  }
-
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
       "~/activity", rclcpp::QoS(1).reliable().transient_local());
   rt_controllers_wrapper_.set_on_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
+
+  if (!resource_manager_ && !robot_description_.empty())
+  {
+    init_resource_manager(robot_description_);
+  }
 
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
@@ -605,6 +592,25 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
+
+  if (!is_resource_manager_initialized())
+  {
+    // The RM failed to initialize after receiving the robot description, or no description was
+    // received at all. This is a critical error. Don't finalize controller manager, instead keep
+    // waiting for robot description
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+    if (!robot_description_notification_timer_)
+    {
+      robot_description_notification_timer_ = create_wall_timer(
+        std::chrono::seconds(1),
+        [&]()
+        {
+          RCLCPP_WARN(
+            get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+        });
+    }
+  }
 }
 
 void ControllerManager::initialize_parameters()
