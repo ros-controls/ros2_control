@@ -218,10 +218,7 @@ public:
    * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
-  bool is_resource_manager_initialized() const
-  {
-    return resource_manager_ && resource_manager_->are_components_initialized();
-  }
+  bool is_resource_manager_initialized() const { return is_resource_manager_initialized_; }
 
   /// Update rate of the main control loop in the controller manager.
   /**
@@ -244,6 +241,16 @@ public:
    * \returns trigger clock of the controller manager.
    */
   rclcpp::Clock::SharedPtr get_trigger_clock() const;
+
+  /**
+   * @brief Returns true if we have a valid robot description, currently based on whether the timer
+   * for waiting on description is still on.
+   */
+  bool has_invalid_robot_description() const
+  {
+    return robot_description_notification_timer_ &&
+           !robot_description_notification_timer_->is_canceled();
+  }
 
 protected:
   void init_services();
@@ -675,6 +682,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  bool is_resource_manager_initialized_ = false;
   struct ControllerManagerExecutionTime
   {
     double read_time = 0.0;
