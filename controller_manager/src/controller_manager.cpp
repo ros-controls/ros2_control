@@ -533,7 +533,7 @@ void ControllerManager::init_controller_manager()
   {
     // The RM failed to initialize after receiving the robot description, or no description was
     // received at all. This is a critical error. Don't finalize controller manager, instead keep
-    // waiting for robot description - fallback state
+    // waiting for robot description
     resource_manager_ =
       std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
     if (!robot_description_notification_timer_)
