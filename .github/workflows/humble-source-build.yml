@@ -1,9 +1,6 @@
 name: Humble Source Build
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - humble
   push:
     branches:
       - humble
@@ -20,8 +17,8 @@ on:
   pull_request:
     branches:
       - humble
-    paths:
-      - .github/workflows/humble-source-build.yml
+    # paths:
+    #   - .github/workflows/humble-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * MON-FRI'
