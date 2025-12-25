@@ -1,17 +1,26 @@
 repositories:
-  ros-controls/gazebo_ros2_control:
-    type: git
-    url: https://github.com/ros-controls/gazebo_ros2_control.git
-    version: humble
-  ros-controls/gz_ros2_control:
+  gz_ros2_control:
     type: git
     url: https://github.com/ros-controls/gz_ros2_control.git
     version: humble
-  ros-controls/ros2_control_demos:
+  ros2_control_demos:
     type: git
     url: https://github.com/ros-controls/ros2_control_demos.git
     version: humble
-  ros-controls/ros2_controllers:
+  ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
     version: humble
+  control_toolbox:
+    type: git
+    url: https://github.com/ros-controls/control_toolbox.git
+    version: humble
+  kinematics_interface:
+    type: git
+    url: https://github.com/ros-controls/kinematics_interface.git
+    version: humble
+  # deactivate until https://github.com/ros-controls/topic_based_hardware_interfaces/issues/9 is fixed
+  # ros-controls/topic_based_hardware_interfaces:
+  #   type: git
+  #   url: https://github.com/ros-controls/topic_based_hardware_interfaces.git
+  #   version: main

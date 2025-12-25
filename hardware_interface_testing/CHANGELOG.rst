@@ -2,6 +2,37 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.53.0 (2025-12-01)
+-------------------
+
+2.52.2 (2025-10-27)
+-------------------
+
+2.52.1 (2025-10-17)
+-------------------
+* Fix exclusive hardware control mode switching on controller failed activation (backport `#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2579 <https://github.com/ros-controls/ros2_control/issues/2579>`_)
+* Contributors: mergify[bot]
+
+2.52.0 (2025-09-12)
+-------------------
+
+2.51.0 (2025-06-06)
+-------------------
+
+2.50.0 (2025-04-10)
+-------------------
+* Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)
+* Contributors: mergify[bot]
+
+2.49.0 (2025-03-18)
+-------------------
+
+2.48.0 (2025-02-07)
+-------------------
+
+2.47.0 (2024-12-31)
+-------------------
+
 2.46.0 (2024-12-16)
 -------------------
 

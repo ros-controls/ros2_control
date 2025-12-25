@@ -40,8 +40,9 @@ class TestSensor : public SensorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.sensors[0].name, info_.sensors[0].state_interfaces[0].name, &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        info_.sensors[0].name, info_.sensors[0].state_interfaces[0].name, &velocity_state_));
 
     return state_interfaces;
   }

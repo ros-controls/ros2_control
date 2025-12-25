@@ -2,6 +2,65 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.53.0 (2025-12-01)
+-------------------
+* Fix dependencies of controller_manager (backport `#2836 <https://github.com/ros-controls/ros2_control/issues/2836>`_) (`#2837 <https://github.com/ros-controls/ros2_control/issues/2837>`_)
+* Update CPU affinity parameter to be able to set multiple CPUs (backport `#1915 <https://github.com/ros-controls/ros2_control/issues/1915>`_, `#2509 <https://github.com/ros-controls/ros2_control/issues/2509>`_) (`#2823 <https://github.com/ros-controls/ros2_control/issues/2823>`_)
+* [Docs] Update determinism section (`#2131 <https://github.com/ros-controls/ros2_control/issues/2131>`_) (`#2785 <https://github.com/ros-controls/ros2_control/issues/2785>`_)
+* Remove Realtime Kernel Check (`#2777 <https://github.com/ros-controls/ros2_control/issues/2777>`_)
+* Contributors: Brian Jin, mergify[bot]
+
+2.52.2 (2025-10-27)
+-------------------
+* Fix concurrent spinning of the test_node (backport `#2721 <https://github.com/ros-controls/ros2_control/issues/2721>`_) (`#2726 <https://github.com/ros-controls/ros2_control/issues/2726>`_)
+* Contributors: mergify[bot]
+
+2.52.1 (2025-10-17)
+-------------------
+* Fix exclusive hardware control mode switching on controller failed activation (backport `#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2579 <https://github.com/ros-controls/ros2_control/issues/2579>`_)
+* Contributors: mergify[bot]
+
+2.52.0 (2025-09-12)
+-------------------
+* Fix CMake install so overriding works (backport `#926 <https://github.com/ros-controls/ros2_control/issues/926>`_) (`#2480 <https://github.com/ros-controls/ros2_control/issues/2480>`_)
+* Contributors: mergify[bot]
+
+2.51.0 (2025-06-06)
+-------------------
+* Cleanup test name (`#2295 <https://github.com/ros-controls/ros2_control/issues/2295>`_) (`#2297 <https://github.com/ros-controls/ros2_control/issues/2297>`_)
+* check_controllers_running: Make timeout a parameter  (`#2278 <https://github.com/ros-controls/ros2_control/issues/2278>`_) (`#2280 <https://github.com/ros-controls/ros2_control/issues/2280>`_)
+* doc: Added explanation of preceding/following controllers (backport `#2192 <https://github.com/ros-controls/ros2_control/issues/2192>`_) (`#2193 <https://github.com/ros-controls/ros2_control/issues/2193>`_)
+* Contributors: mergify[bot]
+
+2.50.0 (2025-04-10)
+-------------------
+* Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)
+* Fix generate_controllers_spawner_launch_description_from_dict (`#2146 <https://github.com/ros-controls/ros2_control/issues/2146>`_) (`#2148 <https://github.com/ros-controls/ros2_control/issues/2148>`_)
+* Fix `~/robot_description` in docs
+* Fix documentation of `robot_description` in CM (`#2117 <https://github.com/ros-controls/ros2_control/issues/2117>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
+2.49.0 (2025-03-18)
+-------------------
+* Move test_utils module from demos repo (backport `#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_) (`#2110 <https://github.com/ros-controls/ros2_control/issues/2110>`_)
+* Update memlock values in doc (`#2066 <https://github.com/ros-controls/ros2_control/issues/2066>`_) (`#2069 <https://github.com/ros-controls/ros2_control/issues/2069>`_)
+* Contributors: mergify[bot]
+
+2.48.0 (2025-02-07)
+-------------------
+* Handle SIGINT properly in the controller manager (backport `#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_) (`#2040 <https://github.com/ros-controls/ros2_control/issues/2040>`_)
+* [CM] Remove obsolete ControllerMock from the tests (`#1990 <https://github.com/ros-controls/ros2_control/issues/1990>`_) (`#1991 <https://github.com/ros-controls/ros2_control/issues/1991>`_)
+* Contributors: mergify[bot]
+
+2.47.0 (2024-12-31)
+-------------------
+* Fix deprecated usage of lock_memory API (`#1970 <https://github.com/ros-controls/ros2_control/issues/1970>`_) (`#1971 <https://github.com/ros-controls/ros2_control/issues/1971>`_)
+* Log an error if update() call returns `ERROR` (`#1969 <https://github.com/ros-controls/ros2_control/issues/1969>`_)
+* Fix spawner behaviour on failing controller activation or deactivation (`#1941 <https://github.com/ros-controls/ros2_control/issues/1941>`_) (`#1968 <https://github.com/ros-controls/ros2_control/issues/1968>`_)
+* Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_) (`#1920 <https://github.com/ros-controls/ros2_control/issues/1920>`_)
+* Use singleton approach to store and reuse the service clients (`#1949 <https://github.com/ros-controls/ros2_control/issues/1949>`_) (`#1953 <https://github.com/ros-controls/ros2_control/issues/1953>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 2.46.0 (2024-12-16)
 -------------------
 * Add service call timeout argument in spawner (`#1808 <https://github.com/ros-controls/ros2_control/issues/1808>`_) (`#1886 <https://github.com/ros-controls/ros2_control/issues/1886>`_)

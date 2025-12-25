@@ -1,5 +1,0 @@
-ctrl_with_parameters_and_type:
-  ros__parameters:
-    interface_name: "impedance"
-    joint_offset: 0.2
-    joint_names: ["joint10"]

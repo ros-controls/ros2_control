@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - master
+      - jazzy
+  push:
+    branches:
+      - jazzy
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

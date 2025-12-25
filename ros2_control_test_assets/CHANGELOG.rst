@@ -2,6 +2,39 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.53.0 (2025-12-01)
+-------------------
+
+2.52.2 (2025-10-27)
+-------------------
+
+2.52.1 (2025-10-17)
+-------------------
+* Fix exclusive hardware control mode switching on controller failed activation (backport `#1522 <https://github.com/ros-controls/ros2_control/issues/1522>`_) (`#2579 <https://github.com/ros-controls/ros2_control/issues/2579>`_)
+* Contributors: mergify[bot]
+
+2.52.0 (2025-09-12)
+-------------------
+* Fix CMake install so overriding works (backport `#926 <https://github.com/ros-controls/ros2_control/issues/926>`_) (`#2480 <https://github.com/ros-controls/ros2_control/issues/2480>`_)
+* Contributors: mergify[bot]
+
+2.51.0 (2025-06-06)
+-------------------
+
+2.50.0 (2025-04-10)
+-------------------
+
+2.49.0 (2025-03-18)
+-------------------
+* Move test_utils module from demos repo (backport `#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_) (`#2110 <https://github.com/ros-controls/ros2_control/issues/2110>`_)
+* Contributors: mergify[bot]
+
+2.48.0 (2025-02-07)
+-------------------
+
+2.47.0 (2024-12-31)
+-------------------
+
 2.46.0 (2024-12-16)
 -------------------
 

@@ -48,10 +48,12 @@ class TestActuator : public ActuatorInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[0].name, info_.joints[0].state_interfaces[0].name, &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[0].name, info_.joints[0].state_interfaces[1].name, &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        info_.joints[0].name, info_.joints[0].state_interfaces[0].name, &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        info_.joints[0].name, info_.joints[0].state_interfaces[1].name, &velocity_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(info_.joints[0].name, "some_unlisted_interface", nullptr));
 
@@ -61,13 +63,16 @@ class TestActuator : public ActuatorInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
 
     if (info_.joints[0].command_interfaces.size() > 1)
     {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[0].name, info_.joints[0].command_interfaces[1].name, &max_velocity_command_));
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info_.joints[0].name, info_.joints[0].command_interfaces[1].name,
+          &max_velocity_command_));
     }
 
     return command_interfaces;

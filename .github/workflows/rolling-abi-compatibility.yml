@@ -9,24 +9,23 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-abi-compatibility.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
 
 concurrency:
-  # cancel previous runs of the same workflow, except for pushes on master branch
+  # cancel previous runs of the same workflow, except for pushes on given branches
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
 
 jobs:
   abi_check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ros-industrial/industrial_ci@master
-        env:
-          ROS_DISTRO: rolling
-          ROS_REPO: main
-          ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
-          NOT_TEST_BUILD: true
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}

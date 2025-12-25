@@ -8,14 +8,23 @@ pull_request_rules:
         branches:
           - galactic
 
-  - name: Backport to foxy at reviewers discretion
+  - name: Backport to jazzy at reviewers discretion
     conditions:
       - base=master
-      - "label=backport-foxy"
+      - "label=backport-jazzy"
     actions:
       backport:
         branches:
-          - foxy
+          - jazzy
+
+  - name: Backport to kilted at reviewers discretion
+    conditions:
+      - base=master
+      - "label=backport-kilted"
+    actions:
+      backport:
+        branches:
+          - kilted
 
   - name: Ask to resolve conflict
     conditions:

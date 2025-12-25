@@ -1,4 +1,4 @@
-name: RHEL Rolling Semi-Binary Build
+name: Rolling - RHEL Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
@@ -9,18 +9,19 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/rolling-rhel-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control.jazzy.repos'
+      - 'ros2_control.rolling.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
+    - cron: '03 1 * * MON-FRI'
 
 concurrency:
-  # cancel previous runs of the same workflow, except for pushes on master branch
+  # cancel previous runs of the same workflow, except for pushes on given branches
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
 
 jobs:
   rhel_semi_binary_build:

@@ -2,6 +2,38 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.53.0 (2025-12-01)
+-------------------
+
+2.52.2 (2025-10-27)
+-------------------
+
+2.52.1 (2025-10-17)
+-------------------
+
+2.52.0 (2025-09-12)
+-------------------
+* Fix CMake install so overriding works (backport `#926 <https://github.com/ros-controls/ros2_control/issues/926>`_) (`#2480 <https://github.com/ros-controls/ros2_control/issues/2480>`_)
+* Contributors: mergify[bot]
+
+2.51.0 (2025-06-06)
+-------------------
+
+2.50.0 (2025-04-10)
+-------------------
+* Trigger shutdown transition in destructor (backport `#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_) (`#2142 <https://github.com/ros-controls/ros2_control/issues/2142>`_)
+* Add header to import limits from standard URDF definition (backport `#1298 <https://github.com/ros-controls/ros2_control/issues/1298>`_) (`#2125 <https://github.com/ros-controls/ros2_control/issues/2125>`_)
+* Contributors: Sebastian Castro, mergify[bot]
+
+2.49.0 (2025-03-18)
+-------------------
+
+2.48.0 (2025-02-07)
+-------------------
+
+2.47.0 (2024-12-31)
+-------------------
+
 2.46.0 (2024-12-16)
 -------------------
 * generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)

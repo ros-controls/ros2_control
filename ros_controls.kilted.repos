@@ -1,0 +1,25 @@
+repositories:
+  gz_ros2_control:
+    type: git
+    url: https://github.com/ros-controls/gz_ros2_control.git
+    version: rolling
+  ros2_control_demos:
+    type: git
+    url: https://github.com/ros-controls/ros2_control_demos.git
+    version: master
+  ros2_controllers:
+    type: git
+    url: https://github.com/ros-controls/ros2_controllers.git
+    version: kilted
+  control_toolbox:
+    type: git
+    url: https://github.com/ros-controls/control_toolbox.git
+    version: kilted
+  kinematics_interface:
+    type: git
+    url: https://github.com/ros-controls/kinematics_interface.git
+    version: master
+  topic_based_hardware_interfaces:
+    type: git
+    url: https://github.com/ros-controls/topic_based_hardware_interfaces.git
+    version: main

@@ -44,8 +44,8 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} \\
- * \tau_{j_2} & = & n_{j_2} (n_{a_2} \tau_{a_2} - n_{j_1} n_{a_1} \tau_{a_1})
+ * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} + n_{a_2} \tau_{a_2}  \\
+ * \tau_{j_2} & = & n_{j_2} n_{a_2} \tau_{a_2}2}
  * \f}
  * </td>
  * <td>
@@ -66,8 +66,8 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * \tau_{a_1} & = & \tau_{j_1} / (n_{j_1} n_{a_1}) \\
- * \tau_{a_2} & = & \frac{ \tau_{j_1} + \tau_{j_2} / n_{j_2} }{ n_{a_2} }
+ * \tau_{a_1} & = & \frac{\tau_{j_1} - \tau_{j_2}/n_{j_2}} {n_{j_1} n_{a_1}} \\
+ * \tau_{a_2} & = & \frac{\tau_{j_2}} {n_{j_2} n_{a_2}}
  * \f}
  * </td>
  * <td>
@@ -286,9 +286,8 @@ inline void FourBarLinkageTransmission::actuator_to_joint()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0]);
-    joint_eff[1].set_value(
-      jr[1] * (act_eff[1].get_value() * ar[1] - jr[0] * act_eff[0].get_value() * ar[0]));
+    joint_eff[0].set_value(jr[0] * act_eff[0].get_value() * ar[0] + act_eff[1].get_value() * ar[1]);
+    joint_eff[1].set_value(jr[1] * act_eff[1].get_value() * ar[1]);
   }
 }
 
@@ -328,8 +327,9 @@ inline void FourBarLinkageTransmission::joint_to_actuator()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    act_eff[0].set_value(joint_eff[0].get_value() / (ar[0] * jr[0]));
-    act_eff[1].set_value((joint_eff[0].get_value() + joint_eff[1].get_value() / jr[1]) / ar[1]);
+    act_eff[0].set_value(
+      (joint_eff[0].get_value() - joint_eff[1].get_value() / jr[1]) / (jr[0] * ar[0]));
+    act_eff[1].set_value(joint_eff[1].get_value() / (ar[1] * jr[1]));
   }
 }
 

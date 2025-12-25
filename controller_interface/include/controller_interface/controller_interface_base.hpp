@@ -70,7 +70,7 @@ public:
   ControllerInterfaceBase() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual ~ControllerInterfaceBase() = default;
+  virtual ~ControllerInterfaceBase();
 
   /// Get configuration for controller's required command interfaces.
   /**
@@ -219,7 +219,25 @@ public:
   virtual bool is_in_chained_mode() const = 0;
 
 protected:
+  /** Loaned command interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref command_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  /** Loaned state interfaces.
+   * \note The order of these interfaces is determined by the return value of
+   * \ref state_interface_configuration():
+   * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
+   * returned vector.
+   * If interface_configuration_type::ALL is specified, the order is determined by the internal
+   * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
+   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   unsigned int update_rate_ = 0;
 

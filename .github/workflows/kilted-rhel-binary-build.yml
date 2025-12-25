@@ -1,0 +1,37 @@
+name: Kilted - RHEL Semi-Binary Build
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/kilted-rhel-binary-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.kilted.repos'
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * MON-FRI'
+
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on given branches
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/heads') }}
+
+jobs:
+  rhel_semi_binary_build:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [kilted]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: kilted
+      skip_packages: rqt_controller_manager

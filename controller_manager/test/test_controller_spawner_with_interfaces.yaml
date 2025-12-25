@@ -1,0 +1,25 @@
+ctrl_with_joint2_command_interface:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    command_interfaces:
+      - "joint2/velocity"
+
+ctrl_with_joint1_command_interface:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    command_interfaces:
+      - "joint1/position"
+
+ctrl_with_joint1_and_joint2_command_interfaces:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    command_interfaces:
+      - "joint1/position"
+      - "joint2/velocity"
+
+ctrl_with_state_interfaces:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    state_interfaces:
+      - "joint1/position"
+      - "joint2/position"

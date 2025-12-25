@@ -2,6 +2,46 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.53.0 (2025-12-01)
+-------------------
+
+2.52.2 (2025-10-27)
+-------------------
+
+2.52.1 (2025-10-17)
+-------------------
+
+2.52.0 (2025-09-12)
+-------------------
+* Fix CMake install so overriding works (backport `#926 <https://github.com/ros-controls/ros2_control/issues/926>`_) (`#2480 <https://github.com/ros-controls/ros2_control/issues/2480>`_)
+* Contributors: mergify[bot]
+
+2.51.0 (2025-06-06)
+-------------------
+
+2.50.0 (2025-04-10)
+-------------------
+* Bump version of pre-commit hooks (backport `#2156 <https://github.com/ros-controls/ros2_control/issues/2156>`_) (`#2157 <https://github.com/ros-controls/ros2_control/issues/2157>`_)
+* [RM] Add error handling for missing `plugin` tags in URDF parsing (backport `#2138 <https://github.com/ros-controls/ros2_control/issues/2138>`_) (`#2145 <https://github.com/ros-controls/ros2_control/issues/2145>`_)
+* Contributors: mergify[bot]
+
+2.49.0 (2025-03-18)
+-------------------
+* Improve API/lifecycle docs (`#2081 <https://github.com/ros-controls/ros2_control/issues/2081>`_) (`#2085 <https://github.com/ros-controls/ros2_control/issues/2085>`_)
+* Contributors: mergify[bot]
+
+2.48.0 (2025-02-07)
+-------------------
+* Handle SIGINT properly in the controller manager (backport `#2014 <https://github.com/ros-controls/ros2_control/issues/2014>`_) (`#2040 <https://github.com/ros-controls/ros2_control/issues/2040>`_)
+* [Doc] Fix broken link (backport `#2034 <https://github.com/ros-controls/ros2_control/issues/2034>`_) (`#2035 <https://github.com/ros-controls/ros2_control/issues/2035>`_)
+* Contributors: mergify[bot]
+
+2.47.0 (2024-12-31)
+-------------------
+* Fix the lock_guard placement (`#1960 <https://github.com/ros-controls/ros2_control/issues/1960>`_)
+* Update initial_value parameters of generic_system tests (`#1943 <https://github.com/ros-controls/ros2_control/issues/1943>`_)
+* Contributors: Sai Kishor Kothakota, Sanjeev
+
 2.46.0 (2024-12-16)
 -------------------
 * generate version.h file per package using the ament_generate_version_header  (backport `#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_) (`#1938 <https://github.com/ros-controls/ros2_control/issues/1938>`_)

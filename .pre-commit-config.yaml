@@ -16,7 +16,7 @@
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -37,7 +37,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.0
+    rev: v3.21.2
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -50,20 +50,20 @@ repos:
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
 
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 25.11.0
     hooks:
       - id: black
         args: ["--line-length=99"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
 
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v19.1.4
+    rev: v21.1.6
     hooks:
       - id: clang-format
         args: ['-fallback-style=none', '-i']
@@ -109,7 +109,7 @@ repos:
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.2
+    rev: v2.0.0
     hooks:
       - id: doc8
         args: ['--max-line-length=100', '--ignore=D001']
@@ -126,14 +126,14 @@ repos:
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         args: ['--write-changes', '--uri-ignore-words-list=ist', '-L manuel']
         exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.30.0
+    rev: 0.35.0
     hooks:
       - id: check-github-workflows
         args: ["--verbose"]

@@ -8,7 +8,14 @@ on:
     paths:
       - '**.rst'
       - '**.md'
+      - '**.jpg'
+      - '**.jpeg'
+      - '**.png'
+      - '**.svg'
+      - '**.yml'
       - '**.yaml'
+      - '!.github/**' # exclude yaml files in .github directory
+      - '.github/workflows/rolling-check-docs.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +24,6 @@ concurrency:
 jobs:
   check-docs:
     name: Check Docs
-    uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@master
+    uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@rolling
     with:
       ROS2_CONTROL_PR: ${{ github.ref }}
