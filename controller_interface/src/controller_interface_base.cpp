@@ -75,14 +75,11 @@ return_type ControllerInterfaceBase::init(
 {
   impl_->ctrl_itf_params_ = params;
   impl_->node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    impl_->ctrl_itf_params_.controller_name, impl_->ctrl_itf_params_.node_namespace,
-    impl_->ctrl_itf_params_.node_options,
+    params.controller_name, params.node_namespace, params.node_options,
     false);  // disable LifecycleNode service interfaces
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
 
-  if (
-    impl_->ctrl_itf_params_.controller_manager_update_rate == 0 &&
-    impl_->ctrl_itf_params_.update_rate != 0)
+  if (params.controller_manager_update_rate == 0 && params.update_rate != 0)
   {
     RCLCPP_WARN(
       impl_->node_->get_logger(), "%s",
@@ -92,16 +89,15 @@ return_type ControllerInterfaceBase::init(
         "Using the controller's update rate as the controller manager update rate. Please fix in "
         "the tests by initializing the 'controller_manager_update_rate' instead of the "
         "'update_rate' variable within the ControllerInterfaceParams struct",
-        impl_->ctrl_itf_params_.update_rate)
+        params.update_rate)
         .c_str());
-    impl_->ctrl_itf_params_.controller_manager_update_rate = impl_->ctrl_itf_params_.update_rate;
+    impl_->ctrl_itf_params_.controller_manager_update_rate = params.update_rate;
   }
 
   try
   {
     // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>(
-      "update_rate", static_cast<int>(impl_->ctrl_itf_params_.controller_manager_update_rate));
+    auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
   }
@@ -191,6 +187,7 @@ return_type ControllerInterfaceBase::init(
 const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+  auto & params = impl_->ctrl_itf_params_;
   // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
   // overrides correctly in combination with std::bind. The goal is to have the following calls:
   // 1. CM: controller.get_node()->configure()
@@ -207,9 +204,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
       return get_lifecycle_state();
     }
-    if (
-      impl_->ctrl_itf_params_.update_rate != 0u &&
-      update_rate > impl_->ctrl_itf_params_.update_rate)
+    if (params.update_rate != 0u && update_rate > params.update_rate)
     {
       RCLCPP_WARN(
         get_node()->get_logger(), "%s",
@@ -217,33 +212,32 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
           "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
           "the controller manager : '{} Hz'. Setting it to the update rate of the controller "
           "manager.",
-          update_rate, impl_->ctrl_itf_params_.update_rate)
+          update_rate, params.update_rate)
           .c_str());
     }
     else
     {
-      if (update_rate > 0 && impl_->ctrl_itf_params_.controller_manager_update_rate > 0)
+      if (update_rate > 0 && params.controller_manager_update_rate > 0)
       {
         // Calculate the update rate corresponding the periodicity of the controller manager
         const bool is_frequency_achievable =
-          (impl_->ctrl_itf_params_.controller_manager_update_rate %
-           static_cast<unsigned int>(update_rate)) == 0;
+          (params.controller_manager_update_rate % static_cast<unsigned int>(update_rate)) == 0;
         const unsigned int ticks_per_controller_per_second = static_cast<unsigned int>(std::round(
-          static_cast<double>(impl_->ctrl_itf_params_.controller_manager_update_rate) /
+          static_cast<double>(params.controller_manager_update_rate) /
           static_cast<double>(update_rate)));
         const unsigned int achievable_hz =
-          is_frequency_achievable ? static_cast<unsigned int>(update_rate)
-                                  : impl_->ctrl_itf_params_.controller_manager_update_rate /
-                                      ticks_per_controller_per_second;
+          is_frequency_achievable
+            ? static_cast<unsigned int>(update_rate)
+            : params.controller_manager_update_rate / ticks_per_controller_per_second;
 
         RCLCPP_WARN_EXPRESSION(
           get_node()->get_logger(), !is_frequency_achievable, "%s",
           fmt::format(
             "The requested update rate of '{}' Hz is not achievable with the controller manager "
             "update rate of '{}' Hz. Setting it to the closest achievable frequency '{}' Hz.",
-            update_rate, impl_->ctrl_itf_params_.controller_manager_update_rate, achievable_hz)
+            update_rate, params.controller_manager_update_rate, achievable_hz)
             .c_str());
-        impl_->ctrl_itf_params_.update_rate = achievable_hz;
+        params.update_rate = achievable_hz;
       }
     }
     impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
