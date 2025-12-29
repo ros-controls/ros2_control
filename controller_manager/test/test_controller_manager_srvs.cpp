@@ -475,6 +475,77 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv)
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
 }
 
+TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::CleanupController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::CleanupController>(
+      "test_controller_manager/cleanup_controller");
+
+  auto request = std::make_shared<controller_manager_msgs::srv::CleanupController::Request>();
+  request->name = test_controller::TEST_CONTROLLER_NAME;
+
+  // variation - 1:
+  // scenario: call the cleanup service when no controllers are loaded
+  // expected: it should return ERROR as no controllers will be found to cleanup
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
+
+  // variation - 2:
+  // scenario: call the cleanup service when one controller is loaded
+  // expected: it should return OK as one controller will be found to cleanup
+  auto test_controller = std::make_shared<TestController>();
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 3:
+  // scenario: call the cleanup service when controller state is ACTIVE
+  // expected: it should return ERROR as cleanup is restricted for ACTIVE controllers
+  test_controller = std::dynamic_pointer_cast<TestController>(cm_->load_controller(
+    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  // activate controllers
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller can not be cleaned in active state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 4:
+  // scenario: call the cleanup service when controller state is INACTIVE
+  // expected: it should return OK as cleanup will be done for INACTIVE controllers
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok) << "Controller cleaned in inactive state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+}
+
 TEST_F(TestControllerManagerSrvs, unload_controller_srv)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;

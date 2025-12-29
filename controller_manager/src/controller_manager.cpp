@@ -980,6 +980,10 @@ void ControllerManager::init_services()
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
+  cleanup_controller_service_ = create_service<controller_manager_msgs::srv::CleanupController>(
+    "~/cleanup_controller",
+    std::bind(&ControllerManager::cleanup_controller_service_cb, this, _1, _2), qos_services,
+    best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -1229,9 +1233,14 @@ controller_interface::return_type ControllerManager::unload_controller(
     return controller_interface::return_type::ERROR;
   }
 
+  // call cleanup transition, if it is inactive
+  if (cleanup_controller(controller_name) != controller_interface::return_type::OK)
+  {
+    return controller_interface::return_type::ERROR;
+  }
+
   RCLCPP_DEBUG(get_logger(), "Shutdown controller");
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
-  cleanup_controller_exported_interfaces(controller);
   if (is_controller_inactive(*controller.c) || is_controller_unconfigured(*controller.c))
   {
     RCLCPP_DEBUG(
@@ -1280,6 +1289,55 @@ controller_interface::return_type ControllerManager::cleanup_controller(
     return controller_interface::return_type::ERROR;
   }
   return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const std::string & controller_name)
+{
+  const auto & controllers = get_loaded_controllers();
+
+  auto found_it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+
+  if (found_it == controllers.end())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Could not cleanup controller with name '%s' because no controller with this name exists",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  auto controller = found_it->c;
+
+  if (is_controller_unconfigured(*controller))
+  {
+    // all good nothing to do!
+    return controller_interface::return_type::OK;
+  }
+
+  RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
+
+  auto state = controller->get_lifecycle_state();
+  if (
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Controller '%s' can not be cleaned-up from '%s' state.",
+      controller_name.c_str(), state.label().c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Calling cleanup for controller '%s'", controller_name.c_str());
+  auto result = cleanup_controller(*found_it);
+
+  if (result == controller_interface::return_type::OK)
+  {
+    RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
+  }
+
+  return result;
 }
 
 void ControllerManager::shutdown_controller(
@@ -2805,6 +2863,21 @@ void ControllerManager::unload_controller_service_cb(
 
   RCLCPP_DEBUG(
     get_logger(), "unloading service finished for controller '%s' ", request->name.c_str());
+}
+
+void ControllerManager::cleanup_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "cleanup service called for controller '%s' ", request->name.c_str());
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "cleanup service locked");
+
+  response->ok = cleanup_controller(request->name) == controller_interface::return_type::OK;
+
+  RCLCPP_DEBUG(
+    get_logger(), "cleanup service finished for controller '%s' ", request->name.c_str());
 }
 
 void ControllerManager::list_hardware_components_srv_cb(
