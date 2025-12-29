@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.11.0 (2025-12-29)
+-------------------
 * Use Pimpl approach for controller and hardware component interfaces (`#2898 <https://github.com/ros-controls/ros2_control/issues/2898>`_) (`#2932 <https://github.com/ros-controls/ros2_control/issues/2932>`_)
 * Fix missing copy and move operations of data_type\_ variable (`#2903 <https://github.com/ros-controls/ros2_control/issues/2903>`_) (`#2906 <https://github.com/ros-controls/ros2_control/issues/2906>`_)
 * Contributors: mergify[bot]
