@@ -46,20 +46,27 @@ enum class return_type : std::uint8_t
 /// Indicating which interfaces are to be claimed.
 /**
  * One might either claim all available command/state interfaces,
- * specifying a set of individual interfaces,
- * or none at all.
+ * specifying a set of individual interfaces or none at all.
+ * @enum ALL - Claim all available interfaces.
+ * @enum INDIVIDUAL - Claim only the specified individual interfaces.
+ * @enum NONE - Claim no interfaces.
+ * @enum INDIVIDUAL_BEST_EFFORT - Claim the available interfaces from the specified individual
+ * interfaces.
+ * @enum REGEX - Claim interfaces matching the specified regular expressions.
  */
 enum class interface_configuration_type : std::uint8_t
 {
   ALL = 0,
   INDIVIDUAL = 1,
   NONE = 2,
+  INDIVIDUAL_BEST_EFFORT = 3,
+  REGEX = 10
 };
 
 /// Configuring what command/state interfaces to claim.
 struct InterfaceConfiguration
 {
-  interface_configuration_type type;
+  interface_configuration_type type = interface_configuration_type::NONE;
   std::vector<std::string> names = {};
 };
 
@@ -370,6 +377,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   /** Loaned state interfaces.
@@ -380,6 +391,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
