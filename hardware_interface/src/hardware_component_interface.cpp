@@ -81,8 +81,8 @@ CallbackReturn HardwareComponentInterface::init(
         const auto read_start_time = std::chrono::steady_clock::now();
         const auto ret_read = read(time, period);
         const auto read_end_time = std::chrono::steady_clock::now();
-        read_return_info_.store(ret_read, std::memory_order_release);
-        read_execution_time_.store(
+        impl_->read_return_info_.store(ret_read, std::memory_order_release);
+        impl_->read_execution_time_.store(
           std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
           std::memory_order_release);
         if (ret_read != return_type::OK)
@@ -90,14 +90,14 @@ CallbackReturn HardwareComponentInterface::init(
           return ret_read;
         }
         if (
-          !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
+          !is_sensor_type && impl_->lifecycle_id_cache_.load(std::memory_order_acquire) ==
                                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
           const auto write_start_time = std::chrono::steady_clock::now();
           const auto ret_write = write(time, period);
           const auto write_end_time = std::chrono::steady_clock::now();
-          write_return_info_.store(ret_write, std::memory_order_release);
-          write_execution_time_.store(
+          impl_->write_return_info_.store(ret_write, std::memory_order_release);
+          impl_->write_execution_time_.store(
             std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
             std::memory_order_release);
           return ret_write;
@@ -112,9 +112,9 @@ CallbackReturn HardwareComponentInterface::init(
   {
     std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    hardware_component_node_ = std::make_shared<rclcpp::Node>(
-      node_name, params.node_namespace, get_hardware_component_node_options());
-    locked_executor->add_node(hardware_component_node_->get_node_base_interface());
+    impl_->hardware_component_node_ = std::make_shared<rclcpp::Node>(
+      node_name, params.node_namespace, define_custom_node_options());
+    locked_executor->add_node(impl_->hardware_component_node_->get_node_base_interface());
   }
   else
   {
