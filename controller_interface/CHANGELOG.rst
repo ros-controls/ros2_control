@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2025-12-10)
+------------------
+* Fix the blocking calls of lifecycle_state in the real-time loop (`#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_)
+* Fix platform-dependent warning in `controller_interface_base.cpp` using `fmt::format` (`#2880 <https://github.com/ros-controls/ros2_control/issues/2880>`_)
+* Contributors: Dhruv Patel, Sai Kishor Kothakota
+
 6.1.0 (2025-12-01)
 ------------------
 * Add tf prefix helper and test (`#2803 <https://github.com/ros-controls/ros2_control/issues/2803>`_)

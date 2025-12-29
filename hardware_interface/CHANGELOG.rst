@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.0 (2025-12-10)
+------------------
+* [Handle] Add support to more data types (`#2879 <https://github.com/ros-controls/ros2_control/issues/2879>`_)
+* Fix rst syntax (`#2892 <https://github.com/ros-controls/ros2_control/issues/2892>`_)
+* Fix the blocking calls of lifecycle_state in the real-time loop (`#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_)
+* remove unused async components header (`#2885 <https://github.com/ros-controls/ros2_control/issues/2885>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 6.1.0 (2025-12-01)
 ------------------
 * [HardwareComponentInterface] Add get state and command interface handle methods (`#2831 <https://github.com/ros-controls/ros2_control/issues/2831>`_)
