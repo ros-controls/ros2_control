@@ -3028,13 +3028,13 @@ TEST_P(TestControllersWithVariousInterfaceTypes, list_controllers_with_different
       {"joint1/position", "joint1/velocity", "joint2/position"}};
   }
   else if (
-    interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
+    interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT)
   {
     cmd_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE,
+      controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
       {"joint1/position", "joint2/velocity", "joint123/interface_does_not_exist"}};
     state_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE,
+      controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
       {"joint1/position", "joint1/velocity", "joint2/position",
        "joint456/interface_does_not_exist"}};
   }
@@ -3201,5 +3201,5 @@ INSTANTIATE_TEST_SUITE_P(
   test_various_interface_types, TestControllersWithVariousInterfaceTypes,
   testing::Values(
     controller_interface::interface_configuration_type::INDIVIDUAL,
-    controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE,
+    controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
     controller_interface::interface_configuration_type::REGEX));

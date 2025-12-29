@@ -195,7 +195,7 @@ std::vector<std::string> get_command_interfaces_names(
   }
   else if (
     command_interface_config.type ==
-    controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
+    controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT)
   {
     auto available_interfaces = resource_manager->available_command_interfaces();
     for (const auto & name : command_interface_config.names)
@@ -249,7 +249,7 @@ std::vector<std::string> get_state_interfaces_names(
   }
   else if (
     state_interface_config.type ==
-    controller_interface::interface_configuration_type::INDIVIDUAL_FLEXIBLE)
+    controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT)
   {
     auto available_interfaces = resource_manager->available_state_interfaces();
     for (const auto & name : state_interface_config.names)
