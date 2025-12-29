@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add new interface_configuration_types and reusable methods (`#2902 <https://github.com/ros-controls/ros2_control/issues/2902>`_) (`#2935 <https://github.com/ros-controls/ros2_control/issues/2935>`_)
+* Add `cleanup_controller` lifecycle transition (backport `#2414 <https://github.com/ros-controls/ros2_control/issues/2414>`_) (`#2914 <https://github.com/ros-controls/ros2_control/issues/2914>`_)
+* Contributors: mergify[bot]
+
 4.41.0 (2025-12-10)
 -------------------
 * Calculate achievable update rate of controllers (backport `#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_) (`#2843 <https://github.com/ros-controls/ros2_control/issues/2843>`_)

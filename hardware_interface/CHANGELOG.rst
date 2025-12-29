@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use Pimpl approach for controller and hardware component interfaces (backport `#2898 <https://github.com/ros-controls/ros2_control/issues/2898>`_) (`#2931 <https://github.com/ros-controls/ros2_control/issues/2931>`_)
+* Fix missing copy and move operations of data_type\_ variable (backport `#2903 <https://github.com/ros-controls/ros2_control/issues/2903>`_) (`#2905 <https://github.com/ros-controls/ros2_control/issues/2905>`_)
+* [Handle] Add support to more data types (backport `#2879 <https://github.com/ros-controls/ros2_control/issues/2879>`_) (`#2896 <https://github.com/ros-controls/ros2_control/issues/2896>`_)
+* Contributors: mergify[bot]
+
 4.41.0 (2025-12-10)
 -------------------
 * Fix the blocking calls of lifecycle_state in the real-time loop (backport `#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_) (`#2890 <https://github.com/ros-controls/ros2_control/issues/2890>`_)

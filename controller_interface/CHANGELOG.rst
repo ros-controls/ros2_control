@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add new interface_configuration_types and reusable methods (`#2902 <https://github.com/ros-controls/ros2_control/issues/2902>`_) (`#2935 <https://github.com/ros-controls/ros2_control/issues/2935>`_)
+* Use Pimpl approach for controller and hardware component interfaces (backport `#2898 <https://github.com/ros-controls/ros2_control/issues/2898>`_) (`#2931 <https://github.com/ros-controls/ros2_control/issues/2931>`_)
+* Contributors: mergify[bot]
+
 4.41.0 (2025-12-10)
 -------------------
 * Calculate achievable update rate of controllers (backport `#2828 <https://github.com/ros-controls/ros2_control/issues/2828>`_) (`#2843 <https://github.com/ros-controls/ros2_control/issues/2843>`_)
