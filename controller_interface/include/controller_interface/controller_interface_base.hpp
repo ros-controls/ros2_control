@@ -46,8 +46,13 @@ enum class return_type : std::uint8_t
 /// Indicating which interfaces are to be claimed.
 /**
  * One might either claim all available command/state interfaces,
- * specifying a set of individual interfaces,
- * or none at all.
+ * specifying a set of individual interfaces or none at all.
+ * @enum ALL - Claim all available interfaces.
+ * @enum INDIVIDUAL - Claim only the specified individual interfaces.
+ * @enum NONE - Claim no interfaces.
+ * @enum INDIVIDUAL_FLEXIBLE - Claim the available interfaces from the specified individual
+ * interfaces.
+ * @enum REGEX - Claim interfaces matching the specified regular expressions.
  */
 enum class interface_configuration_type : std::uint8_t
 {
