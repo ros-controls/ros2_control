@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add `unconfigure` state to `set_controller_state` verb (`#2913 <https://github.com/ros-controls/ros2_control/issues/2913>`_) (`#2919 <https://github.com/ros-controls/ros2_control/issues/2919>`_)
+* Add `cleanup_controller` lifecycle transition (backport `#2414 <https://github.com/ros-controls/ros2_control/issues/2414>`_) (`#2915 <https://github.com/ros-controls/ros2_control/issues/2915>`_)
+* Contributors: mergify[bot]
+
 5.10.0 (2025-12-09)
 -------------------
 

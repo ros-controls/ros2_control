@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use proper cleanup transition (`#2917 <https://github.com/ros-controls/ros2_control/issues/2917>`_) (`#2923 <https://github.com/ros-controls/ros2_control/issues/2923>`_)
+* Contributors: mergify[bot]
+
 5.10.0 (2025-12-09)
 -------------------
 
