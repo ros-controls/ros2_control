@@ -101,7 +101,7 @@ struct ControllerUpdateStatus
 class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-  ControllerInterfaceBase() = default;
+  ControllerInterfaceBase();
 
   virtual ~ControllerInterfaceBase();
 
@@ -269,13 +269,13 @@ public:
   template <typename ParameterT>
   auto auto_declare(const std::string & name, const ParameterT & default_value)
   {
-    if (!node_->has_parameter(name))
+    if (!get_node()->has_parameter(name))
     {
-      return node_->declare_parameter<ParameterT>(name, default_value);
+      return get_node()->declare_parameter<ParameterT>(name, default_value);
     }
     else
     {
-      return node_->get_parameter(name).get_value<ParameterT>();
+      return get_node()->get_parameter(name).get_value<ParameterT>();
     }
   }
 
@@ -390,13 +390,8 @@ private:
    */
   void stop_async_handler_thread();
 
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
-  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
-  bool is_async_ = false;
-  controller_interface::ControllerInterfaceParams ctrl_itf_params_;
-  std::atomic_bool skip_async_triggers_ = false;
-  ControllerUpdateStats trigger_stats_;
-  mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+  struct ControllerInterfaceBaseImpl;
+  std::unique_ptr<ControllerInterfaceBaseImpl> impl_;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
