@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.11.0 (2025-12-29)
 -------------------
 * Add `unconfigure` state to `set_controller_state` verb (`#2913 <https://github.com/ros-controls/ros2_control/issues/2913>`_) (`#2919 <https://github.com/ros-controls/ros2_control/issues/2919>`_)
