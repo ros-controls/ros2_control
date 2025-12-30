@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Stop async thread in the destructor (`#2941 <https://github.com/ros-controls/ros2_control/issues/2941>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.3.0 (2025-12-29)
 ------------------
 * Use Pimpl approach for controller and hardware component interfaces (`#2898 <https://github.com/ros-controls/ros2_control/issues/2898>`_)
