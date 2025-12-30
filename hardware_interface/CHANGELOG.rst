@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.11.1 (2025-12-30)
+-------------------
 * Stop async thread in the destructor (`#2941 <https://github.com/ros-controls/ros2_control/issues/2941>`_) (`#2943 <https://github.com/ros-controls/ros2_control/issues/2943>`_)
 * Contributors: mergify[bot]
 
