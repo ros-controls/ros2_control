@@ -55,7 +55,14 @@ HardwareComponentInterface::HardwareComponentInterface()
 {
 }
 
-HardwareComponentInterface::~HardwareComponentInterface() = default;
+HardwareComponentInterface::~HardwareComponentInterface()
+{
+  if (async_handler_)
+  {
+    async_handler_->stop_thread();
+  }
+  async_handler_.reset();
+}
 
 CallbackReturn HardwareComponentInterface::init(
   const hardware_interface::HardwareComponentParams & params)
