@@ -475,6 +475,77 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv)
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
 }
 
+TEST_F(TestControllerManagerSrvs, cleanup_controller_srv)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::CleanupController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::CleanupController>(
+      "test_controller_manager/cleanup_controller");
+
+  auto request = std::make_shared<controller_manager_msgs::srv::CleanupController::Request>();
+  request->name = test_controller::TEST_CONTROLLER_NAME;
+
+  // variation - 1:
+  // scenario: call the cleanup service when no controllers are loaded
+  // expected: it should return ERROR as no controllers will be found to cleanup
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
+
+  // variation - 2:
+  // scenario: call the cleanup service when one controller is loaded
+  // expected: it should return OK as one controller will be found to cleanup
+  auto test_controller = std::make_shared<TestController>();
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 3:
+  // scenario: call the cleanup service when controller state is ACTIVE
+  // expected: it should return ERROR as cleanup is restricted for ACTIVE controllers
+  test_controller = std::dynamic_pointer_cast<TestController>(cm_->load_controller(
+    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  // activate controllers
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok) << "Controller can not be cleaned in active state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // variation - 4:
+  // scenario: call the cleanup service when controller state is INACTIVE
+  // expected: it should return OK as cleanup will be done for INACTIVE controllers
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok) << "Controller cleaned in inactive state: " << request->name;
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+}
+
 TEST_F(TestControllerManagerSrvs, unload_controller_srv)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -2996,3 +3067,210 @@ TEST_F(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller_2->get_lifecycle_state().id());
 }
+
+class TestControllersWithVariousInterfaceTypes
+: public TestControllerManagerSrvs,
+  public testing::WithParamInterface<controller_interface::interface_configuration_type>
+{
+};
+
+TEST_P(TestControllersWithVariousInterfaceTypes, list_controllers_with_different_interface_types)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+
+  auto interface_type = GetParam();
+  auto test_controller = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg, state_cfg;
+  if (interface_type == controller_interface::interface_configuration_type::INDIVIDUAL)
+  {
+    cmd_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {"joint1/position", "joint2/velocity"}};
+    state_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {"joint1/position", "joint1/velocity", "joint2/position"}};
+  }
+  else if (
+    interface_type == controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT)
+  {
+    cmd_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
+      {"joint1/position", "joint2/velocity", "joint123/interface_does_not_exist"}};
+    state_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
+      {"joint1/position", "joint1/velocity", "joint2/position",
+       "joint456/interface_does_not_exist"}};
+  }
+  else if (interface_type == controller_interface::interface_configuration_type::REGEX)
+  {
+    cmd_cfg = {
+      controller_interface::interface_configuration_type::REGEX, {"joint[12]/(position|velocity)"}};
+    state_cfg = {
+      controller_interface::interface_configuration_type::REGEX,
+      {"joint1/(position|velocity)", "joint2/position"}};
+  }
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
+  ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
+
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_FALSE(result->controller[0].is_async);
+  ASSERT_EQ(100u, result->controller[0].update_rate);
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+
+  cmd_cfg = {controller_interface::interface_configuration_type::ALL};
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  state_cfg = {controller_interface::interface_configuration_type::ALL};
+  test_controller->set_state_interface_configuration(state_cfg);
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre(
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  // Switch with a very low timeout 1 ns and it should fail as there is no enough time to switch
+  ASSERT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 1)));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre(
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  // Try again with higher timeout
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(3, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->unload_controller(test_controller::TEST_CONTROLLER_NAME));
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  test_various_interface_types, TestControllersWithVariousInterfaceTypes,
+  testing::Values(
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
+    controller_interface::interface_configuration_type::REGEX));

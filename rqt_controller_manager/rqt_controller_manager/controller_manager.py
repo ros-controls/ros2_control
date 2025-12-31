@@ -18,6 +18,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from controller_manager.controller_manager_services import (
+    cleanup_controller,
     configure_controller,
     list_controllers,
     list_hardware_components,
@@ -234,9 +235,7 @@ class ControllerManager(Plugin):
             )
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate (active)")
-            action_cleanup = menu.addAction(
-                self._icons["unconfigured"], "Unload and Load (unconfigured)"
-            )
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup (unconfigured)")
             action_unload = menu.addAction(self._icons["unloaded"], "Unload (unloaded)")
         elif ctrl.state == "unconfigured":
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate (active)")
@@ -259,10 +258,7 @@ class ControllerManager(Plugin):
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_cleanup:
-                # TODO: use cleanup service once available
-                # https://github.com/ros-controls/ros2_control/issues/759
-                unload_controller(self._node, self._cm_name, ctrl.name)
-                load_controller(self._node, self._cm_name, ctrl.name)
+                cleanup_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_unload:
                 unload_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == "unconfigured":
