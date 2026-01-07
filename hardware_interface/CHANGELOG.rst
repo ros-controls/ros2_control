@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Re-add the removed on_init method of HardwareInfo (`#2948 <https://github.com/ros-controls/ros2_control/issues/2948>`_)
+* Contributors: Sai Kishor Kothakota
+
 5.11.1 (2025-12-30)
 -------------------
 * Stop async thread in the destructor (`#2941 <https://github.com/ros-controls/ros2_control/issues/2941>`_) (`#2943 <https://github.com/ros-controls/ros2_control/issues/2943>`_)
