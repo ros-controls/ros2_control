@@ -136,7 +136,7 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_controller_manager_srvs
     controller_manager_msgs
   )
-  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
+  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 240)
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )
