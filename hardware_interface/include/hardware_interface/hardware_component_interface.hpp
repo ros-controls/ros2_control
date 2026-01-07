@@ -138,6 +138,15 @@ public:
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  [[deprecated("Use on_init(const HardwareComponentInterfaceParams & params) instead.")]]
+  virtual CallbackReturn on_init(const HardwareInfo & hardware_info);
+
+  /// Initialization of the hardware interface from data parsed from the robot's URDF.
+  /**
    * \param[in] params  A struct of type hardware_interface::HardwareComponentInterfaceParams
    * containing all necessary parameters for initializing this specific hardware component,
    * specifically its HardwareInfo, and a weak_ptr to the executor.
