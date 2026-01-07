@@ -247,10 +247,9 @@ return_type HardwareComponentInterface::update_hardware_status_message(
   return return_type::OK;
 }
 
-CallbackReturn HardwareComponentInterface::on_init(
-  const hardware_interface::HardwareComponentInterfaceParams & params)
+CallbackReturn HardwareComponentInterface::on_init(const HardwareInfo & hardware_info)
 {
-  info_ = params.hardware_info;
+  info_ = hardware_info;
   if (info_.type == "actuator")
   {
     parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
@@ -270,6 +269,16 @@ CallbackReturn HardwareComponentInterface::on_init(
     parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
   }
   return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn HardwareComponentInterface::on_init(
+  const hardware_interface::HardwareComponentInterfaceParams & params)
+{
+  // This is done for backward compatibility with the old on_init method.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  return on_init(params.hardware_info);
+#pragma GCC diagnostic pop
 }
 
 rclcpp::NodeOptions HardwareComponentInterface::define_custom_node_options() const
