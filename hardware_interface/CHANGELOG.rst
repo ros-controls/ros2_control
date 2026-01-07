@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.11.2 (2026-01-07)
+-------------------
 * Re-add the removed on_init method of HardwareInfo (`#2948 <https://github.com/ros-controls/ros2_control/issues/2948>`_)
 * Contributors: Sai Kishor Kothakota
 
