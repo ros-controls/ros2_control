@@ -51,16 +51,6 @@
 namespace hardware_interface
 {
 
-static inline rclcpp::NodeOptions get_hardware_component_node_options()
-{
-  rclcpp::NodeOptions node_options;
-// \note The versions conditioning is added here to support the source-compatibility with Humble
-#if RCLCPP_VERSION_MAJOR >= 21
-  node_options.enable_logger_service(true);
-#endif
-  return node_options;
-}
-
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 /**
@@ -74,13 +64,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 class HardwareComponentInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-  HardwareComponentInterface()
-  : lifecycle_state_(
-      rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
-    logger_(rclcpp::get_logger("hardware_component_interface"))
-  {
-  }
+  HardwareComponentInterface();
 
   /// HardwareComponentInterface copy constructor is actively deleted.
   /**
@@ -91,7 +75,7 @@ public:
 
   HardwareComponentInterface(HardwareComponentInterface && other) = delete;
 
-  virtual ~HardwareComponentInterface() = default;
+  virtual ~HardwareComponentInterface();
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
   /// clock and logger interfaces.
@@ -285,11 +269,7 @@ public:
    * \returns CallbackReturn::SUCCESS if configured successfully, CallbackReturn::ERROR on failure.
    */
   virtual CallbackReturn init_hardware_status_message(
-    control_msgs::msg::HardwareStatus & /*msg_template*/)
-  {
-    // Default implementation does nothing, disabling the feature.
-    return CallbackReturn::SUCCESS;
-  }
+    control_msgs::msg::HardwareStatus & msg_template);
 
   /// User-overridable method to fill the hardware status message with real-time data.
   /**
@@ -300,11 +280,7 @@ public:
    * \param[in,out] msg The pre-allocated message to be filled with the latest values.
    * \returns return_type::OK on success, return_type::ERROR on failure.
    */
-  virtual return_type update_hardware_status_message(control_msgs::msg::HardwareStatus & /*msg*/)
-  {
-    // Default implementation does nothing.
-    return return_type::OK;
-  }
+  virtual return_type update_hardware_status_message(control_msgs::msg::HardwareStatus & msg);
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
@@ -317,29 +293,14 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   virtual CallbackReturn on_init(
-    const hardware_interface::HardwareComponentInterfaceParams & params)
-  {
-    info_ = params.hardware_info;
-    if (info_.type == "actuator")
-    {
-      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-      parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
-    }
-    else if (info_.type == "sensor")
-    {
-      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-      parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
-    }
-    else if (info_.type == "system")
-    {
-      parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
-      parse_state_interface_descriptions(info_.sensors, sensor_state_interfaces_);
-      parse_state_interface_descriptions(info_.gpios, gpio_state_interfaces_);
-      parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
-      parse_command_interface_descriptions(info_.gpios, gpio_command_interfaces_);
-    }
-    return CallbackReturn::SUCCESS;
-  };
+    const hardware_interface::HardwareComponentInterfaceParams & params);
+
+  /// Define custom node options for the hardware component interface.
+  /**
+   * Method used by the hardware component to instantiate the Lifecycle node
+   * of the hardware component upon loading the hardware component.
+   */
+  virtual rclcpp::NodeOptions define_custom_node_options() const;
 
   /// Exports all state interfaces for this hardware interface.
   /**
@@ -356,13 +317,7 @@ public:
   [[deprecated(
     "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled by the Framework.")]] virtual std::vector<StateInterface>
-  export_state_interfaces()
-  {
-    // return empty vector by default. For backward compatibility we try calling
-    // export_state_interfaces() and only when empty vector is returned call
-    // on_export_state_interfaces()
-    return {};
-  }
+  export_state_interfaces();
 
   /**
    * Override this method to export custom StateInterfaces which are not defined in the URDF file.
@@ -371,11 +326,7 @@ public:
    * \return vector of descriptions to the unlisted StateInterfaces
    */
   virtual std::vector<hardware_interface::InterfaceDescription>
-  export_unlisted_state_interface_descriptions()
-  {
-    // return empty vector by default.
-    return {};
-  }
+  export_unlisted_state_interface_descriptions();
 
   /**
    * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
@@ -384,52 +335,7 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
-  {
-    // import the unlisted interfaces
-    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
-      export_unlisted_state_interface_descriptions();
-
-    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
-    state_interfaces.reserve(
-      unlisted_interface_descriptions.size() + joint_state_interfaces_.size() +
-      sensor_state_interfaces_.size() + gpio_state_interfaces_.size());
-
-    // add InterfaceDescriptions and create the StateInterfaces from the descriptions and add to
-    // maps.
-    for (const auto & description : unlisted_interface_descriptions)
-    {
-      auto name = description.get_name();
-      unlisted_state_interfaces_.insert(std::make_pair(name, description));
-      auto state_interface = std::make_shared<StateInterface>(description);
-      hardware_states_.insert(std::make_pair(name, state_interface));
-      unlisted_states_.push_back(state_interface);
-      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
-    }
-
-    for (const auto & [name, descr] : joint_state_interfaces_)
-    {
-      auto state_interface = std::make_shared<StateInterface>(descr);
-      hardware_states_.insert(std::make_pair(name, state_interface));
-      joint_states_.push_back(state_interface);
-      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
-    }
-    for (const auto & [name, descr] : sensor_state_interfaces_)
-    {
-      auto state_interface = std::make_shared<StateInterface>(descr);
-      hardware_states_.insert(std::make_pair(name, state_interface));
-      sensor_states_.push_back(state_interface);
-      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
-    }
-    for (const auto & [name, descr] : gpio_state_interfaces_)
-    {
-      auto state_interface = std::make_shared<StateInterface>(descr);
-      hardware_states_.insert(std::make_pair(name, state_interface));
-      gpio_states_.push_back(state_interface);
-      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
-    }
-    return state_interfaces;
-  }
+  virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces();
 
   /// Exports all command interfaces for this hardware interface.
   /**
@@ -446,13 +352,7 @@ public:
   [[deprecated(
     "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
     "Exporting is handled by the Framework.")]] virtual std::vector<CommandInterface>
-  export_command_interfaces()
-  {
-    // return empty vector by default. For backward compatibility we try calling
-    // export_command_interfaces() and only when empty vector is returned call
-    // on_export_command_interfaces()
-    return {};
-  }
+  export_command_interfaces();
 
   /**
    * Override this method to export custom CommandInterfaces which are not defined in the URDF file.
@@ -461,11 +361,7 @@ public:
    * \return vector of descriptions to the unlisted CommandInterfaces
    */
   virtual std::vector<hardware_interface::InterfaceDescription>
-  export_unlisted_command_interface_descriptions()
-  {
-    // return empty vector by default.
-    return {};
-  }
+  export_unlisted_command_interface_descriptions();
 
   /**
    * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
@@ -477,46 +373,7 @@ public:
    *
    * \return vector of shared pointers to the created and stored CommandInterfaces
    */
-  virtual std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
-  {
-    // import the unlisted interfaces
-    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
-      export_unlisted_command_interface_descriptions();
-
-    std::vector<CommandInterface::SharedPtr> command_interfaces;
-    command_interfaces.reserve(
-      unlisted_interface_descriptions.size() + joint_command_interfaces_.size() +
-      gpio_command_interfaces_.size());
-
-    // add InterfaceDescriptions and create the CommandInterfaces from the descriptions and add to
-    // maps.
-    for (const auto & description : unlisted_interface_descriptions)
-    {
-      auto name = description.get_name();
-      unlisted_command_interfaces_.insert(std::make_pair(name, description));
-      auto command_interface = std::make_shared<CommandInterface>(description);
-      hardware_commands_.insert(std::make_pair(name, command_interface));
-      unlisted_commands_.push_back(command_interface);
-      command_interfaces.push_back(command_interface);
-    }
-
-    for (const auto & [name, descr] : joint_command_interfaces_)
-    {
-      auto command_interface = std::make_shared<CommandInterface>(descr);
-      hardware_commands_.insert(std::make_pair(name, command_interface));
-      joint_commands_.push_back(command_interface);
-      command_interfaces.push_back(command_interface);
-    }
-
-    for (const auto & [name, descr] : gpio_command_interfaces_)
-    {
-      auto command_interface = std::make_shared<CommandInterface>(descr);
-      hardware_commands_.insert(std::make_pair(name, command_interface));
-      gpio_commands_.push_back(command_interface);
-      command_interfaces.push_back(command_interface);
-    }
-    return command_interfaces;
-  }
+  virtual std::vector<CommandInterface::SharedPtr> on_export_command_interfaces();
 
   /// Prepare for a new command interface switch.
   /**
@@ -530,11 +387,8 @@ public:
    * interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
   virtual return_type prepare_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/)
-  {
-    return return_type::OK;
-  }
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces);
 
   // Perform switching to the new command interface.
   /**
@@ -547,11 +401,8 @@ public:
    * interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
   virtual return_type perform_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/)
-  {
-    return return_type::OK;
-  }
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces);
 
   /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
   /**
@@ -565,41 +416,7 @@ public:
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   HardwareComponentCycleStatus trigger_read(
-    const rclcpp::Time & time, const rclcpp::Duration & period)
-  {
-    HardwareComponentCycleStatus status;
-    status.result = return_type::ERROR;
-    if (info_.is_async)
-    {
-      status.result = read_return_info_.load(std::memory_order_acquire);
-      const auto read_exec_time = read_execution_time_.load(std::memory_order_acquire);
-      if (read_exec_time.count() > 0)
-      {
-        status.execution_time = read_exec_time;
-      }
-      const auto result = async_handler_->trigger_async_callback(time, period);
-      status.successful = result.first;
-      if (!status.successful)
-      {
-        RCLCPP_WARN_EXPRESSION(
-          get_logger(), info_.async_params.print_warnings,
-          "Trigger read/write called while the previous async trigger is still in progress for "
-          "hardware interface : '%s'. Failed to trigger read/write cycle!",
-          info_.name.c_str());
-        status.result = return_type::OK;
-        return status;
-      }
-    }
-    else
-    {
-      const auto start_time = std::chrono::steady_clock::now();
-      status.successful = true;
-      status.result = read(time, period);
-      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now() - start_time);
-    }
-    return status;
-  }
+    const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Read the current state values from the hardware.
   /**
@@ -624,30 +441,7 @@ public:
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   HardwareComponentCycleStatus trigger_write(
-    const rclcpp::Time & time, const rclcpp::Duration & period)
-  {
-    HardwareComponentCycleStatus status;
-    status.result = return_type::ERROR;
-    if (info_.is_async)
-    {
-      status.successful = true;
-      const auto write_exec_time = write_execution_time_.load(std::memory_order_acquire);
-      if (write_exec_time.count() > 0)
-      {
-        status.execution_time = write_exec_time;
-      }
-      status.result = write_return_info_.load(std::memory_order_acquire);
-    }
-    else
-    {
-      const auto start_time = std::chrono::steady_clock::now();
-      status.successful = true;
-      status.result = write(time, period);
-      status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now() - start_time);
-    }
-    return status;
-  }
+    const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Write the current command values to the hardware.
   /**
@@ -658,22 +452,19 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
-  {
-    return return_type::OK;
-  }
+  virtual return_type write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Get name of the hardware.
   /**
    * \return name.
    */
-  const std::string & get_name() const { return info_.name; }
+  const std::string & get_name() const;
 
   /// Get name of the hardware group to which it belongs to.
   /**
    * \return group name.
    */
-  const std::string & get_group_name() const { return info_.group; }
+  const std::string & get_group_name() const;
 
   /// Get life-cycle state of the hardware.
   /**
@@ -682,7 +473,7 @@ public:
    * \note This method is thread safe.
    * \return state.
    */
-  const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
+  const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
   /// Set life-cycle state of the hardware.
   /**
@@ -691,23 +482,17 @@ public:
    * \note This method is real-time safe and thread safe and can be called in the control loop.
    * \return state.
    */
-  void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
-  {
-    lifecycle_state_ = new_state;
-    lifecycle_id_cache_.store(new_state.id(), std::memory_order_release);
-  }
+  void set_lifecycle_state(const rclcpp_lifecycle::State & new_state);
 
-  uint8_t get_lifecycle_id() const { return lifecycle_id_cache_.load(std::memory_order_acquire); }
+  /// Get the lifecycle id of the hardware component interface.
+  uint8_t get_lifecycle_id() const;
 
   /// Does the state interface exist?
   /**
    * \param[in] interface_name The name of the state interface.
    * \return true if the state interface exists, false otherwise.
    */
-  bool has_state(const std::string & interface_name) const
-  {
-    return hardware_states_.find(interface_name) != hardware_states_.end();
-  }
+  virtual bool has_state(const std::string & interface_name) const;
 
   /// Get the state interface handle
   /**
@@ -716,19 +501,8 @@ public:
    * \throws std::runtime_error This method throws a runtime error if it cannot find the state
    * interface with the given name.
    */
-  const StateInterface::SharedPtr & get_state_interface_handle(
-    const std::string & interface_name) const
-  {
-    auto it = hardware_states_.find(interface_name);
-    if (it == hardware_states_.end())
-    {
-      throw std::runtime_error(
-        fmt::format(
-          "The requested state interface not found: '{}' in hardware component: '{}'.",
-          interface_name, info_.name));
-    }
-    return it->second;
-  }
+  virtual const StateInterface::SharedPtr & get_state_interface_handle(
+    const std::string & interface_name) const;
 
   /// Set the value of a state interface.
   /**
@@ -827,10 +601,7 @@ public:
    * \param[in] interface_name The name of the command interface.
    * \return true if the command interface exists, false otherwise.
    */
-  bool has_command(const std::string & interface_name) const
-  {
-    return hardware_commands_.find(interface_name) != hardware_commands_.end();
-  }
+  virtual bool has_command(const std::string & interface_name) const;
 
   /// Get the command interface handle
   /**
@@ -839,19 +610,8 @@ public:
    * \throws std::runtime_error This method throws a runtime error if it cannot find the command
    * interface with the given name.
    */
-  const CommandInterface::SharedPtr & get_command_interface_handle(
-    const std::string & interface_name) const
-  {
-    auto it = hardware_commands_.find(interface_name);
-    if (it == hardware_commands_.end())
-    {
-      throw std::runtime_error(
-        fmt::format(
-          "The requested command interface not found: '{}' in hardware component: '{}'.",
-          interface_name, info_.name));
-    }
-    return it->second;
-  }
+  virtual const CommandInterface::SharedPtr & get_command_interface_handle(
+    const std::string & interface_name) const;
 
   /// Set the value of a command interface.
   /**
@@ -948,66 +708,44 @@ public:
   /**
    * \return logger of the HardwareComponentInterface.
    */
-  rclcpp::Logger get_logger() const { return logger_; }
+  virtual rclcpp::Logger get_logger() const;
 
   /// Get the clock
   /**
    * \return clock that is shared with the controller manager
    */
-  rclcpp::Clock::SharedPtr get_clock() const { return clock_; }
+  virtual rclcpp::Clock::SharedPtr get_clock() const;
 
   /// Get the default node of the HardwareComponentInterface.
   /**
    * \return node of the HardwareComponentInterface.
    */
-  rclcpp::Node::SharedPtr get_node() const { return hardware_component_node_; }
+  virtual rclcpp::Node::SharedPtr get_node() const;
 
   /// Get the hardware info of the HardwareComponentInterface.
   /**
    * \return hardware info of the HardwareComponentInterface.
    */
-  const HardwareInfo & get_hardware_info() const { return info_; }
+  const HardwareInfo & get_hardware_info() const;
 
   /// Pause any asynchronous operations.
   /**
    * This method is called to pause any ongoing asynchronous operations, such as read/write cycles.
    * It is typically used during lifecycle transitions or when the hardware needs to be paused.
    */
-  void pause_async_operations()
-  {
-    if (async_handler_)
-    {
-      async_handler_->pause_execution();
-    }
-  }
+  void pause_async_operations();
 
   /// Prepare for the activation of the hardware.
   /**
    * This method is called before the hardware is activated by the resource manager.
    */
-  void prepare_for_activation()
-  {
-    read_return_info_.store(return_type::OK, std::memory_order_release);
-    read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
-    write_return_info_.store(return_type::OK, std::memory_order_release);
-    write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
-  }
+  void prepare_for_activation();
 
   /// Enable or disable introspection of the hardware.
   /**
    * \param[in] enable Enable introspection if true, disable otherwise.
    */
-  void enable_introspection(bool enable)
-  {
-    if (enable)
-    {
-      stats_registrations_.enableAll();
-    }
-    else
-    {
-      stats_registrations_.disableAll();
-    }
-  }
+  void enable_introspection(bool enable);
 
 protected:
   HardwareInfo info_;
@@ -1024,7 +762,6 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
-  std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
@@ -1040,23 +777,11 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
 private:
-  rclcpp::Clock::SharedPtr clock_;
-  rclcpp::Logger logger_;
-  rclcpp::Node::SharedPtr hardware_component_node_ = nullptr;
-  // interface names to Handle accessed through getters/setters
-  std::unordered_map<std::string, StateInterface::SharedPtr> hardware_states_;
-  std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
-  std::atomic<return_type> read_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
-  std::atomic<return_type> write_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+  class HardwareComponentInterfaceImpl;
+  std::unique_ptr<HardwareComponentInterfaceImpl> impl_;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;
-  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
-  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
-    hardware_status_box_;
-  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
 };
 
 }  // namespace hardware_interface
