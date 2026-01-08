@@ -30,7 +30,6 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
-#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
@@ -1668,7 +1667,9 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  ros2_control::add_items(resource_storage_->available_state_interfaces_, interface_names);
+  resource_storage_->available_state_interfaces_.insert(
+    resource_storage_->available_state_interfaces_.end(), interface_names.begin(),
+    interface_names.end());
 }
 
 // CM API: Called in "update"-thread
@@ -1735,7 +1736,9 @@ void ResourceManager::make_controller_reference_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  ros2_control::add_items(resource_storage_->available_command_interfaces_, interface_names);
+  resource_storage_->available_command_interfaces_.insert(
+    resource_storage_->available_command_interfaces_.end(), interface_names.begin(),
+    interface_names.end());
 }
 
 // CM API: Called in "update"-thread
