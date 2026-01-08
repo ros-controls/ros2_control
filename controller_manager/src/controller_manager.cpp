@@ -1620,13 +1620,6 @@ void ControllerManager::clear_requests()
   switch_params_.activate_asap = false;
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
-  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
-  // state without the controller being in active state
-  for (const auto & controller_name : switch_params_.to_chained_mode_request)
-  {
-    resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
-    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
-  }
   switch_params_.to_chained_mode_request.clear();
   switch_params_.from_chained_mode_request.clear();
   switch_params_.activate_command_interface_request.clear();
@@ -2411,6 +2404,28 @@ void ControllerManager::activate_controllers(
 {
   std::vector<std::string> failed_controllers_command_interfaces;
   bool is_successful = true;
+  // Make all chainable interfaces available before activating controllers
+  std::for_each(
+    controllers_to_activate.begin(), controllers_to_activate.end(),
+    [this, &rt_controller_list](const std::string & controller_name)
+    {
+      auto found_it = std::find_if(
+        rt_controller_list.begin(), rt_controller_list.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+      if (found_it != rt_controller_list.end())
+      {
+        if (found_it->c->is_chainable())
+        {
+          RCLCPP_INFO(
+            get_logger(),
+            "Making exported interfaces available for chainable controller '%s' before "
+            "activation",
+            controller_name.c_str());
+          resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
+          resource_manager_->make_controller_reference_interfaces_available(controller_name);
+        }
+      }
+    });
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(

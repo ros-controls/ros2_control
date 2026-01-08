@@ -438,8 +438,10 @@ public:
       // successful xor deactivated
       if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface))
+          << "The interface : '" << interface << "' should exist but it does not";
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface))
+          << "The interface : '" << interface << "' should be claimed but it is not claimed";
       }
       else
       {
