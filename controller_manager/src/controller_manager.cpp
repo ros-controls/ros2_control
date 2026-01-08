@@ -3687,6 +3687,18 @@ controller_interface::return_type ControllerManager::check_following_controllers
           switch_params_.deactivate_request.begin(), switch_params_.deactivate_request.end(),
           following_ctrl_it->info.name) != switch_params_.deactivate_request.end())
       {
+        if (
+          (ros2_control::has_item(controller_state_interfaces, ctrl_itf_name) &&
+           controller_it->c->state_interface_configuration().type ==
+             controller_interface::interface_configuration_type::ALL) ||
+          (ros2_control::has_item(controller_cmd_interfaces, ctrl_itf_name) &&
+           controller_it->c->command_interface_configuration().type ==
+             controller_interface::interface_configuration_type::ALL))
+        {
+          // if preceding controller uses ALL state/command interface configuration, then it means
+          // there is no strict dependency on specific interface
+          continue;
+        }
         message = fmt::format(
           FMT_COMPILE(
             "The following controller with name '{}' is currently active but it is requested to "
