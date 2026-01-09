@@ -60,7 +60,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_urdf_without_ha
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_invalid_urdf)
@@ -74,7 +74,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_invalid_urdf)
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_empty_urdf)
@@ -88,7 +88,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_empty_urdf)
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_nonexistent_plugins)
@@ -102,7 +102,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_nonexistent_plu
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
@@ -116,7 +116,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 TEST_F(ControllerManagerTest, init_controller_manager_with_invalid_urdf)
@@ -128,7 +128,7 @@ TEST_F(ControllerManagerTest, init_controller_manager_with_invalid_urdf)
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
-  EXPECT_TRUE(cm.has_invalid_robot_description());
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
 }
 
 int main(int argc, char ** argv)

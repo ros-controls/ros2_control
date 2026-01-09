@@ -40,7 +40,7 @@ public:
 
   using ControllerManager::resource_manager_;
 
-  using ControllerManager::has_invalid_robot_description;
+  using ControllerManager::is_waiting_for_robot_description;
 };
 
 class ControllerManagerTest : public ::testing::Test
