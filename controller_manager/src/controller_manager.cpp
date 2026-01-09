@@ -1620,13 +1620,6 @@ void ControllerManager::clear_requests()
   switch_params_.activate_asap = false;
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
-  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
-  // state without the controller being in active state
-  for (const auto & controller_name : switch_params_.to_chained_mode_request)
-  {
-    resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
-    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
-  }
   switch_params_.to_chained_mode_request.clear();
   switch_params_.from_chained_mode_request.clear();
   switch_params_.activate_command_interface_request.clear();
@@ -2411,6 +2404,26 @@ void ControllerManager::activate_controllers(
 {
   std::vector<std::string> failed_controllers_command_interfaces;
   bool is_successful = true;
+  // Make all chainable interfaces available before activating controllers
+  for (const auto & controller_name : controllers_to_activate)
+  {
+    auto found_it = std::find_if(
+      rt_controller_list.begin(), rt_controller_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (found_it != rt_controller_list.end())
+    {
+      if (found_it->c->is_chainable())
+      {
+        RCLCPP_DEBUG(
+          get_logger(),
+          "Making exported interfaces available for chainable controller '%s' before "
+          "activation",
+          controller_name.c_str());
+        resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
+        resource_manager_->make_controller_reference_interfaces_available(controller_name);
+      }
+    }
+  }
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(
@@ -3687,6 +3700,18 @@ controller_interface::return_type ControllerManager::check_following_controllers
           switch_params_.deactivate_request.begin(), switch_params_.deactivate_request.end(),
           following_ctrl_it->info.name) != switch_params_.deactivate_request.end())
       {
+        if (
+          (ros2_control::has_item(controller_state_interfaces, ctrl_itf_name) &&
+           controller_it->c->state_interface_configuration().type ==
+             controller_interface::interface_configuration_type::ALL) ||
+          (ros2_control::has_item(controller_cmd_interfaces, ctrl_itf_name) &&
+           controller_it->c->command_interface_configuration().type ==
+             controller_interface::interface_configuration_type::ALL))
+        {
+          // if preceding controller uses ALL state/command interface configuration, then it means
+          // there is no strict dependency on specific interface
+          continue;
+        }
         message = fmt::format(
           FMT_COMPILE(
             "The following controller with name '{}' is currently active but it is requested to "
