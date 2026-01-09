@@ -2414,7 +2414,7 @@ void ControllerManager::activate_controllers(
     {
       if (found_it->c->is_chainable())
       {
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
           get_logger(),
           "Making exported interfaces available for chainable controller '%s' before "
           "activation",
