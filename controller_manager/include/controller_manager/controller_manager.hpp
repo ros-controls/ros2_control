@@ -90,6 +90,8 @@ public:
    */
   bool shutdown_controllers();
 
+  void init_robot_description_callback();
+
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   void init_resource_manager(const std::string & robot_description);
@@ -215,8 +217,11 @@ public:
    * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
-  bool is_resource_manager_initialized() const { return is_resource_manager_initialized_; }
-
+  bool is_resource_manager_initialized() const
+  {
+    return resource_manager_ && resource_manager_->are_components_initialized() &&
+           resource_manager_->are_joint_limiters_imported();
+  }
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
@@ -673,7 +678,6 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
-  bool is_resource_manager_initialized_ = false;
   struct ControllerManagerExecutionTime
   {
     double read_time = 0.0;

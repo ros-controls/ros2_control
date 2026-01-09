@@ -458,6 +458,7 @@ ControllerManager::ControllerManager(
 {
   initialize_parameters();
   init_controller_manager();
+  init_robot_description_callback();
 }
 
 ControllerManager::ControllerManager(
@@ -477,14 +478,18 @@ ControllerManager::ControllerManager(
   cm_node_options_(options),
   robot_description_(resource_manager_->get_robot_description())
 {
-  if (
-    resource_manager_->are_components_initialized() &&
-    resource_manager_->are_joint_limiters_imported())
+  if (is_resource_manager_initialized())
   {
-    is_resource_manager_initialized_ = true;
+    initialize_parameters();
+    init_controller_manager();
+    resource_manager_->set_on_component_state_switch_callback(
+      std::bind(&ControllerManager::publish_activity, this));
   }
-  initialize_parameters();
-  init_controller_manager();
+  else
+  {
+    RCLCPP_FATAL(get_logger(), "The resource manager is not properly initialized");
+    throw std::runtime_error("Resource manager object is not valid. See the FATAL message above.");
+  }
 }
 
 ControllerManager::~ControllerManager()
@@ -536,20 +541,6 @@ void ControllerManager::init_controller_manager()
   rt_controllers_wrapper_.set_on_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
 
-  if (!resource_manager_ && !robot_description_.empty())
-  {
-    init_resource_manager(robot_description_);
-  }
-
-  // set QoS to transient local to get messages that have already been published
-  // (if robot state publisher starts before controller manager)
-  robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-    "robot_description", rclcpp::QoS(1).transient_local(),
-    std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
-  RCLCPP_INFO(
-    get_logger(), "Subscribing to '%s' topic for robot description.",
-    robot_description_subscription_->get_topic_name());
-
   // Setup diagnostics
   periodicity_stats_.reset();
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -592,25 +583,6 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
-
-  if (!is_resource_manager_initialized())
-  {
-    // The RM failed to initialize after receiving the robot description, or no description was
-    // received at all. This is a critical error. Don't finalize controller manager, instead keep
-    // waiting for robot description
-    resource_manager_ =
-      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-    if (!robot_description_notification_timer_)
-    {
-      robot_description_notification_timer_ = create_wall_timer(
-        std::chrono::seconds(1),
-        [&]()
-        {
-          RCLCPP_WARN(
-            get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
-        });
-    }
-  }
 }
 
 void ControllerManager::initialize_parameters()
@@ -648,6 +620,33 @@ void ControllerManager::initialize_parameters()
       "Exception thrown while initializing controller manager parameters: %s \n", e.what());
     throw e;
   }
+}
+
+void ControllerManager::init_robot_description_callback()
+{
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+
+  robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
+    "robot_description", rclcpp::QoS(1).transient_local(),
+    std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
+  RCLCPP_INFO(
+    get_logger(), "Subscribing to '%s' topic for robot description.",
+    robot_description_subscription_->get_topic_name());
+
+  if (!robot_description_notification_timer_)
+  {
+    robot_description_notification_timer_ = create_wall_timer(
+      std::chrono::seconds(1),
+      [&]()
+      {
+        RCLCPP_WARN(
+          get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+      });
+  }
+  std_msgs::msg::String msg;
+  msg.data = robot_description_;
+  robot_description_callback(msg);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -690,7 +689,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
 
   RCLCPP_INFO_EXPRESSION(
     get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
@@ -818,7 +816,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     }
   }
   robot_description_notification_timer_->cancel();
-  is_resource_manager_initialized_ = true;
   auto hw_components_info = resource_manager_->get_components_status();
 
   for (const auto & [component_name, component_info] : hw_components_info)
