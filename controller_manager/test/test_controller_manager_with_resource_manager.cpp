@@ -51,12 +51,10 @@ void ControllerManagerTest::TearDown()
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_urdf_without_hardware_plugin)
 {
-  TestControllerManager cm(std::move(test_resource_manager_), executor_);
+  const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_without_hardware_plugin;
 
-  std_msgs::msg::String invalid_urdf_msg;
-  invalid_urdf_msg.data = ros2_control_test_assets::invalid_urdf_without_hardware_plugin;
-
-  cm.robot_description_callback(invalid_urdf_msg);
+  TestControllerManager cm(
+    executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
@@ -65,12 +63,10 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_urdf_without_ha
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_invalid_urdf)
 {
-  TestControllerManager cm(std::move(test_resource_manager_), executor_);
+  const std::string invalid_urdf = R"(<robot malformed></robot>)";
 
-  std_msgs::msg::String invalid_urdf_msg;
-  invalid_urdf_msg.data = R"(<robot malformed></robot>)";
-
-  cm.robot_description_callback(invalid_urdf_msg);
+  TestControllerManager cm(
+    executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
@@ -79,12 +75,10 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_invalid_urdf)
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_empty_urdf)
 {
-  TestControllerManager cm(std::move(test_resource_manager_), executor_);
+  const std::string invalid_urdf = "";
 
-  std_msgs::msg::String invalid_urdf_msg;
-  invalid_urdf_msg.data = "";
-
-  cm.robot_description_callback(invalid_urdf_msg);
+  TestControllerManager cm(
+    executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
@@ -92,34 +86,6 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_empty_urdf)
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_nonexistent_plugins)
-{
-  TestControllerManager cm(std::move(test_resource_manager_), executor_);
-
-  std_msgs::msg::String invalid_urdf_msg;
-  invalid_urdf_msg.data = ros2_control_test_assets::invalid_urdf_with_nonexistent_plugin;
-
-  cm.robot_description_callback(invalid_urdf_msg);
-
-  EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
-}
-
-TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
-{
-  TestControllerManager cm(std::move(test_resource_manager_), executor_);
-
-  std_msgs::msg::String invalid_urdf_msg;
-  invalid_urdf_msg.data = ros2_control_test_assets::invalid_urdf_no_geometry;
-
-  cm.robot_description_callback(invalid_urdf_msg);
-
-  EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
-}
-
-TEST_F(ControllerManagerTest, init_controller_manager_with_invalid_urdf)
 {
   const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_with_nonexistent_plugin;
 
@@ -129,6 +95,25 @@ TEST_F(ControllerManagerTest, init_controller_manager_with_invalid_urdf)
   EXPECT_FALSE(cm.is_resource_manager_initialized());
 
   EXPECT_TRUE(cm.is_waiting_for_robot_description());
+}
+
+TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
+{
+  const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_no_geometry;
+
+  TestControllerManager cm(
+    executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
+
+  EXPECT_FALSE(cm.is_resource_manager_initialized());
+
+  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+}
+
+TEST_F(ControllerManagerTest, cm_constructor_with_invalid_rm_object)
+{
+  EXPECT_THROW(
+    { TestControllerManager cm(std::move(test_resource_manager_), executor_); },
+    std::runtime_error);
 }
 
 int main(int argc, char ** argv)
