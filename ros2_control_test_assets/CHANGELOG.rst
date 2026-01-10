@@ -2,6 +2,9 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.11.2 (2026-01-07)
 -------------------
 

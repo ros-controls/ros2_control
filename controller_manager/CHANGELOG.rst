@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the duplicate entries in the controller exported interfaces (`#2951 <https://github.com/ros-controls/ros2_control/issues/2951>`_) (`#2955 <https://github.com/ros-controls/ros2_control/issues/2955>`_)
+* Contributors: mergify[bot]
+
 5.11.2 (2026-01-07)
 -------------------
 

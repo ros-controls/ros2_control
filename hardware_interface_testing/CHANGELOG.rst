@@ -2,6 +2,9 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.11.2 (2026-01-07)
 -------------------
 
