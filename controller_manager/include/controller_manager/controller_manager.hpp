@@ -91,6 +91,8 @@ public:
    */
   bool shutdown_controllers();
 
+  void init_robot_description_callback();
+
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   void init_resource_manager(const std::string & robot_description);
@@ -220,9 +222,9 @@ public:
    */
   bool is_resource_manager_initialized() const
   {
-    return resource_manager_ && resource_manager_->are_components_initialized();
+    return resource_manager_ && resource_manager_->are_components_initialized() &&
+           resource_manager_->are_joint_limiters_imported();
   }
-
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
@@ -244,6 +246,16 @@ public:
    * \returns trigger clock of the controller manager.
    */
   rclcpp::Clock::SharedPtr get_trigger_clock() const;
+
+  /**
+   * @brief Returns true if we have a valid robot description, currently based on whether the timer
+   * for waiting on description is still on.
+   */
+  bool is_waiting_for_robot_description() const
+  {
+    return robot_description_notification_timer_ &&
+           !robot_description_notification_timer_->is_canceled();
+  }
 
 protected:
   void init_services();
