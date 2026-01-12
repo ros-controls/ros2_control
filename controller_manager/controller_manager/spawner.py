@@ -72,10 +72,36 @@ def is_controller_loaded(
     return any(c.name == controller_name for c in controllers)
 
 
+def parse_type_from_controllers(controller_names: list[str]) -> dict[str, str]:
+    controller_to_type : dict[str, str] = dict()
+    for name in controller_names:
+        # We expect controller:some/type
+        # -> split[0]=controller AND split[1]=some/type
+        split = name.split(":")
+        if len(split) != 2 or not split[0] or not split[1]:
+            raise ValueError(
+                f"Invalid format '{name}'. Expected format is 'controller_name:some/controller_type' if '--param-file-remote-only' flag is used."
+            )
+        controller = split[0]
+        controller_type = split[1]
+
+        if controller in controller_to_type:
+            raise ValueError(
+                f"Controller names must be unique. Got multiple occurrences of {controller}"
+            )
+        else:
+            controller_to_type[controller] = controller_type
+    return controller_to_type
+
+
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
-    parser.add_argument("controller_names", help="List of controllers", nargs="+")
+    parser.add_argument(
+        "controller_names",
+        help="List of controllers. In combination with '--param-file-remote-only' flag pass type of controller as 'controller:/controller/type'",
+        nargs="+",
+    )
     parser.add_argument(
         "-c",
         "--controller-manager",
@@ -91,6 +117,20 @@ def main(args=None):
         "override the parameters of the same controller.",
         default=None,
         action="append",
+        required=False,
+    )
+    parser.add_argument(
+        "--param-file-remote-only",
+        help="Set this to load the param file only remotely. Param file is not needed to be present locally only remotely.",
+        default=False,
+        action="store_true",
+        required=False,
+    )
+    parser.add_argument(
+        "-n",
+        "--namespace",
+        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
+        default=None,
         required=False,
     )
     parser.add_argument(
@@ -162,6 +202,7 @@ def main(args=None):
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
     param_files = args.param_file
+    param_file_remote = args.param_file_remote_only
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
@@ -170,14 +211,54 @@ def main(args=None):
     switch_asap = args.switch_asap
     node = None
 
-    if param_files:
+    if param_files and not param_file_remote:
         for param_file in param_files:
             if not os.path.isfile(param_file):
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
     logger = rclpy.logging.get_logger("ros2_control_controller_spawner_" + controller_names[0])
 
+    # If we have remote flag given we want to parse the controller_names from
+    # controller:controller/type to a dict[controller] = controller/type
+    # the controller_names are then overwritten with only the controller names
+    controller_to_type :dict[str,str] = {}
+    if param_file_remote:
+        controller_to_type = parse_type_from_controllers(controller_names)
+        if not controller_to_type:
+            raise ValueError(
+                "Invalid format for controller_name.Expected format is 'controller_name:some/controller_type' if '--param-file-remote-only' flag is used."
+            )
+        # Overwrite controller_names with the parsed controller names
+        controller_names = list(controller_to_type.keys()) 
+
+    spawner_node_name = "spawner_" + controller_names[0]
+    node = Node(spawner_node_name)
+
+    if node.get_namespace() != "/" and args.namespace:
+        raise RuntimeError(
+            f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
+            f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
+        )
+
+    if args.namespace:
+        warnings.filterwarnings("always")
+        warnings.warn(
+            "The '--namespace' argument is deprecated and will be removed in future releases."
+            " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
+            DeprecationWarning,
+        )
+
+    spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+
+    if not spawner_namespace.startswith("/"):
+        spawner_namespace = f"/{spawner_namespace}"
+
+    if not controller_manager_name.startswith("/"):
+        if spawner_namespace and spawner_namespace != "/":
+            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
+        else:
+            controller_manager_name = f"/{controller_manager_name}"
+
     try:
-        spawner_node_name = "spawner_" + controller_names[0]
         # Get the environment variable $ROS_HOME or default to ~/.ros
         ros_home = os.getenv("ROS_HOME", os.path.join(os.path.expanduser("~"), ".ros"))
         ros_control_lock_dir = os.path.join(ros_home, "locks")
@@ -211,7 +292,6 @@ def main(args=None):
             )
             return 1
 
-        node = Node(spawner_node_name)
         logger = node.get_logger()
 
         spawner_namespace = node.get_namespace()
@@ -249,12 +329,15 @@ def main(args=None):
                         [arg for args in controller_ros_args for arg in args.split()],
                     ):
                         return 1
+
                 if param_files:
                     if not set_controller_parameters_from_param_files(
                         node,
                         controller_manager_name,
                         controller_name,
                         param_files,
+                        param_file_remote,
+                        controller_to_type,
                         spawner_namespace,
                     ):
                         return 1
