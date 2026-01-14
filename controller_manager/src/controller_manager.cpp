@@ -945,7 +945,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
 void ControllerManager::init_services()
 {
-  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
+  // TODO(anyone): Due to issues with the MultiThreadedExecutor, this control loop does not rely on
   // the executor (see issue #260).
   // deterministic_callback_group_ = create_callback_group(
   //   rclcpp::CallbackGroupType::MutuallyExclusive);
