@@ -209,7 +209,7 @@ public:
    * Deterministic (real-time safe) callback group for the update function. Default behavior
    * is read hardware, update controller and finally write new values to the hardware.
    */
-  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
+  // TODO(anyone): Due to issues with the MultiThreadedExecutor, this control loop does not rely on
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
