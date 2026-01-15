@@ -150,7 +150,17 @@ int main(int argc, char ** argv)
         // wait until we hit the end of the period
         if (use_sim_time)
         {
-          cm->get_clock()->sleep_until(current_time + period);
+          try
+          {
+            cm->get_clock()->sleep_until(current_time + period);
+          }
+          catch (const std::runtime_error & e)
+          {
+            RCLCPP_ERROR(
+              cm->get_logger(),
+              "sleep_until failed with error: %s. Exiting control loop and aborting....", e.what());
+            break;
+          }
         }
         else
         {
