@@ -113,6 +113,8 @@ public:
 
   std::recursive_mutex & get_mutex();
 
+  std::shared_ptr<realtime_tools::SyncSignal> get_sync_signal() const { return impl_->get_sync_signal(); }
+
 private:
   std::unique_ptr<HardwareComponentInterface> impl_;
   mutable std::recursive_mutex component_mutex_;

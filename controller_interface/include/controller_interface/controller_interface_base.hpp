@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "realtime_tools/async_function_handler.hpp"
+#include "realtime_tools/sync_signal.hpp"
 
 #include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
@@ -366,6 +367,8 @@ public:
    * \param[in] enable Enable introspection if true, disable otherwise.
    */
   void enable_introspection(bool enable);
+
+  void set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal);
 
 protected:
   /** Loaned command interfaces.

@@ -1420,6 +1420,31 @@ controller_interface::return_type ControllerManager::configure_controller(
   // For cases, when the controller ends up in the unconfigured state from any other state
   cleanup_controller_exported_interfaces(*found_it);
 
+    // see if we need to attach the controller update to a specific hardware interface
+    // we do this before controller->confiugre(), as there we init the async function handl;er
+    //
+    // temp, this will be parameterized
+    // Where should these parameters go? for now, lets focus on functionality first
+    bool controller_attach_to_hardware = true;
+    std::string hw_name_we_want_to_sync_to = "kassow";
+    if (controller_attach_to_hardware && controller->is_async()) {        
+        // we gotta get the hardware component by name, somehow.
+        // or we could push the controller object to the resource manager, both ways would work.
+        // this can log if it fails and just return null.
+        auto signal = resource_manager_->get_hardware_sync_signal(hw_name_we_want_to_sync_to);
+        if (signal){
+            controller->set_sync_signal(signal);
+            
+            RCLCPP_INFO(get_logger(), "Linked async controller %s update() to follow async hardware %s read().", 
+                    controller_name.c_str(), hw_name_we_want_to_sync_to.c_str());
+        }else{
+            RCLCPP_ERROR(get_logger(), 
+                "Failed to link controller '%s' to Hardware '%s'. Aborting configuration.", 
+                controller_name.c_str(), hw_name_we_want_to_sync_to.c_str());
+            return controller_interface::return_type::ERROR; 
+        }
+    }
+
   try
   {
     const auto & new_state = controller->configure();

@@ -40,6 +40,7 @@ public:
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+  std::shared_ptr<realtime_tools::SyncSignal> controller_sync_signal_;
 };
 
 HardwareComponentInterface::HardwareComponentInterface()
@@ -92,6 +93,10 @@ CallbackReturn HardwareComponentInterface::init(
         impl_->read_execution_time_.store(
           std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
           std::memory_order_release);
+        
+        if (impl_->controller_sync_signal_) {
+            impl_->controller_sync_signal_->signal_read_finished();
+        }
         if (ret_read != return_type::OK)
         {
           return ret_read;
@@ -468,6 +473,13 @@ void HardwareComponentInterface::prepare_for_activation()
   impl_->read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
   impl_->write_return_info_.store(return_type::OK, std::memory_order_release);
   impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+}
+
+std::shared_ptr<realtime_tools::SyncSignal> HardwareComponentInterface::get_sync_signal() const {
+  if (!impl_->controller_sync_signal_) {
+      impl_->controller_sync_signal_ = std::make_shared<realtime_tools::SyncSignal>();
+  }
+  return impl_->controller_sync_signal_;
 }
 
 void HardwareComponentInterface::enable_introspection(bool enable)

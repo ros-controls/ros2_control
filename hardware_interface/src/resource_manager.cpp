@@ -1628,6 +1628,28 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
   return ros2_control::has_item(resource_storage_->available_state_interfaces_, name);
 }
 
+std::shared_ptr<realtime_tools::SyncSignal> ResourceManager::get_hardware_sync_signal(const std::string & hardware_name) const
+{
+std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+
+auto find_signal = [&](auto & container) -> std::shared_ptr<realtime_tools::SyncSignal> {
+    auto it = std::find_if(container.begin(), container.end(),
+    [&](const auto & component) { return component.get_name() == hardware_name; });
+    
+    if (it != container.end()) {
+        return it->get_sync_signal(); 
+    }
+    return nullptr;
+};
+
+if (auto signal = find_signal(resource_storage_->actuators_)) return signal;
+if (auto signal = find_signal(resource_storage_->sensors_)) return signal;
+if (auto signal = find_signal(resource_storage_->systems_)) return signal;
+
+RCLCPP_ERROR(get_logger(), "Hardware component '%s' not found when requesting sync signal.", hardware_name.c_str());
+return nullptr;
+}
+
 std::string ResourceManager::get_state_interface_data_type(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
