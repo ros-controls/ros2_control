@@ -47,6 +47,7 @@
 #include "realtime_tools/async_function_handler.hpp"
 #include "realtime_tools/realtime_publisher.hpp"
 #include "realtime_tools/realtime_thread_safe_box.hpp"
+#include "realtime_tools/sync_signal.hpp"
 
 namespace hardware_interface
 {
@@ -579,6 +580,13 @@ public:
    * \param[in] enable Enable introspection if true, disable otherwise.
    */
   void enable_introspection(bool enable);
+
+  /**
+  * Getter for the synchronization signal of async slave hardware interface.
+  * Used when we want to ensure asnyc controller update() is executer after its
+  * corresponding hardware interface.
+  */
+  std::shared_ptr<realtime_tools::SyncSignal> get_sync_signal() const;
 
 protected:
   HardwareInfo info_;
