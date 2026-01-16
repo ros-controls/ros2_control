@@ -104,6 +104,13 @@ return_type ControllerInterfaceBase::init(
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
 
+    auto_declare<int>("async_parameters.thread_priority", 50);
+    auto_declare<std::string>("async_parameters.scheduling_policy", "synchronized");
+    auto_declare<std::vector<int64_t>>("async_parameters.cpu_affinity", std::vector<int64_t>()); 
+    auto_declare<int>("async_parameters.execution_rate", impl_->ctrl_itf_params_.update_rate);
+    auto_declare<bool>("async_parameters.wait_until_initial_trigger", true);
+    auto_declare<bool>("async_parameters.print_warnings", true);
+
     impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
   catch (const std::exception & e)
@@ -249,6 +256,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   if (impl_->is_async_)
   {
     realtime_tools::AsyncFunctionHandlerParams async_params;
+    async_params.clock = impl_->ctrl_itf_params_.clock;
     async_params.thread_priority = 50;  // default value
     const int thread_priority_param =
       static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
@@ -274,13 +282,10 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       async_params.thread_priority);
     impl_->async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     
-    bool waits_for_async_hardware = true;
-    if (!waits_for_async_hardware) {
-        impl_->async_handler_->init(
-            std::bind(
-                &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
-            async_params);
-    } else {
+    if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE) {
+        RCLCPP_INFO(
+            get_node()->get_logger(),
+            "Controller is running in SLAVE mode. It expects a SLAVE hardware interface to signal when update() should run.");
         impl_->async_handler_->init(
         [this](const rclcpp::Time & time, const rclcpp::Duration & period) {
             if (impl_->hardware_sync_signal_) {
@@ -296,12 +301,17 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
             return this->update(time, period);
         }, 
         async_params);
+
+        REGISTER_ROS2_CONTROL_INTROSPECTION("sync_triggers", &impl_->sync_triggers_);
+        REGISTER_ROS2_CONTROL_INTROSPECTION("sync_latency_us", &impl_->sync_latency_us_);
+    } else {
+        impl_->async_handler_->init(
+            std::bind(
+                &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
+        async_params);
     }
     
     impl_->async_handler_->start_thread();
-
-    REGISTER_ROS2_CONTROL_INTROSPECTION("sync_triggers", &impl_->sync_triggers_);
-    REGISTER_ROS2_CONTROL_INTROSPECTION("sync_latency_us", &impl_->sync_latency_us_);
   }
 
   REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &impl_->trigger_stats_.total_triggers);

@@ -52,6 +52,12 @@ struct ControllerInterfaceParams
   std::string node_namespace = "";
   rclcpp::NodeOptions node_options = rclcpp::NodeOptions();
 
+  /**
+   * @brief Shared pointer to the rclcpp::Clock to be used by this hardware component.
+   * Typically, this is the same clock used by the ResourceManager/ControllerManager.
+   */
+  rclcpp::Clock::SharedPtr clock = nullptr;
+
   std::unordered_map<std::string, joint_limits::JointLimits> hard_joint_limits = {};
   std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_joint_limits = {};
 };
