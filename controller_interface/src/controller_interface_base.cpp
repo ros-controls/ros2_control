@@ -308,7 +308,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         impl_->async_handler_->init(
             std::bind(
                 &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
-        async_params);
+            async_params);
     }
     
     impl_->async_handler_->start_thread();
@@ -397,7 +397,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
     }
     if (last_trigger_time.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
     {
-      status.period = time - last_trigger_time;
+      status.period = impl_->async_handler_->get_current_callback_period();
     }
   }
   else
