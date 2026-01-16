@@ -231,7 +231,11 @@ public:
 
   bool is_async() const;
 
+  bool is_slave() const;
+
   const std::string & get_robot_description() const;
+  
+  const std::string get_hardware_name_to_sync() const;
 
   /**
    * Get the unordered map of joint limits that are defined in the robot description.
@@ -370,7 +374,7 @@ public:
    */
   void enable_introspection(bool enable);
 
-  void set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal);
+  bool set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal);
 
 protected:
   /** Loaned command interfaces.

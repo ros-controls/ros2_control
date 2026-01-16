@@ -32,6 +32,7 @@ struct ControllerInterfaceBase::ControllerInterfaceBaseImpl
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
   mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+  std::string hardware_name_to_sync_ = "";
   std::shared_ptr<realtime_tools::SyncSignal> hardware_sync_signal_;
   uint64_t sync_triggers_ = 0;
   double sync_latency_us_ = 0.0;
@@ -110,7 +111,9 @@ return_type ControllerInterfaceBase::init(
     auto_declare<int>("async_parameters.execution_rate", impl_->ctrl_itf_params_.update_rate);
     auto_declare<bool>("async_parameters.wait_until_initial_trigger", true);
     auto_declare<bool>("async_parameters.print_warnings", true);
+    auto_declare<std::string>("async_parameters.slave_to_hardware", "");
 
+    impl_->hardware_name_to_sync_ = get_node()->get_parameter("async_parameters.slave_to_hardware").as_string();
     impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
   catch (const std::exception & e)
@@ -283,9 +286,6 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     impl_->async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     
     if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE) {
-        RCLCPP_INFO(
-            get_node()->get_logger(),
-            "Controller is running in SLAVE mode. It expects a SLAVE hardware interface to signal when update() should run.");
         impl_->async_handler_->init(
         [this](const rclcpp::Time & time, const rclcpp::Duration & period) {
             if (impl_->hardware_sync_signal_) {
@@ -442,6 +442,8 @@ const std::string & ControllerInterfaceBase::get_robot_description() const
   return impl_->ctrl_itf_params_.robot_description;
 }
 
+const std::string ControllerInterfaceBase::get_hardware_name_to_sync() const { return impl_->hardware_name_to_sync_; }
+
 const std::unordered_map<std::string, joint_limits::JointLimits> &
 ControllerInterfaceBase::get_hard_joint_limits() const
 {
@@ -476,9 +478,23 @@ void ControllerInterfaceBase::stop_async_handler_thread()
   }
 }
 
-void ControllerInterfaceBase::set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal) 
+bool ControllerInterfaceBase::is_slave() const {
+    auto scheduling_policy = get_node()->get_parameter("async_parameters.scheduling_policy").as_string();
+    if( scheduling_policy != "slave") {
+        return false;
+    }
+    return true;
+}
+bool ControllerInterfaceBase::set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal) 
 {
+  if(!this->is_slave()){
+    RCLCPP_INFO(
+      get_node()->get_logger(), "AsyncSchedulingPolicy must be SLAVE to get sync_signal");
+    return false;
+  }
+
   impl_->hardware_sync_signal_ = signal;
+  return true;
 }
 
 std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
