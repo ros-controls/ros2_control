@@ -145,10 +145,16 @@ return_type ControllerInterfaceBase::init(
     {
       impl_->skip_async_triggers_.store(false, std::memory_order_release);
       enable_introspection(true);
+
       if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
         impl_->async_handler_->reset_variables();
+
+        // Register the controller so hardware write waits on read to complete
+        if (this->is_slave()){
+            impl_->hardware_sync_signal_->register_controller();
+        }
       }
       impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       return on_activate(previous_state);
@@ -159,6 +165,10 @@ return_type ControllerInterfaceBase::init(
     {
       enable_introspection(false);
       impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+
+      if (this->is_slave()){
+        impl_->hardware_sync_signal_->unregister_controller();
+      }
       return on_deactivate(previous_state);
     });
 
@@ -297,8 +307,15 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
                 impl_->sync_triggers_ = static_cast<int64_t>(cycle_count);
                 impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
             }
+            // If this is slave and throws, the on_error will de-register the controller so the hw does not hang
+            auto result = this->update(time, period);
+            std::this_thread::sleep_for(std::chrono::microseconds(500));
 
-            return this->update(time, period);
+            if (impl_->hardware_sync_signal_) {
+                impl_->hardware_sync_signal_->signal_update_finished();
+            }
+
+            return result;
         }, 
         async_params);
 
@@ -474,6 +491,9 @@ void ControllerInterfaceBase::stop_async_handler_thread()
 {
   if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
   {
+    if (this->is_slave()){
+        impl_->hardware_sync_signal_->unregister_controller();
+    }
     impl_->async_handler_->stop_thread();
   }
 }
