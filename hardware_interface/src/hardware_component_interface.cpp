@@ -129,7 +129,7 @@ CallbackReturn HardwareComponentInterface::init(
             impl_->sync_latency_us_ = 0.0; // reset latency measurement, in case we don't wait for updates.
             if (impl_->controller_sync_signal_->get_num_updates_hw_waits_on() > 0) {
                 auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-                auto last_signal_time = impl_->controller_sync_signal_->get_last_signal_time();
+                auto last_signal_time = impl_->controller_sync_signal_->get_last_signal_update_finished_time();
                 impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
             }
         }

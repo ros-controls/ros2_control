@@ -303,7 +303,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 
                 // updating introspection variables
                 auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-                auto last_signal_time = impl_->hardware_sync_signal_->get_last_signal_time();
+                auto last_signal_time = impl_->hardware_sync_signal_->get_last_signal_read_finished_time();
                 impl_->sync_triggers_ = static_cast<int64_t>(cycle_count);
                 impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
             }
