@@ -309,7 +309,6 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
             }
             // If this is slave and throws, the on_error will de-register the controller so the hw does not hang
             auto result = this->update(time, period);
-            std::this_thread::sleep_for(std::chrono::microseconds(500));
 
             if (impl_->hardware_sync_signal_) {
                 impl_->hardware_sync_signal_->signal_update_finished();
