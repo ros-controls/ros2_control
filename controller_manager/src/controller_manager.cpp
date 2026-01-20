@@ -572,8 +572,7 @@ ControllerManager::ControllerManager(
   {
     initialize_parameters();
     init_controller_manager();
-    resource_manager_->set_on_component_state_switch_callback(
-      std::bind(&ControllerManager::publish_activity, this));
+    set_initial_hardware_components_state();
   }
   else
   {
@@ -755,6 +754,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   }
 
   init_resource_manager(robot_description_);
+  set_initial_hardware_components_state();
   if (!is_resource_manager_initialized())
   {
     // The RM failed to init AFTER we received the description - a critical error.
@@ -815,6 +815,17 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       get_logger(), "Exception caught while loading and initializing components: %s", e.what());
     return;
   }
+
+  if (robot_description_notification_timer_)
+  {
+    robot_description_notification_timer_->cancel();
+  }
+}
+
+void ControllerManager::set_initial_hardware_components_state()
+{
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
 
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();
@@ -905,7 +916,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       }
     }
   }
-  robot_description_notification_timer_->cancel();
   auto hw_components_info = resource_manager_->get_components_status();
 
   for (const auto & [component_name, component_info] : hw_components_info)

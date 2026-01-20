@@ -99,7 +99,7 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_nonexistent_plu
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
 {
-  const std::string invalid_urdf = ros2_control_test_assets::minimal_robot_urdf_no_limits;
+  const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_no_geometry;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
