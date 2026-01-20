@@ -31,6 +31,7 @@
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "joint_limits/joint_limits_urdf.hpp"
@@ -84,7 +85,7 @@ namespace detail
 /**
  * \param[in] element_it XMLElement iterator to search for the text.
  * \param[in] tag_name parent tag name where text is searched for (used for error output)
- * \return text of for the tag
+ * \return text of for the tag stripping leading and trailing whitespace
  * \throws std::runtime_error if text is not found
  */
 std::string get_text_for_element(
@@ -96,7 +97,7 @@ std::string get_text_for_element(
     std::cerr << "text not specified in the " << tag_name << " tag" << std::endl;
     return "";
   }
-  return get_text_output;
+  return ros2_control::strip(get_text_output);
 }
 
 /// Gets value of the attribute on an XMLelement.
@@ -106,7 +107,7 @@ std::string get_text_for_element(
  * \param[in] element_it XMLElement iterator to search for the attribute
  * \param[in] attribute_name attribute name to search for and return value
  * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
- * \return attribute value
+ * \return attribute value stripping leading and trailing whitespace
  * \throws std::runtime_error if attribute is not found
  */
 std::string get_attribute_value(
@@ -119,7 +120,7 @@ std::string get_attribute_value(
     throw std::runtime_error(
       fmt::format(FMT_COMPILE("no attribute {} in {} tag"), attribute_name, tag_name));
   }
-  return element_it->Attribute(attribute_name);
+  return ros2_control::strip(element_it->Attribute(attribute_name));
 }
 
 /// Gets value of the attribute on an XMLelement.
@@ -129,7 +130,7 @@ std::string get_attribute_value(
  * \param[in] element_it XMLElement iterator to search for the attribute
  * \param[in] attribute_name attribute name to search for and return value
  * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
- * \return attribute value
+ * \return attribute value stripping leading and trailing whitespace
  * \throws std::runtime_error if attribute is not found
  */
 std::string get_attribute_value(
@@ -161,7 +162,7 @@ double get_parameter_value_or(
         const auto tag_text = params_it->GetText();
         if (tag_text)
         {
-          return hardware_interface::stod(tag_text);
+          return hardware_interface::stod(ros2_control::strip(tag_text));
         }
       }
     }
@@ -196,7 +197,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
 
   std::size_t size;
   // Regex used to check for non-zero positive int
-  std::string s = attr->Value();
+  std::string s = ros2_control::strip(attr->Value());
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
@@ -233,7 +234,7 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   }
   else
   {
-    data_type = attr->Value();
+    data_type = ros2_control::strip(attr->Value());
   }
 
   return data_type;
@@ -252,7 +253,7 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
   try
   {
-    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    const auto rw_rate = attr ? std::stoi(ros2_control::strip(attr->Value())) : 0;
     if (rw_rate < 0)
     {
       throw std::runtime_error(
@@ -270,7 +271,7 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
         FMT_COMPILE(
           "Could not parse rw_rate tag in \"{}\". Invalid value: \"{}\", expected a positive "
           "integer."),
-        elem->Name(), attr->Value()));
+        elem->Name(), ros2_control::strip(attr->Value())));
   }
   catch (const std::out_of_range & e)
   {
@@ -279,7 +280,7 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
         FMT_COMPILE(
           "Could not parse rw_rate tag in \"{}\". Out of range value: \"{}\", expected a positive "
           "valid integer."),
-        elem->Name(), attr->Value()));
+        elem->Name(), ros2_control::strip(attr->Value())));
   }
 }
 
@@ -294,7 +295,7 @@ unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
-  return attr ? parse_bool(attr->Value()) : false;
+  return attr ? parse_bool(ros2_control::strip(attr->Value())) : false;
 }
 
 /// Parse thread_priority attribute
@@ -312,7 +313,7 @@ int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
   {
     return 50;
   }
-  std::string s = attr->Value();
+  std::string s = ros2_control::strip(attr->Value());
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
@@ -349,8 +350,9 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
     {
       throw std::runtime_error("no parameter name attribute set in param tag");
     }
-    const std::string parameter_name = params_it->Attribute(kNameAttribute);
-    const std::string parameter_value = get_text_for_element(params_it, parameter_name);
+    const std::string parameter_name = ros2_control::strip(params_it->Attribute(kNameAttribute));
+    const std::string parameter_value =
+      ros2_control::strip(get_text_for_element(params_it, parameter_name));
     parameters[parameter_name] = parameter_value;
 
     params_it = params_it->NextSiblingElement(kParamTag);
