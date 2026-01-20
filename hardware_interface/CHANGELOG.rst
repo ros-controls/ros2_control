@@ -2,6 +2,22 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.3.2 (2026-01-10)
+------------------
+* Fix the duplicate entries in the controller exported interfaces (`#2951 <https://github.com/ros-controls/ros2_control/issues/2951>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.3.1 (2025-12-30)
+------------------
+* Stop async thread in the destructor (`#2941 <https://github.com/ros-controls/ros2_control/issues/2941>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.3.0 (2025-12-29)
+------------------
+* Use Pimpl approach for controller and hardware component interfaces (`#2898 <https://github.com/ros-controls/ros2_control/issues/2898>`_)
+* Fix missing copy and move operations of data_type\_ variable (`#2903 <https://github.com/ros-controls/ros2_control/issues/2903>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.2.0 (2025-12-10)
 ------------------
 * [Handle] Add support to more data types (`#2879 <https://github.com/ros-controls/ros2_control/issues/2879>`_)

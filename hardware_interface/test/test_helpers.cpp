@@ -54,4 +54,13 @@ TEST(TestHelper, test_helper_methods)
 
   ASSERT_TRUE(ros2_control::is_unique(vec));
   ASSERT_FALSE(ros2_control::is_unique(std::vector<std::string>({"aa", "bb", "cc", "aa"})));
+
+  // Check strip method
+  ASSERT_EQ(ros2_control::strip("   hello world   "), "hello world");
+  ASSERT_EQ(ros2_control::strip("\n\t  hello world \r\n "), "hello world");
+  ASSERT_EQ(ros2_control::strip("      "), "");
+  ASSERT_EQ(ros2_control::strip("hello"), "hello");
+  ASSERT_EQ(ros2_control::strip(""), "");
+  ASSERT_EQ(ros2_control::strip("  hello   world  "), "hello   world");
+  ASSERT_EQ(ros2_control::strip("  \thello\tworld\t  "), "hello\tworld");
 }

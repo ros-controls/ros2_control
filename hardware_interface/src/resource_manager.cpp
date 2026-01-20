@@ -30,6 +30,7 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
@@ -1623,10 +1624,7 @@ std::vector<std::string> ResourceManager::available_state_interfaces() const
 bool ResourceManager::state_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return std::find(
-           resource_storage_->available_state_interfaces_.begin(),
-           resource_storage_->available_state_interfaces_.end(),
-           name) != resource_storage_->available_state_interfaces_.end();
+  return ros2_control::has_item(resource_storage_->available_state_interfaces_, name);
 }
 
 std::string ResourceManager::get_state_interface_data_type(const std::string & name) const
@@ -1667,9 +1665,7 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  resource_storage_->available_state_interfaces_.insert(
-    resource_storage_->available_state_interfaces_.end(), interface_names.begin(),
-    interface_names.end());
+  ros2_control::add_items(resource_storage_->available_state_interfaces_, interface_names);
 }
 
 // CM API: Called in "update"-thread
@@ -1736,9 +1732,7 @@ void ResourceManager::make_controller_reference_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  resource_storage_->available_command_interfaces_.insert(
-    resource_storage_->available_command_interfaces_.end(), interface_names.begin(),
-    interface_names.end());
+  ros2_control::add_items(resource_storage_->available_command_interfaces_, interface_names);
 }
 
 // CM API: Called in "update"-thread
@@ -1892,10 +1886,7 @@ std::vector<std::string> ResourceManager::available_command_interfaces() const
 bool ResourceManager::command_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return std::find(
-           resource_storage_->available_command_interfaces_.begin(),
-           resource_storage_->available_command_interfaces_.end(),
-           name) != resource_storage_->available_command_interfaces_.end();
+  return ros2_control::has_item(resource_storage_->available_command_interfaces_, name);
 }
 
 std::string ResourceManager::get_command_interface_data_type(const std::string & name) const
