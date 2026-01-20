@@ -96,6 +96,8 @@ public:
 
   void init_resource_manager(const std::string & robot_description);
 
+  void set_initial_hardware_components_state();
+
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
