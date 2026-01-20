@@ -601,7 +601,7 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-  mutable bool joint_limiters_are_imported_ = false;
+  mutable bool joint_limiters_are_imported_ = true;
 };
 
 }  // namespace hardware_interface
