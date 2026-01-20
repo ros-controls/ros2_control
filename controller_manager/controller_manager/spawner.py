@@ -201,7 +201,8 @@ def main(args=None):
             except Timeout:
                 logger.warning(
                     bcolors.WARNING
-                    + f"Attempt {attempt+1} failed. Retrying in {retry_delay} seconds..."
+                    + f"Failed to acquire lock in {20} seconds. "
+                    + f"Attempt {attempt+1} of {max_retries} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
                 )
                 time.sleep(retry_delay)
