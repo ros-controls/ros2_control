@@ -214,11 +214,10 @@ def main(args=None):
             return 1
 
         # print only once when the lock is finally acquired, but with info level if it failed once
-        if (
-            not logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
-            and hit_timeout
-        ):
+        if hit_timeout:
             logger.info(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+        else:
+            logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
 
         node = Node(spawner_node_name)
         logger = node.get_logger()
