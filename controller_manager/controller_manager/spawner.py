@@ -197,7 +197,6 @@ def main(args=None):
                 )
                 # timeout after 20 seconds and try again
                 lock.acquire(timeout=20)
-                logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
                 break
             except Timeout:
                 logger.warning(
@@ -214,8 +213,12 @@ def main(args=None):
             )
             return 1
 
-        if hit_timeout:
-            logger.info(bcolors.OKGREEN + "Successfully acquired the spawner lock!" + bcolors.ENDC)
+        # print only once when the lock is finally acquired, but with info level if it failed once
+        if (
+            not logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
+            and hit_timeout
+        ):
+            logger.info(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
 
         node = Node(spawner_node_name)
         logger = node.get_logger()
