@@ -189,6 +189,7 @@ def main(args=None):
         lock = FileLock(f"{ros_control_lock_dir}/ros2-control-controller-spawner.lock")
         max_retries = 5
         retry_delay = 3  # seconds
+        hit_timeout = False
         for attempt in range(max_retries):
             try:
                 logger.debug(
@@ -205,12 +206,16 @@ def main(args=None):
                     + f"Attempt {attempt+1} of {max_retries} failed. Retrying in {retry_delay} seconds..."
                     + bcolors.ENDC
                 )
+                hit_timeout = True
                 time.sleep(retry_delay)
         else:
             logger.error(
                 bcolors.FAIL + "Failed to acquire lock after multiple attempts." + bcolors.ENDC
             )
             return 1
+
+        if hit_timeout:
+            logger.info(bcolors.OKGREEN + "Successfully acquired the spawner lock!" + bcolors.ENDC)
 
         node = Node(spawner_node_name)
         logger = node.get_logger()
