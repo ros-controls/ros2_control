@@ -65,6 +65,7 @@ public:
    * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
+   * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
   bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,

@@ -884,6 +884,7 @@ public:
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
+   * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
   bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
   {
