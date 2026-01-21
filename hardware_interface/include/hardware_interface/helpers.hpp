@@ -194,7 +194,7 @@ template <typename Container>
  * @param str The string to remove whitespaces from.
  * @return The string without whitespaces.
  */
-std::string strip(const std::string & str)
+inline std::string strip(const std::string & str)
 {
   const std::string whitespace = " \t\n\r\f\v";
   size_t start = str.find_first_not_of(whitespace);
