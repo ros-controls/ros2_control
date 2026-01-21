@@ -138,7 +138,6 @@ VelocityLimits compute_velocity_limits(
   const double max_vel =
     limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
   VelocityLimits vel_limits(-max_vel, max_vel);
-  internal::verify_actual_position_within_limits(joint_name, act_pos, limits);
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
