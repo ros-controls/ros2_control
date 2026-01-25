@@ -578,6 +578,110 @@ TEST_F(JointSaturationLimiterTest, check_desired_jerk_only_cases)
   test_limit_enforcing(-1.5, -0.5, true);
 }
 
+TEST_F(JointSaturationLimiterTest, check_desired_position_with_jerk_limits)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 2.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 1.0;
+  // No deceleration limits - use acceleration for both
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 0.5;  // Very low jerk to make it the limiting factor
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+
+  // Test lambda for position limiting with jerk
+  auto test_limit_enforcing = [&](
+                                const std::optional<double> & actual_position,
+                                const std::optional<double> & actual_velocity,
+                                double desired_position, double expected_position, bool is_clamped)
+  {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing for actual position: " + std::to_string(act_pos) + ", actual velocity: " +
+      std::to_string(act_vel) + ", desired position: " + std::to_string(desired_position) +
+      ", expected position: " + std::to_string(expected_position) + ", is clamped: " +
+      std::to_string(is_clamped) + " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.position = desired_position;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_position, COMMON_THRESHOLD);
+  };
+
+  // Test jerk limiting on position when starting from rest
+  // With max_jerk = 0.5 and dt = 1s, effective_max_acc = min(1.0, 0.5*1) = 0.5
+  // So max velocity from rest = 0.5 * 1 = 0.5, and max position delta = 0.5 * 1 = 0.5
+  // Starting from position 0, max reachable is 0.5 (not 1.0 which would be without jerk limit)
+  test_limit_enforcing(0.0, 0.0, 5.0, 0.5, true);
+
+  // Continuing from prev_pos = 0.5, still at velocity 0 (stationary test)
+  // With jerk limit, effective_max_acc = 0.5, max_vel = 0.5, delta_pos = 0.5
+  test_limit_enforcing(0.0, 0.0, 5.0, 1.0, true);
+
+  // Test with actual velocity - when we have existing velocity, we can reach further
+  // Reinitialize to reset prev_command
+  ASSERT_TRUE(Init(limits));
+
+  // Starting with velocity 0.5, with jerk limit 0.5:
+  // effective_max_acc = min(1.0, 0.5) = 0.5
+  // max_vel_positive = min(2.0, 0.5 + 0.5*1) = 1.0
+  // delta_pos_positive = 1.0 * 1 = 1.0
+  test_limit_enforcing(0.0, 0.5, 5.0, 1.0, true);
+
+  // Test negative direction with jerk limits
+  ASSERT_TRUE(Init(limits));
+
+  // From rest, going negative with jerk limits
+  test_limit_enforcing(0.0, 0.0, -5.0, -0.5, true);
+  test_limit_enforcing(0.0, 0.0, -5.0, -1.0, true);
+
+  // Test that without jerk limits, we can reach further
+  limits.has_jerk_limits = false;
+  ASSERT_TRUE(Init(limits));
+
+  // Without jerk limits, effective_max_acc = 1.0
+  // max_vel = min(2.0, 0 + 1.0*1) = 1.0
+  // delta_pos = 1.0 * 1 = 1.0
+  test_limit_enforcing(0.0, 0.0, 5.0, 1.0, true);
+
+  // Second step, prev_pos = 1.0
+  // max_vel = min(2.0, 0 + 1.0*1) = 1.0
+  // delta_pos = 1.0 * 1 = 1.0, so max_pos = 2.0
+  test_limit_enforcing(0.0, 0.0, 5.0, 2.0, true);
+
+  // Now test with very high jerk (should not be limiting factor)
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 10.0;  // High jerk, acceleration should be the limit
+  ASSERT_TRUE(Init(limits));
+
+  // With max_jerk = 10.0 and dt = 1s, effective_max_acc = min(1.0, 10*1) = 1.0
+  // Same as without jerk limits
+  test_limit_enforcing(0.0, 0.0, 5.0, 1.0, true);
+  test_limit_enforcing(0.0, 0.0, 5.0, 2.0, true);
+}
+
 TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
 {
   SetupNode("joint_saturation_limiter");

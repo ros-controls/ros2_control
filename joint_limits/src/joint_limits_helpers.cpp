@@ -109,12 +109,94 @@ PositionLimits compute_position_limits(
   internal::verify_actual_position_within_limits(joint_name, act_pos, limits);
   if (limits.has_velocity_limits)
   {
-    const double act_vel_abs = act_vel.has_value() ? std::fabs(act_vel.value()) : 0.0;
-    const double delta_vel = limits.has_acceleration_limits
-                               ? act_vel_abs + (limits.max_acceleration * dt)
-                               : limits.max_velocity;
-    const double max_vel = std::min(limits.max_velocity, delta_vel);
-    const double delta_pos = max_vel * dt;
+    const double current_vel = act_vel.has_value() ? act_vel.value() : 0.0;
+
+    // Determine acceleration and deceleration limits
+    const double max_acc = limits.has_acceleration_limits ? limits.max_acceleration
+                                                          : std::numeric_limits<double>::infinity();
+    const double max_dec = limits.has_deceleration_limits ? limits.max_deceleration : max_acc;
+
+    // Apply jerk limits to constrain acceleration/deceleration if applicable
+    double effective_max_acc = max_acc;
+    double effective_max_dec = max_dec;
+    if (limits.has_jerk_limits)
+    {
+      // Jerk limits the rate of change of acceleration
+      // Assuming starting from zero acceleration, max achievable acceleration is jerk * dt
+      // For sustained motion, we use the minimum of jerk-limited and configured acceleration
+      const double jerk_limited_acc = limits.max_jerk * dt;
+      effective_max_acc = std::min(max_acc, jerk_limited_acc);
+      effective_max_dec = std::min(max_dec, jerk_limited_acc);
+    }
+
+    // Compute maximum velocity change for positive and negative directions
+    // Deceleration is used when reducing the magnitude of velocity (moving towards zero)
+    // Acceleration is used when increasing the magnitude of velocity (moving away from zero)
+    double max_vel_positive, max_vel_negative;
+
+    if (current_vel > 0)
+    {
+      // Moving in positive direction
+      // Accelerating: increasing positive velocity (use max_acc)
+      // Decelerating: reducing positive velocity towards zero (use max_dec)
+      max_vel_positive = std::min(limits.max_velocity, current_vel + effective_max_acc * dt);
+      max_vel_negative = std::max(-limits.max_velocity, current_vel - effective_max_dec * dt);
+      // When decelerating from positive velocity, we can't go below zero using deceleration
+      // If we want to go negative, we need to first stop (decelerate to 0) then accelerate
+      if (max_vel_negative < 0)
+      {
+        // Time to stop: t_stop = current_vel / max_dec
+        const double t_stop = current_vel / effective_max_dec;
+        if (t_stop < dt)
+        {
+          // Can stop within this timestep and then accelerate in negative direction
+          const double remaining_dt = dt - t_stop;
+          max_vel_negative = std::max(-limits.max_velocity, -effective_max_acc * remaining_dt);
+        }
+        else
+        {
+          // Can only decelerate, cannot go negative yet
+          max_vel_negative = 0.0;
+        }
+      }
+    }
+    else if (current_vel < 0)
+    {
+      // Moving in negative direction
+      // Accelerating: increasing negative velocity magnitude (use max_acc)
+      // Decelerating: reducing negative velocity magnitude towards zero (use max_dec)
+      max_vel_negative = std::max(-limits.max_velocity, current_vel - effective_max_acc * dt);
+      max_vel_positive = std::min(limits.max_velocity, current_vel + effective_max_dec * dt);
+      // When decelerating from negative velocity, we can't go above zero using deceleration
+      if (max_vel_positive > 0)
+      {
+        // Time to stop: t_stop = |current_vel| / max_dec
+        const double t_stop = -current_vel / effective_max_dec;
+        if (t_stop < dt)
+        {
+          // Can stop within this timestep and then accelerate in positive direction
+          const double remaining_dt = dt - t_stop;
+          max_vel_positive = std::min(limits.max_velocity, effective_max_acc * remaining_dt);
+        }
+        else
+        {
+          // Can only decelerate, cannot go positive yet
+          max_vel_positive = 0.0;
+        }
+      }
+    }
+    else
+    {
+      // Stationary (current_vel == 0)
+      // Any movement is acceleration
+      max_vel_positive = std::min(limits.max_velocity, effective_max_acc * dt);
+      max_vel_negative = std::max(-limits.max_velocity, -effective_max_acc * dt);
+    }
+
+    // Compute position deltas based on achievable velocities
+    const double delta_pos_positive = std::max(0.0, max_vel_positive) * dt;
+    const double delta_pos_negative = std::min(0.0, max_vel_negative) * dt;
+
     /// @note: We use the previous command position to compute the limits here because using the
     /// actual position would be too conservative, usually there is a couple of cycles of delay
     /// between the command sent to the robot and the robot actually showing that in the state. That
@@ -122,9 +204,11 @@ PositionLimits compute_position_limits(
     /// the actual velocity limit.
     const double position_reference = prev_command_pos.value();
     pos_limits.lower_limit = std::max(
-      std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
+      std::min(position_reference + delta_pos_negative, pos_limits.upper_limit),
+      pos_limits.lower_limit);
     pos_limits.upper_limit = std::min(
-      std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
+      std::max(position_reference + delta_pos_positive, pos_limits.lower_limit),
+      pos_limits.upper_limit);
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
