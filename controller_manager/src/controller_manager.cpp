@@ -910,6 +910,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Process grouped components: first configure all in group, then activate all
+  // If any component fails, rollback all components in the group to a safe state
   for (const auto & [group_name, group_components] : components_by_group)
   {
     RCLCPP_INFO(
@@ -918,6 +919,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
     // First, configure all components in the group (transition to inactive state)
     std::vector<std::string> successfully_configured;
+    bool configuration_failed = false;
     for (const auto & component_name : group_components)
     {
       RCLCPP_INFO(
@@ -927,15 +929,78 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       {
         successfully_configured.push_back(component_name);
       }
+      else
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Component '%s' in group '%s' failed to configure. Configuring of the remaining "
+          "components in the group will be skipped....",
+          component_name.c_str(), group_name.c_str());
+        configuration_failed = true;
+        break;
+      }
+    }
+
+    // If configuration failed, skip activation
+    if (configuration_failed)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Group '%s' failed during configuration phase. All components in the group will remain "
+        "in their current state.",
+        group_name.c_str());
+      continue;  // Skip to next group
     }
 
     // Then, activate all successfully configured components in the group
+    std::vector<std::string> successfully_activated;
+    bool activation_failed = false;
     for (const auto & component_name : successfully_configured)
     {
       RCLCPP_INFO(
         get_logger(), "Activating component '%s' in group '%s'.", component_name.c_str(),
         group_name.c_str());
-      set_component_state_with_error_handling(component_name, active_state);
+      if (set_component_state_with_error_handling(component_name, active_state))
+      {
+        successfully_activated.push_back(component_name);
+      }
+      else
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Component '%s' in group '%s' failed to activate. Rolling back all activated components "
+          "in the group to inactive state.",
+          component_name.c_str(), group_name.c_str());
+        activation_failed = true;
+        break;
+      }
+    }
+
+    // If activation failed, deactivate all successfully activated components back to inactive
+    if (activation_failed)
+    {
+      for (const auto & activated_component : successfully_activated)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Deactivating component '%s' in group '%s' due to group activation failure.",
+          activated_component.c_str(), group_name.c_str());
+        if (
+          resource_manager_->set_component_state(activated_component, inactive_state) ==
+          hardware_interface::return_type::ERROR)
+        {
+          RCLCPP_ERROR(
+            get_logger(),
+            "Failed to deactivate component '%s' during rollback. Component may be in an "
+            "inconsistent state.",
+            activated_component.c_str());
+        }
+      }
+      RCLCPP_ERROR(
+        get_logger(),
+        "Group '%s' failed during activation phase. All components in the group have been "
+        "deactivated.",
+        group_name.c_str());
     }
   }
 
