@@ -3317,11 +3317,10 @@ controller_interface::return_type ControllerManager::update(
       get_logger(), !rt_buffer_.fallback_controllers_list.empty(),
       "Activating fallback controllers : [ %s]",
       rt_buffer_.get_concatenated_string(rt_buffer_.fallback_controllers_list).c_str());
-    std::for_each(
-      rt_buffer_.activate_controllers_using_interfaces_list.begin(),
-      rt_buffer_.activate_controllers_using_interfaces_list.end(),
-      [this](const std::string & controller)
-      { ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller); });
+    for (const std::string & controller : rt_buffer_.activate_controllers_using_interfaces_list)
+    {
+        ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller);
+    };
 
     // Retrieve the interfaces to start and stop from the hardware end
     perform_hardware_command_mode_change(
@@ -4648,19 +4647,19 @@ void ControllerManager::update_list_with_controller_chain(
 void ControllerManager::build_controllers_topology_info(
   const std::vector<ControllerSpec> & controllers)
 {
-  std::for_each(
-    controller_chain_spec_.begin(), controller_chain_spec_.end(),
-    [](auto & pair)
+    for (auto & [_, spec] : controller_chain_spec_)
     {
-      pair.second.following_controllers.clear();
-      pair.second.preceding_controllers.clear();
-    });
-  std::for_each(
-    controller_chained_reference_interfaces_cache_.begin(),
-    controller_chained_reference_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
-  std::for_each(
-    controller_chained_state_interfaces_cache_.begin(),
-    controller_chained_state_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+      spec.following_controllers.clear();
+      spec.preceding_controllers.clear();
+    }
+    for (auto & [_, cache] : controller_chained_reference_interfaces_cache_)
+    {
+      cache.clear();
+    }
+    for (auto & [_, cache] : controller_chained_state_interfaces_cache_)
+    {
+      cache.clear();
+    }
   for (const auto & controller : controllers)
   {
     if (is_controller_unconfigured(*controller.c))
