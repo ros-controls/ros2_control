@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <array>
+#include <memory>
 #include <vector>
 
 #include "hardware_interface/system_interface.hpp"
@@ -68,41 +69,29 @@ class TestTwoJointSystem : public SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-          &position_state_[i]));
+      position_state_interfaces_[i] = std::make_shared<StateInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION);
+      state_interfaces.push_back(position_state_interfaces_[i]);
     }
-
     return state_interfaces;
   }
-#pragma GCC diagnostic pop
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  std::vector<CommandInterface> export_command_interfaces() override
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
-    std::vector<CommandInterface> command_interfaces;
+    std::vector<CommandInterface::SharedPtr> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-          &position_command_[i]));
+      position_command_interfaces_[i] = std::make_shared<CommandInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION);
+      command_interfaces.push_back(position_command_interfaces_[i]);
     }
-
     return command_interfaces;
   }
-#pragma GCC diagnostic pop
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
@@ -115,8 +104,8 @@ class TestTwoJointSystem : public SystemInterface
   }
 
 private:
-  std::array<double, 2> position_command_ = {{0.0, 0.0}};
-  std::array<double, 2> position_state_ = {{0.0, 0.0}};
+  std::array<StateInterface::SharedPtr, 2> position_state_interfaces_;
+  std::array<CommandInterface::SharedPtr, 2> position_command_interfaces_;
 };
 
 }  // namespace test_hardware_components
