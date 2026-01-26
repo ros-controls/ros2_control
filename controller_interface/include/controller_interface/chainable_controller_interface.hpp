@@ -71,7 +71,21 @@ protected:
    *
    * \returns list of StateInterfaces that other controller can use as their inputs.
    */
+  [[deprecated(
+    "Replaced by std::vector<hardware_interface::StateInterface::ConstSharedPtr> "
+    "export_state_interfaces_list() method.")]]
   virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces();
+
+  /// Virtual method that each chainable controller should implement to export its read-only
+  /// chainable interfaces.
+  /**
+   * Each chainable controller implements this methods where all its state(read only) interfaces are
+   * exported. The method has the same meaning as `export_state_interfaces` method from
+   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
+   *
+   * \returns list of StateInterfaces that other controller can use as their inputs.
+   */
+  virtual std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces_list();
 
   /// Virtual method that each chainable controller should implement to export its read/write
   /// chainable interfaces.
@@ -82,7 +96,22 @@ protected:
    *
    * \returns list of CommandInterfaces that other controller can use as their outputs.
    */
+  [[deprecated(
+    "Replaced by std::vector<hardware_interface::CommandInterface::SharedPtr> "
+    "export_reference_interfaces_list() method.")]]
   virtual std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces();
+
+  /// Virtual method that each chainable controller should implement to export its read/write
+  /// chainable interfaces.
+  /**
+   * Each chainable controller implements this methods where all input (command) interfaces are
+   * exported. The method has the same meaning as `export_command_interface` method from
+   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
+   *
+   * \returns list of CommandInterfaces that other controller can use as their outputs.
+   */
+  virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
+  export_reference_interfaces_list();
 
   /// Virtual method that each chainable controller should implement to switch chained mode.
   /**
