@@ -130,15 +130,19 @@ class DummyActuator : public hardware_interface::ActuatorInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    position_state_ += velocity_command_;
-    velocity_state_ = velocity_command_;
+    double velocity_cmd = 0.0;
+    (void)velocity_command_->get_value(velocity_cmd, false);
+    double position = 0.0;
+    (void)position_state_->get_value(position, false);
+    (void)position_state_->set_value(position + velocity_cmd);
+    (void)velocity_state_->set_value(velocity_cmd);
 
     return hardware_interface::return_type::OK;
   }
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    velocity_state_ = 0;
+    (void)velocity_state_->set_value(0.0);
     return CallbackReturn::SUCCESS;
   }
 
@@ -157,16 +161,15 @@ class DummyActuator : public hardware_interface::ActuatorInterface
   }
 
 private:
-  double position_state_ = std::numeric_limits<double>::quiet_NaN();
-  double velocity_state_ = std::numeric_limits<double>::quiet_NaN();
-  double velocity_command_ = 0.0;
+  hardware_interface::StateInterface::SharedPtr position_state_;
+  hardware_interface::StateInterface::SharedPtr velocity_state_;
+  hardware_interface::CommandInterface::SharedPtr velocity_command_;
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;
   unsigned int write_calls_ = 0;
   bool recoverable_error_happened_ = false;
 };
-// END
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
@@ -266,7 +269,6 @@ private:
   bool recoverable_error_happened_ = false;
 };
 
-// BEGIN (Handle export change): for backward compatibility
 class DummySensor : public hardware_interface::SensorInterface
 {
   CallbackReturn on_init(
@@ -278,20 +280,18 @@ class DummySensor : public hardware_interface::SensorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    voltage_level_ = 0.0;
+    (void)voltage_level_->set_value(0.0);
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
     // We can read some voltage level
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("sens1", "voltage", &voltage_level_));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    voltage_level_ = std::make_shared<hardware_interface::StateInterface>("sens1", "voltage");
+    state_interfaces.push_back(voltage_level_);
     return state_interfaces;
   }
 
@@ -305,7 +305,7 @@ class DummySensor : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
-    voltage_level_ = voltage_level_hw_value_;
+    (void)voltage_level_->set_value(voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
 
@@ -324,14 +324,13 @@ class DummySensor : public hardware_interface::SensorInterface
   }
 
 private:
-  double voltage_level_ = std::numeric_limits<double>::quiet_NaN();
+  hardware_interface::StateInterface::SharedPtr voltage_level_;
   double voltage_level_hw_value_ = 0x666;
 
   // Helper variables to initiate error on read
   int read_calls_ = 0;
   bool recoverable_error_happened_ = false;
 };
-// END
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
@@ -459,7 +458,6 @@ private:
   bool recoverable_error_happened_ = false;
 };
 
-// BEGIN (Handle export change): for backward compatibility
 class DummySystem : public hardware_interface::SystemInterface
 {
   CallbackReturn on_init(
@@ -473,15 +471,15 @@ class DummySystem : public hardware_interface::SystemInterface
   {
     for (auto i = 0ul; i < 3; ++i)
     {
-      position_state_[i] = 0.0;
-      velocity_state_[i] = 0.0;
+      (void)position_state_[i]->set_value(0.0);
+      (void)velocity_state_[i]->set_value(0.0);
     }
     // reset command only if error is initiated
     if (recoverable_error_happened_)
     {
       for (auto i = 0ul; i < 3; ++i)
       {
-        velocity_command_[i] = 0.0;
+        (void)velocity_command_[i]->set_value(0.0);
       }
     }
 
