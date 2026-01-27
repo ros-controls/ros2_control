@@ -47,12 +47,6 @@ static std::pair<std::string, std::string> extract_joint_and_interface(
 
   return {joint_name, interface_name};
 }
-struct JointState
-{
-  double pos;
-  double vel;
-  double effort;
-};
 
 class TestActuatorExclusiveInterfaces : public ActuatorInterface
 {
@@ -65,53 +59,53 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
     }
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
 
-    for (const auto & j : get_hardware_info().joints)
-    {
-      (void)j;  // Suppress unused warning
-      current_states_.emplace_back(JointState{});
-    }
-
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
-    std::vector<StateInterface> state_interfaces;
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     for (std::size_t i = 0; i < info_.joints.size(); ++i)
     {
       const auto & joint = info_.joints[i];
 
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
+      position_states_.push_back(
+        std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_POSITION));
+      (void)position_states_.back()->set_value(0.0, false);
+      velocity_states_.push_back(
+        std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_VELOCITY));
+      (void)velocity_states_.back()->set_value(0.0, false);
+      effort_states_.push_back(
+        std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_EFFORT));
+      (void)effort_states_.back()->set_value(0.0, false);
+      state_interfaces.push_back(position_states_.back());
+      state_interfaces.push_back(velocity_states_.back());
+      state_interfaces.push_back(effort_states_.back());
     }
     return state_interfaces;
   }
 
-  std::vector<CommandInterface> export_command_interfaces() override
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
-    std::vector<CommandInterface> command_interfaces;
+    std::vector<CommandInterface::SharedPtr> command_interfaces;
     for (std::size_t i = 0; i < info_.joints.size(); ++i)
     {
       const auto & joint = info_.joints[i];
 
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          joint.name, hardware_interface::HW_IF_POSITION, &current_states_.at(i).pos));
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          joint.name, hardware_interface::HW_IF_VELOCITY, &current_states_.at(i).vel));
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          joint.name, hardware_interface::HW_IF_EFFORT, &current_states_.at(i).effort));
+      position_commands_.push_back(
+        std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_POSITION));
+      (void)position_commands_.back()->set_value(0.0, false);
+      velocity_commands_.push_back(
+        std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_VELOCITY));
+      (void)velocity_commands_.back()->set_value(0.0, false);
+      effort_commands_.push_back(
+        std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_EFFORT));
+      (void)effort_commands_.back()->set_value(0.0, false);
+      command_interfaces.push_back(position_commands_.back());
+      command_interfaces.push_back(velocity_commands_.back());
+      command_interfaces.push_back(effort_commands_.back());
     }
     return command_interfaces;
   }
@@ -200,7 +194,12 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
 
 private:
   std::vector<std::string> currently_claimed_joints_;
-  std::vector<JointState> current_states_;
+  std::vector<StateInterface::SharedPtr> position_states_;
+  std::vector<StateInterface::SharedPtr> velocity_states_;
+  std::vector<StateInterface::SharedPtr> effort_states_;
+  std::vector<CommandInterface::SharedPtr> position_commands_;
+  std::vector<CommandInterface::SharedPtr> velocity_commands_;
+  std::vector<CommandInterface::SharedPtr> effort_commands_;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
