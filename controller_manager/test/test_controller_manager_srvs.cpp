@@ -2930,10 +2930,10 @@ class TestControllerManagerSrvsWithFailingPerformSwitch : public TestControllerM
     const std::string replacement = "$1<param name=\"fail_on_perform_mode_switch\">true</param>\n";
     const std::string result = std::regex_replace(robot_description, plugin_regex, replacement);
 
+    rclcpp::NodeOptions node_options = {};
     cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        result, rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      executor_, result, true, TEST_CM_NAME, "", node_options);
+
     run_updater_ = false;
     time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());
     SetUpSrvsCMExecutor();

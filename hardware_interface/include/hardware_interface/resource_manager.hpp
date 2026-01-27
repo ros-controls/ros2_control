@@ -558,6 +558,8 @@ public:
 
   const std::string & get_robot_description() const;
 
+  bool are_joint_limiters_imported() const;
+
 protected:
   /// Gets the logger for the resource manager
   /**
@@ -599,6 +601,7 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+  mutable bool joint_limiters_are_imported_ = true;
 };
 
 }  // namespace hardware_interface
