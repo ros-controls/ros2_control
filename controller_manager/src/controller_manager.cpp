@@ -3319,7 +3319,7 @@ controller_interface::return_type ControllerManager::update(
       rt_buffer_.get_concatenated_string(rt_buffer_.fallback_controllers_list).c_str());
     for (const std::string & controller : rt_buffer_.activate_controllers_using_interfaces_list)
     {
-        ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller);
+      ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller);
     };
 
     // Retrieve the interfaces to start and stop from the hardware end
@@ -4647,19 +4647,19 @@ void ControllerManager::update_list_with_controller_chain(
 void ControllerManager::build_controllers_topology_info(
   const std::vector<ControllerSpec> & controllers)
 {
-    for (auto & [_, spec] : controller_chain_spec_)
-    {
-      spec.following_controllers.clear();
-      spec.preceding_controllers.clear();
-    }
-    for (auto & [_, cache] : controller_chained_reference_interfaces_cache_)
-    {
-      cache.clear();
-    }
-    for (auto & [_, cache] : controller_chained_state_interfaces_cache_)
-    {
-      cache.clear();
-    }
+  for (auto & [_, spec] : controller_chain_spec_)
+  {
+    spec.following_controllers.clear();
+    spec.preceding_controllers.clear();
+  }
+  for (auto & [_, cache] : controller_chained_reference_interfaces_cache_)
+  {
+    cache.clear();
+  }
+  for (auto & [_, cache] : controller_chained_state_interfaces_cache_)
+  {
+    cache.clear();
+  }
   for (const auto & controller : controllers)
   {
     if (is_controller_unconfigured(*controller.c))
