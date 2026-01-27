@@ -55,9 +55,11 @@ public:
 
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
-  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override;
+  std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces_list()
+    override;
 
-  std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces_list()
+    override;
 
   controller_interface::return_type update_reference_from_subscribers(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
@@ -84,7 +86,8 @@ public:
   controller_interface::return_type update_return_value = controller_interface::return_type::OK;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
-  std::vector<std::string> reference_interface_names_;
+  std::vector<std::string> reference_interface_names_ = {};
+  std::vector<std::string> exported_state_interface_names_ = {};
   std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
