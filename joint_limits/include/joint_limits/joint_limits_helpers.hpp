@@ -58,6 +58,7 @@ bool is_limited(double value, double min, double max);
  * @param prev_command_pos The previous commanded position of the joint.
  * @param dt The time step.
  * @return The position limits, first is the lower limit and second is the upper limit.
+ * @throws std::runtime_error if the actual position is out of bounds.
  */
 PositionLimits compute_position_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
