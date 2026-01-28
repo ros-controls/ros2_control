@@ -12,6 +12,7 @@ controller_interface
 * The update rate of the controller will now be approximated to a closer achievable frequency, when its frequency is not achievable with the current controller manager update rate. (`#2828 <https://github.com/ros-controls/ros2_control/pull/2828>`__)
 * The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
 * Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
+* Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
 
 controller_manager
 ******************
