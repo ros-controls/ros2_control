@@ -67,6 +67,23 @@ struct JointLimits
   bool has_effort_limits;
   bool angle_wraparound;
 
+  void disable_all_limits()
+  {
+    has_position_limits = false;
+    has_velocity_limits = false;
+    has_acceleration_limits = false;
+    has_deceleration_limits = false;
+    has_jerk_limits = false;
+    has_effort_limits = false;
+    min_position = -std::numeric_limits<double>::max();
+    max_position = std::numeric_limits<double>::max();
+    max_velocity = std::numeric_limits<double>::max();
+    max_acceleration = std::numeric_limits<double>::max();
+    max_deceleration = std::numeric_limits<double>::max();
+    max_jerk = std::numeric_limits<double>::max();
+    max_effort = std::numeric_limits<double>::max();
+  }
+
   std::string to_string() const
   {
     std::stringstream ss_output;
