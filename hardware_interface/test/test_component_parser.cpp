@@ -1216,8 +1216,12 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_velocity,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_effort,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").max_position, DoubleNear(0.5, 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").min_position, DoubleNear(-1.5, 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").k_position, DoubleNear(10.0, 1e-5));
@@ -1339,8 +1343,12 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_unavailable
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_velocity,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_effort,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
 
   EXPECT_TRUE(hardware_info.limits.at("joint3").has_position_limits);
   EXPECT_THAT(hardware_info.limits.at("joint3").min_position, DoubleNear(-M_PI, 1e-5));

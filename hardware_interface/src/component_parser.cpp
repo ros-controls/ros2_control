@@ -906,13 +906,18 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
 /**
  * @brief Retrieve the limits from ros2_control command interface tags and override URDF limits if
  * restrictive
- * @param interfaces The interfaces to retrieve the limits from.
+ * @param joint The joint component info containing interfaces and joint-level enable_limits.
  * @param limits The joint limits to be set.
  */
-void update_interface_limits(
-  const std::vector<InterfaceInfo> & interfaces, joint_limits::JointLimits & limits)
+void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLimits & limits)
 {
-  for (auto & itr : interfaces)
+  // If limits are disabled at the joint level, disable all limit flags
+  if (!joint.enable_limits)
+  {
+    limits.disable_all_limits();
+    return;
+  }
+  for (auto & itr : joint.command_interfaces)
   {
     if (itr.name == hardware_interface::HW_IF_POSITION)
     {
@@ -1085,7 +1090,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       joint_limits::JointLimits limits;
       getJointLimits(urdf_joint, limits);
       // Take the most restricted one. Also valid for continuous-joint type only
-      detail::update_interface_limits(joint.command_interfaces, limits);
+      detail::update_interface_limits(joint, limits);
       hw_info.limits[joint.name] = limits;
       joint_limits::SoftJointLimits soft_limits;
       if (getSoftJointLimits(urdf_joint, soft_limits))
