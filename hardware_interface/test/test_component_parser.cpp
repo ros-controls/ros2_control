@@ -1925,6 +1925,137 @@ TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardw
   EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_vacuum/vacuum");
 }
 
+TEST_F(TestComponentParser, successfully_parse_urdf_with_disabled_limits)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_with_disabled_limits) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(3));
+
+  // First hardware: TestActuatorHardware with joint1
+  // joint1 has <limits enable="false"/> at the joint level, so all interfaces should have
+  // enable_limits=false
+  EXPECT_EQ(hw_info[0].name, "TestActuatorHardware");
+  EXPECT_EQ(hw_info[0].type, "actuator");
+  ASSERT_THAT(hw_info[0].joints, SizeIs(1));
+  EXPECT_EQ(hw_info[0].joints[0].name, "joint1");
+
+  // All command interfaces on joint1 should have enable_limits=false
+  ASSERT_THAT(hw_info[0].joints[0].command_interfaces, SizeIs(4));
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[2].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[3].name, "max_velocity");
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[3].enable_limits);
+
+  // All state interfaces on joint1 should have enable_limits=false
+  ASSERT_THAT(hw_info[0].joints[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hw_info[0].joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[0].joints[0].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[0].joints[0].state_interfaces[1].enable_limits);
+
+  // Verify that joint1 limits are disabled (has_*_limits should be false)
+  ASSERT_THAT(hw_info[0].limits, SizeIs(1));
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_position_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_velocity_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_effort_limits);
+
+  // Second hardware: TestSensorHardware - no limits element, so enable_limits should be true
+  // (default)
+  EXPECT_EQ(hw_info[1].name, "TestSensorHardware");
+  EXPECT_EQ(hw_info[1].type, "sensor");
+  ASSERT_THAT(hw_info[1].sensors, SizeIs(1));
+  EXPECT_EQ(hw_info[1].sensors[0].name, "sensor1");
+  ASSERT_THAT(hw_info[1].sensors[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[1].sensors[0].state_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[1].sensors[0].state_interfaces[0].enable_limits);
+
+  // Third hardware: TestSystemHardware with joint2 and joint3
+  EXPECT_EQ(hw_info[2].name, "TestSystemHardware");
+  EXPECT_EQ(hw_info[2].type, "system");
+  ASSERT_THAT(hw_info[2].joints, SizeIs(2));
+
+  // joint2 has <limits enable="false"/> at the joint level, so all interfaces should have
+  // enable_limits=false
+  EXPECT_EQ(hw_info[2].joints[0].name, "joint2");
+  ASSERT_THAT(hw_info[2].joints[0].command_interfaces, SizeIs(2));
+  EXPECT_EQ(hw_info[2].joints[0].command_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[2].joints[0].command_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].command_interfaces[1].name, "max_acceleration");
+  EXPECT_FALSE(hw_info[2].joints[0].command_interfaces[1].enable_limits);
+
+  ASSERT_THAT(hw_info[2].joints[0].state_interfaces, SizeIs(3));
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[2].name, HW_IF_ACCELERATION);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[2].enable_limits);
+
+  // joint3 has <limits enable="false"/> only on the position command interface
+  // Other interfaces should have enable_limits=true (default)
+  EXPECT_EQ(hw_info[2].joints[1].name, "joint3");
+  ASSERT_THAT(hw_info[2].joints[1].command_interfaces, SizeIs(2));
+  // Position command interface should have enable_limits=false (explicitly set)
+  EXPECT_EQ(hw_info[2].joints[1].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[2].joints[1].command_interfaces[0].enable_limits);
+  // Velocity command interface should have enable_limits=true (default, no limits element)
+  EXPECT_EQ(hw_info[2].joints[1].command_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[2].joints[1].command_interfaces[1].enable_limits);
+
+  // All state interfaces on joint3 should have enable_limits=true (default)
+  ASSERT_THAT(hw_info[2].joints[1].state_interfaces, SizeIs(3));
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[2].name, HW_IF_ACCELERATION);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[2].enable_limits);
+
+  // Verify limits for TestSystemHardware joints
+  ASSERT_THAT(hw_info[2].limits, SizeIs(2));
+  // joint2 has limits disabled at the joint level, but only has velocity command interface
+  // The velocity limits should be disabled, but position limits come from URDF (no position cmd_if)
+  EXPECT_TRUE(hw_info[2].limits.at("joint2").has_position_limits);
+  EXPECT_THAT(hw_info[2].limits.at("joint2").max_position, DoubleNear(M_PI, 1e-5));
+  EXPECT_THAT(hw_info[2].limits.at("joint2").min_position, DoubleNear(-M_PI, 1e-5));
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_velocity_limits);
+  // joint3 has only position command interface limits disabled
+  // position limits should be disabled (has position cmd_if with enable_limits=false)
+  // velocity limits remain enabled (from URDF, velocity cmd_if has enable_limits=true)
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_position_limits);
+  EXPECT_TRUE(hw_info[2].limits.at("joint3").has_velocity_limits);
+  EXPECT_THAT(hw_info[2].limits.at("joint3").max_velocity, DoubleNear(0.2, 1e-5));
+  EXPECT_TRUE(hw_info[2].limits.at("joint3").has_effort_limits);
+  EXPECT_THAT(hw_info[2].limits.at("joint3").max_effort, DoubleNear(0.1, 1e-5));
+
+  // Verify soft_limits - joint2 has a safety_controller in the URDF but since joint2's
+  // limits are disabled, we should still have soft_limits parsed from the URDF
+  ASSERT_THAT(hw_info[2].soft_limits, SizeIs(1));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").max_position, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").min_position, DoubleNear(-1.5, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").k_position, DoubleNear(10.0, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").k_velocity, DoubleNear(20.0, 1e-5));
+
+  // GPIO interfaces - no limits element, so enable_limits should be true (default)
+  ASSERT_THAT(hw_info[2].gpios, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].name, "configuration");
+  ASSERT_THAT(hw_info[2].gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].command_interfaces[0].name, "max_tcp_jerk");
+  EXPECT_TRUE(hw_info[2].gpios[0].command_interfaces[0].enable_limits);
+  ASSERT_THAT(hw_info[2].gpios[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].state_interfaces[0].name, "max_tcp_jerk");
+  EXPECT_TRUE(hw_info[2].gpios[0].state_interfaces[0].enable_limits);
+}
+
 TEST_F(TestComponentParser, successfully_parse_valid_sdf)
 {
   std::string sdf_to_test = ros2_control_test_assets::diff_drive_robot_sdf;
