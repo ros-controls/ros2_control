@@ -87,6 +87,7 @@ public:
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_ = {};
+  std::vector<std::string> state_interfaces_to_export_ = {};
   std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;

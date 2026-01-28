@@ -146,15 +146,14 @@ controller_interface::return_type TestChainableController::update_and_write_comm
       state_interfaces_[i].get_optional().value());
   }
   // If there is a command interface then integrate and set it to the exported state interface data
-  for (size_t i = 0; i < exported_state_interface_names_.size() && i < command_interfaces_.size();
-       ++i)
+  for (size_t i = 0; i < state_interfaces_to_export_.size() && i < command_interfaces_.size(); ++i)
   {
     ordered_exported_state_interfaces_[i]->set_value(
       command_interfaces_[i].get_optional().value() * CONTROLLER_DT);
   }
   // If there is no command interface and if there is a state interface then just forward the same
   // value as in the state interface
-  for (size_t i = 0; i < exported_state_interface_names_.size() && i < state_interfaces_.size() &&
+  for (size_t i = 0; i < state_interfaces_to_export_.size() && i < state_interfaces_.size() &&
                      command_interfaces_.empty();
        ++i)
   {
@@ -236,10 +235,10 @@ TestChainableController::on_export_state_interfaces_list()
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
 
-  for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
+  for (size_t i = 0; i < state_interfaces_to_export_.size(); ++i)
   {
     auto si = std::make_shared<hardware_interface::StateInterface>(
-      get_node()->get_name(), exported_state_interface_names_[i]);
+      get_node()->get_name(), state_interfaces_to_export_[i]);
     (void)si->set_value(0.0);
     state_interfaces.push_back(si);
   }
@@ -285,7 +284,7 @@ void TestChainableController::set_reference_interface_names(
 void TestChainableController::set_exported_state_interface_names(
   const std::vector<std::string> & state_interface_names)
 {
-  exported_state_interface_names_ = state_interface_names;
+  state_interfaces_to_export_ = state_interface_names;
 }
 
 void TestChainableController::set_imu_sensor_name(const std::string & name)
