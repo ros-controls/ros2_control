@@ -454,11 +454,12 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   }
 
   // Option enable or disable the interface limits, by default they are enabled
-  bool enable_limits = true;
+  component.enable_limits = true;
   const auto * limits_it = component_it->FirstChildElement(kLimitsTag);
   if (limits_it)
   {
-    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
+    component.enable_limits =
+      parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
   }
 
   // Parse all command interfaces
@@ -466,7 +467,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   while (command_interfaces_it)
   {
     InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it);
-    cmd_info.enable_limits &= enable_limits;
+    cmd_info.enable_limits &= component.enable_limits;
     component.command_interfaces.push_back(cmd_info);
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
@@ -476,7 +477,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   while (state_interfaces_it)
   {
     InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it);
-    state_info.enable_limits &= enable_limits;
+    state_info.enable_limits &= component.enable_limits;
     component.state_interfaces.push_back(state_info);
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
