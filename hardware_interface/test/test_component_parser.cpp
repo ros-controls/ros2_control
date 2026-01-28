@@ -1967,6 +1967,9 @@ TEST_F(TestComponentParser, successfully_parse_urdf_with_disabled_limits)
   EXPECT_FALSE(hw_info[0].limits.at("joint1").has_position_limits);
   EXPECT_FALSE(hw_info[0].limits.at("joint1").has_velocity_limits);
   EXPECT_FALSE(hw_info[0].limits.at("joint1").has_effort_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_jerk_limits);
 
   // Second hardware: TestSensorHardware - no limits element, so enable_limits should be true
   // (default)
@@ -2022,12 +2025,21 @@ TEST_F(TestComponentParser, successfully_parse_urdf_with_disabled_limits)
 
   // Verify limits for TestSystemHardware joints
   ASSERT_THAT(hw_info[2].limits, SizeIs(2));
-  // joint2 has limits disabled at the joint level, but only has velocity command interface
-  // The velocity limits should be disabled, but position limits come from URDF (no position cmd_if)
-  EXPECT_TRUE(hw_info[2].limits.at("joint2").has_position_limits);
-  EXPECT_THAT(hw_info[2].limits.at("joint2").max_position, DoubleNear(M_PI, 1e-5));
-  EXPECT_THAT(hw_info[2].limits.at("joint2").min_position, DoubleNear(-M_PI, 1e-5));
+  // joint2 has limits disabled at the joint level, but only has velocity command interface, even
+  // then all the limits should be disabled by default
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_position_limits);
+  EXPECT_THAT(
+    hw_info[2].limits.at("joint2").max_position,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hw_info[2].limits.at("joint2").min_position,
+    DoubleNear(-std::numeric_limits<double>::max(), 1e-5));
   EXPECT_FALSE(hw_info[2].limits.at("joint2").has_velocity_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_effort_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_jerk_limits);
+
   // joint3 has only position command interface limits disabled
   // position limits should be disabled (has position cmd_if with enable_limits=false)
   // velocity limits remain enabled (from URDF, velocity cmd_if has enable_limits=true)
@@ -2036,6 +2048,9 @@ TEST_F(TestComponentParser, successfully_parse_urdf_with_disabled_limits)
   EXPECT_THAT(hw_info[2].limits.at("joint3").max_velocity, DoubleNear(0.2, 1e-5));
   EXPECT_TRUE(hw_info[2].limits.at("joint3").has_effort_limits);
   EXPECT_THAT(hw_info[2].limits.at("joint3").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_jerk_limits);
 
   // Verify soft_limits - joint2 has a safety_controller in the URDF but since joint2's
   // limits are disabled, we should still have soft_limits parsed from the URDF
