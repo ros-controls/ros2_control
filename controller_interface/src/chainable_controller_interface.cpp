@@ -54,7 +54,7 @@ ChainableControllerInterface::export_state_interfaces()
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   auto state_interfaces = on_export_state_interfaces();
 #pragma GCC diagnostic pop
-  const auto state_interfaces_list = export_state_interfaces_list();
+  const auto state_interfaces_list = on_export_state_interfaces_list();
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces_ptrs_vec;
   state_interfaces_ptrs_vec.reserve(state_interfaces.size() + state_interfaces_list.size());
   ordered_exported_state_interfaces_.reserve(
@@ -164,7 +164,7 @@ ChainableControllerInterface::export_reference_interfaces()
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   auto reference_interfaces = on_export_reference_interfaces();
 #pragma GCC diagnostic pop
-  const auto reference_interfaces_list = export_reference_interfaces_list();
+  const auto reference_interfaces_list = on_export_reference_interfaces_list();
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces_ptrs_vec;
   reference_interfaces_ptrs_vec.reserve(
     reference_interfaces.size() + reference_interfaces_list.size());
@@ -330,7 +330,7 @@ ChainableControllerInterface::on_export_state_interfaces()
 }
 
 std::vector<hardware_interface::StateInterface::SharedPtr>
-ChainableControllerInterface::export_state_interfaces_list()
+ChainableControllerInterface::on_export_state_interfaces_list()
 {
   // return empty vector by default.
   return {};
@@ -351,7 +351,7 @@ ChainableControllerInterface::on_export_reference_interfaces()
 }
 
 std::vector<hardware_interface::CommandInterface::SharedPtr>
-ChainableControllerInterface::export_reference_interfaces_list()
+ChainableControllerInterface::on_export_reference_interfaces_list()
 {
   // return empty vector by default.
   return {};

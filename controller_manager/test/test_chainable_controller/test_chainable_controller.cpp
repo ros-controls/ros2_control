@@ -231,7 +231,7 @@ CallbackReturn TestChainableController::on_cleanup(
 }
 
 std::vector<hardware_interface::StateInterface::SharedPtr>
-TestChainableController::export_state_interfaces_list()
+TestChainableController::on_export_state_interfaces_list()
 {
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
@@ -248,7 +248,7 @@ TestChainableController::export_state_interfaces_list()
 }
 
 std::vector<hardware_interface::CommandInterface::SharedPtr>
-TestChainableController::export_reference_interfaces_list()
+TestChainableController::on_export_reference_interfaces_list()
 {
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;

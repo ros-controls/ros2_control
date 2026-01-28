@@ -55,10 +55,10 @@ public:
 
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
-  std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces_list()
+  std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()
     override;
 
-  std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces_list()
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
     override;
 
   controller_interface::return_type update_reference_from_subscribers(

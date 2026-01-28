@@ -84,7 +84,8 @@ public:
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces_list() override
+  std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()
+    override
   {
     std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
 
@@ -113,7 +114,7 @@ public:
     return command_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces_list()
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
     override
   {
     std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
