@@ -351,21 +351,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("external_joint", "external_state_interface", nullptr));
-
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    state_interface_ = std::make_shared<hardware_interface::StateInterface>(
+      "external_joint", "external_state_interface");
+    state_interfaces.emplace_back(state_interface_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "external_joint", "external_command_interface", nullptr));
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    command_interface_ = std::make_shared<hardware_interface::CommandInterface>(
+      "external_joint", "external_command_interface");
+    command_interfaces.emplace_back(command_interface_);
 
     return command_interfaces;
   }
@@ -381,6 +383,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   {
     return hardware_interface::return_type::OK;
   }
+
+  hardware_interface::StateInterface::SharedPtr state_interface_;
+  hardware_interface::CommandInterface::SharedPtr command_interface_;
 };
 
 TEST_F(ResourceManagerTest, post_initialization_add_components)

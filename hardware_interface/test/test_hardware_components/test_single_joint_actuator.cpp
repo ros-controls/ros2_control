@@ -68,36 +68,22 @@ class TestSingleJointActuator : public ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
-
     const auto & joint_name = get_hardware_info().joints[0].name;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
-#pragma GCC diagnostic pop
-    return state_interfaces;
+    position_state_interface_ =
+      std::make_shared<StateInterface>(joint_name, hardware_interface::HW_IF_POSITION);
+    velocity_state_interface_ =
+      std::make_shared<StateInterface>(joint_name, hardware_interface::HW_IF_VELOCITY);
+    return {position_state_interface_, velocity_state_interface_};
   }
 
-  std::vector<CommandInterface> export_command_interfaces() override
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
-    std::vector<CommandInterface> command_interfaces;
-
     const auto & joint_name = get_hardware_info().joints[0].name;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
-#pragma GCC diagnostic pop
-
-    return command_interfaces;
+    position_command_interface_ =
+      std::make_shared<CommandInterface>(joint_name, hardware_interface::HW_IF_POSITION);
+    return {position_command_interface_};
   }
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
@@ -107,15 +93,19 @@ class TestSingleJointActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    velocity_state_ = position_command_ - position_state_;
-    position_state_ = position_command_;
+    double position_state = 0.0;
+    double position_command = 0.0;
+    (void)position_state_interface_->get_value(position_state, true);
+    (void)position_command_interface_->get_value(position_command, true);
+    (void)velocity_state_interface_->set_value(position_command - position_state, true);
+    (void)position_state_interface_->set_value(position_command, true);
     return return_type::OK;
   }
 
 private:
-  double position_state_ = 0.0;
-  double velocity_state_ = 0.0;
-  double position_command_ = 0.0;
+  StateInterface::SharedPtr position_state_interface_;
+  StateInterface::SharedPtr velocity_state_interface_;
+  CommandInterface::SharedPtr position_command_interface_;
 };
 
 }  // namespace test_hardware_components
