@@ -454,11 +454,12 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   }
 
   // Option enable or disable the interface limits, by default they are enabled
-  bool enable_limits = true;
+  component.enable_limits = true;
   const auto * limits_it = component_it->FirstChildElement(kLimitsTag);
   if (limits_it)
   {
-    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
+    component.enable_limits =
+      parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
   }
 
   // Parse all command interfaces
@@ -466,7 +467,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   while (command_interfaces_it)
   {
     InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it);
-    cmd_info.enable_limits &= enable_limits;
+    cmd_info.enable_limits &= component.enable_limits;
     component.command_interfaces.push_back(cmd_info);
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
@@ -476,7 +477,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   while (state_interfaces_it)
   {
     InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it);
-    state_info.enable_limits &= enable_limits;
+    state_info.enable_limits &= component.enable_limits;
     component.state_interfaces.push_back(state_info);
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
@@ -905,13 +906,18 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
 /**
  * @brief Retrieve the limits from ros2_control command interface tags and override URDF limits if
  * restrictive
- * @param interfaces The interfaces to retrieve the limits from.
+ * @param joint The joint component info containing interfaces and joint-level enable_limits.
  * @param limits The joint limits to be set.
  */
-void update_interface_limits(
-  const std::vector<InterfaceInfo> & interfaces, joint_limits::JointLimits & limits)
+void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLimits & limits)
 {
-  for (auto & itr : interfaces)
+  // If limits are disabled at the joint level, disable all limit flags
+  if (!joint.enable_limits)
+  {
+    limits.disable_all_limits();
+    return;
+  }
+  for (auto & itr : joint.command_interfaces)
   {
     if (itr.name == hardware_interface::HW_IF_POSITION)
     {
@@ -1084,7 +1090,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       joint_limits::JointLimits limits;
       getJointLimits(urdf_joint, limits);
       // Take the most restricted one. Also valid for continuous-joint type only
-      detail::update_interface_limits(joint.command_interfaces, limits);
+      detail::update_interface_limits(joint, limits);
       hw_info.limits[joint.name] = limits;
       joint_limits::SoftJointLimits soft_limits;
       if (getSoftJointLimits(urdf_joint, soft_limits))
