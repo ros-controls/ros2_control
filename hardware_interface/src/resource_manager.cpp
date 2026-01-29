@@ -747,10 +747,32 @@ public:
 
   void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
   {
+    const auto are_joint_limits_enabled =
+      [&](
+        const std::vector<hardware_interface::ComponentInfo> & comp_info,
+        const std::string & joint_name) -> bool
+    {
+      for (const auto & joint_component_info : comp_info)
+      {
+        if (joint_component_info.name == joint_name && !joint_component_info.enable_limits)
+        {
+          return false;
+        }
+      }
+      return true;
+    };
     for (const auto & hw_info : hardware_infos)
     {
       for (const auto & [joint_name, limits] : hw_info.limits)
       {
+        if (!are_joint_limits_enabled(hw_info.joints, joint_name))
+        {
+          RCLCPP_INFO(
+            get_logger(), "Joint limits are disabled for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
+          continue;
+        }
+
         std::vector<joint_limits::SoftJointLimits> soft_limits;
         hard_joint_limits_.insert({joint_name, limits});
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
