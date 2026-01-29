@@ -86,6 +86,9 @@ struct ComponentInfo
   ///  Hold the value of the mimic attribute if given, NOT_SET otherwise
   MimicAttribute is_mimic = MimicAttribute::NOT_SET;
 
+  /// Whether limits are enabled for this component (set at joint level with <limits enable="..."/>)
+  bool enable_limits = true;
+
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints and GPIOs.
