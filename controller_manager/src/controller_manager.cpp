@@ -643,6 +643,13 @@ void ControllerManager::init_controller_manager()
     if (params_->enforce_command_limits)
     {
       resource_manager_->import_joint_limiters(robot_description_);
+      RCLCPP_INFO(get_logger(), "Enforcing command limits is enabled...");
+    }
+    else
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "Enforcing command limits is disabled. Command limits from URDF will be ignored.");
     }
     init_services();
   }
@@ -708,9 +715,6 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
-
-  RCLCPP_INFO_EXPRESSION(
-    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -779,6 +783,13 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   if (params_->enforce_command_limits)
   {
     resource_manager_->import_joint_limiters(robot_description_);
+    RCLCPP_INFO(get_logger(), "Enforcing command limits is enabled...");
+  }
+  else
+  {
+    RCLCPP_INFO(
+      get_logger(),
+      "Enforcing command limits is disabled. Command limits from URDF will be ignored.");
   }
   hardware_interface::ResourceManagerParams params;
   params.robot_description = robot_description;
