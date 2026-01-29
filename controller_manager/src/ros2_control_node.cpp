@@ -93,9 +93,7 @@ int main(int argc, char ** argv)
         else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
         {
           const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
-          std::for_each(
-            cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
-            [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+          cpus.assign(cpu_affinity_param_array.begin(), cpu_affinity_param_array.end());
         }
         const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
         if (!affinity_result.first)
@@ -150,7 +148,17 @@ int main(int argc, char ** argv)
         // wait until we hit the end of the period
         if (use_sim_time)
         {
-          cm->get_clock()->sleep_until(current_time + period);
+          try
+          {
+            cm->get_clock()->sleep_until(current_time + period);
+          }
+          catch (const std::runtime_error & e)
+          {
+            RCLCPP_ERROR(
+              cm->get_logger(),
+              "sleep_until failed with error: %s. Exiting control loop and aborting....", e.what());
+            break;
+          }
         }
         else
         {

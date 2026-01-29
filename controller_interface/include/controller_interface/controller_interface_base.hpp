@@ -29,6 +29,7 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -45,20 +46,27 @@ enum class return_type : std::uint8_t
 /// Indicating which interfaces are to be claimed.
 /**
  * One might either claim all available command/state interfaces,
- * specifying a set of individual interfaces,
- * or none at all.
+ * specifying a set of individual interfaces or none at all.
+ * @enum ALL - Claim all available interfaces.
+ * @enum INDIVIDUAL - Claim only the specified individual interfaces.
+ * @enum NONE - Claim no interfaces.
+ * @enum INDIVIDUAL_BEST_EFFORT - Claim the available interfaces from the specified individual
+ * interfaces.
+ * @enum REGEX - Claim interfaces matching the specified regular expressions.
  */
 enum class interface_configuration_type : std::uint8_t
 {
   ALL = 0,
   INDIVIDUAL = 1,
   NONE = 2,
+  INDIVIDUAL_BEST_EFFORT = 3,
+  REGEX = 10
 };
 
 /// Configuring what command/state interfaces to claim.
 struct InterfaceConfiguration
 {
-  interface_configuration_type type;
+  interface_configuration_type type = interface_configuration_type::NONE;
   std::vector<std::string> names = {};
 };
 
@@ -100,7 +108,7 @@ struct ControllerUpdateStatus
 class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
-  ControllerInterfaceBase() = default;
+  ControllerInterfaceBase();
 
   virtual ~ControllerInterfaceBase();
 
@@ -200,7 +208,22 @@ public:
 
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
+  /**
+   * Get the current lifecycle state of the controller node.
+   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
+   * should not be called in the control loop.
+   * \note This method is thread safe.
+   * \returns lifecycle state of the controller node.
+   */
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
+
+  /**
+   * Get the lifecycle id of the controller node that is cached internally
+   * to avoid calls to get_lifecycle_state() in the real-time control loop.
+   * \note This method is real-time safe and thread safe and can be called in the control loop.
+   * \returns lifecycle id of the controller node.
+   */
+  uint8_t get_lifecycle_id() const;
 
   unsigned int get_update_rate() const;
 
@@ -253,13 +276,13 @@ public:
   template <typename ParameterT>
   auto auto_declare(const std::string & name, const ParameterT & default_value)
   {
-    if (!node_->has_parameter(name))
+    if (!get_node()->has_parameter(name))
     {
-      return node_->declare_parameter<ParameterT>(name, default_value);
+      return get_node()->declare_parameter<ParameterT>(name, default_value);
     }
     else
     {
-      return node_->get_parameter(name).get_value<ParameterT>();
+      return get_node()->get_parameter(name).get_value<ParameterT>();
     }
   }
 
@@ -354,6 +377,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   /** Loaned state interfaces.
@@ -364,6 +391,10 @@ protected:
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
    * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
+   * not matched the requested one, as it depends on the available interfaces in the resource
+   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * order.
    */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
@@ -374,12 +405,8 @@ private:
    */
   void stop_async_handler_thread();
 
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
-  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
-  bool is_async_ = false;
-  controller_interface::ControllerInterfaceParams ctrl_itf_params_;
-  std::atomic_bool skip_async_triggers_ = false;
-  ControllerUpdateStats trigger_stats_;
+  struct ControllerInterfaceBaseImpl;
+  std::unique_ptr<ControllerInterfaceBaseImpl> impl_;
 
 protected:
   pal_statistics::RegistrationsRAII stats_registrations_;

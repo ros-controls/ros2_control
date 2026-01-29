@@ -28,6 +28,7 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager_msgs/msg/controller_manager_activity.hpp"
+#include "controller_manager_msgs/srv/cleanup_controller.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -107,6 +108,8 @@ public:
     const std::string & controller_name);
 
   controller_interface::return_type unload_controller(const std::string & controller_name);
+
+  controller_interface::return_type cleanup_controller(const std::string & controller_name);
 
   std::vector<ControllerSpec> get_loaded_controllers() const;
 
@@ -206,7 +209,7 @@ public:
    * Deterministic (real-time safe) callback group for the update function. Default behavior
    * is read hardware, update controller and finally write new values to the hardware.
    */
-  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
+  // TODO(anyone): Due to issues with the MultiThreadedExecutor, this control loop does not rely on
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
@@ -313,6 +316,10 @@ protected:
   void unload_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
+
+  void cleanup_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response);
 
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
@@ -650,6 +657,8 @@ private:
     switch_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::CleanupController>::SharedPtr
+    cleanup_controller_service_;
 
   rclcpp::Service<controller_manager_msgs::srv::ListHardwareComponents>::SharedPtr
     list_hardware_components_service_;

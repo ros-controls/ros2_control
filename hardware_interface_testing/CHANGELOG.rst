@@ -2,6 +2,25 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+
+6.2.0 (2025-12-10)
+------------------
+* Fix the blocking calls of lifecycle_state in the real-time loop (`#2884 <https://github.com/ros-controls/ros2_control/issues/2884>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.1.0 (2025-12-01)
+------------------
+* Publish all castable data types to pal_statistics (`#2633 <https://github.com/ros-controls/ros2_control/issues/2633>`_)
+* Contributors: Christoph Fröhlich
+
 6.0.2 (2025-11-09)
 ------------------
 * Avoid deadlocks for failed command switching (`#2774 <https://github.com/ros-controls/ros2_control/issues/2774>`_)

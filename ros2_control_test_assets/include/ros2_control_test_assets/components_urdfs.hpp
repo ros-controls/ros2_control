@@ -122,9 +122,10 @@ const auto valid_urdf_ros2_control_system_multi_interface_and_custom_interface_p
         <param name="register_size">4</param>
       </state_interface>
       <state_interface name="effort"/>
-      <param name="modbus_server_ip">1.1.1.1</param>
-      <param name="modbus_server_port">1234</param>
-      <param name="use_persistent_connection">true</param>
+      <param name="modbus_server_ip"> 1.1.1.1</param>
+      <param name="modbus_server_port">1234
+      </param>
+      <param name="use_persistent_connection"> true</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position">
@@ -135,12 +136,12 @@ const auto valid_urdf_ros2_control_system_multi_interface_and_custom_interface_p
       </command_interface>
       <state_interface name="position">
         <param name="register">21</param>
-        <param name="data_type">int32_t</param>
+        <param name="data_type">int32_t </param>
       </state_interface>
       <state_interface name="velocity"/>
       <state_interface name="effort">
         <param name="register">21</param>
-        <param name="data_type">int32_t</param>
+        <param name="data_type"> int32_t </param>
       </state_interface>
       <param name="modbus_server_ip">192.168.178.123</param>
       <param name="modbus_server_port">4321</param>

@@ -92,9 +92,10 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
 };
@@ -132,6 +133,7 @@ public:
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
     sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
     robot_localization_controller = std::make_shared<TestableTestChainableController>();
+    all_state_broadcaster = std::make_shared<test_controller::TestController>();
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
@@ -208,11 +210,17 @@ public:
       position_tracking_cmd_ifs_cfg);
     position_tracking_controller_two->set_state_interface_configuration(
       position_tracking_state_ifs_cfg);
+
+    // Use ALL state interfaces
+    all_state_broadcaster->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::ALL, {}});
+    all_state_broadcaster->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::NONE, {}});
   }
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(9u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(10u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
@@ -222,6 +230,7 @@ public:
     EXPECT_EQ(2, robot_localization_controller.use_count());
     EXPECT_EQ(2, odom_publisher_controller.use_count());
     EXPECT_EQ(2, position_tracking_controller_two.use_count());
+    EXPECT_EQ(2, all_state_broadcaster.use_count());
 
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -250,6 +259,9 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       position_tracking_controller_two->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      all_state_broadcaster->get_lifecycle_state().id());
   }
 
   // order or controller configuration is not important therefore we can reuse the same method
@@ -364,6 +376,13 @@ public:
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
+
+    cm_->configure_controller(ALL_STATE_BROADCASTER);
+    EXPECT_EQ(
+      all_state_broadcaster->get_lifecycle_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
   }
 
   template <
@@ -419,8 +438,10 @@ public:
       // successful xor deactivated
       if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface))
+          << "The interface :'" << interface << "' should exist but it does not";
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface))
+          << "The interface :'" << interface << "' should be claimed but it is not claimed";
       }
       else
       {
@@ -590,6 +611,7 @@ public:
   static constexpr char ROBOT_LOCALIZATION_CONTROLLER[] = "robot_localization_controller";
   static constexpr char ODOM_PUBLISHER_CONTROLLER[] = "odometry_publisher_controller";
   static constexpr char POSITION_TRACKING_CONTROLLER_TWO[] = "position_tracking_controller_two";
+  static constexpr char ALL_STATE_BROADCASTER[] = "all_state_broadcaster";
 
   const std::vector<std::string> PID_LEFT_WHEEL_REFERENCE_INTERFACES = {
     "pid_left_wheel_controller/velocity"};
@@ -620,6 +642,7 @@ public:
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller_two;
+  std::shared_ptr<test_controller::TestController> all_state_broadcaster;
 
   testing::WithParamInterface<Strictness>::ParamType test_param;
 
@@ -677,6 +700,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -901,6 +927,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1134,6 +1163,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1258,6 +1290,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1301,22 +1336,28 @@ TEST_P(
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Deactivate position_tracking_controller and activate position_tracking_controller_two
   switch_test_controllers(
-    {POSITION_TRACKING_CONTROLLER_TWO}, {POSITION_TRACKING_CONTROLLER}, test_param.strictness,
-    std::future_status::timeout, controller_interface::return_type::OK);
+    {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, {POSITION_TRACKING_CONTROLLER},
+    test_param.strictness, std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Now deactivate the position_tracking_controller_two and it should be in inactive state
   switch_test_controllers(
-    {}, {POSITION_TRACKING_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
-    controller_interface::return_type::OK);
+    {}, {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, test_param.strictness,
+    std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
@@ -1374,9 +1415,28 @@ TEST_P(
   // Activate all the controllers again in group and deactivate the diff_drive_controller_two
   switch_test_controllers(
     {POSITION_TRACKING_CONTROLLER_TWO, DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER,
-     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER},
+     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER, ALL_STATE_BROADCASTER},
     {DIFF_DRIVE_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
     controller_interface::return_type::OK);
+
+  // Now configure a second all state broadcaster and see if it succeeds
+
+  auto all_state_broadcaster_two = std::make_shared<test_controller::TestController>();
+
+  all_state_broadcaster_two->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::ALL, {}});
+  all_state_broadcaster_two->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::NONE, {}});
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      all_state_broadcaster_two, "all_state_broadcaster_two",
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller("all_state_broadcaster_two"));
+  }
+
   // Following controllers should stay active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
@@ -1396,6 +1456,9 @@ TEST_P(
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
   // This is false, because it only uses the state interfaces and exposes state interfaces
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
@@ -1444,6 +1507,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1636,6 +1702,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1915,6 +1984,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();

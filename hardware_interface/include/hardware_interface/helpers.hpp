@@ -189,6 +189,23 @@ template <typename Container>
   return std::adjacent_find(container.cbegin(), container.cend()) == container.cend();
 }
 
+/**
+ * @brief Remove trailing and leading whitespaces from a string.
+ * @param str The string to remove whitespaces from.
+ * @return The string without whitespaces.
+ */
+inline std::string strip(const std::string & str)
+{
+  const std::string whitespace = " \t\n\r\f\v";
+  size_t start = str.find_first_not_of(whitespace);
+  if (start == std::string::npos)
+  {
+    return "";  // string is all whitespace
+  }
+  size_t end = str.find_last_not_of(whitespace);
+  return str.substr(start, end - start + 1);
+}
+
 }  // namespace ros2_control
 
 #endif  // HARDWARE_INTERFACE__HELPERS_HPP_
