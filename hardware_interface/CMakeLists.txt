@@ -69,6 +69,15 @@ pluginlib_export_plugin_description_file(
   hardware_interface mock_components_plugin_description.xml)
 
 if(BUILD_TESTING)
+  function(add_atomic_link_options target)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+      target_link_options(${target} PRIVATE
+        "LINKER:--no-as-needed"
+        "LINKER:-latomic"
+        "LINKER:--as-needed"
+      )
+    endif()
+  endfunction()
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
@@ -82,6 +91,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
   target_link_libraries(test_joint_handle hardware_interface rcpputils::rcpputils)
+  add_atomic_link_options(test_joint_handle)
 
   # Test helper methods
   ament_add_gmock(test_helpers test/test_helpers.cpp)
@@ -90,15 +100,19 @@ if(BUILD_TESTING)
   # Test lexical casts methods
   ament_add_gtest(test_lexical_casts test/test_lexical_casts.cpp)
   target_link_libraries(test_lexical_casts hardware_interface)
+  add_atomic_link_options(test_lexical_casts)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_link_libraries(test_component_interfaces hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_component_interfaces)
 
   ament_add_gmock(test_component_interfaces_custom_export test/test_component_interfaces_custom_export.cpp)
   target_link_libraries(test_component_interfaces_custom_export hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_component_interfaces_custom_export)
 
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_component_parser)
 
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
@@ -118,6 +132,7 @@ if(BUILD_TESTING)
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
   target_link_libraries(test_generic_system hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_generic_system)
 endif()
 
 install(
