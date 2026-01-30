@@ -1,0 +1,14 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: "joint_state_broadcaster/JointStateBroadcaster"
+
+    controller1:
+      type: "controller_manager/test_controller"
+      joint_names: ["joint1"]
+
+    controller2:
+      type: "controller_manager/test_controller"
+      joint_names: ["joint2"]
