@@ -211,7 +211,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         fmt::format(
           "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
           "the controller manager : '{} Hz'. Defaulting to the controller manager rate.",
-          update_rate, ctrl_itf_params_.update_rate)
+          update_rate, params.update_rate)
           .c_str());
     }
     else
