@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.12.0 (2026-02-03)
+-------------------
 * Add a log entry if enforce_command_limits is false (`#2998 <https://github.com/ros-controls/ros2_control/issues/2998>`_) (`#3000 <https://github.com/ros-controls/ros2_control/issues/3000>`_)
 * Replace std::for_each with idiomatic container operations (`#2986 <https://github.com/ros-controls/ros2_control/issues/2986>`_) (`#2991 <https://github.com/ros-controls/ros2_control/issues/2991>`_)
 * Improve warning if spawner cannot acquire filelock (`#2970 <https://github.com/ros-controls/ros2_control/issues/2970>`_) (`#2973 <https://github.com/ros-controls/ros2_control/issues/2973>`_)

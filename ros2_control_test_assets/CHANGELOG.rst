@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.12.0 (2026-02-03)
+-------------------
 * Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_) (`#2997 <https://github.com/ros-controls/ros2_control/issues/2997>`_)
 * Strip leading and trailing whitespaces while parsing components (`#2974 <https://github.com/ros-controls/ros2_control/issues/2974>`_) (`#2977 <https://github.com/ros-controls/ros2_control/issues/2977>`_)
 * Contributors: mergify[bot]
