@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed issue with mock_components being linked even when not needed (`#2925 <https://github.com/ros-controls/ros2_control/issues/2925>`_)
+* Contributors: Ewoodss
+
 2.53.0 (2025-12-01)
 -------------------
 

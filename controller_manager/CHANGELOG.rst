@@ -2,6 +2,9 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.53.0 (2025-12-01)
 -------------------
 * Fix dependencies of controller_manager (backport `#2836 <https://github.com/ros-controls/ros2_control/issues/2836>`_) (`#2837 <https://github.com/ros-controls/ros2_control/issues/2837>`_)
