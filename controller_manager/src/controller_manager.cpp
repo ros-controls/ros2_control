@@ -4737,7 +4737,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // add parameter files specified in controller's info
   for (const auto & parameters_file : controller.info.parameters_files)
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4748,7 +4748,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   if (use_sim_time_)
   {
-    if (!ros2_control::has_item(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4759,7 +4759,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
-    !ros2_control::has_item(controller.info.node_options_args, RCL_ROS_ARGS_FLAG))
+    !ros2_control::has_item(controller.info.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))
   {
     node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
   }
