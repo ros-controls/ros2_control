@@ -2,6 +2,17 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the node name overlapping in the Hardware Components (`#3006 <https://github.com/ros-controls/ros2_control/issues/3006>`_) (`#3015 <https://github.com/ros-controls/ros2_control/issues/3015>`_)
+* Resort members of InterfaceInfo to avoid ABI break (`#3001 <https://github.com/ros-controls/ros2_control/issues/3001>`_) (`#3003 <https://github.com/ros-controls/ros2_control/issues/3003>`_)
+* Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_) (`#2997 <https://github.com/ros-controls/ros2_control/issues/2997>`_)
+* Add documentation about enabling limiters (`#2993 <https://github.com/ros-controls/ros2_control/issues/2993>`_) (`#2995 <https://github.com/ros-controls/ros2_control/issues/2995>`_)
+* Don't throw on position joint limits in case of velocity command (`#2978 <https://github.com/ros-controls/ros2_control/issues/2978>`_) (`#2980 <https://github.com/ros-controls/ros2_control/issues/2980>`_)
+* Strip leading and trailing whitespaces while parsing components (`#2974 <https://github.com/ros-controls/ros2_control/issues/2974>`_) (`#2977 <https://github.com/ros-controls/ros2_control/issues/2977>`_)
+* Add helper method to strip whitespaces (`#2934 <https://github.com/ros-controls/ros2_control/issues/2934>`_) (`#2962 <https://github.com/ros-controls/ros2_control/issues/2962>`_)
+* Contributors: mergify[bot]
+
 5.11.3 (2026-01-10)
 -------------------
 * Fix the duplicate entries in the controller exported interfaces (`#2951 <https://github.com/ros-controls/ros2_control/issues/2951>`_) (`#2955 <https://github.com/ros-controls/ros2_control/issues/2955>`_)
