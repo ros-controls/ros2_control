@@ -44,11 +44,8 @@ from controller_manager.test_utils import (
     check_controllers_running,
     check_node_running,
 )
-from controller_manager.launch_utils import (
-    generate_controllers_spawner_launch_description,
-    generate_controllers_spawner_launch_description_from_dict,
-    generate_load_controller_launch_description,
-)
+from controller_manager.launch_utils import generate_controllers_spawner_launch_description
+
 
 # Executes the given launch file and checks if all nodes can be started
 @pytest.mark.launch_test
