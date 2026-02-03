@@ -4769,7 +4769,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   }
 
   RCLCPP_INFO_EXPRESSION(
-    get_logger(), !node_options_arguments.empty(),
+    get_logger(), !node_options_arguments.empty(), "%s",
     fmt::format(
       FMT_COMPILE("Controller '{}' node arguments: '{}'"), controller.info.name,
       fmt::join(node_options_arguments, " "))
