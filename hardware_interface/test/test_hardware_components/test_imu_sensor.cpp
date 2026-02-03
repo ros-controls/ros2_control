@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -62,38 +63,23 @@ class TestIMUSensor : public SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
-
     const std::string & sensor_name = get_hardware_info().sensors[0].name;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "orientation.x", &orientation_.x));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "orientation.y", &orientation_.y));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "orientation.z", &orientation_.z));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "orientation.w", &orientation_.w));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "angular_velocity.x", &angular_velocity_.x));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "angular_velocity.y", &angular_velocity_.y));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "angular_velocity.z", &angular_velocity_.z));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name, "linear_acceleration.x", &linear_acceleration_.x));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name, "linear_acceleration.y", &linear_acceleration_.y));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name, "linear_acceleration.z", &linear_acceleration_.z));
-#pragma GCC diagnostic pop
-    return state_interfaces;
+    orientation_x_ = std::make_shared<StateInterface>(sensor_name, "orientation.x");
+    orientation_y_ = std::make_shared<StateInterface>(sensor_name, "orientation.y");
+    orientation_z_ = std::make_shared<StateInterface>(sensor_name, "orientation.z");
+    orientation_w_ = std::make_shared<StateInterface>(sensor_name, "orientation.w");
+    angular_velocity_x_ = std::make_shared<StateInterface>(sensor_name, "angular_velocity.x");
+    angular_velocity_y_ = std::make_shared<StateInterface>(sensor_name, "angular_velocity.y");
+    angular_velocity_z_ = std::make_shared<StateInterface>(sensor_name, "angular_velocity.z");
+    linear_acceleration_x_ = std::make_shared<StateInterface>(sensor_name, "linear_acceleration.x");
+    linear_acceleration_y_ = std::make_shared<StateInterface>(sensor_name, "linear_acceleration.y");
+    linear_acceleration_z_ = std::make_shared<StateInterface>(sensor_name, "linear_acceleration.z");
+    return {orientation_x_,        orientation_y_,         orientation_z_,
+            orientation_w_,        angular_velocity_x_,    angular_velocity_y_,
+            angular_velocity_z_,   linear_acceleration_x_, linear_acceleration_y_,
+            linear_acceleration_z_};
   }
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
@@ -103,42 +89,35 @@ class TestIMUSensor : public SensorInterface
     const double u1 = distribution_1(generator_);
     const double u2 = distribution_1(generator_);
     const double u3 = distribution_1(generator_);
-    orientation_.w = std::sqrt(1. - u1) * std::sin(2 * M_PI * u2);
-    orientation_.x = std::sqrt(1. - u1) * std::cos(2 * M_PI * u2);
-    orientation_.y = std::sqrt(u1) * std::sin(2 * M_PI * u3);
-    orientation_.z = std::sqrt(u1) * std::cos(2 * M_PI * u3);
+    (void)orientation_w_->set_value(std::sqrt(1. - u1) * std::sin(2 * M_PI * u2), true);
+    (void)orientation_x_->set_value(std::sqrt(1. - u1) * std::cos(2 * M_PI * u2), true);
+    (void)orientation_y_->set_value(std::sqrt(u1) * std::sin(2 * M_PI * u3), true);
+    (void)orientation_z_->set_value(std::sqrt(u1) * std::cos(2 * M_PI * u3), true);
 
     // generate random angular velocities and linear accelerations
     std::uniform_real_distribution<double> distribution_2(0.0, 0.1);
-    angular_velocity_.x = distribution_2(generator_);
-    angular_velocity_.y = distribution_2(generator_);
-    angular_velocity_.z = distribution_2(generator_);
+    (void)angular_velocity_x_->set_value(distribution_2(generator_), true);
+    (void)angular_velocity_y_->set_value(distribution_2(generator_), true);
+    (void)angular_velocity_z_->set_value(distribution_2(generator_), true);
 
-    linear_acceleration_.x = distribution_2(generator_);
-    linear_acceleration_.y = distribution_2(generator_);
-    linear_acceleration_.z = distribution_2(generator_);
+    (void)linear_acceleration_x_->set_value(distribution_2(generator_), true);
+    (void)linear_acceleration_y_->set_value(distribution_2(generator_), true);
+    (void)linear_acceleration_z_->set_value(distribution_2(generator_), true);
     return return_type::OK;
   }
 
 private:
-  struct QuaternionValues
-  {
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-    double w = 1.0;
-  };
-  struct AxisValues
-  {
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-  };
-
   std::default_random_engine generator_;
-  QuaternionValues orientation_;
-  AxisValues angular_velocity_;
-  AxisValues linear_acceleration_;
+  StateInterface::SharedPtr orientation_x_;
+  StateInterface::SharedPtr orientation_y_;
+  StateInterface::SharedPtr orientation_z_;
+  StateInterface::SharedPtr orientation_w_;
+  StateInterface::SharedPtr angular_velocity_x_;
+  StateInterface::SharedPtr angular_velocity_y_;
+  StateInterface::SharedPtr angular_velocity_z_;
+  StateInterface::SharedPtr linear_acceleration_x_;
+  StateInterface::SharedPtr linear_acceleration_y_;
+  StateInterface::SharedPtr linear_acceleration_z_;
 };
 
 }  // namespace test_hardware_components

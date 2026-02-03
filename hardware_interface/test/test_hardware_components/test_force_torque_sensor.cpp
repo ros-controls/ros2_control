@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"
@@ -54,52 +55,44 @@ class TestForceTorqueSensor : public SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
-
     const auto & sensor_name = get_hardware_info().sensors[0].name;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "fx", &values_.fx));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "fy", &values_.fy));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "fz", &values_.fz));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "tx", &values_.tx));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "ty", &values_.ty));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(sensor_name, "tz", &values_.tz));
-#pragma GCC diagnostic pop
-    return state_interfaces;
+    fx_interface_ = std::make_shared<StateInterface>(sensor_name, "fx");
+    fy_interface_ = std::make_shared<StateInterface>(sensor_name, "fy");
+    fz_interface_ = std::make_shared<StateInterface>(sensor_name, "fz");
+    tx_interface_ = std::make_shared<StateInterface>(sensor_name, "tx");
+    ty_interface_ = std::make_shared<StateInterface>(sensor_name, "ty");
+    tz_interface_ = std::make_shared<StateInterface>(sensor_name, "tz");
+    return {fx_interface_, fy_interface_, fz_interface_,
+            tx_interface_, ty_interface_, tz_interface_};
   }
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    values_.fx = fmod((values_.fx + 1.0), 10);
-    values_.fy = fmod((values_.fy + 1.0), 10);
-    values_.fz = fmod((values_.fz + 1.0), 10);
-    values_.tx = fmod((values_.tx + 1.0), 10);
-    values_.ty = fmod((values_.ty + 1.0), 10);
-    values_.tz = fmod((values_.tz + 1.0), 10);
+    double fx = 0.0, fy = 0.0, fz = 0.0, tx = 0.0, ty = 0.0, tz = 0.0;
+    (void)fx_interface_->get_value(fx, true);
+    (void)fy_interface_->get_value(fy, true);
+    (void)fz_interface_->get_value(fz, true);
+    (void)tx_interface_->get_value(tx, true);
+    (void)ty_interface_->get_value(ty, true);
+    (void)tz_interface_->get_value(tz, true);
+    (void)fx_interface_->set_value(fmod((fx + 1.0), 10), true);
+    (void)fy_interface_->set_value(fmod((fy + 1.0), 10), true);
+    (void)fz_interface_->set_value(fmod((fz + 1.0), 10), true);
+    (void)tx_interface_->set_value(fmod((tx + 1.0), 10), true);
+    (void)ty_interface_->set_value(fmod((ty + 1.0), 10), true);
+    (void)tz_interface_->set_value(fmod((tz + 1.0), 10), true);
     return return_type::OK;
   }
 
 private:
-  struct FTValues
-  {
-    double fx = 0.0;
-    double fy = 0.0;
-    double fz = 0.0;
-    double tx = 0.0;
-    double ty = 0.0;
-    double tz = 0.0;
-  };
-
-  FTValues values_;
+  StateInterface::SharedPtr fx_interface_;
+  StateInterface::SharedPtr fy_interface_;
+  StateInterface::SharedPtr fz_interface_;
+  StateInterface::SharedPtr tx_interface_;
+  StateInterface::SharedPtr ty_interface_;
+  StateInterface::SharedPtr tz_interface_;
 };
 
 }  // namespace test_hardware_components
