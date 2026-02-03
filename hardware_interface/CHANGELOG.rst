@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.4.0 (2026-02-03)
+------------------
 * Fix the node name overlapping in the Hardware Components (`#3006 <https://github.com/ros-controls/ros2_control/issues/3006>`_)
 * Resort members of InterfaceInfo to avoid ABI break (`#3001 <https://github.com/ros-controls/ros2_control/issues/3001>`_)
 * Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_)
