@@ -20,6 +20,7 @@ controller_manager
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
 * A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 * Added new ``cleanup_controller`` service to the controller manager to allow cleaning up controllers from external clients. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
+* Removed forwarding of the controller manager's ros arguments to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
 
 hardware_interface
 ******************
