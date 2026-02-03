@@ -119,8 +119,12 @@ CallbackReturn HardwareComponentInterface::init(
   {
     std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    impl_->hardware_component_node_ = std::make_shared<rclcpp::Node>(
-      node_name, params.node_namespace, define_custom_node_options());
+
+    auto options = define_custom_node_options();
+    options.arguments({"--ros-args", "-r", "__node:=" + node_name});
+
+    impl_->hardware_component_node_ =
+      std::make_shared<rclcpp::Node>(node_name, params.node_namespace, options);
     locked_executor->add_node(impl_->hardware_component_node_->get_node_base_interface());
   }
   else
