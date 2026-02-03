@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.53.1 (2026-02-03)
+-------------------
 * Fixed issue with mock_components being linked even when not needed (`#2925 <https://github.com/ros-controls/ros2_control/issues/2925>`_)
 * Contributors: Ewoodss
 
