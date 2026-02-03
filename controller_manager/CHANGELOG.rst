@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add a log entry if enforce_command_limits is false (`#2998 <https://github.com/ros-controls/ros2_control/issues/2998>`_)
+* Replace std::for_each with idiomatic container operations (`#2986 <https://github.com/ros-controls/ros2_control/issues/2986>`_)
+* Improve warning if spawner cannot acquire filelock (`#2970 <https://github.com/ros-controls/ros2_control/issues/2970>`_)
+* [Simulation] Catch exceptions of sleep_until context (`#2963 <https://github.com/ros-controls/ros2_control/issues/2963>`_)
+* Fix typo in TODO comments: MutliThreadedExecutor -> MultiThreadedExecutor (`#2958 <https://github.com/ros-controls/ros2_control/issues/2958>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Vignesh Vembar
+
 6.3.2 (2026-01-10)
 ------------------
 * Fix the duplicate entries in the controller exported interfaces (`#2951 <https://github.com/ros-controls/ros2_control/issues/2951>`_)
