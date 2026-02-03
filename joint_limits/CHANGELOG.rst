@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.4.0 (2026-02-03)
+------------------
+* Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_)
+* Don't throw on position joint limits in case of velocity command (`#2978 <https://github.com/ros-controls/ros2_control/issues/2978>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 6.3.2 (2026-01-10)
 ------------------
 
