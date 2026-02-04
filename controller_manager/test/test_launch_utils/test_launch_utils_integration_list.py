@@ -24,6 +24,7 @@ from launch_ros.substitutions import FindPackageShare
 from launch.launch_context import LaunchContext
 
 import rclpy
+import time
 
 from controller_manager.test_utils import check_controllers_running
 
@@ -129,6 +130,8 @@ class TestControllerSpawnerList(unittest.TestCase):
 
     def test_controllers_start(self, controller_list):
         cnames = controller_list.copy()
+        # Add a delay before checking controller status
+        time.sleep(5.0)  # Wait 5 seconds for controllers to start
         check_controllers_running(self.node, cnames, state="active")
 
     def test_spawner_exit_code(self, proc_info):

@@ -6,9 +6,19 @@ controller_manager:
       type: "joint_state_broadcaster/JointStateBroadcaster"
 
     controller1:
-      type: "controller_manager/test_controller"
-      joint_names: ["joint1"]
-
+      type: "forward_command_controller/ForwardCommandController"  # Standard controller
+      
     controller2:
-      type: "controller_manager/test_controller"
-      joint_names: ["joint2"]
+      type: "forward_command_controller/ForwardCommandController"  # Standard controller
+
+# Add controller-specific parameters
+controller1:
+  ros__parameters:
+    joints: ["joint1"]
+    interface_name: position
+
+controller2:
+  ros__parameters:
+    joints: ["joint2"] 
+    interface_name: position
+
