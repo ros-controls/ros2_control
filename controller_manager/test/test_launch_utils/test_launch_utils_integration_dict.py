@@ -72,7 +72,7 @@ def generate_test_description():
     # The dictionary keys are the controller names to be spawned/started.
     # Values can be empty lists since config is provided via the main YAML.
     ctrl_dict = {
-        "joint_state_broadcaster": [],
+        "test_broadcaster": [],
         "controller1": [],
         "controller2": [],
     }

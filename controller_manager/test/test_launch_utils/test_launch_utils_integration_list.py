@@ -76,7 +76,7 @@ def generate_test_description():
     print("Resolved controller YAML:", robot_controllers_path)
 
     # ===== DEFINE CONTROLLERS TO SPAWN =====
-    controller_list = ["joint_state_broadcaster", "controller1", "controller2"]
+    controller_list = ["test_broadcaster", "controller1", "controller2"]
 
     # ===== GENERATE SPAWNER =====
     print(f"Spawning controllers: {controller_list}")
