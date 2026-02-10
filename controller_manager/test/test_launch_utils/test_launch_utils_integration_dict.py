@@ -99,7 +99,8 @@ def generate_test_description():
                 output="both",
             ),
             generate_controllers_spawner_launch_description_from_dict(
-                controller_info_dict=ctrl_dict, extra_spawner_args=["--activate"]
+                controller_info_dict=ctrl_dict,
+                extra_spawner_args=["--activate", "--controller-manager-timeout", "20"],
             ),
             ReadyToTest(),
         ]

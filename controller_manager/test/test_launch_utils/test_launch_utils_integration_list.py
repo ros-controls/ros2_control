@@ -101,6 +101,7 @@ def generate_test_description():
             generate_controllers_spawner_launch_description(
                 controller_names=controller_list.copy(),
                 controller_params_files=[robot_controllers_path],
+                extra_spawner_args=["--controller-manager-timeout", "20"],
             ),
             ReadyToTest(),
         ]
