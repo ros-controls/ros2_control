@@ -210,8 +210,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         get_node()->get_logger(), "%s",
         fmt::format(
           "The update rate of the controller : '{} Hz' cannot be higher than the update rate of "
-          "the controller manager : '{} Hz'. Setting it to the update rate of the controller "
-          "manager.",
+          "the controller manager : '{} Hz'. Defaulting to the controller manager rate.",
           update_rate, params.update_rate)
           .c_str());
     }
