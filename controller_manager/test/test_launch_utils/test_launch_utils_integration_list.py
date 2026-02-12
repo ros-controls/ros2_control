@@ -68,7 +68,7 @@ def generate_test_description():
         [
             FindPackageShare("controller_manager"),
             "test",
-            "test_ros2_control_node_combined.yaml",
+            "test_ros2_control_node_combined_list.yaml",
         ]
     )
 
