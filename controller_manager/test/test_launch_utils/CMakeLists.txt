@@ -18,6 +18,7 @@ install(
   FILES
     test_controller_load.yaml
     test_ros2_control_node_combined.yaml
+    test_ros2_control_node_combined_list.yaml
   DESTINATION share/${PROJECT_NAME}/test
 )
 
