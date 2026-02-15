@@ -2301,9 +2301,8 @@ const auto diff_drive_robot_sdf =
 </sdf>
 )";
 
-const auto minimal_robot_urdf =
-  std::string(urdf_head) + std::string(hardware_resources) +
-  std::string(minimal_robot_transmissions) + std::string(urdf_tail);
+const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
+                                std::string(minimal_robot_transmissions) + std::string(urdf_tail);
 const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +
                                           std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
