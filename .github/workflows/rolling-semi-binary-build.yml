@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   semi-binary:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@rmw_implementation
     strategy:
       fail-fast: false
       matrix:
