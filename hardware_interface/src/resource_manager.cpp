@@ -30,6 +30,7 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
@@ -760,10 +761,32 @@ public:
 
   void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
   {
+    const auto are_joint_limits_enabled =
+      [&](
+        const std::vector<hardware_interface::ComponentInfo> & comp_info,
+        const std::string & joint_name) -> bool
+    {
+      for (const auto & joint_component_info : comp_info)
+      {
+        if (joint_component_info.name == joint_name && !joint_component_info.enable_limits)
+        {
+          return false;
+        }
+      }
+      return true;
+    };
     for (const auto & hw_info : hardware_infos)
     {
       for (const auto & [joint_name, limits] : hw_info.limits)
       {
+        if (!are_joint_limits_enabled(hw_info.joints, joint_name))
+        {
+          RCLCPP_INFO(
+            get_logger(), "Joint limits are disabled for joint '%s' in hardware '%s'",
+            joint_name.c_str(), hw_info.name.c_str());
+          continue;
+        }
+
         std::vector<joint_limits::SoftJointLimits> soft_limits;
         hard_joint_limits_.insert({joint_name, limits});
         const std::vector<joint_limits::JointLimits> hard_limits{limits};
@@ -883,6 +906,7 @@ public:
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
+   * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
   bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
   {
@@ -1623,10 +1647,7 @@ std::vector<std::string> ResourceManager::available_state_interfaces() const
 bool ResourceManager::state_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return std::find(
-           resource_storage_->available_state_interfaces_.begin(),
-           resource_storage_->available_state_interfaces_.end(),
-           name) != resource_storage_->available_state_interfaces_.end();
+  return ros2_control::has_item(resource_storage_->available_state_interfaces_, name);
 }
 
 std::string ResourceManager::get_state_interface_data_type(const std::string & name) const
@@ -1667,9 +1688,7 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  resource_storage_->available_state_interfaces_.insert(
-    resource_storage_->available_state_interfaces_.end(), interface_names.begin(),
-    interface_names.end());
+  ros2_control::add_items(resource_storage_->available_state_interfaces_, interface_names);
 }
 
 // CM API: Called in "update"-thread
@@ -1736,9 +1755,7 @@ void ResourceManager::make_controller_reference_interfaces_available(
   auto interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  resource_storage_->available_command_interfaces_.insert(
-    resource_storage_->available_command_interfaces_.end(), interface_names.begin(),
-    interface_names.end());
+  ros2_control::add_items(resource_storage_->available_command_interfaces_, interface_names);
 }
 
 // CM API: Called in "update"-thread
@@ -1892,10 +1909,7 @@ std::vector<std::string> ResourceManager::available_command_interfaces() const
 bool ResourceManager::command_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return std::find(
-           resource_storage_->available_command_interfaces_.begin(),
-           resource_storage_->available_command_interfaces_.end(),
-           name) != resource_storage_->available_command_interfaces_.end();
+  return ros2_control::has_item(resource_storage_->available_command_interfaces_, name);
 }
 
 std::string ResourceManager::get_command_interface_data_type(const std::string & name) const

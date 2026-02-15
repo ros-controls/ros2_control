@@ -2,6 +2,20 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.4.0 (2026-02-03)
+------------------
+
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+* Use proper cleanup transition (`#2917 <https://github.com/ros-controls/ros2_control/issues/2917>`_)
+* Contributors: Soham Patil
+
 6.2.0 (2025-12-10)
 ------------------
 
