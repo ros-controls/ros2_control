@@ -122,6 +122,9 @@ class TestControllerSpawnerList(unittest.TestCase):
     def setUp(self):
         self.node = rclpy.create_node("test_controller_spawner")
 
+    def tearDown(self):
+        self.node.destroy_node()
+
     def test_spawner_nodes_launched(self, proc_info):
         """Ensure processes are running."""
         process_names = proc_info.process_names()
@@ -145,7 +148,8 @@ class TestControllerSpawnerList(unittest.TestCase):
 
 
 @launch_testing.post_shutdown_test()
-class TestProcessOutput(unittest.TestCase):
+# class TestProcessOutput(unittest.TestCase):
+class TestShutdown(unittest.TestCase):
     """Post-shutdown tests."""
 
     def test_exit_codes(self, proc_info):

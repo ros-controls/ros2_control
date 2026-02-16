@@ -19,7 +19,6 @@ from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
 
-# import launch_testing.asserts
 import launch_ros.actions
 from launch.substitutions import PathSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -27,36 +26,10 @@ from launch.launch_context import LaunchContext
 
 
 import rclpy
+import time
 
+from controller_manager.test_utils import check_controllers_running
 from controller_manager.launch_utils import generate_load_controller_launch_description
-
-
-def get_loaded_controllers(node, timeout=30.0):
-    """Query /controller_manager/list_controllers until controllers are available."""
-    from controller_manager_msgs.srv import ListControllers
-    import time
-
-    client = node.create_client(ListControllers, "/controller_manager/list_controllers")
-
-    if not client.wait_for_service(timeout_sec=timeout):
-        raise RuntimeError("Controller manager service not available")
-
-    seen = []
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        req = ListControllers.Request()
-        fut = client.call_async(req)
-        rclpy.spin_until_future_complete(node, fut, timeout_sec=2.0)
-
-        if fut.done() and fut.result() is not None:
-            response = fut.result()
-            seen = [c.name for c in response.controller]
-            if seen:
-                break
-
-        time.sleep(0.2)
-
-    return seen
 
 
 @pytest.mark.launch_test
@@ -84,7 +57,7 @@ def generate_test_description():
     robot_controllers = (
         PathSubstitution(FindPackageShare("controller_manager"))
         / "test"
-        / "test_ros2_control_node_combined.yaml"
+        / "test_controller_load.yaml"
     )
 
     context = LaunchContext()
@@ -109,14 +82,14 @@ def generate_test_description():
                 output="both",
             ),
             generate_load_controller_launch_description(
-                controller_name="controller1",
+                controller_name="test_controller_load",
                 controller_params_file=[robot_controllers_path],
                 extra_spawner_args=["--activate", "--controller-manager-timeout", "20"],
             ),
             ReadyToTest(),
         ]
     ), {
-        "controller_name": "controller1",
+        "controller_name": "test_controller_load",
     }
 
 
@@ -133,15 +106,17 @@ class TestControllerLoad(unittest.TestCase):
     def setUp(self):
         self.node = rclpy.create_node("test_controller_client")
 
+    def tearDown(self):
+        self.node.destroy_node()
+
     def test_controller_loaded(self, launch_service, proc_output, controller_name):
 
-        # Poll the ListControllers service to ensure the target controller is present
-        loaded_controllers = get_loaded_controllers(self.node, timeout=30.0)
+        # Small delay to ensure controller finishes activation
+        time.sleep(2.0)
 
-        # CRITICAL ASSERTION: The test passes only if the controller name is in the list
-        assert (
-            controller_name in loaded_controllers
-        ), f"Controller '{controller_name}' not found. Loaded: {loaded_controllers}"
+        # The utility checks state via /controller_manager/list_controllers
+        # and raises if any controller in the list is not in the expected state.
+        check_controllers_running(self.node, [controller_name], state="active")
 
     def test_spawner_exit_code(self, proc_info):
         """Test that spawner process ran (may have completed already)."""
@@ -155,7 +130,7 @@ class TestControllerLoad(unittest.TestCase):
 
 
 @launch_testing.post_shutdown_test()
-class TestProcessOutput(unittest.TestCase):
+class TestShutdown(unittest.TestCase):
     """Post-shutdown tests."""
 
     def test_exit_codes(self, proc_info):

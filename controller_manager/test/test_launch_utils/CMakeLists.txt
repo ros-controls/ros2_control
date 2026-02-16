@@ -4,14 +4,6 @@ find_package(ament_cmake_pytest REQUIRED)
 find_package(launch_testing_ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
 
-# Install the URDF files into the 'share' directory
-#install(
-#  DIRECTORY urdf
-#  DESTINATION share/${PROJECT_NAME}
-#  FILES_MATCHING
-#  PATTERN "*.urdf"
-#)
-
 # Install YAML test files
 #
 install(
