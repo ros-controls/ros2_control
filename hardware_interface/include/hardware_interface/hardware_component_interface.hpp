@@ -89,7 +89,174 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  CallbackReturn init(const hardware_interface::HardwareComponentParams & params);
+  CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
+  {
+    clock_ = params.clock;
+    logger_ = params.logger;
+    info_ = params.hardware_info;
+    if (params.hardware_info.is_async)
+    {
+      realtime_tools::AsyncFunctionHandlerParams async_thread_params;
+      async_thread_params.thread_priority = info_.async_params.thread_priority;
+      async_thread_params.scheduling_policy =
+        realtime_tools::AsyncSchedulingPolicy(info_.async_params.scheduling_policy);
+      async_thread_params.cpu_affinity_cores = info_.async_params.cpu_affinity_cores;
+      async_thread_params.clock = params.clock;
+      async_thread_params.logger = get_logger();
+      async_thread_params.exec_rate = params.hardware_info.rw_rate;
+      async_thread_params.print_warnings = info_.async_params.print_warnings;
+      RCLCPP_INFO(
+        get_logger(), "Starting async handler with scheduler priority: %d and policy : %s",
+        info_.async_params.thread_priority,
+        async_thread_params.scheduling_policy.to_string().c_str());
+      async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      const bool is_sensor_type = (info_.type == "sensor");
+      async_handler_->init(
+        [this, is_sensor_type](const rclcpp::Time & time, const rclcpp::Duration & period)
+        {
+          if (
+            !is_sensor_type && lifecycle_id_cache_.load(std::memory_order_acquire) ==
+                                 lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+          {
+            const auto write_start_time = std::chrono::steady_clock::now();
+            const auto ret_write = write(time, period);
+            const auto write_end_time = std::chrono::steady_clock::now();
+            write_return_info_.store(ret_write, std::memory_order_release);
+            write_execution_time_.store(
+              std::chrono::duration_cast<std::chrono::nanoseconds>(
+                write_end_time - write_start_time),
+              std::memory_order_release);
+            if (ret_write != return_type::OK)
+            {
+              return ret_write;
+            }
+          }
+          const auto read_start_time = std::chrono::steady_clock::now();
+          const auto ret_read = read(time, period);
+          const auto read_end_time = std::chrono::steady_clock::now();
+          read_return_info_.store(ret_read, std::memory_order_release);
+          read_execution_time_.store(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
+            std::memory_order_release);
+          return ret_read;
+        },
+        async_thread_params);
+      async_handler_->start_thread();
+    }
+
+    if (auto locked_executor = params.executor.lock())
+    {
+      std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
+      std::replace(node_name.begin(), node_name.end(), '/', '_');
+      hardware_component_node_ = std::make_shared<rclcpp::Node>(
+        node_name, params.node_namespace, get_hardware_component_node_options());
+      locked_executor->add_node(hardware_component_node_->get_node_base_interface());
+    }
+    else
+    {
+      RCLCPP_WARN(
+        params.logger,
+        "Executor is not available during hardware component initialization for '%s'. Skipping "
+        "node creation!",
+        params.hardware_info.name.c_str());
+    }
+
+    double publish_rate = 0.0;
+    auto it = info_.hardware_parameters.find("status_publish_rate");
+    if (it != info_.hardware_parameters.end())
+    {
+      try
+      {
+        publish_rate = hardware_interface::stod(it->second);
+      }
+      catch (const std::invalid_argument &)
+      {
+        RCLCPP_WARN(
+          get_logger(), "Invalid 'status_publish_rate' parameter. Using default %.1f Hz.",
+          publish_rate);
+      }
+    }
+
+    if (publish_rate == 0.0)
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
+    }
+    else
+    {
+      control_msgs::msg::HardwareStatus status_msg_template;
+      if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
+      {
+        RCLCPP_ERROR(get_logger(), "User-defined 'init_hardware_status_message' failed.");
+        return CallbackReturn::ERROR;
+      }
+
+      if (!status_msg_template.hardware_device_states.empty())
+      {
+        if (!hardware_component_node_)
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "Hardware status message was configured, but no node is available for the publisher. "
+            "Publisher will not be created.");
+        }
+        else
+        {
+          try
+          {
+            hardware_status_publisher_ =
+              hardware_component_node_->create_publisher<control_msgs::msg::HardwareStatus>(
+                "~/hardware_status", rclcpp::SystemDefaultsQoS());
+
+            hardware_status_timer_ = hardware_component_node_->create_wall_timer(
+              std::chrono::duration<double>(1.0 / publish_rate),
+              [this]()
+              {
+                std::optional<control_msgs::msg::HardwareStatus> msg_to_publish_opt;
+                hardware_status_box_.get(msg_to_publish_opt);
+
+                if (msg_to_publish_opt.has_value() && hardware_status_publisher_)
+                {
+                  control_msgs::msg::HardwareStatus & msg = msg_to_publish_opt.value();
+                  if (update_hardware_status_message(msg) != return_type::OK)
+                  {
+                    RCLCPP_WARN_THROTTLE(
+                      get_logger(), *clock_, 1000,
+                      "User's update_hardware_status_message() failed for '%s'.",
+                      info_.name.c_str());
+                    return;
+                  }
+                  msg.header.stamp = this->get_clock()->now();
+                  hardware_status_publisher_->publish(msg);
+                }
+              });
+            hardware_status_box_.set(std::make_optional(status_msg_template));
+          }
+          catch (const std::exception & e)
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Exception during publisher/timer setup for hardware status: %s",
+              e.what());
+            return CallbackReturn::ERROR;
+          }
+        }
+      }
+      else
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "`status_publish_rate` was set to a non-zero value, but no hardware status message was "
+          "configured. Publisher will not be created. Are you sure "
+          "init_hardware_status_message() is set up properly?");
+      }
+    }
+
+    hardware_interface::HardwareComponentInterfaceParams interface_params;
+    interface_params.hardware_info = info_;
+    interface_params.executor = params.executor;
+    return on_init(interface_params);
+  };
 
   /// User-overridable method to configure the structure of the HardwareStatus message.
   /**
