@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
-#define TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
+#ifndef ROS2_CONTROL_TEST_ASSETS__TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
+#define ROS2_CONTROL_TEST_ASSETS__TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
 
 namespace ros2_control_test_assets
 {
