@@ -20,7 +20,7 @@ import launch_testing
 from launch_testing.actions import ReadyToTest
 import launch_ros.actions
 from launch.substitutions import PathSubstitution
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch.launch_context import LaunchContext
 
 import rclpy
@@ -52,7 +52,6 @@ def generate_test_description():
 
     urdf_path_str = urdf_subst.perform(context)
 
-    # DEBUG: You can print the resolved path here to verify:
     print(f"Resolved URDF Path: {urdf_path_str}")
 
     with open(urdf_path_str) as infp:
@@ -61,7 +60,7 @@ def generate_test_description():
 
     # Path to combined YAML
     robot_controllers_subst = (
-        PathSubstitution(FindPackageShare("controller_manager"))
+        PathSubstitution(FindPackagePrefix("controller_manager"))
         / "test"
         / "test_ros2_control_node_combined.yaml"
     )

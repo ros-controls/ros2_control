@@ -21,7 +21,7 @@ from launch_testing.actions import ReadyToTest
 
 import launch_ros.actions
 from launch.substitutions import PathSubstitution
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch.launch_context import LaunchContext
 
 
@@ -46,7 +46,6 @@ def generate_test_description():
 
     urdf_path_str = urdf_subst.perform(context)
 
-    # DEBUG: You can print the resolved path here to verify:
     print(f"Resolved URDF Path: {urdf_path_str}")
 
     with open(urdf_path_str) as infp:
@@ -55,9 +54,9 @@ def generate_test_description():
 
     # Path to combined YAML
     robot_controllers = (
-        PathSubstitution(FindPackageShare("controller_manager"))
+        PathSubstitution(FindPackagePrefix("controller_manager"))
         / "test"
-        / "test_controller_load.yaml"
+        / "test_ros2_control_node_combined.yaml"
     )
 
     context = LaunchContext()
@@ -82,14 +81,14 @@ def generate_test_description():
                 output="both",
             ),
             generate_load_controller_launch_description(
-                controller_name="test_controller_load",
+                controller_name="controller1",
                 controller_params_file=[robot_controllers_path],
                 extra_spawner_args=["--activate", "--controller-manager-timeout", "20"],
             ),
             ReadyToTest(),
         ]
     ), {
-        "controller_name": "test_controller_load",
+        "controller_name": "controller1",
     }
 
 
