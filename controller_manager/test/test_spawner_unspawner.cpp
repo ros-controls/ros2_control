@@ -626,8 +626,10 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   EXPECT_LT(std::chrono::duration_cast<std::chrono::seconds>(spawner_b_elapsed).count(), 30)
     << "Spawner B took too long — likely blocked by Spawner A holding the lock";
 
-  // Wait for Spawner A to be killed by timeout
-  spawner_a_future.wait();
+  // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
+  int spawner_a_exit_code = spawner_a_future.get();
+  EXPECT_NE(spawner_a_exit_code, 0)
+    << "Spawner A (wrapped by timeout) unexpectedly exited with success status";
 }
 
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
