@@ -207,12 +207,9 @@ const auto valid_6d_robot_urdf =
     <parent link="base_link"/>
     <child link="base"/>
   </joint>
-  <ros2_control name="KukaSystemPositionOnlyHardware" type="system">
+  <ros2_control name="RobotSystem6DOF" type="system">
     <hardware>
-      <plugin>ros2_control_kuka_demo_driver/KukaSystemPositionOnlyHardware</plugin>
-      <param name="example_param_hw_start_duration_sec">2.0</param>
-      <param name="example_param_hw_stop_duration_sec">3.0</param>
-      <param name="example_param_hw_slowdown">2.0</param>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint_a1">
       <command_interface name="position">
@@ -308,4 +305,4 @@ const auto valid_6d_robot_srdf =
 
 }  // namespace ros2_control_test_assets
 
-#endif  // TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
+#endif  // ROS2_CONTROL_TEST_ASSETS__TEST_ASSET_6D_ROBOT_DESCRIPTION_HPP_
