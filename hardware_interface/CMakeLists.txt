@@ -118,6 +118,24 @@ if(BUILD_TESTING)
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
   target_link_libraries(test_generic_system hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+
+  # Benchmark for hardware interface access patterns (re: ros2_control #2816)
+  find_package(ament_cmake_google_benchmark REQUIRED)
+  ament_add_google_benchmark(benchmark_handle_access
+    test/benchmark_handle_access.cpp
+    TIMEOUT 600
+  )
+  if(TARGET benchmark_handle_access)
+    target_link_libraries(benchmark_handle_access hardware_interface)
+  else()
+    if(AMENT_RUN_PERFORMANCE_TESTS)
+      message(FATAL_ERROR "benchmark_handle_access target not created (Google Benchmark not found) "
+        "but AMENT_RUN_PERFORMANCE_TESTS is ON. Install Google Benchmark for your platform.")
+    else()
+      message(STATUS "benchmark_handle_access target not created — libbenchmark not found. "
+        "Benchmark/API validation will not run.")
+    endif()
+  endif()
 endif()
 
 install(
