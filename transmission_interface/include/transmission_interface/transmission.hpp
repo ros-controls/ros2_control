@@ -68,6 +68,18 @@ public:
     return {"position", "velocity", "effort"};
   }
 
+  /**
+   * Get the actuator position offset which can be used to initialize the actuator position to a
+   * known value.
+   */
+  virtual double get_actuator_position_offset() const { return 0.0; }
+
+  /**
+   * Get the joint position offset which can be used to initialize the joint position to a known
+   * value.
+   */
+  virtual double get_joint_position_offset() const { return 0.0; }
+
   /// Transform \e effort variables from actuator to joint space.
   /**
    * \param[in] act_data Actuator-space variables.
