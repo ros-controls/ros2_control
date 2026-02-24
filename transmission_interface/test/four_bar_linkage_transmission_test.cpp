@@ -88,6 +88,13 @@ TEST(PreconditionsTest, AccessorValidation)
   EXPECT_THAT(-4.0, DoubleNear(trans.get_joint_reduction()[1], EPS));
   EXPECT_THAT(1.0, DoubleNear(trans.get_joint_offset()[0], EPS));
   EXPECT_THAT(-1.0, DoubleNear(trans.get_joint_offset()[1], EPS));
+
+  ASSERT_THAT(
+    trans.get_supported_joint_interfaces(),
+    testing::ElementsAre(HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT));
+  ASSERT_THAT(
+    trans.get_supported_actuator_interfaces(),
+    testing::ElementsAre(HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT));
 }
 
 void testConfigureWithBadHandles(std::string interface_name)

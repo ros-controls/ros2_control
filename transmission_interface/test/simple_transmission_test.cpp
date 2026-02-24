@@ -59,6 +59,15 @@ TEST(PreconditionsTest, AccessorValidation)
   EXPECT_EQ(1u, trans.num_joints());
   EXPECT_THAT(2.0, DoubleNear(trans.get_actuator_reduction(), EPS));
   EXPECT_THAT(-1.0, DoubleNear(trans.get_joint_offset(), EPS));
+  ASSERT_THAT(
+    trans.get_supported_joint_interfaces(), testing::ElementsAre(
+                                              HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT,
+                                              HW_IF_TORQUE, HW_IF_FORCE, HW_IF_ABSOLUTE_POSITION));
+  ASSERT_THAT(
+    trans.get_supported_actuator_interfaces(),
+    testing::ElementsAre(
+      HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT, HW_IF_TORQUE, HW_IF_FORCE,
+      HW_IF_ABSOLUTE_POSITION));
 }
 
 TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)

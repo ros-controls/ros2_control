@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "transmission_interface/handle.hpp"
@@ -50,6 +51,22 @@ public:
   virtual void configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) = 0;
+
+  /**
+   * Get the list of supported joint interfaces.
+   */
+  virtual std::vector<std::string> get_supported_joint_interfaces() const
+  {
+    return {"position", "velocity", "effort"};
+  }
+
+  /**
+   * Get the list of supported actuator interfaces.
+   */
+  virtual std::vector<std::string> get_supported_actuator_interfaces() const
+  {
+    return {"position", "velocity", "effort"};
+  }
 
   /// Transform \e effort variables from actuator to joint space.
   /**
