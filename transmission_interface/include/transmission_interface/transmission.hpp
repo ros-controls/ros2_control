@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/handle.hpp"
 
 namespace transmission_interface
@@ -57,7 +58,9 @@ public:
    */
   virtual std::vector<std::string> get_supported_joint_interfaces() const
   {
-    return {"position", "velocity", "effort"};
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
   }
 
   /**
@@ -65,7 +68,9 @@ public:
    */
   virtual std::vector<std::string> get_supported_actuator_interfaces() const
   {
-    return {"position", "velocity", "effort"};
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
   }
 
   /**

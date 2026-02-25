@@ -156,13 +156,16 @@ public:
 
   std::vector<std::string> get_supported_actuator_interfaces() const override
   {
-    return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
-                  hardware_interface::HW_IF_EFFORT};
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
   }
 
   std::vector<std::string> get_supported_joint_interfaces() const override
   {
-    return {"position", "velocity", "effort"};
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
   }
 
 protected:
