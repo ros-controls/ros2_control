@@ -39,7 +39,9 @@ public:
 
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedCommandInterface(
     CommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
+  : command_interface_(command_interface),
+    deleter_(std::forward<Deleter>(deleter)),
+    interface_name_(command_interface.get_name())
   {
   }
 

@@ -38,7 +38,9 @@ public:
 
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
     const StateInterface & state_interface, Deleter && deleter)
-  : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
+  : state_interface_(state_interface),
+    deleter_(std::forward<Deleter>(deleter)),
+    interface_name_(command_interface.get_name())
   {
   }
 
