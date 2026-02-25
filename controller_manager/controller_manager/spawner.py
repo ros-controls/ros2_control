@@ -286,6 +286,13 @@ def parse_native_args(args):
         action="append",
         required=False,
     )
+    parser.add_argument(
+        "--controller",
+        help="Advanced mode: specify per-controller arguments. "
+        "Use '--controller <name> [opts]' for each controller. "
+        "Run 'spawner --controller -h' for details.",
+        nargs="*",
+    )
 
     global_namespace_args = parser.parse_args(args)
 
