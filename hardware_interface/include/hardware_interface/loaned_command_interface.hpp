@@ -37,21 +37,16 @@ public:
   {
   }
 
-<<<<<<< HEAD
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedCommandInterface(
     CommandInterface & command_interface, Deleter && deleter)
   : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
-  LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
-  : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
-=======
   explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
   : command_interface_(*command_interface),
     interface_name_(command_interface->get_name()),
     deleter_(std::forward<Deleter>(deleter))
->>>>>>> 1c445c7 (Cache interface name to avoid failing at the destruction time (#3043))
   {
   }
 

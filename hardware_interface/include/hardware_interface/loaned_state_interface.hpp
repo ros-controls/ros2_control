@@ -47,15 +47,10 @@ public:
   {
   }
 
-<<<<<<< HEAD
-  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
-  : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
-=======
   explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
   : state_interface_(*state_interface),
     interface_name_(state_interface->get_name()),
     deleter_(std::forward<Deleter>(deleter))
->>>>>>> 1c445c7 (Cache interface name to avoid failing at the destruction time (#3043))
   {
   }
 
