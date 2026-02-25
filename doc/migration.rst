@@ -9,6 +9,7 @@ This list summarizes important changes between Humble (previous) and Jazzy (curr
 controller_interface
 ********************
 
+<<<<<<< HEAD
 * ``update_reference_from_subscribers()`` method got time and period parameters `(PR #846) <https://github.com/ros-controls/ros2_control/pull/846>`__.
 * The changes from `(PR #1694) <https://github.com/ros-controls/ros2_control/pull/1694>`__ will affect how the controllers will be loading the parameters. Defining parameters in a single yaml file and loading it to the controller_manager node alone will no longer work.
   In order to load the parameters to the controllers properly, it is needed to use ``--param-file`` option from the spawner. This is because the controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments.
@@ -26,6 +27,87 @@ controller_interface
     params.node_namespace = "";
     params.node_options = controller.define_custom_node_options();
     controller.init(params);
+=======
+ChainableControllerInterface
+----------------------------
+
+* The ``on_export_state_interfaces()`` method is deprecated and replaced by ``on_export_state_interfaces_list()`` (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_). The new method returns shared pointers instead of objects by value:
+
+  .. code-block:: cpp
+
+     // Old (deprecated)
+     std::vector<hardware_interface::StateInterface> on_export_state_interfaces()
+
+     // New
+     std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()
+
+  Example migration:
+
+  .. code-block:: cpp
+
+     // Old implementation
+     std::vector<hardware_interface::StateInterface>
+     MyController::on_export_state_interfaces()
+     {
+       std::vector<hardware_interface::StateInterface> state_interfaces;
+       state_interfaces.emplace_back(
+         std::string(get_node()->get_name()) + "/my_state", "position", &my_state_value_);
+       return state_interfaces;
+     }
+
+     // New implementation
+     std::vector<hardware_interface::StateInterface::SharedPtr>
+     MyController::on_export_state_interfaces_list()
+     {
+       std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
+       auto state_interface = std::make_shared<hardware_interface::StateInterface>(
+         std::string(get_node()->get_name()) + "/my_state", "position");
+       state_interface->set_value(std::numeric_limits<double>::quiet_NaN());
+       state_interfaces.push_back(state_interface);
+       return state_interfaces;
+     }
+
+* The ``on_export_reference_interfaces()`` method is deprecated and replaced by ``on_export_reference_interfaces_list()`` (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_). The new method returns shared pointers instead of objects by value:
+
+  .. code-block:: cpp
+
+     // Old (deprecated)
+     std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces()
+
+     // New
+     std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
+
+  Example migration:
+
+  .. code-block:: cpp
+
+     // Old implementation
+     std::vector<hardware_interface::CommandInterface>
+     MyController::on_export_reference_interfaces()
+     {
+       reference_interfaces_.resize(1, std::numeric_limits<double>::quiet_NaN());
+       std::vector<hardware_interface::CommandInterface> reference_interfaces;
+       reference_interfaces.emplace_back(
+         std::string(get_node()->get_name()) + "/my_ref", "velocity", &reference_interfaces_[0]);
+       return reference_interfaces;
+     }
+
+     // New implementation
+     std::vector<hardware_interface::CommandInterface::SharedPtr>
+     MyController::on_export_reference_interfaces_list()
+     {
+       std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
+       auto cmd_interface = std::make_shared<hardware_interface::CommandInterface>(
+         std::string(get_node()->get_name()) + "/my_ref", "velocity");
+       cmd_interface->set_value(std::numeric_limits<double>::quiet_NaN());
+       reference_interfaces.push_back(cmd_interface);
+       return reference_interfaces;
+     }
+
+* The exported state interfaces are now returned as ``ConstSharedPtr`` from ``export_state_interfaces()`` to ensure they are read-only for consumers (`#1767 <https://github.com/ros-controls/ros2_control/pull/1767>`_).
+
+* The internal storage variables will be removed in upcoming releases. Controllers should now use the ordered exported interface containers (``ordered_exported_state_interfaces_`` and ``ordered_exported_reference_interfaces_``) which store shared pointers instead of raw values (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_).
+>>>>>>> f10dd93 (Add new API for chainable controller interface exporting (#2988))
 
 controller_manager
 ******************
