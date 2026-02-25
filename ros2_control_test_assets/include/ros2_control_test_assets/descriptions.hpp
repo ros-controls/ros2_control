@@ -759,16 +759,6 @@ const auto minimal_robot_transmissions =
   </transmission>
 )";
 
-const auto minimal_robot_transmissions_wrong =
-  R"(
-  <transmission name="minimal_transmission1">
-    <type>transmission_interface/SimpleTransmission</type>
-    <actuator name="minimal_motor1">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-)";
-
 const auto hardware_resources_with_disabled_limits =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
