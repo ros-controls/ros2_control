@@ -40,7 +40,7 @@ public:
     const StateInterface & state_interface, Deleter && deleter)
   : state_interface_(state_interface),
     deleter_(std::forward<Deleter>(deleter)),
-    interface_name_(command_interface.get_name())
+    interface_name_(state_interface.get_name())
   {
   }
 
