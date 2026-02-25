@@ -39,12 +39,16 @@ public:
 
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedCommandInterface(
     CommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
+  : command_interface_(command_interface),
+    deleter_(std::forward<Deleter>(deleter)),
+    interface_name_(command_interface.get_name())
   {
   }
 
-  LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
-  : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
+  : command_interface_(*command_interface),
+    interface_name_(command_interface->get_name()),
+    deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -54,23 +58,23 @@ public:
 
   virtual ~LoanedCommandInterface()
   {
-    auto logger = rclcpp::get_logger(command_interface_.get_name());
+    auto logger = rclcpp::get_logger(interface_name_);
     RCLCPP_WARN_EXPRESSION(
-      rclcpp::get_logger(get_name()),
+      logger,
       (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
       "LoanedCommandInterface %s has %u (%.4f %%) timeouts and %u (~ %.4f %%) missed calls out of "
       "%u get_value calls",
-      get_name().c_str(), get_value_statistics_.timeout_counter,
+      interface_name_.c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
       (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     RCLCPP_WARN_EXPRESSION(
-      rclcpp::get_logger(get_name()),
+      logger,
       (set_value_statistics_.failed_counter > 0 || set_value_statistics_.timeout_counter > 0),
       "LoanedCommandInterface %s has %u (%.4f %%) timeouts and  %u (~ %.4f %%) missed calls out of "
       "%u set_value calls",
-      get_name().c_str(), set_value_statistics_.timeout_counter,
+      interface_name_.c_str(), set_value_statistics_.timeout_counter,
       (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.failed_counter,
       (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
@@ -218,6 +222,7 @@ public:
 protected:
   CommandInterface & command_interface_;
   Deleter deleter_;
+  std::string interface_name_;
 
 private:
   struct HandleRTStatistics
