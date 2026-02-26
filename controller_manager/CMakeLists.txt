@@ -274,6 +274,10 @@ if(BUILD_TESTING)
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+
+  # Now include the launch_utils subfolder
+  add_subdirectory(test/test_launch_utils)
+
 endif()
 
 install(
