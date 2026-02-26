@@ -89,6 +89,41 @@ ChainableControllerInterface
 
 * The internal storage variables will be removed in upcoming releases. Controllers should now use the ordered exported interface containers (``ordered_exported_state_interfaces_`` and ``ordered_exported_reference_interfaces_``) which store shared pointers instead of raw values (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_).
 
+* The controller manager's ros arguments are no longer forwarded to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
+  So, any remapping done at the controller manager level will not be visible to the controllers anymore.
+  It is recommended to use the ``--controller-ros-args`` option of the spawner to pass ros arguments to controllers.
+
+  .. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        remappings=[("/diffbot_base_controller/cmd_vel", "/cmd_vel")],
+        output="both",
+    )
+
+  to
+
+  .. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+    )
+    spawner_node = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "diffbot_base_controller",
+            "--controller-ros-args",
+            "--remap",
+            "/diffbot_base_controller/cmd_vel:=/cmd_vel",
+        ],
+    )
+
 controller_manager
 ******************
 
