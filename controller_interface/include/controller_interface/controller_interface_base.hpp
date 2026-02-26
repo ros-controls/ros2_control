@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "realtime_tools/async_function_handler.hpp"
+#include "realtime_tools/sync_signal.hpp"
 
 #include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
@@ -228,7 +229,11 @@ public:
 
   bool is_async() const;
 
+  bool is_slave() const;
+
   const std::string & get_robot_description() const;
+  
+  const std::string get_hardware_name_to_sync() const;
 
   /**
    * Get the unordered map of joint limits that are defined in the robot description.
@@ -366,6 +371,8 @@ public:
    * \param[in] enable Enable introspection if true, disable otherwise.
    */
   void enable_introspection(bool enable);
+
+  bool set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal);
 
 protected:
   /** Loaned command interfaces.
