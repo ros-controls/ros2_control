@@ -194,6 +194,55 @@ There are two scripts to interact with controller manager from launch files:
       --controller-ros-args CONTROLLER_ROS_ARGS
                             The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
 
+The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. For example, to spawn two controllers with different parameter files and remapping topics, the following command can be used:
+
+.. code-block:: console
+
+    $ ros2 run controller_manager spawner --controller position_trajectory_controller \
+        --param-file /path/to/position_trajectory_controller_params.yaml \
+        --controller-ros-args "--ros-args --remap /joint_states:=/rrbot/joint_states" \
+        --controller velocity_trajectory_controller \
+        --param-file /path/to/velocity_trajectory_controller_params.yaml \
+        --controller-ros-args "--ros-args --remap /joint_states:=/rrbot/joint_states"
+
+.. code-block:: console
+
+    $ ros2 run  controller_manager spawner --controller -h
+    Usage: spawner [global_options] --controller <name> [controller_options] --controller <name> ...
+
+    Global Options:
+    usage: spawner [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
+                  [--switch-asap | --no-switch-asap] [-u] [-h]
+
+    options:
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager
+      --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
+                            Timeout for controller manager services
+      --switch-timeout SWITCH_TIMEOUT
+                            Timeout for switch controller service
+      --service-call-timeout SERVICE_CALL_TIMEOUT
+                            Timeout for service calls
+      --activate-as-group   Activate controllers as a group
+      --switch-asap, --no-switch-asap
+                            Switch controllers as soon as possible
+      -u, --unload-on-kill  Deactivate the active controllers and unload them on kill
+      -h, --help            Show help
+
+    Controller Options:
+    usage: spawner [-p PARAM_FILE] [--load-only] [--inactive] [--controller-ros-args CONTROLLER_ROS_ARGS] controller_name
+
+    positional arguments:
+      controller_name       Name of the controller
+
+    options:
+      -p PARAM_FILE, --param-file PARAM_FILE
+                            Parameter files to load for the controller
+      --load-only           Load the controller but do not configure/activate it
+      --inactive            Configure the controller but do not switch it
+      --controller-ros-args CONTROLLER_ROS_ARGS
+                            ROS arguments to pass to the controller
+
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
 
