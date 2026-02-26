@@ -658,6 +658,12 @@ const auto hardware_resources =
       <state_interface name="velocity"/>
       <command_interface name="max_velocity" />
     </joint>
+    <transmission name="ros2_control_transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
+    </transmission>
   </ros2_control>
   <ros2_control name="TestSensorHardware" type="sensor">
     <hardware>
@@ -692,7 +698,65 @@ const auto hardware_resources =
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
     </gpio>
+    <transmission name="differential_transmission">
+      <plugin>transmission_interface/DifferentialTransmission</plugin>
+      <actuator name="joint2_motor" role="actuator1">
+        <mechanical_reduction>50</mechanical_reduction>
+      </actuator>
+      <actuator name="joint3_motor" role="actuator2">
+        <mechanical_reduction>-50</mechanical_reduction>
+      </actuator>
+      <joint name="joint2" role="joint1">
+        <offset>0.5</offset>
+        <mechanical_reduction>2.0</mechanical_reduction>
+      </joint>
+      <joint name="joint3" role="joint2">
+        <offset>-0.5</offset>
+        <mechanical_reduction>-2.0</mechanical_reduction>
+      </joint>
+    </transmission>
+    <transmission name="four_bar_transmission">
+      <plugin>transmission_interface/FourBarLinkageTransmission</plugin>
+      <actuator name="joint2_motor" role="actuator1">
+        <mechanical_reduction>50</mechanical_reduction>
+      </actuator>
+      <actuator name="joint3_motor" role="actuator2">
+        <mechanical_reduction>-50</mechanical_reduction>
+      </actuator>
+      <joint name="joint2" role="joint1">
+        <offset>0.5</offset>
+        <mechanical_reduction>2.0</mechanical_reduction>
+      </joint>
+      <joint name="joint3" role="joint2">
+        <offset>-0.5</offset>
+        <mechanical_reduction>-2.0</mechanical_reduction>
+      </joint>
+    </transmission>
   </ros2_control>
+)";
+
+const auto minimal_robot_transmissions =
+  R"(
+  <transmission name="minimal_transmission1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint1">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="minimal_motor1">
+      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </actuator>
+  </transmission>
+  <transmission name="minimal_transmission2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint2">
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="minimal_motor2">
+      <mechanicalReduction>60</mechanicalReduction>
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </actuator>
+  </transmission>
 )";
 
 const auto hardware_resources_with_disabled_limits =
@@ -2227,8 +2291,8 @@ const auto diff_drive_robot_sdf =
 </sdf>
 )";
 
-const auto minimal_robot_urdf =
-  std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
+                                std::string(minimal_robot_transmissions) + std::string(urdf_tail);
 const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +
                                           std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
