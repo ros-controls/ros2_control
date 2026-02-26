@@ -20,7 +20,7 @@
   <depend>controller_manager_msgs</depend>
   <depend>control_msgs</depend>
   <exec_depend>rosidl_runtime_py</exec_depend>
-  <exec_depend>python3-pygraphviz</exec_depend>
+  <exec_depend>python3-graphviz</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
