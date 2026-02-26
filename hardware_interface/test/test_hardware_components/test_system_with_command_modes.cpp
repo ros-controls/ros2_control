@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -75,47 +76,43 @@ public:
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-          &position_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY,
-          &velocity_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_ACCELERATION,
-          &acceleration_state_[i]));
-#pragma GCC diagnostic pop
+      position_state_interfaces_[i] = std::make_shared<hardware_interface::StateInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION);
+      velocity_state_interfaces_[i] = std::make_shared<hardware_interface::StateInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY);
+      acceleration_state_interfaces_[i] = std::make_shared<hardware_interface::StateInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_ACCELERATION);
+      position_state_interfaces_[i]->set_value(0.0);
+      velocity_state_interfaces_[i]->set_value(0.0);
+      acceleration_state_interfaces_[i]->set_value(0.0);
+      state_interfaces.push_back(position_state_interfaces_[i]);
+      state_interfaces.push_back(velocity_state_interfaces_[i]);
+      state_interfaces.push_back(acceleration_state_interfaces_[i]);
     }
 
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
     for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
-          &position_command_[i]));
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY,
-          &velocity_command_[i]));
-#pragma GCC diagnostic pop
+      position_command_interfaces_[i] = std::make_shared<hardware_interface::CommandInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION);
+      velocity_command_interfaces_[i] = std::make_shared<hardware_interface::CommandInterface>(
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY);
+      position_command_interfaces_[i]->set_value(0.0);
+      velocity_command_interfaces_[i]->set_value(0.0);
+      command_interfaces.push_back(position_command_interfaces_[i]);
+      command_interfaces.push_back(velocity_command_interfaces_[i]);
     }
 
     return command_interfaces;
@@ -137,7 +134,9 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces) override
   {
-    acceleration_state_[0] += 1.0;
+    double accel = 0.0;
+    (void)acceleration_state_interfaces_[0]->get_value(accel, true);
+    (void)acceleration_state_interfaces_[0]->set_value(accel + 1.0, true);
 
     // Starting interfaces
     start_modes_.clear();
@@ -185,7 +184,9 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
-    acceleration_state_[0] += 100.0;
+    double accel = 0.0;
+    (void)acceleration_state_interfaces_[0]->get_value(accel, true);
+    (void)acceleration_state_interfaces_[0]->set_value(accel + 100.0, true);
     // Test of failure in perform command mode switch
     // Fail if given an empty list.
     // This should never occur in a real system as the same start_interfaces list is sent to both
@@ -201,11 +202,11 @@ private:
   std::vector<std::string> start_modes_ = {"position", "position"};
   std::vector<bool> stop_modes_ = {false, false};
 
-  std::array<double, 2> position_command_ = {{0.0, 0.0}};
-  std::array<double, 2> velocity_command_ = {{0.0, 0.0}};
-  std::array<double, 2> position_state_ = {{0.0, 0.0}};
-  std::array<double, 2> velocity_state_ = {{0.0, 0.0}};
-  std::array<double, 2> acceleration_state_ = {{0.0, 0.0}};
+  std::array<hardware_interface::CommandInterface::SharedPtr, 2> position_command_interfaces_;
+  std::array<hardware_interface::CommandInterface::SharedPtr, 2> velocity_command_interfaces_;
+  std::array<hardware_interface::StateInterface::SharedPtr, 2> position_state_interfaces_;
+  std::array<hardware_interface::StateInterface::SharedPtr, 2> velocity_state_interfaces_;
+  std::array<hardware_interface::StateInterface::SharedPtr, 2> acceleration_state_interfaces_;
 };
 
 }  // namespace test_hardware_components
