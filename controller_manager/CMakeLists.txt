@@ -55,10 +55,20 @@ target_link_libraries(controller_manager PUBLIC
                       ${std_msgs_TARGETS}
                       ${controller_manager_msgs_TARGETS})
 
+function(add_atomic_link_options target)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+    target_link_options(${target} PRIVATE
+      "LINKER:--no-as-needed"
+      "LINKER:-latomic"
+      "LINKER:--as-needed"
+    )
+  endif()
+endfunction()
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
 )
+add_atomic_link_options(ros2_control_node)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
@@ -110,6 +120,7 @@ if(BUILD_TESTING)
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_controller_manager)
 
   ament_add_gmock(test_controller_manager_with_namespace
     test/test_controller_manager_with_namespace.cpp
@@ -119,6 +130,7 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_controller_manager_with_namespace)
 
   ament_add_gmock(test_controller_manager_hardware_error_handling
     test/test_controller_manager_hardware_error_handling.cpp
@@ -128,6 +140,7 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_controller_manager_hardware_error_handling)
 
   ament_add_gmock(test_load_controller
     test/test_load_controller.cpp
@@ -139,6 +152,7 @@ if(BUILD_TESTING)
     test_controller_failed_init
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_load_controller)
 
   ament_add_gmock(test_cleanup_controller
     test/test_cleanup_controller.cpp
@@ -160,6 +174,7 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_controllers_chaining_with_controller_manager)
 
   ament_add_gmock(test_controller_manager_srvs
     test/test_controller_manager_srvs.cpp
@@ -172,6 +187,7 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
   )
+  add_atomic_link_options(test_controller_manager_srvs)
   set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
 
   ament_add_gmock(test_controller_manager_urdf_passing
@@ -183,6 +199,7 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
   )
+  add_atomic_link_options(test_controller_manager_urdf_passing)
 
   add_library(test_controller_with_interfaces SHARED
     test/test_controller_with_interfaces/test_controller_with_interfaces.cpp
@@ -222,6 +239,7 @@ if(BUILD_TESTING)
     test_controller_failed_activate
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_release_interfaces)
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
@@ -232,6 +250,7 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_spawner_unspawner)
   target_compile_definitions(
     test_spawner_unspawner
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
@@ -258,6 +277,7 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  add_atomic_link_options(test_hardware_spawner)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
@@ -268,6 +288,7 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
   )
+  add_atomic_link_options(test_hardware_management_srvs)
 
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
