@@ -28,6 +28,10 @@ using lifecycle_msgs::msg::State;
 /**
  * @brief Triggers the controller's configure transition and checks success
  *
+ * @note Intentionally calls controller->configure() instead of get_node()->configure() because
+ * ControllerInterfaceBase::configure() contains controller-specific configure logic and parameter
+ * handling before driving the lifecycle transition.
+ *
  * @param controller The controller to test
  * @return true if the controller successfully transitions to the expected state, false if it fails
  * to
@@ -69,7 +73,7 @@ bool activate_succeeds(const std::unique_ptr<T> & controller)
   {
     case State::PRIMARY_STATE_ACTIVE:
       return true;
-    case State::PRIMARY_STATE_UNCONFIGURED:
+    case State::PRIMARY_STATE_INACTIVE:
       return false;
     default:
       throw std::runtime_error(
@@ -147,9 +151,8 @@ bool shutdown_succeeds(const std::unique_ptr<T> & controller)
   {
     case State::PRIMARY_STATE_FINALIZED:
       return true;
-    case State::PRIMARY_STATE_UNCONFIGURED:
-      return false;
     default:
+      // if transition returns error or failure, it will anyways end up in the finalized state
       throw std::runtime_error(
         "Unexpected controller state in shutdown_succeeds: " + std::to_string(state.id()));
   }
