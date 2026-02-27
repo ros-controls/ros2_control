@@ -122,6 +122,11 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_tf_prefix
     controller_interface
   )
+
+  ament_add_gmock(test_test_utils test/test_test_utils.cpp)
+  target_link_libraries(test_test_utils
+    controller_interface
+  )
 endif()
 
 install(
