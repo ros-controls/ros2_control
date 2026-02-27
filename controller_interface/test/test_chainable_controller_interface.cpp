@@ -69,6 +69,91 @@ TEST_F(ChainableControllerInterfaceTest, export_state_interfaces)
   EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
 }
 
+TEST_F(ChainableControllerInterfaceTest, export_state_interfaces_list_only)
+{
+  TestableChainableControllerInterface controller;
+  controller.legacy_export = false;
+  controller.pointers_export = true;
+  controller.state_interfaces_values_.clear();
+
+  // initialize, create node
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = TEST_CONTROLLER_NAME;
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+  ASSERT_NO_THROW(controller.get_node());
+
+  auto exported_state_interfaces = controller.export_state_interfaces();
+
+  ASSERT_THAT(exported_state_interfaces, SizeIs(1));
+  EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state_ptr");
+
+  EXPECT_TRUE(std::isnan(exported_state_interfaces[0]->get_optional().value()));
+
+  ASSERT_TRUE(
+    controller.exported_state_interfaces_.find("testable_chainable_controller/test_state_ptr") !=
+    controller.exported_state_interfaces_.end());
+  controller.exported_state_interfaces_.at("testable_chainable_controller/test_state_ptr")
+    ->set_value(EXPORTED_STATE_INTERFACE_VALUE);
+  EXPECT_EQ(exported_state_interfaces[0]->get_optional().value(), EXPORTED_STATE_INTERFACE_VALUE);
+
+  // calling export_state_interfaces again should return the same interface and shouldn't throw
+  EXPECT_NO_THROW(exported_state_interfaces = controller.export_state_interfaces());
+
+  ASSERT_THAT(exported_state_interfaces, SizeIs(1));
+  EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state_ptr");
+}
+
+TEST_F(ChainableControllerInterfaceTest, export_state_interfaces_list_plus_legacy)
+{
+  TestableChainableControllerInterface controller;
+  controller.legacy_export = true;
+  controller.pointers_export = true;
+
+  // initialize, create node
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = TEST_CONTROLLER_NAME;
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+  ASSERT_NO_THROW(controller.get_node());
+
+  auto exported_state_interfaces = controller.export_state_interfaces();
+
+  ASSERT_THAT(exported_state_interfaces, SizeIs(2));
+  EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
+
+  EXPECT_EQ(exported_state_interfaces[0]->get_optional().value(), EXPORTED_STATE_INTERFACE_VALUE);
+
+  EXPECT_EQ(exported_state_interfaces[1]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[1]->get_interface_name(), "test_state_ptr");
+
+  EXPECT_TRUE(std::isnan(exported_state_interfaces[1]->get_optional().value()));
+  ASSERT_TRUE(
+    controller.exported_state_interfaces_.find("testable_chainable_controller/test_state_ptr") !=
+    controller.exported_state_interfaces_.end());
+  controller.exported_state_interfaces_.at("testable_chainable_controller/test_state_ptr")
+    ->set_value(EXPORTED_STATE_INTERFACE_VALUE);
+  EXPECT_EQ(exported_state_interfaces[0]->get_optional().value(), EXPORTED_STATE_INTERFACE_VALUE);
+
+  // calling export_state_interfaces again should return the same interface and shouldn't throw
+  EXPECT_NO_THROW(exported_state_interfaces = controller.export_state_interfaces());
+
+  ASSERT_THAT(exported_state_interfaces, SizeIs(2));
+  EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
+  EXPECT_EQ(exported_state_interfaces[1]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(exported_state_interfaces[1]->get_interface_name(), "test_state_ptr");
+}
+
 TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
 {
   TestableChainableControllerInterface controller;
@@ -97,6 +182,91 @@ TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
   ASSERT_THAT(reference_interfaces, SizeIs(1));
   EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf");
+}
+
+TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces_list_only)
+{
+  TestableChainableControllerInterface controller;
+  controller.legacy_export = false;
+  controller.pointers_export = true;
+  controller.reference_interfaces_.clear();
+
+  // initialize, create node
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = TEST_CONTROLLER_NAME;
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+  ASSERT_NO_THROW(controller.get_node());
+
+  auto reference_interfaces = controller.export_reference_interfaces();
+
+  ASSERT_THAT(reference_interfaces, SizeIs(1));
+  EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf_ptr");
+
+  EXPECT_TRUE(std::isnan(reference_interfaces[0]->get_optional().value()));
+
+  ASSERT_TRUE(
+    controller.exported_reference_interfaces_.find("testable_chainable_controller/test_itf_ptr") !=
+    controller.exported_reference_interfaces_.end());
+  controller.exported_reference_interfaces_.at("testable_chainable_controller/test_itf_ptr")
+    ->set_value(INTERFACE_VALUE);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
+
+  // calling export_reference_interfaces again should return the same interface and shouldn't throw
+  EXPECT_NO_THROW(reference_interfaces = controller.export_reference_interfaces());
+
+  ASSERT_THAT(reference_interfaces, SizeIs(1));
+  EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf_ptr");
+}
+
+TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces_list_plus_legacy)
+{
+  TestableChainableControllerInterface controller;
+  controller.legacy_export = true;
+  controller.pointers_export = true;
+
+  // initialize, create node
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = TEST_CONTROLLER_NAME;
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+  ASSERT_NO_THROW(controller.get_node());
+
+  auto reference_interfaces = controller.export_reference_interfaces();
+
+  ASSERT_THAT(reference_interfaces, SizeIs(2));
+  EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf");
+
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
+
+  EXPECT_EQ(reference_interfaces[1]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[1]->get_interface_name(), "test_itf_ptr");
+
+  EXPECT_TRUE(std::isnan(reference_interfaces[1]->get_optional().value()));
+  ASSERT_TRUE(
+    controller.exported_reference_interfaces_.find("testable_chainable_controller/test_itf_ptr") !=
+    controller.exported_reference_interfaces_.end());
+  controller.exported_reference_interfaces_.at("testable_chainable_controller/test_itf_ptr")
+    ->set_value(INTERFACE_VALUE);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
+
+  // calling export_reference_interfaces again should return the same interface and shouldn't throw
+  EXPECT_NO_THROW(reference_interfaces = controller.export_reference_interfaces());
+
+  ASSERT_THAT(reference_interfaces, SizeIs(2));
+  EXPECT_EQ(reference_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf");
+  EXPECT_EQ(reference_interfaces[1]->get_prefix_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[1]->get_interface_name(), "test_itf_ptr");
 }
 
 TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
