@@ -104,6 +104,13 @@ def parse_args_advanced(args):
         help="Switch controllers as soon as possible",
     )
     global_parser.add_argument(
+        "-n",
+        "--namespace",
+        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
+        default=None,
+        required=False,
+    )
+    global_parser.add_argument(
         "-u",
         "--unload-on-kill",
         action="store_true",
@@ -397,13 +404,13 @@ def main(args=None):
         node = Node(spawner_node_name)
         logger = node.get_logger()
 
-        if node.get_namespace() != "/" and args.namespace:
+        if node.get_namespace() != "/" and global_args.namespace:
             raise RuntimeError(
-                f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
+                f"Setting namespace through both '--namespace {global_args.namespace}' arg and the ROS 2 standard way "
                 f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
             )
 
-        if args.namespace:
+        if global_args.namespace:
             warnings.filterwarnings("always")
             warnings.warn(
                 "The '--namespace' argument is deprecated and will be removed in future releases."
@@ -411,7 +418,9 @@ def main(args=None):
                 DeprecationWarning,
             )
 
-        spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+        spawner_namespace = (
+            global_args.namespace if global_args.namespace else node.get_namespace()
+        )
 
         if not spawner_namespace.startswith("/"):
             spawner_namespace = f"/{spawner_namespace}"
