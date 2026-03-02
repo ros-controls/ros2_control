@@ -76,6 +76,8 @@ bool activate_succeeds(const std::unique_ptr<T> & controller)
     case State::PRIMARY_STATE_INACTIVE:
       return false;
     default:
+      // if transition returns error, it will go to on_error transition. Depending on its success,
+      // it will either land in unconfigured or finalized state
       throw std::runtime_error(
         "Unexpected controller state in activate_succeeds: " + std::to_string(state.id()));
   }
