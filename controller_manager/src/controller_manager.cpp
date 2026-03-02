@@ -2339,8 +2339,9 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
       {
         // controller that 'cmd_tf_name' belongs to
         ControllersListIterator following_ctrl_it;
-        if (command_interface_is_reference_interface_of_controller(
-              cmd_itf_name, controllers, following_ctrl_it))
+        if (
+          command_interface_is_reference_interface_of_controller(
+            cmd_itf_name, controllers, following_ctrl_it))
         {
           // currently iterated "controller" is preceding controller --> add following controller
           // with matching interface name to "from" chained mode list (if not already in it)
