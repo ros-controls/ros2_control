@@ -697,17 +697,17 @@ private:
     void reset()
     {
       do_switch = false;
-      started = false;
       strictness = 0;
       activate_asap = false;
+      ready_to_switch = false;
     }
 
-    std::atomic_bool do_switch;
-    bool started;
+    std::atomic_bool do_switch{false};
+    std::atomic_bool ready_to_switch{false};
 
     // Switch options
     int strictness;
-    std::atomic_bool activate_asap;
+    std::atomic_bool activate_asap{false};
     std::chrono::nanoseconds timeout;
 
     // conditional variable and mutex to wait for the switch to complete
