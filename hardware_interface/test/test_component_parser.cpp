@@ -13,16 +13,16 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>
 #include <string>
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
-
-#ifdef _WIN32
-#define M_PI 3.1415926535897932384626433832795
-#endif
 
 using namespace ::testing;  // NOLINT
 
