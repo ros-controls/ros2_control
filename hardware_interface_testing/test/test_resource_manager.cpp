@@ -14,7 +14,11 @@
 
 // Authors: Karsten Knese, Denis Stogl
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 #include "test_resource_manager.hpp"
+#include <cmath>
 
 #include <algorithm>
 #include <memory>
