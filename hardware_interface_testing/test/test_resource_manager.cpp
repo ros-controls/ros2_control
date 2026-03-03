@@ -18,9 +18,9 @@
 #define _USE_MATH_DEFINES
 #endif
 #include "test_resource_manager.hpp"
-#include <cmath>
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_map>
