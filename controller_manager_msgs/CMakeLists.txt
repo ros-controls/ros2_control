@@ -28,12 +28,7 @@ set(srv_files
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
-<<<<<<< HEAD
   DEPENDENCIES builtin_interfaces lifecycle_msgs
-  ADD_LINTER_TESTS
-=======
-  DEPENDENCIES builtin_interfaces lifecycle_msgs std_msgs
->>>>>>> 5e74ebe (Remove linters from msg package (#3059))
 )
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()
