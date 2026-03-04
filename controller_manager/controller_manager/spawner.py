@@ -16,6 +16,7 @@
 import argparse
 import errno
 import os
+import signal
 import sys
 import time
 import warnings
@@ -356,6 +357,11 @@ def main(args=None):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        # Ignore further SIGINTs so a second signal cannot interrupt cleanup.
+        # Without this, a signal delivered while rclpy's C extension returns to
+        # Python can raise a second KeyboardInterrupt inside the except block,
+        # skipping the deactivate/unload calls and leaving controllers loaded.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         if unload_controllers_upon_exit:
             logger.info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
