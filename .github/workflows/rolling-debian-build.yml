@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   debian_semi_binary_build:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@fix/debian/rhel
     strategy:
       fail-fast: false
       matrix:
