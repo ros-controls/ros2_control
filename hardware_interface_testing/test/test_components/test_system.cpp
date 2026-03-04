@@ -66,58 +66,64 @@ class TestSystem : public SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
-    std::vector<StateInterface> state_interfaces;
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+      position_state_[i] =
+        std::make_shared<StateInterface>(info.joints[i].name, hardware_interface::HW_IF_POSITION);
+      (void)position_state_[i]->set_value(0.0, false);
+      velocity_state_[i] =
+        std::make_shared<StateInterface>(info.joints[i].name, hardware_interface::HW_IF_VELOCITY);
+      (void)velocity_state_[i]->set_value(0.0, false);
+      acceleration_state_[i] = std::make_shared<StateInterface>(
+        info.joints[i].name, hardware_interface::HW_IF_ACCELERATION);
+      (void)acceleration_state_[i]->set_value(0.0, false);
+      state_interfaces.push_back(position_state_[i]);
+      state_interfaces.push_back(velocity_state_[i]);
+      state_interfaces.push_back(acceleration_state_[i]);
     }
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
+      configuration_state_ = std::make_shared<StateInterface>(
+        info.gpios[0].name, info.gpios[0].state_interfaces[0].name);
+      (void)configuration_state_->set_value(0.0, false);
+      state_interfaces.push_back(configuration_state_);
     }
 
     return state_interfaces;
   }
 
-  std::vector<CommandInterface> export_command_interfaces() override
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
-    std::vector<CommandInterface> command_interfaces;
+    std::vector<CommandInterface::SharedPtr> command_interfaces;
     for (auto i = 0u; i < info.joints.size(); ++i)
     {
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+      velocity_command_[i] =
+        std::make_shared<CommandInterface>(info.joints[i].name, hardware_interface::HW_IF_VELOCITY);
+      (void)velocity_command_[i]->set_value(0.0, false);
+      command_interfaces.push_back(velocity_command_[i]);
     }
     // Add max_acceleration command interface
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        info.joints[0].name, info.joints[0].command_interfaces[1].name,
-        &max_acceleration_command_));
+    max_acceleration_command_ = std::make_shared<CommandInterface>(
+      info.joints[0].name, info.joints[0].command_interfaces[1].name);
+    (void)max_acceleration_command_->set_value(0.0, false);
+    command_interfaces.push_back(max_acceleration_command_);
 
     if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
+      configuration_command_ = std::make_shared<CommandInterface>(
+        info.gpios[0].name, info.gpios[0].command_interfaces[0].name);
+      (void)configuration_command_->set_value(0.0, false);
+      command_interfaces.push_back(configuration_command_);
     }
 
     return command_interfaces;
@@ -131,16 +137,18 @@ class TestSystem : public SystemInterface
       std::this_thread::sleep_for(
         std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
     }
+    double vel_cmd = 0.0;
+    (void)velocity_command_[0]->get_value(vel_cmd, false);
     // simulate error on read
-    if (velocity_command_[0] == test_constants::READ_FAIL_VALUE)
+    if (vel_cmd == test_constants::READ_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      velocity_command_[0] = 0.0;
+      (void)velocity_command_[0]->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on read
-    if (velocity_command_[0] == test_constants::READ_DEACTIVATE_VALUE)
+    if (vel_cmd == test_constants::READ_DEACTIVATE_VALUE)
     {
       return return_type::DEACTIVATE;
     }
@@ -149,7 +157,7 @@ class TestSystem : public SystemInterface
     // working as it should. This makes value checks clearer and confirms there
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
-    velocity_state_[0] = velocity_command_[0] / 2.0;
+    (void)velocity_state_[0]->set_value(vel_cmd / 2.0, false);
     return return_type::OK;
   }
 
@@ -161,16 +169,18 @@ class TestSystem : public SystemInterface
       std::this_thread::sleep_for(
         std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
     }
+    double vel_cmd = 0.0;
+    (void)velocity_command_[0]->get_value(vel_cmd, false);
     // simulate error on write
-    if (velocity_command_[0] == test_constants::WRITE_FAIL_VALUE)
+    if (vel_cmd == test_constants::WRITE_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      velocity_command_[0] = 0.0;
+      (void)velocity_command_[0]->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on write
-    if (velocity_command_[0] == test_constants::WRITE_DEACTIVATE_VALUE)
+    if (vel_cmd == test_constants::WRITE_DEACTIVATE_VALUE)
     {
       return return_type::DEACTIVATE;
     }
@@ -178,13 +188,13 @@ class TestSystem : public SystemInterface
   }
 
 private:
-  std::array<double, 2> velocity_command_ = {{0.0, 0.0}};
-  std::array<double, 2> position_state_ = {{0.0, 0.0}};
-  std::array<double, 2> velocity_state_ = {{0.0, 0.0}};
-  std::array<double, 2> acceleration_state_ = {{0.0, 0.0}};
-  double max_acceleration_command_ = 0.0;
-  double configuration_state_ = 0.0;
-  double configuration_command_ = 0.0;
+  std::array<CommandInterface::SharedPtr, 2> velocity_command_;
+  std::array<StateInterface::SharedPtr, 2> position_state_;
+  std::array<StateInterface::SharedPtr, 2> velocity_state_;
+  std::array<StateInterface::SharedPtr, 2> acceleration_state_;
+  CommandInterface::SharedPtr max_acceleration_command_;
+  StateInterface::SharedPtr configuration_state_;
+  CommandInterface::SharedPtr configuration_command_;
 };
 
 class TestUninitializableSystem : public TestSystem

@@ -46,13 +46,13 @@ class TestSensor : public SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        get_hardware_info().sensors[0].name,
-        get_hardware_info().sensors[0].state_interfaces[0].name, &velocity_state_));
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
+    velocity_state_ = std::make_shared<StateInterface>(
+      get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name);
+    (void)velocity_state_->set_value(0.0, false);
+    state_interfaces.push_back(velocity_state_);
 
     return state_interfaces;
   }
@@ -63,7 +63,7 @@ class TestSensor : public SensorInterface
   }
 
 private:
-  double velocity_state_ = 0.0;
+  StateInterface::SharedPtr velocity_state_;
 };
 
 class TestUninitializableSensor : public TestSensor
