@@ -31,6 +31,7 @@
   <exec_depend>rcutils</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_google_benchmark</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
 
   <export>
