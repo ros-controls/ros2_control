@@ -32,6 +32,10 @@ struct ControllerInterfaceBase::ControllerInterfaceBaseImpl
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
   mutable std::atomic<uint8_t> lifecycle_id_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+  std::string hardware_name_to_sync_ = "";
+  std::shared_ptr<realtime_tools::SyncSignal> hardware_sync_signal_;
+  uint64_t sync_triggers_ = 0;
+  double sync_latency_us_ = 0.0;
 };
 
 ControllerInterfaceBase::ControllerInterfaceBase()
@@ -100,6 +104,17 @@ return_type ControllerInterfaceBase::init(
     auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
+
+    auto_declare<int>("async_parameters.thread_priority", 50);
+    auto_declare<std::string>("async_parameters.scheduling_policy", "synchronized");
+    auto_declare<std::vector<int64_t>>("async_parameters.cpu_affinity", std::vector<int64_t>()); 
+    auto_declare<int>("async_parameters.execution_rate", impl_->ctrl_itf_params_.update_rate);
+    auto_declare<bool>("async_parameters.wait_until_initial_trigger", true);
+    auto_declare<bool>("async_parameters.print_warnings", true);
+    auto_declare<std::string>("async_parameters.slave_to_hardware", "");
+
+    impl_->hardware_name_to_sync_ = get_node()->get_parameter("async_parameters.slave_to_hardware").as_string();
+    impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
   catch (const std::exception & e)
   {
@@ -130,10 +145,16 @@ return_type ControllerInterfaceBase::init(
     {
       impl_->skip_async_triggers_.store(false, std::memory_order_release);
       enable_introspection(true);
+
       if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
       {
         // This is needed if it is disabled due to a thrown exception in the async callback thread
         impl_->async_handler_->reset_variables();
+
+        // Register the controller so hardware write waits on read to complete
+        if (this->is_slave()){
+            impl_->hardware_sync_signal_->register_controller();
+        }
       }
       impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
       return on_activate(previous_state);
@@ -144,6 +165,10 @@ return_type ControllerInterfaceBase::init(
     {
       enable_introspection(false);
       impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
+
+      if (this->is_slave()){
+        impl_->hardware_sync_signal_->unregister_controller();
+      }
       return on_deactivate(previous_state);
     });
 
@@ -240,11 +265,11 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         params.update_rate = achievable_hz;
       }
     }
-    impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
   if (impl_->is_async_)
   {
     realtime_tools::AsyncFunctionHandlerParams async_params;
+    async_params.clock = impl_->ctrl_itf_params_.clock;
     async_params.thread_priority = 50;  // default value
     const int thread_priority_param =
       static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
@@ -269,12 +294,42 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
       async_params.thread_priority);
     impl_->async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-    impl_->async_handler_->init(
-      std::bind(
-        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
-      async_params);
+    
+    if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE) {
+        impl_->async_handler_->init(
+        [this](const rclcpp::Time & time, const rclcpp::Duration & period) {
+            if (impl_->hardware_sync_signal_) {
+                uint64_t cycle_count = impl_->hardware_sync_signal_->wait_for_signal_read_finished();
+
+                // updating introspection variables
+                auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+                auto last_signal_time = impl_->hardware_sync_signal_->get_last_signal_read_finished_time();
+                impl_->sync_triggers_ = static_cast<int64_t>(cycle_count);
+                impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
+            }
+            // If this is slave and throws, the on_error will de-register the controller so the hw does not hang
+            auto result = this->update(time, period);
+
+            if (impl_->hardware_sync_signal_) {
+                impl_->hardware_sync_signal_->signal_update_finished();
+            }
+
+            return result;
+        }, 
+        async_params);
+
+        REGISTER_ROS2_CONTROL_INTROSPECTION("sync_triggers", &impl_->sync_triggers_);
+        REGISTER_ROS2_CONTROL_INTROSPECTION("sync_latency_us", &impl_->sync_latency_us_);
+    } else {
+        impl_->async_handler_->init(
+            std::bind(
+                &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
+            async_params);
+    }
+    
     impl_->async_handler_->start_thread();
   }
+
   REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &impl_->trigger_stats_.total_triggers);
   REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &impl_->trigger_stats_.failed_triggers);
   impl_->trigger_stats_.reset();
@@ -358,7 +413,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
     }
     if (last_trigger_time.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
     {
-      status.period = time - last_trigger_time;
+      status.period = impl_->async_handler_->get_current_callback_period();
     }
   }
   else
@@ -403,6 +458,8 @@ const std::string & ControllerInterfaceBase::get_robot_description() const
   return impl_->ctrl_itf_params_.robot_description;
 }
 
+const std::string ControllerInterfaceBase::get_hardware_name_to_sync() const { return impl_->hardware_name_to_sync_; }
+
 const std::unordered_map<std::string, joint_limits::JointLimits> &
 ControllerInterfaceBase::get_hard_joint_limits() const
 {
@@ -433,8 +490,30 @@ void ControllerInterfaceBase::stop_async_handler_thread()
 {
   if (is_async() && impl_->async_handler_ && impl_->async_handler_->is_running())
   {
+    if (this->is_slave()){
+        impl_->hardware_sync_signal_->unregister_controller();
+    }
     impl_->async_handler_->stop_thread();
   }
+}
+
+bool ControllerInterfaceBase::is_slave() const {
+    auto scheduling_policy = get_node()->get_parameter("async_parameters.scheduling_policy").as_string();
+    if( scheduling_policy != "slave") {
+        return false;
+    }
+    return true;
+}
+bool ControllerInterfaceBase::set_sync_signal(std::shared_ptr<realtime_tools::SyncSignal> signal) 
+{
+  if(!this->is_slave()){
+    RCLCPP_INFO(
+      get_node()->get_logger(), "AsyncSchedulingPolicy must be SLAVE to get sync_signal");
+    return false;
+  }
+
+  impl_->hardware_sync_signal_ = signal;
+  return true;
 }
 
 std::string ControllerInterfaceBase::get_name() const { return get_node()->get_name(); }
