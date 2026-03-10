@@ -560,6 +560,7 @@ ControllerManager::ControllerManager(
     params_->defaults.allow_controller_activation_with_inactive_hardware;
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
+  params.handle_exceptions = params_->handle_exceptions;
   resource_manager_ =
     std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
   init_controller_manager();
@@ -798,6 +799,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
+  params.handle_exceptions = params_->handle_exceptions;
   if (!resource_manager_->load_and_initialize_components(params))
   {
     RCLCPP_WARN(
