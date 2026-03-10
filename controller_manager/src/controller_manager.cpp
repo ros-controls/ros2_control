@@ -3307,7 +3307,7 @@ controller_interface::return_type ControllerManager::update(
       {
         for (const auto & fallback_controller : ctrl_it->info.fallback_controllers_names)
         {
-          rt_buffer_.fallback_controllers_list.push_back(fallback_controller);
+          ros2_control::add_item(rt_buffer_.fallback_controllers_list, fallback_controller);
           get_active_controllers_using_command_interfaces_of_controller(
             fallback_controller, rt_controller_list,
             rt_buffer_.activate_controllers_using_interfaces_list, resource_manager_);
