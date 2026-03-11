@@ -544,7 +544,6 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options),
   robot_description_(urdf)
 {
   initialize_parameters();
@@ -579,7 +578,6 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options),
   robot_description_(resource_manager_->get_robot_description())
 {
   initialize_parameters();
@@ -4733,47 +4731,13 @@ void ControllerManager::build_controllers_topology_info(
 rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   const ControllerSpec & controller) const
 {
-  auto check_for_element = [](const auto & list, const auto & element)
-  { return std::find(list.begin(), list.end(), element) != list.end(); };
-
   rclcpp::NodeOptions controller_node_options = controller.c->define_custom_node_options();
   std::vector<std::string> node_options_arguments = controller_node_options.arguments();
 
-  for (const std::string & arg : cm_node_options_.arguments())
-  {
-    if (
-      arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
-      arg.find("robot_description") != std::string::npos)
-    {
-      if (
-        node_options_arguments.back() == RCL_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_PARAM_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_PARAM_FLAG)
-      {
-        node_options_arguments.pop_back();
-      }
-      continue;
-    }
-
-    node_options_arguments.push_back(arg);
-  }
-
-  // Add deprecation notice if the arguments are from the controller_manager node
-  if (
-    check_for_element(node_options_arguments, RCL_REMAP_FLAG) ||
-    check_for_element(node_options_arguments, RCL_SHORT_REMAP_FLAG))
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "The use of remapping arguments to the controller_manager node is deprecated. Please use the "
-      "'--controller-ros-args' argument of the spawner to pass remapping arguments to the "
-      "controller node.");
-  }
-
+  // add parameter files specified in controller's info
   for (const auto & parameters_file : controller.info.parameters_files)
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4784,7 +4748,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   if (use_sim_time_)
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4795,7 +4759,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
-    !check_for_element(controller.info.node_options_args, RCL_ROS_ARGS_FLAG))
+    !ros2_control::has_item(controller.info.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))
   {
     node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
   }
@@ -4804,16 +4768,12 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(arg);
   }
 
-  std::string arguments;
-  arguments.reserve(1000);
-  for (const auto & arg : node_options_arguments)
-  {
-    arguments.append(arg);
-    arguments.append(" ");
-  }
-  RCLCPP_INFO(
-    get_logger(), "Controller '%s' node arguments: %s", controller.info.name.c_str(),
-    arguments.c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !node_options_arguments.empty(), "%s",
+    fmt::format(
+      FMT_COMPILE("Controller '{}' node arguments: '{}'"), controller.info.name,
+      fmt::join(node_options_arguments, " "))
+      .c_str());
 
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   controller_node_options.use_global_arguments(false);
