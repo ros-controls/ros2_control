@@ -72,13 +72,13 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
 
       position_states_.push_back(
         std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_POSITION));
-      (void)position_states_.back()->set_value(0.0, false);
+      std::ignore = position_states_.back()->set_value(0.0, false);
       velocity_states_.push_back(
         std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_VELOCITY));
-      (void)velocity_states_.back()->set_value(0.0, false);
+      std::ignore = velocity_states_.back()->set_value(0.0, false);
       effort_states_.push_back(
         std::make_shared<StateInterface>(joint.name, hardware_interface::HW_IF_EFFORT));
-      (void)effort_states_.back()->set_value(0.0, false);
+      std::ignore = effort_states_.back()->set_value(0.0, false);
       state_interfaces.push_back(position_states_.back());
       state_interfaces.push_back(velocity_states_.back());
       state_interfaces.push_back(effort_states_.back());
@@ -96,13 +96,13 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
 
       position_commands_.push_back(
         std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_POSITION));
-      (void)position_commands_.back()->set_value(0.0, false);
+      std::ignore = position_commands_.back()->set_value(0.0, false);
       velocity_commands_.push_back(
         std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_VELOCITY));
-      (void)velocity_commands_.back()->set_value(0.0, false);
+      std::ignore = velocity_commands_.back()->set_value(0.0, false);
       effort_commands_.push_back(
         std::make_shared<CommandInterface>(joint.name, hardware_interface::HW_IF_EFFORT));
-      (void)effort_commands_.back()->set_value(0.0, false);
+      std::ignore = effort_commands_.back()->set_value(0.0, false);
       command_interfaces.push_back(position_commands_.back());
       command_interfaces.push_back(velocity_commands_.back());
       command_interfaces.push_back(effort_commands_.back());

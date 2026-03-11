@@ -75,13 +75,13 @@ class TestSystem : public SystemInterface
     {
       position_state_[i] =
         std::make_shared<StateInterface>(info.joints[i].name, hardware_interface::HW_IF_POSITION);
-      (void)position_state_[i]->set_value(0.0, false);
+      std::ignore = position_state_[i]->set_value(0.0, false);
       velocity_state_[i] =
         std::make_shared<StateInterface>(info.joints[i].name, hardware_interface::HW_IF_VELOCITY);
-      (void)velocity_state_[i]->set_value(0.0, false);
+      std::ignore = velocity_state_[i]->set_value(0.0, false);
       acceleration_state_[i] = std::make_shared<StateInterface>(
         info.joints[i].name, hardware_interface::HW_IF_ACCELERATION);
-      (void)acceleration_state_[i]->set_value(0.0, false);
+      std::ignore = acceleration_state_[i]->set_value(0.0, false);
       state_interfaces.push_back(position_state_[i]);
       state_interfaces.push_back(velocity_state_[i]);
       state_interfaces.push_back(acceleration_state_[i]);
@@ -92,7 +92,7 @@ class TestSystem : public SystemInterface
       // Add configuration/max_tcp_jerk interface
       configuration_state_ = std::make_shared<StateInterface>(
         info.gpios[0].name, info.gpios[0].state_interfaces[0].name);
-      (void)configuration_state_->set_value(0.0, false);
+      std::ignore = configuration_state_->set_value(0.0, false);
       state_interfaces.push_back(configuration_state_);
     }
 
@@ -108,13 +108,13 @@ class TestSystem : public SystemInterface
     {
       velocity_command_[i] =
         std::make_shared<CommandInterface>(info.joints[i].name, hardware_interface::HW_IF_VELOCITY);
-      (void)velocity_command_[i]->set_value(0.0, false);
+      std::ignore = velocity_command_[i]->set_value(0.0, false);
       command_interfaces.push_back(velocity_command_[i]);
     }
     // Add max_acceleration command interface
     max_acceleration_command_ = std::make_shared<CommandInterface>(
       info.joints[0].name, info.joints[0].command_interfaces[1].name);
-    (void)max_acceleration_command_->set_value(0.0, false);
+    std::ignore = max_acceleration_command_->set_value(0.0, false);
     command_interfaces.push_back(max_acceleration_command_);
 
     if (info.gpios.size() > 0)
@@ -122,7 +122,7 @@ class TestSystem : public SystemInterface
       // Add configuration/max_tcp_jerk interface
       configuration_command_ = std::make_shared<CommandInterface>(
         info.gpios[0].name, info.gpios[0].command_interfaces[0].name);
-      (void)configuration_command_->set_value(0.0, false);
+      std::ignore = configuration_command_->set_value(0.0, false);
       command_interfaces.push_back(configuration_command_);
     }
 
@@ -138,13 +138,13 @@ class TestSystem : public SystemInterface
         std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
-    (void)velocity_command_[0]->get_value(vel_cmd, false);
+    std::ignore = velocity_command_[0]->get_value(vel_cmd, false);
     // simulate error on read
     if (vel_cmd == test_constants::READ_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      (void)velocity_command_[0]->set_value(0.0, false);
+      std::ignore = velocity_command_[0]->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on read
@@ -157,7 +157,7 @@ class TestSystem : public SystemInterface
     // working as it should. This makes value checks clearer and confirms there
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
-    (void)velocity_state_[0]->set_value(vel_cmd / 2.0, false);
+    std::ignore = velocity_state_[0]->set_value(vel_cmd / 2.0, false);
     return return_type::OK;
   }
 
@@ -170,13 +170,13 @@ class TestSystem : public SystemInterface
         std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
-    (void)velocity_command_[0]->get_value(vel_cmd, false);
+    std::ignore = velocity_command_[0]->get_value(vel_cmd, false);
     // simulate error on write
     if (vel_cmd == test_constants::WRITE_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      (void)velocity_command_[0]->set_value(0.0, false);
+      std::ignore = velocity_command_[0]->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on write

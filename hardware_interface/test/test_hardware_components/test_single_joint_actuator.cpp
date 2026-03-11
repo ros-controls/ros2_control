@@ -95,10 +95,10 @@ class TestSingleJointActuator : public ActuatorInterface
   {
     double position_state = 0.0;
     double position_command = 0.0;
-    (void)position_state_interface_->get_value(position_state, true);
-    (void)position_command_interface_->get_value(position_command, true);
-    (void)velocity_state_interface_->set_value(position_command - position_state, true);
-    (void)position_state_interface_->set_value(position_command, true);
+    std::ignore = position_state_interface_->get_value(position_state, true);
+    std::ignore = position_command_interface_->get_value(position_command, true);
+    std::ignore = velocity_state_interface_->set_value(position_command - position_state, true);
+    std::ignore = position_state_interface_->set_value(position_command, true);
     return return_type::OK;
   }
 

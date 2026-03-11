@@ -89,20 +89,20 @@ class TestIMUSensor : public SensorInterface
     const double u1 = distribution_1(generator_);
     const double u2 = distribution_1(generator_);
     const double u3 = distribution_1(generator_);
-    (void)orientation_w_->set_value(std::sqrt(1. - u1) * std::sin(2 * M_PI * u2), true);
-    (void)orientation_x_->set_value(std::sqrt(1. - u1) * std::cos(2 * M_PI * u2), true);
-    (void)orientation_y_->set_value(std::sqrt(u1) * std::sin(2 * M_PI * u3), true);
-    (void)orientation_z_->set_value(std::sqrt(u1) * std::cos(2 * M_PI * u3), true);
+    std::ignore = orientation_w_->set_value(std::sqrt(1. - u1) * std::sin(2 * M_PI * u2), true);
+    std::ignore = orientation_x_->set_value(std::sqrt(1. - u1) * std::cos(2 * M_PI * u2), true);
+    std::ignore = orientation_y_->set_value(std::sqrt(u1) * std::sin(2 * M_PI * u3), true);
+    std::ignore = orientation_z_->set_value(std::sqrt(u1) * std::cos(2 * M_PI * u3), true);
 
     // generate random angular velocities and linear accelerations
     std::uniform_real_distribution<double> distribution_2(0.0, 0.1);
-    (void)angular_velocity_x_->set_value(distribution_2(generator_), true);
-    (void)angular_velocity_y_->set_value(distribution_2(generator_), true);
-    (void)angular_velocity_z_->set_value(distribution_2(generator_), true);
+    std::ignore = angular_velocity_x_->set_value(distribution_2(generator_), true);
+    std::ignore = angular_velocity_y_->set_value(distribution_2(generator_), true);
+    std::ignore = angular_velocity_z_->set_value(distribution_2(generator_), true);
 
-    (void)linear_acceleration_x_->set_value(distribution_2(generator_), true);
-    (void)linear_acceleration_y_->set_value(distribution_2(generator_), true);
-    (void)linear_acceleration_z_->set_value(distribution_2(generator_), true);
+    std::ignore = linear_acceleration_x_->set_value(distribution_2(generator_), true);
+    std::ignore = linear_acceleration_y_->set_value(distribution_2(generator_), true);
+    std::ignore = linear_acceleration_z_->set_value(distribution_2(generator_), true);
     return return_type::OK;
   }
 

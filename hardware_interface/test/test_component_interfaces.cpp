@@ -64,12 +64,12 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    (void)position_state_->set_value(0.0);
-    (void)velocity_state_->set_value(0.0);
+    std::ignore = position_state_->set_value(0.0);
+    std::ignore = velocity_state_->set_value(0.0);
 
     if (recoverable_error_happened_)
     {
-      (void)velocity_command_->set_value(0.0);
+      std::ignore = velocity_command_->set_value(0.0);
     }
 
     read_calls_ = 0;
@@ -99,7 +99,7 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
     velocity_command_ = std::make_shared<hardware_interface::CommandInterface>(
       "joint1", hardware_interface::HW_IF_VELOCITY);
-    (void)velocity_command_->set_value(0.0);
+    std::ignore = velocity_command_->set_value(0.0);
     command_interfaces.push_back(velocity_command_);
     return command_interfaces;
   }
@@ -127,18 +127,18 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     }
 
     double velocity_cmd = 0.0;
-    (void)velocity_command_->get_value(velocity_cmd, false);
+    std::ignore = velocity_command_->get_value(velocity_cmd, false);
     double position = 0.0;
-    (void)position_state_->get_value(position, false);
-    (void)position_state_->set_value(position + velocity_cmd);
-    (void)velocity_state_->set_value(velocity_cmd);
+    std::ignore = position_state_->get_value(position, false);
+    std::ignore = position_state_->set_value(position + velocity_cmd);
+    std::ignore = velocity_state_->set_value(velocity_cmd);
 
     return hardware_interface::return_type::OK;
   }
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    (void)velocity_state_->set_value(0.0);
+    std::ignore = velocity_state_->set_value(0.0);
     return CallbackReturn::SUCCESS;
   }
 
@@ -276,7 +276,7 @@ class DummySensor : public hardware_interface::SensorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    (void)voltage_level_->set_value(0.0);
+    std::ignore = voltage_level_->set_value(0.0);
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
@@ -301,7 +301,7 @@ class DummySensor : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
-    (void)voltage_level_->set_value(voltage_level_hw_value_);
+    std::ignore = voltage_level_->set_value(voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
 
@@ -467,15 +467,15 @@ class DummySystem : public hardware_interface::SystemInterface
   {
     for (auto i = 0ul; i < 3; ++i)
     {
-      (void)position_state_[i]->set_value(0.0);
-      (void)velocity_state_[i]->set_value(0.0);
+      std::ignore = position_state_[i]->set_value(0.0);
+      std::ignore = velocity_state_[i]->set_value(0.0);
     }
     // reset command only if error is initiated
     if (recoverable_error_happened_)
     {
       for (auto i = 0ul; i < 3; ++i)
       {
-        (void)velocity_command_[i]->set_value(0.0);
+        std::ignore = velocity_command_[i]->set_value(0.0);
       }
     }
 
@@ -551,13 +551,13 @@ class DummySystem : public hardware_interface::SystemInterface
     }
 
     double velocity_cmd = 0.0;
-    (void)velocity_command_[0]->get_value(velocity_cmd, false);
+    std::ignore = velocity_command_[0]->get_value(velocity_cmd, false);
     for (size_t i = 0; i < 3; ++i)
     {
       double position = 0.0;
-      (void)position_state_[i]->get_value(position, false);
-      (void)position_state_[i]->set_value(position + velocity_cmd);
-      (void)velocity_state_[i]->set_value(velocity_cmd);
+      std::ignore = position_state_[i]->get_value(position, false);
+      std::ignore = position_state_[i]->set_value(position + velocity_cmd);
+      std::ignore = velocity_state_[i]->set_value(velocity_cmd);
     }
     return hardware_interface::return_type::OK;
   }
@@ -566,7 +566,7 @@ class DummySystem : public hardware_interface::SystemInterface
   {
     for (size_t i = 0; i < 3; ++i)
     {
-      (void)velocity_state_[i]->set_value(0.0);
+      std::ignore = velocity_state_[i]->set_value(0.0);
     }
     return CallbackReturn::SUCCESS;
   }

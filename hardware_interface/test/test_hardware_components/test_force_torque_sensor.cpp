@@ -71,18 +71,18 @@ class TestForceTorqueSensor : public SensorInterface
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     double fx = 0.0, fy = 0.0, fz = 0.0, tx = 0.0, ty = 0.0, tz = 0.0;
-    (void)fx_interface_->get_value(fx, true);
-    (void)fy_interface_->get_value(fy, true);
-    (void)fz_interface_->get_value(fz, true);
-    (void)tx_interface_->get_value(tx, true);
-    (void)ty_interface_->get_value(ty, true);
-    (void)tz_interface_->get_value(tz, true);
-    (void)fx_interface_->set_value(fmod((fx + 1.0), 10), true);
-    (void)fy_interface_->set_value(fmod((fy + 1.0), 10), true);
-    (void)fz_interface_->set_value(fmod((fz + 1.0), 10), true);
-    (void)tx_interface_->set_value(fmod((tx + 1.0), 10), true);
-    (void)ty_interface_->set_value(fmod((ty + 1.0), 10), true);
-    (void)tz_interface_->set_value(fmod((tz + 1.0), 10), true);
+    std::ignore = fx_interface_->get_value(fx, true);
+    std::ignore = fy_interface_->get_value(fy, true);
+    std::ignore = fz_interface_->get_value(fz, true);
+    std::ignore = tx_interface_->get_value(tx, true);
+    std::ignore = ty_interface_->get_value(ty, true);
+    std::ignore = tz_interface_->get_value(tz, true);
+    std::ignore = fx_interface_->set_value(fmod((fx + 1.0), 10), true);
+    std::ignore = fy_interface_->set_value(fmod((fy + 1.0), 10), true);
+    std::ignore = fz_interface_->set_value(fmod((fz + 1.0), 10), true);
+    std::ignore = tx_interface_->set_value(fmod((tx + 1.0), 10), true);
+    std::ignore = ty_interface_->set_value(fmod((ty + 1.0), 10), true);
+    std::ignore = tz_interface_->set_value(fmod((tz + 1.0), 10), true);
     return return_type::OK;
   }
 

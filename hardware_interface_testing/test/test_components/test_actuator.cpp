@@ -67,10 +67,10 @@ class TestActuator : public ActuatorInterface
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     position_state_ = std::make_shared<StateInterface>(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name);
-    (void)position_state_->set_value(0.0, false);
+    std::ignore = position_state_->set_value(0.0, false);
     velocity_state_ = std::make_shared<StateInterface>(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name);
-    (void)velocity_state_->set_value(0.0, false);
+    std::ignore = velocity_state_->set_value(0.0, false);
     unlisted_interface_ = std::make_shared<StateInterface>(
       get_hardware_info().joints[0].name, "some_unlisted_interface");
     state_interfaces.push_back(position_state_);
@@ -85,7 +85,7 @@ class TestActuator : public ActuatorInterface
     std::vector<CommandInterface::SharedPtr> command_interfaces;
     velocity_command_ = std::make_shared<CommandInterface>(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name);
-    (void)velocity_command_->set_value(0.0, false);
+    std::ignore = velocity_command_->set_value(0.0, false);
     command_interfaces.push_back(velocity_command_);
 
     if (get_hardware_info().joints[0].command_interfaces.size() > 1)
@@ -93,7 +93,7 @@ class TestActuator : public ActuatorInterface
       max_velocity_command_ = std::make_shared<CommandInterface>(
         get_hardware_info().joints[0].name,
         get_hardware_info().joints[0].command_interfaces[1].name);
-      (void)max_velocity_command_->set_value(0.0, false);
+      std::ignore = max_velocity_command_->set_value(0.0, false);
       command_interfaces.push_back(max_velocity_command_);
     }
 
@@ -105,8 +105,8 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
     double pos = 0.0;
-    (void)position_state_->get_value(pos, false);
-    (void)position_state_->set_value(pos + 0.001, false);
+    std::ignore = position_state_->get_value(pos, false);
+    std::ignore = position_state_->set_value(pos + 0.001, false);
     return hardware_interface::return_type::OK;
   }
 
@@ -123,8 +123,8 @@ class TestActuator : public ActuatorInterface
       }
     }
     double pos = 0.0;
-    (void)position_state_->get_value(pos, false);
-    (void)position_state_->set_value(pos + 0.1, false);
+    std::ignore = position_state_->get_value(pos, false);
+    std::ignore = position_state_->set_value(pos + 0.1, false);
     return hardware_interface::return_type::OK;
   }
 
@@ -136,13 +136,13 @@ class TestActuator : public ActuatorInterface
         std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
-    (void)velocity_command_->get_value(vel_cmd, false);
+    std::ignore = velocity_command_->get_value(vel_cmd, false);
     // simulate error on read
     if (vel_cmd == test_constants::READ_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      (void)velocity_command_->set_value(0.0, false);
+      std::ignore = velocity_command_->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on read
@@ -156,15 +156,15 @@ class TestActuator : public ActuatorInterface
     // is no "state = command" line or some other mixture of interfaces
     // somewhere in the test stack.
     double vel_state = vel_cmd / 2;
-    (void)velocity_state_->set_value(vel_state, false);
+    std::ignore = velocity_state_->set_value(vel_state, false);
     double pos_state = 0.0;
-    (void)position_state_->get_value(pos_state, false);
-    (void)position_state_->set_value(pos_state + vel_state * period.seconds(), false);
+    std::ignore = position_state_->get_value(pos_state, false);
+    std::ignore = position_state_->set_value(pos_state + vel_state * period.seconds(), false);
 
     if (vel_cmd == test_constants::RESET_STATE_INTERFACES_VALUE)
     {
-      (void)position_state_->set_value(0.0, false);
-      (void)velocity_state_->set_value(0.0, false);
+      std::ignore = position_state_->set_value(0.0, false);
+      std::ignore = velocity_state_->set_value(0.0, false);
     }
     return return_type::OK;
   }
@@ -177,13 +177,13 @@ class TestActuator : public ActuatorInterface
         std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
-    (void)velocity_command_->get_value(vel_cmd, false);
+    std::ignore = velocity_command_->get_value(vel_cmd, false);
     // simulate error on write
     if (vel_cmd == test_constants::WRITE_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM
       // tests
-      (void)velocity_command_->set_value(0.0, false);
+      std::ignore = velocity_command_->set_value(0.0, false);
       return return_type::ERROR;
     }
     // simulate deactivate on write

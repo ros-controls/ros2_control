@@ -135,8 +135,8 @@ public:
     const std::vector<std::string> & stop_interfaces) override
   {
     double accel = 0.0;
-    (void)acceleration_state_interfaces_[0]->get_value(accel, true);
-    (void)acceleration_state_interfaces_[0]->set_value(accel + 1.0, true);
+    std::ignore = acceleration_state_interfaces_[0]->get_value(accel, true);
+    std::ignore = acceleration_state_interfaces_[0]->set_value(accel + 1.0, true);
 
     // Starting interfaces
     start_modes_.clear();
@@ -185,8 +185,8 @@ public:
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
     double accel = 0.0;
-    (void)acceleration_state_interfaces_[0]->get_value(accel, true);
-    (void)acceleration_state_interfaces_[0]->set_value(accel + 100.0, true);
+    std::ignore = acceleration_state_interfaces_[0]->get_value(accel, true);
+    std::ignore = acceleration_state_interfaces_[0]->set_value(accel + 100.0, true);
     // Test of failure in perform command mode switch
     // Fail if given an empty list.
     // This should never occur in a real system as the same start_interfaces list is sent to both

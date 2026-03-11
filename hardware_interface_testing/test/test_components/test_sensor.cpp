@@ -51,7 +51,7 @@ class TestSensor : public SensorInterface
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     velocity_state_ = std::make_shared<StateInterface>(
       get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name);
-    (void)velocity_state_->set_value(0.0, false);
+    std::ignore = velocity_state_->set_value(0.0, false);
     state_interfaces.push_back(velocity_state_);
 
     return state_interfaces;
