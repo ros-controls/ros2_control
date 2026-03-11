@@ -321,6 +321,10 @@ void extract_command_interfaces_for_controller(
   const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
   std::vector<std::string> & request_interface_list)
 {
+  if (!is_controller_active(ctrl.c) && !is_controller_inactive(ctrl.c))
+  {
+    return;
+  }
   const std::vector<std::string> command_interface_names =
     get_command_interfaces_names(ctrl.c, resource_manager);
   request_interface_list.insert(
