@@ -3248,6 +3248,13 @@ TEST_F(TestControllerManagerWithHandlingExceptions, controller_configure_and_act
 
   // activate successfully after resetting the throw flag
   test_controller->throw_on_activate = false;
+  // Reconfigure as we are in UNCONFIGURED state after failed activation
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
   {
     ControllerManagerRunner cm_runner(this);
     auto switch_future = std::async(
@@ -3422,9 +3429,11 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_excep
   test_controller->throw_on_configure = true;
   {
     ControllerManagerRunner cm_runner(this);
-    EXPECT_THROW(
-      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME), std::runtime_error);
+    ASSERT_NO_THROW(cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
   }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
 
   // configure successfully after resetting the throw flag
   test_controller->throw_on_configure = false;
