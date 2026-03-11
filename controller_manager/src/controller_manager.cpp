@@ -1632,6 +1632,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 void ControllerManager::clear_requests()
 {
   switch_params_.do_switch = false;
+  switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
@@ -2176,6 +2177,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   {
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
   }
+  switch_params_.ready_to_switch.store(false, std::memory_order_release);
   switch_params_.do_switch = true;
   // wait until switch is finished
   if (switch_params_.activate_asap)
@@ -2196,6 +2198,21 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   else
   {
+    const auto deadline = std::chrono::steady_clock::now() + switch_params_.timeout;
+    while (!switch_params_.ready_to_switch.load(std::memory_order_acquire))
+    {
+      if (std::chrono::steady_clock::now() >= deadline)
+      {
+        message = fmt::format(
+          FMT_COMPILE("Switch controller timed out after {} seconds!"),
+          static_cast<double>(switch_params_.timeout.count()) / 1e9);
+        RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+        clear_requests();
+        return controller_interface::return_type::ERROR;
+      }
+      // wait for the realtime loop to be ready for switching controllers
+      std::this_thread::yield();
+    }
     RCLCPP_INFO(get_logger(), "Requested controller switch from non-realtime loop");
     // This should work as the realtime thread operation is read-only operation
     manage_switch();
@@ -3354,9 +3371,16 @@ controller_interface::return_type ControllerManager::update(
   resource_manager_->enforce_command_limits(period);
 
   // there are controllers to (de)activate
-  if (switch_params_.do_switch && switch_params_.activate_asap)
+  if (switch_params_.do_switch)
   {
-    manage_switch();
+    if (switch_params_.activate_asap)
+    {
+      manage_switch();
+    }
+    else
+    {
+      switch_params_.ready_to_switch.store(true, std::memory_order_release);
+    }
   }
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
