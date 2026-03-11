@@ -3425,7 +3425,6 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_excep
   }
   test_controller->set_state_interface_configuration(state_itfs_cfg);
 
-  // configure exception with handle_exceptions=false: should throw
   test_controller->throw_on_configure = true;
   {
     ControllerManagerRunner cm_runner(this);
