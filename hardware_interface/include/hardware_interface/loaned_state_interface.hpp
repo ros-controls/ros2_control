@@ -36,7 +36,9 @@ public:
   }
 
   explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
-  : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
+  : state_interface_(*state_interface),
+    interface_name_(state_interface->get_name()),
+    deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -46,13 +48,13 @@ public:
 
   virtual ~LoanedStateInterface()
   {
-    auto logger = rclcpp::get_logger(state_interface_.get_name());
+    auto logger = rclcpp::get_logger(interface_name_);
     RCLCPP_WARN_EXPRESSION(
       logger,
       (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
       "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
       "get_value calls",
-      state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
+      interface_name_.c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
       (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
@@ -119,6 +121,7 @@ public:
 protected:
   const StateInterface & state_interface_;
   Deleter deleter_;
+  std::string interface_name_;
 
 private:
   struct HandleRTStatistics

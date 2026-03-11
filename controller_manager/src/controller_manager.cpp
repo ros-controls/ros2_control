@@ -321,6 +321,10 @@ void extract_command_interfaces_for_controller(
   const std::unique_ptr<hardware_interface::ResourceManager> & resource_manager,
   std::vector<std::string> & request_interface_list)
 {
+  if (!is_controller_active(ctrl.c) && !is_controller_inactive(ctrl.c))
+  {
+    return;
+  }
   const std::vector<std::string> command_interface_names =
     get_command_interfaces_names(ctrl.c, resource_manager);
   request_interface_list.insert(
@@ -544,7 +548,6 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options),
   robot_description_(urdf)
 {
   initialize_parameters();
@@ -579,7 +582,6 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options),
   robot_description_(resource_manager_->get_robot_description())
 {
   initialize_parameters();
@@ -643,6 +645,13 @@ void ControllerManager::init_controller_manager()
     if (params_->enforce_command_limits)
     {
       resource_manager_->import_joint_limiters(robot_description_);
+      RCLCPP_INFO(get_logger(), "Enforcing command limits is enabled...");
+    }
+    else
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "Enforcing command limits is disabled. Command limits from URDF will be ignored.");
     }
     init_services();
   }
@@ -708,9 +717,6 @@ void ControllerManager::init_controller_manager()
         }
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
-
-  RCLCPP_INFO_EXPRESSION(
-    get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
 }
 
 void ControllerManager::initialize_parameters()
@@ -779,6 +785,13 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   if (params_->enforce_command_limits)
   {
     resource_manager_->import_joint_limiters(robot_description_);
+    RCLCPP_INFO(get_logger(), "Enforcing command limits is enabled...");
+  }
+  else
+  {
+    RCLCPP_INFO(
+      get_logger(),
+      "Enforcing command limits is disabled. Command limits from URDF will be ignored.");
   }
   hardware_interface::ResourceManagerParams params;
   params.robot_description = robot_description;
@@ -1617,6 +1630,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 void ControllerManager::clear_requests()
 {
   switch_params_.do_switch = false;
+  switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
@@ -2161,6 +2175,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   {
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
   }
+  switch_params_.ready_to_switch.store(false, std::memory_order_release);
   switch_params_.do_switch = true;
   // wait until switch is finished
   if (switch_params_.activate_asap)
@@ -2181,6 +2196,21 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   else
   {
+    const auto deadline = std::chrono::steady_clock::now() + switch_params_.timeout;
+    while (!switch_params_.ready_to_switch.load(std::memory_order_acquire))
+    {
+      if (std::chrono::steady_clock::now() >= deadline)
+      {
+        message = fmt::format(
+          FMT_COMPILE("Switch controller timed out after {} seconds!"),
+          static_cast<double>(switch_params_.timeout.count()) / 1e9);
+        RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+        clear_requests();
+        return controller_interface::return_type::ERROR;
+      }
+      // wait for the realtime loop to be ready for switching controllers
+      std::this_thread::yield();
+    }
     RCLCPP_INFO(get_logger(), "Requested controller switch from non-realtime loop");
     // This should work as the realtime thread operation is read-only operation
     manage_switch();
@@ -3317,11 +3347,10 @@ controller_interface::return_type ControllerManager::update(
       get_logger(), !rt_buffer_.fallback_controllers_list.empty(),
       "Activating fallback controllers : [ %s]",
       rt_buffer_.get_concatenated_string(rt_buffer_.fallback_controllers_list).c_str());
-    std::for_each(
-      rt_buffer_.activate_controllers_using_interfaces_list.begin(),
-      rt_buffer_.activate_controllers_using_interfaces_list.end(),
-      [this](const std::string & controller)
-      { ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller); });
+    for (const std::string & controller : rt_buffer_.activate_controllers_using_interfaces_list)
+    {
+      ros2_control::add_item(rt_buffer_.deactivate_controllers_list, controller);
+    };
 
     // Retrieve the interfaces to start and stop from the hardware end
     perform_hardware_command_mode_change(
@@ -3340,9 +3369,16 @@ controller_interface::return_type ControllerManager::update(
   resource_manager_->enforce_command_limits(period);
 
   // there are controllers to (de)activate
-  if (switch_params_.do_switch && switch_params_.activate_asap)
+  if (switch_params_.do_switch)
   {
-    manage_switch();
+    if (switch_params_.activate_asap)
+    {
+      manage_switch();
+    }
+    else
+    {
+      switch_params_.ready_to_switch.store(true, std::memory_order_release);
+    }
   }
 
   PUBLISH_ROS2_CONTROL_INTROSPECTION_DATA_ASYNC(hardware_interface::DEFAULT_REGISTRY_KEY);
@@ -4648,19 +4684,19 @@ void ControllerManager::update_list_with_controller_chain(
 void ControllerManager::build_controllers_topology_info(
   const std::vector<ControllerSpec> & controllers)
 {
-  std::for_each(
-    controller_chain_spec_.begin(), controller_chain_spec_.end(),
-    [](auto & pair)
-    {
-      pair.second.following_controllers.clear();
-      pair.second.preceding_controllers.clear();
-    });
-  std::for_each(
-    controller_chained_reference_interfaces_cache_.begin(),
-    controller_chained_reference_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
-  std::for_each(
-    controller_chained_state_interfaces_cache_.begin(),
-    controller_chained_state_interfaces_cache_.end(), [](auto & pair) { pair.second.clear(); });
+  for (auto & [_, spec] : controller_chain_spec_)
+  {
+    spec.following_controllers.clear();
+    spec.preceding_controllers.clear();
+  }
+  for (auto & [_, cache] : controller_chained_reference_interfaces_cache_)
+  {
+    cache.clear();
+  }
+  for (auto & [_, cache] : controller_chained_state_interfaces_cache_)
+  {
+    cache.clear();
+  }
   for (const auto & controller : controllers)
   {
     if (is_controller_unconfigured(*controller.c))
@@ -4723,47 +4759,13 @@ void ControllerManager::build_controllers_topology_info(
 rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   const ControllerSpec & controller) const
 {
-  auto check_for_element = [](const auto & list, const auto & element)
-  { return std::find(list.begin(), list.end(), element) != list.end(); };
-
   rclcpp::NodeOptions controller_node_options = controller.c->define_custom_node_options();
   std::vector<std::string> node_options_arguments = controller_node_options.arguments();
 
-  for (const std::string & arg : cm_node_options_.arguments())
-  {
-    if (
-      arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
-      arg.find("robot_description") != std::string::npos)
-    {
-      if (
-        node_options_arguments.back() == RCL_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_PARAM_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_PARAM_FLAG)
-      {
-        node_options_arguments.pop_back();
-      }
-      continue;
-    }
-
-    node_options_arguments.push_back(arg);
-  }
-
-  // Add deprecation notice if the arguments are from the controller_manager node
-  if (
-    check_for_element(node_options_arguments, RCL_REMAP_FLAG) ||
-    check_for_element(node_options_arguments, RCL_SHORT_REMAP_FLAG))
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "The use of remapping arguments to the controller_manager node is deprecated. Please use the "
-      "'--controller-ros-args' argument of the spawner to pass remapping arguments to the "
-      "controller node.");
-  }
-
+  // add parameter files specified in controller's info
   for (const auto & parameters_file : controller.info.parameters_files)
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4774,7 +4776,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   if (use_sim_time_)
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    if (!ros2_control::has_item(node_options_arguments, std::string(RCL_ROS_ARGS_FLAG)))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
@@ -4785,7 +4787,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
-    !check_for_element(controller.info.node_options_args, RCL_ROS_ARGS_FLAG))
+    !ros2_control::has_item(controller.info.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))
   {
     node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
   }
@@ -4794,16 +4796,12 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(arg);
   }
 
-  std::string arguments;
-  arguments.reserve(1000);
-  for (const auto & arg : node_options_arguments)
-  {
-    arguments.append(arg);
-    arguments.append(" ");
-  }
-  RCLCPP_INFO(
-    get_logger(), "Controller '%s' node arguments: %s", controller.info.name.c_str(),
-    arguments.c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !node_options_arguments.empty(), "%s",
+    fmt::format(
+      FMT_COMPILE("Controller '{}' node arguments: '{}'"), controller.info.name,
+      fmt::join(node_options_arguments, " "))
+      .c_str());
 
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   controller_node_options.use_global_arguments(false);
