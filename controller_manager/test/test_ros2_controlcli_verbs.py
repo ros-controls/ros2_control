@@ -13,11 +13,15 @@
 # limitations under the License.
 
 import os
+import time
 import subprocess
+import threading
 import unittest
 
 from ament_index_python.packages import get_package_prefix
 from ament_index_python.packages import get_package_share_directory
+from control_msgs.msg import HardwareDeviceStatus
+from control_msgs.msg import HardwareStatus
 from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
@@ -26,6 +30,7 @@ import launch_ros.actions
 import pytest
 import rclpy
 
+from controller_manager.controller_manager_services import list_controllers
 from controller_manager.launch_utils import generate_controllers_spawner_launch_description
 from controller_manager.test_utils import check_controllers_running
 from controller_manager.test_utils import check_node_running
@@ -94,15 +99,85 @@ class TestRos2ControlCliVerbs(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
+    def controller_states(self):
+        controllers = list_controllers(self.node, "controller_manager", 5.0).controller
+        return {controller.name: controller.state for controller in controllers}
+
+    def ensure_ctrl1_active(self):
+        states = self.controller_states()
+        if "ctrl_1" not in states:
+            result = run_cli(
+                "load_controller", "--set-state", "active", "ctrl_1", self.robot_controllers
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+        elif states["ctrl_1"] == "unconfigured":
+            result = run_cli("set_controller_state", "ctrl_1", "inactive")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = run_cli("set_controller_state", "ctrl_1", "active")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        elif states["ctrl_1"] == "inactive":
+            result = run_cli("set_controller_state", "ctrl_1", "active")
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        check_controllers_running(self.node, ["ctrl_1"], state="active")
+
+    def ensure_ctrl2_inactive(self):
+        states = self.controller_states()
+        if "ctrl_2" not in states:
+            result = run_cli(
+                "load_controller",
+                "--set-state",
+                "inactive",
+                "ctrl_2",
+                self.robot_controllers,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+        elif states["ctrl_2"] == "unconfigured":
+            result = run_cli("set_controller_state", "ctrl_2", "inactive")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        elif states["ctrl_2"] == "active":
+            result = run_cli("set_controller_state", "ctrl_2", "inactive")
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        check_controllers_running(self.node, ["ctrl_2"], state="inactive")
+
+    def unload_ctrl2_if_loaded(self):
+        states = self.controller_states()
+        if "ctrl_2" not in states:
+            return
+
+        if states["ctrl_2"] == "active":
+            result = run_cli("set_controller_state", "ctrl_2", "inactive")
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        result = run_cli("unload_controller", "ctrl_2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("ctrl_2", self.controller_states())
+
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
         check_controllers_running(self.node, ["ctrl_1"], state="active")
+
+    def test_list_controllers(self):
+        self.ensure_ctrl1_active()
+        result = run_cli("list_controllers")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("ctrl_1", result.stdout)
+        self.assertIn("active", result.stdout)
 
     def test_list_controller_types(self):
         result = run_cli("list_controller_types")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("controller_manager/test_controller", result.stdout)
+
+    def test_list_hardware_components(self):
+        result = run_cli("list_hardware_components")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("TestSystemComponent", result.stdout)
+        self.assertIn("TestSensorComponent", result.stdout)
 
     def test_list_hardware_interfaces(self):
         result = run_cli("list_hardware_interfaces")
@@ -121,18 +196,51 @@ class TestRos2ControlCliVerbs(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         check_controllers_running(self.node, ["ctrl_1"], state="active")
 
-    def test_switch_controllers_best_effort(self):
+    def test_reload_controller_libraries_without_force_kill_fails(self):
+        self.ensure_ctrl1_active()
+
+        result = run_cli("reload_controller_libraries")
+
+        self.assertNotEqual(result.returncode, 0)
         check_controllers_running(self.node, ["ctrl_1"], state="active")
 
+    def test_load_controller(self):
+        self.unload_ctrl2_if_loaded()
+
         result = run_cli(
-            "load_controller",
-            "--set-state",
-            "inactive",
-            "ctrl_2",
-            self.robot_controllers,
+            "load_controller", "--set-state", "inactive", "ctrl_2", self.robot_controllers
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         check_controllers_running(self.node, ["ctrl_2"], state="inactive")
+
+    def test_set_controller_state(self):
+        self.ensure_ctrl2_inactive()
+
+        result = run_cli("set_controller_state", "ctrl_2", "active")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        check_controllers_running(self.node, ["ctrl_2"], state="active")
+
+        result = run_cli("set_controller_state", "ctrl_2", "inactive")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        check_controllers_running(self.node, ["ctrl_2"], state="inactive")
+
+    def test_cleanup_controller(self):
+        self.ensure_ctrl2_inactive()
+
+        result = run_cli("cleanup_controller", "ctrl_2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        check_controllers_running(self.node, ["ctrl_2"], state="unconfigured")
+
+    def test_unload_controller(self):
+        self.ensure_ctrl2_inactive()
+
+        result = run_cli("unload_controller", "ctrl_2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("ctrl_2", self.controller_states())
+
+    def test_switch_controllers_best_effort(self):
+        self.ensure_ctrl1_active()
+        self.ensure_ctrl2_inactive()
 
         result = run_cli(
             "switch_controllers",
@@ -146,6 +254,48 @@ class TestRos2ControlCliVerbs(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         check_controllers_running(self.node, ["ctrl_1"], state="inactive")
         check_controllers_running(self.node, ["ctrl_2"], state="active")
+
+    def test_view_hardware_status(self):
+        publisher = self.node.create_publisher(HardwareStatus, "/test/hardware_status", 10)
+        stop_publishing = threading.Event()
+
+        def publish_status():
+            while not stop_publishing.is_set():
+                msg = HardwareStatus()
+                msg.header.stamp = self.node.get_clock().now().to_msg()
+                msg.hardware_id = "test_hardware_component"
+
+                device_status = HardwareDeviceStatus()
+                device_status.device_id = "test_device"
+                msg.hardware_device_states.append(device_status)
+
+                publisher.publish(msg)
+                time.sleep(0.1)
+
+        process = subprocess.Popen(
+            ["ros2", "control", "view_hardware_status", "--hardware-id", "missing_hardware"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        publisher_thread = threading.Thread(target=publish_status, daemon=True)
+        publisher_thread.start()
+
+        try:
+            stdout, stderr = process.communicate(timeout=10.0)
+        finally:
+            stop_publishing.set()
+            publisher_thread.join(timeout=1.0)
+            if process.poll() is None:
+                process.kill()
+                process.communicate()
+
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertIn("Subscribing to the following topics", stdout)
+        self.assertIn("/test/hardware_status", stdout)
+        self.assertIn("Available Hardware IDs", stdout)
+        self.assertIn("test_hardware_component", stdout)
 
 
 @launch_testing.post_shutdown_test()
