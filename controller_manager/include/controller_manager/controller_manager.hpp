@@ -670,7 +670,6 @@ private:
   std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
   std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
 
-  rclcpp::NodeOptions cm_node_options_;
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
@@ -697,17 +696,17 @@ private:
     void reset()
     {
       do_switch = false;
-      started = false;
       strictness = 0;
       activate_asap = false;
+      ready_to_switch = false;
     }
 
-    std::atomic_bool do_switch;
-    bool started;
+    std::atomic_bool do_switch{false};
+    std::atomic_bool ready_to_switch{false};
 
     // Switch options
     int strictness;
-    std::atomic_bool activate_asap;
+    std::atomic_bool activate_asap{false};
     std::chrono::nanoseconds timeout;
 
     // conditional variable and mutex to wait for the switch to complete
