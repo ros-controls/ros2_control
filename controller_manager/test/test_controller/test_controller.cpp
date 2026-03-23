@@ -135,6 +135,10 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
 {
   auto ctrl_node = get_node();
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_configure)
+  {
+    throw std::runtime_error("Exception from TestController::on_configure() as requested.");
+  }
   if (!ctrl_node->has_parameter("command_interfaces"))
   {
     ctrl_node->declare_parameter("command_interfaces", std::vector<std::string>({}));
@@ -182,6 +186,10 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
 CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_activate)
+  {
+    throw std::runtime_error("Exception from TestController::on_activate() as requested.");
+  }
   if (external_commands_for_testing_.empty())
   {
     external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
