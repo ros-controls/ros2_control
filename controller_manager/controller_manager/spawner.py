@@ -315,7 +315,12 @@ def main(args=None):
             # Without this, a signal delivered while rclpy's C extension returns to
             # Python can raise a second KeyboardInterrupt inside the except block,
             # skipping the deactivate/unload calls and leaving controllers loaded.
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            # The try/except guards against coverage's trace function raising a
+            # second KeyboardInterrupt during the signal.signal() call itself.
+            try:
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+            except (KeyboardInterrupt, Exception):
+                pass
             if not args.stopped and not args.inactive:
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
