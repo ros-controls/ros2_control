@@ -194,6 +194,10 @@ There are two scripts to interact with controller manager from launch files:
       --controller-ros-args CONTROLLER_ROS_ARGS
                             The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
 
+    When launching ``spawner`` with ROS parameter files that use substitutions (for example, launch ``allow_substs=True``),
+    the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
+    with any explicit ``--param-file`` arguments passed to the spawner command.
+
 The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. For example, to spawn two controllers with different parameter files and remapping topics, the following command can be used:
 
 .. code-block:: console
