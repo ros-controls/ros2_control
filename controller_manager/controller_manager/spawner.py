@@ -361,16 +361,12 @@ def main(args=None):
         # Without this, a signal delivered while rclpy's C extension returns to
         # Python can raise a second KeyboardInterrupt inside the except block,
         # skipping the deactivate/unload calls and leaving controllers loaded.
-<<<<<<< mergify/bp/mergify/bp/kilted/pr-3075/pr-3124
         # The try/except guards against coverage's trace function raising a
         # second KeyboardInterrupt during the signal.signal() call itself.
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
         except (KeyboardInterrupt, Exception):
             pass
-=======
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
->>>>>>> kilted
         if unload_controllers_upon_exit:
             logger.info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
