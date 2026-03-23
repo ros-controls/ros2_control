@@ -378,9 +378,6 @@ def main(args=None):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-<<<<<<< HEAD
-        if unload_controllers_upon_exit:
-=======
         # Ignore further SIGINTs so a second signal cannot interrupt cleanup.
         # Without this, a signal delivered while rclpy's C extension returns to
         # Python can raise a second KeyboardInterrupt inside the except block,
@@ -391,8 +388,7 @@ def main(args=None):
             signal.signal(signal.SIGINT, signal.SIG_IGN)
         except (KeyboardInterrupt, Exception):
             pass
-        if unload_on_kill:
->>>>>>> 2794132 ([Spawner] Block further SIGINTs with unload_on_kill option (#3075))
+        if unload_controllers_upon_exit:
             logger.info("KeyboardInterrupt successfully captured!")
             if not args.inactive:
                 logger.info("Deactivating and unloading controllers...")
