@@ -3446,3 +3446,108 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_excep
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());
 }
+
+// Struct to parameterize both the CM update rate and the individual controller update rate
+struct CmCtrlRates
+{
+  unsigned int cm_update_rate;
+  unsigned int ctrl_update_rate;
+};
+
+// Tests that a controller running at a sub-rate updates the correct number of times when the
+// ControllerManager itself is running at a non-default rate (i.e., not the standard 100 Hz).
+class TestControllerManagerWithDifferentCmUpdateRates
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public testing::WithParamInterface<CmCtrlRates>
+{
+public:
+  TestControllerManagerWithDifferentCmUpdateRates()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, "",
+      {rclcpp::Parameter("update_rate", static_cast<int>(GetParam().cm_update_rate))})
+  {
+  }
+};
+
+TEST_P(
+  TestControllerManagerWithDifferentCmUpdateRates,
+  per_controller_update_rate_with_different_cm_rates)
+{
+  const unsigned int cm_update_rate = GetParam().cm_update_rate;
+  const unsigned int ctrl_update_rate = GetParam().ctrl_update_rate;
+  const double cm_period = 1.0 / cm_update_rate;
+
+  EXPECT_EQ(cm_->get_update_rate(), cm_update_rate);
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_controller, test_controller::TEST_CONTROLLER_NAME,
+      test_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  test_controller->get_node()->set_parameter({"update_rate", static_cast<int>(ctrl_update_rate)});
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // Activate the controller
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  time_ += rclcpp::Duration::from_seconds(cm_period);
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(cm_period)));
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller->get_lifecycle_state().id());
+  EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
+
+  // Run the update loop for exactly cm_update_rate iterations (one simulated second) and verify
+  // the controller was called the correct number of times. Since cm_update_rate is an exact
+  // multiple of ctrl_update_rate in all parameterized cases, the expected count is exact.
+  const auto initial_counter = test_controller->internal_counter;
+
+  for (size_t i = 0; i < cm_update_rate; ++i)
+  {
+    time_ += rclcpp::Duration::from_seconds(cm_period);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time_, rclcpp::Duration::from_seconds(cm_period)));
+  }
+
+  const auto actual_updates = test_controller->internal_counter - initial_counter;
+  EXPECT_EQ(actual_updates, ctrl_update_rate)
+    << "After " << cm_update_rate << " CM cycles at " << cm_update_rate
+    << " Hz, a controller at " << ctrl_update_rate << " Hz should have updated exactly "
+    << ctrl_update_rate << " times";
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  per_controller_update_rate_with_different_cm_rates,
+  TestControllerManagerWithDifferentCmUpdateRates,
+  testing::Values(
+    CmCtrlRates{200, 50},
+    CmCtrlRates{200, 100},
+    CmCtrlRates{500, 100},
+    CmCtrlRates{500, 50},
+    CmCtrlRates{1000, 100},
+    CmCtrlRates{1000, 500}));
