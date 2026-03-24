@@ -880,21 +880,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
 
   ASSERT_FALSE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
-  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
+  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
@@ -966,21 +952,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
   ASSERT_FALSE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
-  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
+  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
@@ -1030,21 +1002,7 @@ TEST_F(
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   ASSERT_FALSE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
-  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
+  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(2));
@@ -1480,20 +1438,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.group, IsEmpty());
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+  ASSERT_EQ(hardware_info.thread_priority, 30);
   ASSERT_EQ(hardware_info.async_params.thread_priority, 30);
   ASSERT_EQ(hardware_info.async_params.scheduling_policy, "detached");
   ASSERT_FALSE(hardware_info.async_params.print_warnings);
@@ -1513,20 +1458,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.joints, IsEmpty());
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+  ASSERT_EQ(hardware_info.thread_priority, 50);
   ASSERT_EQ(hardware_info.async_params.thread_priority, 50);
   ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
   ASSERT_TRUE(hardware_info.async_params.print_warnings);
@@ -1554,20 +1486,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   EXPECT_EQ(hardware_info.gpios[0].name, "configuration");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   ASSERT_TRUE(hardware_info.is_async);
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+  ASSERT_EQ(hardware_info.thread_priority, 70);
   ASSERT_EQ(hardware_info.async_params.thread_priority, 70);
   ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
   ASSERT_EQ(1u, hardware_info.async_params.cpu_affinity_cores.size());
@@ -2112,4 +2031,100 @@ TEST_F(TestComponentParser, successfully_parse_valid_sdf)
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
+}
+
+TEST_F(TestComponentParser, missing_hardware_plugin_tag_includes_component_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="MySpecificRobot" type="system">
+        <hardware>
+          <!-- plugin tag intentionally missing -->
+          <param name="some_param">1.0</param>
+        </hardware>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("MySpecificRobot"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<plugin>"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<hardware>"));
+  }
+}
+
+TEST_F(TestComponentParser, missing_joint_attribute_includes_joint_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position"/>
+        </joint>
+        <joint name="joint2">
+          <!-- missing name attribute here is tricky since we parse it first,
+               let's test missing attribute in command_interface instead -->
+          <command_interface>
+            <param name="min">-1</param>
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("name"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("command_interface"));
+    // Ideally it should say it failed for joint2, but tag_name is "command_interface"
+  }
+}
+
+TEST_F(TestComponentParser, parameter_missing_name_includes_parent_context)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position">
+            <param>1.0</param> <!-- Missing name attribute -->
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("joint1"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("parameter name"));
+  }
 }
