@@ -29,4 +29,3 @@ jobs:
     with:
       ros_distro: rolling
       pixi_dependencies: typeguard jinja2 boost compilers cpp-expected
-      ninja_packages: rsl
