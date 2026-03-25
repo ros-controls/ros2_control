@@ -37,7 +37,6 @@ For details see the controller_manager section.
 * Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
 * Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
 
-
 controller_manager
 ******************
 * URDF is now passed to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/pull/1088>`_)
@@ -111,6 +110,7 @@ controller_manager
 * A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 * The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. (`#2895 <https://github.com/ros-controls/ros2_control/pull/2895>`__)
 * Added new ``cleanup_controller`` service to the controller manager to allow cleaning up controllers from external clients. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
+* The ``spawner`` now forwards all the parameter files parsed to the spawner node to the spawned controllers. This would support ``allow_substs`` approach. (`#3136 <https://github.com/ros-controls/ros2_control/pull/3136>`__)
 
 hardware_interface
 ******************
