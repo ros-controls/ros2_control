@@ -3174,6 +3174,102 @@ TEST_F(TestControllerManagerWithHandlingExceptions, controller_lifecycle_on_exce
     test_controller->get_lifecycle_state().id());
 }
 
+TEST_F(TestControllerManagerWithHandlingExceptions, controller_configure_and_activate_on_exceptions)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  // configure exception with handle_exceptions=true: should not throw, returns ERROR
+  test_controller->throw_on_configure = true;
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_NO_THROW(EXPECT_EQ(
+      controller_interface::return_type::ERROR,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME)));
+  }
+  EXPECT_NE(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // configure successfully after resetting the throw flag
+  test_controller->throw_on_configure = false;
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // activate exception with handle_exceptions=true: switch should not throw, returns ERROR
+  test_controller->throw_on_activate = true;
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
+  }
+  EXPECT_NE(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  // activate successfully after resetting the throw flag
+  test_controller->throw_on_activate = false;
+  // Reconfigure as we are in UNCONFIGURED state after failed activation
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
+  {
+    ControllerManagerRunner cm_runner(this);
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+}
+
 class TestControllerManagerNotHandlingExceptions
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
@@ -3294,6 +3390,58 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_lifecycle_on_excep
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
   }
 
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+}
+
+TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_exceptions)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  test_controller->throw_on_configure = true;
+  {
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_NO_THROW(cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+
+  // configure successfully after resetting the throw flag
+  test_controller->throw_on_configure = false;
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  }
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());

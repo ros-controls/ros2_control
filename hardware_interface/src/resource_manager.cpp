@@ -1514,6 +1514,7 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->cm_update_rate_ = params.update_rate;
   params_.robot_description = params.robot_description;
   params_.update_rate = params.update_rate;
+  params_.handle_exceptions = params.handle_exceptions;
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
