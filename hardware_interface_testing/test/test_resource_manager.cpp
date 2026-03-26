@@ -14,9 +14,13 @@
 
 // Authors: Karsten Knese, Denis Stogl
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -2776,6 +2780,91 @@ TEST_F(ResourceManagerTestCommandLimitEnforcement, test_command_interfaces_limit
   setup_resource_manager_and_do_initial_checks();
 
   check_limit_enforcement();
+}
+
+class ResourceManagerTestReadWriteException : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks(bool handle_exceptions)
+  {
+    hardware_interface::ResourceManagerParams rm_params;
+    rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    rm_params.clock = node_.get_clock();
+    rm_params.logger = node_.get_logger();
+    rm_params.update_rate = 100;
+    rm_params.handle_exceptions = handle_exceptions;
+    rm = std::make_shared<TestableResourceManager>(rm_params);
+    activate_components(*rm);
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    // with default values read and write should run without any problems
+    {
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+
+  const rclcpp::Time time = rclcpp::Time(0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+};
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->read(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->write(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->read(time, duration), std::runtime_error);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->write(time, duration), std::runtime_error);
 }
 
 int main(int argc, char ** argv)
