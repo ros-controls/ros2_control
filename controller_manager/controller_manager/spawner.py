@@ -575,7 +575,7 @@ def main(args=None):
             signal.signal(signal.SIGINT, signal.SIG_IGN)
         except (KeyboardInterrupt, Exception):
             pass
-        if unload_controllers_upon_exit:
+        if unload_on_kill:
             logger.info("KeyboardInterrupt successfully captured!")
 
             # Determine which controllers to deactivate
