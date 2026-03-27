@@ -152,7 +152,10 @@ class TestActuator : public ActuatorInterface
       return return_type::DEACTIVATE;
     }
     // simulate exception on read
-    if (velocity_command_ == test_constants::READ_THROW_VALUE)
+    const auto velocity_command_value = velocity_command_->get_optional();
+    if (
+      velocity_command_value.has_value() &&
+      velocity_command_value.value() == test_constants::READ_THROW_VALUE)
     {
       throw std::runtime_error("Exception from TestActuator::read() as requested.");
     }
@@ -198,7 +201,10 @@ class TestActuator : public ActuatorInterface
       return return_type::DEACTIVATE;
     }
     // simulate exception on write
-    if (velocity_command_ == test_constants::WRITE_THROW_VALUE)
+    const auto velocity_command_value = velocity_command_->get_optional();
+    if (
+      velocity_command_value.has_value() &&
+      velocity_command_value.value() == test_constants::WRITE_THROW_VALUE)
     {
       throw std::runtime_error("Exception from TestActuator::write() as requested.");
     }

@@ -153,7 +153,10 @@ class TestSystem : public SystemInterface
       return return_type::DEACTIVATE;
     }
     // simulate exception on read
-    if (velocity_command_[0] == test_constants::READ_THROW_VALUE)
+    const auto velocity_command_value = velocity_command_[0]->get_optional();
+    if (
+      velocity_command_value.has_value() &&
+      velocity_command_value.value() == test_constants::READ_THROW_VALUE)
     {
       throw std::runtime_error("Exception from TestSystem::read() as requested.");
     }
@@ -190,7 +193,10 @@ class TestSystem : public SystemInterface
       return return_type::DEACTIVATE;
     }
     // simulate exception on write
-    if (velocity_command_[0] == test_constants::WRITE_THROW_VALUE)
+    const auto velocity_command_value = velocity_command_[0]->get_optional();
+    if (
+      velocity_command_value.has_value() &&
+      velocity_command_value.value() == test_constants::WRITE_THROW_VALUE)
     {
       throw std::runtime_error("Exception from TestSystem::write() as requested.");
     }
