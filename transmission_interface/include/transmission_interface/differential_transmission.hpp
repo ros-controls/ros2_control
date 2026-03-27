@@ -159,6 +159,20 @@ public:
   /// Get human-friendly report of handles
   std::string get_handles_info() const;
 
+  std::vector<std::string> get_supported_actuator_interfaces() const override
+  {
+    return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
+            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+  }
+
+  std::vector<std::string> get_supported_joint_interfaces() const override
+  {
+    return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
+            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+  }
+
 protected:
   std::vector<double> actuator_reduction_;
   std::vector<double> joint_reduction_;
