@@ -120,9 +120,10 @@ std::string get_attribute_value(
     const char * name = element_it->Attribute(kNameAttribute);
     if (name && std::strlen(name) > 0)
     {
-      throw std::runtime_error(fmt::format(
-        FMT_COMPILE("no attribute '{}' in '{}' tag with name '{}'"), attribute_name, tag_name,
-        name));
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("no attribute '{}' in '{}' tag with name '{}'"), attribute_name, tag_name,
+          name));
     }
     throw std::runtime_error(
       fmt::format(FMT_COMPILE("no attribute '{}' in '{}' tag"), attribute_name, tag_name));
@@ -355,9 +356,10 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
     attr = params_it->FindAttribute(kNameAttribute);
     if (!attr)
     {
-      throw std::runtime_error(fmt::format(
-        FMT_COMPILE("no parameter name attribute set in param tag{}"),
-        context_name.empty() ? "" : " for '" + context_name + "'"));
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("no parameter name attribute set in param tag{}"),
+          context_name.empty() ? "" : " for '" + context_name + "'"));
     }
     const std::string parameter_name = ros2_control::strip(params_it->Attribute(kNameAttribute));
     const std::string parameter_value =
@@ -522,7 +524,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it)
   {
-    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it, component.name));
+    component.command_interfaces.push_back(
+      parse_interfaces_from_xml(command_interfaces_it, component.name));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -530,7 +533,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
-    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it, component.name));
+    component.state_interfaces.push_back(
+      parse_interfaces_from_xml(state_interfaces_it, component.name));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -583,9 +587,10 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
   if (!type_it)
   {
-    throw std::runtime_error(fmt::format(
-      FMT_COMPILE("Missing <plugin> tag of <transmission> element for '{}' in your URDF."),
-      transmission.name));
+    throw std::runtime_error(
+      fmt::format(
+        FMT_COMPILE("Missing <plugin> tag of <transmission> element for '{}' in your URDF."),
+        transmission.name));
   }
   transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
@@ -703,9 +708,10 @@ HardwareInfo parse_resource_from_xml(
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
       if (!type_it)
       {
-        throw std::runtime_error(fmt::format(
-          FMT_COMPILE("Missing <plugin> tag of <hardware> element for '{}' in your URDF."),
-          hardware.name));
+        throw std::runtime_error(
+          fmt::format(
+            FMT_COMPILE("Missing <plugin> tag of <hardware> element for '{}' in your URDF."),
+            hardware.name));
       }
       hardware.hardware_plugin_name =
         get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
@@ -1000,7 +1006,8 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
 
   if (!ros2_control_it)
   {
-    throw std::runtime_error(fmt::format(FMT_COMPILE("no '{}' tag found in the URDF"), kROS2ControlTag));
+    throw std::runtime_error(
+      fmt::format(FMT_COMPILE("no '{}' tag found in the URDF"), kROS2ControlTag));
   }
 
   std::vector<HardwareInfo> hardware_info;
