@@ -612,32 +612,54 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
-  // Run Spawner A with --unload-on-kill in background; timeout sends SIGINT after 5s for cleanup.
+  // Run Spawner A with --unload-on-kill in background; timeout sends SIGINT for cleanup.
   std::string spawner_a_cmd =
-    "timeout --signal=INT 5 "
-    "$(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "timeout --signal=INT 15 " +
+    std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
     "ctrl_1 -c test_controller_manager --unload-on-kill";
   auto spawner_a_future = std::async(
     std::launch::async, [&spawner_a_cmd]() { return std::system(spawner_a_cmd.c_str()); });
 
   // Wait until ctrl_1 is active, confirming Spawner A released the lock before the wait loop.
   auto wait_start = std::chrono::steady_clock::now();
-  while (cm_->get_loaded_controllers().empty())
+  auto is_ctrl_1_active = [this]() {
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      if (ctrl.info.name == "ctrl_1")
+      {
+        return ctrl.c->get_lifecycle_state().id() ==
+               lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+      }
+    }
+    return false;
+  };
+
+  while (!is_ctrl_1_active())
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_LT(std::chrono::steady_clock::now() - wait_start, std::chrono::seconds(10))
-      << "Timed out waiting for ctrl_1 to be loaded by Spawner A";
+      << "Timed out waiting for ctrl_1 to become active via Spawner A";
   }
+
+  EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
+    << "Spawner A exited before Spawner B started; lock-contention scenario was not exercised";
 
   // Spawner B must not be blocked by Spawner A's lock; bug would cause ~100s delay (20s x 5
   // retries).
   auto spawner_b_start = std::chrono::steady_clock::now();
-  EXPECT_EQ(call_spawner("ctrl_2 -c test_controller_manager"), 0)
+  std::string spawner_b_cmd =
+    "timeout --signal=INT 30 " +
+    std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "ctrl_2 -c test_controller_manager";
+  int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
+  EXPECT_EQ(spawner_b_exit_code, 0)
     << "Spawner B should not be blocked by Spawner A's --unload-on-kill lock";
   auto spawner_b_elapsed = std::chrono::steady_clock::now() - spawner_b_start;
 
   EXPECT_LT(std::chrono::duration_cast<std::chrono::seconds>(spawner_b_elapsed).count(), 30)
-    << "Spawner B took too long — likely blocked by Spawner A holding the lock";
+    << "Spawner B took too long and may have been blocked by Spawner A holding the lock";
 
   // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
   int spawner_a_exit_code = spawner_a_future.get();
