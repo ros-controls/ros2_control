@@ -148,13 +148,15 @@ template <typename T>
 bool shutdown_succeeds(const std::unique_ptr<T> & controller)
 {
   auto state = controller->get_node()->shutdown();
+  std::cout << "Controller state in shutdown_succeeds: " + std::to_string(state.id()) << std::endl;
 
   switch (state.id())
   {
     case State::PRIMARY_STATE_FINALIZED:
       return true;
+    case State::PRIMARY_STATE_UNCONFIGURED:
+      return false;
     default:
-      // if transition returns error or failure, it will anyways end up in the finalized state
       throw std::runtime_error(
         "Unexpected controller state in shutdown_succeeds: " + std::to_string(state.id()));
   }

@@ -73,6 +73,8 @@ public:
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /* previous_state */) override
   {
+    std::cout << "Controller shutdown_return in on_shutdown: " << static_cast<int>(shutdown_return)
+              << std::endl;
     return shutdown_return;
   }
 };
@@ -264,6 +266,13 @@ TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_returns_true_for_finalize
 {
   auto controller = make_controller();
   EXPECT_THAT(controller_interface::shutdown_succeeds(controller), ::testing::Eq(true));
+}
+
+TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_returns_false_for_unconfigured_state)
+{
+  auto controller = make_controller();
+  controller->shutdown_return = CallbackReturn::FAILURE;
+  EXPECT_THAT(controller_interface::shutdown_succeeds(controller), ::testing::Eq(false));
 }
 
 TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_throws_for_real_controller_on_error)
