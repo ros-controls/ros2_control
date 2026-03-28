@@ -360,8 +360,6 @@ private:
     const std::string & command_interface);
   void init_controller_manager();
 
-  void initialize_parameters();
-
   /**
    * Call cleanup to change the given controller lifecycle node to the unconfigured state.
    *
@@ -687,6 +685,8 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  bool activate_all_hw_components_ = false;
 
   struct ControllerManagerExecutionTime
   {

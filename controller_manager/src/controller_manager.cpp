@@ -532,6 +532,8 @@ ControllerManager::ControllerManager(
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : ControllerManager(executor, "", false, manager_node_name, node_namespace, options)
 {
+  init_controller_manager();
+  init_robot_description_callback();
 }
 
 ControllerManager::ControllerManager(
@@ -541,17 +543,18 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
+  robot_description_(urdf),
+  activate_all_hw_components_(activate_all_hw_components),
   loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  robot_description_(urdf)
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  initialize_parameters();
   init_controller_manager();
-  init_robot_description_callback();
+  init_resource_manager(urdf);
+  set_initial_hardware_components_state();
 }
 
 ControllerManager::ControllerManager(
@@ -572,7 +575,6 @@ ControllerManager::ControllerManager(
 {
   if (is_resource_manager_initialized())
   {
-    initialize_parameters();
     init_controller_manager();
     set_initial_hardware_components_state();
   }
@@ -626,6 +628,41 @@ bool ControllerManager::shutdown_controllers()
 
 void ControllerManager::init_controller_manager()
 {
+  // Initialize parameters
+  try
+  {
+    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
+
+    if (!this->has_parameter("overruns.print_warnings"))
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.description =
+        "If true, the controller manager will print a warning message to the console if an overrun "
+        "is detected in its real-time loop (read, update and write). By default, it is set to "
+        "true, except when used with use_sim_time parameter set to true.";
+      descriptor.read_only = false;
+      auto parameter = rclcpp::ParameterValue(!use_sim_time_);
+      this->declare_parameter("overruns.print_warnings", parameter, descriptor);
+    }
+    cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
+      this->get_node_parameters_interface(), this->get_logger());
+    params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
+    update_rate_ = static_cast<unsigned int>(params_->update_rate);
+    trigger_clock_ =
+      use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    RCLCPP_INFO(
+      get_logger(), "Using %s clock for triggering controller manager cycles.",
+      trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      this->get_logger(),
+      "Exception thrown while initializing controller manager parameters: %s \n", e.what());
+    throw e;
+  }
+
+  // Initialized activity publisher and diagnostics
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
       "~/activity", rclcpp::QoS(1).reliable().transient_local());
@@ -676,48 +713,8 @@ void ControllerManager::init_controller_manager()
       }));
 }
 
-void ControllerManager::initialize_parameters()
-{
-  // Initialize parameters
-  try
-  {
-    use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
-
-    if (!this->has_parameter("overruns.print_warnings"))
-    {
-      rcl_interfaces::msg::ParameterDescriptor descriptor;
-      descriptor.description =
-        "If true, the controller manager will print a warning message to the console if an overrun "
-        "is detected in its real-time loop (read, update and write). By default, it is set to "
-        "true, except when used with use_sim_time parameter set to true.";
-      descriptor.read_only = false;
-      auto parameter = rclcpp::ParameterValue(!use_sim_time_);
-      this->declare_parameter("overruns.print_warnings", parameter, descriptor);
-    }
-    cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
-      this->get_node_parameters_interface(), this->get_logger());
-    params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
-    update_rate_ = static_cast<unsigned int>(params_->update_rate);
-    trigger_clock_ =
-      use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
-    RCLCPP_INFO(
-      get_logger(), "Using %s clock for triggering controller manager cycles.",
-      trigger_clock_->get_clock_type() == RCL_STEADY_TIME ? "Steady (Monotonic)" : "ROS");
-  }
-  catch (const std::exception & e)
-  {
-    RCLCPP_ERROR(
-      this->get_logger(),
-      "Exception thrown while initializing controller manager parameters: %s \n", e.what());
-    throw e;
-  }
-}
-
 void ControllerManager::init_robot_description_callback()
 {
-  resource_manager_ =
-    std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
     "robot_description", rclcpp::QoS(1).transient_local(),
     std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
@@ -735,9 +732,6 @@ void ControllerManager::init_robot_description_callback()
           get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
       });
   }
-  std_msgs::msg::String msg;
-  msg.data = robot_description_;
-  robot_description_callback(msg);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -756,7 +750,6 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   }
 
   init_resource_manager(robot_description_);
-  set_initial_hardware_components_state();
   if (!is_resource_manager_initialized())
   {
     // The RM failed to init AFTER we received the description - a critical error.
@@ -764,15 +757,15 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
     // state
     resource_manager_ =
       std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+    return;
   }
-  else
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "Resource Manager has been successfully initialized. Starting Controller Manager "
-      "services...");
-    init_services();
-  }
+  set_initial_hardware_components_state();
+  RCLCPP_INFO(
+    get_logger(),
+    "Resource Manager has been successfully initialized. Starting Controller Manager "
+    "services...");
+
+  init_services();
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
@@ -781,7 +774,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.robot_description = robot_description;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
-  params.activate_all = activate_all_hw_components;
+  params.activate_all = activate_all_hw_components_;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
@@ -799,7 +792,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   RCLCPP_INFO_EXPRESSION(
     get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
   if (params_->enforce_command_limits)
-  params.handle_exceptions = params_->handle_exceptions;
+  {
+    params.handle_exceptions = params_->handle_exceptions;
+  }
   if (!resource_manager_->load_and_initialize_components(params))
   {
     try
