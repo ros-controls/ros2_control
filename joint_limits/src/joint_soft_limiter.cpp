@@ -13,8 +13,11 @@
 // limitations under the License.
 
 /// \author Adrià Roig Moreno
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include "joint_limits/joint_soft_limiter.hpp"
+#include <cmath>
 
 namespace joint_limits
 {
