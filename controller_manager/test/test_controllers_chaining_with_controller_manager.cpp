@@ -98,6 +98,15 @@ public:
       std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
+  {
+  }
 };
 
 class TestControllerChainingWithControllerManager
@@ -112,11 +121,11 @@ public:
     const std::string velocity_replacement = R"(velocity="10000.0")";
     const std::string diffbot_urdf_large_limits = std::regex_replace(
       ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
+
+    rclcpp::NodeOptions node_options = {};
     cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      executor_, diffbot_urdf_large_limits, true, TEST_CM_NAME, "", node_options);
+
     run_updater_ = false;
   }
 

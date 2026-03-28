@@ -759,7 +759,7 @@ public:
     }
   }
 
-  void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
+  bool import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
   {
     const auto are_joint_limits_enabled =
       [&](
@@ -830,6 +830,7 @@ public:
         joint_limiters_interface_[hw_info.name].insert({joint_name, std::move(limits_interface)});
       }
     }
+    return true;
   }
 
   template <typename T>
@@ -1473,19 +1474,6 @@ ResourceManager::ResourceManager(
     params.allow_controller_activation_with_inactive_hardware;
   return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params.return_failed_hardware_names_on_return_deactivate_write_cycle_;
-  if (load)
-  {
-    load_and_initialize_components(params);
-    if (params.activate_all)
-    {
-      for (auto const & hw_info : resource_storage_->hardware_info_map_)
-      {
-        using lifecycle_msgs::msg::State;
-        rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
-        set_component_state(hw_info.first, state);
-      }
-    }
-  }
 }
 
 bool ResourceManager::shutdown_components()
@@ -1508,8 +1496,6 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
-  components_are_loaded_and_initialized_ = true;
-
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   params_.robot_description = params.robot_description;
@@ -1529,6 +1515,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  components_are_loaded_and_initialized_ = true;
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
@@ -1604,8 +1591,10 @@ void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
   std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  resource_storage_->import_joint_limiters(hardware_info);
+  joint_limiters_are_imported_ = resource_storage_->import_joint_limiters(hardware_info);
 }
+
+bool ResourceManager::are_joint_limiters_imported() const { return joint_limiters_are_imported_; }
 
 bool ResourceManager::are_components_initialized() const
 {

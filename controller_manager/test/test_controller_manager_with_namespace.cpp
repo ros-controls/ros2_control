@@ -41,9 +41,11 @@ public:
     params.executor = executor_;
     params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
     params.node_namespace = TEST_NAMESPACE;
+    auto rm = std::make_unique<hardware_interface::ResourceManager>(params, true);
+    rm->load_and_initialize_components(params);
     cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(params, true), executor_, TEST_CM_NAME,
-      TEST_NAMESPACE);
+      std::move(rm), executor_, TEST_CM_NAME, TEST_NAMESPACE);
+
     run_updater_ = false;
   }
 };
