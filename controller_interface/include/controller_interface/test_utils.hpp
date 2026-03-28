@@ -139,7 +139,7 @@ bool cleanup_succeeds(const std::unique_ptr<T> & controller)
  * @brief Triggers the controller's shutdown transition and checks success
  *
  * @param controller The controller to test
- * @return true if the controller successfully transitions to the expected state, false if it fails
+ * @return true if the controller successfully transitions to the expected state
  * to
  *
  * @throws std::runtime_error if the controller transitions to an unexpected state
@@ -151,10 +151,13 @@ bool shutdown_succeeds(const std::unique_ptr<T> & controller)
 
   switch (state.id())
   {
+    // TODO(anyone): The observed behavior is not as described in
+    // https://design.ros2.org/articles/node_lifecycle.html if transition returns success or
+    // failure, it will anyways end up in the finalized state
     case State::PRIMARY_STATE_FINALIZED:
       return true;
     default:
-      // if transition returns error or failure, it will anyways end up in the finalized state
+      // if transition returns error, it will end up in the unconfigured state
       throw std::runtime_error(
         "Unexpected controller state in shutdown_succeeds: " + std::to_string(state.id()));
   }
