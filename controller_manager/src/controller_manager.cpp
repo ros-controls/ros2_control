@@ -760,9 +760,12 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   if (!is_resource_manager_initialized())
   {
     // The RM failed to init AFTER we received the description - a critical error.
-    // don't finalize controller manager, instead keep waiting for robot description - fallback state
-    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
-  } else
+    // don't finalize controller manager, instead keep waiting for robot description - fallback
+    // state
+    resource_manager_ =
+      std::make_unique<hardware_interface::ResourceManager>(trigger_clock_, get_logger());
+  }
+  else
   {
     RCLCPP_INFO(
       get_logger(),
@@ -778,11 +781,20 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.robot_description = robot_description;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
+  params.activate_all = activate_all_hw_components;
+  params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
-  params.update_rate = static_cast<unsigned int>(params_->update_rate);
+  params.allow_controller_activation_with_inactive_hardware =
+    params_->defaults.allow_controller_activation_with_inactive_hardware;
+  params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
+    params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
+  params.handle_exceptions = params_->handle_exceptions;
+  resource_manager_ =
+    std::make_unique<hardware_interface::ResourceManager>(params, !robot_description_.empty());
 
-  resource_manager_->set_on_component_state_switch_callback(std::bind(&ControllerManager::publish_activity, this));
+  resource_manager_->set_on_component_state_switch_callback(
+    std::bind(&ControllerManager::publish_activity, this));
 
   RCLCPP_INFO_EXPRESSION(
     get_logger(), params_->enforce_command_limits, "Enforcing command limits is enabled...");
@@ -828,9 +840,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
 void ControllerManager::set_initial_hardware_components_state()
 {
-  resource_manager_->set_on_component_state_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
-
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();
 
