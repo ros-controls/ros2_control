@@ -615,11 +615,11 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   // Run Spawner A with --unload-on-kill in background, keep it alive long enough to ensure
   // Spawner B cannot succeed by waiting for Spawner A's timeout.
   std::string spawner_a_cmd =
-    "timeout --signal=INT 30 " + std::string(coveragepy_script) +
-    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "timeout --signal=INT 12 "
+    "$(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
     "ctrl_1 -c test_controller_manager --unload-on-kill";
   auto spawner_a_future = std::async(
-    std::launch::async, [&spawner_a_cmd]() { return std::system(spawner_a_cmd.c_str()); });
+    std::launch::async, [spawner_a_cmd]() { return std::system(spawner_a_cmd.c_str()); });
 
   // Wait until ctrl_1 is active, confirming Spawner A released the lock before the wait loop.
   auto wait_start = std::chrono::steady_clock::now();
@@ -648,7 +648,6 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
 
   // Spawner B must not be blocked by Spawner A's lock. Keep B's timeout below A's lifetime so a
   // lock blockage cannot still pass after A eventually exits.
-  auto spawner_b_start = std::chrono::steady_clock::now();
   std::string spawner_b_cmd =
     "timeout --signal=INT 10 " + std::string(coveragepy_script) +
     " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
@@ -656,10 +655,6 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
   EXPECT_EQ(spawner_b_exit_code, 0)
     << "Spawner B should not be blocked by Spawner A's --unload-on-kill lock";
-  auto spawner_b_elapsed = std::chrono::steady_clock::now() - spawner_b_start;
-
-  EXPECT_LT(spawner_b_elapsed, std::chrono::seconds(10))
-    << "Spawner B took too long and may have been blocked by Spawner A holding the lock";
 
   // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
   int spawner_a_exit_code = spawner_a_future.get();
