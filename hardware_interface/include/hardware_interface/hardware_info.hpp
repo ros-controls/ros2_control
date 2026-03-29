@@ -350,7 +350,6 @@ struct HardwareAsyncParams
 {
   /// Thread priority for the async worker thread
   int thread_priority = 50;
-
   /// Scheduling policy for the async worker thread
   std::string scheduling_policy = "synchronized";
   /// CPU affinity cores for the async worker thread
