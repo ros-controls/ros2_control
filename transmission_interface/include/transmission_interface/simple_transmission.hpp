@@ -127,6 +127,20 @@ public:
   double get_actuator_reduction() const { return reduction_; }
   double get_joint_offset() const { return jnt_offset_; }
 
+  std::vector<std::string> get_supported_actuator_interfaces() const override
+  {
+    return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
+            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+  }
+
+  std::vector<std::string> get_supported_joint_interfaces() const override
+  {
+    return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+            hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
+            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+  }
+
 protected:
   double reduction_;
   double jnt_offset_;
