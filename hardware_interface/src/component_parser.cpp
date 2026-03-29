@@ -117,16 +117,8 @@ std::string get_attribute_value(
   attr = element_it->FindAttribute(attribute_name);
   if (!attr)
   {
-    const char * name = element_it->Attribute(kNameAttribute);
-    if (name && std::strlen(name) > 0)
-    {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE("no attribute '{}' in '{}' tag with name '{}'"), attribute_name, tag_name,
-          name));
-    }
     throw std::runtime_error(
-      fmt::format(FMT_COMPILE("no attribute '{}' in '{}' tag"), attribute_name, tag_name));
+      fmt::format(FMT_COMPILE("no attribute {} in {} tag"), attribute_name, tag_name));
   }
   return ros2_control::strip(element_it->Attribute(attribute_name));
 }
@@ -345,7 +337,7 @@ int parse_thread_priority_attribute(const tinyxml2::XMLElement * elem)
  * \throws std::runtime_error if a component attribute or tag is not found
  */
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
-  const tinyxml2::XMLElement * params_it, const std::string & context_name)
+  const tinyxml2::XMLElement * params_it)
 {
   std::unordered_map<std::string, std::string> parameters;
   const tinyxml2::XMLAttribute * attr;
@@ -356,10 +348,7 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
     attr = params_it->FindAttribute(kNameAttribute);
     if (!attr)
     {
-      throw std::runtime_error(
-        fmt::format(
-          FMT_COMPILE("no parameter name attribute set in param tag{}"),
-          context_name.empty() ? "" : " for '" + context_name + "'"));
+      throw std::runtime_error("no parameter name attribute set in param tag");
     }
     const std::string parameter_name = ros2_control::strip(params_it->Attribute(kNameAttribute));
     const std::string parameter_value =
@@ -379,7 +368,7 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
 hardware_interface::InterfaceInfo parse_interfaces_from_xml(
-  const tinyxml2::XMLElement * interfaces_it, const std::string & context_name)
+  const tinyxml2::XMLElement * interfaces_it)
 {
   hardware_interface::InterfaceInfo interface;
 
@@ -389,7 +378,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
 
   // Optional min/max attributes
   std::unordered_map<std::string, std::string> interface_params =
-    parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag), context_name);
+    parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
   auto interface_param = interface_params.find(kMinTag);
   if (interface_param != interface_params.end())
   {
@@ -425,7 +414,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   const auto * params_it = interfaces_it->FirstChildElement(kParamTag);
   if (params_it)
   {
-    interface.parameters = parse_parameters_from_xml(params_it, context_name);
+    interface.parameters = parse_parameters_from_xml(params_it);
   }
 
   interface.data_type = parse_data_type_attribute(interfaces_it);
@@ -477,7 +466,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it)
   {
-    InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it, component.name);
+    InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it);
     cmd_info.enable_limits &= component.enable_limits;
     component.command_interfaces.push_back(cmd_info);
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
@@ -487,7 +476,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
-    InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it, component.name);
+    InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it);
     state_info.enable_limits &= component.enable_limits;
     component.state_interfaces.push_back(state_info);
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
@@ -497,7 +486,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * params_it = component_it->FirstChildElement(kParamTag);
   if (params_it)
   {
-    component.parameters = parse_parameters_from_xml(params_it, component.name);
+    component.parameters = parse_parameters_from_xml(params_it);
   }
 
   return component;
@@ -524,8 +513,7 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it)
   {
-    component.command_interfaces.push_back(
-      parse_interfaces_from_xml(command_interfaces_it, component.name));
+    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -533,8 +521,7 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
-    component.state_interfaces.push_back(
-      parse_interfaces_from_xml(state_interfaces_it, component.name));
+    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -542,7 +529,7 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   const auto * params_it = component_it->FirstChildElement(kParamTag);
   if (params_it)
   {
-    component.parameters = parse_parameters_from_xml(params_it, component.name);
+    component.parameters = parse_parameters_from_xml(params_it);
   }
 
   return component;
@@ -587,10 +574,7 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
   if (!type_it)
   {
-    throw std::runtime_error(
-      fmt::format(
-        FMT_COMPILE("Missing <plugin> tag of <transmission> element for '{}' in your URDF."),
-        transmission.name));
+    throw std::runtime_error("Missing <plugin> tag of <transmission> element in your URDF.");
   }
   transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
@@ -614,7 +598,7 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   const auto * params_it = transmission_it->FirstChildElement(kParamTag);
   if (params_it)
   {
-    transmission.parameters = parse_parameters_from_xml(params_it, transmission.name);
+    transmission.parameters = parse_parameters_from_xml(params_it);
   }
 
   return transmission;
@@ -694,9 +678,22 @@ HardwareInfo parse_resource_from_xml(
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
   hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
-  hardware.thread_priority = hardware.is_async ? parse_thread_priority_attribute(ros2_control_it)
-                                               : std::numeric_limits<int>::max();
-  hardware.async_params.thread_priority = hardware.thread_priority;
+  hardware.async_params.thread_priority = 50;
+  
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -708,10 +705,7 @@ HardwareInfo parse_resource_from_xml(
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
       if (!type_it)
       {
-        throw std::runtime_error(
-          fmt::format(
-            FMT_COMPILE("Missing <plugin> tag of <hardware> element for '{}' in your URDF."),
-            hardware.name));
+        throw std::runtime_error("Missing <plugin> tag of <hardware> element in your URDF.");
       }
       hardware.hardware_plugin_name =
         get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
@@ -723,7 +717,7 @@ HardwareInfo parse_resource_from_xml(
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {
-        hardware.hardware_parameters = parse_parameters_from_xml(params_it, hardware.name);
+        hardware.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     }
     else if (std::string(kPropertiesTag) == ros2_control_child_it->Name())
@@ -747,7 +741,21 @@ HardwareInfo parse_resource_from_xml(
           if (async_it->FindAttribute(kThreadPriorityAttribute))
           {
             hardware.async_params.thread_priority = parse_thread_priority_attribute(async_it);
-            hardware.thread_priority = hardware.async_params.thread_priority;
+            // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
           }
           if (async_it->FindAttribute(kPrintWarningsAttribute))
           {
@@ -1006,8 +1014,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
 
   if (!ros2_control_it)
   {
-    throw std::runtime_error(
-      fmt::format(FMT_COMPILE("no '{}' tag found in the URDF"), kROS2ControlTag));
+    throw std::runtime_error(fmt::format(FMT_COMPILE("no {} tag"), kROS2ControlTag));
   }
 
   std::vector<HardwareInfo> hardware_info;

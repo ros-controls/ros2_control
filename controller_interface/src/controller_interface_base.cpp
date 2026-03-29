@@ -99,7 +99,7 @@ return_type ControllerInterfaceBase::init(
     // no rclcpp::ParameterValue unsigned int specialization
     auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
-    auto_declare<int>("thread_priority", -100);
+
   }
   catch (const std::exception & e)
   {
@@ -246,17 +246,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   {
     realtime_tools::AsyncFunctionHandlerParams async_params;
     async_params.thread_priority = 50;  // default value
-    const int thread_priority_param =
-      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
-    if (thread_priority_param >= 0 && thread_priority_param <= 99)
-    {
-      async_params.thread_priority = thread_priority_param;
-      RCLCPP_WARN(
-        get_node()->get_logger(),
-        "The parsed 'thread_priority' parameter will be deprecated and not be functional from "
-        "ROS 2 Lyrical Luth release. Please use the 'async_parameters.thread_priority' parameter "
-        "instead.");
-    }
+    
     async_params.initialize(impl_->node_, "async_parameters.");
     if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::DETACHED)
     {

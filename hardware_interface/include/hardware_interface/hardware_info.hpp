@@ -350,6 +350,7 @@ struct HardwareAsyncParams
 {
   /// Thread priority for the async worker thread
   int thread_priority = 50;
+
   /// Scheduling policy for the async worker thread
   std::string scheduling_policy = "synchronized";
   /// CPU affinity cores for the async worker thread
@@ -371,8 +372,7 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
-  /// [[deprecated("Use async_params instead.")]] Async thread priority
-  int thread_priority;
+  
   /// Async Parameters
   HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
