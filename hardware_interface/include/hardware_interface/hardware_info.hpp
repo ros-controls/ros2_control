@@ -350,6 +350,7 @@ struct HardwareAsyncParams
 {
   /// Thread priority for the async worker thread
   int thread_priority = 50;
+
   /// Scheduling policy for the async worker thread
   std::string scheduling_policy = "synchronized";
   /// CPU affinity cores for the async worker thread
@@ -359,13 +360,6 @@ struct HardwareAsyncParams
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
 struct HardwareInfo
 {
   /// Name of the hardware.
@@ -378,8 +372,7 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
-  /// Async thread priority
-  [[deprecated("Use async_params instead.")]] int thread_priority;
+
   /// Async Parameters
   HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
@@ -426,11 +419,6 @@ struct HardwareInfo
    */
   std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
