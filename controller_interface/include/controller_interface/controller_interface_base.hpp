@@ -30,6 +30,7 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
+#include "pal_statistics/pal_statistics_utils.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
