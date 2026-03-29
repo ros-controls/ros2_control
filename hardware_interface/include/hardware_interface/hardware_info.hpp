@@ -372,7 +372,7 @@ struct HardwareInfo
   unsigned int rw_rate;
   /// Component is async
   bool is_async;
-  
+
   /// Async Parameters
   HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.

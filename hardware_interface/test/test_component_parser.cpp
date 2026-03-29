@@ -1527,8 +1527,6 @@ TEST_F(TestComponentParser, successfully_parse_parameter_empty)
   }
 }
 
-
-
 TEST_F(TestComponentParser, negative_size_throws_error)
 {
   std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +

@@ -679,7 +679,7 @@ HardwareInfo parse_resource_from_xml(
   hardware.rw_rate = parse_rw_rate_attribute(ros2_control_it);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
   hardware.async_params.thread_priority = 50;
-  
+
   // TODO(anyone): remove this line once thread_priority is removed
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -749,7 +749,6 @@ HardwareInfo parse_resource_from_xml(
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-
 
 #ifdef _MSC_VER
 #pragma warning(pop)
