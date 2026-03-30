@@ -612,8 +612,33 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
+  auto get_active_controller_names = [this]()
+  {
+    std::vector<std::string> active_controller_names;
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      if (
+        ctrl.c->get_lifecycle_state().id() ==
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        active_controller_names.push_back(ctrl.info.name);
+      }
+    }
+    return active_controller_names;
+  };
+
+  auto get_loaded_controller_names = [this]()
+  {
+    std::vector<std::string> loaded_controller_names;
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      loaded_controller_names.push_back(ctrl.info.name);
+    }
+    return loaded_controller_names;
+  };
+
   // Run Spawner A with --unload-on-kill in background, keep it alive long enough to ensure
-  // Spawner B cannot succeed by waiting for Spawner A's timeout.
+  // Spawner B should succeed, in spite of the waiting for Spawner A's timeout.
   std::string spawner_a_cmd =
     "timeout --signal=INT 12 "
     "$(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
@@ -655,11 +680,20 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
   EXPECT_EQ(spawner_b_exit_code, 0)
     << "Spawner B should not be blocked by Spawner A's --unload-on-kill lock";
+  ASSERT_THAT(
+    get_active_controller_names(), testing::UnorderedElementsAre("ctrl_1", "ctrl_2"));
+
+  EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
+    << "Spawner A exited already; lock-contention scenario might not be exercised";
 
   // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
   int spawner_a_exit_code = spawner_a_future.get();
   EXPECT_NE(spawner_a_exit_code, 0)
     << "Spawner A (wrapped by timeout) unexpectedly exited with success status";
+
+  // After Spawner A times out, ctrl_1 should be unloaded, leaving only ctrl_2 active.
+  ASSERT_THAT(get_loaded_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
+  ASSERT_THAT(get_active_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
 }
 
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
