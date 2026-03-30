@@ -88,9 +88,9 @@ public:
         get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY);
       acceleration_state_interfaces_[i] = std::make_shared<hardware_interface::StateInterface>(
         get_hardware_info().joints[i].name, hardware_interface::HW_IF_ACCELERATION);
-      position_state_interfaces_[i]->set_value(0.0);
-      velocity_state_interfaces_[i]->set_value(0.0);
-      acceleration_state_interfaces_[i]->set_value(0.0);
+      std::ignore = position_state_interfaces_[i]->set_value(0.0);
+      std::ignore = velocity_state_interfaces_[i]->set_value(0.0);
+      std::ignore = acceleration_state_interfaces_[i]->set_value(0.0);
       state_interfaces.push_back(position_state_interfaces_[i]);
       state_interfaces.push_back(velocity_state_interfaces_[i]);
       state_interfaces.push_back(acceleration_state_interfaces_[i]);
@@ -109,8 +109,8 @@ public:
         get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION);
       velocity_command_interfaces_[i] = std::make_shared<hardware_interface::CommandInterface>(
         get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY);
-      position_command_interfaces_[i]->set_value(0.0);
-      velocity_command_interfaces_[i]->set_value(0.0);
+      std::ignore = position_command_interfaces_[i]->set_value(0.0);
+      std::ignore = velocity_command_interfaces_[i]->set_value(0.0);
       command_interfaces.push_back(position_command_interfaces_[i]);
       command_interfaces.push_back(velocity_command_interfaces_[i]);
     }
