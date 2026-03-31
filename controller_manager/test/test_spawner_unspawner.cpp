@@ -617,9 +617,7 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
     std::vector<std::string> active_controller_names;
     for (const auto & ctrl : cm_->get_loaded_controllers())
     {
-      if (
-        ctrl.c->get_lifecycle_state().id() ==
-        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      if (ctrl.c->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         active_controller_names.push_back(ctrl.info.name);
       }
@@ -680,8 +678,7 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
   EXPECT_EQ(spawner_b_exit_code, 0)
     << "Spawner B should not be blocked by Spawner A's --unload-on-kill lock";
-  ASSERT_THAT(
-    get_active_controller_names(), testing::UnorderedElementsAre("ctrl_1", "ctrl_2"));
+  ASSERT_THAT(get_active_controller_names(), testing::UnorderedElementsAre("ctrl_1", "ctrl_2"));
 
   EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
     << "Spawner A exited already; lock-contention scenario might not be exercised";
