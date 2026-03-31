@@ -134,6 +134,7 @@ protected:
    * in chained mode.
    *
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   * \note This method is realtime-safe.
    */
   virtual return_type update_reference_from_subscribers(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
@@ -148,6 +149,7 @@ protected:
    *
    * \returns return_type::OK if calculation and writing of interface is successfully, otherwise
    * return_type::ERROR.
+   * \note This method is realtime-safe.
    */
   virtual return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
