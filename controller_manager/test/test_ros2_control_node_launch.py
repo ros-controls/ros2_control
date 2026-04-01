@@ -69,8 +69,8 @@ def generate_test_description():
         "urdf",
         "test_hardware_components.urdf",
     )
-    with open(urdf) as infp:
-        robot_description_content = infp.read()
+    with open(urdf) as info:
+        robot_description_content = info.read()
     robot_description = {"robot_description": robot_description_content}
 
     robot_state_pub_node = launch_ros.actions.Node(
