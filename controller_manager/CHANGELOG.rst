@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.5.0 (2026-04-02)
+------------------
 * Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
 * Activate hardware components by group sequentially (`#2984 <https://github.com/ros-controls/ros2_control/issues/2984>`_)
   * Add first logic to activate components by group

@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.5.0 (2026-04-02)
+------------------
 * Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
 * hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_)
 * fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_)
