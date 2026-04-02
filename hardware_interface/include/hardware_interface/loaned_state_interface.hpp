@@ -136,8 +136,8 @@ public:
 
 protected:
   const StateInterface & state_interface_;
-  Deleter deleter_;
   std::string interface_name_;
+  Deleter deleter_;
 
 private:
   struct HandleRTStatistics
