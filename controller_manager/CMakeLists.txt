@@ -270,9 +270,12 @@ if(BUILD_TESTING)
   )
 
   find_package(ament_cmake_pytest REQUIRED)
-  install(FILES test/test_ros2_control_node.yaml
+  install(FILES
+    test/test_ros2_control_node.yaml
+    test/test_ros2_controlcli.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
+  ament_add_pytest_test(test_ros2_controlcli_verbs test/test_ros2_controlcli_verbs.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
 endif()
 
