@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 6.4.0 (2026-02-03)
 ------------------
 
