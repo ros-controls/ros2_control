@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.44.0 (2026-04-02)
+-------------------
 * Add pal_statistics as explicit dependency (`#3163 <https://github.com/ros-controls/ros2_control/issues/3163>`_) (`#3167 <https://github.com/ros-controls/ros2_control/issues/3167>`_)
 * Add new API for chainable controller interface exporting (backport `#2988 <https://github.com/ros-controls/ros2_control/issues/2988>`_) (`#3050 <https://github.com/ros-controls/ros2_control/issues/3050>`_)
 * Contributors: mergify[bot]

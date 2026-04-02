@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.44.0 (2026-04-02)
+-------------------
 * Export information of supported interfaces from transmissions (`#3049 <https://github.com/ros-controls/ros2_control/issues/3049>`_) (`#3155 <https://github.com/ros-controls/ros2_control/issues/3155>`_)
 * Contributors: mergify[bot]
 

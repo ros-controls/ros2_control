@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.44.0 (2026-04-02)
+-------------------
 * Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_) (`#3117 <https://github.com/ros-controls/ros2_control/issues/3117>`_)
 * Consistently add <cmath> include with define for windows (backport `#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_) (`#3066 <https://github.com/ros-controls/ros2_control/issues/3066>`_)
 * Bump version of pre-commit hooks (`#3055 <https://github.com/ros-controls/ros2_control/issues/3055>`_) (`#3057 <https://github.com/ros-controls/ros2_control/issues/3057>`_)

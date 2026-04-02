@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.44.0 (2026-04-02)
+-------------------
 * fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_) (`#3161 <https://github.com/ros-controls/ros2_control/issues/3161>`_)
 * Consistently add <cmath> include with define for windows (backport `#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_) (`#3066 <https://github.com/ros-controls/ros2_control/issues/3066>`_)
 * Cache interface name to avoid failing at the destruction time (backport `#3043 <https://github.com/ros-controls/ros2_control/issues/3043>`_) (`#3047 <https://github.com/ros-controls/ros2_control/issues/3047>`_)
