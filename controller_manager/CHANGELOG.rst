@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.13.0 (2026-04-02)
+-------------------
 * Activate hardware components by group sequentially (`#2984 <https://github.com/ros-controls/ros2_control/issues/2984>`_) (`#3170 <https://github.com/ros-controls/ros2_control/issues/3170>`_)
 * [Spawner] Allow parsing the parameter files parsed from spawner to controllers (`#3136 <https://github.com/ros-controls/ros2_control/issues/3136>`_) (`#3152 <https://github.com/ros-controls/ros2_control/issues/3152>`_)
 * [Spawner] Allow arguments per controller instead of global args (`#2895 <https://github.com/ros-controls/ros2_control/issues/2895>`_) (`#3053 <https://github.com/ros-controls/ros2_control/issues/3053>`_)

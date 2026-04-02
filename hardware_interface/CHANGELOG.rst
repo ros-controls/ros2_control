@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.13.0 (2026-04-02)
+-------------------
 * hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_) (`#3177 <https://github.com/ros-controls/ros2_control/issues/3177>`_)
 * fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_) (`#3162 <https://github.com/ros-controls/ros2_control/issues/3162>`_)
 * Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_) (`#3118 <https://github.com/ros-controls/ros2_control/issues/3118>`_)

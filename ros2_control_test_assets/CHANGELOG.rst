@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.13.0 (2026-04-02)
+-------------------
 * Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_) (`#3118 <https://github.com/ros-controls/ros2_control/issues/3118>`_)
 * Contributors: mergify[bot]
 
