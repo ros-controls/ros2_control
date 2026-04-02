@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_) (`#3065 <https://github.com/ros-controls/ros2_control/issues/3065>`_)
+* Contributors: mergify[bot]
+
 2.53.1 (2026-02-03)
 -------------------
 * Fixed issue with mock_components being linked even when not needed (`#2925 <https://github.com/ros-controls/ros2_control/issues/2925>`_)
