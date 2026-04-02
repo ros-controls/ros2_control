@@ -597,3 +597,339 @@ The color output automatically adapts to the environment:
 * ``RCUTILS_COLORIZED_OUTPUT=1`` -> forces color output
 * Unset -> automatically detects TTY and enables color only in interactive
   terminals
+
+Utility scripts
+---------------
+
+In addition to the ``spawner``, ``unspawner``, and ``hardware_spawner`` helper scripts, the controller_manager package provides utility modules for programmatic interaction with the controller manager.
+
+controller_manager_services
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``controller_manager_services`` module provides utility classes for interacting with controller manager services programmatically.
+
+**SingletonServiceCaller**
+
+A utility class that manages ROS 2 service clients for controller manager operations, ensuring only one client per service (singleton pattern).
+
+**Python Usage Example:**
+
+.. code-block:: python
+
+    import rclpy
+    from rclpy.node import Node
+    from controller_manager.controller_manager_services import SingletonServiceCaller
+    from controller_manager_msgs.srv import LoadController
+
+    def load_my_controller():
+        rclpy.init()
+        node = Node('my_loader')
+        try:
+            # Create or retrieve a service client
+            client = SingletonServiceCaller(
+                node,
+                LoadController,
+                '/controller_manager/load_controller'
+            )
+            # Use the client to call the service
+            request = LoadController.Request()
+            request.name = 'joint_trajectory_controller'
+            # Call service
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(node, future)
+            response = future.result()
+            if response.success:
+                print("✓ Controller loaded successfully")
+            else:
+                print("✗ Failed to load controller")
+                print(f"  Reason: {response.reason}")
+        finally:
+            node.destroy_node()
+            rclpy.shutdown()
+
+    if __name__ == '__main__':
+        load_my_controller()
+
+**Terminal Output:**
+
+.. code-block:: console
+
+    $ python3 load_controller_script.py
+    ✓ Controller loaded successfully
+
+**Supported Services:**
+
+The ``SingletonServiceCaller`` can be used with these controller manager services:
+
+- ``LoadController`` - Load a controller
+- ``UnloadController`` - Unload a controller
+- ``ConfigureController`` - Configure a loaded controller
+- ``CleanupController`` - Clean up a controller
+- ``SwitchController`` - Switch between active controllers
+- ``ListControllers`` - List all controllers and their states
+- ``ListControllerTypes`` - List available controller types
+- ``ListHardwareInterfaces`` - List available hardware interfaces
+- ``ListHardwareComponents`` - List hardware components
+- ``SetHardwareComponentState`` - Set state of hardware components
+- ``ReloadControllerLibraries`` - Reload controller libraries
+
+**Complete Controller Lifecycle Management Example:**
+
+.. code-block:: python
+
+    import rclpy
+    from rclpy.node import Node
+    from controller_manager.controller_manager_services import SingletonServiceCaller
+    from controller_manager_msgs.srv import (
+        LoadController,
+        ConfigureController,
+        SwitchController,
+        UnloadController,
+    )
+
+    class ControllerManager:
+        def __init__(self):
+            rclpy.init()
+            self.node = Node('controller_ops')
+        def load_controller(self, controller_name):
+            """Load a controller."""
+            client = SingletonServiceCaller(
+                self.node,
+                LoadController,
+                '/controller_manager/load_controller'
+            )
+            request = LoadController.Request()
+            request.name = controller_name
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(self.node, future)
+            response = future.result()
+            return response.success
+        def configure_controller(self, controller_name):
+            """Configure a loaded controller."""
+            client = SingletonServiceCaller(
+                self.node,
+                ConfigureController,
+                '/controller_manager/configure_controller'
+            )
+            request = ConfigureController.Request()
+            request.name = controller_name
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(self.node, future)
+            response = future.result()
+            return response.success
+        def activate_controller(self, controller_name):
+            """Activate a configured controller."""
+            client = SingletonServiceCaller(
+                self.node,
+                SwitchController,
+                '/controller_manager/switch_controller'
+            )
+            request = SwitchController.Request()
+            request.deactivate_controllers = []
+            request.activate_controllers = [controller_name]
+            request.strictness = SwitchController.Request.STRICT
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(self.node, future)
+            response = future.result()
+            return response.ok
+        def cleanup(self):
+            self.node.destroy_node()
+            rclpy.shutdown()
+
+    if __name__ == '__main__':
+        manager = ControllerManager()
+        try:
+            print("Loading controller...")
+            if manager.load_controller('my_controller'):
+                print("✓ Controller loaded")
+                print("Configuring controller...")
+                if manager.configure_controller('my_controller'):
+                    print("✓ Controller configured")
+                    print("Activating controller...")
+                    if manager.activate_controller('my_controller'):
+                        print("✓ Controller activated")
+        finally:
+            manager.cleanup()
+
+**Terminal Output:**
+
+.. code-block:: console
+
+    $ python3 controller_ops.py
+    Loading controller...
+    ✓ Controller loaded
+    Configuring controller...
+    ✓ Controller configured
+    Activating controller...
+    ✓ Controller activated
+
+**Use Cases:**
+
+- Building custom robot control tools and applications
+- Implementing complex controller coordination logic
+- Creating monitoring or diagnostic utilities
+- Programmatic controller lifecycle management
+- Integration with custom middleware or frameworks
+
+
+launch_utils
+^^^^^^^^^^^^
+
+The ``launch_utils`` module provides helper functions to generate launch descriptions for loading controllers. These functions simplify launch file creation by reducing boilerplate code.
+
+**generate_controllers_spawner_launch_description()**
+
+Generates a launch description that automatically loads and activates controllers using the spawner utility.
+
+**Function Signature:**
+
+.. code-block:: python
+
+    def generate_controllers_spawner_launch_description(
+        controller_names: list,
+        controller_params_files=None,
+        extra_spawner_args=[]
+    ) -> LaunchDescription
+
+**Python Usage Example:**
+
+.. code-block:: python
+
+    from controller_manager.launch_utils import generate_controllers_spawner_launch_description
+    from launch import LaunchDescription
+    import os
+    from ament_index_python.packages import get_package_share_directory
+
+    def generate_launch_description():
+        config_dir = os.path.join(
+            get_package_share_directory('my_robot_bringup'),
+            'config'
+        )
+        # Example 1: Load with controller parameters already in controller_manager
+        spawner = generate_controllers_spawner_launch_description(
+            ['joint_state_broadcaster']
+        )
+        # Example 2: Load with parameter file and extra arguments
+        spawner = generate_controllers_spawner_launch_description(
+            ['joint_trajectory_controller'],
+            controller_params_files=[os.path.join(config_dir, 'controllers.yaml')],
+            extra_spawner_args=['--load-only']
+        )
+        return LaunchDescription([spawner])
+
+**Parameters:**
+
+- ``controller_names`` (list[str]): Names of controllers to load. Example: ``['joint_state_broadcaster', 'joint_trajectory_controller']``
+- ``controller_params_files`` (list[str], optional): Paths to YAML parameter files for controllers. Defaults to ``None``
+- ``extra_spawner_args`` (list[str], optional): Additional arguments to pass to spawner (e.g., ``['--load-only', '--inactive']``). Defaults to ``[]``
+
+**Return Value:**
+
+Returns a ``LaunchDescription`` containing:
+
+- Launch argument for ``controller_manager_name`` (default: "controller_manager") - allows overriding the controller manager node name
+- Launch argument for ``unload_on_kill`` (default: "false") - waits for interrupt signal to unload controllers
+- Spawner node that loads and activates the specified controllers
+
+**Complete Launch File Example:**
+
+.. code-block:: python
+
+    from launch import LaunchDescription
+    from launch_ros.actions import Node
+    from controller_manager.launch_utils import generate_controllers_spawner_launch_description
+    import os
+    from ament_index_python.packages import get_package_share_directory
+
+    def generate_launch_description():
+        # Get configuration paths
+        config_dir = os.path.join(
+            get_package_share_directory('my_robot_bringup'),
+            'config'
+        )
+        # Create controller manager node
+        control_node = Node(
+            package='controller_manager',
+            executable='ros2_control_node',
+            parameters=[os.path.join(config_dir, 'ros2_controllers.yaml')],
+            output='both',
+        )
+        # Create spawner for multiple controllers
+        controllers_spawner = generate_controllers_spawner_launch_description(
+            ['joint_state_broadcaster', 'joint_trajectory_controller'],
+            controller_params_files=[os.path.join(config_dir, 'controllers.yaml')],
+        )
+        return LaunchDescription([
+            control_node,
+            controllers_spawner,
+        ])
+
+**Launching:**
+
+.. code-block:: console
+
+    $ ros2 launch my_robot_bringup my_robot.launch.py
+    [controller_manager-1] [INFO] [ros2_control_node]: Loaded controller 'joint_state_broadcaster'
+    [spawner-1] [INFO] [spawner]: Configured and activated 'joint_state_broadcaster'
+    [spawner-1] [INFO] [spawner]: Configured and activated 'joint_trajectory_controller'
+
+**generate_controllers_spawner_launch_description_from_dict()**
+
+Provides an alternative way to specify controllers using a dictionary format, allowing different parameter files per controller.
+
+**Function Signature:**
+
+.. code-block:: python
+
+    def generate_controllers_spawner_launch_description_from_dict(
+        controller_info_dict: dict,
+        extra_spawner_args=[]
+    ) -> LaunchDescription
+
+**Parameters:**
+
+- ``controller_info_dict`` (dict): Dictionary with controller names as keys and configuration dictionaries as values
+    - Each value should contain ``controller_params_file`` (str or list[str], optional): Path(s) to parameter file(s)
+- ``extra_spawner_args`` (list[str], optional): Additional arguments to pass to spawner. Defaults to ``[]``
+
+**Python Usage Example:**
+
+.. code-block:: python
+
+    from controller_manager.launch_utils import generate_controllers_spawner_launch_description_from_dict
+    from launch import LaunchDescription
+    import os
+    from ament_index_python.packages import get_package_share_directory
+
+    def generate_launch_description():
+        config_dir = os.path.join(
+            get_package_share_directory('my_robot_bringup'),
+            'config'
+        )
+        # Define controllers with per-controller configurations
+        controller_info_dict = {
+            'joint_state_broadcaster': {
+                'controller_params_file': os.path.join(config_dir, 'common_params.yaml')
+            },
+            'position_trajectory_controller': {
+                'controller_params_file': [
+                    os.path.join(config_dir, 'common_params.yaml'),
+                    os.path.join(config_dir, 'position_controller.yaml'),
+                ]
+            },
+            'velocity_trajectory_controller': {
+                'controller_params_file': os.path.join(config_dir, 'velocity_controller.yaml')
+            },
+        }
+        spawner = generate_controllers_spawner_launch_description_from_dict(
+            controller_info_dict,
+            extra_spawner_args=['--load-only']
+        )
+        return LaunchDescription([spawner])
+
+**Use Cases:**
+
+- Define different parameter files for different controllers
+- Apply common parameter files across multiple controllers
+- Override controller parameters with multiple YAML files
+- Simplify complex launch file configurations
