@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.54.0 (2026-04-02)
+-------------------
 * Bump version of pre-commit hooks (`#3181 <https://github.com/ros-controls/ros2_control/issues/3181>`_) (`#3182 <https://github.com/ros-controls/ros2_control/issues/3182>`_)
 * [Spawner] Fix exception of time.sleep in spawner (`#3124 <https://github.com/ros-controls/ros2_control/issues/3124>`_) (`#3128 <https://github.com/ros-controls/ros2_control/issues/3128>`_)
 * [Spawner] Block further SIGINTs with unload_on_kill option (`#3075 <https://github.com/ros-controls/ros2_control/issues/3075>`_) (`#3127 <https://github.com/ros-controls/ros2_control/issues/3127>`_)

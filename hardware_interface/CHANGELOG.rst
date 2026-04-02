@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.54.0 (2026-04-02)
+-------------------
 * Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_) (`#3065 <https://github.com/ros-controls/ros2_control/issues/3065>`_)
 * Contributors: mergify[bot]
 
