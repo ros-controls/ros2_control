@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_) (`#3177 <https://github.com/ros-controls/ros2_control/issues/3177>`_)
+* fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_) (`#3162 <https://github.com/ros-controls/ros2_control/issues/3162>`_)
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_) (`#3118 <https://github.com/ros-controls/ros2_control/issues/3118>`_)
+* Consistently add <cmath> include with define for windows (backport `#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_) (`#3067 <https://github.com/ros-controls/ros2_control/issues/3067>`_)
+* Cache interface name to avoid failing at the destruction time (`#3043 <https://github.com/ros-controls/ros2_control/issues/3043>`_) (`#3046 <https://github.com/ros-controls/ros2_control/issues/3046>`_)
+* Contributors: mergify[bot]
+
 5.12.0 (2026-02-03)
 -------------------
 * Fix the node name overlapping in the Hardware Components (`#3006 <https://github.com/ros-controls/ros2_control/issues/3006>`_) (`#3015 <https://github.com/ros-controls/ros2_control/issues/3015>`_)

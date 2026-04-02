@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [rqt_controller_manager] show update_rate and is_async in details window (`#3154 <https://github.com/ros-controls/ros2_control/issues/3154>`_) (`#3159 <https://github.com/ros-controls/ros2_control/issues/3159>`_)
+* Contributors: mergify[bot]
+
 5.12.0 (2026-02-03)
 -------------------
 
