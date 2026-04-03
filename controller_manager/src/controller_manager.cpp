@@ -585,6 +585,7 @@ ControllerManager::ControllerManager(
   {
     init_controller_manager();
     set_initial_hardware_components_state();
+    init_services();
   }
   else
   {
