@@ -532,7 +532,6 @@ ControllerManager::ControllerManager(
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : ControllerManager(executor, "", false, manager_node_name, node_namespace, options)
 {
-  init_controller_manager();
   init_robot_description_callback();
 }
 
@@ -554,7 +553,16 @@ ControllerManager::ControllerManager(
 {
   init_controller_manager();
   init_resource_manager(urdf);
-  set_initial_hardware_components_state();
+  if (is_resource_manager_initialized())
+  {
+    set_initial_hardware_components_state();
+    init_services();
+  }
+  else
+  {
+    // URDF was invalid or empty — fall back to waiting for a valid description via topic.
+    init_robot_description_callback();
+  }
 }
 
 ControllerManager::ControllerManager(
@@ -795,17 +803,15 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     params.handle_exceptions = params_->handle_exceptions;
   }
-  if (!resource_manager_->load_and_initialize_components(params))
+
+  try
   {
-    try
-    {
-      resource_manager_->import_joint_limiters(robot_description);
-    }
-    catch (const std::exception & e)
-    {
-      RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
-      return;
-    }
+    resource_manager_->import_joint_limiters(robot_description);
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(get_logger(), "Error importing joint limiters: %s", e.what());
+    return;
   }
 
   try
