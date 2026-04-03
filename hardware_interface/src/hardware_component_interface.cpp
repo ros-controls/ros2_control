@@ -91,17 +91,21 @@ CallbackReturn HardwareComponentInterface::init(
     const bool is_sensor_type = (info_.type == "sensor");
 
     // TODO: (nb) do we parametrize this?
-    auto sync_barrier_timeout_hz = std::chrono::duration<double>(0.9 * async_thread_params.exec_rate);
-    std::chrono::nanoseconds sync_barrier_timeout_ns = 
-        std::chrono::duration_cast<std::chrono::nanoseconds>(sync_barrier_timeout_hz);
-    
-    const bool is_slave = (async_thread_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE);
-    if (is_slave) {
-        REGISTER_ROS2_CONTROL_INTROSPECTION("sync_latency_us", &impl_->sync_latency_us_);
+    auto sync_barrier_timeout_hz =
+      std::chrono::duration<double>(0.9 * async_thread_params.exec_rate);
+    std::chrono::nanoseconds sync_barrier_timeout_ns =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(sync_barrier_timeout_hz);
+
+    const bool is_slave =
+      (async_thread_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE);
+    if (is_slave)
+    {
+      REGISTER_ROS2_CONTROL_INTROSPECTION("sync_latency_us", &impl_->sync_latency_us_);
     }
 
     async_handler_->init(
-      [this, is_sensor_type, sync_barrier_timeout_ns, is_slave](const rclcpp::Time & time, const rclcpp::Duration & period)
+      [this, is_sensor_type, sync_barrier_timeout_ns, is_slave](
+        const rclcpp::Time & time, const rclcpp::Duration & period)
       {
         // READ
         const auto read_start_time = std::chrono::steady_clock::now();
@@ -111,9 +115,10 @@ CallbackReturn HardwareComponentInterface::init(
         impl_->read_execution_time_.store(
           std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
           std::memory_order_release);
-        
-        if (is_slave && impl_->controller_sync_signal_) {
-            impl_->controller_sync_signal_->signal_read_finished();
+
+        if (is_slave && impl_->controller_sync_signal_)
+        {
+          impl_->controller_sync_signal_->signal_read_finished();
         }
         if (ret_read != return_type::OK)
         {
@@ -121,22 +126,30 @@ CallbackReturn HardwareComponentInterface::init(
         }
 
         // if slave, WAIT FOR UPDATE COMPLETES
-        if (is_slave && impl_->controller_sync_signal_ && !is_sensor_type) { // if we're a sensor, we don't wait on update
-            bool all_updates_complete = impl_->controller_sync_signal_->wait_for_signal_updates_finished(sync_barrier_timeout_ns);
-            
-            if (!all_updates_complete) {
-                RCLCPP_WARN_THROTTLE(
-                    get_node()->get_logger(), *get_node()->get_clock(), 1000,
-                    "Not all slave controllers finished updating before continuing with write() in the alloted time: %ld us",
-                    sync_barrier_timeout_ns.count()/1000);
-            }
+        if (is_slave && impl_->controller_sync_signal_ && !is_sensor_type)
+        {  // if we're a sensor, we don't wait on update
+          bool all_updates_complete =
+            impl_->controller_sync_signal_->wait_for_signal_updates_finished(
+              sync_barrier_timeout_ns);
 
-            impl_->sync_latency_us_ = 0.0; // reset latency measurement, in case we don't wait for updates.
-            if (impl_->controller_sync_signal_->get_num_updates_hw_waits_on() > 0) {
-                auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-                auto last_signal_time = impl_->controller_sync_signal_->get_last_signal_update_finished_time();
-                impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
-            }
+          if (!all_updates_complete)
+          {
+            RCLCPP_WARN_THROTTLE(
+              get_node()->get_logger(), *get_node()->get_clock(), 1000,
+              "Not all slave controllers finished updating before continuing with write() in the "
+              "allotted time: %ld us",
+              sync_barrier_timeout_ns.count() / 1000);
+          }
+
+          impl_->sync_latency_us_ =
+            0.0;  // reset latency measurement, in case we don't wait for updates.
+          if (impl_->controller_sync_signal_->get_num_updates_hw_waits_on() > 0)
+          {
+            auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+            auto last_signal_time =
+              impl_->controller_sync_signal_->get_last_signal_update_finished_time();
+            impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
+          }
         }
 
         // WRITE
@@ -612,9 +625,11 @@ void HardwareComponentInterface::prepare_for_activation()
   impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
 }
 
-std::shared_ptr<realtime_tools::SyncSignal> HardwareComponentInterface::get_sync_signal() const {
-  if (!impl_->controller_sync_signal_) {
-      impl_->controller_sync_signal_ = std::make_shared<realtime_tools::SyncSignal>();
+std::shared_ptr<realtime_tools::SyncSignal> HardwareComponentInterface::get_sync_signal() const
+{
+  if (!impl_->controller_sync_signal_)
+  {
+    impl_->controller_sync_signal_ = std::make_shared<realtime_tools::SyncSignal>();
   }
   return impl_->controller_sync_signal_;
 }

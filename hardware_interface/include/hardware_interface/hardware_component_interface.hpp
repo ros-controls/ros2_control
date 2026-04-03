@@ -582,10 +582,10 @@ public:
   void enable_introspection(bool enable);
 
   /**
-  * Getter for the synchronization signal of async slave hardware interface.
-  * Used when we want to ensure asnyc controller update() is executer after its
-  * corresponding hardware interface.
-  */
+   * Getter for the synchronization signal of async slave hardware interface.
+   * Used when we want to ensure async controller update() is executer after its
+   * corresponding hardware interface.
+   */
   std::shared_ptr<realtime_tools::SyncSignal> get_sync_signal() const;
 
 protected:

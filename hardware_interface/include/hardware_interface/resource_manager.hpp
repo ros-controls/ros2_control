@@ -233,7 +233,8 @@ public:
    */
   void make_controller_exported_state_interfaces_unavailable(const std::string & controller_name);
 
-  std::shared_ptr<realtime_tools::SyncSignal> get_hardware_sync_signal(const std::string & hardware_name) const;
+  std::shared_ptr<realtime_tools::SyncSignal> get_hardware_sync_signal(
+    const std::string & hardware_name) const;
 
   /// Remove controllers exported state interfaces from resource manager.
   /**

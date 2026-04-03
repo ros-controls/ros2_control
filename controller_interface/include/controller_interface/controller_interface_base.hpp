@@ -234,7 +234,7 @@ public:
   bool is_slave() const;
 
   const std::string & get_robot_description() const;
-  
+
   const std::string get_hardware_name_to_sync() const;
 
   /**

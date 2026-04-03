@@ -1564,27 +1564,29 @@ controller_interface::return_type ControllerManager::configure_controller(
   // For cases, when the controller ends up in the unconfigured state from any other state
   cleanup_controller_exported_interfaces(*found_it);
 
+  if (controller->is_async() && controller->is_slave())
+  {
+    const std::string hw_name = controller->get_hardware_name_to_sync();
+    auto signal = resource_manager_->get_hardware_sync_signal(hw_name);
 
-    if (controller->is_async() && controller->is_slave()) {        
-
-        const std::string hw_name = controller->get_hardware_name_to_sync();
-        auto signal = resource_manager_->get_hardware_sync_signal(hw_name);
-
-        if (!signal){
-            RCLCPP_ERROR(get_logger(), 
-                "Failed to link controller '%s' to Hardware '%s'. Aborting configuration.", 
-                controller_name.c_str(), hw_name.c_str());
-            return controller_interface::return_type::ERROR; 
-        }
-        bool signal_set = controller->set_sync_signal(signal);
-        if(!signal_set){
-            RCLCPP_ERROR(get_logger(), 
-                "Failed to link controller '%s' to Hardware '%s'. Aborting configuration.", 
-                controller_name.c_str(), hw_name.c_str());
-        }   
-        RCLCPP_INFO(get_logger(), "Linked async controller '%s' update() to follow async hardware '%s' read().", 
-                        controller_name.c_str(), hw_name.c_str());
+    if (!signal)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to link controller '%s' to Hardware '%s'. Aborting configuration.",
+        controller_name.c_str(), hw_name.c_str());
+      return controller_interface::return_type::ERROR;
     }
+    bool signal_set = controller->set_sync_signal(signal);
+    if (!signal_set)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to link controller '%s' to Hardware '%s'. Aborting configuration.",
+        controller_name.c_str(), hw_name.c_str());
+    }
+    RCLCPP_INFO(
+      get_logger(), "Linked async controller '%s' update() to follow async hardware '%s' read().",
+      controller_name.c_str(), hw_name.c_str());
+  }
 
   try
   {
