@@ -90,11 +90,10 @@ CallbackReturn HardwareComponentInterface::init(
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     const bool is_sensor_type = (info_.type == "sensor");
 
-    // TODO: (nb) do we parametrize this?
-    auto sync_barrier_timeout_hz =
-      std::chrono::duration<double>(0.9 * async_thread_params.exec_rate);
+    // TODO: (nb) do we parametrize this 0.9?
     std::chrono::nanoseconds sync_barrier_timeout_ns =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(sync_barrier_timeout_hz);
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::duration<double>(0.9 / async_thread_params.exec_rate));
 
     const bool is_slave =
       (async_thread_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE);
