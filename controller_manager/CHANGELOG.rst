@@ -2,6 +2,24 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* Activate hardware components by group sequentially (`#2984 <https://github.com/ros-controls/ros2_control/issues/2984>`_)
+  * Add first logic to activate components by group
+  * Add logic to skip rest of the components
+* [Spawner] Allow parsing the parameter files parsed from spawner to controllers (`#3136 <https://github.com/ros-controls/ros2_control/issues/3136>`_)
+* [Spawner] Fix exception of time.sleep in spawner (`#3124 <https://github.com/ros-controls/ros2_control/issues/3124>`_)
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Fix the conditioning in extract_command_interfaces_for_controller method (`#3109 <https://github.com/ros-controls/ros2_control/issues/3109>`_)
+* Protect controller switching, when switching from nonRT loop (`#3060 <https://github.com/ros-controls/ros2_control/issues/3060>`_)
+* Stop forwarding controller manager node options (`#3016 <https://github.com/ros-controls/ros2_control/issues/3016>`_)
+* [Spawner] Block further SIGINTs with unload_on_kill option (`#3075 <https://github.com/ros-controls/ros2_control/issues/3075>`_)
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_)
+* [Spawner] Allow arguments per controller instead of global args (`#2895 <https://github.com/ros-controls/ros2_control/issues/2895>`_)
+* Add new API for chainable controller interface exporting (`#2988 <https://github.com/ros-controls/ros2_control/issues/2988>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, github-actions[bot]
+
 6.4.0 (2026-02-03)
 ------------------
 * Add a log entry if enforce_command_limits is false (`#2998 <https://github.com/ros-controls/ros2_control/issues/2998>`_)

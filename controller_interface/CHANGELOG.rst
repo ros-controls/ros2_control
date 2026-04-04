@@ -2,6 +2,13 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* Add pal_statistics as explicit dependency (`#3163 <https://github.com/ros-controls/ros2_control/issues/3163>`_)
+* Add new API for chainable controller interface exporting (`#2988 <https://github.com/ros-controls/ros2_control/issues/2988>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 6.4.0 (2026-02-03)
 ------------------
 
