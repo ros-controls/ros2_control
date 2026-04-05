@@ -29,6 +29,7 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -1356,14 +1357,17 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-
+#if RCLCPP_VERSION_GTE(30, 1, 5)
+  void add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
+#else
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-
   std::vector<std::string> added_node_names;
 };
 
