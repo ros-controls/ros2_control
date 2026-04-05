@@ -1360,18 +1360,14 @@ public:
 #if RCLCPP_VERSION_GTE(30, 1, 5)
   void add_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
-  {
-    rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
-    added_node_names.push_back(node_ptr->get_name());
-  }
 #else
-  void add_node(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+   void add_node(
+     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-#endif
   std::vector<std::string> added_node_names;
 };
 
