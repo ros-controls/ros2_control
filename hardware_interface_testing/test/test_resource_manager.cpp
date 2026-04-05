@@ -1361,8 +1361,8 @@ public:
   void add_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
 #else
-   void add_node(
-     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+  void add_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
 #endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
