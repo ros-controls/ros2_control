@@ -64,9 +64,11 @@ TEST_P(TestControllerManagerWithNamespace, cm_and_controller_in_namespace)
   EXPECT_EQ(2, test_controller.use_count());
 
   const auto all_node_names = cm_->get_node_names();
+  // Use IsSupersetOf to tolerate extra nodes that may appear through DDS discovery
+  // from other processes running in the same ROS domain (e.g. robot_state_publisher).
   ASSERT_THAT(
     all_node_names,
-    testing::UnorderedElementsAreArray(
+    testing::IsSupersetOf(
       {"/test_namespace/test_controller_manager", "/test_namespace/test_controller_name",
        "/test_namespace/test_controller2_name", "/test_namespace/testactuatorhardware",
        "/test_namespace/testsensorhardware", "/test_namespace/testsystemhardware",
