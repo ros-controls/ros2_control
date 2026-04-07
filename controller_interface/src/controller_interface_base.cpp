@@ -300,30 +300,51 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 
     if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::SLAVE)
     {
+      // TODO: (nb) do we parametrize this 0.9?
+      std::chrono::nanoseconds sync_signal_timeout =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::duration<double>(0.9 / get_update_rate()));
+
       impl_->async_handler_->init(
-        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        [this, sync_signal_timeout](const rclcpp::Time & time, const rclcpp::Duration & period)
         {
           if (impl_->hardware_sync_signal_)
           {
-            uint64_t cycle_count = impl_->hardware_sync_signal_->wait_for_signal_read_finished();
+            auto cycle_count =
+              impl_->hardware_sync_signal_->wait_for_signal_read_finished(sync_signal_timeout);
 
-            // updating introspection variables
+            if (!cycle_count.has_value())
+            {
+              // timeout! return and allow for cleanup
+              return return_type::OK;
+            }
+
+            // Update introspection variables.
             auto now = std::chrono::steady_clock::now().time_since_epoch().count();
             auto last_signal_time =
               impl_->hardware_sync_signal_->get_last_signal_read_finished_time();
-            impl_->sync_triggers_ = static_cast<int64_t>(cycle_count);
-            impl_->sync_latency_us_ = static_cast<double>(now - last_signal_time) / 1000.0;
+            impl_->sync_triggers_ = static_cast<int64_t>(cycle_count.value());
+            impl_->sync_latency_us_ = static_cast<double>(now - static_cast<int64_t>(last_signal_time)) / 1000.0;
           }
-          // If this is slave and throws, the on_error will de-register the controller so the hw
-          // does not hang
-          auto result = this->update(time, period);
 
-          if (impl_->hardware_sync_signal_)
+          // call signal_update_finished() even if update() throws.
+          try
           {
-            impl_->hardware_sync_signal_->signal_update_finished();
+            auto result = this->update(time, period);
+            if (impl_->hardware_sync_signal_)
+            {
+              impl_->hardware_sync_signal_->signal_update_finished();
+            }
+            return result;
           }
-
-          return result;
+          catch (...)
+          {
+            if (impl_->hardware_sync_signal_)
+            {
+              impl_->hardware_sync_signal_->signal_update_finished();
+            }
+            throw;
+          }
         },
         async_params);
 

@@ -127,11 +127,11 @@ CallbackReturn HardwareComponentInterface::init(
         // if slave, WAIT FOR UPDATE COMPLETES
         if (is_slave && impl_->controller_sync_signal_ && !is_sensor_type)
         {  // if we're a sensor, we don't wait on update
-          bool all_updates_complete =
+          auto all_updates_complete =
             impl_->controller_sync_signal_->wait_for_signal_updates_finished(
               sync_barrier_timeout_ns);
 
-          if (!all_updates_complete)
+          if (!all_updates_complete.has_value())
           {
             RCLCPP_WARN_THROTTLE(
               get_node()->get_logger(), *get_node()->get_clock(), 1000,
