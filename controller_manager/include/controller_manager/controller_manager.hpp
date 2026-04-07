@@ -50,7 +50,7 @@
 #include "rclcpp/node.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#if !defined(_WIN32) && !defined(__APPLE__)
+#if !defined(_WIN32)
 #include "realtime_tools/mutex.hpp"
 #endif
 
@@ -570,7 +570,7 @@ private:
     // *INDENT-OFF*
   public:
     // *INDENT-ON*
-#if !defined(_WIN32) && !defined(__APPLE__)
+#if !defined(_WIN32)
     using controllers_lock_type = realtime_tools::prio_inherit_recursive_mutex;
 #else
     using controllers_lock_type = std::recursive_mutex;
