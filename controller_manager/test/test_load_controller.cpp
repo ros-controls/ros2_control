@@ -266,7 +266,8 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configure
   test_controller->simulate_cleanup_failure = false;
   {
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
+    EXPECT_EQ(
+      cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   }
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
