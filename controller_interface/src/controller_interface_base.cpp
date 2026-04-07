@@ -324,7 +324,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
             auto last_signal_time =
               impl_->hardware_sync_signal_->get_last_signal_read_finished_time();
             impl_->sync_triggers_ = static_cast<int64_t>(cycle_count.value());
-            impl_->sync_latency_us_ = static_cast<double>(now - static_cast<int64_t>(last_signal_time)) / 1000.0;
+            impl_->sync_latency_us_ =
+              static_cast<double>(now - static_cast<int64_t>(last_signal_time)) / 1000.0;
           }
 
           // call signal_update_finished() even if update() throws.
