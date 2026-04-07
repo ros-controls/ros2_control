@@ -1357,7 +1357,7 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-#if RCLCPP_VERSION_GTE(30, 1, 5)
+#if RCLCPP_VERSION_GTE(31, 0, 0)
   void add_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
 #else
