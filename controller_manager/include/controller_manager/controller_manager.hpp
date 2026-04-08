@@ -227,6 +227,7 @@ public:
     return resource_manager_ && resource_manager_->are_components_initialized() &&
            resource_manager_->are_joint_limiters_imported();
   }
+
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
