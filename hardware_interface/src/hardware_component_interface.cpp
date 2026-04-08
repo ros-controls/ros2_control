@@ -41,12 +41,10 @@ public:
   std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
 
-#if HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS
   std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
   realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
     hardware_status_box_;
   rclcpp::TimerBase::SharedPtr hardware_status_timer_;
-#endif
 };
 
 HardwareComponentInterface::HardwareComponentInterface()
@@ -167,7 +165,6 @@ CallbackReturn HardwareComponentInterface::init(
   }
   else
   {
-#if HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS
     control_msgs::msg::HardwareStatus status_msg_template;
     if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
     {
@@ -232,13 +229,6 @@ CallbackReturn HardwareComponentInterface::init(
         "configured. Publisher will not be created. Are you sure "
         "init_hardware_status_message() is set up properly?");
     }
-#else
-    RCLCPP_WARN(
-      get_logger(),
-      "`status_publish_rate` was set to a non-zero value, but "
-      "`control_msgs/msg/HardwareStatus` is not available in this ROS distro. "
-      "Hardware status publishing will be disabled.");
-#endif
   }
 
   hardware_interface::HardwareComponentInterfaceParams interface_params;
@@ -247,7 +237,6 @@ CallbackReturn HardwareComponentInterface::init(
   return on_init(interface_params);
 }
 
-#if HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS
 CallbackReturn HardwareComponentInterface::init_hardware_status_message(
   control_msgs::msg::HardwareStatus & /*msg_template*/)
 {
@@ -261,7 +250,6 @@ return_type HardwareComponentInterface::update_hardware_status_message(
   // Default implementation does nothing.
   return return_type::OK;
 }
-#endif
 
 CallbackReturn HardwareComponentInterface::on_init(
   const hardware_interface::HardwareComponentInterfaceParams & params)
