@@ -1474,6 +1474,19 @@ ResourceManager::ResourceManager(
     params.allow_controller_activation_with_inactive_hardware;
   return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params.return_failed_hardware_names_on_return_deactivate_write_cycle_;
+  if (load)
+  {
+    load_and_initialize_components(params);
+    if (params.activate_all)
+    {
+      for (auto const & hw_info : resource_storage_->hardware_info_map_)
+      {
+        using lifecycle_msgs::msg::State;
+        rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+        set_component_state(hw_info.first, state);
+      }
+    }
+  }
 }
 
 bool ResourceManager::shutdown_components()

@@ -24,7 +24,16 @@
 #include <utility>
 #include <vector>
 
+#if defined(__has_include)
+#if __has_include("control_msgs/msg/hardware_status.hpp")
 #include "control_msgs/msg/hardware_status.hpp"
+#define HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS 1
+#endif
+#endif
+
+#ifndef HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS
+#define HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS 0
+#endif
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -91,6 +100,7 @@ public:
    */
   CallbackReturn init(const hardware_interface::HardwareComponentParams & params);
 
+#if HARDWARE_INTERFACE_HAS_CONTROL_MSGS_HARDWARE_STATUS
   /// User-overridable method to configure the structure of the HardwareStatus message.
   /**
    * To enable status publishing, override this method to pre-allocate the message structure
@@ -114,6 +124,7 @@ public:
    * \returns return_type::OK on success, return_type::ERROR on failure.
    */
   virtual return_type update_hardware_status_message(control_msgs::msg::HardwareStatus & msg);
+#endif
 
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
