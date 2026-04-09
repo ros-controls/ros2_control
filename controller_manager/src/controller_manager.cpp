@@ -1545,9 +1545,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   auto controller = found_it->c;
 
   const auto & state = controller->get_lifecycle_state();
-  if (
-    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
-    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     RCLCPP_ERROR(
       get_logger(), "Controller '%s' can not be configured from '%s' state.",
@@ -1555,16 +1553,6 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    if (cleanup_controller(*found_it) != controller_interface::return_type::OK)
-    {
-      return controller_interface::return_type::ERROR;
-    }
-  }
-  // For cases, when the controller ends up in the unconfigured state from any other state
   cleanup_controller_exported_interfaces(*found_it);
 
   try
