@@ -759,7 +759,7 @@ public:
     }
   }
 
-  bool import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
+  void import_joint_limiters(const std::vector<HardwareInfo> & hardware_infos)
   {
     const auto are_joint_limits_enabled =
       [&](
@@ -830,7 +830,6 @@ public:
         joint_limiters_interface_[hw_info.name].insert({joint_name, std::move(limits_interface)});
       }
     }
-    return true;
   }
 
   template <typename T>
@@ -1604,10 +1603,8 @@ void ResourceManager::import_joint_limiters(const std::string & urdf)
 {
   std::lock_guard<std::recursive_mutex> guard(joint_limiters_lock_);
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  joint_limiters_are_imported_ = resource_storage_->import_joint_limiters(hardware_info);
+  resource_storage_->import_joint_limiters(hardware_info);
 }
-
-bool ResourceManager::are_joint_limiters_imported() const { return joint_limiters_are_imported_; }
 
 bool ResourceManager::are_components_initialized() const
 {

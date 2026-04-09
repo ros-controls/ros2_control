@@ -1,4 +1,4 @@
-// Copyright 2025 b»robotized group
+// Copyright 2025 b-robotized group
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "gtest/gtest.h"
 #include "hardware_interface/resource_manager.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "std_msgs/msg/string.hpp"
 
@@ -39,8 +37,6 @@ public:
   using ControllerManager::is_resource_manager_initialized;
 
   using ControllerManager::resource_manager_;
-
-  using ControllerManager::is_waiting_for_robot_description;
 };
 
 class ControllerManagerTest : public ::testing::Test

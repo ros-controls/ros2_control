@@ -1,4 +1,4 @@
-// Copyright 2025 b»robotized group
+// Copyright 2025 b-robotized group
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@ std::unique_ptr<hardware_interface::ResourceManager> ControllerManagerTest::test
   nullptr;
 std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> ControllerManagerTest::executor_ =
   nullptr;
-
-using LifecycleCallbackReturn =
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 void ControllerManagerTest::SetUp()
 {
@@ -52,61 +49,71 @@ void ControllerManagerTest::TearDown()
 TEST_F(ControllerManagerTest, robot_description_callback_handles_urdf_without_hardware_plugin)
 {
   const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_without_hardware_plugin;
+  std_msgs::msg::String valid_robot_description;
+  valid_robot_description.data = ros2_control_test_assets::minimal_robot_urdf;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+  cm.robot_description_callback(valid_robot_description);
+  EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_invalid_urdf)
 {
   const std::string invalid_urdf = R"(<robot malformed></robot>)";
+  std_msgs::msg::String valid_robot_description;
+  valid_robot_description.data = ros2_control_test_assets::minimal_robot_urdf;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+  cm.robot_description_callback(valid_robot_description);
+  EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_empty_urdf)
 {
   const std::string invalid_urdf = "";
+  std_msgs::msg::String valid_robot_description;
+  valid_robot_description.data = ros2_control_test_assets::minimal_robot_urdf;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+  cm.robot_description_callback(valid_robot_description);
+  EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_nonexistent_plugins)
 {
   const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_with_nonexistent_plugin;
+  std_msgs::msg::String valid_robot_description;
+  valid_robot_description.data = ros2_control_test_assets::minimal_robot_urdf;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+  cm.robot_description_callback(valid_robot_description);
+  EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
 TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
 {
   const std::string invalid_urdf = ros2_control_test_assets::invalid_urdf_no_geometry;
+  std_msgs::msg::String valid_robot_description;
+  valid_robot_description.data = ros2_control_test_assets::minimal_robot_urdf;
 
   TestControllerManager cm(
     executor_, invalid_urdf, false, "test_controller_manager", "", rclcpp::NodeOptions{});
 
   EXPECT_FALSE(cm.is_resource_manager_initialized());
-
-  EXPECT_TRUE(cm.is_waiting_for_robot_description());
+  cm.robot_description_callback(valid_robot_description);
+  EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
 TEST_F(ControllerManagerTest, cm_constructor_with_invalid_rm_object)

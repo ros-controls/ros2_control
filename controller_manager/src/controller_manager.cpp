@@ -537,19 +537,18 @@ ControllerManager::ControllerManager(
 
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
-  bool activate_all_hw_components, const std::string & manager_node_name,
+  bool /*activate_all_hw_components*/, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
   diagnostics_updater_(this),
   executor_(executor),
-  robot_description_(urdf),
-  activate_all_hw_components_(activate_all_hw_components),
   loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  robot_description_(urdf)
 {
   init_controller_manager();
   init_resource_manager(urdf);
@@ -669,7 +668,7 @@ void ControllerManager::init_controller_manager()
     RCLCPP_ERROR(
       this->get_logger(),
       "Exception thrown while initializing controller manager parameters: %s \n", e.what());
-    throw e;
+    throw;
   }
 
   // Initialized activity publisher and diagnostics
@@ -784,7 +783,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.robot_description = robot_description;
   params.clock = trigger_clock_;
   params.logger = this->get_logger();
-  params.activate_all = activate_all_hw_components_;
   params.update_rate = static_cast<unsigned int>(params_->update_rate);
   params.executor = executor_;
   params.node_namespace = this->get_namespace();
