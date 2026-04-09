@@ -683,6 +683,8 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  bool activate_all_hw_components_ = false;
+
   struct ControllerManagerExecutionTime
   {
     double read_time = 0.0;
