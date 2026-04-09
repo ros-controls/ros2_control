@@ -349,8 +349,8 @@ private:
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
   void init_controller_manager();
-
-  void initialize_parameters();
+  void init_robot_description_callback();
+  void set_initial_hardware_components_state();
 
   /**
    * Call cleanup to change the given controller lifecycle node to the unconfigured state.
@@ -682,6 +682,8 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  bool activate_all_hw_components_ = false;
 
   struct ControllerManagerExecutionTime
   {
