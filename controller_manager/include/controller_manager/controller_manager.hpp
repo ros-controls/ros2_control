@@ -97,6 +97,8 @@ public:
 
   void robot_description_callback(const std_msgs::msg::String & msg);
 
+  void init_resource_manager(const std::string & robot_description);
+
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
@@ -348,7 +350,6 @@ private:
     const std::string & command_interface);
   void init_controller_manager();
   void init_robot_description_callback();
-  void init_resource_manager(const std::string & robot_description);
   void set_initial_hardware_components_state();
 
   /**

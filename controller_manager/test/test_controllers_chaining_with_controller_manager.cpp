@@ -122,7 +122,7 @@ public:
     const std::string diffbot_urdf_large_limits = std::regex_replace(
       ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
 
-    rclcpp::NodeOptions node_options = {};
+    rclcpp::NodeOptions node_options{};
     cm_ = std::make_shared<TestableControllerManager>(
       executor_, diffbot_urdf_large_limits, true, TEST_CM_NAME, "", node_options);
 

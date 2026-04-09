@@ -2930,7 +2930,7 @@ class TestControllerManagerSrvsWithFailingPerformSwitch : public TestControllerM
     const std::string replacement = "$1<param name=\"fail_on_perform_mode_switch\">true</param>\n";
     const std::string result = std::regex_replace(robot_description, plugin_regex, replacement);
 
-    rclcpp::NodeOptions node_options = {};
+    rclcpp::NodeOptions node_options{};
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       executor_, result, true, TEST_CM_NAME, "", node_options);
 
