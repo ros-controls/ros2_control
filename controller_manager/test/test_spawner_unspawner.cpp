@@ -605,6 +605,94 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
+{
+  // Verifies that --unload-on-kill releases the file lock before entering the interrupt wait loop.
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  auto get_active_controller_names = [this]()
+  {
+    std::vector<std::string> active_controller_names;
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      if (ctrl.c->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        active_controller_names.push_back(ctrl.info.name);
+      }
+    }
+    return active_controller_names;
+  };
+
+  auto get_loaded_controller_names = [this]()
+  {
+    std::vector<std::string> loaded_controller_names;
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      loaded_controller_names.push_back(ctrl.info.name);
+    }
+    return loaded_controller_names;
+  };
+
+  // Run Spawner A with --unload-on-kill in background, keep it alive long enough to ensure
+  // Spawner B should succeed, in spite of the waiting for Spawner A's timeout.
+  std::string spawner_a_cmd =
+    "timeout --signal=INT 12 "
+    "$(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "ctrl_1 -c test_controller_manager --unload-on-kill";
+  auto spawner_a_future = std::async(
+    std::launch::async, [spawner_a_cmd]() { return std::system(spawner_a_cmd.c_str()); });
+
+  // Wait until ctrl_1 is active, confirming Spawner A released the lock before the wait loop.
+  auto wait_start = std::chrono::steady_clock::now();
+  auto is_ctrl_1_active = [this]()
+  {
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      if (ctrl.info.name == "ctrl_1")
+      {
+        return ctrl.c->get_lifecycle_state().id() ==
+               lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+      }
+    }
+    return false;
+  };
+
+  while (!is_ctrl_1_active())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ASSERT_LT(std::chrono::steady_clock::now() - wait_start, std::chrono::seconds(10))
+      << "Timed out waiting for ctrl_1 to become active via Spawner A";
+  }
+
+  EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
+    << "Spawner A exited before Spawner B started; lock-contention scenario was not exercised";
+
+  // Spawner B must not be blocked by Spawner A's lock. Keep B's timeout below A's lifetime so a
+  // lock blockage cannot still pass after A eventually exits.
+  std::string spawner_b_cmd =
+    "timeout --signal=INT 10 " + std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "ctrl_2 -c test_controller_manager";
+  int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
+  EXPECT_EQ(spawner_b_exit_code, 0)
+    << "Spawner B should not be blocked by Spawner A's --unload-on-kill lock";
+  ASSERT_THAT(get_active_controller_names(), testing::UnorderedElementsAre("ctrl_1", "ctrl_2"));
+
+  EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
+    << "Spawner A exited already; lock-contention scenario might not be exercised";
+
+  // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
+  int spawner_a_exit_code = spawner_a_future.get();
+  EXPECT_NE(spawner_a_exit_code, 0)
+    << "Spawner A (wrapped by timeout) unexpectedly exited with success status";
+
+  // After Spawner A times out, ctrl_1 should be unloaded, leaving only ctrl_2 active.
+  ASSERT_THAT(get_loaded_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
+  ASSERT_THAT(get_active_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
+}
+
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 {
   const std::string main_test_file_path =
