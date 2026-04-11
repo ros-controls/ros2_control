@@ -19,7 +19,7 @@ from ros2cli.node.direct import DirectNode
 
 from ros2node.api import NodeNameCompleter
 
-from rcl_interfaces.srv import ListParameters
+from rclpy.parameter_client import AsyncParameterClient
 import rclpy
 
 import argparse
@@ -30,13 +30,10 @@ class ControllerNameCompleter:
 
     def __call__(self, prefix, parsed_args, **kwargs):
         with DirectNode(parsed_args) as node:
-            client = node.create_client(
-                ListParameters, f"{parsed_args.controller_manager}/list_parameters"
-            )
-            if not client.wait_for_service(timeout_sec=5.0):
+            client = AsyncParameterClient(node, parsed_args.controller_manager)
+            if not client.wait_for_services(timeout_sec=5.0):
                 return []
-            request = ListParameters.Request()
-            future = client.call_async(request)
+            future = client.list_parameters()
             rclpy.spin_until_future_complete(node, future)
             response = future.result()
             if response is None:

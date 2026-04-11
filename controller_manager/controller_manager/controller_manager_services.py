@@ -30,12 +30,7 @@ import rclpy
 import yaml
 from rcl_interfaces.msg import Parameter
 
-# @note: The versions conditioning is added here to support the source-compatibility with Humble
-# The `get_parameter_value` function is moved to `rclpy.parameter` module from `ros2param.api` module from version 3.6.0
-try:
-    from rclpy.parameter import get_parameter_value
-except ImportError:
-    from ros2param.api import get_parameter_value
+from rclpy.parameter import get_parameter_value
 from rcl_interfaces.srv import SetParameters
 
 
