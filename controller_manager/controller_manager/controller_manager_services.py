@@ -442,16 +442,12 @@ def set_controller_parameters(
     request = SetParameters.Request()
     request.parameters = [parameter]
 
-    try:
-        response = service_caller(
-            node,
-            f"{controller_manager_name}/set_parameters",
-            SetParameters,
-            request,
-        )
-    except Exception as e:
-        node.get_logger().error(f"Service call failed: {e}")
-        return None
+    response = service_caller(
+        node,
+        f"{controller_manager_name}/set_parameters",
+        SetParameters,
+        request,
+    )
     assert len(response.results) == 1
     result = response.results[0]
     if result.successful:
