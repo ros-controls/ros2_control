@@ -29,6 +29,7 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -355,21 +356,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("external_joint", "external_state_interface", nullptr));
-
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    state_interface_ = std::make_shared<hardware_interface::StateInterface>(
+      "external_joint", "external_state_interface");
+    state_interfaces.emplace_back(state_interface_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "external_joint", "external_command_interface", nullptr));
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    command_interface_ = std::make_shared<hardware_interface::CommandInterface>(
+      "external_joint", "external_command_interface");
+    command_interfaces.emplace_back(command_interface_);
 
     return command_interfaces;
   }
@@ -385,6 +388,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   {
     return hardware_interface::return_type::OK;
   }
+
+  hardware_interface::StateInterface::SharedPtr state_interface_;
+  hardware_interface::CommandInterface::SharedPtr command_interface_;
 };
 
 TEST_F(ResourceManagerTest, post_initialization_add_components)
@@ -1351,14 +1357,17 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-
+#if RCLCPP_VERSION_GTE(31, 0, 0)
+  void add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
+#else
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-
   std::vector<std::string> added_node_names;
 };
 
