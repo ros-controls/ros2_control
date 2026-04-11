@@ -664,9 +664,4 @@ def _get_parameter_controller_names(node, node_name):
     names = response.result.names if response else []
 
     suffix = ".type"
-    # @note: The versions conditioning is added here to support the source-compatibility with Humble
-    if os.environ.get("ROS_DISTRO") == "humble":
-        # for humble, ros2param < 0.20.0
-        return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
-    else:
-        return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
+    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
