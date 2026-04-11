@@ -32,6 +32,7 @@ public:
   CallbackReturn deactivate_return = CallbackReturn::SUCCESS;
   CallbackReturn cleanup_return = CallbackReturn::SUCCESS;
   CallbackReturn shutdown_return = CallbackReturn::SUCCESS;
+  CallbackReturn on_error_return = CallbackReturn::SUCCESS;
 
   CallbackReturn on_init() override { return CallbackReturn::SUCCESS; }
 
@@ -74,6 +75,11 @@ public:
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /* previous_state */) override
   {
     return shutdown_return;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /* previous_state */) override
+  {
+    return on_error_return;
   }
 };
 
@@ -266,13 +272,23 @@ TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_returns_true_for_finalize
   EXPECT_THAT(controller_interface::shutdown_succeeds(controller), ::testing::Eq(true));
 }
 
-TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_throws_for_real_controller_on_error)
+TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_throws_for_on_error_succeeds)
 {
   auto controller = make_controller();
   ASSERT_THAT(controller_interface::configure_succeeds(controller), ::testing::Eq(true));
   controller->shutdown_return = CallbackReturn::ERROR;
 
   EXPECT_THROW(controller_interface::shutdown_succeeds(controller), std::runtime_error);
+}
+
+TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_returns_true_for_on_error_fails)
+{
+  auto controller = make_controller();
+  ASSERT_THAT(controller_interface::configure_succeeds(controller), ::testing::Eq(true));
+  controller->shutdown_return = CallbackReturn::ERROR;
+  controller->on_error_return = CallbackReturn::FAILURE;
+
+  EXPECT_THAT(controller_interface::shutdown_succeeds(controller), ::testing::Eq(true));
 }
 
 TEST_F(ControllerInterfaceTestUtils, shutdown_succeeds_throws_for_unexpected_state)
