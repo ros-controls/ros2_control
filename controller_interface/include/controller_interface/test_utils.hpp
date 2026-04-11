@@ -150,14 +150,18 @@ bool shutdown_succeeds(const std::unique_ptr<T> & controller)
 
   switch (state.id())
   {
-    // if transition returns success or failure, it will anyways end up in the finalized state
-    // The observed behavior is not as described in
-    // https://design.ros2.org/articles/node_lifecycle.html
-    // See https://github.com/ros2/rclcpp/issues/1763 for more information
+    // if shutdown transition returns success or failure, it will anyways end up in the finalized
+    // state
+    //   The observed behavior is not as described in
+    //   https://design.ros2.org/articles/node_lifecycle.html
+    //   See https://github.com/ros2/rclcpp/issues/1763 for more information
+    // if shutdown transition returns error, it will go to on_error transition:
+    //   If on_error returns failure, it will end up in finalized state
     case State::PRIMARY_STATE_FINALIZED:
       return true;
     default:
-      // if transition returns error, it will end up in the unconfigured state
+      // if shutdowntransition returns error, it will go to on_error transition:
+      //   If on_error returns success, it will end up in unconfigured state
       throw std::runtime_error(
         "Unexpected controller state in shutdown_succeeds: " + std::to_string(state.id()));
   }
