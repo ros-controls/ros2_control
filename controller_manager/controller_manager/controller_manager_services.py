@@ -36,7 +36,7 @@ try:
     from rclpy.parameter import get_parameter_value
 except ImportError:
     from ros2param.api import get_parameter_value
-from ros2param.api import call_set_parameters
+from rcl_interfaces.srv import SetParameters
 
 
 import os
@@ -439,9 +439,19 @@ def set_controller_parameters(
     parameter_string = str(parameter_value)
     parameter.value = get_parameter_value(string_value=parameter_string)
 
-    response = call_set_parameters(
-        node=node, node_name=controller_manager_name, parameters=[parameter]
-    )
+    request = SetParameters.Request()
+    request.parameters = [parameter]
+
+    try:
+        response = service_caller(
+            node,
+            f"{controller_manager_name}/set_parameters",
+            SetParameters,
+            request,
+        )
+    except Exception as e:
+        node.get_logger().error(f"Service call failed: {e}")
+        return None
     assert len(response.results) == 1
     result = response.results[0]
     if result.successful:
