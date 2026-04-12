@@ -1337,14 +1337,26 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 
   // DUPLICATE PREVENTION TEST
 
-  // Make reference interfaces available again (simulating multiple activate calls)
+  // Count before first call (interfaces should NOT be available yet)
+  size_t count_initial = rm.available_command_interfaces().size();
+
+  // Make reference interfaces available (first call)
   rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
 
-  // Count before
+  // Count after first call
   size_t count_before = rm.available_command_interfaces().size();
+
+  EXPECT_GT(count_before, count_initial) << "First call should have added interfaces";
 
   // Make available AGAIN - this should NOT create duplicates
   rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+  }
 
   // Count after - should be same as before
   size_t count_after = rm.available_command_interfaces().size();
@@ -1404,6 +1416,8 @@ TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
     EXPECT_TRUE(rm.state_interface_exists(interface));
     EXPECT_FALSE(rm.state_interface_is_available(interface));
   }
+  // Count before first make available call
+  size_t count_initial = rm.available_state_interfaces().size();
 
   // make interface available
   rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
@@ -1413,13 +1427,24 @@ TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
     EXPECT_TRUE(rm.state_interface_is_available(interface));
   }
 
+  // Verify first call changed the count
+  size_t count_after_first = rm.available_state_interfaces().size();
+  EXPECT_GT(count_after_first, count_initial) << "First call should have added interfaces";
+
   // DUPLICATE PREVENTION TEST
 
-  // Count before
+  // Count before second call
   size_t count_before = rm.available_state_interfaces().size();
 
   // Make available AGAIN - this should NOT create duplicates
   rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
 
   // Count after - should be same as before
   size_t count_after = rm.available_state_interfaces().size();
