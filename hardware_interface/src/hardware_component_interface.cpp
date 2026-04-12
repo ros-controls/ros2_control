@@ -157,13 +157,7 @@ CallbackReturn HardwareComponentInterface::init(
     }
   }
 
-  if (publish_rate == 0.0)
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
-  }
-  else
+  if (publish_rate > 0.0)
   {
     control_msgs::msg::HardwareStatus status_msg_template;
     if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
