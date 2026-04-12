@@ -2,6 +2,9 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.5.1 (2026-04-05)
+------------------
+
 6.5.0 (2026-04-02)
 ------------------
 * Remove linters from msg package (`#3059 <https://github.com/ros-controls/ros2_control/issues/3059>`_)

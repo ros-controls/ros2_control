@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.5.1 (2026-04-05)
+------------------
+* Fix API breaking change of Executor::add_node (`#3080 <https://github.com/ros-controls/ros2_control/issues/3080>`_)
+* Contributors: Christoph Fröhlich
+
 6.5.0 (2026-04-02)
 ------------------
 * Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
