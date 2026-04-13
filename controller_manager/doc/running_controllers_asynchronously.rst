@@ -129,7 +129,7 @@ Monitoring and Tuning
 
 The ``controller_interface`` package provides a ``ControllerUpdateStats`` structure which
 can be used to monitor the controller update rate and missed update cycles. This data is
-published to the ``/diagnostics`` topic and can be used to fine-tune the controller's
+published to the ``/diagnostics``  and also `/controller_manager/introspection_data/*` topic and can be used to fine-tune the controller's
 ``update_rate``.
 
 See Also
