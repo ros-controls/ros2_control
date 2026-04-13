@@ -88,7 +88,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_helpers hardware_interface)
 
   # Test lexical casts methods
-  ament_add_gtest(test_lexical_casts test/test_lexical_casts.cpp)
+  ament_add_gmock(test_lexical_casts test/test_lexical_casts.cpp)
   target_link_libraries(test_lexical_casts hardware_interface)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
