@@ -278,9 +278,15 @@ class ControllerManager(Plugin):
         popup = self._popup_widget
         popup.setWindowTitle("Controller Information")
 
+        # Reset fields to prevent stale data when switching between popups
+        popup.ctrl_update_rate.setText("N/A")
+        popup.ctrl_is_async.setText("N/A")
+
         ctrl = self._controllers[index.row()]
         popup.ctrl_name.setText(ctrl.name)
         popup.ctrl_type.setText(ctrl.type)
+        popup.ctrl_update_rate.setText(f"{ctrl.update_rate} Hz")
+        popup.ctrl_is_async.setText(str(ctrl.is_async))
 
         res_model = QStandardItemModel()
         model_root = QStandardItem("Claimed Interfaces")
@@ -389,9 +395,15 @@ class ControllerManager(Plugin):
         popup = self._popup_widget
         popup.setWindowTitle("Hardware Component Info")
 
+        # Reset fields to prevent stale data when switching between popups
+        popup.ctrl_update_rate.setText("N/A")
+        popup.ctrl_is_async.setText("N/A")
+
         hw_component = self._hw_components[index.row()]
         popup.ctrl_name.setText(hw_component.name)
         popup.ctrl_type.setText(hw_component.type)
+        popup.ctrl_update_rate.setText(f"{hw_component.rw_rate} Hz")
+        popup.ctrl_is_async.setText(str(hw_component.is_async))
 
         res_model = QStandardItemModel()
         model_root = QStandardItem("Command Interfaces")
