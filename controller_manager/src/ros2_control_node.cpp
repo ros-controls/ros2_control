@@ -15,12 +15,12 @@
 #include <errno.h>
 #include <chrono>
 #include <memory>
-#include <rclcpp/logging.hpp>
 #include <string>
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/executors.hpp"
+#include "rclcpp/logging.hpp"
 #include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
@@ -81,7 +81,8 @@ int main(int argc, char ** argv)
     thread_priority);
 
   const bool syncronize_by_hardware = cm->get_parameter_or<bool>("synchronize_by_hardware", false);
-  RCLCPP_INFO_EXPRESSION(cm->get_logger(), syncronize_by_hardware, "Synchronizing control loop with hardware.");
+  RCLCPP_INFO_EXPRESSION(
+    cm->get_logger(), syncronize_by_hardware, "Synchronizing control loop with hardware.");
 
   std::thread cm_thread(
     [cm, thread_priority, use_sim_time, manage_overruns, syncronize_by_hardware]()
