@@ -7,8 +7,8 @@ Running Controllers Asynchronously
 
 The ``ros2_control`` framework allows controllers to run asynchronously.
 This is useful when a controller's ``update()`` method contains blocking calls or requires
-more execution time than the controller manager's control loop period allows, which would
-otherwise affect the periodicity of the control loop.
+This is useful when a controller's ``update()`` method contains blocking calls or requires more execution time that affects the controller manager's control loop period, which would
+otherwise affect the periodicity of the control loop causing overruns.
 
 For example, if the ``update_rate`` for the controller manager is 100Hz, the sum of the
 execution times of all controllers' ``update()`` calls and hardware components ``read()``
