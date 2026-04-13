@@ -80,7 +80,6 @@ Additional thread parameters can be configured using the ``async_parameters`` na
         async_parameters:
           thread_priority: 50
           cpu_affinity: [2, 4]
-          wait_until_initial_trigger: false
 
 The description of all parameters can be found in the `Common Controller Parameters
 <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_
