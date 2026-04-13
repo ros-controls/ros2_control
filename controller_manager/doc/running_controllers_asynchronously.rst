@@ -19,7 +19,7 @@ blocking the main control loop.
 
 .. note::
   The async update support is transparent to each controller implementation.
-  Any existing controller can be run asynchronously without modification by setting
+  Any existing controller can be run asynchronously just by setting
   the ``is_async`` parameter to ``true``.
 
 Parameters
