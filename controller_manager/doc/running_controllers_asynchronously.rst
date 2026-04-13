@@ -31,9 +31,8 @@ asynchronously:
 * ``is_async``: (optional) If set to ``true``, the controller will run its ``update()``
   method asynchronously. Default is ``false``.
 * ``update_rate``: (optional) The rate in Hz at which the controller's ``update()`` is
-  triggered. If not set or set to ``0``, the controller runs at the same rate as the
-  controller manager. This parameter can also be used independently for synchronous
-  controllers running at a lower rate than the controller manager.
+  triggered. If not set or set to the rate of the
+  controller manager.
 
 Additional thread parameters can be set under the ``async_parameters`` namespace:
 
