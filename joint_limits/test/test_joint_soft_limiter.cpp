@@ -14,6 +14,9 @@
 
 /// \author Adrià Roig Moreno
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 #include <cmath>
 #include <limits>
 #include "joint_limits/joint_limits_helpers.hpp"

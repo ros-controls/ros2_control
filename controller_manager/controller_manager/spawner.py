@@ -16,6 +16,7 @@
 import argparse
 import errno
 import os
+import signal
 import sys
 import time
 import warnings
@@ -314,6 +315,31 @@ def parse_native_args(args):
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
 
+    def append_unique_preserve_order(base, to_append):
+        if base is None:
+            base = []
+        existing = set(base)
+        for item in to_append:
+            if item not in existing:
+                base.append(item)
+                existing.add(item)
+        return base
+
+    def get_ros_params_files(argv):
+        params_files = []
+        index = 0
+        while index < len(argv):
+            if argv[index] == "--params-file":
+                if index + 1 >= len(argv):
+                    raise ValueError("--params-file requires a path argument")
+                params_files.append(argv[index + 1])
+                index += 2
+                continue
+            index += 1
+        return params_files
+
+    spawner_ros_params_files = get_ros_params_files(sys.argv[1:])
+
     # Remove ROS args
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
 
@@ -332,6 +358,12 @@ def main(args=None):
     activate_as_group = global_args.activate_as_group
     unload_on_kill = global_args.unload_on_kill
     node = None
+
+    if spawner_ros_params_files:
+        for controller in controllers:
+            controller["param_files"] = append_unique_preserve_order(
+                controller["param_files"], spawner_ros_params_files
+            )
 
     # Check param files existence
     for c in controllers:
@@ -534,6 +566,16 @@ def main(args=None):
             time.sleep(1)
 
     except KeyboardInterrupt:
+        # Ignore further SIGINTs so a second signal cannot interrupt cleanup.
+        # Without this, a signal delivered while rclpy's C extension returns to
+        # Python can raise a second KeyboardInterrupt inside the except block,
+        # skipping the deactivate/unload calls and leaving controllers loaded.
+        # The try/except guards against coverage's trace function raising a
+        # second KeyboardInterrupt during the signal.signal() call itself.
+        try:
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+        except (KeyboardInterrupt, Exception):
+            pass
         if unload_on_kill:
             logger.info("KeyboardInterrupt successfully captured!")
 
