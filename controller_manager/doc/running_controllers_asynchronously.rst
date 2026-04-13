@@ -41,9 +41,6 @@ Additional thread parameters can be set under the ``async_parameters`` namespace
   inherits the same priority as the controller manager thread.
 * ``cpu_affinity``: (optional) A list of CPU core IDs to pin the async thread to.
   Default is an empty list, meaning the thread can run on any CPU core.
-* ``wait_until_initial_trigger``: (optional) If set to ``true``, the async thread will
-  wait for the first trigger from the controller manager before starting execution.
-  Default is ``false``.
 
 .. note::
   The thread priority is only used when the controller runs asynchronously.
