@@ -6,7 +6,6 @@ Running Controllers Asynchronously
 ====================================
 
 The ``ros2_control`` framework allows controllers to run asynchronously.
-This is useful when a controller's ``update()`` method contains blocking calls or requires
 This is useful when a controller's ``update()`` method contains blocking calls or requires more execution time that affects the controller manager's control loop period, which would
 otherwise affect the periodicity of the control loop causing overruns.
 
@@ -31,7 +30,7 @@ asynchronously:
 * ``is_async``: (optional) If set to ``true``, the controller will run its ``update()``
   method asynchronously. Default is ``false``.
 * ``update_rate``: (optional) The rate in Hz at which the controller's ``update()`` is
-  triggered. If not set or set to the rate of the
+  triggered. If not set or set to ``0``, the controller runs at the same rate as the
   controller manager.
 
 Additional thread parameters can be set under the ``async_parameters`` namespace:
@@ -92,7 +91,8 @@ From a design perspective, the controller manager functions as a scheduler that 
 updates for asynchronous controllers during the control loop.
 
 The ``ControllerInterfaceBase`` calls ``AsyncFunctionHandler`` to handle the actual
-``update()`` callback of the controller. This is the same mechanism used by the resource
+``update()`` callback of the controller. The ``AsyncFunctionHandler`` is part of the `realtime_tools
+<https://control.ros.org/rolling/doc/realtime_tools/doc/index.html>`__ package. This is the same mechanism used by the resource
 manager to support ``read()`` and ``write()`` operations for asynchronous hardware
 components (see :ref:`asynchronous_components`). When a controller is configured to run
 asynchronously, the controller interface creates an async handler during the controller's
@@ -128,7 +128,7 @@ Monitoring and Tuning
 
 The ``controller_interface`` package provides a ``ControllerUpdateStats`` structure which
 can be used to monitor the controller update rate and missed update cycles. This data is
-published to the ``/diagnostics``  and also `/controller_manager/introspection_data/*` topic and can be used to fine-tune the controller's
+published to the ``/diagnostics``  and also ``/controller_manager/introspection_data/*`` topic and can be used to fine-tune the controller's
 ``update_rate``.
 
 See Also
