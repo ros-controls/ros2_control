@@ -263,8 +263,17 @@ controller_manager:
       type: bool,
       description: "If true, the controller manager will print a warning message to the console if an overrun is detected in its real-time loop (``read``, ``update`` and ``write``). By default, it is set to true, except when used with ``use_sim_time`` parameter set to true.",
     }
-  synchronize_by_hardware:
-    type: bool
-    default_value: false
-    read_only: true
-    description: "If true, the controller manager will not sleep actively. Use this, when there is a hardware interface running that will block during its read or write operation until receiving new data from the hardware."
+  hardware_synchronization:
+    use_blocking_read_write:
+      type: bool
+      default_value: false
+      read_only: true
+      description: "If true, the controller manager will not sleep actively. Use this, when there is a hardware interface running that will block during its read or write operation until receiving new data from the hardware."
+    minimum_sleep_time:
+      type: double
+      default_value: 0.0001
+      read_only: true
+      description: "The minimum sleep time in seconds for the controller manager's real-time loop. This is used to prevent the controller manager from sleeping for too short of a time, which can cause high CPU usage if the hardware doesn't block in read / write. This is only used when ``use_blocking_read_write`` is set to true."
+      validation: {
+        gt<>: 0.0,
+      }
