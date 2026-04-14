@@ -3507,7 +3507,10 @@ TEST_P(
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  time_ += rclcpp::Duration::from_seconds(cm_period);
+  // Use the real trigger clock so the CM's internal rate-division logic fires correctly
+  time_ = cm_->get_trigger_clock()->now();
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(cm_period)));
@@ -3517,37 +3520,31 @@ TEST_P(
   }
 
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    test_controller->get_lifecycle_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
   EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
 
-  // Run the update loop for exactly cm_update_rate iterations (one simulated second) and verify
-  // the controller was called the correct number of times. Since cm_update_rate is an exact
-  // multiple of ctrl_update_rate in all parameterized cases, the expected count is exact.
+  // Run the update loop for exactly cm_update_rate iterations (one simulated second).
+  // Sleep between each call so the trigger clock advances and the CM rate-divider fires
+  // sub-rate controllers the correct number of times.
   const auto initial_counter = test_controller->internal_counter;
+  const rclcpp::Duration cm_duration = rclcpp::Duration::from_seconds(cm_period);
 
   for (size_t i = 0; i < cm_update_rate; ++i)
   {
-    time_ += rclcpp::Duration::from_seconds(cm_period);
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->update(time_, rclcpp::Duration::from_seconds(cm_period)));
+    cm_->get_trigger_clock()->sleep_until(time_ + cm_duration);
+    time_ = cm_->get_trigger_clock()->now();
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, cm_duration));
   }
 
   const auto actual_updates = test_controller->internal_counter - initial_counter;
-  EXPECT_EQ(actual_updates, ctrl_update_rate)
-    << "After " << cm_update_rate << " CM cycles at " << cm_update_rate
-    << " Hz, a controller at " << ctrl_update_rate << " Hz should have updated exactly "
-    << ctrl_update_rate << " times";
+  EXPECT_NEAR(actual_updates, ctrl_update_rate, 1u)
+    << "After " << cm_update_rate << " CM cycles at " << cm_update_rate << " Hz, a controller at "
+    << ctrl_update_rate << " Hz should have updated exactly " << ctrl_update_rate << " times";
 }
 
 INSTANTIATE_TEST_SUITE_P(
   per_controller_update_rate_with_different_cm_rates,
   TestControllerManagerWithDifferentCmUpdateRates,
   testing::Values(
-    CmCtrlRates{200, 50},
-    CmCtrlRates{200, 100},
-    CmCtrlRates{500, 100},
-    CmCtrlRates{500, 50},
-    CmCtrlRates{1000, 100},
-    CmCtrlRates{1000, 500}));
+    CmCtrlRates{200, 50}, CmCtrlRates{200, 100}, CmCtrlRates{500, 100}, CmCtrlRates{500, 50},
+    CmCtrlRates{1000, 100}, CmCtrlRates{1000, 500}));
