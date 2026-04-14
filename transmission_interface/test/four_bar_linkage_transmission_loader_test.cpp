@@ -56,56 +56,36 @@ private:
 TEST(FourBarLinkageTransmissionLoaderTest, FullSpec)
 {
   // Parse transmission info
-  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
-      <ros2_control name="FullSpec" type="system">
-        <joint name="joint1">
-          <command_interface name="velocity">
-            <param name="min">-0.5</param>
-            <param name="max">0.5</param>
-          </command_interface>
-          <state_interface name="velocity"/>
-        </joint>
-        <joint name="joint2">
-          <command_interface name="position">
-            <param name="min">-1</param>
-            <param name="max">1</param>
-          </command_interface>
-          <state_interface name="position"/>
-        </joint>
-        <transmission name="transmission1">
-          <plugin>transmission_interface/FourBarLinkageTransmission</plugin>
-          <actuator name="joint1_motor" role="actuator1">
-            <mechanical_reduction>50</mechanical_reduction>
-          </actuator>
-          <actuator name="joint2_motor" role="actuator2">
-            <mechanical_reduction>-50</mechanical_reduction>
-          </actuator>
-          <joint name="joint1" role="joint1">
-            <offset>0.5</offset>
-            <mechanical_reduction>2.0</mechanical_reduction>
-          </joint>
-          <joint name="joint2" role="joint2">
-            <offset>-0.5</offset>
-            <mechanical_reduction>-2.0</mechanical_reduction>
-          </joint>
-        </transmission>
-      </ros2_control>
-    </robot>
-    )";
+  std::string urdf_to_test = ros2_control_test_assets::minimal_robot_urdf;
 
   std::vector<hardware_interface::HardwareInfo> infos =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
-  ASSERT_THAT(infos[0].transmissions, SizeIs(1));
+  const hardware_interface::TransmissionInfo * info_ptr = nullptr;
+  for (const auto & info : infos)
+  {
+    for (const auto & transmission : info.transmissions)
+    {
+      if (transmission.type == "transmission_interface/FourBarLinkageTransmission")
+      {
+        info_ptr = &transmission;
+        break;
+      }
+    }
+    if (info_ptr)
+    {
+      break;
+    }
+  }
+  ASSERT_TRUE(nullptr != info_ptr);
 
   // Transmission loader
   TransmissionPluginLoader loader;
   std::shared_ptr<transmission_interface::TransmissionLoader> transmission_loader =
-    loader.create(infos[0].transmissions[0].type);
+    loader.create(info_ptr->type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
   std::shared_ptr<transmission_interface::Transmission> transmission;
-  const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
-  transmission = transmission_loader->load(info);
+  transmission = transmission_loader->load(*info_ptr);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =
