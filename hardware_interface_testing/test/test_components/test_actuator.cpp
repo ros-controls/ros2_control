@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
@@ -46,19 +48,45 @@ class TestActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
 
-    /*
-     * a hardware can optional prove for incorrect info here.
-     *
-     * // can only control one joint
-     * if (get_hardware_info().joints.size() != 1) {return CallbackReturn::ERROR;}
-     * // can only control in position
-     * if (get_hardware_info().joints[0].command_interfaces.size() != 1) {return
-     * CallbackReturn::ERROR;}
-     * // can only give feedback state for position and velocity
-     * if (get_hardware_info().joints[0].state_interfaces.size() != 2) {return
-     * CallbackReturn::ERROR;}
-     */
+    auto it = get_hardware_info().hardware_parameters.find("throw_on_read");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_read_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_write");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_write_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_configure");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_configure_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_activate");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_activate_ = (it->second == "true");
+    }
 
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_configure_)
+    {
+      throw std::runtime_error("Injected exception during on_configure!");
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_activate_)
+    {
+      throw std::runtime_error("Injected exception during on_activate!");
+    }
     return CallbackReturn::SUCCESS;
   }
 
@@ -131,10 +159,15 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
+    if (throw_on_read_)
+    {
+      throw std::runtime_error("Exception from TestActuator::read() as requested by parameter.");
+    }
+
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
-        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
+        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
     std::ignore = velocity_command_->get_value(vel_cmd, false);
@@ -180,6 +213,11 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (throw_on_write_)
+    {
+      throw std::runtime_error("Exception from TestActuator::write() as requested by parameter.");
+    }
+
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
@@ -212,6 +250,10 @@ class TestActuator : public ActuatorInterface
   }
 
 private:
+  bool throw_on_read_ = false;
+  bool throw_on_write_ = false;
+  bool throw_on_configure_ = false;
+  bool throw_on_activate_ = false;
   StateInterface::SharedPtr position_state_;
   StateInterface::SharedPtr velocity_state_;
   CommandInterface::SharedPtr velocity_command_;

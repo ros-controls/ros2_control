@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"
@@ -43,6 +45,41 @@ class TestSensor : public SensorInterface
         get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
     }
+
+    auto it = get_hardware_info().hardware_parameters.find("throw_on_read");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_read_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_configure");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_configure_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_activate");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_activate_ = (it->second == "true");
+    }
+
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_configure_)
+    {
+      throw std::runtime_error("Injected exception during on_configure!");
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_activate_)
+    {
+      throw std::runtime_error("Injected exception during on_activate!");
+    }
     return CallbackReturn::SUCCESS;
   }
 
@@ -59,10 +96,17 @@ class TestSensor : public SensorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (throw_on_read_)
+    {
+      throw std::runtime_error("Exception from TestSensor::read() as requested by parameter.");
+    }
     return return_type::OK;
   }
 
 private:
+  bool throw_on_read_ = false;
+  bool throw_on_configure_ = false;
+  bool throw_on_activate_ = false;
   StateInterface::SharedPtr velocity_state_;
 };
 

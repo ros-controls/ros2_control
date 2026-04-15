@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <array>
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include "hardware_interface/system_interface.hpp"
@@ -62,6 +64,46 @@ class TestSystem : public SystemInterface
         "System hardware component '%s' from plugin '%s' failed to initialize as rw_rate is 0.",
         get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
+    }
+
+    auto it = get_hardware_info().hardware_parameters.find("throw_on_read");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_read_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_write");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_write_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_configure");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_configure_ = (it->second == "true");
+    }
+    it = get_hardware_info().hardware_parameters.find("throw_on_activate");
+    if (it != get_hardware_info().hardware_parameters.end())
+    {
+      throw_on_activate_ = (it->second == "true");
+    }
+
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_configure_)
+    {
+      throw std::runtime_error("Injected exception during on_configure!");
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (throw_on_activate_)
+    {
+      throw std::runtime_error("Injected exception during on_activate!");
     }
     return CallbackReturn::SUCCESS;
   }
@@ -131,6 +173,11 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (throw_on_read_)
+    {
+      throw std::runtime_error("Exception from TestSystem::read() as requested by parameter.");
+    }
+
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
@@ -171,6 +218,11 @@ class TestSystem : public SystemInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    if (throw_on_write_)
+    {
+      throw std::runtime_error("Exception from TestSystem::write() as requested by parameter.");
+    }
+
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
@@ -204,6 +256,10 @@ class TestSystem : public SystemInterface
   }
 
 private:
+  bool throw_on_read_ = false;
+  bool throw_on_write_ = false;
+  bool throw_on_configure_ = false;
+  bool throw_on_activate_ = false;
   std::array<CommandInterface::SharedPtr, 2> velocity_command_;
   std::array<StateInterface::SharedPtr, 2> position_state_;
   std::array<StateInterface::SharedPtr, 2> velocity_state_;
