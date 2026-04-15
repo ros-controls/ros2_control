@@ -182,6 +182,43 @@ public:
   bool legacy_export = true;
 };
 
+// Controller that doesn't implement on_export_reference_interfaces() and
+// on_export_state_interfaces() virtuals.
+class DefaultExportChainableController : public controller_interface::ChainableControllerInterface
+{
+public:
+  controller_interface::CallbackReturn on_init() override
+  {
+    // Populate the input (reference) interface with 'r1' and 'r2'
+    exported_reference_interface_names_ = {"r1", "r2"};
+    // Populate the output (state) interface with 's1' and 's2'
+    exported_state_interface_names_ = {"s1", "s2"};
+    reference_interfaces_.assign(exported_reference_interface_names_.size(), 0.0);
+    state_interfaces_values_.assign(exported_state_interface_names_.size(), 0.0);
+    return controller_interface::CallbackReturn::SUCCESS;
+  }
+  // ControllerInterfaceBase virtuals
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override
+  {
+    return {controller_interface::interface_configuration_type::NONE};
+  }
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override
+  {
+    return {controller_interface::interface_configuration_type::NONE};
+  }
+  // ChainableControllerInterface virtuals
+  controller_interface::return_type update_reference_from_subscribers(
+    const rclcpp::Time &, const rclcpp::Duration &) override
+  {
+    return controller_interface::return_type::OK;
+  }
+  controller_interface::return_type update_and_write_commands(
+    const rclcpp::Time &, const rclcpp::Duration &) override
+  {
+    return controller_interface::return_type::OK;
+  }
+};
+
 class ChainableControllerInterfaceTest : public ::testing::Test
 {
 public:

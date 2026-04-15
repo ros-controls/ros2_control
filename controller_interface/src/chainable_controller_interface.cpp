@@ -98,7 +98,7 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     ros2_control::add_item(ordered_exported_state_interfaces_, state_interface);
-    ros2_control::add_item(exported_state_interface_names_, interface_name);
+    ros2_control::add_item(exported_state_interface_names_, state_interface->get_interface_name());
     state_interfaces_ptrs_vec.push_back(
       std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
   }
@@ -136,7 +136,6 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     ros2_control::add_item(ordered_exported_state_interfaces_, interface_ptr);
-    ros2_control::add_item(exported_state_interface_names_, interface_name);
     state_interfaces_ptrs_vec.push_back(interface_ptr);
     ;
   }
@@ -227,7 +226,8 @@ ChainableControllerInterface::export_reference_interfaces()
       throw std::runtime_error(error_msg);
     }
     ros2_control::add_item(ordered_exported_reference_interfaces_, reference_interface);
-    ros2_control::add_item(exported_reference_interface_names_, interface_name);
+    ros2_control::add_item(
+      exported_reference_interface_names_, reference_interface->get_interface_name());
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
@@ -266,7 +266,6 @@ ChainableControllerInterface::export_reference_interfaces()
       throw std::runtime_error(error_msg);
     }
     ros2_control::add_item(ordered_exported_reference_interfaces_, interface_ptr);
-    ros2_control::add_item(exported_reference_interface_names_, interface_name);
     reference_interfaces_ptrs_vec.push_back(interface_ptr);
   }
 
