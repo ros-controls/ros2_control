@@ -14,9 +14,13 @@
 
 // Authors: Karsten Knese, Denis Stogl
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -25,6 +29,7 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -351,21 +356,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("external_joint", "external_state_interface", nullptr));
-
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    state_interface_ = std::make_shared<hardware_interface::StateInterface>(
+      "external_joint", "external_state_interface");
+    state_interfaces.emplace_back(state_interface_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "external_joint", "external_command_interface", nullptr));
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    command_interface_ = std::make_shared<hardware_interface::CommandInterface>(
+      "external_joint", "external_command_interface");
+    command_interfaces.emplace_back(command_interface_);
 
     return command_interfaces;
   }
@@ -381,6 +388,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   {
     return hardware_interface::return_type::OK;
   }
+
+  hardware_interface::StateInterface::SharedPtr state_interface_;
+  hardware_interface::CommandInterface::SharedPtr command_interface_;
 };
 
 TEST_F(ResourceManagerTest, post_initialization_add_components)
@@ -1347,14 +1357,17 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-
+#if RCLCPP_VERSION_GTE(31, 0, 0)
+  void add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
+#else
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-
   std::vector<std::string> added_node_names;
 };
 
@@ -2758,6 +2771,91 @@ TEST_F(ResourceManagerTestCommandLimitEnforcement, test_command_interfaces_limit
   setup_resource_manager_and_do_initial_checks();
 
   check_limit_enforcement();
+}
+
+class ResourceManagerTestReadWriteException : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks(bool handle_exceptions)
+  {
+    hardware_interface::ResourceManagerParams rm_params;
+    rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    rm_params.clock = node_.get_clock();
+    rm_params.logger = node_.get_logger();
+    rm_params.update_rate = 100;
+    rm_params.handle_exceptions = handle_exceptions;
+    rm = std::make_shared<TestableResourceManager>(rm_params);
+    activate_components(*rm);
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    // with default values read and write should run without any problems
+    {
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+
+  const rclcpp::Time time = rclcpp::Time(0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+};
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->read(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->write(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->read(time, duration), std::runtime_error);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->write(time, duration), std::runtime_error);
 }
 
 int main(int argc, char ** argv)
