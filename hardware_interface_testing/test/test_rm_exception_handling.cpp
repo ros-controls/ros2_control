@@ -512,7 +512,8 @@ TEST_F(ResourceManagerNominalAllComponentsTest, validate_nominal_behavior)
 int main(int argc, char ** argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  // Remove global rclcpp::init to satisfy branch coverage in SetUp()
+  rclcpp::init(argc, argv);
   int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
   return result;
 }
