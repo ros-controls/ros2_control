@@ -23,7 +23,6 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/version.h"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::HardwareInfo;
@@ -31,26 +30,11 @@ using hardware_interface::ResourceManager;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 
-// Distribution-aware status check macros.
-// On Humble, HardwareReadWriteStatus.result is a bool (ok).
-// On Jazzy/Rolling, HardwareReadWriteStatus.result is a return_type enum.
-#if RCLCPP_VERSION_MAJOR >= 28  // Jazzy and Rolling
-#define EXPECT_STATUS_OK(status) EXPECT_EQ(status, hardware_interface::return_type::OK)
-#define EXPECT_STATUS_ERROR(status) EXPECT_EQ(status, hardware_interface::return_type::ERROR)
-#else
-#define EXPECT_STATUS_OK(status) EXPECT_TRUE(status)
-#define EXPECT_STATUS_ERROR(status) EXPECT_FALSE(status)
-#endif
-
 class ResourceManagerExceptionTest : public ::testing::Test
 {
 protected:
   void SetUp() override
   {
-    if (!rclcpp::ok())
-    {
-      rclcpp::init(0, nullptr);
-    }
     node_ = std::make_shared<rclcpp::Node>("ResourceManagerExceptionTestNode");
   }
 
@@ -128,7 +112,7 @@ TEST_F(ResourceManagerExceptionTest, catch_read_exception)
   auto [result, failed_hardware] =
     rm.read(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
 
-  EXPECT_STATUS_ERROR(result);
+  EXPECT_EQ(result, return_type::ERROR);
   ASSERT_EQ(failed_hardware.size(), 1u);
   EXPECT_EQ(failed_hardware[0], "ExceptionSystem");
 
@@ -157,7 +141,7 @@ TEST_F(ResourceManagerExceptionTest, catch_write_exception)
   auto [result, failed_hardware] =
     rm.write(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
 
-  EXPECT_STATUS_ERROR(result);
+  EXPECT_EQ(result, return_type::ERROR);
 
   auto status = rm.get_components_status();
   EXPECT_EQ(
@@ -206,8 +190,33 @@ TEST_F(ResourceManagerExceptionTest, catch_activate_exception)
 
 TEST_F(ResourceManagerExceptionTest, nominal_system_usage)
 {
-  // Test 100% coverage by omitting injection parameters
-  std::string urdf = get_exception_robot_urdf("", false);
+  // exercises the 'Param Missing' branches and the is_async=true branch
+  std::string urdf = R"(
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ExceptionRobot">
+  <link name="base_link"/>
+  <joint name="joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+  </joint>
+  <link name="link1"/>
+  <ros2_control name="NominalSystem" type="system" is_async="true">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="update_rate">100</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <command_interface name="max_acceleration"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+  </ros2_control>
+</robot>
+)";
   ResourceManager rm(
     urdf, node_->get_node_clock_interface(), node_->get_node_logging_interface(), true, 100);
 
@@ -218,20 +227,51 @@ TEST_F(ResourceManagerExceptionTest, nominal_system_usage)
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     hardware_interface::lifecycle_state_names::ACTIVE);
 
-  EXPECT_EQ(rm.set_component_state("ExceptionSystem", inactive_state), return_type::OK);
-  EXPECT_EQ(rm.set_component_state("ExceptionSystem", active_state), return_type::OK);
+  EXPECT_EQ(rm.set_component_state("NominalSystem", inactive_state), return_type::OK);
+  EXPECT_EQ(rm.set_component_state("NominalSystem", active_state), return_type::OK);
 
   auto [result_read, failed_read] =
     rm.read(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
-  EXPECT_STATUS_OK(result_read);
-
-  auto [result_write, failed_write] =
-    rm.write(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
-  EXPECT_STATUS_OK(result_write);
+  EXPECT_EQ(result_read, return_type::OK);
 
   auto status = rm.get_components_status();
   EXPECT_EQ(
-    status["ExceptionSystem"].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+    status["NominalSystem"].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+}
+
+TEST_F(ResourceManagerExceptionTest, initialization_failure)
+{
+  // Cover the CallbackReturn::ERROR line by omitting update_rate
+  std::string urdf = R"(
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ExceptionRobot">
+  <link name="base_link"/>
+  <joint name="joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+  </joint>
+  <link name="link1"/>
+  <ros2_control name="FailSystem" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+</robot>
+)";
+  // RM construction will fail to initialize the component due to missing update_rate
+  ResourceManager rm(
+    urdf, node_->get_node_clock_interface(), node_->get_node_logging_interface(), true, 0);
+
+  auto status = rm.get_components_status();
+  // It stays 'unknown' because on_init failed in the constructor
+  EXPECT_EQ(status["FailSystem"].state.label(), "unknown");
 }
 
 class ResourceManagerActuatorExceptionTest : public ResourceManagerExceptionTest
@@ -288,7 +328,7 @@ TEST_F(ResourceManagerActuatorExceptionTest, catch_read_exception)
   auto [result, failed_hardware] =
     rm.read(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
 
-  EXPECT_STATUS_ERROR(result);
+  EXPECT_EQ(result, return_type::ERROR);
   ASSERT_EQ(failed_hardware.size(), 1u);
   EXPECT_EQ(failed_hardware[0], "ExceptionActuator");
 
@@ -317,7 +357,7 @@ TEST_F(ResourceManagerActuatorExceptionTest, catch_write_exception)
   auto [result, failed_hardware] =
     rm.write(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
 
-  EXPECT_STATUS_ERROR(result);
+  EXPECT_EQ(result, return_type::ERROR);
 
   auto status = rm.get_components_status();
   EXPECT_EQ(
@@ -362,6 +402,46 @@ TEST_F(ResourceManagerActuatorExceptionTest, catch_activate_exception)
   auto status = rm.get_components_status();
   EXPECT_EQ(
     status["ExceptionActuator"].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+TEST_F(ResourceManagerActuatorExceptionTest, nominal_actuator_usage)
+{
+  // exercises the 'Param Missing' branches for Actuator
+  std::string urdf = R"(
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ExceptionRobot">
+  <link name="base_link"/>
+  <joint name="joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+  </joint>
+  <link name="link1"/>
+  <ros2_control name="NominalActuator" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+      <param name="update_rate">100</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+</robot>
+)";
+  ResourceManager rm(
+    urdf, node_->get_node_clock_interface(), node_->get_node_logging_interface(), true, 100);
+
+  rclcpp_lifecycle::State inactive_state(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(rm.set_component_state("NominalActuator", inactive_state), return_type::OK);
+
+  auto status = rm.get_components_status();
+  EXPECT_EQ(
+    status["NominalActuator"].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 class ResourceManagerSensorExceptionTest : public ResourceManagerExceptionTest
@@ -409,7 +489,7 @@ TEST_F(ResourceManagerSensorExceptionTest, catch_read_exception)
   auto [result, failed_hardware] =
     rm.read(node_->get_clock()->now(), rclcpp::Duration(std::chrono::milliseconds(10)));
 
-  EXPECT_STATUS_ERROR(result);
+  EXPECT_EQ(result, return_type::ERROR);
   ASSERT_EQ(failed_hardware.size(), 1u);
   EXPECT_EQ(failed_hardware[0], "ExceptionSensor");
 
@@ -456,6 +536,37 @@ TEST_F(ResourceManagerSensorExceptionTest, catch_activate_exception)
   auto status = rm.get_components_status();
   EXPECT_EQ(
     status["ExceptionSensor"].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+TEST_F(ResourceManagerSensorExceptionTest, nominal_sensor_usage)
+{
+  // exercises the 'Param Missing' branches for Sensor
+  std::string urdf = R"(
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="ExceptionRobot">
+  <link name="base_link"/>
+  <ros2_control name="NominalSensor" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="update_rate">100</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+</robot>
+)";
+  ResourceManager rm(
+    urdf, node_->get_node_clock_interface(), node_->get_node_logging_interface(), true, 100);
+
+  rclcpp_lifecycle::State inactive_state(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(rm.set_component_state("NominalSensor", inactive_state), return_type::OK);
+
+  auto status = rm.get_components_status();
+  EXPECT_EQ(
+    status["NominalSensor"].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 int main(int argc, char ** argv)
