@@ -483,6 +483,18 @@ overruns.manage (optional; bool; default: true)
   If an overrun is detected, the controller manager will print a warning message to the console.
   When used with ``use_sim_time`` set to true, this parameter is ignored and the overrun handling is disabled.
 
+hardware_synchronization.use_blocking_read_write (optional; bool; default: false)
+  If true, the controller manager will not sleep actively. Use this, when there is a hardware
+  interface running that will block during its read or write operation until receiving new data
+  from the hardware.
+
+hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
+  The minimum sleep time in seconds for the control node's real-time loop. This is used to
+  prevent the control node from running too fast, which can cause high CPU
+  usage if the hardware doesn't block in read / write. This is only used when
+  ``use_blocking_read_write`` is set to true.
+  If the cycle is shorter than this, it will sleep for this period and print a warning.
+
 Concepts
 -----------
 

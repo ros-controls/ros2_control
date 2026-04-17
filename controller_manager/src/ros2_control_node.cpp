@@ -82,13 +82,13 @@ int main(int argc, char ** argv)
 
   const bool hw_sync_enable =
     cm->get_parameter_or<bool>("hardware_synchronization.use_blocking_read_write", false);
-  const double hw_sync_min_sleep_time =
-    cm->get_parameter_or<double>("hardware_synchronization.minimum_sleep_time", 0.0001);
+  const double hw_sync_min_cycle_time =
+    cm->get_parameter_or<double>("hardware_synchronization.minimum_cycle_time", 0.0001);
   RCLCPP_INFO_EXPRESSION(
     cm->get_logger(), hw_sync_enable, "Synchronizing control loop with hardware.");
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time, manage_overruns, hw_sync_enable, hw_sync_min_sleep_time]()
+    [cm, thread_priority, use_sim_time, manage_overruns, hw_sync_enable, hw_sync_min_cycle_time]()
     {
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
@@ -152,6 +152,7 @@ int main(int argc, char ** argv)
         cm->read(cm->get_trigger_clock()->now(), measured_period);
         cm->update(cm->get_trigger_clock()->now(), measured_period);
         cm->write(cm->get_trigger_clock()->now(), measured_period);
+        auto const cycle_end_time = cm->get_trigger_clock()->now();
 
         // wait until we hit the end of the period
         if (use_sim_time)
@@ -170,8 +171,18 @@ int main(int argc, char ** argv)
         }
         else if (hw_sync_enable)
         {
-          std::this_thread::sleep_for(
-            std::chrono::microseconds(static_cast<int>(hw_sync_min_sleep_time * 1e6)));
+          if (
+            (cycle_end_time - current_time).nanoseconds() <
+            static_cast<rcl_duration_value_t>(hw_sync_min_cycle_time * 1e9))
+          {
+            RCLCPP_WARN_THROTTLE(
+              cm->get_logger(), *cm->get_clock(), 1000,
+              "Last control cycle was shorter than the minimum cycle time while blocking read or "
+              "write is configured. Is the hardware interface not blocking correctly? Note: This "
+              "might happen when the hardware component that should block is not active.");
+            std::this_thread::sleep_for(
+              std::chrono::microseconds(static_cast<int>(hw_sync_min_cycle_time * 1e6)));
+          }
         }
         else
         {
