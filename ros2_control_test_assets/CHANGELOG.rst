@@ -2,6 +2,12 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add 6D robot description to ros2_control_test_assets (`#3032 <https://github.com/ros-controls/ros2_control/issues/3032>`_)
+* Unify transmission tests using shared minimal robot URDF in test assets (`#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_)
+* Contributors: Naitik
+
 6.5.1 (2026-04-05)
 ------------------
 
