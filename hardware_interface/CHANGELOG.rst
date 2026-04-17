@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* lexical_casts: use gMock instead of gTest (`#3204 <https://github.com/ros-controls/ros2_control/issues/3204>`_) (`#3206 <https://github.com/ros-controls/ros2_control/issues/3206>`_)
+* Contributors: mergify[bot]
+
 5.13.0 (2026-04-02)
 -------------------
 * hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_) (`#3177 <https://github.com/ros-controls/ros2_control/issues/3177>`_)
