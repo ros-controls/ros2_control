@@ -23,6 +23,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
@@ -34,6 +35,17 @@ using strvec = std::vector<std::string>;
 
 class TestCleanupController : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
+};
+
+// A chainable controller whose export_reference_interfaces throws.
+class ThrowingChainableController : public test_chainable_controller::TestChainableController
+{
+public:
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
+    override
+  {
+    throw std::runtime_error("Simulated export failure");
+  }
 };
 
 TEST_F(TestCleanupController, cleanup_unknown_controller)
@@ -115,4 +127,60 @@ TEST_F(TestCleanupController, cleanup_active_controller)
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_lifecycle_state().id());
+}
+
+TEST_F(TestCleanupController, configure_chainable_with_and_without_interfaces_should_not_hang)
+{
+  auto bad_controller = std::make_shared<test_chainable_controller::TestChainableController>();
+
+  cm_->add_controller(
+    bad_controller, "bad_chainable_controller",
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  auto ret = cm_->configure_controller("bad_chainable_controller");
+  EXPECT_EQ(controller_interface::return_type::ERROR, ret);
+
+  // After a failed configure, the controller should be rolled back to UNCONFIGURED.
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    bad_controller->get_lifecycle_state().id())
+    << "Controller should be rolled back to UNCONFIGURED after configure failure, "
+       "but is in state: "
+    << bad_controller->get_lifecycle_state().label();
+  
+  // Add an interface and configure. Controller should reach INACTIVE state
+  bad_controller->set_reference_interface_names({"joint1/position"});
+
+  ret = cm_->configure_controller("bad_chainable_controller");
+  EXPECT_EQ(controller_interface::return_type::OK, ret);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    bad_controller->get_lifecycle_state().id())
+    << "Controller should reach INACTIVE after successful configure, "
+       "but is in state: "
+    << bad_controller->get_lifecycle_state().label();
+}
+
+TEST_F(TestCleanupController, configure_chainable_with_throwing_export_should_cleanup)
+{
+  auto throwing_controller = std::make_shared<ThrowingChainableController>();
+
+  cm_->add_controller(
+    throwing_controller, "throwing_chainable_controller",
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  auto ret = cm_->configure_controller("throwing_chainable_controller");
+  EXPECT_EQ(controller_interface::return_type::ERROR, ret);
+
+  // After an exception during export, the controller should be rolled back to UNCONFIGURED
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    throwing_controller->get_lifecycle_state().id())
+    << "Controller should be rolled back to UNCONFIGURED after export exception, "
+       "but is in state: "
+    << throwing_controller->get_lifecycle_state().label();
 }
