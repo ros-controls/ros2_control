@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -19,10 +23,6 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
-
-#ifdef _WIN32
-#define M_PI 3.1415926535897932384626433832795
-#endif
 
 using namespace ::testing;  // NOLINT
 
@@ -2112,4 +2112,100 @@ TEST_F(TestComponentParser, successfully_parse_valid_sdf)
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
+}
+
+TEST_F(TestComponentParser, missing_hardware_plugin_tag_includes_component_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="MySpecificRobot" type="system">
+        <hardware>
+          <!-- plugin tag intentionally missing -->
+          <param name="some_param">1.0</param>
+        </hardware>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("MySpecificRobot"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<plugin>"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<hardware>"));
+  }
+}
+
+TEST_F(TestComponentParser, missing_joint_attribute_includes_joint_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position"/>
+        </joint>
+        <joint name="joint2">
+          <!-- missing name attribute here is tricky since we parse it first,
+               let's test missing attribute in command_interface instead -->
+          <command_interface>
+            <param name="min">-1</param>
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("name"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("command_interface"));
+    // Ideally it should say it failed for joint2, but tag_name is "command_interface"
+  }
+}
+
+TEST_F(TestComponentParser, parameter_missing_name_includes_parent_context)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position">
+            <param>1.0</param> <!-- Missing name attribute -->
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("joint1"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("parameter name"));
+  }
 }

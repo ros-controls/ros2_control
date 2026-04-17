@@ -2,6 +2,23 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.6.0 (2026-04-17)
+------------------
+* Fix RCLCPP_VERSION_GTE for add_node (`#3198 <https://github.com/ros-controls/ros2_control/issues/3198>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.1 (2026-04-05)
+------------------
+* Fix API breaking change of Executor::add_node (`#3080 <https://github.com/ros-controls/ros2_control/issues/3080>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, github-actions[bot]
+
 6.4.0 (2026-02-03)
 ------------------
 
