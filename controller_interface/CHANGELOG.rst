@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.14.0 (2026-04-17)
+-------------------
 * Add test_utils file for transition tests (backport `#3048 <https://github.com/ros-controls/ros2_control/issues/3048>`_) (`#3215 <https://github.com/ros-controls/ros2_control/issues/3215>`_)
 * Contributors: mergify[bot]
 

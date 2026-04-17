@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.14.0 (2026-04-17)
+-------------------
 * Unify transmission tests using shared minimal robot URDF in test assets (backport `#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_) (`#3218 <https://github.com/ros-controls/ros2_control/issues/3218>`_)
 * Add 6D robot description to ros2_control_test_assets (backport `#3032 <https://github.com/ros-controls/ros2_control/issues/3032>`_) (`#3227 <https://github.com/ros-controls/ros2_control/issues/3227>`_)
 * Contributors: mergify[bot]
