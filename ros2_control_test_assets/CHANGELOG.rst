@@ -2,6 +2,12 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Unify transmission tests using shared minimal robot URDF in test assets (backport `#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_) (`#3217 <https://github.com/ros-controls/ros2_control/issues/3217>`_)
+* Add 6D robot description to ros2_control_test_assets (backport `#3032 <https://github.com/ros-controls/ros2_control/issues/3032>`_) (`#3226 <https://github.com/ros-controls/ros2_control/issues/3226>`_)
+* Contributors: mergify[bot]
+
 4.44.0 (2026-04-02)
 -------------------
 * Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_) (`#3117 <https://github.com/ros-controls/ros2_control/issues/3117>`_)

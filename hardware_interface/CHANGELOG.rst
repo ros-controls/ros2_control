@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* lexical_casts: use gMock instead of gTest (`#3204 <https://github.com/ros-controls/ros2_control/issues/3204>`_) (`#3205 <https://github.com/ros-controls/ros2_control/issues/3205>`_)
+* Contributors: mergify[bot]
+
 4.44.0 (2026-04-02)
 -------------------
 * fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_) (`#3161 <https://github.com/ros-controls/ros2_control/issues/3161>`_)
