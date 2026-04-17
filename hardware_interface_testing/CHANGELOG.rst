@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.45.0 (2026-04-17)
+-------------------
 * Fix RCLCPP_VERSION_GTE for add_node (backport `#3198 <https://github.com/ros-controls/ros2_control/issues/3198>`_) (`#3200 <https://github.com/ros-controls/ros2_control/issues/3200>`_)
 * Fix API breaking change of Executor::add_node (backport `#3080 <https://github.com/ros-controls/ros2_control/issues/3080>`_) (`#3190 <https://github.com/ros-controls/ros2_control/issues/3190>`_)
 * Contributors: mergify[bot]
