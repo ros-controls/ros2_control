@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.6.0 (2026-04-17)
+------------------
 * [CM] Migrate controllers_lock\_ to RT-safe PI recursive mutex (`#3197 <https://github.com/ros-controls/ros2_control/issues/3197>`_)
 * Contributors: Shlok Mehndiratta
 

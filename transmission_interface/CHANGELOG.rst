@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.6.0 (2026-04-17)
+------------------
 * Unify transmission tests using shared minimal robot URDF in test assets (`#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_)
 * Contributors: Naitik
 
