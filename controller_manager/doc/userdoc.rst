@@ -902,9 +902,7 @@ Provides an alternative way to specify controllers using a dictionary format, al
     from ament_index_python.packages import get_package_share_directory
 
     def generate_launch_description():
-        config_dir = os.path.join(
-            get_package_share_directory('my_robot_bringup'),
-            'config'
+        config_dir = PathSubstitution(FindPackageShare('my_robot_bringup') / 'config')
         )
         # Define controllers with per-controller configurations
         controller_info_dict = {
