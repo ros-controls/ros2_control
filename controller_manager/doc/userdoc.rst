@@ -618,37 +618,36 @@ A utility class that manages ROS 2 service clients for controller manager operat
 
     import rclpy
     from rclpy.node import Node
-    from controller_manager.controller_manager_services import SingletonServiceCaller
+    from controller_manager.controller_manager_services import (
+      load_controller, configure_controller, switch_controllers, cleanup_controller, unload_controller
+    )
     from controller_manager_msgs.srv import LoadController
 
-    def load_my_controller():
+    def main():
         rclpy.init()
-        node = Node('my_loader')
+        node = rclpy.create_node('controller_ops')
+        cm_name = 'controller_manager'
         try:
-            # Create or retrieve a service client
-            client = SingletonServiceCaller(
-                node,
-                LoadController,
-                '/controller_manager/load_controller'
-            )
-            # Use the client to call the service
-            request = LoadController.Request()
-            request.name = 'joint_trajectory_controller'
-            # Call service
-            future = client.call_async(request)
-            rclpy.spin_until_future_complete(node, future)
-            response = future.result()
-            if response.success:
-                print("✓ Controller loaded successfully")
-            else:
-                print("✗ Failed to load controller")
-                print(f"  Reason: {response.reason}")
+          resp = load_controller(node, cm_name, 'my_controller')
+          if getattr(resp, 'success', False):
+            node.get_logger().info("Controller loaded")
+          resp = configure_controller(node, cm_name, 'my_controller')
+          if getattr(resp, 'ok', getattr(resp, 'success', False)):
+            node.get_logger().info("Controller configured")
+          resp = switch_controllers(
+            node, cm_name, deactivate_controllers=[], activate_controllers=['my_controller'],
+            strictness=2, activate_asap=False, timeout=0.0
+        )
+          if getattr(resp, 'ok', False):
+            node.get_logger().info('Controller activated')
         finally:
-            node.destroy_node()
-            rclpy.shutdown()
+          cleanup_controller(node, cm_name, 'my_controller')
+          unload_controller(node, cm_name, 'my_controller')
+          node.destroy_node()
+          rclpy.shutdown()
 
     if __name__ == '__main__':
-        load_my_controller()
+        main()
 
 **Terminal Output:**
 
