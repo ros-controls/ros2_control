@@ -36,8 +36,9 @@ from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
 from qt_gui.plugin import Plugin
-from ros2param.api import call_get_parameters, call_list_parameters
+from rcl_interfaces.srv import GetParameters, ListParameters
 from ros2service.api import get_service_names_and_types
+import rclpy
 
 from .update_combo import update_combo
 
@@ -622,8 +623,16 @@ def _get_controller_type(node, node_name, ctrl_name):
     @return Controller type
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
-    return response.values[0].string_value if response.values else ""
+    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
+    client = node.create_client(GetParameters, f"{node_name}/get_parameters")
+    if not client.wait_for_service(timeout_sec=5.0):
+        return ""
+    request = GetParameters.Request()
+    request.names = [ctrl_name]
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future)
+    response = future.result()
+    return response.values[0].string_value if response and response.values else ""
 
 
 def _list_controller_managers(node):
@@ -644,13 +653,15 @@ def _list_controller_managers(node):
 
 def _get_parameter_controller_names(node, node_name):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
-    parameter_names = call_list_parameters(node=node, node_name=node_name)
+    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
+    client = node.create_client(ListParameters, f"{node_name}/list_parameters")
+    if not client.wait_for_service(timeout_sec=5.0):
+        return []
+    request = ListParameters.Request()
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future)
+    response = future.result()
+    names = response.result.names if response else []
+
     suffix = ".type"
-    # @note: The versions conditioning is added here to support the source-compatibility with Humble
-    if os.environ.get("ROS_DISTRO") == "humble":
-        # for humble, ros2param < 0.20.0
-        return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
-    else:
-        return [
-            n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)
-        ]
+    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
