@@ -13,12 +13,10 @@
 // limitations under the License.
 
 #include <array>
-#include <memory>
-#include <stdexcept>
 #include <vector>
 
+#include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/system_interface.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
@@ -42,6 +40,26 @@ void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
 
 class TestSystem : public SystemInterface
 {
+  void check_injected_failure(const std::string & method_name) const
+  {
+    const auto & info = get_hardware_info();
+    const auto & params = info.hardware_parameters;
+    const std::string throw_key = "throw_on_" + method_name;
+    const std::string unknown_throw_key = "throw_unknown_on_" + method_name;
+
+    if (params.count(throw_key) && hardware_interface::parse_bool(params.at(throw_key)))
+    {
+      throw std::runtime_error("Standard exception from TestSystem::" + method_name);
+    }
+
+    if (
+      params.count(unknown_throw_key) &&
+      hardware_interface::parse_bool(params.at(unknown_throw_key)))
+    {
+      throw 42;  // Throw an unknown type (int)
+    }
+  }
+
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
@@ -50,6 +68,8 @@ class TestSystem : public SystemInterface
       return CallbackReturn::ERROR;
     }
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+
+    check_injected_failure("on_init");
 
     // Simulating initialization error
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
@@ -65,51 +85,48 @@ class TestSystem : public SystemInterface
         get_hardware_info().name.c_str(), get_hardware_info().hardware_plugin_name.c_str());
       return CallbackReturn::ERROR;
     }
-
-    auto it = get_hardware_info().hardware_parameters.find("throw_on_read");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_read_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_write");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_write_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_configure");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_configure_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_activate");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_activate_ = (it->second == "true");
-    }
-
     return CallbackReturn::SUCCESS;
   }
 
-  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
   {
-    if (throw_on_configure_)
-    {
-      throw std::runtime_error("Injected exception during on_configure!");
-    }
-    return CallbackReturn::SUCCESS;
+    check_injected_failure("on_configure");
+    return SystemInterface::on_configure(previous_state);
   }
 
-  CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override
   {
-    if (throw_on_activate_)
-    {
-      throw std::runtime_error("Injected exception during on_activate!");
-    }
-    return CallbackReturn::SUCCESS;
+    check_injected_failure("on_cleanup");
+    return SystemInterface::on_cleanup(previous_state);
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_activate");
+    return SystemInterface::on_activate(previous_state);
+  }
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_deactivate");
+    return SystemInterface::on_deactivate(previous_state);
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_shutdown");
+    return SystemInterface::on_shutdown(previous_state);
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_error");
+    return SystemInterface::on_error(previous_state);
   }
 
   std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
+    check_injected_failure("export_state_interfaces");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
@@ -143,6 +160,7 @@ class TestSystem : public SystemInterface
 
   std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
+    check_injected_failure("export_command_interfaces");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     const auto info = get_hardware_info();
     std::vector<CommandInterface::SharedPtr> command_interfaces;
@@ -173,11 +191,7 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    if (throw_on_read_)
-    {
-      throw std::runtime_error("Exception from TestSystem::read() as requested by parameter.");
-    }
-
+    check_injected_failure("read");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
@@ -218,11 +232,7 @@ class TestSystem : public SystemInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    if (throw_on_write_)
-    {
-      throw std::runtime_error("Exception from TestSystem::write() as requested by parameter.");
-    }
-
+    check_injected_failure("write");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
@@ -255,11 +265,23 @@ class TestSystem : public SystemInterface
     return return_type::OK;
   }
 
+  return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
+  {
+    check_injected_failure("prepare_command_mode_switch");
+    return SystemInterface::prepare_command_mode_switch(start_interfaces, stop_interfaces);
+  }
+
+  return_type perform_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
+  {
+    check_injected_failure("perform_command_mode_switch");
+    return SystemInterface::perform_command_mode_switch(start_interfaces, stop_interfaces);
+  }
+
 private:
-  bool throw_on_read_ = false;
-  bool throw_on_write_ = false;
-  bool throw_on_configure_ = false;
-  bool throw_on_activate_ = false;
   std::array<CommandInterface::SharedPtr, 2> velocity_command_;
   std::array<StateInterface::SharedPtr, 2> position_state_;
   std::array<StateInterface::SharedPtr, 2> velocity_state_;

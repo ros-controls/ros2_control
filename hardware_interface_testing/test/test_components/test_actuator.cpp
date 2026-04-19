@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
-#include <stdexcept>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 #include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
@@ -27,6 +26,28 @@ using hardware_interface::StateInterface;
 
 class TestActuator : public ActuatorInterface
 {
+  void check_injected_failure(const std::string & method_name) const
+  {
+    const auto & info = get_hardware_info();
+    const auto & params = info.hardware_parameters;
+    const std::string throw_key = "throw_on_" + method_name;
+    const std::string unknown_throw_key = "throw_unknown_on_" + method_name;
+
+    if (params.count(throw_key) && hardware_interface::parse_bool(params.at(throw_key)))
+    {
+      throw std::runtime_error("Standard exception from TestActuator::" + method_name);
+    }
+
+    if (
+      params.count(unknown_throw_key) &&
+      hardware_interface::parse_bool(params.at(unknown_throw_key)))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Injecting unknown exception for TestActuator::%s", method_name.c_str());
+      throw 42;  // Throw an unknown type (int)
+    }
+  }
+
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
@@ -34,6 +55,8 @@ class TestActuator : public ActuatorInterface
     {
       return CallbackReturn::ERROR;
     }
+
+    check_injected_failure("on_init");
 
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
     {
@@ -48,50 +71,61 @@ class TestActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
 
-    auto it = get_hardware_info().hardware_parameters.find("throw_on_read");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_read_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_write");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_write_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_configure");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_configure_ = (it->second == "true");
-    }
-    it = get_hardware_info().hardware_parameters.find("throw_on_activate");
-    if (it != get_hardware_info().hardware_parameters.end())
-    {
-      throw_on_activate_ = (it->second == "true");
-    }
+    /*
+     * a hardware can optional prove for incorrect info here.
+     *
+     * // can only control one joint
+     * if (get_hardware_info().joints.size() != 1) {return CallbackReturn::ERROR;}
+     * // can only control in position
+     * if (get_hardware_info().joints[0].command_interfaces.size() != 1) {return
+     * CallbackReturn::ERROR;}
+     * // can only give feedback state for position and velocity
+     * if (get_hardware_info().joints[0].state_interfaces.size() != 2) {return
+     * CallbackReturn::ERROR;}
+     */
 
     return CallbackReturn::SUCCESS;
   }
 
-  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
   {
-    if (throw_on_configure_)
-    {
-      throw std::runtime_error("Injected exception during on_configure!");
-    }
-    return CallbackReturn::SUCCESS;
+    check_injected_failure("on_configure");
+    return ActuatorInterface::on_configure(previous_state);
   }
 
-  CallbackReturn on_activate(const rclcpp_lifecycle::State & /*previous_state*/) override
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override
   {
-    if (throw_on_activate_)
-    {
-      throw std::runtime_error("Injected exception during on_activate!");
-    }
-    return CallbackReturn::SUCCESS;
+    check_injected_failure("on_cleanup");
+    return ActuatorInterface::on_cleanup(previous_state);
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_activate");
+    return ActuatorInterface::on_activate(previous_state);
+  }
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_deactivate");
+    return ActuatorInterface::on_deactivate(previous_state);
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_shutdown");
+    return ActuatorInterface::on_shutdown(previous_state);
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_error");
+    return ActuatorInterface::on_error(previous_state);
   }
 
   std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
+    check_injected_failure("export_state_interfaces");
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     position_state_ = std::make_shared<StateInterface>(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name);
@@ -110,6 +144,7 @@ class TestActuator : public ActuatorInterface
 
   std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
+    check_injected_failure("export_command_interfaces");
     std::vector<CommandInterface::SharedPtr> command_interfaces;
     velocity_command_ = std::make_shared<CommandInterface>(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name);
@@ -129,9 +164,10 @@ class TestActuator : public ActuatorInterface
   }
 
   hardware_interface::return_type prepare_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/) override
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
   {
+    check_injected_failure("prepare_command_mode_switch");
     double pos = 0.0;
     std::ignore = position_state_->get_value(pos, false);
     std::ignore = position_state_->set_value(pos + 0.001, false);
@@ -139,9 +175,10 @@ class TestActuator : public ActuatorInterface
   }
 
   hardware_interface::return_type perform_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/) override
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
   {
+    check_injected_failure("perform_command_mode_switch");
     if (get_hardware_info().hardware_parameters.count("fail_on_perform_mode_switch"))
     {
       if (
@@ -159,15 +196,11 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
-    if (throw_on_read_)
-    {
-      throw std::runtime_error("Exception from TestActuator::read() as requested by parameter.");
-    }
-
+    check_injected_failure("read");
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
-        std::chrono::milliseconds(1000 / (6 * get_hardware_info().rw_rate)));
+        std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));
     }
     double vel_cmd = 0.0;
     std::ignore = velocity_command_->get_value(vel_cmd, false);
@@ -213,11 +246,7 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    if (throw_on_write_)
-    {
-      throw std::runtime_error("Exception from TestActuator::write() as requested by parameter.");
-    }
-
+    check_injected_failure("write");
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
@@ -250,10 +279,6 @@ class TestActuator : public ActuatorInterface
   }
 
 private:
-  bool throw_on_read_ = false;
-  bool throw_on_write_ = false;
-  bool throw_on_configure_ = false;
-  bool throw_on_activate_ = false;
   StateInterface::SharedPtr position_state_;
   StateInterface::SharedPtr velocity_state_;
   CommandInterface::SharedPtr velocity_command_;
