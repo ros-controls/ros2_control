@@ -55,6 +55,15 @@ if(BUILD_TESTING)
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})
 
+  ament_add_gmock(test_rm_exception_handling test/test_rm_exception_handling.cpp)
+  target_link_libraries(test_rm_exception_handling
+                        hardware_interface::hardware_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp
+                        rclcpp_lifecycle::rclcpp_lifecycle
+                        ros2_control_test_assets::ros2_control_test_assets
+                        ${lifecycle_msgs_TARGETS})
+
 endif()
 
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})

@@ -14,6 +14,7 @@
 
 #include <vector>
 
+#include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "rclcpp/logging.hpp"
 
@@ -23,6 +24,28 @@ using hardware_interface::StateInterface;
 
 class TestSensor : public SensorInterface
 {
+  void check_injected_failure(const std::string & method_name) const
+  {
+    const auto & info = get_hardware_info();
+    const auto & params = info.hardware_parameters;
+    const std::string throw_key = "throw_on_" + method_name;
+    const std::string unknown_throw_key = "throw_unknown_on_" + method_name;
+
+    if (params.count(throw_key) && hardware_interface::parse_bool(params.at(throw_key)))
+    {
+      throw std::runtime_error("Standard exception from TestSensor::" + method_name);
+    }
+
+    if (
+      params.count(unknown_throw_key) &&
+      hardware_interface::parse_bool(params.at(unknown_throw_key)))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Injecting unknown exception for TestSensor::%s", method_name.c_str());
+      throw 42;  // Throw an unknown type (int)
+    }
+  }
+
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
@@ -30,6 +53,8 @@ class TestSensor : public SensorInterface
     {
       return CallbackReturn::ERROR;
     }
+
+    check_injected_failure("on_init");
     // can only give feedback state for velocity
     if (get_hardware_info().sensors[0].state_interfaces.size() == 2)
     {
@@ -46,8 +71,45 @@ class TestSensor : public SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_configure");
+    return SensorInterface::on_configure(previous_state);
+  }
+
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_cleanup");
+    return SensorInterface::on_cleanup(previous_state);
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_activate");
+    return SensorInterface::on_activate(previous_state);
+  }
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_deactivate");
+    return SensorInterface::on_deactivate(previous_state);
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_shutdown");
+    return SensorInterface::on_shutdown(previous_state);
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_error");
+    return SensorInterface::on_error(previous_state);
+  }
+
   std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
+    check_injected_failure("export_state_interfaces");
     std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     velocity_state_ = std::make_shared<StateInterface>(
       get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name);
@@ -59,6 +121,7 @@ class TestSensor : public SensorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    check_injected_failure("read");
     return return_type::OK;
   }
 
