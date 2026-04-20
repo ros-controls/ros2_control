@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
+=======
+#include <algorithm>
+#include <cctype>
+#include <charconv>
+#include <cmath>
+#include <cstdint>
+#include <locale>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+>>>>>>> c178e16 (Add missing `charconv` header (#3234))
 #include "hardware_interface/lexical_casts.hpp"
 
 namespace hardware_interface
