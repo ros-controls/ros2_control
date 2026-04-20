@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.6.0 (2026-04-17)
+------------------
+* lexical_casts: use gMock instead of gTest (`#3204 <https://github.com/ros-controls/ros2_control/issues/3204>`_)
+* Contributors: Christoph Fröhlich
+
 6.5.1 (2026-04-05)
 ------------------
 
