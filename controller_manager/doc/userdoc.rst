@@ -603,23 +603,22 @@ Utility scripts
 
 In addition to the ``spawner``, ``unspawner``, and ``hardware_spawner`` helper scripts, the controller_manager package provides utility modules for programmatic interaction with the controller manager.
 
-controller_manager_services
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Programmatic controller lifecycle (recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``controller_manager_services`` module provides utility classes for interacting with controller manager services programmatically.
+Prefer the high-level service wrapper functions in
+``controller_manager.controller_manager.controller_manager_services`` for lifecycle scripts
+(e.g. ``load_controller``, ``configure_controller``, ``switch_controllers``, ``cleanup_controller``, ``unload_controller``)
+instead of exposing internal service-client singletons.
 
-**SingletonServiceCaller**
-
-A utility class that manages ROS 2 service clients for controller manager operations, ensuring only one client per service (singleton pattern).
-
-**Python Usage Example:**
+**Example lifecycle script:**
 
 .. code-block:: python
 
     import rclpy
     from rclpy.node import Node
     from controller_manager.controller_manager_services import (
-      load_controller, configure_controller, switch_controllers, cleanup_controller, unload_controller
+        load_controller, configure_controller, switch_controllers, cleanup_controller, unload_controller
     )
     from controller_manager_msgs.srv import LoadController
 
@@ -628,148 +627,30 @@ A utility class that manages ROS 2 service clients for controller manager operat
         node = rclpy.create_node('controller_ops')
         cm_name = 'controller_manager'
         try:
-          resp = load_controller(node, cm_name, 'my_controller')
-          if getattr(resp, 'success', False):
-            node.get_logger().info("Controller loaded")
-          resp = configure_controller(node, cm_name, 'my_controller')
-          if getattr(resp, 'ok', getattr(resp, 'success', False)):
-            node.get_logger().info("Controller configured")
-          resp = switch_controllers(
-            node, cm_name, deactivate_controllers=[], activate_controllers=['my_controller'],
-            strictness=2, activate_asap=False, timeout=0.0
-        )
-          if getattr(resp, 'ok', False):
-            node.get_logger().info('Controller activated')
+            resp = load_controller(node, cm_name, 'my_controller')
+            if getattr(resp, 'success', False):
+                node.get_logger().info("Controller loaded")
+            resp = configure_controller(node, cm_name, 'my_controller')
+            if getattr(resp, 'ok', getattr(resp, 'success', False)):
+                node.get_logger().info("Controller configured")
+            resp = switch_controllers(
+                node, cm_name, deactivate_controllers=[], activate_controllers=['my_controller'],
+                strictness=2, activate_asap=False, timeout=0.0
+            )
+            if getattr(resp, 'ok', False):
+                node.get_logger().info('Controller activated')
         finally:
-          cleanup_controller(node, cm_name, 'my_controller')
-          unload_controller(node, cm_name, 'my_controller')
-          node.destroy_node()
-          rclpy.shutdown()
+            cleanup_controller(node, cm_name, 'my_controller')
+            unload_controller(node, cm_name, 'my_controller')
+            node.destroy_node()
+            rclpy.shutdown()
 
     if __name__ == '__main__':
         main()
 
-**Terminal Output:**
-
-.. code-block:: console
-
-    $ python3 load_controller_script.py
-    ✓ Controller loaded successfully
-
-**Supported Services:**
-
-The ``SingletonServiceCaller`` can be used with these controller manager services:
-
-- ``LoadController`` - Load a controller
-- ``UnloadController`` - Unload a controller
-- ``ConfigureController`` - Configure a loaded controller
-- ``CleanupController`` - Clean up a controller
-- ``SwitchController`` - Switch between active controllers
-- ``ListControllers`` - List all controllers and their states
-- ``ListControllerTypes`` - List available controller types
-- ``ListHardwareInterfaces`` - List available hardware interfaces
-- ``ListHardwareComponents`` - List hardware components
-- ``SetHardwareComponentState`` - Set state of hardware components
-- ``ReloadControllerLibraries`` - Reload controller libraries
-
-**Complete Controller Lifecycle Management Example:**
-
-.. code-block:: python
-
-    import rclpy
-    from rclpy.node import Node
-    from controller_manager.controller_manager_services import SingletonServiceCaller
-    from controller_manager_msgs.srv import (
-        LoadController,
-        ConfigureController,
-        SwitchController,
-        UnloadController,
-    )
-
-    class ControllerManager:
-        def __init__(self):
-            rclpy.init()
-            self.node = Node('controller_ops')
-        def load_controller(self, controller_name):
-            """Load a controller."""
-            client = SingletonServiceCaller(
-                self.node,
-                LoadController,
-                '/controller_manager/load_controller'
-            )
-            request = LoadController.Request()
-            request.name = controller_name
-            future = client.call_async(request)
-            rclpy.spin_until_future_complete(self.node, future)
-            response = future.result()
-            return response.success
-        def configure_controller(self, controller_name):
-            """Configure a loaded controller."""
-            client = SingletonServiceCaller(
-                self.node,
-                ConfigureController,
-                '/controller_manager/configure_controller'
-            )
-            request = ConfigureController.Request()
-            request.name = controller_name
-            future = client.call_async(request)
-            rclpy.spin_until_future_complete(self.node, future)
-            response = future.result()
-            return response.success
-        def activate_controller(self, controller_name):
-            """Activate a configured controller."""
-            client = SingletonServiceCaller(
-                self.node,
-                SwitchController,
-                '/controller_manager/switch_controller'
-            )
-            request = SwitchController.Request()
-            request.deactivate_controllers = []
-            request.activate_controllers = [controller_name]
-            request.strictness = SwitchController.Request.STRICT
-            future = client.call_async(request)
-            rclpy.spin_until_future_complete(self.node, future)
-            response = future.result()
-            return response.ok
-        def cleanup(self):
-            self.node.destroy_node()
-            rclpy.shutdown()
-
-    if __name__ == '__main__':
-        manager = ControllerManager()
-        try:
-            print("Loading controller...")
-            if manager.load_controller('my_controller'):
-                print("✓ Controller loaded")
-                print("Configuring controller...")
-                if manager.configure_controller('my_controller'):
-                    print("✓ Controller configured")
-                    print("Activating controller...")
-                    if manager.activate_controller('my_controller'):
-                        print("✓ Controller activated")
-        finally:
-            manager.cleanup()
-
-**Terminal Output:**
-
-.. code-block:: console
-
-    $ python3 controller_ops.py
-    Loading controller...
-    ✓ Controller loaded
-    Configuring controller...
-    ✓ Controller configured
-    Activating controller...
-    ✓ Controller activated
-
-**Use Cases:**
-
-- Building custom robot control tools and applications
-- Implementing complex controller coordination logic
-- Creating monitoring or diagnostic utilities
-- Programmatic controller lifecycle management
-- Integration with custom middleware or frameworks
-
+Notes:
+- Import path: controller_manager.controller_manager.controller_manager_services (matches repository layout).
+- Response fields differ between services; examples use getattr to handle ``success`` vs ``ok``.
 
 launch_utils
 ^^^^^^^^^^^^
