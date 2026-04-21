@@ -17,13 +17,17 @@
 #ifndef MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 
+#include <atomic>
 #include <string>
 #include <vector>
+
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 using hardware_interface::return_type;
 
@@ -89,7 +93,8 @@ private:
   bool calculate_dynamics_;
   std::vector<size_t> joint_control_mode_;
 
-  bool command_propagation_disabled_;
+  std::atomic<bool> command_propagation_disabled_;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_command_propagation_srv_;
 };
 
 typedef GenericSystem GenericRobot;

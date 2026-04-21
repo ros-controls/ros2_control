@@ -66,11 +66,28 @@ CallbackReturn GenericSystem::on_init(
   it = get_hardware_info().hardware_parameters.find("disable_commands");
   if (it != get_hardware_info().hardware_parameters.end())
   {
-    command_propagation_disabled_ = hardware_interface::parse_bool(it->second);
+    command_propagation_disabled_.store(
+      hardware_interface::parse_bool(it->second), std::memory_order_relaxed);
   }
   else
   {
-    command_propagation_disabled_ = false;
+    command_propagation_disabled_.store(false, std::memory_order_relaxed);
+  }
+
+  if (get_node())
+  {
+    set_command_propagation_srv_ = get_node()->create_service<std_srvs::srv::SetBool>(
+      "~/set_command_propagation",
+      [this](
+        const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+        std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+      {
+        command_propagation_disabled_.store(!request->data, std::memory_order_release);
+        response->success = true;
+        response->message =
+          request->data ? "Command propagation enabled" : "Command propagation disabled";
+        RCLCPP_INFO(get_logger(), "%s", response->message.c_str());
+      });
   }
 
   // check if there is parameter that enables dynamic calculation
@@ -330,7 +347,7 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
 
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  if (command_propagation_disabled_)
+  if (command_propagation_disabled_.load(std::memory_order_acquire))
   {
     RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");
     return return_type::OK;
