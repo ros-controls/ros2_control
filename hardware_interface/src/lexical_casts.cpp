@@ -29,6 +29,32 @@ namespace hardware_interface
 {
 namespace impl
 {
+template <typename T>
+std::optional<T> parse_floating_point_from_chars(const std::string & s)
+{
+  const char * begin = s.data();
+  const char * end = begin + s.size();
+
+  // std::from_chars for floating-point values does not accept a leading '+'.
+  if (begin != end && *begin == '+')
+  {
+    ++begin;
+    if (begin == end)
+    {
+      return std::nullopt;
+    }
+  }
+
+  T result_value;
+  const auto parse_result = std::from_chars(begin, end, result_value);
+  if (parse_result.ec == std::errc() && parse_result.ptr == end && std::isfinite(result_value))
+  {
+    return result_value;
+  }
+
+  return std::nullopt;
+}
+
 std::optional<double> stod(const std::string & s)
 {
 #if __cplusplus < 202002L
@@ -44,14 +70,7 @@ std::optional<double> stod(const std::string & s)
   }
   return result;
 #else
-  // Impl with std::from_chars
-  double result_value;
-  const auto parse_result = std::from_chars(s.data(), s.data() + s.size(), result_value);
-  if (parse_result.ec == std::errc())
-  {
-    return result_value;
-  }
-  return std::nullopt;
+  return parse_floating_point_from_chars<double>(s);
 #endif
 }
 
@@ -70,14 +89,7 @@ std::optional<float> stof(const std::string & s)
   }
   return result;
 #else
-  // Impl with std::from_chars
-  float result_value;
-  const auto parse_result = std::from_chars(s.data(), s.data() + s.size(), result_value);
-  if (parse_result.ec == std::errc())
-  {
-    return result_value;
-  }
-  return std::nullopt;
+  return parse_floating_point_from_chars<float>(s);
 #endif
 }
 
