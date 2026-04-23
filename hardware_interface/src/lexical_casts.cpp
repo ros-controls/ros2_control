@@ -29,14 +29,19 @@ namespace hardware_interface
 {
 namespace impl
 {
-template <typename T>
-std::optional<T> parse_floating_point_from_chars(const std::string & s)
+template <typename FloatingPointType>
+std::optional<FloatingPointType> parse_floating_point_with_from_chars(const std::string & s)
 {
   const char * begin = s.data();
-  const char * end = begin + s.size();
+  const char * end = s.data() + s.size();
 
-  // std::from_chars for floating-point values does not accept a leading '+'.
-  if (begin != end && *begin == '+')
+  if (begin == end)
+  {
+    return std::nullopt;
+  }
+
+  // std::from_chars for floating-point does not accept a leading '+' sign.
+  if (*begin == '+')
   {
     ++begin;
     if (begin == end)
@@ -45,9 +50,11 @@ std::optional<T> parse_floating_point_from_chars(const std::string & s)
     }
   }
 
-  T result_value;
+  FloatingPointType result_value;
   const auto parse_result = std::from_chars(begin, end, result_value);
-  if (parse_result.ec == std::errc() && parse_result.ptr == end && std::isfinite(result_value))
+  if (
+    parse_result.ec == std::errc() && parse_result.ptr == end &&
+    std::isfinite(static_cast<double>(result_value)))
   {
     return result_value;
   }
@@ -70,7 +77,8 @@ std::optional<double> stod(const std::string & s)
   }
   return result;
 #else
-  return parse_floating_point_from_chars<double>(s);
+  // Impl with std::from_chars
+  return parse_floating_point_with_from_chars<double>(s);
 #endif
 }
 
@@ -89,7 +97,8 @@ std::optional<float> stof(const std::string & s)
   }
   return result;
 #else
-  return parse_floating_point_from_chars<float>(s);
+  // Impl with std::from_chars
+  return parse_floating_point_with_from_chars<float>(s);
 #endif
 }
 
