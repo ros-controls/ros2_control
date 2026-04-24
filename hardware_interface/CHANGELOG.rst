@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix C++20 behavior changes of `std::from_chars` (`#3244 <https://github.com/ros-controls/ros2_control/issues/3244>`_) (`#3248 <https://github.com/ros-controls/ros2_control/issues/3248>`_)
+* Add missing `charconv` header (`#3234 <https://github.com/ros-controls/ros2_control/issues/3234>`_) (`#3237 <https://github.com/ros-controls/ros2_control/issues/3237>`_)
+* Contributors: mergify[bot]
+
 5.14.0 (2026-04-17)
 -------------------
 * lexical_casts: use gMock instead of gTest (`#3204 <https://github.com/ros-controls/ros2_control/issues/3204>`_) (`#3206 <https://github.com/ros-controls/ros2_control/issues/3206>`_)
