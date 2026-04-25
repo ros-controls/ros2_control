@@ -17,6 +17,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -775,15 +776,26 @@ class TestComponentInterfaces : public ::testing::Test
 protected:
   void SetUp() override
   {
-    executor_ =
-      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
-
-    // This sleep is needed to prevent a too fast test from ending before the
-    // executor has began to spin, which causes it to hang
-    std::this_thread::sleep_for(50ms);
+    if (!rclcpp::ok())
+    {
+      rclcpp::init(0, nullptr);
+    }
+    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    spin_thread_ = std::thread([this]() { executor_->spin(); });
   }
-  void TearDown() override { executor_->cancel(); }
+  void TearDown() override
+  {
+    if (executor_)
+    {
+      executor_->cancel();
+    }
+    if (spin_thread_.joinable())
+    {
+      spin_thread_.join();
+    }
+  }
   std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
+  std::thread spin_thread_;
 };
 // BEGIN (Handle export change): for backward compatibility
 TEST_F(TestComponentInterfaces, dummy_actuator)
