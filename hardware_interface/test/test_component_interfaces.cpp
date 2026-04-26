@@ -807,6 +807,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1082,6 +1083,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1229,6 +1231,7 @@ TEST_F(TestComponentInterfaces, dummy_system)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1582,6 +1585,7 @@ TEST_F(TestComponentInterfaces, dummy_command_mode_system)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1621,6 +1625,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1770,6 +1775,7 @@ TEST_F(TestComponentInterfaces, dummy_actuator_write_error_behavior)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -1931,6 +1937,7 @@ TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -2074,6 +2081,7 @@ TEST_F(TestComponentInterfaces, dummy_system_read_error_behavior)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
@@ -2241,6 +2249,7 @@ TEST_F(TestComponentInterfaces, dummy_system_write_error_behavior)
 
   hardware_interface::HardwareInfo mock_hw_info;
   mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
