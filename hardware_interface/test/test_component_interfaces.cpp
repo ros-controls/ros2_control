@@ -780,11 +780,8 @@ protected:
     {
       rclcpp::init(0, nullptr);
     }
-    executor_ =
-      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
     spin_thread_ = std::thread([this]() { executor_->spin(); });
-    // Give executor thread(s) time to start spinning
-    std::this_thread::sleep_for(10ms);
   }
   void TearDown() override
   {
