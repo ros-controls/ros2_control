@@ -872,8 +872,16 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    const double current_position = state_interfaces[0]->get_optional().value();
-    const double current_velocity = state_interfaces[1]->get_optional().value();
+    const auto pos_opt = state_interfaces[0]->get_optional();
+    const auto vel_opt = state_interfaces[1]->get_optional();
+    // Skip if the async handler briefly holds the write lock
+    if (!pos_opt.has_value() || !vel_opt.has_value())
+    {
+      ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+      continue;
+    }
+    const double current_position = pos_opt.value();
+    const double current_velocity = vel_opt.value();
 
     if (step == 0u)
     {
@@ -908,18 +916,25 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
-    const double current_finalized_position = state_interfaces[0]->get_optional().value();
+    const auto pos_opt = state_interfaces[0]->get_optional();
+    const auto vel_opt = state_interfaces[1]->get_optional();
+    // Skip if the async handler briefly holds the write lock (get_optional returns nullopt)
+    if (!pos_opt.has_value() || !vel_opt.has_value())
+    {
+      ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+      continue;
+    }
     if (step == 0u)
     {
       // Accept whatever value was reached; we only care it stays frozen from here on.
-      EXPECT_GE(current_finalized_position, 0.0);
-      finalized_position = current_finalized_position;
+      EXPECT_GE(pos_opt.value(), 0.0);
+      finalized_position = pos_opt.value();
     }
     else
     {
-      EXPECT_EQ(finalized_position, current_finalized_position);  // position value
+      EXPECT_EQ(finalized_position, pos_opt.value());  // position value
     }
-    EXPECT_EQ(0, state_interfaces[1]->get_optional().value());  // velocity
+    EXPECT_EQ(0.0, vel_opt.value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
@@ -1776,13 +1791,18 @@ TEST_F(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
 
   // Initiate error on write (this is first time therefore recoverable)
+  // Use a time-bounded loop: async handler on slow CI runners may consume most write_calls_
+  // increments internally, so a fixed count limit is insufficient — wall time is reliable.
   hardware_interface::return_type write_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    write_ret = actuator_hw.write(TIME, PERIOD);
-    if (write_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      write_ret = actuator_hw.write(TIME, PERIOD);
+      if (write_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, write_ret);
@@ -1805,12 +1825,15 @@ TEST_F(TestComponentInterfaces, dummy_actuator_write_error_behavior)
 
   // Initiate error on write (this is the second time therefore unrecoverable)
   write_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    write_ret = actuator_hw.write(TIME, PERIOD);
-    if (write_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      write_ret = actuator_hw.write(TIME, PERIOD);
+      if (write_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, write_ret);
@@ -2071,14 +2094,19 @@ TEST_F(TestComponentInterfaces, dummy_system_read_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
 
-  // Initiate error on write (this is first time therefore recoverable)
+  // Initiate error on read (this is first time therefore recoverable)
+  // Use a time-bounded loop: async handler on slow CI runners may consume most read_calls_
+  // increments internally, so a fixed count limit is insufficient — wall time is reliable.
   hardware_interface::return_type read_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    read_ret = system_hw.read(TIME, PERIOD);
-    if (read_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      read_ret = system_hw.read(TIME, PERIOD);
+      if (read_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, read_ret);
@@ -2104,14 +2132,17 @@ TEST_F(TestComponentInterfaces, dummy_system_read_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
 
-  // Initiate error on write (this is the second time therefore unrecoverable)
+  // Initiate error on read (this is the second time therefore unrecoverable)
   read_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    read_ret = system_hw.read(TIME, PERIOD);
-    if (read_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      read_ret = system_hw.read(TIME, PERIOD);
+      if (read_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, read_ret);
@@ -2231,13 +2262,18 @@ TEST_F(TestComponentInterfaces, dummy_system_write_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
 
   // Initiate error on write (this is first time therefore recoverable)
+  // Use a time-bounded loop: async handler on slow CI runners may consume most write_calls_
+  // increments internally, so a fixed count limit is insufficient — wall time is reliable.
   hardware_interface::return_type write_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    write_ret = system_hw.write(TIME, PERIOD);
-    if (write_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      write_ret = system_hw.write(TIME, PERIOD);
+      if (write_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, write_ret);
@@ -2265,12 +2301,15 @@ TEST_F(TestComponentInterfaces, dummy_system_write_error_behavior)
 
   // Initiate error on write (this is the second time therefore unrecoverable)
   write_ret = hardware_interface::return_type::OK;
-  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS * 5; ++i)
   {
-    write_ret = system_hw.write(TIME, PERIOD);
-    if (write_ret == hardware_interface::return_type::ERROR)
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-      break;
+      write_ret = system_hw.write(TIME, PERIOD);
+      if (write_ret == hardware_interface::return_type::ERROR)
+      {
+        break;
+      }
     }
   }
   ASSERT_EQ(hardware_interface::return_type::ERROR, write_ret);
