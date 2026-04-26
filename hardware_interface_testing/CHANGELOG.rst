@@ -2,6 +2,9 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.0 (2026-04-23)
+------------------
+
 6.6.0 (2026-04-17)
 ------------------
 * Fix RCLCPP_VERSION_GTE for add_node (`#3198 <https://github.com/ros-controls/ros2_control/issues/3198>`_)
