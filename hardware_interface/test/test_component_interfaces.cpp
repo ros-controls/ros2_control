@@ -878,9 +878,8 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
 
     if (step == 0u)
     {
-      // Async scheduling can run one or more cycles before the first read on slower CI runners.
-      EXPECT_GE(current_position, 0.0);
-      EXPECT_LE(current_position, velocity_value * 10);
+      // Async scheduling can run one cycle before the first read on slower CI runners.
+      EXPECT_TRUE(current_position == 0.0 || current_position == velocity_value);
       EXPECT_TRUE(current_velocity == 0.0 || current_velocity == velocity_value);
       previous_position = current_position;
     }
@@ -900,11 +899,9 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
 
-  // Capture the position that was reached before shutdown — async timing determines
-  // how many cycles actually completed, so we just verify it stays frozen afterwards.
   double finalized_position = std::numeric_limits<double>::quiet_NaN();
 
-  // Nothing should change because it is FINALIZED
+  // Noting should change because it is FINALIZED
   for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
@@ -912,8 +909,8 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
     const double current_finalized_position = state_interfaces[0]->get_optional().value();
     if (step == 0u)
     {
-      // Accept whatever value was reached; we only care it stays frozen from here on.
-      EXPECT_GE(current_finalized_position, 0.0);
+      // Depending on async timing, the final value can be one cycle behind.
+      EXPECT_TRUE(current_finalized_position == 9.0 || current_finalized_position == 10.0);
       finalized_position = current_finalized_position;
     }
     else
