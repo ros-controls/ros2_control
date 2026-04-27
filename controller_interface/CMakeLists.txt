@@ -24,7 +24,6 @@ add_library(controller_interface SHARED
   src/controller_interface.cpp
   src/chainable_controller_interface.cpp
 )
-target_compile_features(controller_interface PUBLIC cxx_std_17)
 target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
