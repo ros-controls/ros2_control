@@ -123,13 +123,6 @@ controller. An error message is printed similar to the following:
   [ros2_control_node-1] [ERROR] [1741629098.352874151] [controller_manager]: Caught exception of type : St13runtime_error while updating controller
   [ros2_control_node-1] [ERROR] [1741629098.352940701] [controller_manager]: Deactivating controllers : [example_async_controller] as their update resulted in an error!
 
-Monitoring and Tuning
-----------------------
-
-The ``controller_interface`` package provides a ``ControllerUpdateStats`` structure which
-can be used to monitor the controller update rate and missed update cycles. This data is
-published to the ``/diagnostics``  and also ``/controller_manager/introspection_data/*`` topic and can be used to fine-tune the controller's
-``update_rate``.
 
 See Also
 ---------
