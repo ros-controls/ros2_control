@@ -176,20 +176,6 @@ ChainableControllerInterface::export_reference_interfaces()
   exported_reference_interface_names_.clear();
   ordered_exported_reference_interfaces_.clear();
 
-  // BEGIN (Handle export change): for backward compatibility
-  // check if the "reference_interfaces_" variable is resized to number of interfaces
-  if (reference_interfaces_.size() != reference_interfaces.size())
-  {
-    std::string error_msg = fmt::format(
-      FMT_COMPILE(
-        "The internal storage for reference values 'reference_interfaces_' variable has size '{}', "
-        "but it is expected to have the size '{}' equal to the number of exported reference "
-        "interfaces. Please correct and recompile the controller with name '{}' and try again."),
-      reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
-    throw std::runtime_error(error_msg);
-  }
-  // END
-
   // check if the names of the reference interfaces begin with the controller's name
   for (auto & interface : reference_interfaces)
   {
