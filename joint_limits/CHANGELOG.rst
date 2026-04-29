@@ -2,6 +2,14 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.0 (2026-04-23)
+------------------
+* Fix LNK2005 in joint*limiter (`#3243 <https://github.com/ros-controls/ros2_control/issues/3243>`_)
+* Contributors: Christoph Fröhlich
+
+6.6.0 (2026-04-17)
+------------------
+
 6.5.1 (2026-04-05)
 ------------------
 
