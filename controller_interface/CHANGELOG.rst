@@ -2,6 +2,14 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+* Add test_utils file for transition tests (`#3048 <https://github.com/ros-controls/ros2_control/issues/3048>`_)
+* Contributors: Christoph Fröhlich
+
 6.5.1 (2026-04-05)
 ------------------
 
