@@ -362,7 +362,8 @@ private:
   /// Initialize the robot description subscription and wait notification timer.
   /**
    * Used when the controller manager starts without a valid robot description, or when a robot
-   * description failed to initialize hardware and the manager should keep waiting for a replacement.
+   * description failed to initialize hardware and the manager should keep waiting for a
+   * replacement.
    */
   void init_robot_description_callback();
 

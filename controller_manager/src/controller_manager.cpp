@@ -829,8 +829,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   else
   {
     RCLCPP_INFO(
-      get_logger(), "Enforcing command limits is disabled. Command limits from URDF will be "
-                    "ignored.");
+      get_logger(),
+      "Enforcing command limits is disabled. Command limits from URDF will be "
+      "ignored.");
   }
 
   try
