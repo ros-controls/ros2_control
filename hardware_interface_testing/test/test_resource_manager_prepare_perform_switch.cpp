@@ -555,6 +555,7 @@ public:
     params.logger = node_.get_logger();
     params.clock = node_.get_clock();
     params.robot_description = command_mode_urdf;
+    params.update_rate = 100;
     rm_ = std::make_unique<TestableResourceManager>(params);
     ASSERT_EQ(1u, rm_->actuator_components_size());
     ASSERT_EQ(1u, rm_->system_components_size());

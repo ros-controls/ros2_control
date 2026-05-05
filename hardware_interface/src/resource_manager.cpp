@@ -1433,7 +1433,7 @@ public:
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
-  unsigned int cm_update_rate_ = 100;
+  unsigned int cm_update_rate_ = 0;
 };
 
 ResourceManager::ResourceManager(
@@ -1525,6 +1525,16 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
+  components_are_loaded_and_initialized_ = true;
+
+  if (params.update_rate == 0)
+  {
+    RCLCPP_ERROR(
+      params.logger, "update_rate is not set or is zero - cannot initialize hardware components.");
+    components_are_loaded_and_initialized_ = false;
+    return false;
+  }
+
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   params_.robot_description = params.robot_description;
