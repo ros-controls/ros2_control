@@ -76,7 +76,7 @@ public:
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 0);
 
   /// Constructor for the Resource Manager.
   /**
@@ -95,7 +95,7 @@ public:
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 0);
 
   /// Constructor for the Resource Manager.
   /**
@@ -587,7 +587,7 @@ private:
   // aforementioned constructors.
   hardware_interface::ResourceManagerParams constructParams(
     rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
-    bool activate_all = false, unsigned int update_rate = 100);
+    bool activate_all = false, unsigned int update_rate = 0);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 

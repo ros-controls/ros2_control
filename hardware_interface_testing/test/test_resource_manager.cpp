@@ -1501,6 +1501,7 @@ TEST_F(ResourceManagerTest, hardware_nodes_are_added_to_mock_executor_on_load)
   params.clock = node_.get_clock();
   params.logger = node_.get_logger();
   params.executor = mock_executor;
+  params.update_rate = 100;
   TestableResourceManager rm(params);
   auto to_lower = [](const std::string & s)
   {
