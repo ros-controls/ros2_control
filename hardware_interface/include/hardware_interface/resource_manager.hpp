@@ -67,7 +67,7 @@ public:
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
-   * of async components.
+   * of async components. Must be non-zero, otherwise load_and_initialize_components will fail.
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
    * used for triggering async components and different read/write component rates.
    * \param[in] logger_interface reference to the logger interface of the CM node for logging.
@@ -88,7 +88,7 @@ public:
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
-   * of async components.
+   * of async components. Must be non-zero, otherwise load_and_initialize_components will fail.
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
