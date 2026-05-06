@@ -220,6 +220,18 @@ TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
   ASSERT_FALSE(rm.are_components_initialized());
 }
 
+TEST_F(ResourceManagerTest, expect_load_and_initialize_to_fail_when_update_rate_is_zero)
+{
+  TestableResourceManager rm(node_);
+  hardware_interface::ResourceManagerParams rm_params;
+  rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+  rm_params.clock = node_.get_clock();
+  rm_params.logger = node_.get_logger();
+  rm_params.update_rate = 0;
+  ASSERT_FALSE(rm.load_and_initialize_components(rm_params));
+  ASSERT_FALSE(rm.are_components_initialized());
+}
+
 TEST_F(
   ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_plugin_does_not_exist)
 {
