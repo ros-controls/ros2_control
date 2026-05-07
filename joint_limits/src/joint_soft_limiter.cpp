@@ -152,8 +152,19 @@ bool JointSoftLimiter::on_enforce(
       pos_low = std::clamp(prev_command_position + soft_min_vel * dt_seconds, pos_low, pos_high);
       pos_high = std::clamp(prev_command_position + soft_max_vel * dt_seconds, pos_low, pos_high);
     }
+    // Save the velocity-clamped bounds before intersecting with hard position limits.
+    // If the two ranges don't overlap (prev_command far outside soft limits), the soft-limit
+    // boundary from velocity clamping is used as the fallback so std::clamp always gets
+    // a valid [lo, hi] pair (lo <= hi). This fixes an assertion in GCC 15 libstdc++.
+    const double vel_clamped_pos_low = pos_low;
+    const double vel_clamped_pos_high = pos_high;
     pos_low = std::max(pos_low, position_limits.lower_limit);
     pos_high = std::min(pos_high, position_limits.upper_limit);
+    if (pos_low > pos_high)
+    {
+      pos_low = vel_clamped_pos_low;
+      pos_high = vel_clamped_pos_high;
+    }
 
     limits_enforced = is_limited(desired.position.value(), pos_low, pos_high);
     desired.position = std::clamp(desired.position.value(), pos_low, pos_high);
