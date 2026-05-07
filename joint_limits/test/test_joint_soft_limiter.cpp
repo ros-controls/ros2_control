@@ -311,6 +311,63 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   EXPECT_FALSE(desired_state_.has_jerk());
 }
 
+// Regression test: when prev_command_position is far outside the soft position limits, the
+// velocity-reachable range [prev_cmd ± max_vel*dt] may not overlap with [soft_min, soft_max].
+// This produced pos_low > pos_high and triggered a std::clamp assertion in GCC 15
+// (Ubuntu 26.04 / libstdc++ 15).
+//
+// Reproduction conditions:
+//  - velocity limits are set (so velocity-based pos_low/pos_high are computed)
+//  - soft position limits are set without k_position
+//  - configure() is NOT called after Init(), so prev_command_ is empty on the first enforce()
+//  - actual position is absent, so prev_command_ is seeded from desired (far from soft limits)
+TEST_F(JointSoftLimiterTest, position_soft_limits_no_overlap_with_velocity_reachable_range)
+{
+  SetupNode("soft_joint_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -M_PI;
+  limits.max_position = M_PI;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+
+  // Soft limits well inside hard limits — no k_position, so only position bounding applies.
+  // configure() is intentionally NOT called after Init() so prev_command_ stays empty
+  // (reset by on_init()). The first enforce() then seeds prev_command_ from desired (2.0).
+  joint_limits::SoftJointLimits soft_limits;
+  soft_limits.min_position = -0.75;
+  soft_limits.max_position = 0.75;
+  ASSERT_TRUE(Init(limits, soft_limits));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+
+  // prev_command_ is empty → seeded from desired = 2.0.
+  // Velocity-reachable range from 2.0: [1.0, 3.0].
+  // Soft limits: [-0.75, 0.75].  No overlap → pos_low > pos_high without the fix.
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = 2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
+
+  // Second call: prev_command is now 0.75.  Velocity-reachable: [-0.25, 1.75].
+  // Soft limits [-0.75, 0.75] overlap → normal clamping, no inversion.
+  desired_state_.position = -3.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), -0.25, COMMON_THRESHOLD);
+
+  // Symmetric case: prev_command seeded from desired = -2.0 (below soft min).
+  // Velocity-reachable from -2.0: [-3.0, -1.0].  No overlap with [-0.75, 0.75].
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = -2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), soft_limits.min_position, COMMON_THRESHOLD);
+}
+
 TEST_F(JointSoftLimiterTest, check_desired_velocity_only_cases)
 {
   SetupNode("joint_saturation_limiter");
