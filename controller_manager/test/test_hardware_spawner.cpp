@@ -209,7 +209,7 @@ TEST_F(TestHardwareSpawnerWithoutRobotDescription, spawner_with_later_load_of_ro
 {
   // Delay sending robot description
   robot_description_sending_timer_ = cm_->create_wall_timer(
-    std::chrono::milliseconds(2500),
+    std::chrono::milliseconds(4000),
     [&]()
     {
       RCLCPP_INFO(
