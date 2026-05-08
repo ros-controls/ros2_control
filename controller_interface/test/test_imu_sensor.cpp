@@ -54,7 +54,7 @@ TEST_F(IMUSensorTest, validate_all)
   hardware_interface::StateInterface orientation_z{
     sensor_name_, imu_interface_names_[2], &orientation_values_[2]};
   hardware_interface::StateInterface orientation_w{
-    sensor_name_, imu_interface_names_[3], &orientation_values_[4]};
+    sensor_name_, imu_interface_names_[3], &orientation_values_[3]};
 
   // assign values to angular velocity
   hardware_interface::StateInterface angular_velocity_x{
