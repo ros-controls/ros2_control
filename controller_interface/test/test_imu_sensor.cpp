@@ -47,7 +47,6 @@ TEST_F(IMUSensorTest, validate_all)
   std::vector<std::string> interface_names = imu_sensor_->get_state_interface_names();
 
   // assign values to orientation
-<<<<<<< HEAD
   hardware_interface::StateInterface orientation_x{
     sensor_name_, imu_interface_names_[0], &orientation_values_[0]};
   hardware_interface::StateInterface orientation_y{
@@ -55,17 +54,7 @@ TEST_F(IMUSensorTest, validate_all)
   hardware_interface::StateInterface orientation_z{
     sensor_name_, imu_interface_names_[2], &orientation_values_[2]};
   hardware_interface::StateInterface orientation_w{
-    sensor_name_, imu_interface_names_[3], &orientation_values_[4]};
-=======
-  auto orientation_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[0], &orientation_values_[0]);
-  auto orientation_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[1], &orientation_values_[1]);
-  auto orientation_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[2], &orientation_values_[2]);
-  auto orientation_w = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[3], &orientation_values_[3]);
->>>>>>> a83682b (Fix the out of bound access of std::vector in ChainableController and others (#3287))
+    sensor_name_, imu_interface_names_[3], &orientation_values_[3]};
 
   // assign values to angular velocity
   hardware_interface::StateInterface angular_velocity_x{
