@@ -34,4 +34,4 @@ jobs:
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ref: master
-      container: ubuntu:24.04
+      container: ubuntu:26.04
