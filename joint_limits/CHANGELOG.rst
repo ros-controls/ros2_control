@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.14.2 (2026-05-12)
+-------------------
 * Fix std::clamp regression on Ubuntu 26.04 (`#3275 <https://github.com/ros-controls/ros2_control/issues/3275>`_) (`#3281 <https://github.com/ros-controls/ros2_control/issues/3281>`_)
 * Contributors: mergify[bot]
 
