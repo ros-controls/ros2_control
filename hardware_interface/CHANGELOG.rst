@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.45.2 (2026-05-12)
+-------------------
 * fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_) (`#3285 <https://github.com/ros-controls/ros2_control/issues/3285>`_)
 * Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_) (`#3277 <https://github.com/ros-controls/ros2_control/issues/3277>`_)
 * Contributors: mergify[bot]

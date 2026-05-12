@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.45.2 (2026-05-12)
+-------------------
 * Fix size assertion in test_chainable_controller (`#3284 <https://github.com/ros-controls/ros2_control/issues/3284>`_) (`#3303 <https://github.com/ros-controls/ros2_control/issues/3303>`_)
 * Fix the out of bound access of the std::vector in ChainableController (backport `#3287 <https://github.com/ros-controls/ros2_control/issues/3287>`_) (`#3288 <https://github.com/ros-controls/ros2_control/issues/3288>`_)
 * [doc] Add dedicated documentation page for running controllers asynchronously (backport `#3195 <https://github.com/ros-controls/ros2_control/issues/3195>`_) (`#3254 <https://github.com/ros-controls/ros2_control/issues/3254>`_)
