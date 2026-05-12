@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_) (`#3286 <https://github.com/ros-controls/ros2_control/issues/3286>`_)
+* Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_) (`#3278 <https://github.com/ros-controls/ros2_control/issues/3278>`_)
+* Contributors: mergify[bot]
+
 5.14.1 (2026-04-24)
 -------------------
 * Fix C++20 behavior changes of `std::from_chars` (`#3244 <https://github.com/ros-controls/ros2_control/issues/3244>`_) (`#3248 <https://github.com/ros-controls/ros2_control/issues/3248>`_)
