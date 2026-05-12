@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the out of bound access of the std::vector in ChainableController (backport `#3287 <https://github.com/ros-controls/ros2_control/issues/3287>`_) (`#3288 <https://github.com/ros-controls/ros2_control/issues/3288>`_)
+* Contributors: mergify[bot]
+
 4.45.1 (2026-04-24)
 -------------------
 
