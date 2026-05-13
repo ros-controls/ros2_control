@@ -2,6 +2,11 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.1 (2026-05-12)
+------------------
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich
+
 6.7.0 (2026-04-23)
 ------------------
 

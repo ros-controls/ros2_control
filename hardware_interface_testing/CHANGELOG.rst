@@ -2,6 +2,12 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.1 (2026-05-12)
+------------------
+* Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_)
+* Add tests for duplicate prevention (fixes `#2952 <https://github.com/ros-controls/ros2_control/issues/2952>`_) (`#3189 <https://github.com/ros-controls/ros2_control/issues/3189>`_)
+* Contributors: Sai Kishor Kothakota, kamal2730
+
 6.7.0 (2026-04-23)
 ------------------
 

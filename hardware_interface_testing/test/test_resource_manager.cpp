@@ -1478,6 +1478,7 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
+  // cppcheck-suppress syntaxError
 #if RCLCPP_VERSION_GTE(31, 0, 0)
   void add_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
