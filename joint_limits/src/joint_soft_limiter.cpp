@@ -147,7 +147,7 @@ bool JointSoftLimiter::on_enforce(
       pos_high = soft_joint_limits.max_position;
     }
 
-    if (hard_limits.has_velocity_limits)
+    if (hard_limits.has_velocity_limits && std::isfinite(prev_command_position))
     {
       pos_low = std::clamp(prev_command_position + soft_min_vel * dt_seconds, pos_low, pos_high);
       pos_high = std::clamp(prev_command_position + soft_max_vel * dt_seconds, pos_low, pos_high);

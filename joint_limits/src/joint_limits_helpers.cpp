@@ -115,16 +115,21 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    /// @note: We use the previous command position to compute the limits here because using the
-    /// actual position would be too conservative, usually there is a couple of cycles of delay
-    /// between the command sent to the robot and the robot actually showing that in the state. That
-    /// effectively limits the velocity with which the joint can be moved which is much lower than
-    /// the actual velocity limit.
-    const double position_reference = prev_command_pos.value();
-    pos_limits.lower_limit = std::max(
-      std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
-    pos_limits.upper_limit = std::min(
-      std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
+    /// @note: We prefer the previous command position over actual position because using the actual
+    /// position would be too conservative — there is typically a couple of cycles of delay between
+    /// the command and the robot state. Fall back to actual position when no previous command
+    /// exists (e.g., first position command after operating in another mode). Skip
+    /// velocity-constrained narrowing entirely when neither reference is available.
+    const std::optional<double> & pos_ref =
+      prev_command_pos.has_value() ? prev_command_pos : act_pos;
+    if (pos_ref.has_value())
+    {
+      const double position_reference = pos_ref.value();
+      pos_limits.lower_limit = std::max(
+        std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
+      pos_limits.upper_limit = std::min(
+        std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
+    }
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
