@@ -1191,18 +1191,21 @@ TEST_F(JointSoftLimiterTest, when_switching_command_interface_expect_no_bad_opti
   limits.max_velocity = 1.0;
   joint_limits::SoftJointLimits soft_limits;
   ASSERT_TRUE(Init(limits, soft_limits));
-  ASSERT_TRUE(Configure());
+
+  // Configure with an effort-only state (no position) to simulate a controller
+  // that was previously running in effort mode. on_configure sets
+  // prev_command_ = current_joint_states, so prev_command_.position stays nullopt.
+  joint_limits::JointControlInterfacesData effort_only_state;
+  effort_only_state.joint_name = "foo_joint";
+  effort_only_state.effort = 0.0;
+  ASSERT_TRUE(joint_limiter_->configure(effort_only_state));
 
   rclcpp::Duration period(0, 100000000);  // 0.1 second
 
-  // First cycle: effort-only command — prev_command_.position stays nullopt
+  // Sending a position command while prev_command_.position is nullopt must not
+  // throw bad_optional_access inside compute_position_limits.
   desired_state_ = {};
   actual_state_ = {};
-  desired_state_.effort = 10.0;
-  EXPECT_NO_THROW(joint_limiter_->enforce(actual_state_, desired_state_, period));
-
-  // Second cycle: switch to position command — must not throw bad_optional_access
-  desired_state_ = {};
   desired_state_.position = M_PI * 2.0;  // outside limits
   EXPECT_NO_THROW(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_LE(desired_state_.position.value(), limits.max_position);
