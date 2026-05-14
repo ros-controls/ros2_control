@@ -209,7 +209,13 @@ TEST_F(TestHardwareSpawnerWithoutRobotDescription, spawner_with_later_load_of_ro
 {
   // Delay sending robot description
   robot_description_sending_timer_ = cm_->create_wall_timer(
-    std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
+    std::chrono::milliseconds(4000),
+    [&]()
+    {
+      RCLCPP_INFO(
+        cm_->get_logger(), "Passing robot description to controller manager and resource manager");
+      pass_robot_description_to_cm_and_rm();
+    });
 
   EXPECT_EQ(
     call_spawner(

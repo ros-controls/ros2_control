@@ -1283,7 +1283,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   std::vector<std::string> fallback_controllers;
   if (!has_parameter(fallback_ctrl_param))
   {
-    declare_parameter(fallback_ctrl_param, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
+    declare_parameter(fallback_ctrl_param, std::vector<std::string>{});
   }
   if (get_parameter(fallback_ctrl_param, fallback_controllers) && !fallback_controllers.empty())
   {
@@ -1304,7 +1304,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   std::vector<std::string> node_options_args;
   if (!has_parameter(node_options_args_param))
   {
-    declare_parameter(node_options_args_param, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
+    declare_parameter(node_options_args_param, std::vector<std::string>{});
   }
   if (get_parameter(node_options_args_param, node_options_args) && !node_options_args.empty())
   {
