@@ -56,6 +56,8 @@ class SensorInterface : public HardwareComponentInterface
 public:
   std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override { return {}; }
 
+  virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) final
   {
     return return_type::OK;

@@ -481,6 +481,12 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
   return status;
 }
 
+return_type HardwareComponentInterface::read(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+{
+  return return_type::OK;
+}
+
 return_type HardwareComponentInterface::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {

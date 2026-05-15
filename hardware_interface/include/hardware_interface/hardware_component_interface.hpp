@@ -261,7 +261,7 @@ public:
    * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+  virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo
   /**
