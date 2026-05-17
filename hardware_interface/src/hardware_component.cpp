@@ -46,6 +46,18 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
+HardwareComponent::~HardwareComponent()
+{
+  // Stop the async thread before impl_'s destructor chain runs. By the time the concrete derived
+  // class destructor completes, the vtable is reset to HardwareComponentInterface's pure-virtual
+  // vtable, so any async callback executing read()/write() after that point calls a pure virtual
+  // and terminates. Stopping here ensures the thread is joined while the vtable is still valid.
+  if (impl_)
+  {
+    impl_->stop_async_handler();
+  }
+}
+
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {

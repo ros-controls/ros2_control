@@ -568,6 +568,15 @@ public:
    */
   void pause_async_operations();
 
+  /// Stop and release the async handler thread.
+  /**
+   * Joins the async worker thread and destroys the handler. Must be called while the most-derived
+   * class is still alive (i.e., before that class's destructor has run), so that virtual dispatch
+   * in the async callback is still valid. HardwareComponent calls this from its destructor before
+   * releasing the impl pointer.
+   */
+  void stop_async_handler();
+
   /// Prepare for the activation of the hardware.
   /**
    * This method is called before the hardware is activated by the resource manager.
