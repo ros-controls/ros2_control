@@ -1167,7 +1167,8 @@ TEST_F(JointSoftLimiterTest, when_command_is_nan_expect_no_limiting)
   actual_state_.velocity = 0.0;
   desired_state_ = {};
   desired_state_.position = 0.0;
-  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));  // seed prev_command
+  ASSERT_FALSE(
+    joint_limiter_->enforce(actual_state_, desired_state_, period));  // seed prev_command
 
   desired_state_.position = nan;
   EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));  // NaN, no change
