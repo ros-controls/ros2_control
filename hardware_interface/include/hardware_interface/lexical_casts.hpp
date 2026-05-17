@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
+#include <cstdint>
 #include <limits>
 #include <regex>
 #include <sstream>

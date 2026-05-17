@@ -14,7 +14,7 @@
 
 #include <stdexcept>
 
-#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "hardware_interface/lexical_casts.hpp"
 

@@ -2,6 +2,25 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.1 (2026-05-12)
+------------------
+
+6.7.0 (2026-04-23)
+------------------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_)
+* Contributors: Shlok Mehndiratta
+
+6.6.0 (2026-04-17)
+------------------
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* [rqt_controller_manager] show update_rate and is_async in details window (`#3154 <https://github.com/ros-controls/ros2_control/issues/3154>`_)
+* Contributors: Sahil Lakhmani
+
 6.4.0 (2026-02-03)
 ------------------
 
