@@ -672,7 +672,7 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   // Spawner B must not be blocked by Spawner A's lock. Keep B's timeout below A's lifetime so a
   // lock blockage cannot still pass after A eventually exits.
   std::string spawner_b_cmd =
-    "timeout --signal=INT 10 " + std::string(coveragepy_script) +
+    "timeout --signal=INT 4 " + std::string(coveragepy_script) +
     " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
     "ctrl_2 -c test_controller_manager";
   int spawner_b_exit_code = std::system(spawner_b_cmd.c_str());
