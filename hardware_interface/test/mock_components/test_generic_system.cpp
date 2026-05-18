@@ -19,15 +19,19 @@
 #include <unordered_map>
 #include <vector>
 
+#include <thread>
+
 #include "gmock/gmock.h"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 namespace
 {
@@ -858,6 +862,25 @@ public:
   : hardware_interface::ResourceManager(
       urdf, node->get_node_clock_interface(), node->get_node_logging_interface(), activate_all,
       cm_update_rate)
+  {
+  }
+
+  explicit TestableResourceManager(
+    rclcpp::Node::SharedPtr node, rclcpp::Executor::SharedPtr executor, const std::string & urdf,
+    bool activate_all = false, unsigned int cm_update_rate = 100)
+  : hardware_interface::ResourceManager(
+      [&]()
+      {
+        hardware_interface::ResourceManagerParams params;
+        params.robot_description = urdf;
+        params.clock = node->get_clock();
+        params.logger = node->get_logger();
+        params.activate_all = activate_all;
+        params.update_rate = cm_update_rate;
+        params.executor = executor;
+        return params;
+      }(),
+      true)
   {
   }
 };
@@ -2701,6 +2724,79 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   EXPECT_EQ(3.45, j1p_s.get_optional().value());
   EXPECT_EQ(0.0, j1v_s.get_optional().value());
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
+}
+
+TEST_F(TestGenericSystem, toggle_command_propagation_service)
+{
+  auto urdf =
+    ros2_control_test_assets::urdf_head + hw_sys_2dof_ + ros2_control_test_assets::urdf_tail;
+  auto rm_node = std::make_shared<rclcpp::Node>("rm_node");
+  auto client_node = std::make_shared<rclcpp::Node>("service_client_node");
+  auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  executor->add_node(rm_node);
+  executor->add_node(client_node);
+
+  std::thread executor_thread([executor]() { executor->spin(); });
+
+  {
+    TestableResourceManager rm(rm_node, executor, urdf);
+    activate_components(rm, {"MockHardwareSystem"});
+
+    hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+    hardware_interface::LoanedCommandInterface j1p_c =
+      rm.claim_command_interface("joint1/position");
+
+    // Initialize state
+    ASSERT_TRUE(j1p_c.set_value(1.1));
+    ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+    ASSERT_EQ(1.1, j1p_s.get_optional().value());
+
+    // Disable via service
+    auto client = client_node->create_client<std_srvs::srv::SetBool>(
+      "/mockhardwaresystem/set_command_propagation");
+
+    if (!client->wait_for_service(std::chrono::seconds(10)))
+    {
+      executor->cancel();
+      executor_thread.join();
+      FAIL() << "Service not available";
+    }
+
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    request->data = false;
+    auto result_future = client->async_send_request(request);
+
+    if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    {
+      executor->cancel();
+      executor_thread.join();
+      FAIL() << "Service call timed out";
+    }
+    ASSERT_TRUE(result_future.get()->success);
+
+    // Verify Disabled - set new command but state should stay at 1.1
+    ASSERT_TRUE(j1p_c.set_value(2.2));
+    ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+    EXPECT_EQ(1.1, j1p_s.get_optional().value());  // Frozen
+
+    // Enable via service
+    request->data = true;
+    result_future = client->async_send_request(request);
+    if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    {
+      executor->cancel();
+      executor_thread.join();
+      FAIL() << "Service call timed out";
+    }
+    ASSERT_TRUE(result_future.get()->success);
+
+    // Verify Enabled again - state should now update to 2.2
+    ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+    EXPECT_EQ(2.2, j1p_s.get_optional().value());
+  }
+
+  executor->cancel();
+  executor_thread.join();
 }
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
