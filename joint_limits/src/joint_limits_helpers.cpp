@@ -75,23 +75,23 @@ void verify_actual_position_within_limits(
 void update_prev_command(
   const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command)
 {
-  if (desired.has_position())
+  if (desired.has_position() && !std::isnan(desired.position.value()))
   {
     prev_command.position = desired.position;
   }
-  if (desired.has_velocity())
+  if (desired.has_velocity() && !std::isnan(desired.velocity.value()))
   {
     prev_command.velocity = desired.velocity;
   }
-  if (desired.has_effort())
+  if (desired.has_effort() && !std::isnan(desired.effort.value()))
   {
     prev_command.effort = desired.effort;
   }
-  if (desired.has_acceleration())
+  if (desired.has_acceleration() && !std::isnan(desired.acceleration.value()))
   {
     prev_command.acceleration = desired.acceleration;
   }
-  if (desired.has_jerk())
+  if (desired.has_jerk() && !std::isnan(desired.jerk.value()))
   {
     prev_command.jerk = desired.jerk;
   }

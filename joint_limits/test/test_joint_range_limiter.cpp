@@ -672,6 +672,83 @@ TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
 }
 
+TEST_F(JointSaturationLimiterTest, when_command_is_nan_expect_no_limiting)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -M_PI;
+  limits.max_position = M_PI;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  limits.has_effort_limits = true;
+  limits.max_effort = 200.0;
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 2.0;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Configure());
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+
+  // NaN position must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.position.value()));
+
+  // NaN velocity must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.velocity = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.velocity.value()));
+
+  // NaN effort must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.effort = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.effort.value()));
+
+  // NaN acceleration must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.acceleration = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.acceleration.value()));
+
+  // NaN jerk must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.jerk = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.jerk.value()));
+
+  // NaN must not corrupt prev_command_ — a subsequent finite command must still be limited.
+  ASSERT_TRUE(Init(limits));
+  actual_state_ = {};
+  actual_state_.position = 0.0;
+  actual_state_.velocity = 0.0;
+  desired_state_ = {};
+  desired_state_.position = 0.0;
+  ASSERT_FALSE(
+    joint_limiter_->enforce(actual_state_, desired_state_, period));  // seed prev_command
+
+  desired_state_.position = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));  // NaN, no change
+
+  desired_state_.position = M_PI * 2.0;  // well outside position limits
+  EXPECT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isfinite(desired_state_.position.value()));
+  EXPECT_LE(desired_state_.position.value(), limits.max_position);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleMock(&argc, argv);
