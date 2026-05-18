@@ -1508,8 +1508,6 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
-  components_are_loaded_and_initialized_ = true;
-
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   params_.robot_description = params.robot_description;
@@ -1529,6 +1527,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  components_are_loaded_and_initialized_ = true;
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
