@@ -2980,10 +2980,6 @@ TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_han
   EXPECT_THROW(rm->write(time, duration), std::runtime_error);
 }
 
-// Regression test: destroying a ResourceManager holding an active async hardware component
-// (DETACHED scheduling policy) must not crash with "pure virtual method called".
-// The bug: the async thread calls read()/write() via virtual dispatch after the derived class
-// destructor has run and reset the vtable to HardwareComponentInterface's pure-virtual vtable.
 /// @note this is a non-deterministic test and this type of tests are hard to reproduce due to
 // vtable stuff
 TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
