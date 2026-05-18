@@ -148,7 +148,7 @@ controller_interface::return_type TestChainableController::update_and_write_comm
   // If there is a command interface then integrate and set it to the exported state interface data
   for (size_t i = 0; i < state_interfaces_to_export_.size() && i < command_interfaces_.size(); ++i)
   {
-    ordered_exported_state_interfaces_[i]->set_value(
+    std::ignore = ordered_exported_state_interfaces_[i]->set_value(
       command_interfaces_[i].get_optional().value() * CONTROLLER_DT);
   }
   // If there is no command interface and if there is a state interface then just forward the same
@@ -157,7 +157,8 @@ controller_interface::return_type TestChainableController::update_and_write_comm
                      command_interfaces_.empty();
        ++i)
   {
-    ordered_exported_state_interfaces_[i]->set_value(state_interfaces_[i].get_optional().value());
+    std::ignore =
+      ordered_exported_state_interfaces_[i]->set_value(state_interfaces_[i].get_optional().value());
   }
 
   return update_return_value;
