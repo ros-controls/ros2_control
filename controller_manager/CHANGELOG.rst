@@ -2,6 +2,24 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.7.1 (2026-05-12)
+------------------
+* Fix size assertion in test_chainable_controller (`#3284 <https://github.com/ros-controls/ros2_control/issues/3284>`_)
+* Fix the out of bound access of std::vector in ChainableController and others (`#3287 <https://github.com/ros-controls/ros2_control/issues/3287>`_)
+* [doc] Add dedicated documentation page for running controllers asynchronously (`#3195 <https://github.com/ros-controls/ros2_control/issues/3195>`_)
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Shahazad Abdulla
+
+6.7.0 (2026-04-23)
+------------------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_)
+* Contributors: Shlok Mehndiratta
+
+6.6.0 (2026-04-17)
+------------------
+* [CM] Migrate controllers_lock\_ to RT-safe PI recursive mutex (`#3197 <https://github.com/ros-controls/ros2_control/issues/3197>`_)
+* Contributors: Shlok Mehndiratta
+
 6.5.1 (2026-04-05)
 ------------------
 

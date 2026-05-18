@@ -49,24 +49,58 @@ bool JointSoftLimiter::on_enforce(
   {
     if (desired.has_position())
     {
-      prev_command_.position = actual.has_position() ? actual.position : desired.position;
+      if (actual.has_position())
+      {
+        prev_command_.position = actual.position;
+      }
+      else if (!std::isnan(desired.position.value()))
+      {
+        prev_command_.position = desired.position;
+      }
     }
     if (desired.has_velocity())
     {
-      prev_command_.velocity = actual.has_velocity() ? actual.velocity : desired.velocity;
+      if (actual.has_velocity())
+      {
+        prev_command_.velocity = actual.velocity;
+      }
+      else if (!std::isnan(desired.velocity.value()))
+      {
+        prev_command_.velocity = desired.velocity;
+      }
     }
     if (desired.has_effort())
     {
-      prev_command_.effort = actual.has_effort() ? actual.effort : desired.effort;
+      if (actual.has_effort())
+      {
+        prev_command_.effort = actual.effort;
+      }
+      else if (!std::isnan(desired.effort.value()))
+      {
+        prev_command_.effort = desired.effort;
+      }
     }
     if (desired.has_acceleration())
     {
-      prev_command_.acceleration =
-        actual.has_acceleration() ? actual.acceleration : desired.acceleration;
+      if (actual.has_acceleration())
+      {
+        prev_command_.acceleration = actual.acceleration;
+      }
+      else if (!std::isnan(desired.acceleration.value()))
+      {
+        prev_command_.acceleration = desired.acceleration;
+      }
     }
     if (desired.has_jerk())
     {
-      prev_command_.jerk = actual.has_jerk() ? actual.jerk : desired.jerk;
+      if (actual.has_jerk())
+      {
+        prev_command_.jerk = actual.jerk;
+      }
+      else if (!std::isnan(desired.jerk.value()))
+      {
+        prev_command_.jerk = desired.jerk;
+      }
     }
     if (actual.has_data())
     {
@@ -132,7 +166,7 @@ bool JointSoftLimiter::on_enforce(
     }
   }
 
-  if (desired.has_position())
+  if (desired.has_position() && !std::isnan(desired.position.value()))
   {
     const auto position_limits = compute_position_limits(
       joint_name, hard_limits, actual.velocity, actual.position, prev_command_.position,
@@ -152,14 +186,25 @@ bool JointSoftLimiter::on_enforce(
       pos_low = std::clamp(prev_command_position + soft_min_vel * dt_seconds, pos_low, pos_high);
       pos_high = std::clamp(prev_command_position + soft_max_vel * dt_seconds, pos_low, pos_high);
     }
+    // Save the velocity-clamped bounds before intersecting with hard position limits.
+    // If the two ranges don't overlap (prev_command far outside soft limits), the soft-limit
+    // boundary from velocity clamping is used as the fallback so std::clamp always gets
+    // a valid [lo, hi] pair (lo <= hi). This fixes an assertion in GCC 15 libstdc++.
+    const double vel_clamped_pos_low = pos_low;
+    const double vel_clamped_pos_high = pos_high;
     pos_low = std::max(pos_low, position_limits.lower_limit);
     pos_high = std::min(pos_high, position_limits.upper_limit);
+    if (pos_low > pos_high)
+    {
+      pos_low = vel_clamped_pos_low;
+      pos_high = vel_clamped_pos_high;
+    }
 
     limits_enforced = is_limited(desired.position.value(), pos_low, pos_high);
     desired.position = std::clamp(desired.position.value(), pos_low, pos_high);
   }
 
-  if (desired.has_velocity())
+  if (desired.has_velocity() && !std::isnan(desired.velocity.value()))
   {
     const auto velocity_limits = compute_velocity_limits(
       joint_name, hard_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
@@ -181,7 +226,7 @@ bool JointSoftLimiter::on_enforce(
     desired.velocity = std::clamp(desired.velocity.value(), soft_min_vel, soft_max_vel);
   }
 
-  if (desired.has_effort())
+  if (desired.has_effort() && !std::isnan(desired.effort.value()))
   {
     const auto effort_limits =
       compute_effort_limits(hard_limits, actual.position, actual.velocity, dt_seconds);
@@ -210,7 +255,7 @@ bool JointSoftLimiter::on_enforce(
     desired.effort = std::clamp(desired.effort.value(), soft_min_eff, soft_max_eff);
   }
 
-  if (desired.has_acceleration())
+  if (desired.has_acceleration() && !std::isnan(desired.acceleration.value()))
   {
     const auto limits =
       compute_acceleration_limits(hard_limits, desired.acceleration.value(), actual.velocity);
@@ -221,33 +266,12 @@ bool JointSoftLimiter::on_enforce(
       std::clamp(desired.acceleration.value(), limits.lower_limit, limits.upper_limit);
   }
 
-  if (desired.has_jerk())
+  if (desired.has_jerk() && !std::isnan(desired.jerk.value()))
   {
     limits_enforced =
       is_limited(desired.jerk.value(), -hard_limits.max_jerk, hard_limits.max_jerk) ||
       limits_enforced;
     desired.jerk = std::clamp(desired.jerk.value(), -hard_limits.max_jerk, hard_limits.max_jerk);
-  }
-
-  if (desired.has_position() && !std::isfinite(desired.position.value()) && actual.has_position())
-  {
-    desired.position = actual.position;
-    limits_enforced = true;
-  }
-  if (desired.has_velocity() && !std::isfinite(desired.velocity.value()))
-  {
-    desired.velocity = 0.0;
-    limits_enforced = true;
-  }
-  if (desired.has_acceleration() && !std::isfinite(desired.acceleration.value()))
-  {
-    desired.acceleration = 0.0;
-    limits_enforced = true;
-  }
-  if (desired.has_jerk() && !std::isfinite(desired.jerk.value()))
-  {
-    desired.jerk = 0.0;
-    limits_enforced = true;
   }
 
   update_prev_command(desired, prev_command_);

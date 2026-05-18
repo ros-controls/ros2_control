@@ -24,7 +24,6 @@ add_library(controller_interface SHARED
   src/controller_interface.cpp
   src/chainable_controller_interface.cpp
 )
-target_compile_features(controller_interface PUBLIC cxx_std_17)
 target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
@@ -123,6 +122,11 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_controller_tf_prefix test/test_controller_tf_prefix.cpp)
   target_link_libraries(test_controller_tf_prefix
+    controller_interface
+  )
+
+  ament_add_gmock(test_test_utils test/test_test_utils.cpp)
+  target_link_libraries(test_test_utils
     controller_interface
   )
 endif()
