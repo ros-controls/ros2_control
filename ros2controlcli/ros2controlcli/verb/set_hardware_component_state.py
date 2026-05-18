@@ -33,7 +33,7 @@ class SetHardwareComponentStateVerb(VerbExtension):
         arg.completer = LoadedHardwareComponentNameCompleter()
         arg = parser.add_argument(
             "state",
-            choices=["unconfigured", "inactive", "active"],
+            choices=["unconfigured", "inactive", "active", "finalized"],
             help="State in which the hardware component should be changed to",
         )
         add_controller_mgr_parsers(parser)
@@ -51,9 +51,9 @@ class SetHardwareComponentStateVerb(VerbExtension):
                     node, args.controller_manager, args.hardware_component_name, unconfigured_state
                 )
                 if not response.ok:
-                    return "Error cleaning up hardware component, check controller_manager logs"
+                    return "Error transitioning hardware component to 'unconfigured', check controller_manager logs"
 
-            if args.state == "inactive":
+            elif args.state == "inactive":
                 inactive_state = State()
                 inactive_state.id = State.PRIMARY_STATE_INACTIVE
                 inactive_state.label = "inactive"
@@ -62,9 +62,9 @@ class SetHardwareComponentStateVerb(VerbExtension):
                     node, args.controller_manager, args.hardware_component_name, inactive_state
                 )
                 if not response.ok:
-                    return "Error stopping hardware component, check controller_manager logs"
+                    return "Error deactivating hardware component, check controller_manager logs"
 
-            if args.state == "active":
+            elif args.state == "active":
 
                 active_state = State()
                 active_state.id = State.PRIMARY_STATE_ACTIVE
@@ -75,6 +75,18 @@ class SetHardwareComponentStateVerb(VerbExtension):
                 )
                 if not response.ok:
                     return "Error activating hardware component, check controller_manager logs"
+
+            elif args.state == "finalized":
+
+                finalized_state = State()
+                finalized_state.id = State.PRIMARY_STATE_FINALIZED
+                finalized_state.label = "finalized"
+
+                response = set_hardware_component_state(
+                    node, args.controller_manager, args.hardware_component_name, finalized_state
+                )
+                if not response.ok:
+                    return "Error finalizing hardware component, check controller_manager logs"
 
             print(f"Successfully set {args.hardware_component_name} to state {response.state}")
             return 0

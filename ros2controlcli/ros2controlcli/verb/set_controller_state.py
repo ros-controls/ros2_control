@@ -52,14 +52,14 @@ class SetControllerStateVerb(VerbExtension):
             if args.state == "unconfigured":
                 if matched_controller.state != "inactive":
                     return (
-                        f"cannot cleanup {matched_controller.name} "
-                        f"from its current state {matched_controller.state}"
+                        f"cannot transition {matched_controller.name} to 'unconfigured' "
+                        f"from its current state '{matched_controller.state}'"
                     )
                 response = cleanup_controller(node, args.controller_manager, args.controller_name)
                 if not response.ok:
-                    return "Error cleaning up controller, check controller_manager logs"
+                    return "Error transitioning controller to 'unconfigured', check controller_manager logs"
 
-                print(f"successfully cleaned up {args.controller_name}")
+                print(f"Successfully transitioned {args.controller_name} to 'unconfigured'")
                 return 0
 
             if args.state == "inactive":
@@ -78,7 +78,7 @@ class SetControllerStateVerb(VerbExtension):
                         node, args.controller_manager, [args.controller_name], [], True, True, 5.0
                     )
                     if not response.ok:
-                        return "Error stopping controller, check controller_manager logs"
+                        return "Error deactivating controller, check controller_manager logs"
 
                     print(f"Successfully deactivated {args.controller_name}")
                     return 0
