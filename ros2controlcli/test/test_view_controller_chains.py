@@ -15,9 +15,10 @@
 import unittest
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.msg import HardwareInterface
+from controller_manager_msgs.msg import HardwareComponentState
 from controller_manager_msgs.msg import ChainConnection
 from controller_manager_msgs.srv import ListControllers
-from controller_manager_msgs.srv import ListHardwareInterfaces
+from controller_manager_msgs.srv import ListHardwareComponents
 
 from ros2controlcli.verb.view_controller_chains import parse_response
 
@@ -25,7 +26,7 @@ from ros2controlcli.verb.view_controller_chains import parse_response
 class TestViewControllerChains(unittest.TestCase):
     def test_expected(self):
         list_controllers_response = ListControllers.Response()
-        list_hardware_response = ListHardwareInterfaces.Response()
+        list_hardware_response = ListHardwareComponents.Response()
 
         chained_to_controller = ControllerState()
         chained_from_controller = ControllerState()
@@ -72,8 +73,11 @@ class TestViewControllerChains(unittest.TestCase):
         controller_list = [chained_from_controller, chained_to_controller]
 
         list_controllers_response.controller = controller_list
-        list_hardware_response.state_interfaces = state_interfaces
-        list_hardware_response.command_interfaces = command_interfaces
+
+        list_controllers_response_component = HardwareComponentState()
+        list_controllers_response_component.state_interfaces = state_interfaces
+        list_controllers_response_component.command_interfaces = command_interfaces
+        list_hardware_response.component.append(list_controllers_response_component)
         try:
             parse_response(list_controllers_response, list_hardware_response, visualize=False)
         except Exception:
