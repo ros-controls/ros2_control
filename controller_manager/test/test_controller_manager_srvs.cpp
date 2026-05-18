@@ -2932,7 +2932,7 @@ class TestControllerManagerSrvsWithFailingPerformSwitch : public TestControllerM
 
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
-        result, rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface(), true),
+        result, rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface(), true, 100),
       executor_, TEST_CM_NAME);
     run_updater_ = false;
     time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());

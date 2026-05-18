@@ -115,7 +115,7 @@ public:
     cm_ = std::make_shared<TestableControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
         diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
+        rm_node_->get_node_logging_interface(), true, 100),
       executor_, TEST_CM_NAME);
     run_updater_ = false;
   }
