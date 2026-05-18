@@ -1632,12 +1632,12 @@ controller_interface::return_type ControllerManager::configure_controller(
       ref_interfaces = controller->export_reference_interfaces();
       if (ref_interfaces.empty() && state_interfaces.empty())
       {
-        // TODO(destogl): Add test for this!
         RCLCPP_ERROR(
           get_logger(),
           "Controller '%s' is chainable, but does not export any state or reference interfaces. "
           "Did you override the on_export_method() correctly?",
           controller_name.c_str());
+        cleanup_controller(*found_it);
         return controller_interface::return_type::ERROR;
       }
     }
@@ -1647,6 +1647,7 @@ controller_interface::return_type ControllerManager::configure_controller(
         get_logger(), "Export of the state or reference interfaces failed with following error: %s",
         e.what());
       params_->handle_exceptions ? void() : throw;
+      cleanup_controller(*found_it);
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);

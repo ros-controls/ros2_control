@@ -147,6 +147,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_failed_init
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
