@@ -35,6 +35,16 @@ target_link_libraries(transmission_interface PUBLIC
 pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
 
 if(BUILD_TESTING)
+  function(add_atomic_link_options target)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "loongarch64")
+      target_link_options(${target} PRIVATE
+        "LINKER:--no-as-needed"
+        "LINKER:-latomic"
+        "LINKER:--as-needed"
+      )
+    endif()
+  endfunction()
+
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
 
@@ -59,6 +69,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_simple_transmission_loader
                         transmission_interface
                         ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_simple_transmission_loader)
 
   ament_add_gmock(test_four_bar_linkage_transmission_loader
     test/four_bar_linkage_transmission_loader_test.cpp
@@ -66,6 +77,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_four_bar_linkage_transmission_loader
                         transmission_interface
                         ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_four_bar_linkage_transmission_loader)
 
   ament_add_gmock(test_differential_transmission_loader
     test/differential_transmission_loader_test.cpp
@@ -73,6 +85,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_differential_transmission_loader
                         transmission_interface
                         ros2_control_test_assets::ros2_control_test_assets)
+  add_atomic_link_options(test_differential_transmission_loader)
 
   ament_add_gmock(
     test_utils
