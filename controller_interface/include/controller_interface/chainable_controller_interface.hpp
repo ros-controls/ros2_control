@@ -90,8 +90,7 @@ protected:
   on_export_state_interfaces_list();
 
   /**
-   * @brief Virtual method that each chainable controller should implement to export its read/write
-   * chainable interfaces.
+   * @brief Virtual method that chainables controller implement to export read/write chainable interfaces.
    *
    * Each chainable controller implements this methods where all input (command) interfaces are
    * exported. The method has the same meaning as `export_command_interface` method from
