@@ -41,9 +41,10 @@ public:
     params.executor = executor_;
     params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
     params.node_namespace = TEST_NAMESPACE;
+    auto rm = std::make_unique<hardware_interface::ResourceManager>(params, true);
     cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(params, true), executor_, TEST_CM_NAME,
-      TEST_NAMESPACE);
+      std::move(rm), executor_, TEST_CM_NAME, TEST_NAMESPACE);
+
     run_updater_ = false;
   }
 };
@@ -62,9 +63,11 @@ TEST_P(TestControllerManagerWithNamespace, cm_and_controller_in_namespace)
   EXPECT_EQ(2, test_controller.use_count());
 
   const auto all_node_names = cm_->get_node_names();
+  // Use IsSupersetOf to tolerate extra nodes that may appear through DDS discovery
+  // from other processes running in the same ROS domain (e.g. robot_state_publisher).
   ASSERT_THAT(
     all_node_names,
-    testing::UnorderedElementsAreArray(
+    testing::IsSupersetOf(
       {"/test_namespace/test_controller_manager", "/test_namespace/test_controller_name",
        "/test_namespace/test_controller2_name", "/test_namespace/testactuatorhardware",
        "/test_namespace/testsensorhardware", "/test_namespace/testsystemhardware",
