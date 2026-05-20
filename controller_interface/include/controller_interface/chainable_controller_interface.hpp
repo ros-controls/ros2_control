@@ -42,7 +42,7 @@ public:
   virtual ~ChainableControllerInterface() = default;
 
   /**
-   * @brief Control step update. Command interfaces are updated based on reference inputs and current states.
+   * @brief Control step. Updates command interfaces from reference inputs and current states.
    * **The method called in the (real-time) control loop.**
    *
    * @param[in] time The time at the start of this control loop iteration
@@ -78,7 +78,7 @@ protected:
   virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces();
 
   /**
-   * @brief Virtual method that chainable controllers implement to export read-only chainable interfaces.
+   * @brief Virtual method implemented by chainable controllers to export read-only interfaces.
    *
    * Each chainable controller implements this methods where all its state(read only) interfaces are
    * exported. The method has the same meaning as `on_export_state_interfaces` method from
@@ -90,7 +90,7 @@ protected:
   on_export_state_interfaces_list();
 
   /**
-   * @brief Virtual method that chainables controller implement to export read/write chainable interfaces.
+   * @brief Virtual method implemented by chainable controllers to export read/write interfaces.
    *
    * Each chainable controller implements this methods where all input (command) interfaces are
    * exported. The method has the same meaning as `export_command_interface` method from
