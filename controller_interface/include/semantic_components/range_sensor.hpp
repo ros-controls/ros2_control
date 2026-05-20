@@ -32,9 +32,9 @@ public:
   {
   }
   /**
-   * Return Range reported by a sensor
+   * @brief Return Range reported by a sensor
    *
-   * \return value of the range in meters
+   * @return value of the range in meters
    */
   float get_range() const
   {
@@ -46,10 +46,11 @@ public:
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  /// Return Range message with range in meters
   /**
+   * @brief Return Range message with range in meters
+   *
    * Constructs and return a Range message from the current values.
-   * \return Range message from values;
+   * @return Range message from values;
    */
   bool get_values_as_message(sensor_msgs::msg::Range & message) const
   {
