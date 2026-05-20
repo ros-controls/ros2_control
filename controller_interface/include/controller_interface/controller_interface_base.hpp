@@ -44,8 +44,9 @@ enum class return_type : std::uint8_t
   ERROR = 1,
 };
 
-/// Indicating which interfaces are to be claimed.
 /**
+ * @brief Indicating which interfaces are to be claimed.
+ *
  * One might either claim all available command/state interfaces,
  * specifying a set of individual interfaces or none at all.
  * @enum ALL - Claim all available interfaces.
@@ -64,7 +65,9 @@ enum class interface_configuration_type : std::uint8_t
   REGEX = 10
 };
 
-/// Configuring what command/state interfaces to claim.
+/**
+ * @brief Configuring what command/state interfaces to claim.
+ */
 struct InterfaceConfiguration
 {
   interface_configuration_type type = interface_configuration_type::NONE;
@@ -84,7 +87,7 @@ struct ControllerUpdateStats
 };
 
 /**
- * Struct to store the status of the controller update method.
+ * @brief Struct to store the status of the controller update method.
  * The status contains information if the update was triggered successfully, the result of the
  * update method and the execution duration of the update method. The status is used to provide
  * feedback to the controller_manager.
@@ -102,9 +105,9 @@ struct ControllerUpdateStatus
 };
 
 /**
- * Base interface class  for an controller. The interface may not be used to implement a controller.
- * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
- * that should be implemented and extended for a specific controller.
+ * @brief Base interface class  for an controller. The interface may not be used to implement a
+ * controller. The class provides definitions for `ControllerInterface` and
+ * `ChainableControllerInterface` that should be implemented and extended for a specific controller.
  */
 class ControllerInterfaceBase : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
@@ -113,22 +116,24 @@ public:
 
   virtual ~ControllerInterfaceBase();
 
-  /// Get configuration for controller's required command interfaces.
   /**
+   * @brief Get configuration for controller's required command interfaces.
+   *
    * Method used by the controller_manager to get the set of command interfaces used by the
    * controller. Each controller can use individual method to determine interface names that in
    * simples case have the following format: `<joint>/<interface>`. The method is called only in
    * `inactive` or `active` state, i.e., `on_configure` has to be called first. The configuration is
    * used to check if controller can be activated and to claim interfaces from hardware. The claimed
-   * interfaces are populated in the \ref ControllerInterfaceBase::command_interfaces_
+   * interfaces are populated in the @ref ControllerInterfaceBase::command_interfaces_
    * "command_interfaces_" member.
    *
-   * \returns configuration of command interfaces.
+   * @returns configuration of command interfaces.
    */
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
-  /// Get configuration for controller's required state interfaces.
   /**
+   * @brief Get configuration for controller's required state interfaces.
+   *
    * Method used by the controller_manager to get the set of state interface used by the controller.
    * Each controller can use individual method to determine interface names that in simples case
    * have the following format: `<joint>/<interface>`.
@@ -137,27 +142,29 @@ public:
    * The configuration is used to check if controller can be activated and to claim interfaces from
    * hardware.
    * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
+   * @ref ControllerInterfaceBase::state_interfaces_ "state_interfaces_" member.
    *
-   * \returns configuration of state interfaces.
+   * @returns configuration of state interfaces.
    */
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
-  /// Method that assigns the Loaned interfaces to the controller.
   /**
+   * @brief Method that assigns the Loaned interfaces to the controller.
+   *
    * Method used by the controller_manager to assign the interfaces to the controller.
-   * \note When this method is overridden, the user has to also implement the `release_interfaces`
+   * @note When this method is overridden, the user has to also implement the `release_interfaces`
    * method by overriding it to release the interfaces.
    *
-   * \param[in] command_interfaces vector of command interfaces to be assigned to the controller.
-   * \param[in] state_interfaces vector of state interfaces to be assigned to the controller.
+   * @param[in] command_interfaces vector of command interfaces to be assigned to the controller.
+   * @param[in] state_interfaces vector of state interfaces to be assigned to the controller.
    */
   virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
 
-  /// Method that releases the Loaned interfaces from the controller.
   /**
+   * @brief Method that releases the Loaned interfaces from the controller.
+   *
    * Method used by the controller_manager to release the interfaces from the controller.
    */
   virtual void release_interfaces();
@@ -170,36 +177,38 @@ public:
 
   return_type init(const controller_interface::ControllerInterfaceParams & params);
 
-  /// Custom configure method to read additional parameters for controller-nodes
-  /*
+  /**
+   * @brief Custom configure method to read additional parameters for controller-nodes
+   *
    * Override default implementation for configure of LifecycleNode to get parameters.
    */
   const rclcpp_lifecycle::State & configure();
 
-  /// Extending interface with initialization method which is individual for each controller
+  /**
+   * @brief Extending interface with initialization method which is individual for each controller
+   */
   virtual CallbackReturn on_init() = 0;
 
   /**
-   * Control step update. Command interfaces are updated based on on reference inputs and current
-   * states.
+   * @brief Control step update. Command interfaces are updated based on on reference inputs and
+   * current states.
    * **The method called in the (real-time) control loop.**
    *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time since the last control loop iteration
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   * @param[in] time The time at the start of this control loop iteration
+   * @param[in] period The measured time since the last control loop iteration
+   * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /**
-   * Trigger update method. This method is used by the controller_manager to trigger the update
-   * method of the controller.
-   * The method is used to trigger the update method of the controller synchronously or
-   * asynchronously, based on the controller configuration.
+   * @brief Trigger update method. This method is used by the controller_manager to trigger the
+   * update method of the controller. The method is used to trigger the update method of the
+   * controller synchronously or asynchronously, based on the controller configuration.
    * **The method called in the (real-time) control loop.**
    *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \returns ControllerUpdateStatus. The status contains information if the update was triggered
+   * @param[in] time The time at the start of this control loop iteration
+   * @param[in] period The measured time taken by the last control loop iteration
+   * @returns ControllerUpdateStatus. The status contains information if the update was triggered
    * successfully, the result of the update method and the execution duration of the update method.
    */
   ControllerUpdateStatus trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
@@ -209,19 +218,19 @@ public:
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   /**
-   * Get the current lifecycle state of the controller node.
-   * \note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
+   * @brief Get the current lifecycle state of the controller node.
+   * @note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
    * should not be called in the control loop.
-   * \note This method is thread safe.
-   * \returns lifecycle state of the controller node.
+   * @note This method is thread safe.
+   * @returns lifecycle state of the controller node.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
   /**
-   * Get the lifecycle id of the controller node that is cached internally
+   * @brief Get the lifecycle id of the controller node that is cached internally
    * to avoid calls to get_lifecycle_state() in the real-time control loop.
-   * \note This method is real-time safe and thread safe and can be called in the control loop.
-   * \returns lifecycle id of the controller node.
+   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @returns lifecycle id of the controller node.
    */
   uint8_t get_lifecycle_id() const;
 
@@ -232,21 +241,21 @@ public:
   const std::string & get_robot_description() const;
 
   /**
-   * Get the unordered map of joint limits that are defined in the robot description.
+   * @brief Get the unordered map of joint limits that are defined in the robot description.
    */
   const std::unordered_map<std::string, joint_limits::JointLimits> & get_hard_joint_limits() const;
 
   /**
-   * Get the unordered map of soft joint limits that are defined in the robot description.
+   * @brief Get the unordered map of soft joint limits that are defined in the robot description.
    */
   const std::unordered_map<std::string, joint_limits::SoftJointLimits> & get_soft_joint_limits()
     const;
 
   /**
-   * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
-   * of the controller upon loading the controller.
+   * @brief Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle
+   * node of the controller upon loading the controller.
    *
-   * \note The controller_manager will modify these NodeOptions in case a params file is passed
+   * @note The controller_manager will modify these NodeOptions in case a params file is passed
    * by the spawner to load the controller parameters or when controllers are loaded in simulation
    * (see ros2_control#1311, ros2_controllers#698 , ros2_controllers#795,ros2_controllers#966 for
    * more details)
@@ -256,7 +265,7 @@ public:
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
     rclcpp::NodeOptions node_options;
-// \note The versions conditioning is added here to support the source-compatibility with Humble
+// @note The versions conditioning is added here to support the source-compatibility with Humble
 #if RCLCPP_VERSION_MAJOR >= 21
     node_options.enable_logger_service(true);
 #else
@@ -266,8 +275,8 @@ public:
     return node_options;
   }
 
-  /// Declare and initialize a parameter with a type.
   /**
+   * @brief Declare and initialize a parameter with a type.
    *
    * Wrapper function for templated node's declare_parameter() which checks if
    * parameter is already declared.
@@ -289,58 +298,61 @@ public:
   // Methods for chainable controller types with default values so we can put all controllers into
   // one list in Controller Manager
 
-  /// Get information if a controller is chainable.
   /**
+   * @brief Get information if a controller is chainable.
+   *
    * Get information if a controller is chainable.
    *
-   * \returns true is controller is chainable and false if it is not.
+   * @returns true is controller is chainable and false if it is not.
    */
   virtual bool is_chainable() const = 0;
 
   /**
-   * Export interfaces for a chainable controller that can be used as command interface of other
-   * controllers.
+   * @brief Export interfaces for a chainable controller that can be used as command interface of
+   * other controllers.
    *
-   * \returns list of command interfaces for preceding controllers.
+   * @returns list of command interfaces for preceding controllers.
    */
   virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
   export_reference_interfaces() = 0;
 
   /**
-   * Export interfaces for a chainable controller that can be used as state interface by other
-   * controllers.
+   * @brief Export interfaces for a chainable controller that can be used as state interface by
+   * other controllers.
    *
-   * \returns list of state interfaces for preceding controllers.
+   * @returns list of state interfaces for preceding controllers.
    */
   virtual std::vector<hardware_interface::StateInterface::ConstSharedPtr>
   export_state_interfaces() = 0;
 
   /**
-   * Set chained mode of a chainable controller. This method triggers internal processes to switch
-   * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves the usage of the controller's reference interfaces by the other
+   * @brief Set chained mode of a chainable controller. This method triggers internal processes to
+   * switch a chainable controller to "chained" mode and vice-versa. Setting controller to "chained"
+   * mode usually involves the usage of the controller's reference interfaces by the other
    * controllers
    *
-   * \returns true if mode is switched successfully and false if not.
+   * @returns true if mode is switched successfully and false if not.
    */
   virtual bool set_chained_mode(bool chained_mode) = 0;
 
-  /// Get information if a controller is currently in chained mode.
   /**
+   * @brief Get information if a controller is currently in chained mode.
+   *
    * Get information about controller if it is currently used in chained mode. In chained mode only
    * internal interfaces are available and all subscribers are expected to be disabled. This
    * prevents concurrent writing to controller's inputs from multiple sources.
    *
-   * \returns true is controller is in chained mode and false if it is not.
+   * @returns true is controller is in chained mode and false if it is not.
    */
   virtual bool is_in_chained_mode() const = 0;
 
   /**
-   * Method to wait for any running async update cycle to finish after finishing the current cycle.
-   * This is needed to be called before deactivating the controller by the controller_manager, so
-   * that the interfaces still exist when the controller finishes its cycle and then it's exits.
+   * @brief Method to wait for any running async update cycle to finish after finishing the current
+   * cycle. This is needed to be called before deactivating the controller by the
+   * controller_manager, so that the interfaces still exist when the controller finishes its cycle
+   * and then it's exits.
    *
-   * \note **The method is not real-time safe and shouldn't be called in the control loop.**
+   * @note **The method is not real-time safe and shouldn't be called in the control loop.**
    *
    * If the controller is running in async mode, the method will wait for the current async update
    * to finish. If the controller is not running in async mode, the method will do nothing.
@@ -348,12 +360,13 @@ public:
   void wait_for_trigger_update_to_finish();
 
   /**
-   * Method to prepare the controller for deactivation. This method is called by the controller
-   * manager before deactivating the controller. The method is used to prepare the controller for
-   * deactivation, e.g., to stop triggering the update cycles further. This method is especially
-   * needed for controllers running in async mode and different frequency than the control manager.
+   * @brief Method to prepare the controller for deactivation. This method is called by the
+   * controller manager before deactivating the controller. The method is used to prepare the
+   * controller for deactivation, e.g., to stop triggering the update cycles further. This method is
+   * especially needed for controllers running in async mode and different frequency than the
+   * control manager.
    *
-   * \note **The method is not real-time safe and shouldn't be called in the RT control loop.**
+   * @note **The method is not real-time safe and shouldn't be called in the RT control loop.**
    *
    * If the controller is running in async mode, the method will stop the async update cycles. If
    * the controller is not running in async mode, the method will do nothing.
@@ -362,46 +375,49 @@ public:
 
   std::string get_name() const;
 
-  /// Enable or disable introspection of the controller.
   /**
-   * \param[in] enable Enable introspection if true, disable otherwise.
+   * @brief Enable or disable introspection of the controller.
+   *
+   * @param[in] enable Enable introspection if true, disable otherwise.
    */
   void enable_introspection(bool enable);
 
 protected:
-  /** Loaned command interfaces.
-   * \note The order of these interfaces is determined by the return value of
-   * \ref command_interface_configuration():
+  /**
+   * @brief Loaned command interfaces.
+   * @note The order of these interfaces is determined by the return value of
+   * @ref command_interface_configuration():
    * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
    * returned vector.
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
-   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * @ref get_ordered_interfaces() from @ref helpers.hpp.
    * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
    * not matched the requested one, as it depends on the available interfaces in the resource
-   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * manager. Use the @ref get_ordered_interfaces() from @ref helpers.hpp to obtain a consistent
    * order.
    */
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
-  /** Loaned state interfaces.
-   * \note The order of these interfaces is determined by the return value of
-   * \ref state_interface_configuration():
+  /**
+   * @brief Loaned state interfaces.
+   * @note The order of these interfaces is determined by the return value of
+   * @ref state_interface_configuration():
    * If interface_configuration_type::INDIVIDUAL is specified, the order matches that of the
    * returned vector.
    * If interface_configuration_type::ALL is specified, the order is determined by the internal
    * memory of the resource_manager and may not be deterministic. To obtain a consistent order, use
-   * \ref get_ordered_interfaces() from \ref helpers.hpp.
+   * @ref get_ordered_interfaces() from @ref helpers.hpp.
    * If interface_configuration_type::INDIVIDUAL_BEST_EFFORT or REGEX is specified, the order might
    * not matched the requested one, as it depends on the available interfaces in the resource
-   * manager. Use the \ref get_ordered_interfaces() from \ref helpers.hpp to obtain a consistent
+   * manager. Use the @ref get_ordered_interfaces() from @ref helpers.hpp to obtain a consistent
    * order.
    */
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
   /**
-   * Method to stop the async handler thread. This method is called before the controller cleanup,
-   * error and shutdown lifecycle transitions.
+   * @brief Method to stop the async handler thread. This method is called before the controller
+   * cleanup, error and shutdown lifecycle transitions.
    */
   void stop_async_handler_thread();
 
