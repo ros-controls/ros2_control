@@ -666,17 +666,34 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_state_interfaces();
-    const auto interface_names = add_state_interfaces(interfaces);
-    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
+    try
+    {
+      auto interfaces = hardware.export_state_interfaces();
+      const auto interface_names = add_state_interfaces(interfaces);
+      hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
 
-    RCLCPP_WARN_EXPRESSION(
-      get_logger(), interface_names.empty(),
-      "Importing state interfaces for the hardware '%s' returned no state interfaces.",
-      hardware.get_name().c_str());
-    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
-    available_state_interfaces_.reserve(
-      available_state_interfaces_.capacity() + interface_names.size());
+      RCLCPP_WARN_EXPRESSION(
+        get_logger(), interface_names.empty(),
+        "Importing state interfaces for the hardware '%s' returned no state interfaces.",
+        hardware.get_name().c_str());
+    }
+    catch (const std::exception & ex)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Exception of type : %s occurred while importing state interfaces for the hardware '%s' "
+        ": %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
+      handle_exception_ ? void() : throw;
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Unknown exception occurred while importing state interfaces for the hardware '%s'",
+        hardware.get_name().c_str());
+      handle_exception_ ? void() : throw;
+    }
   }
 
   void insert_command_interface(const CommandInterface::SharedPtr command_interface)
@@ -1443,7 +1460,7 @@ ResourceManager::ResourceManager(
 
 ResourceManager::ResourceManager(
   const hardware_interface::ResourceManagerParams & params, bool load)
-: resource_storage_(std::make_unique<ResourceStorage>(params.clock, params.logger)), params_(params)
+: resource_storage_(std::make_unique<ResourceStorage>(params)), params_(params)
 {
   RCLCPP_WARN_EXPRESSION(
     params.logger, params.allow_controller_activation_with_inactive_hardware,
@@ -1496,7 +1513,16 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
+<<<<<<< HEAD
   components_are_loaded_and_initialized_ = true;
+=======
+  resource_storage_->robot_description_ = params.robot_description;
+  resource_storage_->cm_update_rate_ = params.update_rate;
+  params_.robot_description = params.robot_description;
+  params_.update_rate = params.update_rate;
+  params_.handle_exceptions = params.handle_exceptions;
+  resource_storage_->handle_exception_ = params.handle_exceptions;
+>>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
 
   resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;
