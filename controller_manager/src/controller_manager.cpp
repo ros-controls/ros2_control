@@ -576,9 +576,14 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  cm_node_options_(options),
-  robot_description_(resource_manager_->get_robot_description())
+  cm_node_options_(options)
 {
+  if (resource_manager_ == nullptr)
+  {
+    throw std::runtime_error("The parsed resource manager is a nullptr!");
+  }
+
+  robot_description_ = resource_manager_->get_robot_description();
   initialize_parameters();
   if (is_resource_manager_initialized())
   {
@@ -588,8 +593,20 @@ ControllerManager::ControllerManager(
   }
   else
   {
-    RCLCPP_FATAL(get_logger(), "The resource manager is not properly initialized");
-    throw std::runtime_error("Resource manager object is not valid. See the FATAL message above.");
+    if (!robot_description_.empty())
+    {
+      RCLCPP_FATAL(get_logger(), "The resource manager is not properly initialized");
+      throw std::runtime_error(
+        "Resource manager object is not valid. See the FATAL message above.");
+    }
+    else
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "The resource manager is not yet initialized, will wait for the robot description to "
+        "initialize it..");
+      init_controller_manager();
+    }
   }
 }
 
@@ -804,7 +821,10 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+  if (resource_manager_ == nullptr)
+  {
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+  }
 
   resource_manager_->set_on_component_state_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
