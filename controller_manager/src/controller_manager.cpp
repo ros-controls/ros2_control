@@ -574,9 +574,14 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  robot_description_(resource_manager_->get_robot_description())
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  if (resource_manager_ == nullptr)
+  {
+    throw std::runtime_error("The parsed resource manager is a nullptr!");
+  }
+
+  robot_description_ = resource_manager_->get_robot_description();
   initialize_parameters();
   if (is_resource_manager_initialized())
   {
