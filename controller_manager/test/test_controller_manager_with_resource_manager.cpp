@@ -116,11 +116,29 @@ TEST_F(ControllerManagerTest, robot_description_callback_handles_no_geometry)
   EXPECT_TRUE(cm.is_resource_manager_initialized());
 }
 
-TEST_F(ControllerManagerTest, cm_constructor_with_invalid_rm_object)
+TEST_F(ControllerManagerTest, cm_constructor_with_nullptr_rm_object)
 {
+  test_resource_manager_ = nullptr;
   EXPECT_THROW(
     { TestControllerManager cm(std::move(test_resource_manager_), executor_); },
     std::runtime_error);
+}
+
+TEST_F(ControllerManagerTest, cm_constructor_with_uninitialized_rm_object_with_valid_urdf)
+{
+  hardware_interface::ResourceManagerParams rm_param;
+  rm_param.logger = node_->get_logger();
+  rm_param.clock = node_->get_clock();
+  rm_param.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+  test_resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(rm_param, false);
+  EXPECT_THROW(
+    { TestControllerManager cm(std::move(test_resource_manager_), executor_); },
+    std::runtime_error);
+}
+
+TEST_F(ControllerManagerTest, cm_constructor_with_uninitialized_rm_object_with_no_urdf)
+{
+  EXPECT_NO_THROW({ TestControllerManager cm(std::move(test_resource_manager_), executor_); });
 }
 
 int main(int argc, char ** argv)
