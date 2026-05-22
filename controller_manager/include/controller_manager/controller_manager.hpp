@@ -338,7 +338,7 @@ protected:
   unsigned int update_rate_;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_ = nullptr;
 
 private:
   std::vector<std::string> get_controller_names();

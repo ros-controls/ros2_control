@@ -171,6 +171,9 @@ public:
   : ResourceStorage(rm_param.clock, rm_param.logger)
   {
     handle_exception_ = rm_param.handle_exceptions;
+    robot_description_ = rm_param.robot_description;
+    cm_update_rate_ = rm_param.update_rate;
+    handle_exception_ = rm_param.handle_exceptions;
   }
 
   template <class HardwareT, class HardwareInterfaceT>
