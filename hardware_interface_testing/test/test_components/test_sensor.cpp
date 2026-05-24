@@ -71,15 +71,6 @@ class TestSensor : public SensorInterface
     return CallbackReturn::SUCCESS;
   }
 
-<<<<<<< HEAD
-  std::vector<StateInterface> export_state_interfaces() override
-  {
-    std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        get_hardware_info().sensors[0].name,
-        get_hardware_info().sensors[0].state_interfaces[0].name, &velocity_state_));
-=======
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
   {
     check_injected_failure("on_configure");
@@ -116,15 +107,14 @@ class TestSensor : public SensorInterface
     return SensorInterface::on_error(previous_state);
   }
 
-  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
+  std::vector<StateInterface> export_state_interfaces() override
   {
     check_injected_failure("export_state_interfaces");
-    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
-    velocity_state_ = std::make_shared<StateInterface>(
-      get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name);
-    std::ignore = velocity_state_->set_value(0.0, false);
-    state_interfaces.push_back(velocity_state_);
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
+    std::vector<StateInterface> state_interfaces;
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().sensors[0].name,
+        get_hardware_info().sensors[0].state_interfaces[0].name, &velocity_state_));
 
     return state_interfaces;
   }
