@@ -88,9 +88,6 @@ class TestSystem : public SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
-<<<<<<< HEAD
-  std::vector<StateInterface> export_state_interfaces() override
-=======
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
   {
     check_injected_failure("on_configure");
@@ -127,8 +124,7 @@ class TestSystem : public SystemInterface
     return SystemInterface::on_error(previous_state);
   }
 
-  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
+  std::vector<StateInterface> export_state_interfaces() override
   {
     check_injected_failure("export_state_interfaces");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());

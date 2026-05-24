@@ -1513,16 +1513,7 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
-<<<<<<< HEAD
   components_are_loaded_and_initialized_ = true;
-=======
-  resource_storage_->robot_description_ = params.robot_description;
-  resource_storage_->cm_update_rate_ = params.update_rate;
-  params_.robot_description = params.robot_description;
-  params_.update_rate = params.update_rate;
-  params_.handle_exceptions = params.handle_exceptions;
-  resource_storage_->handle_exception_ = params.handle_exceptions;
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
 
   resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;

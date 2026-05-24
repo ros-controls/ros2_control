@@ -87,22 +87,6 @@ class TestActuator : public ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
-<<<<<<< HEAD
-  std::vector<StateInterface> export_state_interfaces() override
-  {
-    std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
-        &position_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
-        &velocity_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        get_hardware_info().joints[0].name, "some_unlisted_interface", &unlisted_interface_));
-=======
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
   {
     check_injected_failure("on_configure");
@@ -139,42 +123,33 @@ class TestActuator : public ActuatorInterface
     return ActuatorInterface::on_error(previous_state);
   }
 
-  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
+  std::vector<StateInterface> export_state_interfaces() override
   {
     check_injected_failure("export_state_interfaces");
-    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
-    position_state_ = std::make_shared<StateInterface>(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name);
-    std::ignore = position_state_->set_value(0.0, false);
-    velocity_state_ = std::make_shared<StateInterface>(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name);
-    std::ignore = velocity_state_->set_value(0.0, false);
-    unlisted_interface_ = std::make_shared<StateInterface>(
-      get_hardware_info().joints[0].name, "some_unlisted_interface");
-    state_interfaces.push_back(position_state_);
-    state_interfaces.push_back(velocity_state_);
-    state_interfaces.push_back(unlisted_interface_);
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
+    std::vector<StateInterface> state_interfaces;
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
+        &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
+        &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, "some_unlisted_interface", &unlisted_interface_));
 
     return state_interfaces;
   }
 
   std::vector<CommandInterface> export_command_interfaces() override
   {
-<<<<<<< HEAD
+    check_injected_failure("export_command_interfaces");
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
         get_hardware_info().joints[0].name,
         get_hardware_info().joints[0].command_interfaces[0].name, &velocity_command_));
-=======
-    check_injected_failure("export_command_interfaces");
-    std::vector<CommandInterface::SharedPtr> command_interfaces;
-    velocity_command_ = std::make_shared<CommandInterface>(
-      get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name);
-    std::ignore = velocity_command_->set_value(0.0, false);
-    command_interfaces.push_back(velocity_command_);
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
 
     if (get_hardware_info().joints[0].command_interfaces.size() > 1)
     {
@@ -191,14 +166,8 @@ class TestActuator : public ActuatorInterface
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces) override
   {
-<<<<<<< HEAD
-    position_state_ += 0.001;
-=======
     check_injected_failure("prepare_command_mode_switch");
-    double pos = 0.0;
-    std::ignore = position_state_->get_value(pos, false);
-    std::ignore = position_state_->set_value(pos + 0.001, false);
->>>>>>> 6e3c2c4 ([hardware_interface_testing] Add tests for hardware components exception handling (#3228))
+    position_state_ += 0.001;
     return hardware_interface::return_type::OK;
   }
 
