@@ -149,15 +149,14 @@ TEST_F(TestCleanupController, configure_chainable_with_and_without_interfaces_sh
     << "Controller should be rolled back to UNCONFIGURED after configure failure, "
        "but is in state: "
     << bad_controller->get_lifecycle_state().label();
-  
+
   // Add an interface and configure. Controller should reach INACTIVE state
   bad_controller->set_reference_interface_names({"joint1/position"});
 
   ret = cm_->configure_controller("bad_chainable_controller");
   EXPECT_EQ(controller_interface::return_type::OK, ret);
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    bad_controller->get_lifecycle_state().id())
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, bad_controller->get_lifecycle_state().id())
     << "Controller should reach INACTIVE after successful configure, "
        "but is in state: "
     << bad_controller->get_lifecycle_state().label();
