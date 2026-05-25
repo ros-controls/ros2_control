@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 #include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
@@ -25,6 +26,28 @@ using hardware_interface::StateInterface;
 
 class TestActuator : public ActuatorInterface
 {
+  void check_injected_failure(const std::string & method_name) const
+  {
+    const auto & info = get_hardware_info();
+    const auto & params = info.hardware_parameters;
+    const std::string throw_key = "throw_on_" + method_name;
+    const std::string unknown_throw_key = "throw_unknown_on_" + method_name;
+
+    if (params.count(throw_key) && hardware_interface::parse_bool(params.at(throw_key)))
+    {
+      throw std::runtime_error("Standard exception from TestActuator::" + method_name);
+    }
+
+    if (
+      params.count(unknown_throw_key) &&
+      hardware_interface::parse_bool(params.at(unknown_throw_key)))
+    {
+      RCLCPP_DEBUG(
+        get_logger(), "Injecting unknown exception for TestActuator::%s", method_name.c_str());
+      throw 42;  // Throw an unknown type (int)
+    }
+  }
+
   CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
@@ -32,6 +55,8 @@ class TestActuator : public ActuatorInterface
     {
       return CallbackReturn::ERROR;
     }
+
+    check_injected_failure("on_init");
 
     if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
     {
@@ -62,8 +87,45 @@ class TestActuator : public ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_configure");
+    return ActuatorInterface::on_configure(previous_state);
+  }
+
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_cleanup");
+    return ActuatorInterface::on_cleanup(previous_state);
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_activate");
+    return ActuatorInterface::on_activate(previous_state);
+  }
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_deactivate");
+    return ActuatorInterface::on_deactivate(previous_state);
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_shutdown");
+    return ActuatorInterface::on_shutdown(previous_state);
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override
+  {
+    check_injected_failure("on_error");
+    return ActuatorInterface::on_error(previous_state);
+  }
+
   std::vector<StateInterface> export_state_interfaces() override
   {
+    check_injected_failure("export_state_interfaces");
     std::vector<StateInterface> state_interfaces;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
@@ -82,6 +144,7 @@ class TestActuator : public ActuatorInterface
 
   std::vector<CommandInterface> export_command_interfaces() override
   {
+    check_injected_failure("export_command_interfaces");
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
@@ -100,17 +163,19 @@ class TestActuator : public ActuatorInterface
   }
 
   hardware_interface::return_type prepare_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/) override
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
   {
+    check_injected_failure("prepare_command_mode_switch");
     position_state_ += 0.001;
     return hardware_interface::return_type::OK;
   }
 
   hardware_interface::return_type perform_command_mode_switch(
-    const std::vector<std::string> & /*start_interfaces*/,
-    const std::vector<std::string> & /*stop_interfaces*/) override
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
   {
+    check_injected_failure("perform_command_mode_switch");
     if (get_hardware_info().hardware_parameters.count("fail_on_perform_mode_switch"))
     {
       if (
@@ -126,6 +191,7 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
+    check_injected_failure("read");
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
@@ -167,6 +233,7 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    check_injected_failure("write");
     if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
