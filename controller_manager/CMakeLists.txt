@@ -36,7 +36,6 @@ generate_parameter_library(controller_manager_parameters
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
-target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
@@ -268,6 +267,15 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
+  )
+
+  ament_add_gmock(test_controller_manager_with_resource_manager
+  test/test_controller_manager_with_resource_manager.cpp
+  )
+  target_link_libraries(test_controller_manager_with_resource_manager
+    controller_manager
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
   )
 
   find_package(ament_cmake_pytest REQUIRED)
