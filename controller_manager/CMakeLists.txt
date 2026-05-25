@@ -147,6 +147,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_failed_init
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -266,6 +267,15 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
+  )
+
+  ament_add_gmock(test_controller_manager_with_resource_manager
+  test/test_controller_manager_with_resource_manager.cpp
+  )
+  target_link_libraries(test_controller_manager_with_resource_manager
+    controller_manager
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
   )
 
   find_package(ament_cmake_pytest REQUIRED)
