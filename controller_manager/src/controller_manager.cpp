@@ -1705,7 +1705,8 @@ controller_interface::return_type ControllerManager::configure_controller(
         RCLCPP_ERROR(
           get_logger(),
           "Controller '%s' is chainable, but does not export any state or reference interfaces. "
-          "Did you override the on_export_method() correctly?",
+          "Did you override the on_export_state_interfaces_list() or "
+          "on_export_reference_interfaces_list() methods correctly?",
           controller_name.c_str());
         cleanup_controller(*found_it);
         return controller_interface::return_type::ERROR;
