@@ -51,7 +51,7 @@ class SetHardwareComponentStateVerb(VerbExtension):
                     node, args.controller_manager, args.hardware_component_name, unconfigured_state
                 )
                 if not response.ok:
-                    return "Error transitioning hardware component to 'unconfigured', check controller_manager logs"
+                    return "Error cleaning up hardware component, check controller_manager logs"
 
             elif args.state == "inactive":
                 inactive_state = State()
@@ -62,7 +62,7 @@ class SetHardwareComponentStateVerb(VerbExtension):
                     node, args.controller_manager, args.hardware_component_name, inactive_state
                 )
                 if not response.ok:
-                    return "Error deactivating hardware component, check controller_manager logs"
+                    return "Error stopping hardware component, check controller_manager logs"
 
             elif args.state == "active":
 
