@@ -1,0 +1,23 @@
+{
+    "dockerComposeFile": [
+        "dev-compose.yaml"
+    ],
+    "service": "ros2-contro-dev",
+    "workspaceFolder": "/root/ws_ros2_control/src",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "github.copilot",
+                "github.copilot-chat",
+                "anthropic.claude-code",
+                "yzhang.markdown-all-in-one",
+                "tamasfe.even-better-toml",
+                "ms-vscode.cpptools"
+
+            ]
+        }
+    },
+    "privileged": true
+}

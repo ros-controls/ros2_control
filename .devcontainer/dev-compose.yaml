@@ -1,0 +1,8 @@
+services:
+  ros2-contro-dev:
+    build: ../.docker/source
+    container_name: ros2-contro-dev
+    network_mode: host
+    command: sleep infinity
+    volumes:
+      - ..:/root/ws_ros2_control/src:cached
