@@ -102,24 +102,24 @@ class ControllerManager(Plugin):
 
         # Controllers display
         ctrl_table_view = self._widget.ctrl_table_view
-        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
         ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
         ctrl_header = ctrl_table_view.horizontalHeader()
-        ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        ctrl_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ctrl_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_header.customContextMenuRequested.connect(self._on_ctrl_header_menu)
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
-        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
         hw_table_view.doubleClicked.connect(self._on_hw_info)
-
+    
         hw_header = hw_table_view.horizontalHeader()
-        hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        hw_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        hw_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_header.customContextMenuRequested.connect(self._on_hw_header_menu)
 
         # Timer for controller manager updates
@@ -142,7 +142,7 @@ class ControllerManager(Plugin):
 
         # Signal connections
         w = self._widget
-        w.cm_combo.currentIndexChanged[str].connect(self._on_cm_change)
+        w.cm_combo.currentTextChanged.connect(self._on_cm_change)
 
     def shutdown_plugin(self):
         self._update_cm_list_timer.stop()
