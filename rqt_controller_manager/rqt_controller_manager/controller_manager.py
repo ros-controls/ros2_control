@@ -102,24 +102,24 @@ class ControllerManager(Plugin):
 
         # Controllers display
         ctrl_table_view = self._widget.ctrl_table_view
-        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
         ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
         ctrl_header = ctrl_table_view.horizontalHeader()
-        ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        ctrl_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ctrl_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_header.customContextMenuRequested.connect(self._on_ctrl_header_menu)
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
-        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
         hw_table_view.doubleClicked.connect(self._on_hw_info)
 
         hw_header = hw_table_view.horizontalHeader()
-        hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        hw_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        hw_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_header.customContextMenuRequested.connect(self._on_hw_header_menu)
 
         # Timer for controller manager updates
@@ -142,7 +142,7 @@ class ControllerManager(Plugin):
 
         # Signal connections
         w = self._widget
-        w.cm_combo.currentIndexChanged[str].connect(self._on_cm_change)
+        w.cm_combo.currentTextChanged.connect(self._on_cm_change)
 
     def shutdown_plugin(self):
         self._update_cm_list_timer.stop()
@@ -246,7 +246,7 @@ class ControllerManager(Plugin):
             # Controller isn't loaded
             action_load = menu.addAction(self._icons["unconfigured"], "Load (unconfigured)")
 
-        action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if ctrl.state == "active":
@@ -510,7 +510,7 @@ class ControllerTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "controller"
@@ -523,23 +523,23 @@ class ControllerTable(QAbstractTableModel):
 
         ctrl = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
                 return ctrl.state or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             state_key = ctrl.state if ctrl.state else "unloaded"
             return self._icons.get(state_key)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class HwComponentTable(QAbstractTableModel):
@@ -562,7 +562,7 @@ class HwComponentTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "component"
@@ -575,22 +575,22 @@ class HwComponentTable(QAbstractTableModel):
 
         hw_component = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return hw_component.name
             elif index.column() == 1:
                 return hw_component.state.label or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             return self._icons.get(hw_component.state.label)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class FontDelegate(QStyledItemDelegate):
