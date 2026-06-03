@@ -308,14 +308,14 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.ctrl_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(ctrl_header.mapToGlobal(pos))
+        action = menu.exec(ctrl_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if ctrl_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                ctrl_header.setSectionResizeMode(QHeaderView.Interactive)
+            if ctrl_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _update_hw_components(self):
         if not self._cm_name:
@@ -373,7 +373,7 @@ class ControllerManager(Plugin):
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
 
-        action = menu.exec_(self._widget.hw_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.hw_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if hw_component.state.label == "active":
@@ -431,14 +431,14 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.hw_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(hw_header.mapToGlobal(pos))
+        action = menu.exec(hw_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if hw_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                hw_header.setSectionResizeMode(QHeaderView.Interactive)
+            if hw_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _activate_controller(self, name):
         self._switch_controllers([name], [])
@@ -604,11 +604,11 @@ class FontDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         if not index.parent().isValid():
             # Root level
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         if index.parent().isValid() and not index.parent().parent().isValid():
             # Hardware interface level
             option.font.setItalic(True)
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
