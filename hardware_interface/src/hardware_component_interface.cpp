@@ -458,11 +458,19 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
 void HardwareComponentInterface::pause_async_operations()
-
 {
   if (async_handler_)
   {
     async_handler_->pause_execution();
+  }
+}
+
+void HardwareComponentInterface::stop_async_handler()
+{
+  if (async_handler_)
+  {
+    async_handler_->stop_thread();
+    async_handler_.reset();
   }
 }
 
