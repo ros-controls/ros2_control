@@ -568,6 +568,12 @@ public:
    */
   void pause_async_operations();
 
+  /// Stop and release the async handler thread.
+  /**
+   * Joins the async worker thread and destroys the handler.
+   */
+  void stop_async_handler();
+
   /// Prepare for the activation of the hardware.
   /**
    * This method is called before the hardware is activated by the resource manager.

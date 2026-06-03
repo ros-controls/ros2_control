@@ -2980,6 +2980,29 @@ TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_han
   EXPECT_THROW(rm->write(time, duration), std::runtime_error);
 }
 
+/// @note this is a non-deterministic test and this type of tests are hard to reproduce due to
+// vtable stuff
+TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
+{
+  // TestActuatorHardware uses "detached" scheduling policy in async_hardware_resources.
+  const auto minimal_robot_urdf_async =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::async_hardware_resources) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  auto rm = std::make_unique<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
+  activate_components(*rm);
+
+  // Trigger at least one async read cycle so the DETACHED thread is running.
+  auto time = node_.get_clock()->now();
+  const rclcpp::Duration duration(0, 1'000'000);
+  rm->read(time, duration);
+
+  // Drop the ResourceManager without calling shutdown_components() first.
+  // Before the fix this races with the async thread and crashes with "pure virtual method called".
+  EXPECT_NO_FATAL_FAILURE(rm.reset());
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
