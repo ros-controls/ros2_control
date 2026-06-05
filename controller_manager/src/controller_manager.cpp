@@ -574,9 +574,14 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  robot_description_(resource_manager_->get_robot_description())
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  if (resource_manager_ == nullptr)
+  {
+    throw std::runtime_error("The parsed resource manager is a nullptr!");
+  }
+
+  robot_description_ = resource_manager_->get_robot_description();
   initialize_parameters();
   if (is_resource_manager_initialized())
   {
@@ -586,8 +591,20 @@ ControllerManager::ControllerManager(
   }
   else
   {
-    RCLCPP_FATAL(get_logger(), "The resource manager is not properly initialized");
-    throw std::runtime_error("Resource manager object is not valid. See the FATAL message above.");
+    if (!robot_description_.empty())
+    {
+      RCLCPP_FATAL(get_logger(), "The resource manager is not properly initialized");
+      throw std::runtime_error(
+        "Resource manager object is not valid. See the FATAL message above.");
+    }
+    else
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "The resource manager is not yet initialized, will wait for the robot description to "
+        "initialize it..");
+      init_controller_manager();
+    }
   }
 }
 
@@ -803,7 +820,10 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
-  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+  if (resource_manager_ == nullptr)
+  {
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+  }
 
   resource_manager_->set_on_component_state_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));
@@ -1682,12 +1702,13 @@ controller_interface::return_type ControllerManager::configure_controller(
       ref_interfaces = controller->export_reference_interfaces();
       if (ref_interfaces.empty() && state_interfaces.empty())
       {
-        // TODO(destogl): Add test for this!
         RCLCPP_ERROR(
           get_logger(),
           "Controller '%s' is chainable, but does not export any state or reference interfaces. "
-          "Did you override the on_export_method() correctly?",
+          "Did you override the on_export_state_interfaces_list() or "
+          "on_export_reference_interfaces_list() methods correctly?",
           controller_name.c_str());
+        cleanup_controller(*found_it);
         return controller_interface::return_type::ERROR;
       }
     }
@@ -1697,6 +1718,7 @@ controller_interface::return_type ControllerManager::configure_controller(
         get_logger(), "Export of the state or reference interfaces failed with following error: %s",
         e.what());
       params_->handle_exceptions ? void() : throw;
+      cleanup_controller(*found_it);
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
