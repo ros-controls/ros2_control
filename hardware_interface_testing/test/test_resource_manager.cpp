@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/version.h"
@@ -1335,6 +1336,39 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
   EXPECT_EQ(reference_interface_values[1], 2.0);
   EXPECT_EQ(reference_interface_values[2], 33.3);
 
+  // DUPLICATE PREVENTION TEST
+
+  // Count before first call (interfaces should NOT be available yet)
+  size_t count_initial = rm.available_command_interfaces().size();
+
+  // Make reference interfaces available (first call)
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Count after first call
+  size_t count_before = rm.available_command_interfaces().size();
+
+  EXPECT_GT(count_before, count_initial) << "First call should have added interfaces";
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_command_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate reference interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_command_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_reference_interfaces_unavailable(CONTROLLER_NAME);
+
   // remove reference interfaces from resource manager
   rm.remove_controller_reference_interfaces(CONTROLLER_NAME);
 
@@ -1350,6 +1384,93 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
+TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
+{
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
+
+  std::string CONTROLLER_NAME = "test_controller";
+  std::vector<std::string> STATE_INTERFACE_NAMES = {"state1", "state2", "state3"};
+  std::vector<std::string> FULL_STATE_INTERFACE_NAMES = {
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[0],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[1],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[2]};
+
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+  std::vector<double> state_interface_values = {1.0, 2.0, 3.0};
+
+  for (size_t i = 0; i < STATE_INTERFACE_NAMES.size(); ++i)
+  {
+    state_interfaces.push_back(
+      std::make_shared<hardware_interface::StateInterface>(
+        CONTROLLER_NAME, STATE_INTERFACE_NAMES[i], &state_interface_values[i]));
+  }
+
+  rm.import_controller_exported_state_interfaces(CONTROLLER_NAME, state_interfaces);
+
+  ASSERT_THAT(
+    rm.get_controller_exported_state_interface_names(CONTROLLER_NAME),
+    testing::ElementsAreArray(FULL_STATE_INTERFACE_NAMES));
+
+  // check interfaces NOT available initially
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+  // Count before first make available call
+  size_t count_initial = rm.available_state_interfaces().size();
+
+  // make interface available
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Verify first call changed the count
+  size_t count_after_first = rm.available_state_interfaces().size();
+  EXPECT_GT(count_after_first, count_initial) << "First call should have added interfaces";
+
+  // DUPLICATE PREVENTION TEST
+
+  // Count before second call
+  size_t count_before = rm.available_state_interfaces().size();
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_state_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate state interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_state_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_exported_state_interfaces_unavailable(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+
+  // remove
+  rm.remove_controller_exported_state_interfaces(CONTROLLER_NAME);
+
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_FALSE(rm.state_interface_exists(interface));
+  }
+}
+
 class MockExecutor : public rclcpp::executors::SingleThreadedExecutor
 {
 public:
@@ -1357,6 +1478,7 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
+  // cppcheck-suppress syntaxError
 #if RCLCPP_VERSION_GTE(31, 0, 0)
   void add_node(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
@@ -2856,6 +2978,29 @@ TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_han
 
   // with handle_exceptions=false: should throw
   EXPECT_THROW(rm->write(time, duration), std::runtime_error);
+}
+
+/// @note this is a non-deterministic test and this type of tests are hard to reproduce due to
+// vtable stuff
+TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
+{
+  // TestActuatorHardware uses "detached" scheduling policy in async_hardware_resources.
+  const auto minimal_robot_urdf_async =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::async_hardware_resources) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  auto rm = std::make_unique<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
+  activate_components(*rm);
+
+  // Trigger at least one async read cycle so the DETACHED thread is running.
+  auto time = node_.get_clock()->now();
+  const rclcpp::Duration duration(0, 1'000'000);
+  rm->read(time, duration);
+
+  // Drop the ResourceManager without calling shutdown_components() first.
+  // Before the fix this races with the async thread and crashes with "pure virtual method called".
+  EXPECT_NO_FATAL_FAILURE(rm.reset());
 }
 
 int main(int argc, char ** argv)

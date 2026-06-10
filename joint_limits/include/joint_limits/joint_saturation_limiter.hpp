@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
@@ -43,7 +44,7 @@ public:
   /** \brief Destructor */
   virtual ~JointSaturationLimiter();
 
-  bool on_init() override { return true; }
+  bool on_init() override;
 
   bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
@@ -99,6 +100,15 @@ template <typename JointLimitsStateDataType>
 JointSaturationLimiter<JointLimitsStateDataType>::~JointSaturationLimiter()
 {
 }
+
+template <typename JointLimitsStateDataType>
+bool JointSaturationLimiter<JointLimitsStateDataType>::on_init()
+{
+  return true;
+}
+
+template <>
+bool JointSaturationLimiter<JointControlInterfacesData>::on_init();
 
 }  // namespace joint_limits
 
