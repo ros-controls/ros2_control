@@ -35,6 +35,7 @@ generate_parameter_library(controller_manager_parameters
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
+  src/control_loop.cpp
 )
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -276,6 +277,18 @@ if(BUILD_TESTING)
     controller_manager
     hardware_interface::hardware_interface
     ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  find_package(diagnostic_msgs REQUIRED)
+  ament_add_gmock(test_ros2_control_node_hardware_sync
+    test/test_ros2_control_node_hardware_sync.cpp
+    TIMEOUT 120
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_ros2_control_node_hardware_sync
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+    ${diagnostic_msgs_TARGETS}
   )
 
   find_package(ament_cmake_pytest REQUIRED)

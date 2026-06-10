@@ -2339,6 +2339,48 @@ const auto invalid_urdf_no_geometry =
   </robot>
 )";
 
+const auto hardware_resources_single_non_blocking_system = R"(
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_single_blocking_read_system = R"(
+  <ros2_control name="TestBlockingSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="block_in">read</param>
+      <param name="block_duration_s">0.05</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto minimal_robot_single_non_blocking_system_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_single_non_blocking_system) +
+  std::string(urdf_tail);
+const auto minimal_robot_single_blocking_read_system_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_single_blocking_read_system) +
+  std::string(urdf_tail);
+
+[[maybe_unused]] constexpr double TEST_BLOCKING_READ_DURATION_S = 0.05;
+[[maybe_unused]] constexpr double TEST_HARDWARE_SYNC_MINIMUM_CYCLE_TIME_S = 0.01;
+
 const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
                                 std::string(minimal_robot_transmissions) + std::string(urdf_tail);
 const auto minimal_robot_urdf_no_limits = std::string(urdf_head_continuous_missing_limits) +

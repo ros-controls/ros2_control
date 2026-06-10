@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <array>
+#include <chrono>
+#include <thread>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
@@ -40,6 +42,22 @@ void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
 
 class TestSystem : public SystemInterface
 {
+  void maybe_block(const std::string & method_name) const
+  {
+    const auto & params = get_hardware_info().hardware_parameters;
+    const auto block_it = params.find("block_in");
+    const auto duration_it = params.find("block_duration_s");
+    if (block_it == params.end() || duration_it == params.end())
+    {
+      return;
+    }
+    if (block_it->second != method_name)
+    {
+      return;
+    }
+    std::this_thread::sleep_for(std::chrono::duration<double>(std::stod(duration_it->second)));
+  }
+
   void check_injected_failure(const std::string & method_name) const
   {
     const auto & info = get_hardware_info();
@@ -192,6 +210,7 @@ class TestSystem : public SystemInterface
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     check_injected_failure("read");
+    maybe_block("read");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
@@ -233,6 +252,7 @@ class TestSystem : public SystemInterface
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     check_injected_failure("write");
+    maybe_block("write");
     verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
     if (get_hardware_info().is_async)
     {
