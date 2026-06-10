@@ -81,7 +81,7 @@ int main(int argc, char ** argv)
     thread_priority);
 
   const bool hw_sync_enable =
-    cm->get_parameter_or<bool>("hardware_synchronization.use_blocking_read_write", false);
+    cm->get_parameter_or<bool>("hardware_synchronization.expect_blocking_read_write", false);
   const double hw_sync_min_cycle_time =
     cm->get_parameter_or<double>("hardware_synchronization.minimum_cycle_time", 0.0001);
   RCLCPP_INFO_EXPRESSION(
