@@ -50,7 +50,8 @@ public:
    * @brief Return Range message with range in meters
    *
    * Constructs and return a Range message from the current values.
-   * @return Range message from values;
+   * @param[out] message Range message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::Range & message) const
   {
