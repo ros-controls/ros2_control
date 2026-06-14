@@ -62,7 +62,7 @@ public:
    * The function should be used in "command_interface_configuration()" of a controller to provide
    * standardized command interface names semantic component.
    *
-   * @default Default implementation defined command interfaces as "name/NR" where NR is number
+   * Default implementation defined command interfaces as "name/NR" where NR is number
    * from 0 to size of values;
    * @return list of strings with command interface names for the semantic component.
    */
