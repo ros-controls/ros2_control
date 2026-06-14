@@ -161,6 +161,9 @@ public:
 
   /**
    * @brief Fills a NavSatFix message from the current values.
+   * 
+   * @param[out] message NavSatFix message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
   {
