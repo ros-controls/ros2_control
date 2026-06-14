@@ -35,7 +35,8 @@ public:
   /**
    * @brief Returns values as sensor_msgs::msg::MagneticField
    *
-   * @return MagneticField message from values
+   * @param[out] message MagneticField message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::MagneticField & message)
   {
