@@ -167,7 +167,7 @@ protected:
    */
   mutable std::array<double, 6> data_;
   /**
-   * @brief Vector with existing axes for sensors with less then 6D axes.
+   * @brief Array with existing axes for sensors with less than 6D axes.
    */
   std::array<bool, 6> existing_axes_;
 };
