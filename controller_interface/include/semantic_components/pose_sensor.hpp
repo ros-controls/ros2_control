@@ -76,7 +76,7 @@ public:
    * @brief Fill pose message with current values.
    *
    * Fill a pose message with current position and orientation from the state interfaces.
-   * 
+   *
    * @param[out] message Pose message from values
    * @return always returns true
    */
