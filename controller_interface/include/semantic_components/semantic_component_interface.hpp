@@ -68,7 +68,7 @@ public:
    * standardized interface names for the semantic component.
    *
    * Default implementation defined state interfaces as "name/NR" where NR is number
-   * from 1 to size of values;
+   * from 0 to size of values;
    * @return list of strings with state interface names for the semantic component.
    */
   virtual std::vector<std::string> get_state_interface_names()
