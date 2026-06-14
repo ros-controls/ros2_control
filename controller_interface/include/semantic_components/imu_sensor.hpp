@@ -91,7 +91,8 @@ public:
    * @brief Return Imu message with orientation, angular velocity and linear acceleration
    *
    * Constructs and return a IMU message from the current values.
-   * @return imu message from values;
+   * @param[out] message IMU message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::Imu & message) const
   {
