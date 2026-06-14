@@ -50,7 +50,7 @@ public:
   /**
    * @brief Constructor for 6D FTS with custom interface names.
    *
-   * Constructor for 6D FTS with custom interface names or FTS with less then six measurement axes,
+   * Constructor for 6D FTS with custom interface names or FTS with less than six measurement axes,
    * e.g., 1D and 2D force load cells.
    * For non existing axes interface is empty string, i.e., ("");
    *
