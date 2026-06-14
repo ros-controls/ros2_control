@@ -27,7 +27,7 @@ class LedRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::Col
 {
 public:
   /**
-   * @brief Constructor for a LED RGB device with interface names set based on device name.
+   * @brief Constructor for an LED RGB device with interface names set based on device name.
    *
    * The constructor sets the command interface names to "<name>/interface_r",
    * "<name>/interface_g", "<name>/interface_b".
