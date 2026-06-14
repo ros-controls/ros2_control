@@ -123,7 +123,8 @@ public:
    * The method assumes that the interface names on the construction are in the following order:
    *   force X, force Y, force Z, torque X, torque Y, torque Z.
    *
-   * @return wrench message from values;
+   * @param[out] message Wrench message from values
+   * @return always returns true
    */
   bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
