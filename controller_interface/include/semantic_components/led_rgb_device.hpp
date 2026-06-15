@@ -27,14 +27,15 @@ class LedRgbDevice : public SemanticComponentCommandInterface<std_msgs::msg::Col
 {
 public:
   /**
-   * Constructor for a LED RGB device with interface names set based on device name.
+   * @brief Constructor for an LED RGB device with interface names set based on device name.
+   *
    * The constructor sets the command interface names to "<name>/interface_r",
    * "<name>/interface_g", "<name>/interface_b".
    *
-   * \param[in] name name of the LED device, used as a prefix for the command interface names
-   * \param[in] interface_r name of the command interface for the red channel
-   * \param[in] interface_g name of the command interface for the green channel
-   * \param[in] interface_b name of the command interface for the blue channel
+   * @param[in] name name of the LED device, used as a prefix for the command interface names
+   * @param[in] interface_r name of the command interface for the red channel
+   * @param[in] interface_g name of the command interface for the green channel
+   * @param[in] interface_b name of the command interface for the blue channel
    */
   explicit LedRgbDevice(
     const std::string & name, const std::string & interface_r, const std::string & interface_g,
@@ -44,17 +45,17 @@ public:
   {
   }
 
-  /// Set LED states from ColorRGBA message
-
   /**
+   * @brief Set LED states from ColorRGBA message
+   *
    * Set the values of the LED RGB device from a ColorRGBA message.
    *
-   * \details Sets the values of the red, green, and blue channels from the message.
+   * @details Sets the values of the red, green, and blue channels from the message.
    * If any of the values are out of the range [0, 1], the function fails and returns false.
    *
-   * \param[in] message ColorRGBA message
+   * @param[in] message ColorRGBA message
    *
-   * \return true if all values were set, false otherwise
+   * @return true if all values were set, false otherwise
    */
   bool set_values_from_message(const std_msgs::msg::ColorRGBA & message) override
   {
