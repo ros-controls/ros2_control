@@ -32,9 +32,11 @@ public:
   {
   }
 
-  /// Returns values as sensor_msgs::msg::MagneticField
   /**
-   * \return MagneticField message from values
+   * @brief Returns values as sensor_msgs::msg::MagneticField
+   *
+   * @param[out] message MagneticField message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::MagneticField & message)
   {
@@ -64,7 +66,9 @@ private:
     }
   }
 
-  // Array to store the data of the magnetic field sensor
+  /**
+   * @brief Array to store the data of the magnetic field sensor
+   */
   std::array<double, 3> data_{{0.0, 0.0, 0.0}};
 };
 
