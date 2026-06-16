@@ -133,8 +133,8 @@ inline bool declare_parameters(
 }
 
 /**
- * @brief Declare JointLimits and SoftJointLimits parameters for joint with @p joint_name for the @p node
- * object.
+ * @brief Declare JointLimits and SoftJointLimits parameters for joint with @p joint_name for the @p
+ * node object.
  *
  * This is a convenience function.
  * For parameters structure see the underlying `declare_parameters` function.
