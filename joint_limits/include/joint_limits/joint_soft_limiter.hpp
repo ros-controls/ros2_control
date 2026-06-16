@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adrià Roig Moreno
+/// @author Adrià Roig Moreno
 
 #ifndef JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_

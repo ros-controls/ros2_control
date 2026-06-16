@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Denis Stogl
+/// @author Denis Stogl
 
 #ifndef JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 #define JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_

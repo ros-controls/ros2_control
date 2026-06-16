@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Dr. Denis Stogl
+/// @author Dr. Denis Stogl
 
 #ifndef JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
@@ -28,8 +28,9 @@
 namespace joint_limits
 {
 /**
- * Joint Saturation Limiter limits joints' position, velocity and acceleration by clamping values
- * to its minimal and maximal allowed values. Since the position, velocity and accelerations are
+ * @brief Limit joints' position, velocity and acceleration by clamping to their allowed ranges.
+ *
+ * Since the position, velocity and accelerations are
  * variables in physical relation, it might be that some values are limited lower then specified
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
@@ -38,10 +39,10 @@ template <typename JointLimitsStateDataType>
 class JointSaturationLimiter : public JointLimiterInterface<JointLimitsStateDataType>
 {
 public:
-  /** \brief Constructor */
+  /** @brief Constructor */
   JointSaturationLimiter();
 
-  /** \brief Destructor */
+  /** @brief Destructor */
   virtual ~JointSaturationLimiter();
 
   bool on_init() override;
@@ -52,7 +53,9 @@ public:
     return true;
   }
 
-  /** \brief Enforce joint limits to desired position, velocity and acceleration using clamping.
+  /**
+   * @brief Enforce joint limits to desired position, velocity and acceleration using clamping.
+   *
    * Class implements this method accepting following data types:
    * - trajectory_msgs::msg::JointTrajectoryPoint: limiting position, velocity and acceleration;
    *
@@ -62,18 +65,19 @@ public:
    * The method support partial existence of limits, e.g., missing position limits for continuous
    * joins.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
-   * \throws std::runtime_error if the actual position is out of bounds if commanding position
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @returns true if limits are enforced, otherwise false.
+   * @throws std::runtime_error if the actual position is out of bounds if commanding position
    */
   bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
-  /** \brief Reset internal states of the limiter. */
   /**
+   * @brief Reset internal states of the limiter.
+   *
    * This method is called when the controller is stopped or when the controller is
    * reconfigured. It should reset all internal states of the limiter.
    */

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adolfo Rodriguez Tsouroukdissian
+/// @author Adolfo Rodriguez Tsouroukdissian
 
 #ifndef JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
@@ -57,7 +57,7 @@ namespace joint_limits
  * parameters interface @p param_itf.
  *
  * The following parameter structure is declared with base name `joint_limits.joint_name`:
- * \code
+ * @code
  *   has_position_limits: bool
  *   min_position: double
  *   max_position: double
@@ -77,7 +77,7 @@ namespace joint_limits
  *   k_velocity: double
  *   soft_lower_limit: double
  *   soft_upper_limit: double
- * \endcode
+ * @endcode
  *
  * @param[in] joint_name name of the joint for which parameters will be declared.
  * @param[in] param_itf node parameters interface object to access parameters.
@@ -174,7 +174,7 @@ inline bool declare_parameters(
  * @brief Populate a JointLimits instance from the node parameters.
  *
  * It is assumed that parameter structure is the following:
- * \code
+ * @code
  *   has_position_limits: bool
  *   min_position: double
  *   max_position: double
@@ -189,11 +189,11 @@ inline bool declare_parameters(
  *   has_effort_limits: bool
  *   max_effort: double
  *   angle_wraparound: bool  # will be ignored if there are position limits
- * \endcode
+ * @endcode
  *
  * Unspecified parameters are not added to the joint limits specification.
  * A specification in a yaml would look like this:
- * \code
+ * @code
  * <node_name>
  *   ros__parameters:
  *     joint_limits:
@@ -216,7 +216,7 @@ inline bool declare_parameters(
  *         angle_wraparound: true       # available only for continuous joints
  *         has_velocity_limits: true
  *         max_velocity: 4.0
- * \endcode
+ * @endcode
  *
  * @param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * @param[in] param_itf node parameters interface of the node where parameters are specified.
@@ -638,17 +638,17 @@ inline bool check_for_limits_update(
  * @brief Populate a SoftJointLimits instance from the ROS parameter server.
  *
  * It is assumed that the parameter structure is the following:
- * \code
+ * @code
  *   has_soft_limits: bool
  *   k_position: double
  *   k_velocity: double
  *   soft_lower_limit: double
  *   soft_upper_limit: double
- * \endcode
+ * @endcode
  *
  * Only completely specified soft joint limits specifications will be considered valid.
  * For example a valid yaml configuration would look like:
- * \code
+ * @code
  * <node_name>
  *   ros__parameters:
  *     joint_limits:
@@ -657,7 +657,7 @@ inline bool check_for_limits_update(
  *         soft_upper_limit: 1.0
  *         k_position: 10.0
  *         k_velocity: 10.0
- * \endcode
+ * @endcode
  *
  * @param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * @param[in] param_itf node parameters interface of the node where parameters are specified.
