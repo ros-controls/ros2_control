@@ -29,8 +29,8 @@
 
 namespace  // utilities
 {
-/// Declare and initialize a parameter with a type.
 /**
+ * @brief Declare and initialize a parameter with a type.
  *
  * Wrapper function for templated node's declare_parameter() which checks if
  * parameter is already declared.
@@ -53,8 +53,8 @@ auto auto_declare(
 namespace joint_limits
 {
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name using node
- * parameters interface \p param_itf.
+ * @brief Declare JointLimits and SoftJointLimits parameters for joint with @p joint_name using node
+ * parameters interface @p param_itf.
  *
  * The following parameter structure is declared with base name `joint_limits.joint_name`:
  * \code
@@ -79,11 +79,11 @@ namespace joint_limits
  *   soft_upper_limit: double
  * \endcode
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] param_itf node parameters interface object to access parameters.
- * \param[in] logging_itf node logging interface to log if error happens.
+ * @param[in] joint_name name of the joint for which parameters will be declared.
+ * @param[in] param_itf node parameters interface object to access parameters.
+ * @param[in] logging_itf node logging interface to log if error happens.
  *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @returns True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(
   const std::string & joint_name,
@@ -133,15 +133,16 @@ inline bool declare_parameters(
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name for the \p node
+ * @brief Declare JointLimits and SoftJointLimits parameters for joint with @p joint_name for the @p node
  * object.
+ *
  * This is a convenience function.
  * For parameters structure see the underlying `declare_parameters` function.
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] node node for parameters should be declared.
+ * @param[in] joint_name name of the joint for which parameters will be declared.
+ * @param[in] node node for parameters should be declared.
  *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @returns True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
 {
@@ -150,14 +151,16 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the
- * lifecycle_node object. This is a convenience function. For parameters structure see the
+ * @brief Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the
+ * lifecycle_node object.
+ *
+ * This is a convenience function. For parameters structure see the
  * underlying `declare_parameters` function.
  *
- * \param[in] joint_name name of the joint for which parameters will be declared.
- * \param[in] lifecycle_node lifecycle node for parameters should be declared.
+ * @param[in] joint_name name of the joint for which parameters will be declared.
+ * @param[in] lifecycle_node lifecycle node for parameters should be declared.
  *
- * \returns True if parameters are successfully declared, false otherwise.
+ * @returns True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node)
@@ -167,8 +170,9 @@ inline bool declare_parameters(
     lifecycle_node->get_node_logging_interface());
 }
 
-/// Populate a JointLimits instance from the node parameters.
 /**
+ * @brief Populate a JointLimits instance from the node parameters.
+ *
  * It is assumed that parameter structure is the following:
  * \code
  *   has_position_limits: bool
@@ -214,15 +218,15 @@ inline bool declare_parameters(
  *         max_velocity: 4.0
  * \endcode
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
- * \param[in] param_itf node parameters interface of the node where parameters are specified.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
- * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * @param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
+ * @param[in] param_itf node parameters interface of the node where parameters are specified.
+ * @param[in] logging_itf node logging interface to provide log errors.
+ * @param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter
- * exists in \p node), false otherwise.
+ * @returns True if a limits specification is found (i.e., the @p joint_limits/joint_name parameter
+ * exists in @p node), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -375,17 +379,18 @@ inline bool get_joint_limits(
 }
 
 /**
- * Populate a JointLimits instance from the node parameters.
+ * @brief Populate a JointLimits instance from the node parameters.
+ *
  * This is a convenience function.
  * For parameters structure see the underlying `get_joint_limits` function.
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] node Node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
- * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * @param[in] joint_name Name of joint whose limits are to be fetched.
+ * @param[in] node Node object for which parameters should be fetched.
+ * @param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * \returns True if a limits specification is found, false otherwise.
+ * @returns True if a limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
@@ -395,17 +400,18 @@ inline bool get_joint_limits(
 }
 
 /**
- * Populate a JointLimits instance from the node parameters.
+ * @brief Populate a JointLimits instance from the node parameters.
+ *
  * This is a convenience function.
  * For parameters structure see the underlying `get_joint_limits` function.
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
- * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * @param[in] joint_name Name of joint whose limits are to be fetched.
+ * @param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
+ * @param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * \returns True if a limits specification is found, false otherwise.
+ * @returns True if a limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
@@ -417,17 +423,17 @@ inline bool get_joint_limits(
 }
 
 /**
- * Check if any of updated parameters are related to JointLimits.
+ * @brief Check if any of updated parameters are related to JointLimits.
  *
  * This method is intended to be used in the parameters update callback.
  * It is recommended that it's result is temporarily stored and synchronized with the JointLimits
  * structure in the main loop.
  *
- * \param[in] joint_name Name of the joint whose limits should be checked.
- * \param[in] parameters List of the parameters that should be checked if they belong to this
+ * @param[in] joint_name Name of the joint whose limits should be checked.
+ * @param[in] parameters List of the parameters that should be checked if they belong to this
  * structure and that are used for updating the internal values.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] updated_limits structure with updated JointLimits. It is recommended that the
+ * @param[in] logging_itf node logging interface to provide log errors.
+ * @param[out] updated_limits structure with updated JointLimits. It is recommended that the
  * currently used limits are stored into this structure before calling this method.
  */
 inline bool check_for_limits_update(
@@ -628,8 +634,9 @@ inline bool check_for_limits_update(
   return changed;
 }
 
-/// Populate a SoftJointLimits instance from the ROS parameter server.
 /**
+ * @brief Populate a SoftJointLimits instance from the ROS parameter server.
+ *
  * It is assumed that the parameter structure is the following:
  * \code
  *   has_soft_limits: bool
@@ -652,13 +659,14 @@ inline bool check_for_limits_update(
  *         k_velocity: 10.0
  * \endcode
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
- * \param[in] param_itf node parameters interface of the node where parameters are specified.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
- * parameter server will overwrite existing values. \return True if a complete soft limits
- * specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and \p
- * soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
+ * @param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
+ * @param[in] param_itf node parameters interface of the node where parameters are specified.
+ * @param[in] logging_itf node logging interface to provide log errors.
+ * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values.
+ * @return True if a complete soft limits specification is found (ie. if all @p k_position,
+ * @p k_velocity, @p soft_lower_limit and @p soft_upper_limit exist in
+ * @p joint_limits/joint_name namespace), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -716,16 +724,17 @@ inline bool get_joint_limits(
 }
 
 /**
- * Populate a JointLimits instance from the node parameters.
+ * @brief Populate a SoftJointLimits instance from the node parameters.
+ *
  * This is a convenience function.
  * For parameters structure see the underlying `get_joint_limits` function.
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] node Node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * @param[in] joint_name Name of joint whose limits are to be fetched.
+ * @param[in] node Node object for which parameters should be fetched.
+ * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
  *
- * \returns True if a soft limits specification is found, false otherwise.
+ * @returns True if a soft limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
@@ -737,16 +746,17 @@ inline bool get_joint_limits(
 }
 
 /**
- * Populate a JointLimits instance from the node parameters.
+ * @brief Populate a SoftJointLimits instance from the node parameters.
+ *
  * This is a convenience function.
  * For parameters structure see the underlying `get_joint_limits` function.
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * @param[in] joint_name Name of joint whose limits are to be fetched.
+ * @param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
+ * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
  *
- * \returns True if a soft limits specification is found, false otherwise.
+ * @returns True if a soft limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
@@ -758,17 +768,17 @@ inline bool get_joint_limits(
 }
 
 /**
- * Check if any of updated parameters are related to SoftJointLimits.
+ * @brief Check if any of updated parameters are related to SoftJointLimits.
  *
  * This method is intended to be used in the parameters update callback.
  * It is recommended that it's result is temporarily stored and synchronized with the
  * SoftJointLimits structure in the main loop.
  *
- * \param[in] joint_name Name of the joint whose limits should be checked.
- * \param[in] parameters List of the parameters that should be checked if they belong to this
+ * @param[in] joint_name Name of the joint whose limits should be checked.
+ * @param[in] parameters List of the parameters that should be checked if they belong to this
  * structure and that are used for updating the internal values.
- * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] updated_limits structure with updated SoftJointLimits. It is recommended that the
+ * @param[in] logging_itf node logging interface to provide log errors.
+ * @param[out] updated_limits structure with updated SoftJointLimits. It is recommended that the
  * currently used limits are stored into this structure before calling this method.
  */
 inline bool check_for_limits_update(
