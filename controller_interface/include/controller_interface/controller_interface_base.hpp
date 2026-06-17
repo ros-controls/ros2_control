@@ -194,7 +194,8 @@ public:
    * @brief Control step update. Command interfaces are updated based on on reference inputs and
    * current states.
    * **The method called in the (real-time) control loop.**
-   *
+   * @note This method should be realtime-safe.
+   * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time since the last control loop iteration
    * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
@@ -206,7 +207,8 @@ public:
    * update method of the controller. The method is used to trigger the update method of the
    * controller synchronously or asynchronously, based on the controller configuration.
    * **The method called in the (real-time) control loop.**
-   *
+   * @note This method should be realtime-safe.
+   * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time taken by the last control loop iteration
    * @returns ControllerUpdateStatus. The status contains information if the update was triggered
