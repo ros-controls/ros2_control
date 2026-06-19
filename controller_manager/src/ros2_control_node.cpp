@@ -18,10 +18,9 @@
 #include <string>
 #include <thread>
 
-#include "controller_manager/control_loop.hpp"
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/sleeping_policies.hpp"
 #include "rclcpp/executors.hpp"
-#include "rclcpp/logging.hpp"
 #include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
@@ -134,16 +133,43 @@ int main(int argc, char ** argv)
           thread_priority);
       }
 
+      // wait for the clock to be available
       cm->get_clock()->wait_until_started();
       cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
       controller_manager::ControlLoopState state;
-      controller_manager::initialize_control_loop_timing(*cm, state);
+      state.period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
+      state.previous_time = cm->get_trigger_clock()->now();
+      std::this_thread::sleep_for(state.period);
+      state.next_iteration_time = std::chrono::steady_clock::now();
       while (rclcpp::ok())
       {
-        if (!controller_manager::run_control_loop_cycle(*cm, timing_config, state))
+        // calculate measured period
+        auto const current_time = cm->get_trigger_clock()->now();
+        auto const measured_period = current_time - state.previous_time;
+        state.previous_time = current_time;
+
+        // execute update loop
+        cm->read(cm->get_trigger_clock()->now(), measured_period);
+        cm->update(cm->get_trigger_clock()->now(), measured_period);
+        cm->write(cm->get_trigger_clock()->now(), measured_period);
+        state.cycle_end_time = cm->get_trigger_clock()->now();
+
+        // wait until we hit the end of the period
+        if (timing_config.use_sim_time)
         {
-          break;
+          if (!sleep_for_sim_time(cm, state))
+          {
+            break;
+          }
+        }
+        else if (timing_config.expect_blocking_read_write)
+        {
+          sleep_for_blocking_read_write(cm, timing_config, state);
+        }
+        else
+        {
+          sleep_for_periodic_cycle(cm, timing_config, state);
         }
       }
     });

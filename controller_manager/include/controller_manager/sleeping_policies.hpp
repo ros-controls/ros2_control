@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_MANAGER__CONTROL_LOOP_HPP_
-#define CONTROLLER_MANAGER__CONTROL_LOOP_HPP_
+#pragma once
 
-#include <chrono>
+#include <memory>
+
+#include <rclcpp/logging.hpp>
 
 #include "controller_manager/controller_manager.hpp"
-#include "rclcpp/time.hpp"
 
 namespace controller_manager
 {
-
 struct ControlLoopTimingConfig
 {
   bool use_sim_time{false};
@@ -36,15 +35,20 @@ struct ControlLoopState
   rclcpp::Time previous_time;
   std::chrono::steady_clock::time_point next_iteration_time;
   std::chrono::nanoseconds period{0};
+  rclcpp::Time cycle_end_time;  //< The time when work was done in the current cycle.
 };
-
-void initialize_control_loop_timing(ControllerManager & cm, ControlLoopState & state);
-
-/// Runs one read/update/write cycle and applies the post-cycle synchronization policy.
-/// Returns false if the loop must abort (sim-time sleep failure).
-bool run_control_loop_cycle(
-  ControllerManager & cm, const ControlLoopTimingConfig & config, ControlLoopState & state);
-
 }  // namespace controller_manager
 
-#endif  // CONTROLLER_MANAGER__CONTROL_LOOP_HPP_
+bool sleep_for_sim_time(
+  std::shared_ptr<controller_manager::ControllerManager> cm,
+  controller_manager::ControlLoopState & state);
+
+void sleep_for_blocking_read_write(
+  std::shared_ptr<controller_manager::ControllerManager> cm,
+  const controller_manager::ControlLoopTimingConfig & config,
+  controller_manager::ControlLoopState & state);
+
+void sleep_for_periodic_cycle(
+  std::shared_ptr<controller_manager::ControllerManager> cm,
+  const controller_manager::ControlLoopTimingConfig & config,
+  controller_manager::ControlLoopState & state);
