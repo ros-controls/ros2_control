@@ -157,13 +157,7 @@ CallbackReturn HardwareComponentInterface::init(
     }
   }
 
-  if (publish_rate == 0.0)
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
-  }
-  else
+  if (publish_rate > 0.0)
   {
     control_msgs::msg::HardwareStatus status_msg_template;
     if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
@@ -557,11 +551,19 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
 void HardwareComponentInterface::pause_async_operations()
-
 {
   if (async_handler_)
   {
     async_handler_->pause_execution();
+  }
+}
+
+void HardwareComponentInterface::stop_async_handler()
+{
+  if (async_handler_)
+  {
+    async_handler_->stop_thread();
+    async_handler_.reset();
   }
 }
 

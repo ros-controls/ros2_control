@@ -28,7 +28,9 @@ namespace semantic_components
 class PoseSensor : public SemanticComponentInterface<geometry_msgs::msg::Pose>
 {
 public:
-  /// Constructor for a standard pose sensor with interface names set based on sensor name.
+  /**
+   * @brief Constructor for a standard pose sensor with interface names set based on sensor name.
+   */
   explicit PoseSensor(const std::string & name)
   : SemanticComponentInterface(
       name, {{name + '/' + "position.x"},
@@ -40,11 +42,12 @@ public:
              {name + '/' + "orientation.w"}})
   {
   }
-  /// Update and return position.
-  /*!
+  /**
+   * @brief Update and return position.
+   *
    * Update and return current pose position from state interfaces.
    *
-   * \return Array of position coordinates.
+   * @return Array of position coordinates.
    */
   std::array<double, 3> get_position() const
   {
@@ -54,11 +57,12 @@ public:
     return position;
   }
 
-  /// Update and return orientation
-  /*!
+  /**
+   * @brief Update and return orientation
+   *
    * Update and return current pose orientation from state interfaces.
    *
-   * \return Array of orientation coordinates in xyzw convention.
+   * @return Array of orientation coordinates in xyzw convention.
    */
   std::array<double, 4> get_orientation() const
   {
@@ -68,9 +72,13 @@ public:
     return orientation;
   }
 
-  /// Fill pose message with current values.
   /**
+   * @brief Fill pose message with current values.
+   *
    * Fill a pose message with current position and orientation from the state interfaces.
+   *
+   * @param[out] message Pose message from values
+   * @return always returns true
    */
   bool get_values_as_message(geometry_msgs::msg::Pose & message) const
   {
@@ -106,7 +114,9 @@ private:
     }
   }
 
-  /// Array to store the data of the pose sensor
+  /**
+   * @brief Array to store the data of the pose sensor
+   */
   mutable std::array<double, 7> data_{{0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0}};
 };
 

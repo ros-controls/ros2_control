@@ -31,37 +31,37 @@ public:
   virtual ~ControllerInterface() = default;
 
   /**
-   * Controller is not chainable.
+   * @brief Controller is not chainable.
    *
-   * \returns false.
+   * @returns false.
    */
   bool is_chainable() const final;
 
   /**
-   * A non-chainable controller doesn't export any state interfaces.
+   * @brief A non-chainable controller doesn't export any state interfaces.
    *
-   * \returns empty list.
+   * @returns empty list.
    */
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> export_state_interfaces() final;
 
   /**
-   * Controller has no reference interfaces.
+   * @brief Controller has no reference interfaces.
    *
-   * \returns empty list.
+   * @returns empty list.
    */
   std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces() final;
 
   /**
-   * Controller is not chainable, therefore no chained mode can be set.
+   * @brief Controller is not chainable, therefore no chained mode can be set.
    *
-   * \returns false.
+   * @returns false.
    */
   bool set_chained_mode(bool chained_mode) final;
 
   /**
-   * Controller can not be in chained mode.
+   * @brief Controller can not be in chained mode.
    *
-   * \returns false.
+   * @returns false.
    */
   bool is_in_chained_mode() const final;
 };

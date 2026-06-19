@@ -105,9 +105,17 @@ class TestFixture(unittest.TestCase):
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
 
-    def test_controllers_start(self):
+    def test_controllers_start(self, proc_info):
         cnames = ["ctrl_with_parameters_and_type"]
-        check_controllers_running(self.node, cnames, state="active")
+
+        check_controllers_running(self.node, cnames)
+
+        # Wait for controller_spawner to finish and verify successful exit.
+        proc_info.assertWaitForShutdown(process="spawner", timeout=30)
+        launch_testing.asserts.assertExitCodes(proc_info, process="spawner")
+
+        # Re-check controllers after spawner has exited.
+        check_controllers_running(self.node, cnames)
 
 
 @launch_testing.post_shutdown_test()
