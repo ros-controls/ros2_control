@@ -548,13 +548,9 @@ ControllerManager::ControllerManager(
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-<<<<<<< HEAD
   cm_node_options_(options),
-  robot_description_(urdf)
-=======
   robot_description_(urdf),
   activate_all_hw_components_(activate_all_hw_components)
->>>>>>> 189f705 (Controller Manager recovery from invalid URDF errors (#2775))
 {
   initialize_parameters();
   init_resource_manager(urdf);

@@ -1513,20 +1513,12 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
-<<<<<<< HEAD
   components_are_loaded_and_initialized_ = true;
 
   resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;
   params_.robot_description = urdf;
   params_.update_rate = update_rate;
-=======
-  resource_storage_->robot_description_ = params.robot_description;
-  resource_storage_->cm_update_rate_ = params.update_rate;
-  params_.robot_description = params.robot_description;
-  params_.update_rate = params.update_rate;
-  params_.handle_exceptions = params.handle_exceptions;
->>>>>>> 189f705 (Controller Manager recovery from invalid URDF errors (#2775))
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   // Set the update rate for all hardware components
@@ -1620,6 +1612,7 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->cm_update_rate_ = params.update_rate;
   resource_storage_->executor_ = params.executor;
   resource_storage_->node_namespace_ = params.node_namespace;
+  params_.handle_exceptions = params.handle_exceptions;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return load_and_initialize_components(params.robot_description, params.update_rate);
