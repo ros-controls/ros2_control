@@ -83,7 +83,7 @@ namespace joint_limits
  * @param[in] param_itf node parameters interface object to access parameters.
  * @param[in] logging_itf node logging interface to log if error happens.
  *
- * @returns True if parameters are successfully declared, false otherwise.
+ * @return True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(
   const std::string & joint_name,
@@ -142,7 +142,7 @@ inline bool declare_parameters(
  * @param[in] joint_name name of the joint for which parameters will be declared.
  * @param[in] node node for parameters should be declared.
  *
- * @returns True if parameters are successfully declared, false otherwise.
+ * @return True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
 {
@@ -160,7 +160,7 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
  * @param[in] joint_name name of the joint for which parameters will be declared.
  * @param[in] lifecycle_node lifecycle node for parameters should be declared.
  *
- * @returns True if parameters are successfully declared, false otherwise.
+ * @return True if parameters are successfully declared, false otherwise.
  */
 inline bool declare_parameters(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node)
@@ -225,7 +225,7 @@ inline bool declare_parameters(
  * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * @returns True if a limits specification is found (i.e., the @p joint_limits/joint_name parameter
+ * @return True if a limits specification is found (i.e., the @p joint_limits/joint_name parameter
  * exists in @p node), false otherwise.
  */
 inline bool get_joint_limits(
@@ -390,7 +390,7 @@ inline bool get_joint_limits(
  * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * @returns True if a limits specification is found, false otherwise.
+ * @return True if a limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
@@ -411,7 +411,7 @@ inline bool get_joint_limits(
  * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * @returns True if a limits specification is found, false otherwise.
+ * @return True if a limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
@@ -734,7 +734,7 @@ inline bool get_joint_limits(
  * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
  *
- * @returns True if a soft limits specification is found, false otherwise.
+ * @return True if a soft limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
@@ -756,7 +756,7 @@ inline bool get_joint_limits(
  * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
  *
- * @returns True if a soft limits specification is found, false otherwise.
+ * @return True if a soft limits specification is found, false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,

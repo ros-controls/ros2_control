@@ -202,7 +202,7 @@ public:
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * @returns true if limits are enforced, otherwise false.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool enforce(
     const JointLimitsStateDataType & current_joint_states,
@@ -219,7 +219,7 @@ protected:
    * @brief Initialize the limiter's internal states and libraries.
    *
    * Implementation-specific initialization of limiter's internal states and libraries.
-   * @returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_init() = 0;
 
@@ -227,7 +227,7 @@ protected:
    * @brief Configure the limiter's internal states and libraries.
    *
    * Implementation-specific configuration of limiter's internal states and libraries.
-   * @returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
@@ -240,7 +240,7 @@ protected:
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * @returns true if limits are enforced, otherwise false.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
@@ -249,7 +249,7 @@ protected:
   /**
    * @brief Checks if the logging interface is set.
    *
-   * @returns true if the logging interface is available, otherwise false.
+   * @return true if the logging interface is available, otherwise false.
    *
    * @note this way of interfacing would be useful for instances where the logging interface is not
    * available, for example in the ResourceManager or ResourceStorage classes.
@@ -259,7 +259,7 @@ protected:
   /**
    * @brief Checks if the parameter interface is set.
    *
-   * @returns true if the parameter interface is available, otherwise false.
+   * @return true if the parameter interface is available, otherwise false.
    *
    * @note this way of interfacing would be useful for instances where the logging interface is
    * not available, for example in the ResourceManager or ResourceStorage classes.
