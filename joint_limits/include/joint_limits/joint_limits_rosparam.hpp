@@ -426,7 +426,7 @@ inline bool get_joint_limits(
  * @brief Check if any of updated parameters are related to JointLimits.
  *
  * This method is intended to be used in the parameters update callback.
- * It is recommended that it's result is temporarily stored and synchronized with the JointLimits
+ * It is recommended that its result is temporarily stored and synchronized with the JointLimits
  * structure in the main loop.
  *
  * @param[in] joint_name Name of the joint whose limits should be checked.
@@ -664,7 +664,7 @@ inline bool check_for_limits_update(
  * @param[in] logging_itf node logging interface to provide log errors.
  * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
- * @return True if a complete soft limits specification is found (ie. if all @p k_position,
+ * @return True if a complete soft limits specification is found (i.e., if all @p k_position,
  * @p k_velocity, @p soft_lower_limit and @p soft_upper_limit exist in
  * @p joint_limits/joint_name namespace), false otherwise.
  */
@@ -771,7 +771,7 @@ inline bool get_joint_limits(
  * @brief Check if any of updated parameters are related to SoftJointLimits.
  *
  * This method is intended to be used in the parameters update callback.
- * It is recommended that it's result is temporarily stored and synchronized with the
+ * It is recommended that its result is temporarily stored and synchronized with the
  * SoftJointLimits structure in the main loop.
  *
  * @param[in] joint_name Name of the joint whose limits should be checked.

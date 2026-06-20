@@ -31,7 +31,7 @@ namespace joint_limits
  * @brief Limit joints' position, velocity and acceleration by clamping to their allowed ranges.
  *
  * Since the position, velocity and accelerations are
- * variables in physical relation, it might be that some values are limited lower then specified
+ * variables in physical relation, it might be that some values are limited lower than specified
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
  */
@@ -63,7 +63,7 @@ public:
    * and values. First, position limits are checked to adjust desired velocity accordingly, then
    * velocity and finally acceleration.
    * The method support partial existence of limits, e.g., missing position limits for continuous
-   * joins.
+   * joints.
    *
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
