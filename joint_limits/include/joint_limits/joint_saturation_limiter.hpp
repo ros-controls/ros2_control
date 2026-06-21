@@ -62,7 +62,7 @@ public:
    * Implementation of saturation approach for joints with position, velocity or acceleration limits
    * and values. First, position limits are checked to adjust desired velocity accordingly, then
    * velocity and finally acceleration.
-   * The method support partial existence of limits, e.g., missing position limits for continuous
+   * The method supports partial existence of limits, e.g., missing position limits for continuous
    * joints.
    *
    * @param[in] current_joint_states current joint states a robot is in.
