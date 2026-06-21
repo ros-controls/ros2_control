@@ -52,7 +52,8 @@ For more information, see the Docker engine documentation about `resource_constr
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu (also for RaspberryPi)
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu
+- `linux-raspi-realtime <https://packages.ubuntu.com/resolute/linux-raspi-realtime>`_ on Ubuntu on Raspberry Pi: ``sudo apt install linux-raspi-realtime``
 - `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
 - `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
