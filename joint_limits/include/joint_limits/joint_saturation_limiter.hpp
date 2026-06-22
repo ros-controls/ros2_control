@@ -49,6 +49,12 @@ public:
   bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
+    const size_t num_joints = this->number_of_joints_;
+    desired_pos_.assign(num_joints, 0.0);
+    desired_vel_.assign(num_joints, 0.0);
+    desired_acc_.assign(num_joints, 0.0);
+    expected_pos_.assign(num_joints, 0.0);
+    expected_vel_.assign(num_joints, 0.0);
     return true;
   }
 
@@ -87,6 +93,14 @@ protected:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
   std::mutex mutex_;
+
+private:
+  // Cached vectors to eliminate dynamic memory allocation (malloc) in the real-time execution loop
+  std::vector<double> desired_pos_;
+  std::vector<double> desired_vel_;
+  std::vector<double> desired_acc_;
+  std::vector<double> expected_vel_;
+  std::vector<double> expected_pos_;
 };
 
 template <typename JointLimitsStateDataType>
