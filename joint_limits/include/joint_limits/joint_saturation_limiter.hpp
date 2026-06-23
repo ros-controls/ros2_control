@@ -101,6 +101,23 @@ private:
   std::vector<double> desired_acc_;
   std::vector<double> expected_vel_;
   std::vector<double> expected_pos_;
+
+  /**
+   * @brief
+   * Clamps the joint limits
+   */
+  void clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, std::vector<std::string> & limited_jnts_pos, std::vector<std::string> & limited_jnts_vel, std::vector<std::string> & limited_jnts_acc, std::vector<std::string> & limited_jnts_dec, bool & braking_near_position_limit_triggered,  const double dt_seconds);
+
+  /**
+   * @brief
+   * Handles the braking near position limit
+   */
+  void handle_braking_near_position_limit(
+    const std::vector<double> & current_joint_velocities, double dt_seconds,
+    bool has_desired_position, bool has_desired_velocity,
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+    const std::vector<std::string> & limited_jnts_pos);
+
 };
 
 template <typename JointLimitsStateDataType>
@@ -123,6 +140,16 @@ bool JointSaturationLimiter<JointLimitsStateDataType>::on_init()
 
 template <>
 bool JointSaturationLimiter<JointControlInterfacesData>::on_init();
+
+template <>
+void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, std::vector<std::string> & limited_jnts_pos, std::vector<std::string> & limited_jnts_vel, std::vector<std::string> & limited_jnts_acc, std::vector<std::string> & limited_jnts_dec, bool & braking_near_position_limit_triggered,  const double dt_seconds);
+
+template <>
+void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::handle_braking_near_position_limit(
+  const std::vector<double> & current_joint_velocities, double dt_seconds,
+  bool has_desired_position, bool has_desired_velocity,
+  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+  const std::vector<std::string> & limited_jnts_pos);
 
 }  // namespace joint_limits
 
