@@ -36,7 +36,10 @@ class SetControllerStateVerb(VerbExtension):
         arg = parser.add_argument(
             "state",
             choices=["unconfigured", "inactive", "active"],
-            help="State in which the controller should be changed to",
+            help=(
+                "State in which the controller should be changed to. "
+                "Note: the 'finalized' state is reached via the 'unload_controller' command."
+            ),
         )
         add_controller_mgr_parsers(parser)
 
