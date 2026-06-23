@@ -374,6 +374,7 @@ def main(args=None):
 
     # Use the first controller name for the logger/lock
     first_controller_name = controllers[0]["name"]
+    first_controller_name.replace("/", "_")
     logger = rclpy.logging.get_logger("ros2_control_controller_spawner_" + first_controller_name)
 
     try:

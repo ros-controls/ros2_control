@@ -1566,12 +1566,17 @@ bool ResourceManager::load_and_initialize_components(
       components_are_loaded_and_initialized_ = false;
       break;
     }
+
+    std::string node_namespace =
+      ros2_control::get_component_node_namespace(individual_hardware_info.name)
+        .value_or(params.node_namespace);
+
     hardware_interface::HardwareComponentParams interface_params;
     interface_params.hardware_info = individual_hardware_info;
     interface_params.executor = params.executor;
     interface_params.clock = params.clock;
     interface_params.logger = params.logger;
-    interface_params.node_namespace = params.node_namespace;
+    interface_params.node_namespace = node_namespace;
 
     if (individual_hardware_info.type == actuator_type)
     {
