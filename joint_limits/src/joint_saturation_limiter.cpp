@@ -155,21 +155,30 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
 template <>
 void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, std::vector<std::string> & limited_jnts_pos, std::vector<std::string> & limited_jnts_vel, std::vector<std::string> & limited_jnts_acc, std::vector<std::string> & limited_jnts_dec, bool & braking_near_position_limit_triggered,  const double dt_seconds) {
 
-  for (size_t index = 0; index < number_of_joints_; ++index)
+  if (has_desired_position)
   {
-    if (has_desired_position)
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       desired_pos_[index] = desired_joint_states.positions[index];
     }
-    if (has_desired_velocity)
+  }
+  if (has_desired_velocity)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       desired_vel_[index] = desired_joint_states.velocities[index];
     }
-    if (has_desired_acceleration)
+  }
+  if (has_desired_acceleration)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       desired_acc_[index] = desired_joint_states.accelerations[index];
     }
+  }
 
+  for (size_t index = 0; index < number_of_joints_; ++index)
+  {
     if (has_desired_position)
     {
       // limit position
@@ -407,12 +416,18 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::handle_
         std::min(std::fabs(desired_acc_[index]), joint_limits_[index].max_acceleration),
         desired_acc_[index]);
     }
+  }
 
-    if (has_desired_velocity)
+  if (has_desired_velocity)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       desired_vel_[index] = current_joint_velocities[index] + desired_acc_[index] * dt_seconds;
     }
-    if (has_desired_position)
+  }
+  if (has_desired_position)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       desired_pos_[index] = current_joint_states.positions[index] +
                            current_joint_velocities[index] * dt_seconds +
