@@ -481,9 +481,9 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_expect_dec_enforce
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      0.31875,   // pos = double integration from jerk-limited acc with current state
-      0.25,      // vel limited by jerk-limited acc
-      -5.0       // acc limited by jerk-limited max dec (jerk from 0 to -7.5 exceeds max_jerk)
+      0.31875,  // pos = double integration from jerk-limited acc with current state
+      0.25,     // vel limited by jerk-limited acc
+      -5.0      // acc limited by jerk-limited max dec (jerk from 0 to -7.5 exceeds max_jerk)
     );
   }
 }
