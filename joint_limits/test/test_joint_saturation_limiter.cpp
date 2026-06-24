@@ -53,7 +53,7 @@ TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
   }
 }
 
-TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
+TEST_F(JointSaturationLimiterTest, when_neither_poscmd_nor_velcmd_expect_enforce_fail)
 {
   SetupNode("joint_saturation_limiter");
   Load();
@@ -348,8 +348,8 @@ TEST_F(JointSaturationLimiterTest, when_position_close_to_pos_limit_expect_decel
     desired_joint_states_.velocities[0] = 1.5;
 
     // this setup requires 0.15 distance to stop, and 0.2 seconds (so 4 cycles at 0.05)
-    std::vector expected_ret = {true, true, true, false};
-    for (auto i = 0u; i < 4; ++i)
+    std::vector expected_ret = {true, true, true, true, false};
+    for (auto i = 0u; i < 5; ++i)
     {
       auto previous_vel_request = desired_joint_states_.velocities[0];
       // expect limits applied until the end stop
@@ -481,9 +481,9 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_expect_dec_enforce
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      0.315625,  // pos = double integration from max dec with current state
-      0.125,     // vel limited by vel - max dec * dt
-      -7.5       // acc limited by -max dec
+      0.31875,   // pos = double integration from jerk-limited acc with current state
+      0.25,      // vel limited by jerk-limited acc
+      -5.0       // acc limited by jerk-limited max dec (jerk from 0 to -7.5 exceeds max_jerk)
     );
   }
 }
