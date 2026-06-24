@@ -61,6 +61,7 @@ public:
     vel_limit_hit_.assign(num_joints, false);
     acc_limit_hit_.assign(num_joints, false);
     dec_limit_hit_.assign(num_joints, false);
+    jerk_limit_hit_.assign(num_joints, false);
     return true;
   }
 
@@ -118,6 +119,7 @@ private:
   std::vector<bool> vel_limit_hit_;
   std::vector<bool> acc_limit_hit_;
   std::vector<bool> dec_limit_hit_;
+  std::vector<bool> jerk_limit_hit_;
 
   /**
    * @brief

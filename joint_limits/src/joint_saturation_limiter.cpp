@@ -72,6 +72,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   std::fill(vel_limit_hit_.begin(), vel_limit_hit_.end(), false);
   std::fill(acc_limit_hit_.begin(), acc_limit_hit_.end(), false);
   std::fill(dec_limit_hit_.begin(), dec_limit_hit_.end(), false);
+  std::fill(jerk_limit_hit_.begin(), jerk_limit_hit_.end(), false);
 
   bool braking_near_position_limit_triggered = false;
 
@@ -101,6 +102,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   log_limits(vel_limit_hit_, "would exceed velocity limits, limiting");
   log_limits(acc_limit_hit_, "would exceed acceleration limits, limiting");
   log_limits(dec_limit_hit_, "would exceed deceleration limits, limiting");
+  log_limits(jerk_limit_hit_, "would exceed jerk limits, limiting");
 
   if (has_desired_position)
   {
@@ -268,6 +270,40 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
         }
       }
       // else we cannot compute acc, so not limiting it
+    }
+
+    // Limit jerk
+    if (joint_limits_[index].has_jerk_limits)
+    {
+      // check if desired acceleration is zero or corrupted
+      if (
+        std::fabs(desired_acc_[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_acc_[index]))
+      {
+        desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+      }
+      const double current_acceleration = (current_joint_states.accelerations.size() == number_of_joints_) ? current_joint_states.accelerations[index] : 0.0f;
+
+      // Calc desired jerk over this time
+      double desired_jerk = (desired_acc_[index] - current_acceleration) / dt_seconds;
+
+      // Limit Jerk
+      if (std::fabs(desired_jerk) > joint_limits_[index].max_jerk)
+      {
+        desired_jerk = std::copysign(joint_limits_[index].max_jerk, desired_jerk);
+        jerk_limit_hit_[index] = true;
+        limits_enforced = true;
+
+        // Backward recalculation: Update acceleration based on limited jerk
+        desired_acc_[index] = current_acceleration + (desired_jerk * dt_seconds);
+
+        // Backward recalculation: Recompute velocity and position
+        desired_vel_[index] = current_joint_velocities[index] + desired_acc_[index] * dt_seconds;
+        if (has_desired_position)
+        {
+          desired_pos_[index] = current_joint_states.positions[index] + (current_joint_velocities[index] * dt_seconds) + (0.5 * desired_acc_[index] * dt_seconds * dt_seconds);
+        }
+      }
+
     }
 
     // plan ahead for position limits
