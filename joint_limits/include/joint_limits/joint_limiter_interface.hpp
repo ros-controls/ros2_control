@@ -40,16 +40,18 @@ public:
 
   /// Initialization of every JointLimiter.
   /**
-   * Initialization of JointLimiter for defined joints with their names.
+   * @brief Initialize JointLimiter for defined joints with their names.
+   *
    * Robot description topic provides a topic name where URDF of the robot can be found.
    * This is needed to use joint limits from URDF (not implemented yet!).
    * Override this method only if initialization and reading joint limits should be adapted.
    * Otherwise, initialize your custom limiter in `on_limit` method.
    *
-   * \param[in] joint_names names of joints where limits should be applied.
-   * \param[in] param_itf node parameters interface object to access parameters.
-   * \param[in] logging_itf node logging interface to log if error happens.
-   * \param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] param_itf node parameters interface object to access parameters.
+   * @param[in] logging_itf node logging interface to log if error happens.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -132,7 +134,14 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts the joint names and their limits directly
+   * @brief Initialize joints from directly provided names, limits, and soft joint limits.
+   *
+   * @param[in] joint_names names of the joints to initialize.
+   * @param[in] joint_limits hard joint limits for each joint.
+   * @param[in] soft_joint_limits soft joint limits for each joint.
+   * @param[in] param_itf node parameters interface for parameter handling.
+   * @param[in] logging_itf node logging interface for logging.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -160,8 +169,14 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts pointer to the Node.
+   * @brief Initialize method wrapper that accepts a pointer to the Node.
+   *
    * For details see other init method.
+   *
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] node pointer to the node to get parameter and logging interfaces.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names, const rclcpp::Node::SharedPtr & node,
@@ -173,8 +188,15 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts pointer to the LifecycleNode.
+   * @brief Initialize method wrapper that accepts a pointer to the LifecycleNode.
+   *
    * For details see other init method.
+   *
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] lifecycle_node pointer to the lifecycle node to get parameter and logging
+   * interfaces.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -186,19 +208,26 @@ public:
       lifecycle_node->get_node_logging_interface(), robot_description_topic);
   }
 
+  /**
+   * @brief Configure the joint limiter with the current joint states.
+   *
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @returns true if configuration was successful, otherwise false.
+   */
   virtual bool configure(const JointLimitsStateDataType & current_joint_states)
   {
     return on_configure(current_joint_states);
   }
 
-  /** \brief Enforce joint limits to desired joint state for multiple physical quantities.
+  /**
+   * @brief Enforce joint limits to desired joint state for multiple physical quantities.
    *
    * Generic enforce method that calls implementation-specific `on_enforce` method.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @returns true if limits are enforced, otherwise false.
    */
   virtual bool enforce(
     const JointLimitsStateDataType & current_joint_states,
@@ -208,49 +237,58 @@ public:
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
+  /**
+   * @brief Reset the internal states of the joint limiter.
+   */
   virtual void reset_internals() = 0;
 
 protected:
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Initialize limiter's internal states and libraries (implementation-specific).
    *
-   * Implementation-specific initialization of limiter's internal states and libraries.
-   * \returns true if initialization was successful, otherwise false.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool on_init() = 0;
 
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Configure limiter's internal states and libraries (implementation-specific).
    *
-   * Implementation-specific configuration of limiter's internal states and libraries.
-   * \returns true if initialization was successful, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @returns true if initialization was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Enforce the joint limits for multiple dependent physical quantities
+   * (implementation-specific).
    *
-   * Filter-specific implementation of the joint limits enforce algorithm for multiple dependent
-   * physical quantities.
+   * Filter-specific implementation of the joint limits enforce algorithm.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @returns true if limits are enforced, otherwise false.
    */
   virtual bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
-  /** \brief Checks if the logging interface is set.
-   * \returns true if the logging interface is available, otherwise false.
+  /**
+   * @brief Check if the logging interface is set.
    *
-   * \note this way of interfacing would be useful for instances where the logging interface is not
+   * @returns true if the logging interface is available, otherwise false.
+   *
+   * @note this way of interfacing would be useful for instances where the logging interface is not
    * available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
-  /** \brief Checks if the parameter interface is set.
-   * \returns true if the parameter interface is available, otherwise false.
+  /**
+   * @brief Check if the parameter interface is set.
    *
-   * * \note this way of interfacing would be useful for instances where the logging interface is
+   * @returns true if the parameter interface is available, otherwise false.
+   *
+   * @note this way of interfacing would be useful for instances where the logging interface is
    * not available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
