@@ -50,11 +50,17 @@ public:
   {
     prev_command_ = current_joint_states;
     const size_t num_joints = this->number_of_joints_;
+
     desired_pos_.assign(num_joints, 0.0);
     desired_vel_.assign(num_joints, 0.0);
     desired_acc_.assign(num_joints, 0.0);
     expected_pos_.assign(num_joints, 0.0);
     expected_vel_.assign(num_joints, 0.0);
+
+    pos_limit_hit_.assign(num_joints, false);
+    vel_limit_hit_.assign(num_joints, false);
+    acc_limit_hit_.assign(num_joints, false);
+    dec_limit_hit_.assign(num_joints, false);
     return true;
   }
 
@@ -102,11 +108,17 @@ private:
   std::vector<double> expected_vel_;
   std::vector<double> expected_pos_;
 
+  // Pre-allocation boolean flags for tracking limits
+  std::vector<bool> pos_limit_hit_;
+  std::vector<bool> vel_limit_hit_;
+  std::vector<bool> acc_limit_hit_;
+  std::vector<bool> dec_limit_hit_;
+
   /**
    * @brief
    * Clamps the joint limits
    */
-  void clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, std::vector<std::string> & limited_jnts_pos, std::vector<std::string> & limited_jnts_vel, std::vector<std::string> & limited_jnts_acc, std::vector<std::string> & limited_jnts_dec, bool & braking_near_position_limit_triggered,  const double dt_seconds);
+  void clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, bool & braking_near_position_limit_triggered,  const double dt_seconds);
 
   /**
    * @brief
@@ -115,8 +127,7 @@ private:
   void handle_braking_near_position_limit(
     const std::vector<double> & current_joint_velocities, double dt_seconds,
     bool has_desired_position, bool has_desired_velocity,
-    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    const std::vector<std::string> & limited_jnts_pos);
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states);
 
 };
 
@@ -142,14 +153,13 @@ template <>
 bool JointSaturationLimiter<JointControlInterfacesData>::on_init();
 
 template <>
-void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, std::vector<std::string> & limited_jnts_pos, std::vector<std::string> & limited_jnts_vel, std::vector<std::string> & limited_jnts_acc, std::vector<std::string> & limited_jnts_dec, bool & braking_near_position_limit_triggered,  const double dt_seconds);
+void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(const bool has_desired_position, const bool has_desired_velocity, const bool has_desired_acceleration, const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states, trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced, const std::vector<double> current_joint_velocities, bool & braking_near_position_limit_triggered,  const double dt_seconds);
 
 template <>
 void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::handle_braking_near_position_limit(
   const std::vector<double> & current_joint_velocities, double dt_seconds,
   bool has_desired_position, bool has_desired_velocity,
-  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-  const std::vector<std::string> & limited_jnts_pos);
+  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states);
 
 }  // namespace joint_limits
 
