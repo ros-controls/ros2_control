@@ -132,7 +132,7 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts the joint names and their limits directly
+   * Wrapper init method that accepts the joint names, their limits directly, and the soft joint limits.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
