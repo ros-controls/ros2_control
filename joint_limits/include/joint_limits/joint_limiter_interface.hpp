@@ -135,7 +135,7 @@ public:
 
   /**
    * @brief Initialize joints from directly provided names, limits, and soft joint limits.
-   * 
+   *
    * @param[in] joint_names names of the joints to initialize.
    * @param[in] joint_limits hard joint limits for each joint.
    * @param[in] soft_joint_limits soft joint limits for each joint.
@@ -193,7 +193,8 @@ public:
    * For details see other init method.
    *
    * @param[in] joint_names names of joints where limits should be applied.
-   * @param[in] lifecycle_node pointer to the lifecycle node to get parameter and logging interfaces.
+   * @param[in] lifecycle_node pointer to the lifecycle node to get parameter and logging
+   * interfaces.
    * @param[in] robot_description_topic string of a topic where robot description is accessible.
    * @returns true if initialization was successful, otherwise false.
    */
@@ -209,7 +210,7 @@ public:
 
   /**
    * @brief Configure the joint limiter with the current joint states.
-   * 
+   *
    * @param[in] current_joint_states current joint states a robot is in.
    * @returns true if configuration was successful, otherwise false.
    */
@@ -218,7 +219,7 @@ public:
     return on_configure(current_joint_states);
   }
 
-  /** 
+  /**
    * @brief Enforce joint limits to desired joint state for multiple physical quantities.
    *
    * Generic enforce method that calls implementation-specific `on_enforce` method.
@@ -242,14 +243,14 @@ public:
   virtual void reset_internals() = 0;
 
 protected:
-  /** 
+  /**
    * @brief Initialize limiter's internal states and libraries (implementation-specific).
    *
    * @returns true if initialization was successful, otherwise false.
    */
   virtual bool on_init() = 0;
 
-  /** 
+  /**
    * @brief Configure limiter's internal states and libraries (implementation-specific).
    *
    * @param[in] current_joint_states current joint states a robot is in.
@@ -257,8 +258,9 @@ protected:
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
-  /** 
-   * @brief Enforce the joint limits for multiple dependent physical quantities (implementation-specific).
+  /**
+   * @brief Enforce the joint limits for multiple dependent physical quantities
+   * (implementation-specific).
    *
    * Filter-specific implementation of the joint limits enforce algorithm.
    *
@@ -271,7 +273,7 @@ protected:
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
-  /** 
+  /**
    * @brief Check if the logging interface is set.
    *
    * @returns true if the logging interface is available, otherwise false.
@@ -281,7 +283,7 @@ protected:
    */
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
-  /** 
+  /**
    * @brief Check if the parameter interface is set.
    *
    * @returns true if the parameter interface is available, otherwise false.
