@@ -1,0 +1,13 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    test_broadcaster:
+      type: "controller_manager/test_controller"
+
+    controller1:
+      type: "controller_manager/test_controller"
+      joint_names: ["joint1"]
+
+    controller2:
+      type: "controller_manager/test_controller"
+      joint_names: ["joint2"]
