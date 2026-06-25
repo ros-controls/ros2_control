@@ -8,7 +8,7 @@ find_package(rclpy REQUIRED)
 #
 install(
   FILES
-    test/test_launch_utils/test_ros2_control_node_combined.yaml
+    test_ros2_control_node_combined.yaml
   DESTINATION share/${PROJECT_NAME}/test/test_launch_utils
 )
 
