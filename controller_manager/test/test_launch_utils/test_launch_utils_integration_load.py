@@ -21,7 +21,7 @@ from launch_testing.actions import ReadyToTest
 
 import launch_ros.actions
 from launch.substitutions import FileContent, PathSubstitution
-from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
+from launch_ros.substitutions import FindPackageShare
 from launch.launch_context import LaunchContext
 
 
@@ -44,7 +44,7 @@ def generate_test_description():
 
     # Path to combined YAML
     robot_controllers = (
-        PathSubstitution(FindPackagePrefix("controller_manager"))
+        PathSubstitution(FindPackageShare("controller_manager"))
         / "test"
         / "test_launch_utils"
         / "test_ros2_control_node_combined.yaml"
