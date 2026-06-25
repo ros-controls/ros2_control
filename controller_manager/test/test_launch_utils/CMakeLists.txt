@@ -8,8 +8,8 @@ find_package(rclpy REQUIRED)
 #
 install(
   FILES
-    test_ros2_control_node_combined.yaml
-  DESTINATION test
+    test/test_launch_utils/test_ros2_control_node_combined.yaml
+  DESTINATION share/${PROJECT_NAME}/test/test_launch_utils
 )
 
 # Make sure test files get installed into the test tree
@@ -19,7 +19,7 @@ install(
     test_launch_utils_integration_list.py
     test_launch_utils_integration_dict.py
     test_launch_utils_integration_load.py
-  DESTINATION share/${PROJECT_NAME}/test
+  DESTINATION share/${PROJECT_NAME}/test/test_launch_utils
 )
 
 # Register each test with ament

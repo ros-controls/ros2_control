@@ -19,7 +19,7 @@ from launch import LaunchDescription
 import launch_testing
 from launch_testing.actions import ReadyToTest
 import launch_ros.actions
-from launch.substitutions import FileContent, PathSubstitution, PathJoinSubstitution
+from launch.substitutions import FileContent, PathSubstitution
 from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch.launch_context import LaunchContext
 
@@ -44,12 +44,12 @@ def generate_test_description():
     )
     robot_description = {"robot_description": urdf}
 
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackagePrefix("controller_manager"),
-            "test",
-            "test_ros2_control_node_combined.yaml",
-        ]
+    # Path to combined YAML
+    robot_controllers = (
+        PathSubstitution(FindPackagePrefix("controller_manager"))
+        / "test"
+        / "test_launch_utils"
+        / "test_ros2_control_node_combined.yaml"
     )
 
     context = LaunchContext()

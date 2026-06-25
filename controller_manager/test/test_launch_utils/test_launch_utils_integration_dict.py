@@ -52,6 +52,7 @@ def generate_test_description():
     robot_controllers = (
         PathSubstitution(FindPackagePrefix("controller_manager"))
         / "test"
+        / "test_launch_utils"
         / "test_ros2_control_node_combined.yaml"
     )
 
