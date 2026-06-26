@@ -669,6 +669,59 @@ TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_vel_and_acc_expec
   }
 }
 
+TEST_F(JointSaturationLimiterTest, when_acc_limited_vel_overshoots_expect_vel_reclamped)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    // dt such that max_acc * dt > max_velocity: 5.0 * 0.5 = 2.5 > 2.0
+    // Acceleration limiting recomputes velocity which then overshoots max_vel.
+    // The second-pass velocity clamp should catch it.
+    rclcpp::Duration period(0, 500000000);  // 0.5 second
+
+    // forward direction
+    {
+      current_joint_states_.positions[0] = 0.0;
+      current_joint_states_.velocities[0] = 0.0;
+      desired_joint_states_.positions[0] = 1.0;
+      desired_joint_states_.velocities[0] = 2.0;
+      desired_joint_states_.accelerations[0] = 10.0;
+
+      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+      CHECK_STATE_SINGLE_JOINT(
+        desired_joint_states_, 0,
+        1.0,  // pos = 0 + max_vel * dt
+        2.0,  // vel re-clamped to max_vel
+        4.0   // acc = (2.0 - 0) / dt
+      );
+    }
+
+    // reverse direction
+    {
+      current_joint_states_.positions[0] = 0.0;
+      current_joint_states_.velocities[0] = 0.0;
+      desired_joint_states_.positions[0] = -1.0;
+      desired_joint_states_.velocities[0] = -2.0;
+      desired_joint_states_.accelerations[0] = -10.0;
+
+      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+      CHECK_STATE_SINGLE_JOINT(
+        desired_joint_states_, 0,
+        -1.0,  // pos = 0 - max_vel * dt
+        -2.0,  // vel re-clamped to -max_vel
+        -4.0   // acc = (-2.0 - 0) / dt
+      );
+    }
+  }
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleMock(&argc, argv);
