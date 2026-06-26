@@ -136,8 +136,8 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
   const bool has_desired_acceleration,
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
-  const std::vector<double> current_joint_velocities, bool & braking_near_position_limit_triggered,
-  const double dt_seconds)
+  const std::vector<double> & current_joint_velocities,
+  bool & braking_near_position_limit_triggered, const double dt_seconds)
 {
   if (has_desired_position)
   {
@@ -274,7 +274,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
         if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
         {
           limit_applied = apply_acc_or_dec_limit(
-            joint_limits_[index].max_acceleration, desired_acc_, dec_limit_hit_);
+            joint_limits_[index].max_acceleration, desired_acc_, acc_limit_hit_);
         }
 
         if (limit_applied)
@@ -482,7 +482,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
 
   log_limits(
     pos_limit_hit_,
-    "] would exceed position limits"
+    "would exceed position limits"
     " if continuing at current state, limiting all joints");
 }
 

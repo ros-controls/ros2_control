@@ -150,7 +150,7 @@ private:
     const bool has_desired_acceleration,
     const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
-    const std::vector<double> current_joint_velocities,
+    const std::vector<double> & current_joint_velocities,
     bool & braking_near_position_limit_triggered, const double dt_seconds);
 
   /**
@@ -199,8 +199,8 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
   const bool has_desired_acceleration,
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
-  const std::vector<double> current_joint_velocities, bool & braking_near_position_limit_triggered,
-  const double dt_seconds);
+  const std::vector<double> & current_joint_velocities,
+  bool & braking_near_position_limit_triggered, const double dt_seconds);
 
 template <>
 void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
