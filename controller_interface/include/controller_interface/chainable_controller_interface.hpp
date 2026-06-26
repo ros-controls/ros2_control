@@ -145,7 +145,7 @@ protected:
 
   /**
    * @brief Execute calculations of the controller and update command interfaces.
-   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
    * 
    * Update method for chainable controllers.
    * In this method is valid to assume that \reference_interfaces_ hold the values for calculation
