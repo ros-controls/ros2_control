@@ -193,7 +193,7 @@ public:
   /**
    * @brief Control step update. Command interfaces are updated based on on reference inputs and
    * current states.
-   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
    * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time since the last control loop iteration
@@ -205,7 +205,7 @@ public:
    * @brief Trigger update method. This method is used by the controller_manager to trigger the
    * update method of the controller. The method is used to trigger the update method of the
    * controller synchronously or asynchronously, based on the controller configuration.
-   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
    * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time taken by the last control loop iteration
