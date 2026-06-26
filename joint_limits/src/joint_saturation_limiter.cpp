@@ -40,9 +40,23 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     return false;
   }
 
-  // TODO(gwalck) compute if the max are not implicitly violated with the given dt
-  // e.g. for max vel 2.0 and max acc 5.0, with dt >0.4
-  // velocity max is implicitly already violated due to max_acc * dt > 2.0
+  /** WARN users if implicit vel exceeds max velocity */
+  for (size_t i = 0; i < number_of_joints_; ++i)
+  {
+    if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
+    {
+      const double implicit_vel = joint_limits_[i].max_acceleration * dt_seconds;
+      if (implicit_vel > joint_limits_[i].max_velocity)
+      {
+        RCLCPP_WARN_STREAM_THROTTLE(
+          node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+          "Joint '" << joint_names_[i] << "': dt (" << dt_seconds
+                    << ") is too large for max_acceleration (" << joint_limits_[i].max_acceleration
+                    << ") and max_velocity (" << joint_limits_[i].max_velocity
+                    << "); max_acc * dt = " << implicit_vel << " exceeds max_velocity");
+      }
+    }
+  }
 
   // check for required inputs combination
   const bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
@@ -291,6 +305,27 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
         }
       }
       // else we cannot compute acc, so not limiting it
+    }
+
+    // Re-clamp velocity after acceleration limiting (can overshoot max_velocity
+    // when max_acceleration * dt > max_velocity, since acceleration limiting
+    // recomputes velocity from clamped acceleration without re-checking velocity)
+    if (joint_limits_[index].has_velocity_limits)
+    {
+      if (std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
+      {
+        desired_vel_[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel_[index]);
+        vel_limit_hit_[index] = true;
+        limits_enforced = true;
+
+        desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+
+        if (has_desired_position)
+        {
+          desired_pos_[index] =
+            current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
+        }
+      }
     }
 
     // Limit jerk
