@@ -594,6 +594,32 @@ TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_acc_only_expect_limit
   }
 }
 
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_and_acc_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities.clear();
+    desired_joint_states_.accelerations[0] = 4.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.05375, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.accelerations[0], 3.0, COMMON_THRESHOLD);
+  }
+}
+
 TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_and_vel_expect_limits_enforced)
 {
   SetupNode("joint_saturation_limiter");
