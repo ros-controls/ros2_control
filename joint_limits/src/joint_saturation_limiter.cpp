@@ -363,6 +363,93 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
                                 (current_joint_velocities[index] * dt_seconds) +
                                 (0.5 * desired_acc_[index] * dt_seconds * dt_seconds);
         }
+
+        // Post-jerk re-check: jerk-limited acceleration may cause velocity or
+        // acceleration/deceleration to exceed their limits because jerk pulls
+        // acceleration toward current_acc, which may itself exceed limits or
+        // cause velocity to overshoot.
+
+        // Re-check velocity
+        if (joint_limits_[index].has_velocity_limits)
+        {
+          if (std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
+          {
+            desired_vel_[index] =
+              std::copysign(joint_limits_[index].max_velocity, desired_vel_[index]);
+            vel_limit_hit_[index] = true;
+            limits_enforced = true;
+
+            desired_acc_[index] =
+              (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+
+            if (has_desired_position)
+            {
+              desired_pos_[index] =
+                current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
+            }
+          }
+        }
+
+        // Re-check acceleration and deceleration
+        if (
+          joint_limits_[index].has_acceleration_limits ||
+          joint_limits_[index].has_deceleration_limits)
+        {
+          if (
+            std::fabs(desired_acc_[index]) <= VALUE_CONSIDERED_ZERO ||
+            std::isnan(desired_acc_[index]))
+          {
+            desired_acc_[index] =
+              (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+          }
+
+          bool deceleration_limit_applied = false;
+          bool limit_applied = false;
+          auto apply_recheck_limit =
+            [&](const double limit, std::vector<double> & vec, std::vector<bool> & hit_flag) -> bool
+          {
+            if (std::fabs(vec[index]) > limit)
+            {
+              vec[index] = std::copysign(limit, vec[index]);
+              hit_flag[index] = true;
+              limits_enforced = true;
+              return true;
+            }
+            return false;
+          };
+
+          // Check deceleration (velocity changing toward zero)
+          if (
+            (desired_acc_[index] < 0 && current_joint_velocities[index] > 0) ||
+            (desired_acc_[index] > 0 && current_joint_velocities[index] < 0))
+          {
+            if (joint_limits_[index].has_deceleration_limits)
+            {
+              limit_applied = apply_recheck_limit(
+                joint_limits_[index].max_deceleration, desired_acc_, dec_limit_hit_);
+              deceleration_limit_applied = true;
+            }
+          }
+
+          // Check acceleration (fallback to acceleration if no decel check applied)
+          if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
+          {
+            limit_applied = apply_recheck_limit(
+              joint_limits_[index].max_acceleration, desired_acc_, acc_limit_hit_);
+          }
+
+          if (limit_applied)
+          {
+            desired_vel_[index] =
+              current_joint_velocities[index] + desired_acc_[index] * dt_seconds;
+            if (has_desired_position)
+            {
+              desired_pos_[index] = current_joint_states.positions[index] +
+                                    current_joint_velocities[index] * dt_seconds +
+                                    0.5 * desired_acc_[index] * dt_seconds * dt_seconds;
+            }
+          }
+        }
       }
     }
 
