@@ -187,7 +187,7 @@ There are two scripts to interact with controller manager from launch files:
                             DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -u, --unload-on-kill  Wait until this application is interrupted and unload controller
+      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager service to be available
       --switch-timeout SWITCH_TIMEOUT
@@ -274,7 +274,7 @@ The ``spawner`` now supports per controller arguments, while parsing the argumen
       --activate-as-group   Activate controllers as a group
       --switch-asap, --no-switch-asap
                             Switch controllers as soon as possible
-      -u, --unload-on-kill  Deactivate the active controllers and unload them on kill
+      -u, --unload-on-kill  Deactivate the active controllers and unload them on SIGINT or SIGTERM
       -h, --help            Show help
 
     Controller Options:
