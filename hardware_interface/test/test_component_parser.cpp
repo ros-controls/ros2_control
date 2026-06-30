@@ -734,16 +734,20 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].role, "joint1");
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].mechanical_reduction, 10.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].offset, 0.5);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].name, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].role, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].mechanical_reduction, 50.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].offset, 0.0);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[1].read_only);
 
   ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(2));
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].name, "joint1_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].role, "actuator1");
+  EXPECT_TRUE(hardware_info.transmissions[0].actuators[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].name, "joint2_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].role, "actuator2");
+  EXPECT_FALSE(hardware_info.transmissions[0].actuators[1].read_only);
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
