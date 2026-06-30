@@ -108,7 +108,7 @@ def parse_args_advanced(args):
         "-u",
         "--unload-on-kill",
         action="store_true",
-        help="Deactivate the active controllers and unload them on kill",
+        help="Deactivate the active controllers and unload them on SIGINT or SIGTERM",
     )
     global_parser.add_argument("-h", "--help", action="store_true", help="Show help")
 
@@ -239,7 +239,7 @@ def parse_native_args(args):
     parser.add_argument(
         "-u",
         "--unload-on-kill",
-        help="Wait until this application is interrupted and unload controller",
+        help="Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers",
         action="store_true",
     )
     parser.add_argument(
@@ -358,6 +358,13 @@ def main(args=None):
     activate_as_group = global_args.activate_as_group
     unload_on_kill = global_args.unload_on_kill
     node = None
+    lock = None
+
+    def _on_shutdown_signal(signum, frame):
+        raise KeyboardInterrupt()
+
+    signal.signal(signal.SIGINT, _on_shutdown_signal)
+    signal.signal(signal.SIGTERM, _on_shutdown_signal)
 
     if spawner_ros_params_files:
         for controller in controllers:
@@ -574,6 +581,7 @@ def main(args=None):
         # second KeyboardInterrupt during the signal.signal() call itself.
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
         except (KeyboardInterrupt, Exception):
             pass
         if unload_on_kill:
@@ -632,7 +640,7 @@ def main(args=None):
     finally:
         if node:
             node.destroy_node()
-        if lock.is_locked:
+        if lock is not None and lock.is_locked:
             lock.release()
         rclpy.shutdown()
 
