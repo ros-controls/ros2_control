@@ -73,6 +73,7 @@ PositionLimits compute_position_limits(
  * @param prev_command_vel The previous commanded velocity of the joint.
  * @param dt The time step.
  * @return The velocity limits, first is the lower limit and second is the upper limit.
+ * @note When the velocity limits are disabled, this method returns [-inf, inf].
  */
 VelocityLimits compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,

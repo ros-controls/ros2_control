@@ -140,9 +140,12 @@ VelocityLimits compute_velocity_limits(
   const double & desired_vel, const std::optional<double> & act_pos,
   const std::optional<double> & prev_command_vel, double dt)
 {
-  const double max_vel =
-    limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
-  VelocityLimits vel_limits(-max_vel, max_vel);
+  if (!limits.has_velocity_limits)
+  {
+    return VelocityLimits(
+      -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
+  }
+  VelocityLimits vel_limits(-limits.max_velocity, limits.max_velocity);
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
