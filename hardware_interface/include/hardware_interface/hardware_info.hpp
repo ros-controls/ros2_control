@@ -112,6 +112,7 @@ struct JointInfo
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given actuator loaded from URDF for a transmission
@@ -123,6 +124,7 @@ struct ActuatorInfo
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given transmission loaded from URDF
