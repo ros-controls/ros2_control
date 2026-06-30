@@ -110,6 +110,7 @@ struct JointInfo
   std::vector<std::string> state_interfaces;
   std::vector<std::string> command_interfaces;
   std::string role;
+  bool read_only = false;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
 };
@@ -121,6 +122,7 @@ struct ActuatorInfo
   std::vector<std::string> state_interfaces;
   std::vector<std::string> command_interfaces;
   std::string role;
+  bool read_only = false;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
 };
