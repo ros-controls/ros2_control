@@ -110,9 +110,9 @@ struct JointInfo
   std::vector<std::string> state_interfaces;
   std::vector<std::string> command_interfaces;
   std::string role;
-  bool read_only = false;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given actuator loaded from URDF for a transmission
@@ -122,9 +122,9 @@ struct ActuatorInfo
   std::vector<std::string> state_interfaces;
   std::vector<std::string> command_interfaces;
   std::string role;
-  bool read_only = false;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given transmission loaded from URDF
