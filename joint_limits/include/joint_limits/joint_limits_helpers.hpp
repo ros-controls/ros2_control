@@ -87,7 +87,7 @@ VelocityLimits compute_velocity_limits(
  * @param act_vel The actual velocity of the joint.
  * @param dt The time step (currently unused).
  * @return The effort limits: lower_limit is the minimum allowed effort, upper_limit is the maximum.
- * @note When the effort limits are disabled, this method returns [-inf, inf]. 
+ * @note When the effort limits are disabled, this method returns [-inf, inf].
  */
 EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
