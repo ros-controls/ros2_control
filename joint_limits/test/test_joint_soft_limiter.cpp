@@ -593,6 +593,71 @@ TEST_F(JointSoftLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(outside_limits_pos, -1.0, 0.0, true);
 }
 
+TEST_F(JointSoftLimiterTest, when_velocity_limits_disabled_expect_no_velocity_enforcement)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  // velocity limits are disabled, but position and acceleration limits are still active
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  limits.has_velocity_limits = false;
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);
+
+  auto test_velocity_passes_through = [&](
+                                        const std::optional<double> & actual_position,
+                                        const std::optional<double> & actual_velocity,
+                                        double desired_velocity)
+  {
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing velocity passthrough for actual position: " + std::to_string(act_pos) +
+      ", actual velocity: " + std::to_string(act_vel) + ", desired velocity: " +
+      std::to_string(desired_velocity) + " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.velocity = desired_velocity;
+    ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_TRUE(desired_state_.has_velocity());
+    EXPECT_NEAR(desired_state_.velocity.value(), desired_velocity, COMMON_THRESHOLD);
+  };
+
+  test_velocity_passes_through(0.0, std::nullopt, 1000.0);
+  test_velocity_passes_through(5.0, std::nullopt, 1000.0);
+  test_velocity_passes_through(5.0, std::nullopt, -1000.0);
+  test_velocity_passes_through(-5.0, std::nullopt, -1000.0);
+  test_velocity_passes_through(-5.0, std::nullopt, 1000.0);
+
+  // Reset prev_command_ so the next block isn't influenced
+  ASSERT_TRUE(Init(limits, soft_limits));
+  last_commanded_state_ = {};
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  test_velocity_passes_through(0.0, 5.0, 1000.0);
+  test_velocity_passes_through(0.0, -5.0, -1000.0);
+  test_velocity_passes_through(0.0, 0.0, 1000.0);
+}
+
 TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
 {
   SetupNode("joint_saturation_limiter");
