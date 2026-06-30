@@ -222,7 +222,8 @@ public:
    * @brief Get the current lifecycle state of the controller node.
    * @note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
    * should not be called in the control loop.
-   * @note This method is thread safe.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @returns lifecycle state of the controller node.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
@@ -230,7 +231,8 @@ public:
   /**
    * @brief Get the lifecycle id of the controller node that is cached internally
    * to avoid calls to get_lifecycle_state() in the real-time control loop.
-   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @returns lifecycle id of the controller node.
    */
   uint8_t get_lifecycle_id() const;
