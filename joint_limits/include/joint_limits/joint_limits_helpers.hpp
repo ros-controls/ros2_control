@@ -80,12 +80,24 @@ VelocityLimits compute_velocity_limits(
   const std::optional<double> & prev_command_vel, double dt);
 
 /**
- * @brief Compute the effort limits based on the position and velocity limits.
+ * @brief Computes the effort limits based on the position and velocity limits.
+ *
+ * When `limits.has_effort_limits` is false the function returns `[-infinity, +infinity]`
+ * unconditionally the effort command passes through completely untouched. No directional
+ * zeroing at position or velocity bounds is applied either. This matches the per-interface
+ * `<limits enable="false"/>` semantics for position and velocity.
+ *
+ * When `limits.has_effort_limits` is true the magnitude is clamped to `[-max_effort,
+ * +max_effort]`. Additionally, one direction is forced to 0 when the joint is at a
+ * position bound moving further out (requires `has_position_limits` and both act_pos /
+ * act_vel to be set), or when the joint velocity exceeds `max_velocity` (requires
+ * `has_velocity_limits` and act_vel to be set).
+ *
  * @param limits The joint limits.
  * @param act_pos The actual position of the joint.
  * @param act_vel The actual velocity of the joint.
- * @param dt The time step.
- * @return The effort limits, first is the lower limit and second is the upper limit.
+ * @param dt The time step (currently unused).
+ * @return The effort limits: lower_limit is the minimum allowed effort, upper_limit is the maximum.
  */
 EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
