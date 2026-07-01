@@ -193,8 +193,8 @@ public:
   /**
    * @brief Control step update. Command interfaces are updated based on on reference inputs and
    * current states.
-   * **The method called in the (real-time) control loop.**
-   *
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time since the last control loop iteration
    * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
@@ -205,8 +205,8 @@ public:
    * @brief Trigger update method. This method is used by the controller_manager to trigger the
    * update method of the controller. The method is used to trigger the update method of the
    * controller synchronously or asynchronously, based on the controller configuration.
-   * **The method called in the (real-time) control loop.**
-   *
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time taken by the last control loop iteration
    * @returns ControllerUpdateStatus. The status contains information if the update was triggered
@@ -222,7 +222,8 @@ public:
    * @brief Get the current lifecycle state of the controller node.
    * @note Accessing members of the returned rclcpp_lifecycle::State is not real-time safe and
    * should not be called in the control loop.
-   * @note This method is thread safe.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @returns lifecycle state of the controller node.
    */
   const rclcpp_lifecycle::State & get_lifecycle_state() const;
@@ -230,7 +231,8 @@ public:
   /**
    * @brief Get the lifecycle id of the controller node that is cached internally
    * to avoid calls to get_lifecycle_state() in the real-time control loop.
-   * @note This method is real-time safe and thread safe and can be called in the control loop.
+   * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
+   * 
    * @returns lifecycle id of the controller node.
    */
   uint8_t get_lifecycle_id() const;
