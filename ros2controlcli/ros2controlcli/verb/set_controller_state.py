@@ -17,6 +17,7 @@ from controller_manager import (
     configure_controller,
     list_controllers,
     switch_controllers,
+    unload_controller,
 )
 
 from ros2cli.node.direct import add_arguments
@@ -35,8 +36,20 @@ class SetControllerStateVerb(VerbExtension):
         arg.completer = LoadedControllerNameCompleter()
         arg = parser.add_argument(
             "state",
-            choices=["unconfigured", "inactive", "active"],
-            help="State in which the controller should be changed to",
+            choices=[
+                "unconfigured",
+                "inactive",
+                "active",
+                "configure",
+                "activate",
+                "deactivate",
+                "cleanup",
+                "shutdown",
+            ],
+            help=(
+                "Target state or transition to trigger for the controller. "
+                "Note: 'shutdown' maps to the unload_controller service and removes the controller."
+            ),
         )
         add_controller_mgr_parsers(parser)
 
@@ -102,4 +115,50 @@ class SetControllerStateVerb(VerbExtension):
                     return "Error activating controller, check controller_manager logs"
 
                 print(f"Successfully activated {args.controller_name}")
+                return 0
+
+            if args.state == "configure":
+                response = configure_controller(
+                    node, args.controller_manager, args.controller_name
+                )
+                if not response.ok:
+                    return "Error configuring controller, check controller_manager logs"
+
+                print(f"Successfully configured {args.controller_name}")
+                return 0
+
+            if args.state == "activate":
+                response = switch_controllers(
+                    node, args.controller_manager, [], [args.controller_name], True, True, 5.0
+                )
+                if not response.ok:
+                    return "Error activating controller, check controller_manager logs"
+
+                print(f"Successfully activated {args.controller_name}")
+                return 0
+
+            if args.state == "deactivate":
+                response = switch_controllers(
+                    node, args.controller_manager, [args.controller_name], [], True, True, 5.0
+                )
+                if not response.ok:
+                    return "Error deactivating controller, check controller_manager logs"
+
+                print(f"Successfully deactivated {args.controller_name}")
+                return 0
+
+            if args.state == "cleanup":
+                response = cleanup_controller(node, args.controller_manager, args.controller_name)
+                if not response.ok:
+                    return "Error cleaning up controller, check controller_manager logs"
+
+                print(f"successfully cleaned up {args.controller_name}")
+                return 0
+
+            if args.state == "shutdown":
+                response = unload_controller(node, args.controller_manager, args.controller_name)
+                if not response.ok:
+                    return "Error shutting down controller, check controller_manager logs"
+
+                print(f"Successfully shut down {args.controller_name}")
                 return 0
