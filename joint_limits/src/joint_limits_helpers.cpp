@@ -75,23 +75,23 @@ void verify_actual_position_within_limits(
 void update_prev_command(
   const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command)
 {
-  if (desired.has_position())
+  if (desired.has_position() && !std::isnan(desired.position.value()))
   {
     prev_command.position = desired.position;
   }
-  if (desired.has_velocity())
+  if (desired.has_velocity() && !std::isnan(desired.velocity.value()))
   {
     prev_command.velocity = desired.velocity;
   }
-  if (desired.has_effort())
+  if (desired.has_effort() && !std::isnan(desired.effort.value()))
   {
     prev_command.effort = desired.effort;
   }
-  if (desired.has_acceleration())
+  if (desired.has_acceleration() && !std::isnan(desired.acceleration.value()))
   {
     prev_command.acceleration = desired.acceleration;
   }
-  if (desired.has_jerk())
+  if (desired.has_jerk() && !std::isnan(desired.jerk.value()))
   {
     prev_command.jerk = desired.jerk;
   }
@@ -115,16 +115,21 @@ PositionLimits compute_position_limits(
                                : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    /// @note: We use the previous command position to compute the limits here because using the
-    /// actual position would be too conservative, usually there is a couple of cycles of delay
-    /// between the command sent to the robot and the robot actually showing that in the state. That
-    /// effectively limits the velocity with which the joint can be moved which is much lower than
-    /// the actual velocity limit.
-    const double position_reference = prev_command_pos.value();
-    pos_limits.lower_limit = std::max(
-      std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
-    pos_limits.upper_limit = std::min(
-      std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
+    /// @note: We prefer the previous command position over actual position because using the actual
+    /// position would be too conservative — there is typically a couple of cycles of delay between
+    /// the command and the robot state. Fall back to actual position when no previous command
+    /// exists (e.g., first position command after operating in another mode). Skip
+    /// velocity-constrained narrowing entirely when neither reference is available.
+    const std::optional<double> & pos_ref =
+      prev_command_pos.has_value() ? prev_command_pos : act_pos;
+    if (pos_ref.has_value())
+    {
+      const double position_reference = pos_ref.value();
+      pos_limits.lower_limit = std::max(
+        std::min(position_reference - delta_pos, pos_limits.upper_limit), pos_limits.lower_limit);
+      pos_limits.upper_limit = std::min(
+        std::max(position_reference + delta_pos, pos_limits.lower_limit), pos_limits.upper_limit);
+    }
   }
   internal::check_and_swap_limits(pos_limits.lower_limit, pos_limits.upper_limit);
   return pos_limits;
@@ -135,9 +140,12 @@ VelocityLimits compute_velocity_limits(
   const double & desired_vel, const std::optional<double> & act_pos,
   const std::optional<double> & prev_command_vel, double dt)
 {
-  const double max_vel =
-    limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
-  VelocityLimits vel_limits(-max_vel, max_vel);
+  if (!limits.has_velocity_limits)
+  {
+    return VelocityLimits(
+      -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
+  }
+  VelocityLimits vel_limits(-limits.max_velocity, limits.max_velocity);
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
@@ -192,9 +200,13 @@ EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
   const std::optional<double> & act_vel, double /*dt*/)
 {
-  const double max_effort =
-    limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::infinity();
-  EffortLimits eff_limits(-max_effort, max_effort);
+  // When effort limits are disabled the effort command must pass through untouched
+  if (!limits.has_effort_limits)
+  {
+    return EffortLimits(
+      -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
+  }
+  EffortLimits eff_limits(-limits.max_effort, limits.max_effort);
   if (limits.has_position_limits && act_pos.has_value() && act_vel.has_value())
   {
     if ((act_pos.value() <= limits.min_position) && (act_vel.value() <= 0.0))

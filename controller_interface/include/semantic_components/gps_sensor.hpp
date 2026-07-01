@@ -57,9 +57,9 @@ public:
   }
 
   /**
-   * Return GPS's status e.g. fix/no_fix
+   * @brief Return GPS's status e.g. fix/no_fix
    *
-   * \return Status
+   * @return Status
    */
   int8_t get_status() const
   {
@@ -72,9 +72,9 @@ public:
   }
 
   /**
-   * Return service used by GPS e.g. fix/no_fix
+   * @brief Return service used by GPS e.g. fix/no_fix
    *
-   * \return Service
+   * @return Service
    */
   uint16_t get_service() const
   {
@@ -87,9 +87,9 @@ public:
   }
 
   /**
-   * Return latitude reported by a GPS
+   * @brief Return latitude reported by a GPS
    *
-   * \return Latitude.
+   * @return Latitude.
    */
   double get_latitude() const
   {
@@ -102,9 +102,9 @@ public:
   }
 
   /**
-   * Return longitude reported by a GPS
+   * @brief Return longitude reported by a GPS
    *
-   * \return Longitude.
+   * @return Longitude.
    */
   double get_longitude() const
   {
@@ -117,9 +117,9 @@ public:
   }
 
   /**
-   * Return altitude reported by a GPS
+   * @brief Return altitude reported by a GPS
    *
-   * \return Altitude.
+   * @return Altitude.
    */
   double get_altitude() const
   {
@@ -132,9 +132,9 @@ public:
   }
 
   /**
-   * Return covariance reported by a GPS.
+   * @brief Return covariance reported by a GPS.
    *
-   * \return Covariance array.
+   * @return Covariance array.
    */
   template <
     typename U = void,
@@ -160,7 +160,10 @@ public:
   }
 
   /**
-   * Fills a NavSatFix message from the current values.
+   * @brief Fills a NavSatFix message from the current values.
+   *
+   * @param[out] message NavSatFix message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
   {

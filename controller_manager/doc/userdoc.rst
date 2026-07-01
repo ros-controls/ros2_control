@@ -52,7 +52,8 @@ For more information, see the Docker engine documentation about `resource_constr
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu (also for RaspberryPi)
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu
+- `linux-raspi-realtime <https://packages.ubuntu.com/resolute/linux-raspi-realtime>`_ on Ubuntu on Raspberry Pi: ``sudo apt install linux-raspi-realtime``
 - `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
 - `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
@@ -181,7 +182,7 @@ There are two scripts to interact with controller manager from launch files:
                             Controller param file to be loaded into controller node before configure. Pass multiple times to load different files for different controllers or to override the parameters of the same controller.
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -u, --unload-on-kill  Wait until this application is interrupted and unload controller
+      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager service to be available
       --switch-timeout SWITCH_TIMEOUT
@@ -266,7 +267,7 @@ The ``spawner`` now supports per controller arguments, while parsing the argumen
       --activate-as-group   Activate controllers as a group
       --switch-asap, --no-switch-asap
                             Switch controllers as soon as possible
-      -u, --unload-on-kill  Deactivate the active controllers and unload them on kill
+      -u, --unload-on-kill  Deactivate the active controllers and unload them on SIGINT or SIGTERM
       -h, --help            Show help
 
     Controller Options:
@@ -512,67 +513,18 @@ When run under the conditions determined in the above section, the determinism i
 
 Support for Asynchronous Updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For some applications, it is desirable to run a controller at a lower frequency than the controller manager's update rate. For instance, if the ``update_rate`` for the controller manager is 100Hz, the sum of the execution times of all controllers' ``update`` calls and hardware components ``read`` and ``write`` calls must be below 10ms. If one controller requires 15ms of execution time, it cannot be executed synchronously without affecting the overall system update rate. Running a controller asynchronously can be beneficial in this scenario.
 
-The async update support is transparent to each controller implementation. A controller can be enabled for asynchronous updates by setting the ``is_async`` parameter to ``true``. The controller manager will load the controller accordingly. For example:
+.. toctree::
+   :titlesonly:
 
-.. code-block:: yaml
+   Asynchronous Controllers <running_controllers_asynchronously.rst>
 
-    controller_manager:
-      ros__parameters:
-        update_rate: 100  # Hz
-        ...
-
-    example_async_controller:
-      ros__parameters:
-        type: example_controller/ExampleAsyncController
-        is_async: true
-        update_rate: 20  # Hz
-        ...
-
-You can set more parameters of the ``AsyncFunctionHandler``, which handles the thread of the controller, using the ``async_parameters`` namespace. For example:
-
-.. code-block:: yaml
-
-    example_async_controller:
-      ros__parameters:
-        type: example_controller/ExampleAsyncController
-        update_rate: 20  # Hz
-        is_async: true
-        async_parameters:
-          cpu_affinity: [2, 4]
-          thread_priority: 50
-          wait_until_initial_trigger: false
-          ...
-
-will result in the controller being loaded and configured to run at 20Hz, while the controller manager runs at 100Hz. The description of the parameters can be found in the `Common Controller Parameters <https://control.ros.org/master/doc/ros2_controllers/doc/controllers_index.html#common-controller-parameters>`_ section of the ros2_controllers documentation.
-
-Scheduling Behavior
-----------------------
-From a design perspective, the controller manager functions as a scheduler that triggers updates for asynchronous controllers during the control loop.
-
-In this case, the ``ControllerInterfaceBase`` calls ``AsyncFunctionHandler`` to handle the actual ``update`` callback of the controller, which is the same mechanism used by the resource manager to support read/write operations for asynchronous hardware. When a controller is configured to run asynchronously, the controller interface creates an async handler during the controller's configuration and binds it to the controller's update method. The async handler thread created by the controller interface has either the same thread priority as the controller manager or the priority specified by the ``thread_priority`` parameter. When triggered by the controller manager, the async handler evaluates if the previous trigger is successfully finished and then calls the update method.
-
-If the update takes significant time and another update is triggered while the previous update is still running, the result of the previous update will be used. When this situation occurs, the controller manager will print a missing update cycle message, informing the user that they need to lower their controller's frequency as the computation is taking longer than initially estimated, as shown in the following example:
-
-.. code-block:: console
-
-   [ros2_control_node-1] [WARN] [1741626670.311533972] [example_async_controller]: The controller missed xx update cycles out of yy total triggers.
-
-If the async controller's update method throws an unhandled exception, the controller manager will handle it the same way as the synchronous controllers, deactivating the controller. It will also print an error message, similar to the following:
-
-.. code-block:: console
-
-  [ros2_control_node-1] [ERROR] [1741629098.352771957] [AsyncFunctionHandler]: AsyncFunctionHandler: Exception caught in the async callback thread!
-  ...
-  [ros2_control_node-1] [ERROR] [1741629098.352874151] [controller_manager]: Caught exception of type : St13runtime_error while updating controller
-  [ros2_control_node-1] [ERROR] [1741629098.352940701] [controller_manager]: Deactivating controllers : [example_async_controller] as their update resulted in an error!
+For details on running controllers asynchronously, see :ref:`running_controllers_asynchronously`.
 
 Monitoring and Tuning
 ----------------------
 
-ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` topic. This can be used to fine tune the controller update rate.
-
+ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` and also ``/controller_manager/introspection_data/*`` topics. This can be used to fine tune the controller update rate.
 
 Different Clocks used by Controller Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

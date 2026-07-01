@@ -605,6 +605,25 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, unload_on_kill_with_sigterm)
+{
+  // When a launch file shuts down because a required sibling process crashes,
+  // it sends SIGINT and escalates to SIGTERM, --unload-on-kill must still
+  // deactivate and unload the controller when SIGTERM is delivered.
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+  ss << "timeout --signal=TERM 5 "
+     << std::string(coveragepy_script) +
+          " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "ctrl_3 -c test_controller_manager --unload-on-kill";
+
+  EXPECT_NE(std::system(ss.str().c_str()), 0)
+    << "timeout should have killed spawner and returned non 0 code";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 {
   const std::string main_test_file_path =
@@ -917,6 +936,15 @@ public:
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
+
+    // If a robot_description is already being published in the environment (e.g., by
+    // robot_state_publisher), the CM's transient_local subscription will receive it immediately
+    // and initialize the RM.  These tests require an uninitialized CM, so skip in that case.
+    if (cm_->is_resource_manager_initialized())
+    {
+      GTEST_SKIP() << "Skipping WithoutRobotDescription tests: robot_description already received "
+                      "from the environment (e.g. robot_state_publisher is running).";
+    }
   }
 
   void TearDown() override { update_executor_->cancel(); }

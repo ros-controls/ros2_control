@@ -180,6 +180,15 @@ public:
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
+
+    // If a robot_description is already being published in the environment (e.g., by
+    // robot_state_publisher), the CM's transient_local subscription will receive it immediately
+    // and initialize the RM.  These tests require an uninitialized CM, so skip in that case.
+    if (cm_->is_resource_manager_initialized())
+    {
+      GTEST_SKIP() << "Skipping WithoutRobotDescription tests: robot_description already received "
+                      "from the environment (e.g. robot_state_publisher is running).";
+    }
   }
 
   void TearDown() override { update_executor_->cancel(); }
@@ -209,7 +218,13 @@ TEST_F(TestHardwareSpawnerWithoutRobotDescription, spawner_with_later_load_of_ro
 {
   // Delay sending robot description
   robot_description_sending_timer_ = cm_->create_wall_timer(
-    std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
+    std::chrono::milliseconds(4000),
+    [&]()
+    {
+      RCLCPP_INFO(
+        cm_->get_logger(), "Passing robot description to controller manager and resource manager");
+      pass_robot_description_to_cm_and_rm();
+    });
 
   EXPECT_EQ(
     call_spawner(

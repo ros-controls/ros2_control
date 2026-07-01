@@ -42,11 +42,12 @@ public:
              {name + "/" + "linear_acceleration.z"}})
   {
   }
-  /// Return orientation.
   /**
+   * @brief Return orientation.
+   *
    * Return orientation reported by an IMU
    *
-   * \return Array of size 4 with orientation quaternion (x,y,z,w).
+   * @return Array of size 4 with orientation quaternion (x,y,z,w).
    */
   std::array<double, 4> get_orientation() const
   {
@@ -56,11 +57,12 @@ public:
     return orientation;
   }
 
-  /// Return angular velocity.
   /**
+   * @brief Return angular velocity.
+   *
    * Return angular velocity reported by an IMU
    *
-   * \return array of size 3 with angular velocity values (x, y, z).
+   * @return array of size 3 with angular velocity values (x, y, z).
    */
   std::array<double, 3> get_angular_velocity() const
   {
@@ -70,11 +72,12 @@ public:
     return angular_velocity;
   }
 
-  /// Return linear acceleration.
   /**
+   * @brief Return linear acceleration.
+   *
    * Return linear acceleration reported by an IMU
    *
-   * \return array of size 3 with linear acceleration values (x, y, z).
+   * @return array of size 3 with linear acceleration values (x, y, z).
    */
   std::array<double, 3> get_linear_acceleration() const
   {
@@ -84,10 +87,12 @@ public:
     return linear_acceleration;
   }
 
-  /// Return Imu message with orientation, angular velocity and linear acceleration
   /**
+   * @brief Return Imu message with orientation, angular velocity and linear acceleration
+   *
    * Constructs and return a IMU message from the current values.
-   * \return imu message from values;
+   * @param[out] message IMU message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::Imu & message) const
   {

@@ -36,8 +36,9 @@ from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
 from qt_gui.plugin import Plugin
-from ros2param.api import call_get_parameters, call_list_parameters
+from rcl_interfaces.srv import GetParameters, ListParameters
 from ros2service.api import get_service_names_and_types
+import rclpy
 
 from .update_combo import update_combo
 
@@ -101,24 +102,24 @@ class ControllerManager(Plugin):
 
         # Controllers display
         ctrl_table_view = self._widget.ctrl_table_view
-        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
         ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
         ctrl_header = ctrl_table_view.horizontalHeader()
-        ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        ctrl_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ctrl_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_header.customContextMenuRequested.connect(self._on_ctrl_header_menu)
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
-        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
         hw_table_view.doubleClicked.connect(self._on_hw_info)
 
         hw_header = hw_table_view.horizontalHeader()
-        hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        hw_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        hw_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_header.customContextMenuRequested.connect(self._on_hw_header_menu)
 
         # Timer for controller manager updates
@@ -141,7 +142,7 @@ class ControllerManager(Plugin):
 
         # Signal connections
         w = self._widget
-        w.cm_combo.currentIndexChanged[str].connect(self._on_cm_change)
+        w.cm_combo.currentTextChanged.connect(self._on_cm_change)
 
     def shutdown_plugin(self):
         self._update_cm_list_timer.stop()
@@ -245,7 +246,7 @@ class ControllerManager(Plugin):
             # Controller isn't loaded
             action_load = menu.addAction(self._icons["unconfigured"], "Load (unconfigured)")
 
-        action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if ctrl.state == "active":
@@ -307,14 +308,14 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.ctrl_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(ctrl_header.mapToGlobal(pos))
+        action = menu.exec(ctrl_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if ctrl_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                ctrl_header.setSectionResizeMode(QHeaderView.Interactive)
+            if ctrl_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _update_hw_components(self):
         if not self._cm_name:
@@ -372,7 +373,7 @@ class ControllerManager(Plugin):
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
 
-        action = menu.exec_(self._widget.hw_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.hw_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if hw_component.state.label == "active":
@@ -430,14 +431,14 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.hw_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(hw_header.mapToGlobal(pos))
+        action = menu.exec(hw_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if hw_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                hw_header.setSectionResizeMode(QHeaderView.Interactive)
+            if hw_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _activate_controller(self, name):
         self._switch_controllers([name], [])
@@ -509,7 +510,7 @@ class ControllerTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "controller"
@@ -522,23 +523,23 @@ class ControllerTable(QAbstractTableModel):
 
         ctrl = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
                 return ctrl.state or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             state_key = ctrl.state if ctrl.state else "unloaded"
             return self._icons.get(state_key)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class HwComponentTable(QAbstractTableModel):
@@ -561,7 +562,7 @@ class HwComponentTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "component"
@@ -574,22 +575,22 @@ class HwComponentTable(QAbstractTableModel):
 
         hw_component = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return hw_component.name
             elif index.column() == 1:
                 return hw_component.state.label or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             return self._icons.get(hw_component.state.label)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class FontDelegate(QStyledItemDelegate):
@@ -603,11 +604,11 @@ class FontDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         if not index.parent().isValid():
             # Root level
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         if index.parent().isValid() and not index.parent().parent().isValid():
             # Hardware interface level
             option.font.setItalic(True)
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
@@ -622,8 +623,16 @@ def _get_controller_type(node, node_name, ctrl_name):
     @return Controller type
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
-    return response.values[0].string_value if response.values else ""
+    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
+    client = node.create_client(GetParameters, f"{node_name}/get_parameters")
+    if not client.wait_for_service(timeout_sec=5.0):
+        return ""
+    request = GetParameters.Request()
+    request.names = [ctrl_name]
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future)
+    response = future.result()
+    return response.values[0].string_value if response and response.values else ""
 
 
 def _list_controller_managers(node):
@@ -644,13 +653,15 @@ def _list_controller_managers(node):
 
 def _get_parameter_controller_names(node, node_name):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
-    parameter_names = call_list_parameters(node=node, node_name=node_name)
+    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
+    client = node.create_client(ListParameters, f"{node_name}/list_parameters")
+    if not client.wait_for_service(timeout_sec=5.0):
+        return []
+    request = ListParameters.Request()
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future)
+    response = future.result()
+    names = response.result.names if response else []
+
     suffix = ".type"
-    # @note: The versions conditioning is added here to support the source-compatibility with Humble
-    if os.environ.get("ROS_DISTRO") == "humble":
-        # for humble, ros2param < 0.20.0
-        return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
-    else:
-        return [
-            n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)
-        ]
+    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
