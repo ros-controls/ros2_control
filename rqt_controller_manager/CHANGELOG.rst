@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix Qt API (`#3367 <https://github.com/ros-controls/ros2_control/issues/3367>`_)
+* Contributors: Christian Rauch
+
 6.7.1 (2026-05-12)
 ------------------
 
