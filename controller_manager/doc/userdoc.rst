@@ -152,6 +152,32 @@ When dealing with multiple controller managers, you have two options for managin
        namespace="rrbot",
    )
 
+Controller Namespacing
+----------------------
+Controllers may specify a namespace that the node should be placed in via its name:
+
+.. code-block:: yaml
+   controller_manager:
+     ros__parameters:
+       .....
+
+       /my/namespaced/joint_state_broadcaster:
+         type: joint_state_broadcaster/JointStateBroadcaster
+
+   .....
+
+In this example, the spawned controller node will be named ``joint_state_broadcaster`` and will be placed in the namespace ``/my/namedspaced``.
+
+The name specified to the ``spawn`` helper or the CLI ``load_controller`` command will be the full name specified in the ``controller_manager`` configuration:
+
+.. code-block:: console
+   $ ros2 control load_controller /my/namespaced/joint_state_broadcaster
+
+This is helpful when multiple controllers share the same ``controller_manager`` but require topics/services/actions to be namespaced per controller.
+
+.. note::
+   The namespace semantics are the same as when starting a node via the launch system. Names without a preceeding ``/`` are placed in the namespace relative to the ``controller_manager`` node. Names with a preceeding ``/`` are placed in an absolute namespace.
+
 Helper scripts
 --------------
 There are two scripts to interact with controller manager from launch files:

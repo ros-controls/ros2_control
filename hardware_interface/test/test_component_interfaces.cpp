@@ -2303,6 +2303,28 @@ TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, system_hw.get_lifecycle_id());
 }
 
+TEST_F(TestComponentInterfaces, component_namespacing)
+{
+  auto system_hw = std::make_unique<test_components::DummySystem>();
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "/test/hw/namespace/mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = mock_hw_info;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  params.node_namespace = "/test/hw/namespace";
+  system_hw->init(params);
+
+  rclcpp::Node::SharedPtr hw_node = system_hw->get_node();
+
+  EXPECT_EQ(std::string(hw_node->get_name()), std::string("mock_hw"));
+  EXPECT_EQ(std::string(hw_node->get_namespace()), std::string("/test/hw/namespace"));
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
