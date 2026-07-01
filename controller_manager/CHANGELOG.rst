@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.8.0 (2026-07-01)
+------------------
 * Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_)
 * document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_)
 * Wait to terminate test until spawner exits (`#3373 <https://github.com/ros-controls/ros2_control/issues/3373>`_)

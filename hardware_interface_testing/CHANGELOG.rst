@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.8.0 (2026-07-01)
+------------------
 * Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_)
 * [hardware_interface_testing] Add tests for hardware components exception handling (`#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_)
 * Contributors: Sai Kishor Kothakota, Shlok Mehndiratta

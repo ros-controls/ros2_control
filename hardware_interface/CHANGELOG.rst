@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.8.0 (2026-07-01)
+------------------
 * hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_)
 * Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)
 * fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_)
