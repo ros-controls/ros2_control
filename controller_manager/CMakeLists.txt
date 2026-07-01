@@ -55,7 +55,10 @@ target_link_libraries(controller_manager PUBLIC
                       ${std_msgs_TARGETS}
                       ${controller_manager_msgs_TARGETS})
 
-add_executable(ros2_control_node src/ros2_control_node.cpp)
+add_executable(ros2_control_node
+  src/ros2_control_node.cpp
+  src/sleeping_policies.cpp
+)
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
 )
@@ -276,6 +279,17 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_manager_with_resource_manager
     controller_manager
     hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_sleeping_policies
+    test/test_sleeping_policies.cpp
+    src/sleeping_policies.cpp
+    TIMEOUT 60
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_sleeping_policies
+    controller_manager
     ros2_control_test_assets::ros2_control_test_assets
   )
 
