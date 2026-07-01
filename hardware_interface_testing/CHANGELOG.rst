@@ -2,6 +2,12 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_) (`#3378 <https://github.com/ros-controls/ros2_control/issues/3378>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (backport `#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_) (`#3341 <https://github.com/ros-controls/ros2_control/issues/3341>`_)
+* Contributors: mergify[bot]
+
 5.14.2 (2026-05-12)
 -------------------
 * Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_) (`#3278 <https://github.com/ros-controls/ros2_control/issues/3278>`_)

@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve docstring of the semantic_components for consistency (`#3338 <https://github.com/ros-controls/ros2_control/issues/3338>`_) (`#3422 <https://github.com/ros-controls/ros2_control/issues/3422>`_)
+* Improve docstring of the controller_interface for consistency (`#3318 <https://github.com/ros-controls/ros2_control/issues/3318>`_) (`#3337 <https://github.com/ros-controls/ros2_control/issues/3337>`_)
+* Contributors: mergify[bot]
+
 5.14.2 (2026-05-12)
 -------------------
 * Fix the out of bound access of std::vector in ChainableController and others (`#3287 <https://github.com/ros-controls/ros2_control/issues/3287>`_) (`#3289 <https://github.com/ros-controls/ros2_control/issues/3289>`_)

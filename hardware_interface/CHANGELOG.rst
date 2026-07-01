@@ -2,6 +2,17 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_) (`#3430 <https://github.com/ros-controls/ros2_control/issues/3430>`_)
+* hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_) (`#3435 <https://github.com/ros-controls/ros2_control/issues/3435>`_)
+* Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3395 <https://github.com/ros-controls/ros2_control/issues/3395>`_)
+* fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_) (`#3390 <https://github.com/ros-controls/ros2_control/issues/3390>`_)
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_) (`#3378 <https://github.com/ros-controls/ros2_control/issues/3378>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (backport `#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_) (`#3341 <https://github.com/ros-controls/ros2_control/issues/3341>`_)
+* Fixing Hardware components logging spam in tests (`#2692 <https://github.com/ros-controls/ros2_control/issues/2692>`_) (`#3335 <https://github.com/ros-controls/ros2_control/issues/3335>`_)
+* Contributors: mergify[bot]
+
 5.14.2 (2026-05-12)
 -------------------
 * fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_) (`#3286 <https://github.com/ros-controls/ros2_control/issues/3286>`_)
