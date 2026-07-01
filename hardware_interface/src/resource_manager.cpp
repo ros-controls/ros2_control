@@ -1531,6 +1531,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  components_are_loaded_and_initialized_ = true;
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
@@ -1611,6 +1612,7 @@ bool ResourceManager::load_and_initialize_components(
   resource_storage_->cm_update_rate_ = params.update_rate;
   resource_storage_->executor_ = params.executor;
   resource_storage_->node_namespace_ = params.node_namespace;
+  params_.handle_exceptions = params.handle_exceptions;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   return load_and_initialize_components(params.robot_description, params.update_rate);
