@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.15.0 (2026-07-01)
+-------------------
 * Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_) (`#3430 <https://github.com/ros-controls/ros2_control/issues/3430>`_)
 * hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_) (`#3435 <https://github.com/ros-controls/ros2_control/issues/3435>`_)
 * Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3395 <https://github.com/ros-controls/ros2_control/issues/3395>`_)

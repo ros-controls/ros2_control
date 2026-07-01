@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.15.0 (2026-07-01)
+-------------------
 * Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_) (`#3428 <https://github.com/ros-controls/ros2_control/issues/3428>`_)
 * document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_) (`#3400 <https://github.com/ros-controls/ros2_control/issues/3400>`_)
 * Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3395 <https://github.com/ros-controls/ros2_control/issues/3395>`_)
