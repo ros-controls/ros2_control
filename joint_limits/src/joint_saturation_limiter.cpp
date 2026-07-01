@@ -468,15 +468,39 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
           joint_limits_[index].max_position);
         if (pos != expected_pos_[index])
         {
-          // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full
-          // deceleration in any case limit pos to max
-          expected_pos_[index] = pos;
-          // and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be
-          // zero)
-          desired_vel_[index] =
-            (expected_pos_[index] - current_joint_states.positions[index]) / dt_seconds;
           pos_limit_hit_[index] = true;
           limits_enforced = true;
+
+          double decel;
+          if (joint_limits_[index].has_deceleration_limits)
+          {
+            decel = joint_limits_[index].max_deceleration;
+          }
+          else if (joint_limits_[index].has_acceleration_limits)
+          {
+            decel = joint_limits_[index].max_acceleration;
+          }
+          else
+          {
+            decel = std::fabs(desired_vel_[index] / dt_seconds);
+          }
+
+          const double distance_to_limit =
+            (desired_vel_[index] < 0)
+              ? current_joint_states.positions[index] - joint_limits_[index].min_position
+              : joint_limits_[index].max_position - current_joint_states.positions[index];
+
+          const double vel_to_stop = std::sqrt(2.0 * decel * std::max(distance_to_limit, 0.0));
+          const double vel_to_not_exceed = std::max(distance_to_limit, 0.0) / dt_seconds;
+          const double safe_vel = std::min(vel_to_stop, vel_to_not_exceed);
+
+          if (std::fabs(desired_vel_[index]) > safe_vel)
+          {
+            desired_vel_[index] = std::copysign(safe_vel, desired_vel_[index]);
+          }
+
+          expected_pos_[index] =
+            current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
         }
       }
 
