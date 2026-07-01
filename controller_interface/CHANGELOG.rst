@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.46.0 (2026-07-01)
+-------------------
 * Improve docstring of the semantic_components for consistency (`#3338 <https://github.com/ros-controls/ros2_control/issues/3338>`_) (`#3421 <https://github.com/ros-controls/ros2_control/issues/3421>`_)
 * Improve docstring of the controller_interface for consistency (`#3318 <https://github.com/ros-controls/ros2_control/issues/3318>`_) (`#3336 <https://github.com/ros-controls/ros2_control/issues/3336>`_)
 * Contributors: mergify[bot]

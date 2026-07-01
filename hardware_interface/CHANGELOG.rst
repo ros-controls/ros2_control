@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.46.0 (2026-07-01)
+-------------------
 * Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_) (`#3429 <https://github.com/ros-controls/ros2_control/issues/3429>`_)
 * fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_) (`#3389 <https://github.com/ros-controls/ros2_control/issues/3389>`_)
 * Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_) (`#3377 <https://github.com/ros-controls/ros2_control/issues/3377>`_)
