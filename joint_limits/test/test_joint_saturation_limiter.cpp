@@ -53,7 +53,7 @@ TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
   }
 }
 
-TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
+TEST_F(JointSaturationLimiterTest, when_neither_poscmd_nor_velcmd_expect_enforce_fail)
 {
   SetupNode("joint_saturation_limiter");
   Load();
@@ -348,8 +348,9 @@ TEST_F(JointSaturationLimiterTest, when_position_close_to_pos_limit_expect_decel
     desired_joint_states_.velocities[0] = 1.5;
 
     // this setup requires 0.15 distance to stop, and 0.2 seconds (so 4 cycles at 0.05)
-    std::vector expected_ret = {true, true, true, false};
-    for (auto i = 0u; i < 4; ++i)
+    // cycles 0-3 apply limits (braking + jerk), cycles 4-5 settle at stop
+    std::vector expected_ret = {true, true, true, true, false, false};
+    for (auto i = 0u; i < 6; ++i)
     {
       auto previous_vel_request = desired_joint_states_.velocities[0];
       // expect limits applied until the end stop
@@ -481,9 +482,9 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_expect_dec_enforce
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      0.315625,  // pos = double integration from max dec with current state
-      0.125,     // vel limited by vel - max dec * dt
-      -7.5       // acc limited by -max dec
+      0.31875,  // pos = double integration from jerk-limited acc with current state
+      0.25,     // vel limited by jerk-limited acc
+      -5.0      // acc limited by jerk-limited max dec (jerk from 0 to -7.5 exceeds max_jerk)
     );
   }
 }
@@ -514,6 +515,236 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_with_no_maxdec_exp
       0.75,     // vel limited by vel-max acc * dt
       -5.0      // acc limited to -max acc
     );
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_only_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities.clear();
+    desired_joint_states_.accelerations.clear();
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.05375, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_vel_only_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions.clear();
+    desired_joint_states_.velocities[0] = 1.5;
+    desired_joint_states_.accelerations.clear();
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.velocities[0], 1.15, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_acc_only_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities.clear();
+    desired_joint_states_.accelerations[0] = 4.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.05375, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.accelerations[0], 3.0, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_and_acc_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities.clear();
+    desired_joint_states_.accelerations[0] = 4.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.05375, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.accelerations[0], 3.0, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_and_vel_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities[0] = 1.5;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    CHECK_STATE_SINGLE_JOINT(desired_joint_states_, 0, 0.05375, 1.15, 3.0);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_vel_and_acc_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions.clear();
+    desired_joint_states_.velocities[0] = 1.5;
+    desired_joint_states_.accelerations[0] = 4.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    ASSERT_NEAR(desired_joint_states_.velocities[0], 1.15, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.accelerations[0], 3.0, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_jerk_exceeded_with_pos_vel_and_acc_expect_limits_enforced)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    current_joint_states_.velocities[0] = 1.0;
+    current_joint_states_.accelerations[0] = -2.0;
+
+    desired_joint_states_.positions[0] = 0.075;
+    desired_joint_states_.velocities[0] = 1.5;
+    desired_joint_states_.accelerations[0] = 4.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    CHECK_STATE_SINGLE_JOINT(desired_joint_states_, 0, 0.05375, 1.15, 3.0);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_acc_limited_vel_overshoots_expect_vel_reclamped)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    // dt such that max_acc * dt > max_velocity: 5.0 * 0.5 = 2.5 > 2.0
+    // Acceleration limiting recomputes velocity which then overshoots max_vel.
+    // The second-pass velocity clamp should catch it.
+    rclcpp::Duration period(0, 500000000);  // 0.5 second
+
+    // forward direction
+    {
+      current_joint_states_.positions[0] = 0.0;
+      current_joint_states_.velocities[0] = 0.0;
+      desired_joint_states_.positions[0] = 1.0;
+      desired_joint_states_.velocities[0] = 2.0;
+      desired_joint_states_.accelerations[0] = 10.0;
+
+      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+      CHECK_STATE_SINGLE_JOINT(
+        desired_joint_states_, 0,
+        1.0,  // pos = 0 + max_vel * dt
+        2.0,  // vel re-clamped to max_vel
+        4.0   // acc = (2.0 - 0) / dt
+      );
+    }
+
+    // reverse direction
+    {
+      current_joint_states_.positions[0] = 0.0;
+      current_joint_states_.velocities[0] = 0.0;
+      desired_joint_states_.positions[0] = -1.0;
+      desired_joint_states_.velocities[0] = -2.0;
+      desired_joint_states_.accelerations[0] = -10.0;
+
+      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+      CHECK_STATE_SINGLE_JOINT(
+        desired_joint_states_, 0,
+        -1.0,  // pos = 0 - max_vel * dt
+        -2.0,  // vel re-clamped to -max_vel
+        -4.0   // acc = (-2.0 - 0) / dt
+      );
+    }
   }
 }
 
