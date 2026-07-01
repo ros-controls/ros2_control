@@ -15,6 +15,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   realtime_tools
   TinyXML2
   joint_limits
+  std_srvs
   urdf
   pal_statistics
   fmt
@@ -52,6 +53,7 @@ target_link_libraries(hardware_interface PUBLIC
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}
+                      ${std_srvs_TARGETS}
                       fmt::fmt)
 
 add_library(mock_components SHARED
