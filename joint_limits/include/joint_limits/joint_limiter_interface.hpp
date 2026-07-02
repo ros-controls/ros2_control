@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Denis Stogl
+/// @author Denis Stogl
 
 #ifndef JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 #define JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
@@ -38,20 +38,20 @@ public:
 
   virtual ~JointLimiterInterface() = default;
 
-  /// Initialization of every JointLimiter.
   /**
-   * @brief Initialize JointLimiter for defined joints with their names.
+   * @brief Initialize every JointLimiter.
    *
+   * Initialization of JointLimiter for defined joints with their names.
    * Robot description topic provides a topic name where URDF of the robot can be found.
    * This is needed to use joint limits from URDF (not implemented yet!).
    * Override this method only if initialization and reading joint limits should be adapted.
-   * Otherwise, initialize your custom limiter in `on_limit` method.
+   * Otherwise, initialize your custom limiter in `on_init` method.
    *
    * @param[in] joint_names names of joints where limits should be applied.
    * @param[in] param_itf node parameters interface object to access parameters.
    * @param[in] logging_itf node logging interface to log if error happens.
    * @param[in] robot_description_topic string of a topic where robot description is accessible.
-   * @returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -141,7 +141,7 @@ public:
    * @param[in] soft_joint_limits soft joint limits for each joint.
    * @param[in] param_itf node parameters interface for parameter handling.
    * @param[in] logging_itf node logging interface for logging.
-   * @returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -169,7 +169,7 @@ public:
   }
 
   /**
-   * @brief Initialize method wrapper that accepts a pointer to the Node.
+   * @brief Initialize joints using a Node pointer.
    *
    * For details see other init method.
    *
@@ -188,7 +188,7 @@ public:
   }
 
   /**
-   * @brief Initialize method wrapper that accepts a pointer to the LifecycleNode.
+   * @brief Initialize joints using a LifecycleNode pointer.
    *
    * For details see other init method.
    *
@@ -227,7 +227,7 @@ public:
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * @returns true if limits are enforced, otherwise false.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool enforce(
     const JointLimitsStateDataType & current_joint_states,
@@ -244,39 +244,41 @@ public:
 
 protected:
   /**
-   * @brief Initialize limiter's internal states and libraries (implementation-specific).
+   * @brief Initialize the limiter's internal states and libraries.
    *
-   * @returns true if initialization was successful, otherwise false.
+   * Implementation-specific initialization of limiter's internal states and libraries.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_init() = 0;
 
   /**
-   * @brief Configure limiter's internal states and libraries (implementation-specific).
+   * @brief Configure the limiter's internal states and libraries.
+   *
+   * Implementation-specific configuration of limiter's internal states and libraries.
    *
    * @param[in] current_joint_states current joint states a robot is in.
-   * @returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
   /**
-   * @brief Enforce the joint limits for multiple dependent physical quantities
-   * (implementation-specific).
+   * @brief Enforce joint limits for multiple dependent physical quantities.
    *
    * Filter-specific implementation of the joint limits enforce algorithm.
    *
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * @returns true if limits are enforced, otherwise false.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
   /**
-   * @brief Check if the logging interface is set.
+   * @brief Checks if the logging interface is set.
    *
-   * @returns true if the logging interface is available, otherwise false.
+   * @return true if the logging interface is available, otherwise false.
    *
    * @note this way of interfacing would be useful for instances where the logging interface is not
    * available, for example in the ResourceManager or ResourceStorage classes.
@@ -284,9 +286,9 @@ protected:
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
   /**
-   * @brief Check if the parameter interface is set.
+   * @brief Checks if the parameter interface is set.
    *
-   * @returns true if the parameter interface is available, otherwise false.
+   * @return true if the parameter interface is available, otherwise false.
    *
    * @note this way of interfacing would be useful for instances where the logging interface is
    * not available, for example in the ResourceManager or ResourceStorage classes.
