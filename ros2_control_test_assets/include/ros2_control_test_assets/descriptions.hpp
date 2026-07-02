@@ -817,7 +817,7 @@ const auto hardware_resources_with_disabled_limits =
 
 const auto async_hardware_resources =
   R"(
-  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true" thread_priority="30">
+  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true">
     <properties>
       <async affinity="[2, 4,6]" scheduling_policy="detached" print_warnings="false"/>
     </properties>
