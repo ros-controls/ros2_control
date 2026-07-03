@@ -126,7 +126,7 @@ private:
    */
   void clamp_joint_limits(
     const bool has_desired_position, const bool has_desired_velocity,
-    const bool has_desired_acceleration,
+    const bool has_desired_acceleration, const bool has_current_velocity,
     const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
     const std::vector<double> & current_joint_velocities,
@@ -166,7 +166,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_init();
 template <>
 void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(
   const bool has_desired_position, const bool has_desired_velocity,
-  const bool has_desired_acceleration,
+  const bool has_desired_acceleration, const bool has_current_velocity,
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
   const std::vector<double> & current_joint_velocities,

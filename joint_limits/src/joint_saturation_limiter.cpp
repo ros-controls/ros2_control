@@ -91,8 +91,8 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   bool braking_near_position_limit_triggered = false;
 
   clamp_joint_limits(
-    has_desired_position, has_desired_velocity, has_desired_acceleration, current_joint_states,
-    desired_joint_states, limits_enforced, current_joint_velocities,
+    has_desired_position, has_desired_velocity, has_desired_acceleration, has_current_velocity,
+    current_joint_states, desired_joint_states, limits_enforced, current_joint_velocities,
     braking_near_position_limit_triggered, dt_seconds);
 
   if (braking_near_position_limit_triggered)
@@ -147,7 +147,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
 template <>
 void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(
   const bool has_desired_position, const bool has_desired_velocity,
-  const bool has_desired_acceleration,
+  const bool has_desired_acceleration, const bool has_current_velocity,
   const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
   const std::vector<double> & current_joint_velocities,
@@ -238,8 +238,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
     if (
       joint_limits_[index].has_acceleration_limits || joint_limits_[index].has_deceleration_limits)
     {
-      // if(has_current_velocity)
-      if (1)  // for now use a zero velocity if not provided
+      if (has_current_velocity)
       {
         // limiting acc or dec function
         auto apply_acc_or_dec_limit = [&](
@@ -304,7 +303,14 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
           }
         }
       }
-      // else we cannot compute acc, so not limiting it
+      else  // else we cannot compute acc, so not limiting it
+      {
+        RCLCPP_WARN_STREAM_THROTTLE(
+          node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+          "Joint '" << joint_names_[index]
+                    << "': Acceleration limits configured but no current velocity provided. "
+                    << "Acceleration limiting will be skipped.");
+      }
     }
 
     // Re-clamp velocity if it exceeds the max velocity
