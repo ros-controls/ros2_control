@@ -1513,7 +1513,7 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, const unsigned int update_rate)
 {
-  components_are_loaded_and_initialized_ = true;
+  components_are_loaded_and_initialized_ = false;
 
   resource_storage_->robot_description_ = urdf;
   resource_storage_->cm_update_rate_ = update_rate;
