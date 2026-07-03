@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adrià Roig Moreno
+/// @author Adrià Roig Moreno
 
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
@@ -33,7 +33,7 @@ constexpr double OUT_OF_BOUNDS_EXCEPTION_TOLERANCE = 0.0087;
 }  // namespace internal
 
 /**
- * @brief Updates the previous command with the desired command.
+ * @brief Update the previous command with the desired command.
  * @param prev_command The previous command to update.
  * @param desired The desired command which is limited.
  */
@@ -41,7 +41,7 @@ void update_prev_command(
   const JointControlInterfacesData & desired, JointControlInterfacesData & prev_command);
 
 /**
- * @brief Checks if a value is limited by the given limits.
+ * @brief Check if a value is limited by the given limits.
  * @param value The value to check.
  * @param min The minimum limit.
  * @param max The maximum limit.
@@ -50,7 +50,7 @@ void update_prev_command(
 bool is_limited(double value, double min, double max);
 
 /**
- * @brief Computes the position limits based on the velocity and acceleration limits.
+ * @brief Compute the position limits based on the velocity and acceleration limits.
  * @param joint_name The name of the joint.
  * @param limits The joint limits.
  * @param act_vel The actual velocity of the joint.
@@ -66,13 +66,14 @@ PositionLimits compute_position_limits(
   const std::optional<double> & prev_command_pos, double dt);
 
 /**
- * @brief Computes the velocity limits based on the position and acceleration limits.
+ * @brief Compute the velocity limits based on the position and acceleration limits.
  * @param joint_name The name of the joint.
  * @param limits The joint limits.
  * @param act_pos The actual position of the joint.
  * @param prev_command_vel The previous commanded velocity of the joint.
  * @param dt The time step.
  * @return The velocity limits, first is the lower limit and second is the upper limit.
+ * @note When the velocity limits are disabled, this method returns [-inf, inf].
  */
 VelocityLimits compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
@@ -81,18 +82,20 @@ VelocityLimits compute_velocity_limits(
 
 /**
  * @brief Computes the effort limits based on the position and velocity limits.
+ *
  * @param limits The joint limits.
  * @param act_pos The actual position of the joint.
  * @param act_vel The actual velocity of the joint.
- * @param dt The time step.
- * @return The effort limits, first is the lower limit and second is the upper limit.
+ * @param dt The time step (currently unused).
+ * @return The effort limits: lower_limit is the minimum allowed effort, upper_limit is the maximum.
+ * @note When the effort limits are disabled, this method returns [-inf, inf].
  */
 EffortLimits compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
   const std::optional<double> & act_vel, double /*dt*/);
 
 /**
- * @brief Computes the acceleration limits based on the change in velocity and acceleration and
+ * @brief Compute the acceleration limits based on the change in velocity and acceleration and
  * deceleration limits.
  * @param limits The joint limits.
  * @param desired_acceleration The desired acceleration.

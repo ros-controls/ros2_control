@@ -37,11 +37,12 @@ public:
 
   virtual ~SemanticComponentCommandInterface() = default;
 
-  /// Assign loaned command interfaces from the hardware.
   /**
+   * @brief Assign loaned command interfaces from the hardware.
+   *
    * Assign loaned command interfaces on the controller start.
    *
-   * \param[in] command_interfaces vector of command interfaces provided by the controller.
+   * @param[in] command_interfaces vector of command interfaces provided by the controller.
    */
   bool assign_loaned_command_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> & command_interfaces)
@@ -50,23 +51,27 @@ public:
       command_interfaces, interface_names_, "", command_interfaces_);
   }
 
-  /// Release loaned command interfaces from the hardware.
+  /**
+   * @brief Release loaned command interfaces from the hardware.
+   */
   void release_interfaces() { command_interfaces_.clear(); }
 
-  /// Definition of command interface names for the component.
   /**
+   * @brief Definition of command interface names for the component.
+   *
    * The function should be used in "command_interface_configuration()" of a controller to provide
    * standardized command interface names semantic component.
    *
-   * \default Default implementation defined command interfaces as "name/NR" where NR is number
+   * Default implementation defined command interfaces as "name/NR" where NR is number
    * from 0 to size of values;
-   * \return list of strings with command interface names for the semantic component.
+   * @return list of strings with command interface names for the semantic component.
    */
   const std::vector<std::string> & get_command_interface_names() const { return interface_names_; }
 
-  /// Return all values.
   /**
-   * \return true if it gets all the values, else false (i.e., invalid size or if the method
+   * @brief Return all values.
+   *
+   * @return true if it gets all the values, else false (i.e., invalid size or if the method
    * ``hardware_interface::LoanedCommandInterface::set_value`` fails).
    */
   bool set_values(const std::vector<double> & values)
@@ -85,9 +90,10 @@ public:
     return all_set;
   }
 
-  /// Set values from MessageInputType
   /**
-   * \return True if all values were set successfully, false otherwise.
+   * @brief Set values from MessageInputType
+   *
+   * @return True if all values were set successfully, false otherwise.
    */
   virtual bool set_values_from_message(const MessageInputType & /* message */) = 0;
 

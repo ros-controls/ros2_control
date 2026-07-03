@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.46.0 (2026-07-01)
+-------------------
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_) (`#3429 <https://github.com/ros-controls/ros2_control/issues/3429>`_)
+* fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_) (`#3389 <https://github.com/ros-controls/ros2_control/issues/3389>`_)
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_) (`#3377 <https://github.com/ros-controls/ros2_control/issues/3377>`_)
+* hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_) (`#3352 <https://github.com/ros-controls/ros2_control/issues/3352>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (backport `#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_) (`#3340 <https://github.com/ros-controls/ros2_control/issues/3340>`_)
+* Contributors: mergify[bot]
+
 4.45.2 (2026-05-12)
 -------------------
 * fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_) (`#3285 <https://github.com/ros-controls/ros2_control/issues/3285>`_)

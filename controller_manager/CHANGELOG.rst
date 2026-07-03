@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.46.0 (2026-07-01)
+-------------------
+* Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_) (`#3427 <https://github.com/ros-controls/ros2_control/issues/3427>`_)
+* document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_) (`#3399 <https://github.com/ros-controls/ros2_control/issues/3399>`_)
+* Wait to terminate test until spawner exits (`#3373 <https://github.com/ros-controls/ros2_control/issues/3373>`_) (`#3384 <https://github.com/ros-controls/ros2_control/issues/3384>`_)
+* fix typo in state and reference export methods (`#3347 <https://github.com/ros-controls/ros2_control/issues/3347>`_) (`#3357 <https://github.com/ros-controls/ros2_control/issues/3357>`_)
+* Enforce cleanup_controller on more exit points of configure_controller (`#3192 <https://github.com/ros-controls/ros2_control/issues/3192>`_) (`#3348 <https://github.com/ros-controls/ros2_control/issues/3348>`_)
+* Fix duplicate fallback controllers from the controller chain (`#3108 <https://github.com/ros-controls/ros2_control/issues/3108>`_) (`#3326 <https://github.com/ros-controls/ros2_control/issues/3326>`_)
+* Added default value to the fallback param declarations (`#3270 <https://github.com/ros-controls/ros2_control/issues/3270>`_) (`#3314 <https://github.com/ros-controls/ros2_control/issues/3314>`_)
+* Contributors: mergify[bot]
+
 4.45.2 (2026-05-12)
 -------------------
 * Fix size assertion in test_chainable_controller (`#3284 <https://github.com/ros-controls/ros2_control/issues/3284>`_) (`#3303 <https://github.com/ros-controls/ros2_control/issues/3303>`_)

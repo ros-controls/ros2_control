@@ -2,6 +2,15 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.46.0 (2026-07-01)
+-------------------
+* Fix disable velocity and effort limiting feature (`#3425 <https://github.com/ros-controls/ros2_control/issues/3425>`_) (`#3436 <https://github.com/ros-controls/ros2_control/issues/3436>`_)
+* fixed docstring of joint_limits (`#3414 <https://github.com/ros-controls/ros2_control/issues/3414>`_) (`#3433 <https://github.com/ros-controls/ros2_control/issues/3433>`_)
+* Improve docstring of joint_limits for consistency (`#3391 <https://github.com/ros-controls/ros2_control/issues/3391>`_) (`#3423 <https://github.com/ros-controls/ros2_control/issues/3423>`_)
+* Fix bad optional access in the joint limiters (`#3319 <https://github.com/ros-controls/ros2_control/issues/3319>`_) (`#3332 <https://github.com/ros-controls/ros2_control/issues/3332>`_)
+* Handle NaNs properly in the joint limiters (`#3320 <https://github.com/ros-controls/ros2_control/issues/3320>`_) (`#3324 <https://github.com/ros-controls/ros2_control/issues/3324>`_)
+* Contributors: mergify[bot]
+
 4.45.2 (2026-05-12)
 -------------------
 * Fix std::clamp regression on Ubuntu 26.04 (`#3275 <https://github.com/ros-controls/ros2_control/issues/3275>`_) (`#3280 <https://github.com/ros-controls/ros2_control/issues/3280>`_)

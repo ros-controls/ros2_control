@@ -52,7 +52,8 @@ For more information, see the Docker engine documentation about `resource_constr
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu (also for RaspberryPi)
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu
+- `linux-raspi-realtime <https://packages.ubuntu.com/resolute/linux-raspi-realtime>`_ on Ubuntu on Raspberry Pi: ``sudo apt install linux-raspi-realtime``
 - `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
 - `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
@@ -186,7 +187,7 @@ There are two scripts to interact with controller manager from launch files:
                             DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -u, --unload-on-kill  Wait until this application is interrupted and unload controller
+      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager service to be available
       --switch-timeout SWITCH_TIMEOUT
@@ -273,7 +274,7 @@ The ``spawner`` now supports per controller arguments, while parsing the argumen
       --activate-as-group   Activate controllers as a group
       --switch-asap, --no-switch-asap
                             Switch controllers as soon as possible
-      -u, --unload-on-kill  Deactivate the active controllers and unload them on kill
+      -u, --unload-on-kill  Deactivate the active controllers and unload them on SIGINT or SIGTERM
       -h, --help            Show help
 
     Controller Options:
