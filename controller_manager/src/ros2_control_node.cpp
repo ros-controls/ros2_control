@@ -19,6 +19,7 @@
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/sleeping_policies.hpp"
 #include "rclcpp/executors.hpp"
 #include "realtime_tools/realtime_helpers.hpp"
 
@@ -79,8 +80,20 @@ int main(int argc, char ** argv)
     cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
     thread_priority);
 
+  const controller_manager::ControlLoopTimingConfig timing_config{
+    .use_sim_time = use_sim_time,
+    .manage_overruns = manage_overruns,
+    .expect_blocking_read_write =
+      cm->get_parameter_or<bool>("hardware_synchronization.expect_blocking_read_write", false),
+    .minimum_cycle_time =
+      cm->get_parameter_or<double>("hardware_synchronization.minimum_cycle_time", 0.0001),
+  };
+  RCLCPP_INFO_EXPRESSION(
+    cm->get_logger(), timing_config.expect_blocking_read_write,
+    "Synchronizing control loop with hardware.");
+
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time, manage_overruns]()
+    [cm, thread_priority, timing_config]()
     {
       rclcpp::Parameter cpu_affinity_param;
       if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
@@ -124,63 +137,39 @@ int main(int argc, char ** argv)
       cm->get_clock()->wait_until_started();
       cm->get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / cm->get_update_rate()));
 
-      // for calculating sleep time
-      auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
-
-      // for calculating the measured period of the loop
-      rclcpp::Time previous_time = cm->get_trigger_clock()->now();
-      std::this_thread::sleep_for(period);
-
-      std::chrono::steady_clock::time_point next_iteration_time{std::chrono::steady_clock::now()};
-
+      controller_manager::ControlLoopState state;
+      state.period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
+      state.previous_time = cm->get_trigger_clock()->now();
+      std::this_thread::sleep_for(state.period);
+      state.next_iteration_time = std::chrono::steady_clock::now();
       while (rclcpp::ok())
       {
         // calculate measured period
         auto const current_time = cm->get_trigger_clock()->now();
-        auto const measured_period = current_time - previous_time;
-        previous_time = current_time;
+        auto const measured_period = current_time - state.previous_time;
+        state.previous_time = current_time;
 
         // execute update loop
         cm->read(cm->get_trigger_clock()->now(), measured_period);
         cm->update(cm->get_trigger_clock()->now(), measured_period);
         cm->write(cm->get_trigger_clock()->now(), measured_period);
+        state.cycle_end_time = cm->get_trigger_clock()->now();
 
         // wait until we hit the end of the period
-        if (use_sim_time)
+        if (timing_config.use_sim_time)
         {
-          try
+          if (!sleep_for_sim_time(cm, state))
           {
-            cm->get_clock()->sleep_until(current_time + period);
-          }
-          catch (const std::runtime_error & e)
-          {
-            RCLCPP_ERROR(
-              cm->get_logger(),
-              "sleep_until failed with error: %s. Exiting control loop and aborting....", e.what());
             break;
           }
         }
+        else if (timing_config.expect_blocking_read_write)
+        {
+          sleep_for_blocking_read_write(cm, timing_config, state);
+        }
         else
         {
-          next_iteration_time += period;
-          const auto time_now = std::chrono::steady_clock::now();
-          if (manage_overruns && next_iteration_time < time_now)
-          {
-            const double time_diff =
-              static_cast<double>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(time_now - next_iteration_time)
-                  .count()) /
-              1.e6;
-            const double cm_period = 1.e3 / static_cast<double>(cm->get_update_rate());
-            const int overrun_count = static_cast<int>(std::ceil(time_diff / cm_period));
-            RCLCPP_WARN_THROTTLE(
-              cm->get_logger(), *cm->get_clock(), 1000,
-              "Overrun detected! The controller manager missed its desired rate of %d Hz. The loop "
-              "took %f ms (missed cycles : %d).",
-              cm->get_update_rate(), time_diff + cm_period, overrun_count + 1);
-            next_iteration_time += (overrun_count * period);
-          }
-          std::this_thread::sleep_until(next_iteration_time);
+          sleep_for_periodic_cycle(cm, timing_config, state);
         }
       }
     });
