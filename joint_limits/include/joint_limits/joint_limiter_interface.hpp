@@ -257,7 +257,7 @@ protected:
    * Implementation-specific configuration of limiter's internal states and libraries.
    *
    * @param[in] current_joint_states current joint states a robot is in.
-   * @return true if initialization was successful, otherwise false.
+   * @return true if configuration was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
