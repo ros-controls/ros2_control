@@ -177,21 +177,24 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
 
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
+    auto clamp_pos_limit = [&]()
+    {
+      auto pos = std::clamp(
+        desired_pos_[index], joint_limits_[index].min_position, joint_limits_[index].max_position);
+      if (pos != desired_pos_[index])
+      {
+        desired_pos_[index] = pos;
+        pos_limit_hit_[index] = true;
+        limits_enforced = true;
+      }
+    };
+
     if (has_desired_position)
     {
       // limit position
       if (joint_limits_[index].has_position_limits)
       {
-        // clamp input pos_cmd
-        auto pos = std::clamp(
-          desired_pos_[index], joint_limits_[index].min_position,
-          joint_limits_[index].max_position);
-        if (pos != desired_pos_[index])
-        {
-          desired_pos_[index] = pos;
-          pos_limit_hit_[index] = true;
-          limits_enforced = true;
-        }
+        clamp_pos_limit();
       }
       // priority to pos_cmd derivative over cmd_vel when not defined. If done always then we might
       // get jumps in the velocity based on the system's dynamics. Position limit clamping is done
@@ -206,6 +209,23 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       }
     }
 
+    auto clamp_vel_limit = [&]()
+    {
+      desired_vel_[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel_[index]);
+      vel_limit_hit_[index] = true;
+      limits_enforced = true;
+
+      // recompute pos_cmd if needed
+      if (has_desired_position)
+      {
+        desired_pos_[index] =
+          current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
+        clamp_pos_limit();
+      }
+
+      desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+    };
+
     // limit velocity
     if (joint_limits_[index].has_velocity_limits)
     {
@@ -219,18 +239,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       // clamp input vel_cmd
       if (std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
       {
-        desired_vel_[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel_[index]);
-        vel_limit_hit_[index] = true;
-        limits_enforced = true;
-
-        // recompute pos_cmd if needed
-        if (has_desired_position)
-        {
-          desired_pos_[index] =
-            current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
-        }
-
-        desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
+        clamp_vel_limit();
       }
     }
 
@@ -313,34 +322,12 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       }
     }
 
-    // Re-clamp velocity if it exceeds the max velocity
-    auto post_velocity_check_and_clamp = [&](size_t joint_index) -> bool
-    {
-      // Clamp velocity to max allowed
-      desired_vel_[joint_index] =
-        std::copysign(joint_limits_[joint_index].max_velocity, desired_vel_[joint_index]);
-      vel_limit_hit_[joint_index] = true;
-
-      // Recalculate acceleration based on clamped velocity
-      desired_acc_[joint_index] =
-        (desired_vel_[joint_index] - current_joint_velocities[joint_index]) / dt_seconds;
-
-      // Update position if needed
-      if (has_desired_position)
-      {
-        desired_pos_[joint_index] =
-          current_joint_states.positions[joint_index] + desired_vel_[joint_index] * dt_seconds;
-      }
-
-      return true;  // Indicates a limit was enforced
-    };
-
     // Check if joint velocity exceeds max velocity
     if (
       joint_limits_[index].has_velocity_limits &&
       std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
     {
-      limits_enforced = post_velocity_check_and_clamp(index);
+      clamp_vel_limit();
     }
 
     // Limit jerk
@@ -384,7 +371,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
           joint_limits_[index].has_velocity_limits &&
           std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
         {
-          limits_enforced = post_velocity_check_and_clamp(index);
+          clamp_vel_limit();
         }
 
         // Re-check acceleration and deceleration
@@ -448,6 +435,12 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
           }
         }
       }
+    }
+
+    // Re-clamp desired position after acceleration/jerk may have recomputed it
+    if (has_desired_position && joint_limits_[index].has_position_limits)
+    {
+      clamp_pos_limit();
     }
 
     // plan ahead for position limits
