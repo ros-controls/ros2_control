@@ -66,15 +66,10 @@ public:
     {
       cm_node_options.parameter_overrides(cm_parameters);
     }
+
     cm_ = std::make_shared<CtrlMgr>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
-      executor_, TEST_CM_NAME, cm_namespace, cm_node_options);
-    // We want to be able to not pass robot description immediately
-    if (!robot_description_.empty())
-    {
-      pass_robot_description_to_cm_and_rm(robot_description_);
-    }
+      executor_, robot_description_, true, TEST_CM_NAME, cm_namespace, cm_node_options);
+
     time_ = rclcpp::Time(0, 0, cm_->get_trigger_clock()->get_clock_type());
   }
 

@@ -46,6 +46,14 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
 
+HardwareComponent::~HardwareComponent()
+{
+  if (impl_)
+  {
+    impl_->stop_async_handler();
+  }
+}
+
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {

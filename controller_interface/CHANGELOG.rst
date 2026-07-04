@@ -2,6 +2,36 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* Improve docstring of the semantic_components for consistency (`#3338 <https://github.com/ros-controls/ros2_control/issues/3338>`_)
+* Improve docstring of the controller_interface for consistency (`#3318 <https://github.com/ros-controls/ros2_control/issues/3318>`_)
+* Contributors: mcereda
+
+6.7.1 (2026-05-12)
+------------------
+* Fix the out of bound access of std::vector in ChainableController and others (`#3287 <https://github.com/ros-controls/ros2_control/issues/3287>`_)
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+* Add test_utils file for transition tests (`#3048 <https://github.com/ros-controls/ros2_control/issues/3048>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* Add pal_statistics as explicit dependency (`#3163 <https://github.com/ros-controls/ros2_control/issues/3163>`_)
+* Add new API for chainable controller interface exporting (`#2988 <https://github.com/ros-controls/ros2_control/issues/2988>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 6.4.0 (2026-02-03)
 ------------------
 

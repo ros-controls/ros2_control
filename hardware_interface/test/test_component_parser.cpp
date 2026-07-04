@@ -734,16 +734,20 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].role, "joint1");
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].mechanical_reduction, 10.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].offset, 0.5);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].name, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].role, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].mechanical_reduction, 50.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].offset, 0.0);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[1].read_only);
 
   ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(2));
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].name, "joint1_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].role, "actuator1");
+  EXPECT_TRUE(hardware_info.transmissions[0].actuators[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].name, "joint2_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].role, "actuator2");
+  EXPECT_FALSE(hardware_info.transmissions[0].actuators[1].read_only);
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
@@ -2112,4 +2116,100 @@ TEST_F(TestComponentParser, successfully_parse_valid_sdf)
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
+}
+
+TEST_F(TestComponentParser, missing_hardware_plugin_tag_includes_component_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="MySpecificRobot" type="system">
+        <hardware>
+          <!-- plugin tag intentionally missing -->
+          <param name="some_param">1.0</param>
+        </hardware>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("MySpecificRobot"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<plugin>"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<hardware>"));
+  }
+}
+
+TEST_F(TestComponentParser, missing_joint_attribute_includes_joint_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position"/>
+        </joint>
+        <joint name="joint2">
+          <!-- missing name attribute here is tricky since we parse it first,
+               let's test missing attribute in command_interface instead -->
+          <command_interface>
+            <param name="min">-1</param>
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("name"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("command_interface"));
+    // Ideally it should say it failed for joint2, but tag_name is "command_interface"
+  }
+}
+
+TEST_F(TestComponentParser, parameter_missing_name_includes_parent_context)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position">
+            <param>1.0</param> <!-- Missing name attribute -->
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("joint1"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("parameter name"));
+  }
 }

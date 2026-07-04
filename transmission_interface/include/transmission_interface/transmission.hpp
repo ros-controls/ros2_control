@@ -16,8 +16,10 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/handle.hpp"
 
 namespace transmission_interface
@@ -50,6 +52,38 @@ public:
   virtual void configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) = 0;
+
+  /**
+   * Get the list of supported joint interfaces.
+   */
+  virtual std::vector<std::string> get_supported_joint_interfaces() const
+  {
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
+  }
+
+  /**
+   * Get the list of supported actuator interfaces.
+   */
+  virtual std::vector<std::string> get_supported_actuator_interfaces() const
+  {
+    return {
+      hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+      hardware_interface::HW_IF_EFFORT};
+  }
+
+  /**
+   * Get the actuator position offset which can be used to initialize the actuator position to a
+   * known value.
+   */
+  virtual double get_actuator_position_offset() const { return 0.0; }
+
+  /**
+   * Get the joint position offset which can be used to initialize the joint position to a known
+   * value.
+   */
+  virtual double get_joint_position_offset() const { return 0.0; }
 
   /// Transform \e effort variables from actuator to joint space.
   /**

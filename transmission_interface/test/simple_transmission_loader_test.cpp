@@ -57,62 +57,7 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
 {
   // Parse transmission info
 
-  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
-                             R"(
-    <ros2_control name="RRBotModularJoint1" type="actuator">
-      <hardware>
-        <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
-        <param name="example_param_write_for_sec">1.23</param>
-        <param name="example_param_read_for_sec">3</param>
-      </hardware>
-      <joint name="joint1">
-        <command_interface name="velocity">
-          <param name="min">-1</param>
-          <param name="max">1</param>
-        </command_interface>
-        <state_interface name="velocity"/>
-      </joint>
-      <transmission name="transmission1">
-        <plugin>transmission_interface/SimpleTransmission</plugin>
-        <joint name="joint1" role="joint1">
-          <mechanical_reduction>325.949</mechanical_reduction>
-        </joint>
-      </transmission>
-    </ros2_control>
-    <ros2_control name="RRBotModularJoint2" type="actuator">
-      <hardware>
-        <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
-        <param name="example_param_write_for_sec">1.23</param>
-        <param name="example_param_read_for_sec">3</param>
-      </hardware>
-      <joint name="joint2">
-        <command_interface name="velocity">
-          <param name="min">-1</param>
-          <param name="max">1</param>
-        </command_interface>
-        <state_interface name="velocity"/>
-      </joint>
-    </ros2_control>
-    <ros2_control name="RRBotModularPositionSensorJoint1" type="sensor">
-      <hardware>
-        <plugin>ros2_control_demo_hardware/PositionSensorHardware</plugin>
-        <param name="example_param_read_for_sec">2</param>
-      </hardware>
-      <joint name="joint1">
-        <state_interface name="position"/>
-      </joint>
-    </ros2_control>
-    <ros2_control name="RRBotModularPositionSensorJoint2" type="sensor">
-      <hardware>
-        <plugin>ros2_control_demo_hardware/PositionSensorHardware</plugin>
-        <param name="example_param_read_for_sec">2</param>
-      </hardware>
-      <joint name="joint2">
-        <state_interface name="position"/>
-      </joint>
-    </ros2_control>
-  </robot>
-  )";
+  std::string urdf_to_test = ros2_control_test_assets::minimal_robot_urdf;
 
   std::vector<hardware_interface::HardwareInfo> infos =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);

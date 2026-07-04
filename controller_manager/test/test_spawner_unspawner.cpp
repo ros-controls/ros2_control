@@ -605,6 +605,25 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, unload_on_kill_with_sigterm)
+{
+  // When a launch file shuts down because a required sibling process crashes,
+  // it sends SIGINT and escalates to SIGTERM, --unload-on-kill must still
+  // deactivate and unload the controller when SIGTERM is delivered.
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+  ss << "timeout --signal=TERM 5 "
+     << std::string(coveragepy_script) +
+          " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "ctrl_3 -c test_controller_manager --unload-on-kill";
+
+  EXPECT_NE(std::system(ss.str().c_str()), 0)
+    << "timeout should have killed spawner and returned non 0 code";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 {
   const std::string main_test_file_path =
@@ -707,6 +726,44 @@ TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding_reverse)
     ctrl_node->declare_parameter("joint_offset", -M_PI);
   }
   ASSERT_EQ(ctrl_node->get_parameter("joint_offset").as_double(), 0.2);
+}
+
+TEST_F(TestLoadController, spawner_forwards_ros_params_file_along_with_param_file)
+{
+  const std::string main_test_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_type.yaml");
+  const std::string spawner_ros_args_file_path =
+    std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_overriding_parameters.yaml");
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type --load-only -c test_controller_manager -p " +
+      main_test_file_path + " --ros-args --params-file " + spawner_ros_args_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_THAT(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array(),
+    std::vector<std::string>({main_test_file_path, spawner_ros_args_file_path}));
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
+  ASSERT_THAT(
+    ctrl_with_parameters_and_type.info.parameters_files,
+    std::vector<std::string>({main_test_file_path, spawner_ros_args_file_path}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "impedance")
+    << "The ROS --params-file forwarded by spawner should be applied";
 }
 
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
@@ -879,6 +936,15 @@ public:
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
+
+    // If a robot_description is already being published in the environment (e.g., by
+    // robot_state_publisher), the CM's transient_local subscription will receive it immediately
+    // and initialize the RM.  These tests require an uninitialized CM, so skip in that case.
+    if (cm_->is_resource_manager_initialized())
+    {
+      GTEST_SKIP() << "Skipping WithoutRobotDescription tests: robot_description already received "
+                      "from the environment (e.g. robot_state_publisher is running).";
+    }
   }
 
   void TearDown() override { update_executor_->cancel(); }

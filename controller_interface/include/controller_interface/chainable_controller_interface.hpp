@@ -25,9 +25,10 @@
 
 namespace controller_interface
 {
-/// Virtual class to implement when integrating a controller that can be preceded by other
-/// controllers.
 /**
+ * @brief Virtual class to implement when integrating a controller that can be preceded by other
+ * controllers.
+ *
  * Specialization of ControllerInterface class to force implementation of methods specific for
  * "chainable" controller, i.e., controller that can be preceded by an another controller, for
  * example inner controller of an control cascade.
@@ -41,13 +42,12 @@ public:
   virtual ~ChainableControllerInterface() = default;
 
   /**
-   * Control step update. Command interfaces are updated based on on reference inputs and current
-   * states.
+   * @brief Control step. Updates command interfaces from reference inputs and current states.
    * **The method called in the (real-time) control loop.**
    *
-   * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   * @param[in] time The time at the start of this control loop iteration
+   * @param[in] period The measured time taken by the last control loop iteration
+   * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) final;
 
@@ -62,97 +62,104 @@ public:
   bool is_in_chained_mode() const final;
 
 protected:
-  /// Virtual method that each chainable controller should implement to export its read-only
-  /// chainable interfaces.
   /**
+   * @brief Virtual method that each chainable controller should implement to export its read-only
+   * chainable interfaces.
+   *
    * Each chainable controller implements this methods where all its state(read only) interfaces are
    * exported. The method has the same meaning as `export_state_interfaces` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
-   * \returns list of StateInterfaces that other controller can use as their inputs.
+   * @returns list of StateInterfaces that other controller can use as their inputs.
    */
   [[deprecated(
     "Replaced by std::vector<hardware_interface::StateInterface::ConstSharedPtr> "
     "on_export_state_interfaces_list() method.")]]
   virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces();
 
-  /// Virtual method that each chainable controller should implement to export its read-only
-  /// chainable interfaces.
   /**
+   * @brief Virtual method implemented by chainable controllers to export read-only interfaces.
+   *
    * Each chainable controller implements this methods where all its state(read only) interfaces are
    * exported. The method has the same meaning as `on_export_state_interfaces` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
-   * \returns list of StateInterfaces that other controller can use as their inputs.
+   * @returns list of StateInterfaces that other controller can use as their inputs.
    */
   virtual std::vector<hardware_interface::StateInterface::SharedPtr>
   on_export_state_interfaces_list();
 
-  /// Virtual method that each chainable controller should implement to export its read/write
-  /// chainable interfaces.
   /**
+   * @brief Virtual method implemented by chainable controllers to export read/write interfaces.
+   *
    * Each chainable controller implements this methods where all input (command) interfaces are
    * exported. The method has the same meaning as `export_command_interface` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
-   * \returns list of CommandInterfaces that other controller can use as their outputs.
+   * @returns list of CommandInterfaces that other controller can use as their outputs.
    */
   [[deprecated(
     "Replaced by std::vector<hardware_interface::CommandInterface::SharedPtr> "
     "on_export_reference_interfaces_list() method.")]]
   virtual std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces();
 
-  /// Virtual method that each chainable controller should implement to export its read/write
-  /// chainable interfaces.
   /**
+   * @brief Virtual method that each chainable controller should implement to export its read/write
+   * chainable interfaces.
+   *
    * Each chainable controller implements this methods where all input (command) interfaces are
    * exported. The method has the same meaning as `on_export_command_interfaces` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
-   * \returns list of CommandInterfaces that other controller can use as their outputs.
+   * @returns list of CommandInterfaces that other controller can use as their outputs.
    */
   virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
   on_export_reference_interfaces_list();
 
-  /// Virtual method that each chainable controller should implement to switch chained mode.
   /**
+   * @brief Virtual method that each chainable controller should implement to switch chained mode.
+   *
    * Each chainable controller implements this methods to switch between "chained" and "external"
    * mode. In "chained" mode all external interfaces like subscriber and service servers are
    * disabled to avoid potential concurrency in input commands.
    *
-   * \param[in] flag marking a switch to or from chained mode.
+   * @param[in] flag marking a switch to or from chained mode.
    *
-   * \returns true if controller successfully switched between "chained" and "external" mode.
-   * \default returns true so the method don't have to be overridden if controller can always switch
+   * @returns true if controller successfully switched between "chained" and "external" mode.
+   * @default returns true so the method don't have to be overridden if controller can always switch
    * chained mode.
    */
   virtual bool on_set_chained_mode(bool chained_mode);
 
-  /// Update reference from input topics when not in chained mode.
   /**
+   * @brief Update reference from input topics when not in chained mode.
+   *
    * Each chainable controller implements this method to update reference from subscribers when not
    * in chained mode.
    *
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
   virtual return_type update_reference_from_subscribers(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Execute calculations of the controller and update command interfaces.
   /**
+   * @brief Execute calculations of the controller and update command interfaces.
+   *
    * Update method for chainable controllers.
    * In this method is valid to assume that \reference_interfaces_ hold the values for calculation
    * of the commands in the current control step.
    * This means that this method is called after \update_reference_from_subscribers if controller is
    * not in chained mode.
    *
-   * \returns return_type::OK if calculation and writing of interface is successfully, otherwise
+   * @returns return_type::OK if calculation and writing of interface is successfully, otherwise
    * return_type::ERROR.
    */
   virtual return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Storage of values for state interfaces
+  /**
+   * @brief Storage of values for state interfaces
+   */
   std::vector<std::string> exported_state_interface_names_;
   std::vector<hardware_interface::StateInterface::SharedPtr> ordered_exported_state_interfaces_;
   std::unordered_map<std::string, hardware_interface::StateInterface::SharedPtr>
@@ -161,7 +168,9 @@ protected:
   std::vector<double> state_interfaces_values_;
   // END
 
-  /// Storage of values for reference interfaces
+  /**
+   * @brief Storage of values for reference interfaces
+   */
   std::vector<std::string> exported_reference_interface_names_;
   // BEGIN (Handle export change): for backward compatibility
   std::vector<double> reference_interfaces_;
@@ -172,7 +181,9 @@ protected:
     exported_reference_interfaces_;
 
 private:
-  /// A flag marking if a chainable controller is currently preceded by another controller.
+  /**
+   * @brief A flag marking if a chainable controller is currently preceded by another controller.
+   */
   bool in_chained_mode_ = false;
 };
 
