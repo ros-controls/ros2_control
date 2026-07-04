@@ -2,6 +2,18 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_)
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)
+* fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_)
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_)
+* Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (`#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_)
+* Controller Manager recovery from invalid URDF errors (`#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_)
+* Fixing Hardware components logging spam in tests (`#2692 <https://github.com/ros-controls/ros2_control/issues/2692>`_)
+* Contributors: Bence Magyar, Christian Rauch, Sai Kishor Kothakota, Shlok Mehndiratta, Soham Patil, VitezGabriela
+
 6.7.1 (2026-05-12)
 ------------------
 * fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_)
