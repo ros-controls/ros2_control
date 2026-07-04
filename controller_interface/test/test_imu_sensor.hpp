@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-
 #include "semantic_components/imu_sensor.hpp"
 
 // implementing and friending so we can access member variables

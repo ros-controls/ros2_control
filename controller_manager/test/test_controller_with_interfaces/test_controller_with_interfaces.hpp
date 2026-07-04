@@ -15,11 +15,7 @@
 #ifndef TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 #define TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 
-#include <memory>
-#include <string>
-
-#include "controller_interface/visibility_control.h"
-#include "controller_manager/controller_manager.hpp"
+#include "controller_interface/controller_interface.hpp"
 
 namespace test_controller_with_interfaces
 {
@@ -31,10 +27,8 @@ constexpr char TEST_CONTROLLER_COMMAND_INTERFACE[] = "joint2/velocity";
 class TestControllerWithInterfaces : public controller_interface::ControllerInterface
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
   TestControllerWithInterfaces();
 
-  CONTROLLER_MANAGER_PUBLIC
   virtual ~TestControllerWithInterfaces() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
@@ -50,19 +44,18 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
+    const rclcpp_lifecycle::State & previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
     const rclcpp_lifecycle::State & previous_state) override;
 };
 

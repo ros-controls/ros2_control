@@ -5,6 +5,13 @@ on:
   pull_request:
     branches:
       - humble
+  push:
+    branches:
+      - humble
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pre-commit:

@@ -2,6 +2,175 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* Fix disable velocity and effort limiting feature (`#3425 <https://github.com/ros-controls/ros2_control/issues/3425>`_)
+* fixed docstring of joint_limits (`#3414 <https://github.com/ros-controls/ros2_control/issues/3414>`_)
+* Improve docstring of joint_limits for consistency (`#3391 <https://github.com/ros-controls/ros2_control/issues/3391>`_)
+* Fix bad optional access in the joint limiters (`#3319 <https://github.com/ros-controls/ros2_control/issues/3319>`_)
+* Handle NaNs properly in the joint limiters (`#3320 <https://github.com/ros-controls/ros2_control/issues/3320>`_)
+* Contributors: Arhan Chavare, Sai Kishor Kothakota, mcereda
+
+6.7.1 (2026-05-12)
+------------------
+* Fix std::clamp regression on Ubuntu 26.04 (`#3275 <https://github.com/ros-controls/ros2_control/issues/3275>`_)
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.7.0 (2026-04-23)
+------------------
+* Fix LNK2005 in joint*limiter (`#3243 <https://github.com/ros-controls/ros2_control/issues/3243>`_)
+* Contributors: Christoph Fröhlich
+
+6.6.0 (2026-04-17)
+------------------
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_)
+* Contributors: Christoph Fröhlich
+
+6.4.0 (2026-02-03)
+------------------
+* Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_)
+* Don't throw on position joint limits in case of velocity command (`#2978 <https://github.com/ros-controls/ros2_control/issues/2978>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+
+6.2.0 (2025-12-10)
+------------------
+
+6.1.0 (2025-12-01)
+------------------
+
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
+5.7.0 (2025-10-03)
+------------------
+
+5.6.0 (2025-08-26)
+------------------
+* Remove extra semicolons (`#2478 <https://github.com/ros-controls/ros2_control/issues/2478>`_)
+* Contributors: Tapia Danish
+
+5.5.0 (2025-07-31)
+------------------
+
+5.4.0 (2025-07-21)
+------------------
+* Fix the crashing joint limiters when used with multiple interfaces (`#2371 <https://github.com/ros-controls/ros2_control/issues/2371>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+* Use target_link_libraries instead of ament_target_dependencies (`#2266 <https://github.com/ros-controls/ros2_control/issues/2266>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+* Statically allocate string concatenations using FMT formatting (`#2205 <https://github.com/ros-controls/ros2_control/issues/2205>`_)
+* Contributors: mini-1235
+
+4.29.0 (2025-05-04)
+-------------------
+
+4.28.1 (2025-04-17)
+-------------------
+* Use previous command to enforce the joint limits on position interfaces (`#2183 <https://github.com/ros-controls/ros2_control/issues/2183>`_)
+* Fix the joint limits enforcement with `position` and `velocity` (`#2182 <https://github.com/ros-controls/ros2_control/issues/2182>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Change to `ament_add_gmock` in joint_limits (`#2165 <https://github.com/ros-controls/ros2_control/issues/2165>`_)
+* Make all packages use gmock, not gtest (`#2162 <https://github.com/ros-controls/ros2_control/issues/2162>`_)
+* Use ros2_control_cmake (`#2134 <https://github.com/ros-controls/ros2_control/issues/2134>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Soham Patil
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+* Define _USE_MATH_DEFINES in joint_soft_limiter.cpp to ensure that M_PI is defined (`#2001 <https://github.com/ros-controls/ros2_control/issues/2001>`_)
+* Use actual position when limiting desired position (`#1988 <https://github.com/ros-controls/ros2_control/issues/1988>`_)
+* Contributors: Sai Kishor Kothakota, Silvio Traversaro
+
+4.24.0 (2025-01-13)
+-------------------
+* Return strong type for joint_limits helpers (`#1981 <https://github.com/ros-controls/ros2_control/issues/1981>`_)
+* Trigger shutdown transition in destructor (`#1979 <https://github.com/ros-controls/ros2_control/issues/1979>`_)
+* Add joint limiter interface plugins to enforce limits defined in the URDF (`#1526 <https://github.com/ros-controls/ros2_control/issues/1526>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, Wiktor Bajor
+
+4.23.0 (2024-12-29)
+-------------------
+* Remove boilerplate visibility macros (`#1972 <https://github.com/ros-controls/ros2_control/issues/1972>`_)
+* Contributors: Bence Magyar
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+* Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_)
+* Contributors: Christoph Fröhlich
+
+4.20.0 (2024-11-08)
+-------------------
+
+4.19.0 (2024-10-26)
+-------------------
+
+4.18.0 (2024-10-07)
+-------------------
+
+4.17.0 (2024-09-11)
+-------------------
+
+4.16.1 (2024-08-24)
+-------------------
+
+4.16.0 (2024-08-22)
+-------------------
+
+4.15.0 (2024-08-05)
+-------------------
+
+4.14.0 (2024-07-23)
+-------------------
+* Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
+* Contributors: Henry Moore
+
 4.13.0 (2024-07-08)
 -------------------
 * [JointLimits] Add Saturation Joint Limiter that uses clamping method (`#971 <https://github.com/ros-controls/ros2_control/issues/971>`_)

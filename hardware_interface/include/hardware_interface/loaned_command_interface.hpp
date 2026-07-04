@@ -16,10 +16,13 @@
 #define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 
 #include <functional>
+#include <limits>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace hardware_interface
 {
@@ -28,13 +31,15 @@ class LoanedCommandInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  explicit LoanedCommandInterface(CommandInterface & command_interface)
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface)
   : LoanedCommandInterface(command_interface, nullptr)
   {
   }
 
-  LoanedCommandInterface(CommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
+  explicit LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
+  : command_interface_(*command_interface),
+    interface_name_(command_interface->get_name()),
+    deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -44,32 +49,134 @@ public:
 
   virtual ~LoanedCommandInterface()
   {
+    auto logger = rclcpp::get_logger(interface_name_);
+    RCLCPP_WARN_EXPRESSION(
+      logger,
+      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and %u (~ %.4f %%) missed calls out of "
+      "%u get_value calls",
+      interface_name_.c_str(), get_value_statistics_.timeout_counter,
+      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.failed_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.total_counter);
+    RCLCPP_WARN_EXPRESSION(
+      logger,
+      (set_value_statistics_.failed_counter > 0 || set_value_statistics_.timeout_counter > 0),
+      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and  %u (~ %.4f %%) missed calls out of "
+      "%u set_value calls",
+      interface_name_.c_str(), set_value_statistics_.timeout_counter,
+      (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
+      set_value_statistics_.failed_counter,
+      (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
+      set_value_statistics_.total_counter);
     if (deleter_)
     {
       deleter_();
     }
   }
 
-  const std::string get_name() const { return command_interface_.get_name(); }
+  const std::string & get_name() const { return command_interface_.get_name(); }
 
   const std::string & get_interface_name() const { return command_interface_.get_interface_name(); }
 
-  [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string
-  get_full_name() const
-  {
-    return command_interface_.get_name();
-  }
-
   const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
 
-  void set_value(double val) { command_interface_.set_value(val); }
+  /**
+   * @brief Set the value of the command interface.
+   * @tparam T The type of the value to be set.
+   * @param value The value to set.
+   * @param max_tries The maximum number of tries to set the value.
+   * @return true if the value is set successfully, false otherwise.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to set the value, the handle returns false. If the operation is
+   * successful, the handle is updated and returns true.
+   * @note The method will try to set the value max_tries times before returning false. The method
+   * will yield the thread between tries. If the value is set successfully, the method returns true
+   * immediately.
+   */
+  template <typename T>
+  [[nodiscard]] bool set_value(const T & value, unsigned int max_tries = 10)
+  {
+    unsigned int nr_tries = 0;
+    ++set_value_statistics_.total_counter;
+    while (!command_interface_.set_limited_value(value))
+    {
+      ++set_value_statistics_.failed_counter;
+      ++nr_tries;
+      if (nr_tries == max_tries)
+      {
+        ++set_value_statistics_.timeout_counter;
+        return false;
+      }
+      std::this_thread::yield();
+    }
+    return true;
+  }
 
-  double get_value() const { return command_interface_.get_value(); }
+  /**
+   * @brief Get the value of the command interface.
+   * @tparam T The type of the value to be retrieved.
+   * @return The value of the command interface if it accessed successfully, std::nullopt otherwise.
+   * @param max_tries The maximum number of tries to get the value.
+   *
+   * @note The method is thread-safe and non-blocking.
+   * @note When different threads access the internal handle at same instance, and if they are
+   * unable to lock the handle to access the value, the handle returns std::nullopt. If the
+   * operation is successful, the value is returned.
+   * @note The method will try to get the value max_tries times before returning std::nullopt. The
+   * method will yield the thread between tries. If the value is retrieved successfully, the method
+   * returns the value immediately.
+   */
+  template <typename T = double>
+  [[nodiscard]] std::optional<T> get_optional(unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    do
+    {
+      ++get_value_statistics_.total_counter;
+      const std::optional<T> data = command_interface_.get_optional<T>();
+      if (data.has_value())
+      {
+        return data;
+      }
+      ++get_value_statistics_.failed_counter;
+      ++nr_tries;
+      std::this_thread::yield();
+    } while (nr_tries < max_tries);
+
+    ++get_value_statistics_.timeout_counter;
+    return std::nullopt;
+  }
+
+  /**
+   * @brief Get the data type of the command interface.
+   * @return The data type of the command interface.
+   */
+  HandleDataType get_data_type() const { return command_interface_.get_data_type(); }
+
+  /**
+   * @brief Check if the state interface can be casted to double.
+   * @return True if the state interface can be casted to double, false otherwise.
+   */
+  bool is_castable_to_double() const { return command_interface_.is_castable_to_double(); }
 
 protected:
   CommandInterface & command_interface_;
+  std::string interface_name_;
   Deleter deleter_;
+
+private:
+  struct HandleRTStatistics
+  {
+    unsigned int total_counter = 0;
+    unsigned int failed_counter = 0;
+    unsigned int timeout_counter = 0;
+  };
+  mutable HandleRTStatistics get_value_statistics_;
+  HandleRTStatistics set_value_statistics_;
 };
 
 }  // namespace hardware_interface

@@ -15,15 +15,14 @@
 #ifndef TEST_JOINT_SATURATION_LIMITER_HPP_
 #define TEST_JOINT_SATURATION_LIMITER_HPP_
 
-#include <gmock/gmock.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "gmock/gmock.h"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "pluginlib/class_loader.hpp"
-#include "rclcpp/duration.hpp"
 #include "rclcpp/node.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
@@ -34,7 +33,8 @@ const double COMMON_THRESHOLD = 0.0011;
   EXPECT_NEAR(tested_traj_point.velocities[idx], expected_vel, COMMON_THRESHOLD);                  \
   EXPECT_NEAR(tested_traj_point.accelerations[idx], expected_acc, COMMON_THRESHOLD);
 
-using JointLimiter = joint_limits::JointLimiterInterface<joint_limits::JointLimits>;
+using JointLimiter =
+  joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>;
 
 class JointSaturationLimiterTest : public ::testing::Test
 {
@@ -82,9 +82,10 @@ public:
   }
 
   JointSaturationLimiterTest()
-  : joint_limiter_type_("joint_limits/JointSaturationLimiter"),
+  : joint_limiter_type_("joint_limits/JointTrajectoryPointSaturationLimiter"),
     joint_limiter_loader_(
-      "joint_limits", "joint_limits::JointLimiterInterface<joint_limits::JointLimits>")
+      "joint_limits",
+      "joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>")
   {
   }
 

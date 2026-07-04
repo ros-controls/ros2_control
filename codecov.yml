@@ -14,8 +14,6 @@ fixes:
 comment:
   layout: "diff, flags, files"
   behavior: default
-ignore:
-  - "**/test"
 flags:
   unittests:
     paths:

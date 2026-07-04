@@ -20,6 +20,19 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
+namespace
+{
+void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
+{
+  if (expected_id != actual_id)
+  {
+    throw std::runtime_error(
+      "Internal lifecycle ID does not match the expected lifecycle ID. Expected: " +
+      std::to_string(expected_id) + ", Actual: " + std::to_string(actual_id));
+  }
+}
+}  // namespace
+
 namespace test_chainable_controller
 {
 TestChainableController::TestChainableController()
@@ -32,9 +45,10 @@ TestChainableController::TestChainableController()
 controller_interface::InterfaceConfiguration
 TestChainableController::command_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     return cmd_iface_cfg_;
   }
@@ -48,9 +62,10 @@ TestChainableController::command_interface_configuration() const
 controller_interface::InterfaceConfiguration
 TestChainableController::state_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     auto state_iface_cfg = state_iface_cfg_;
     if (imu_sensor_)
@@ -69,70 +84,103 @@ TestChainableController::state_interface_configuration() const
 }
 
 controller_interface::return_type TestChainableController::update_reference_from_subscribers(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
-  for (size_t i = 0; i < reference_interfaces_.size(); ++i)
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (time.get_clock_type() != RCL_ROS_TIME)
   {
-    RCLCPP_INFO(
-      get_node()->get_logger(),
-      "Value of reference interface '%s' before checking external input is %f",
-      (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
-      reference_interfaces_[i]);
+    throw std::runtime_error(
+      "ROS Time is required for the chainable controller to update references from subscribers.");
+  }
+  for (size_t i = 0;
+       i < ordered_exported_reference_interfaces_.size() && i < reference_interface_names_.size();
+       ++i)
+  {
+    auto ref_itf = ordered_exported_reference_interfaces_[i]->get_optional();
+    if (ref_itf.has_value())
+    {
+      RCLCPP_INFO(
+        get_node()->get_logger(),
+        "Value of reference interface '%s' before checking external input is %f",
+        (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
+        ref_itf.value());
+    }
   }
 
   auto joint_commands = rt_command_ptr_.readFromRT();
-  reference_interfaces_ = (*joint_commands)->data;
-  for (size_t i = 0; i < reference_interfaces_.size(); ++i)
+  for (size_t i = 0; i < ordered_exported_reference_interfaces_.size() &&
+                     i < reference_interface_names_.size() && i < (*joint_commands)->data.size();
+       ++i)
   {
-    RCLCPP_INFO(
-      get_node()->get_logger(),
-      "Updated value of reference interface '%s' after applying external input is %f",
-      (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
-      reference_interfaces_[i]);
+    if (ordered_exported_reference_interfaces_[i]->set_value((*joint_commands)->data[i]))
+    {
+      RCLCPP_INFO(
+        get_node()->get_logger(),
+        "Updated value of reference interface '%s' after applying external input is %f",
+        (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
+        (*joint_commands)->data[i]);
+    }
   }
 
   return controller_interface::return_type::OK;
 }
 
 controller_interface::return_type TestChainableController::update_and_write_commands(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error(
+      "ROS Time is required for the chainable controller to update and write commands.");
+  }
   ++internal_counter;
 
-  for (size_t i = 0; i < command_interfaces_.size(); ++i)
-  {
-    command_interfaces_[i].set_value(reference_interfaces_[i] - state_interfaces_[i].get_value());
-  }
-  // If there is a command interface then integrate and set it to the exported state interface data
-  for (size_t i = 0; i < exported_state_interface_names_.size() && i < command_interfaces_.size();
+  for (size_t i = 0;
+       i < command_interfaces_.size() && i < ordered_exported_reference_interfaces_.size() &&
+       i < state_interfaces_.size();
        ++i)
   {
-    state_interfaces_values_[i] = command_interfaces_[i].get_value() * CONTROLLER_DT;
+    (void)command_interfaces_[i].set_value(
+      ordered_exported_reference_interfaces_[i]->get_optional().value() -
+      state_interfaces_[i].get_optional().value());
+  }
+  // If there is a command interface then integrate and set it to the exported state interface data
+  for (size_t i = 0; i < state_interfaces_to_export_.size() && i < command_interfaces_.size(); ++i)
+  {
+    std::ignore = ordered_exported_state_interfaces_[i]->set_value(
+      command_interfaces_[i].get_optional().value() * CONTROLLER_DT);
   }
   // If there is no command interface and if there is a state interface then just forward the same
   // value as in the state interface
-  for (size_t i = 0; i < exported_state_interface_names_.size() && i < state_interfaces_.size() &&
+  for (size_t i = 0; i < state_interfaces_to_export_.size() && i < state_interfaces_.size() &&
                      command_interfaces_.empty();
        ++i)
   {
-    state_interfaces_values_[i] = state_interfaces_[i].get_value();
+    std::ignore =
+      ordered_exported_state_interfaces_[i]->set_value(state_interfaces_[i].get_optional().value());
   }
 
-  return controller_interface::return_type::OK;
+  return update_return_value;
 }
 
-CallbackReturn TestChainableController::on_init() { return CallbackReturn::SUCCESS; }
+CallbackReturn TestChainableController::on_init()
+{
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn TestChainableController::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
     "~/commands", rclcpp::SystemDefaultsQoS(),
     [this](const CmdType::SharedPtr msg)
     {
       auto joint_commands = rt_command_ptr_.readFromNonRT();
 
-      if (msg->data.size() != (*joint_commands)->data.size())
+      if (msg->data.size() == (*joint_commands)->data.size())
       {
         rt_command_ptr_.writeFromNonRT(msg);
       }
@@ -141,12 +189,14 @@ CallbackReturn TestChainableController::on_configure(
         RCLCPP_ERROR_THROTTLE(
           get_node()->get_logger(), *get_node()->get_clock(), 1000,
           "command size (%zu) does not match number of reference interfaces (%zu)",
-          (*joint_commands)->data.size(), reference_interfaces_.size());
+          (*joint_commands)->data.size(), reference_interface_names_.size());
       }
     });
 
   auto msg = std::make_shared<CmdType>();
-  msg->data.resize(reference_interfaces_.size());
+  msg->data.resize(reference_interface_names_.size());
+  RCLCPP_INFO(
+    get_node()->get_logger(), "Initialized command message with size %zu", msg->data.size());
   rt_command_ptr_.writeFromNonRT(msg);
 
   return CallbackReturn::SUCCESS;
@@ -155,45 +205,60 @@ CallbackReturn TestChainableController::on_configure(
 CallbackReturn TestChainableController::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (!is_in_chained_mode())
   {
     auto msg = rt_command_ptr_.readFromRT();
-    (*msg)->data = reference_interfaces_;
+    for (size_t i = 0; i < ordered_exported_reference_interfaces_.size(); i++)
+    {
+      RCLCPP_INFO(
+        get_node()->get_logger(),
+        "The index i : %zu and the size %zu and the message is of size : %zu", i,
+        ordered_exported_reference_interfaces_.size(), (*msg)->data.size());
+      (*msg)->data[i] = ordered_exported_reference_interfaces_[i]->get_optional().value();
+    }
   }
 
-  return CallbackReturn::SUCCESS;
+  return fail_on_activate ? CallbackReturn::ERROR : CallbackReturn::SUCCESS;
 }
 
 CallbackReturn TestChainableController::on_cleanup(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   joints_command_subscriber_.reset();
   return CallbackReturn::SUCCESS;
 }
 
-std::vector<hardware_interface::StateInterface>
-TestChainableController::on_export_state_interfaces()
+std::vector<hardware_interface::StateInterface::SharedPtr>
+TestChainableController::on_export_state_interfaces_list()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
 
-  for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
+  for (size_t i = 0; i < state_interfaces_to_export_.size(); ++i)
   {
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    auto si = std::make_shared<hardware_interface::StateInterface>(
+      get_node()->get_name(), state_interfaces_to_export_[i]);
+    (void)si->set_value(0.0);
+    state_interfaces.push_back(si);
   }
 
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface>
-TestChainableController::on_export_reference_interfaces()
+std::vector<hardware_interface::CommandInterface::SharedPtr>
+TestChainableController::on_export_reference_interfaces_list()
 {
-  std::vector<hardware_interface::CommandInterface> reference_interfaces;
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
 
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)
   {
-    reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
+    auto ci = std::make_shared<hardware_interface::CommandInterface>(
+      get_node()->get_name(), reference_interface_names_[i]);
+    (void)ci->set_value(0.0);
+    reference_interfaces.push_back(ci);
   }
 
   return reference_interfaces;
@@ -215,16 +280,12 @@ void TestChainableController::set_reference_interface_names(
   const std::vector<std::string> & reference_interface_names)
 {
   reference_interface_names_ = reference_interface_names;
-
-  reference_interfaces_.resize(reference_interface_names.size(), 0.0);
 }
 
 void TestChainableController::set_exported_state_interface_names(
   const std::vector<std::string> & state_interface_names)
 {
-  exported_state_interface_names_ = state_interface_names;
-
-  state_interfaces_values_.resize(exported_state_interface_names_.size(), 0.0);
+  state_interfaces_to_export_ = state_interface_names;
 }
 
 void TestChainableController::set_imu_sensor_name(const std::string & name)
@@ -240,7 +301,7 @@ std::vector<double> TestChainableController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value());
+    state_intr_data.push_back(interface.get_optional().value());
   }
   return state_intr_data;
 }

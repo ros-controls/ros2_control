@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_controllers
-from controller_manager.spawner import bcolors
+from controller_manager import list_controllers, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -22,7 +21,7 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 
-def print_controller_state(c, args):
+def print_controller_state(c, args, col_width_name, col_width_state, col_width_type):
     state_color = ""
     if c.state == "active":
         state_color = bcolors.OKGREEN
@@ -31,7 +30,12 @@ def print_controller_state(c, args):
     elif c.state == "unconfigured":
         state_color = bcolors.WARNING
 
-    print(f"{c.name:20s}[{c.type:20s}] {state_color}{c.state:10s}{bcolors.ENDC}")
+    print(
+        f"{state_color}{c.name:<{col_width_name}}{bcolors.ENDC} {c.type:<{col_width_type}}  {state_color}{c.state:<{col_width_state}}{bcolors.ENDC}"
+    )
+    if args.verbose:
+        print(f"\tupdate_rate: {c.update_rate} Hz")
+        print(f"\tis_async: {c.is_async}")
     if args.claimed_interfaces or args.verbose:
         print("\tclaimed interfaces:")
         for claimed_interface in c.claimed_interfaces:
@@ -49,10 +53,14 @@ def print_controller_state(c, args):
         for connection in c.chain_connections:
             for reference in connection.reference_interfaces:
                 print(f"\t\t{reference:20s}")
-    if args.reference_interfaces or args.verbose:
+    if args.exported_interfaces or args.verbose:
         print("\texported reference interfaces:")
-        for reference_interfaces in c.reference_interfaces:
-            print(f"\t\t{reference_interfaces}")
+        for reference_interface in c.reference_interfaces:
+            print(f"\t\t{reference_interface}")
+    if args.exported_interfaces or args.verbose:
+        print("\texported state interfaces:")
+        for exported_state_interface in c.exported_state_interfaces:
+            print(f"\t\t{exported_state_interface}")
 
 
 class ListControllersVerb(VerbExtension):
@@ -81,9 +89,9 @@ class ListControllersVerb(VerbExtension):
             help="List interfaces that the controllers are chained to",
         )
         parser.add_argument(
-            "--reference-interfaces",
+            "--exported-interfaces",
             action="store_true",
-            help="List controller's exported references",
+            help="List controller's exported state and reference interfaces",
         )
         parser.add_argument(
             "--verbose",
@@ -94,9 +102,19 @@ class ListControllersVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             response = list_controllers(node, args.controller_manager)
+
+            if not response.controller:
+                print("No controllers are currently loaded!")
+                return 0
+
+            # Structure data as table for nicer output
+            col_width_name = max(len(ctrl.name) for ctrl in response.controller)
+            col_width_type = max(len(ctrl.type) for ctrl in response.controller)
+            col_width_state = max(len(ctrl.state) for ctrl in response.controller)
+
             for c in response.controller:
-                print_controller_state(c, args)
+                print_controller_state(c, args, col_width_name, col_width_state, col_width_type)
 
             return 0

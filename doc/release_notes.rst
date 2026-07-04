@@ -1,113 +1,39 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/release_notes/Jazzy.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/release_notes.rst
 
-Iron to Jazzy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Release Notes: Kilted Kaiju to Lyrical Luth
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-General
-*******
-* A ``version.h`` file will be generated per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/pull/1449>`_). For example, you can include the version of the package in the logs.
-
-  .. code-block:: cpp
-
-    #include <controller_manager/version.h>
-    ...
-    RCLCPP_INFO(get_logger(), "controller_manager version: %s", CONTROLLER_MANAGER_VERSION_STR);
+This list summarizes important changes between Kilted Kaiju (previous) and Lyrical Luth (current) releases.
 
 controller_interface
 ********************
-For details see the controller_manager section.
-
-* Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/pull/1088>`_).
-* Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/pull/1141>`_)
-* A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/pull/1169>`_)
-* Export state interfaces from the chainable controller #api-breaking (`#1021 <https://github.com/ros-controls/ros2_control/pull/1021>`_)
-
-  * All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
+* The new ``MagneticFieldSensor`` semantic component provides an interface for reading data from magnetometers. (`#2627 <https://github.com/ros-controls/ros2_control/pull/2627>`__)
+* The controller_manager will now deactivate the entire controller chain if a controller in the chain fails during the update cycle. `(#2681 <https://github.com/ros-controls/ros2_control/pull/2681>`__)
+* The update rate of the controller will now be approximated to a closer achievable frequency, when its frequency is not achievable with the current controller manager update rate. (`#2828 <https://github.com/ros-controls/ros2_control/pull/2828>`__)
+* The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
+* Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
+* Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
 
 controller_manager
 ******************
-* URDF is now passed to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/pull/1088>`_)
-  This should help avoiding extra legwork in controllers to get access to the ``/robot_description``.
-* Pass controller manager update rate on the init of the controller interface (`#1141 <https://github.com/ros-controls/ros2_control/pull/1141>`_)
-* Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/pull/1184>`_)
-* Set chained controller interfaces 'available' for activated controllers (`#1098 <https://github.com/ros-controls/ros2_control/pull/1098>`_)
-
-  *  Configured chainable controller: Listed exported interfaces are unavailable and unclaimed
-  *  Active chainable controller (not in chained mode): Listed exported interfaces are available but unclaimed
-  *  Active chainable controller (in chained mode): Listed exported interfaces are available and claimed
-* Try using SCHED_FIFO on any kernel (`#1142 <https://github.com/ros-controls/ros2_control/pull/1142>`_)
-* A method to get node options to setup the controller node was added (`#1169 <https://github.com/ros-controls/ros2_control/pull/1169>`_): ``get_node_options`` can be overridden by controllers, this would make it easy for other controllers to be able to setup their own custom node options
-* CM now subscribes to ``robot_description`` topic instead of ``~/robot_description`` (`#1410 <https://github.com/ros-controls/ros2_control/pull/1410>`_).
-* Change the controller sorting with an approach similar to directed acyclic graphs (`#1384 <https://github.com/ros-controls/ros2_control/pull/1384>`_)
-* Changes from `(PR #1256) <https://github.com/ros-controls/ros2_control/pull/1256>`__
-
-  * All ``joints`` defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`, otherwise the following error is shown:
-
-      The published robot description file (URDF) seems not to be genuine. The following error was caught: <unknown_joint> not found in URDF.
-
-    This is to ensure that the URDF and the ``<ros2_control>``-tag are consistent. E.g., for configuration ports use ``gpio`` interface types instead.
-
-  * The syntax for mimic joints is changed to the `official URDF specification <https://wiki.ros.org/urdf/XML/joint>`__.
-
-    .. code-block:: xml
-
-      <joint name="right_finger_joint" type="prismatic">
-        <axis xyz="0 1 0"/>
-        <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
-        <parent link="base"/>
-        <child link="finger_right"/>
-        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-      </joint>
-      <joint name="left_finger_joint" type="prismatic">
-        <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
-        <axis xyz="0 1 0"/>
-        <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
-        <parent link="base"/>
-        <child link="finger_left"/>
-        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-      </joint>
-
-   The parameters within the ``ros2_control`` tag are not supported any more.
+* The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
+  variable to automatically disable colors in non-TTY and CI environments.
+* The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
+* A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
+* The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. (`#2895 <https://github.com/ros-controls/ros2_control/pull/2895>`__)
+* Added new ``cleanup_controller`` service to the controller manager to allow cleaning up controllers from external clients. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
+* Removed forwarding of the controller manager's ros arguments to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
+* The ``spawner`` now forwards all the parameter files parsed to the spawner node to the spawned controllers. This would support ``allow_substs`` approach. (`#3136 <https://github.com/ros-controls/ros2_control/pull/3136>`__)
 
 hardware_interface
 ******************
-* A portable version for string-to-double conversion was added: ``hardware_interface::stod`` (`#1257 <https://github.com/ros-controls/ros2_control/pull/1257>`_)
-* ``test_components`` was moved to its own package (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
-* The ``ros2_control`` tag now supports parsing of the limits from the URDF into the ``HardwareInfo`` structure. More conservative limits can be defined using the ``min`` and ``max`` attributes per interface (`#1472 <https://github.com/ros-controls/ros2_control/pull/1472>`_)
-
-  .. code:: xml
-
-    <ros2_control name="RRBotSystemMutipleGPIOs" type="system">
-      <hardware>
-        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
-        <param name="example_param_hw_start_duration_sec">2.0</param>
-        <param name="example_param_hw_stop_duration_sec">3.0</param>
-        <param name="example_param_hw_slowdown">2.0</param>
-      </hardware>
-      <joint name="joint1">
-        <command_interface name="position">
-          <param name="min">-1</param>
-          <param name="max">1</param>
-        </command_interface>
-        <command_interface name="velocity">
-          <limits enable="false"/>
-        </command_interface>
-        <state_interface name="position"/>
-      </joint>
-    </ros2_control>
-
-* Soft limits are also parsed from the URDF into the ``HardwareInfo`` structure for the defined joints (`#1488 <https://github.com/ros-controls/ros2_control/pull/1488>`_)
-* Access to logger and clock through ``get_logger`` and ``get_clock`` methods in ResourceManager and HardwareComponents ``Actuator``, ``Sensor`` and ``System`` (`#1585 <https://github.com/ros-controls/ros2_control/pull/1585>`_)
-
-joint_limits
-************
-* Add header to import limits from standard URDF definition (`#1298 <https://github.com/ros-controls/ros2_control/pull/1298>`_)
+* The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
+* Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 
 ros2controlcli
 **************
-* Spawner colours were added to ``list_controllers`` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/pull/1409>`_)
-* The ``set_hardware_component_state`` verb was added (`#1248 <https://github.com/ros-controls/ros2_control/pull/1248>`_). Use the following command to set the state of a hardware component
+* Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
 
-  .. code-block:: bash
-
-    ros2 control set_hardware_component_state <hardware_component_name> <state>
+transmission_interface
+**********************
+* The ``simple_transmission`` and ``differential_transmission`` now also support the ``force`` interface (`#2588 <https://github.com/ros-controls/ros2_control/pull/2588>`_).

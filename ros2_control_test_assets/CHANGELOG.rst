@@ -2,6 +2,168 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)
+* Controller Manager recovery from invalid URDF errors (`#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_)
+* Contributors: Sai Kishor Kothakota, VitezGabriela
+
+6.7.1 (2026-05-12)
+------------------
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich
+
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+* Add 6D robot description to ros2_control_test_assets (`#3032 <https://github.com/ros-controls/ros2_control/issues/3032>`_)
+* Unify transmission tests using shared minimal robot URDF in test assets (`#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_)
+* Contributors: Naitik
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.4.0 (2026-02-03)
+------------------
+* Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_)
+* Strip leading and trailing whitespaces while parsing components (`#2974 <https://github.com/ros-controls/ros2_control/issues/2974>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+
+6.2.0 (2025-12-10)
+------------------
+
+6.1.0 (2025-12-01)
+------------------
+
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
+5.7.0 (2025-10-03)
+------------------
+* Add detach async policy for rate critical frameworks (`#2477 <https://github.com/ros-controls/ros2_control/issues/2477>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+
+5.4.0 (2025-07-21)
+------------------
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+* Read `data_type` for all types of interfaces (`#2235 <https://github.com/ros-controls/ros2_control/issues/2235>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+
+4.29.0 (2025-05-04)
+-------------------
+* [Diagnostics] Add diagnostics of execution time and periodicity of the hardware components (`#2086 <https://github.com/ros-controls/ros2_control/issues/2086>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* Integrate joint limit enforcement into `ros2_control` framework functional with Async controllers and components  (`#2047 <https://github.com/ros-controls/ros2_control/issues/2047>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+4.27.0 (2025-03-01)
+-------------------
+* [CM] Fix the controller deactivation on the control cycles returning ERROR  (`#1756 <https://github.com/ros-controls/ros2_control/issues/1756>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+* Move test_utils module from demos repo (`#1955 <https://github.com/ros-controls/ros2_control/issues/1955>`_)
+* Contributors: Christoph Fröhlich
+
+4.22.0 (2024-12-20)
+-------------------
+* Async Hardware Components (`#1567 <https://github.com/ros-controls/ros2_control/issues/1567>`_)
+* Let sensors also export state interfaces of joints (`#1885 <https://github.com/ros-controls/ros2_control/issues/1885>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+4.21.0 (2024-12-06)
+-------------------
+* [Feature] Choose different read and write rate for the hardware components (`#1570 <https://github.com/ros-controls/ros2_control/issues/1570>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.20.0 (2024-11-08)
+-------------------
+* Add Support for SDF (`#1763 <https://github.com/ros-controls/ros2_control/issues/1763>`_)
+* Contributors: Aarav Gupta
+
+4.19.0 (2024-10-26)
+-------------------
+
+4.18.0 (2024-10-07)
+-------------------
+* Automatic Creation of Handles in HW, Adding Getters/Setters (variant support) (`#1688 <https://github.com/ros-controls/ros2_control/issues/1688>`_)
+* Contributors: Manuel Muth
+
+4.17.0 (2024-09-11)
+-------------------
+* [HWItfs] Add key-value-storage to the InterfaceInfo (`#1421 <https://github.com/ros-controls/ros2_control/issues/1421>`_)
+* Contributors: Manuel Muth
+
+4.16.1 (2024-08-24)
+-------------------
+
+4.16.0 (2024-08-22)
+-------------------
+
+4.15.0 (2024-08-05)
+-------------------
+
+4.14.0 (2024-07-23)
+-------------------
+* Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
+* Contributors: Henry Moore
+
 4.13.0 (2024-07-08)
 -------------------
 * [ControllerChaining] Export state interfaces from chainable controllers (`#1021 <https://github.com/ros-controls/ros2_control/issues/1021>`_)

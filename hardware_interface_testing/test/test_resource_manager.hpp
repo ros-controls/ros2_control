@@ -17,14 +17,13 @@
 #ifndef TEST_RESOURCE_MANAGER_HPP_
 #define TEST_RESOURCE_MANAGER_HPP_
 
-#include <gmock/gmock.h>
-
-#include <memory>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "rclcpp/node.hpp"
 
 class ResourceManagerTest : public ::testing::Test
 {
@@ -50,6 +49,7 @@ public:
   FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_and_manual_validation);
   FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
   FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
+  FRIEND_TEST(ResourceManagerTest, managing_controllers_state_interfaces);
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
   FRIEND_TEST(ResourceManagerTest, test_uninitializable_hardware_no_validation);
 
@@ -63,6 +63,11 @@ public:
     rclcpp::Node & node, const std::string & urdf, bool activate_all = false)
   : hardware_interface::ResourceManager(
       urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
+  {
+  }
+
+  explicit TestableResourceManager(const hardware_interface::ResourceManagerParams & params)
+  : hardware_interface::ResourceManager(params, true)
   {
   }
 };

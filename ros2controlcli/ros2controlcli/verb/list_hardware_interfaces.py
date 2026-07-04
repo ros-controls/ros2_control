@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_hardware_interfaces
-from controller_manager.spawner import bcolors
+from controller_manager import list_hardware_interfaces, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -26,10 +25,16 @@ class ListHardwareInterfacesVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
+        parser.add_argument(
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="List hardware interfaces and their data types",
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             hardware_interfaces = list_hardware_interfaces(node, args.controller_manager)
             command_interfaces = sorted(
                 hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name
@@ -38,26 +43,32 @@ class ListHardwareInterfacesVerb(VerbExtension):
                 hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name
             )
             print("command interfaces")
+            data_type_str = ""
             for command_interface in command_interfaces:
+                if args.verbose:
+                    data_type_str = f" [{command_interface.data_type}]"
                 if command_interface.is_available:
                     if command_interface.is_claimed:
                         print(
-                            f"\t{bcolors.OKBLUE}{command_interface.name} "
-                            f"[available] [claimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKBLUE}{command_interface.name}{data_type_str}"
+                            f" [available] [claimed]{bcolors.ENDC}"
                         )
                     else:
                         print(
-                            f"\t{bcolors.OKCYAN}{command_interface.name} "
-                            f"[available] [unclaimed]{bcolors.ENDC}"
+                            f"\t{bcolors.OKCYAN}{command_interface.name}{data_type_str}"
+                            f" [available] [unclaimed]{bcolors.ENDC}"
                         )
                 else:
                     print(
-                        f"\t{bcolors.WARNING}{command_interface.name} "
-                        f"[unavailable] [unclaimed]{bcolors.ENDC}"
+                        f"\t{bcolors.WARNING}{command_interface.name}{data_type_str}"
+                        f" [unavailable] [unclaimed]{bcolors.ENDC}"
                     )
 
             print("state interfaces")
+            data_type_str = ""
             for state_interface in state_interfaces:
-                print(f"\t{state_interface.name}")
+                if args.verbose:
+                    data_type_str = f" [{state_interface.data_type}]"
+                print(f"\t{state_interface.name}{data_type_str}")
 
             return 0

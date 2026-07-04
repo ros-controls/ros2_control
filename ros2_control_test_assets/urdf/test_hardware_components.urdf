@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="MinimalRobot">
+  <link name="world" />
+  <joint name="base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+  <link name="base_link">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="joint1" type="revolute">
+    <origin rpy="-1.57079632679 0 0" xyz="0 0 0.2"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+  </joint>
+  <link name="link1">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="joint2" type="revolute">
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
+    <parent link="link1"/>
+    <child link="link2"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+  </joint>
+  <link name="link2">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="tool_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="link2"/>
+    <child link="tool_link"/>
+  </joint>
+  <link name="tool_link" />
+
+  <ros2_control name="TestSensorComponent" type="sensor">
+    <hardware>
+      <plugin>test_hardware_components/TestForceTorqueSensor</plugin>
+    </hardware>
+    <sensor name="ft_sensor">
+      <state_interface name="fx"/>
+      <state_interface name="fy"/>
+      <state_interface name="fz"/>
+      <state_interface name="tx"/>
+      <state_interface name="ty"/>
+      <state_interface name="tz"/>
+    </sensor>
+  </ros2_control>
+
+  <ros2_control name="TestSystemComponent" type="system">
+    <hardware>
+      <plugin>test_hardware_components/TestTwoJointSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+</robot>

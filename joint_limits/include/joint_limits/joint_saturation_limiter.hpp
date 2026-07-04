@@ -12,93 +12,107 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Dr. Denis Stogl
+/// @author Dr. Denis Stogl
 
 #ifndef JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 
 #include <memory>
-#include <string>
-#include <utility>
 #include <vector>
 
+#include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"
-#include "joint_limits/joint_limits.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 
 namespace joint_limits
 {
 /**
- * Joint Saturation Limiter limits joints' position, velocity and acceleration by clamping values
- * to its minimal and maximal allowed values. Since the position, velocity and accelerations are
- * variables in physical relation, it might be that some values are limited lower then specified
+ * @brief Limit joints' position, velocity and acceleration by clamping to their allowed ranges.
+ *
+ * Since the position, velocity and accelerations are
+ * variables in physical relation, it might be that some values are limited lower than specified
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
  */
-template <typename LimitsType>
-class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
+template <typename JointLimitsStateDataType>
+class JointSaturationLimiter : public JointLimiterInterface<JointLimitsStateDataType>
 {
 public:
-  /** \brief Constructor */
-  JOINT_LIMITS_PUBLIC JointSaturationLimiter();
+  /** @brief Constructor */
+  JointSaturationLimiter();
 
-  /** \brief Destructor */
-  JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
+  /** @brief Destructor */
+  virtual ~JointSaturationLimiter();
 
-  JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
+  bool on_init() override;
 
-  JOINT_LIMITS_PUBLIC bool on_configure(
-    const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/) override
+  bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
+    prev_command_ = current_joint_states;
     return true;
   }
 
-  /** \brief Enforce joint limits to desired position, velocity and acceleration using clamping.
+  /**
+   * @brief Enforce joint limits to desired position, velocity and acceleration using clamping.
+   *
    * Class implements this method accepting following data types:
    * - trajectory_msgs::msg::JointTrajectoryPoint: limiting position, velocity and acceleration;
    *
    * Implementation of saturation approach for joints with position, velocity or acceleration limits
    * and values. First, position limits are checked to adjust desired velocity accordingly, then
    * velocity and finally acceleration.
-   * The method support partial existence of limits, e.g., missing position limits for continuous
-   * joins.
+   * The method supports partial existence of limits, e.g., missing position limits for continuous
+   * joints.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @return true if limits are enforced, otherwise false.
+   * @throws std::runtime_error if the actual position is out of bounds if commanding position
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
-    const rclcpp::Duration & dt) override;
+  bool on_enforce(
+    const JointLimitsStateDataType & current_joint_states,
+    JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
-  /** \brief Enforce joint limits to desired arbitrary physical quantity.
-   * Additional, commonly used method for enforcing limits by clamping desired input value.
-   * The limit is defined in effort limits of the `joint::limits/JointLimit` structure.
+  /**
+   * @brief Reset internal states of the limiter.
    *
-   * If `has_effort_limits` is set to false, the limits will be not enforced to a joint.
-   *
-   * \param[in,out] desired_joint_states physical quantity that should be adjusted to obey the
-   * limits. \returns true if limits are enforced, otherwise false.
+   * This method is called when the controller is stopped or when the controller is
+   * reconfigured. It should reset all internal states of the limiter.
    */
-  JOINT_LIMITS_PUBLIC bool on_enforce(std::vector<double> & desired_joint_states) override;
+  void reset_internals() override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    prev_command_ = JointLimitsStateDataType();
+  }
 
-private:
+protected:
   rclcpp::Clock::SharedPtr clock_;
+  JointLimitsStateDataType prev_command_;
+  std::mutex mutex_;
 };
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::JointSaturationLimiter() : JointLimiterInterface<LimitsType>()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::JointSaturationLimiter()
+: JointLimiterInterface<JointLimitsStateDataType>()
 {
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock(RCL_ROS_TIME));
 }
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::~JointSaturationLimiter()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::~JointSaturationLimiter()
 {
 }
+
+template <typename JointLimitsStateDataType>
+bool JointSaturationLimiter<JointLimitsStateDataType>::on_init()
+{
+  return true;
+}
+
+template <>
+bool JointSaturationLimiter<JointControlInterfacesData>::on_init();
 
 }  // namespace joint_limits
 

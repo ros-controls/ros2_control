@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
@@ -27,20 +26,21 @@ namespace test_hardware_components
 {
 class TestSingleJointActuator : public ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & actuator_info) override
+  CallbackReturn on_init(
+    const hardware_interface::HardwareComponentInterfaceParams & params) override
   {
-    if (ActuatorInterface::on_init(actuator_info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(params) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
 
     // can only control one joint
-    if (info_.joints.size() != 1)
+    if (get_hardware_info().joints.size() != 1)
     {
       return CallbackReturn::ERROR;
     }
     // can only control in position
-    const auto & command_interfaces = info_.joints[0].command_interfaces;
+    const auto & command_interfaces = get_hardware_info().joints[0].command_interfaces;
     if (command_interfaces.size() != 1)
     {
       return CallbackReturn::ERROR;
@@ -50,7 +50,7 @@ class TestSingleJointActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
     // can only give feedback state for position and velocity
-    const auto & state_interfaces = info_.joints[0].state_interfaces;
+    const auto & state_interfaces = get_hardware_info().joints[0].state_interfaces;
     if (state_interfaces.size() < 1)
     {
       return CallbackReturn::ERROR;
@@ -68,28 +68,22 @@ class TestSingleJointActuator : public ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<StateInterface> export_state_interfaces() override
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() override
   {
-    std::vector<StateInterface> state_interfaces;
-
-    const auto & joint_name = info_.joints[0].name;
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      joint_name, hardware_interface::HW_IF_VELOCITY, &velocity_state_));
-
-    return state_interfaces;
+    const auto & joint_name = get_hardware_info().joints[0].name;
+    position_state_interface_ =
+      std::make_shared<StateInterface>(joint_name, hardware_interface::HW_IF_POSITION);
+    velocity_state_interface_ =
+      std::make_shared<StateInterface>(joint_name, hardware_interface::HW_IF_VELOCITY);
+    return {position_state_interface_, velocity_state_interface_};
   }
 
-  std::vector<CommandInterface> export_command_interfaces() override
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces() override
   {
-    std::vector<CommandInterface> command_interfaces;
-
-    const auto & joint_name = info_.joints[0].name;
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      joint_name, hardware_interface::HW_IF_POSITION, &position_command_));
-
-    return command_interfaces;
+    const auto & joint_name = get_hardware_info().joints[0].name;
+    position_command_interface_ =
+      std::make_shared<CommandInterface>(joint_name, hardware_interface::HW_IF_POSITION);
+    return {position_command_interface_};
   }
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
@@ -99,15 +93,19 @@ class TestSingleJointActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    velocity_state_ = position_command_ - position_state_;
-    position_state_ = position_command_;
+    double position_state = 0.0;
+    double position_command = 0.0;
+    std::ignore = position_state_interface_->get_value(position_state, true);
+    std::ignore = position_command_interface_->get_value(position_command, true);
+    std::ignore = velocity_state_interface_->set_value(position_command - position_state, true);
+    std::ignore = position_state_interface_->set_value(position_command, true);
     return return_type::OK;
   }
 
 private:
-  double position_state_ = 0.0;
-  double velocity_state_ = 0.0;
-  double position_command_ = 0.0;
+  StateInterface::SharedPtr position_state_interface_;
+  StateInterface::SharedPtr velocity_state_interface_;
+  CommandInterface::SharedPtr position_command_interface_;
 };
 
 }  // namespace test_hardware_components

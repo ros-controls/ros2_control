@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
-#include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/parameter.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
 
@@ -46,9 +44,6 @@ class TestableTestChainableController : public test_chainable_controller::TestCh
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_activation_error_handling);
-  FRIEND_TEST(
-    TestControllerChainingWithControllerManager,
-    test_chained_controllers_activation_error_handling2);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_activation_switching_error_handling);
@@ -85,9 +80,6 @@ class TestableControllerManager : public controller_manager::ControllerManager
     test_chained_controllers_activation_error_handling);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
-    test_chained_controllers_activation_error_handling2);
-  FRIEND_TEST(
-    TestControllerChainingWithControllerManager,
     test_chained_controllers_activation_switching_error_handling);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
@@ -100,9 +92,19 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
+  {
+  }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
   {
   }
 };
@@ -115,11 +117,15 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    const std::regex velocity_pattern(R"(velocity\s*=\s*"-?[0-9]+(\.[0-9]+)?")");
+    const std::string velocity_replacement = R"(velocity="10000.0")";
+    const std::string diffbot_urdf_large_limits = std::regex_replace(
+      ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
+
+    rclcpp::NodeOptions node_options{};
     cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::diffbot_urdf, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      executor_, diffbot_urdf_large_limits, true, TEST_CM_NAME, "", node_options);
+
     run_updater_ = false;
   }
 
@@ -136,6 +142,7 @@ public:
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
     sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
     robot_localization_controller = std::make_shared<TestableTestChainableController>();
+    all_state_broadcaster = std::make_shared<test_controller::TestController>();
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
@@ -212,11 +219,17 @@ public:
       position_tracking_cmd_ifs_cfg);
     position_tracking_controller_two->set_state_interface_configuration(
       position_tracking_state_ifs_cfg);
+
+    // Use ALL state interfaces
+    all_state_broadcaster->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::ALL, {}});
+    all_state_broadcaster->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::NONE, {}});
   }
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(9u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(10u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
@@ -226,34 +239,38 @@ public:
     EXPECT_EQ(2, robot_localization_controller.use_count());
     EXPECT_EQ(2, odom_publisher_controller.use_count());
     EXPECT_EQ(2, position_tracking_controller_two.use_count());
+    EXPECT_EQ(2, all_state_broadcaster.use_count());
 
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      pid_left_wheel_controller->get_state().id());
+      pid_left_wheel_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      pid_right_wheel_controller->get_state().id());
+      pid_right_wheel_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      diff_drive_controller->get_state().id());
+      diff_drive_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      diff_drive_controller_two->get_state().id());
+      diff_drive_controller_two->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      position_tracking_controller->get_state().id());
+      position_tracking_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      sensor_fusion_controller->get_state().id());
+      sensor_fusion_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      robot_localization_controller->get_state().id());
+      robot_localization_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      odom_publisher_controller->get_state().id());
+      odom_publisher_controller->get_lifecycle_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      position_tracking_controller_two->get_state().id());
+      position_tracking_controller_two->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      all_state_broadcaster->get_lifecycle_state().id());
   }
 
   // order or controller configuration is not important therefore we can reuse the same method
@@ -266,7 +283,7 @@ public:
     // configure chainable controller and check exported interfaces
     cm_->configure_controller(PID_LEFT_WHEEL);
     EXPECT_EQ(
-      pid_left_wheel_controller->get_state().id(),
+      pid_left_wheel_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 1);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs);
@@ -279,7 +296,7 @@ public:
 
     cm_->configure_controller(PID_RIGHT_WHEEL);
     EXPECT_EQ(
-      pid_right_wheel_controller->get_state().id(),
+      pid_right_wheel_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 2);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs);
@@ -296,7 +313,8 @@ public:
       RCLCPP_ERROR_STREAM(cm_->get_logger(), x);
     }
     EXPECT_EQ(
-      diff_drive_controller->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+      diff_drive_controller->get_lifecycle_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 5);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 2);
     for (const auto & interface :
@@ -315,7 +333,7 @@ public:
 
     cm_->configure_controller(DIFF_DRIVE_CONTROLLER_TWO);
     EXPECT_EQ(
-      diff_drive_controller_two->get_state().id(),
+      diff_drive_controller_two->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 4);
@@ -335,35 +353,42 @@ public:
 
     cm_->configure_controller(POSITION_TRACKING_CONTROLLER);
     EXPECT_EQ(
-      position_tracking_controller->get_state().id(),
+      position_tracking_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 4);
 
     cm_->configure_controller(SENSOR_FUSION_CONTROLLER);
     EXPECT_EQ(
-      position_tracking_controller->get_state().id(),
+      position_tracking_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
 
     cm_->configure_controller(ROBOT_LOCALIZATION_CONTROLLER);
     EXPECT_EQ(
-      position_tracking_controller->get_state().id(),
+      position_tracking_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
 
     cm_->configure_controller(ODOM_PUBLISHER_CONTROLLER);
     EXPECT_EQ(
-      position_tracking_controller->get_state().id(),
+      position_tracking_controller->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
 
     cm_->configure_controller(POSITION_TRACKING_CONTROLLER_TWO);
     EXPECT_EQ(
-      position_tracking_controller_two->get_state().id(),
+      position_tracking_controller_two->get_lifecycle_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
+
+    cm_->configure_controller(ALL_STATE_BROADCASTER);
+    EXPECT_EQ(
+      all_state_broadcaster->get_lifecycle_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
@@ -422,8 +447,10 @@ public:
       // successful xor deactivated
       if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface))
+          << "The interface :'" << interface << "' should exist but it does not";
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface))
+          << "The interface :'" << interface << "' should be claimed but it is not claimed";
       }
       else
       {
@@ -521,21 +548,29 @@ public:
 
     // check if values are set properly in controllers
     ASSERT_EQ(
-      diff_drive_controller->reference_interfaces_[0], reference[0]);  // command from Position to
+      diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      reference[0]);  // command from Position to
     ASSERT_EQ(
-      diff_drive_controller->reference_interfaces_[1], reference[1]);  // DiffDrive is forwarded
+      diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+      reference[1]);  // DiffDrive is forwarded
 
     // Command of DiffDrive controller are references of PID controllers
     EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(diff_drive_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_REF);
-    ASSERT_EQ(diff_drive_controller->command_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_REF);
-    ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-    ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+    ASSERT_EQ(
+      diff_drive_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_REF);
+    ASSERT_EQ(
+      diff_drive_controller->command_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_REF);
+    ASSERT_EQ(
+      pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      EXP_LEFT_WHEEL_REF);
+    ASSERT_EQ(
+      pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      EXP_RIGHT_WHEEL_REF);
 
     EXP_STATE_ODOM_X = chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_STATE_ODOM_Y = chained_estimate_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(sensor_fusion_controller->state_interfaces_values_.size(), 3u);
+    ASSERT_EQ(sensor_fusion_controller->ordered_exported_state_interfaces_.size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data().size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -545,21 +580,29 @@ public:
 
     EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
     EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-    ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-    ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+    ASSERT_EQ(
+      pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+      EXP_LEFT_WHEEL_HW_STATE);
     // DiffDrive uses the same state
-    ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
     // The state doesn't change wrt to any data from the hardware calculation
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
     ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
 
     EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
     EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-    ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
     ASSERT_EQ(
-      pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+      pid_right_wheel_controller->command_interfaces_[0].get_optional().value(),
+      EXP_RIGHT_WHEEL_CMD);
+    ASSERT_EQ(
+      pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+      EXP_RIGHT_WHEEL_HW_STATE);
     // DiffDrive uses the same state
-    ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
     // The state doesn't change wrt to any data from the hardware calculation
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
     ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -583,6 +626,7 @@ public:
   static constexpr char ROBOT_LOCALIZATION_CONTROLLER[] = "robot_localization_controller";
   static constexpr char ODOM_PUBLISHER_CONTROLLER[] = "odometry_publisher_controller";
   static constexpr char POSITION_TRACKING_CONTROLLER_TWO[] = "position_tracking_controller_two";
+  static constexpr char ALL_STATE_BROADCASTER[] = "all_state_broadcaster";
 
   const std::vector<std::string> PID_LEFT_WHEEL_REFERENCE_INTERFACES = {
     "pid_left_wheel_controller/velocity"};
@@ -613,6 +657,7 @@ public:
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller_two;
+  std::shared_ptr<test_controller::TestController> all_state_broadcaster;
 
   testing::WithParamInterface<Strictness>::ParamType test_param;
 
@@ -670,6 +715,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -768,33 +816,42 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   std::vector<double> reference = {32.0, 128.0};
 
   // update 'Position Tracking' controller
-  for (auto & value : diff_drive_controller->reference_interfaces_)
+  for (auto & value : diff_drive_controller->ordered_exported_reference_interfaces_)
   {
-    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+    ASSERT_EQ(value->get_optional().value(), 0.0);  // default reference values are 0.0
   }
   position_tracking_controller->external_commands_for_testing_[0] = reference[0];
   position_tracking_controller->external_commands_for_testing_[1] = reference[1];
-  position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  const rclcpp::Time zero_time(0, 0, RCL_ROS_TIME);
+  position_tracking_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(position_tracking_controller->internal_counter, 8u);
 
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], reference[0]);  // position_controller
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], reference[1]);  // is pass-through
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    reference[0]);  // position_controller
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+    reference[1]);  // is pass-through
 
   // update 'Diff Drive' Controller
-  diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  diff_drive_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(diff_drive_controller->internal_counter, 10u);
   // default reference values are 0.0 - they should be changed now
   EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);    // 32-0
   EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);  // 128-0
-  ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-  ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_LEFT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_RIGHT_WHEEL_REF);
 
   // run the update cycles of the robot localization and odom publisher controller
-  sensor_fusion_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  sensor_fusion_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 6u);
-  robot_localization_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  robot_localization_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(robot_localization_controller->internal_counter, 4u);
-  odom_publisher_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  odom_publisher_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(odom_publisher_controller->internal_counter, 2u);
   EXP_STATE_ODOM_X =
     chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);  // 32-0 / dt
@@ -808,9 +865,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
 
   // update PID controllers that are writing to hardware
-  pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_left_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 14u);
-  pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_right_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 12u);
 
   // update hardware ('read' is  sufficient for test hardware)
@@ -819,10 +876,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
   // 32 / 2
   EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_LEFT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
   // The state doesn't change wrt to any data from the hardware calculation
   ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
@@ -831,13 +892,17 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
   // 128 / 2
   EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_right_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_RIGHT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_RIGHT_WHEEL_HW_STATE);
   ASSERT_EQ(odom_publisher_controller->internal_counter, 2u);
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 6u);
   ASSERT_EQ(robot_localization_controller->internal_counter, 4u);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
   // The state doesn't change wrt to any data from the hardware calculation
   ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -885,6 +950,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -972,17 +1040,17 @@ TEST_P(
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   // SensorFusionController continues to stay in the chained mode as it is still using the state
   // interfaces
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the robot localization controller and see that the sensor fusion controller is still
   // active but not in the chained mode
@@ -993,14 +1061,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the odometry publisher controller
   DeactivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 8u, true);
@@ -1009,15 +1080,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the sensor_fusion controller and see that the diff_drive_controller is still active
   // but not in the chained mode
@@ -1027,15 +1100,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the diff_drive_controller as all it's following controllers that uses it's
   // interfaces are deactivated
@@ -1046,12 +1121,14 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
 
   // all controllers are deactivated --> chained mode is not changed
   DeactivateAndCheckController(
@@ -1063,15 +1140,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 }
 
 TEST_P(
@@ -1107,6 +1186,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1140,18 +1222,22 @@ TEST_P(
 
   // Check if the controller activated (Should not be activated)
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
 
   ActivateController(
     SENSOR_FUSION_CONTROLLER, expected.at(test_param.strictness).return_type,
     std::future_status::ready);
   // Check if the controller activated (Should not be activated)
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
 
   // Test Case 2: Try to activate a preceding controller the same time when trying to
   // deactivate a following controller (using switch_controller function)
@@ -1176,106 +1262,18 @@ TEST_P(
   // should be deactivated (if BEST_EFFORT)
   // If STRICT, preceding controller should stay deactivated and following controller
   // should stay activated
-  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
-
-  // Check if the controllers are not in chained mode
-  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
-  ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
-}
-
-TEST_P(
-  TestControllerChainingWithControllerManager, test_chained_controllers_activation_error_handling2)
-{
-  SetupControllers();
-
-  // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
-  cm_->add_controller(
-    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    pid_left_wheel_controller, PID_LEFT_WHEEL,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    pid_right_wheel_controller, PID_RIGHT_WHEEL,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-
-  CheckIfControllersAreAddedCorrectly();
-
-  ConfigureAndCheckControllers();
-
-  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
-  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
-  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
-
-  // at beginning controllers are not in chained mode
-  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
-  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-
-  // Test Case: Trying to activate a preceding controller and one of the following controller
-  // --> return error; preceding controller are not activated,
-  // BUT following controller IS activated
-  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
-    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
-     {controller_interface::return_type::ERROR, std::future_status::ready,
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}},
-    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
-     {controller_interface::return_type::OK, std::future_status::timeout,
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}}};
-
-  // Attempt to activate preceding controllers (position tracking and diff-drive controller) and
-  // one of the following controller (pid_left_wheel_controller)
-  switch_test_controllers(
-    {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, {}, test_param.strictness,
-    expected.at(test_param.strictness).future_status,
-    expected.at(test_param.strictness).return_type);
-
-  // Preceding controller should stay deactivated and following controller
-  // should be activated (if BEST_EFFORT)
-  // If STRICT, preceding controller and following controller should stay deactivated
-  ASSERT_EQ(expected.at(test_param.strictness).state, pid_left_wheel_controller->get_state().id());
+    diff_drive_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller->get_state().id());
-
-  // Check if the controllers are not in chained mode
-  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
-  ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+    odom_publisher_controller->get_lifecycle_state().id());
 }
 
 TEST_P(
@@ -1315,6 +1313,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1342,39 +1343,47 @@ TEST_P(
   // depending controllers are active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    diff_drive_controller_two->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    diff_drive_controller_two->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller_two->get_state().id());
+    position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Deactivate position_tracking_controller and activate position_tracking_controller_two
   switch_test_controllers(
-    {POSITION_TRACKING_CONTROLLER_TWO}, {POSITION_TRACKING_CONTROLLER}, test_param.strictness,
-    std::future_status::timeout, controller_interface::return_type::OK);
+    {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, {POSITION_TRACKING_CONTROLLER},
+    test_param.strictness, std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller->get_state().id());
+    position_tracking_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller_two->get_state().id());
+    position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Now deactivate the position_tracking_controller_two and it should be in inactive state
   switch_test_controllers(
-    {}, {POSITION_TRACKING_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
-    controller_interface::return_type::OK);
+    {}, {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, test_param.strictness,
+    std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller_two->get_state().id());
+    position_tracking_controller_two->get_lifecycle_state().id());
 
   // Activate it again and deactivate it others to see if we can deactivate it in a group
   switch_test_controllers(
@@ -1382,10 +1391,10 @@ TEST_P(
     controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller->get_state().id());
+    position_tracking_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller_two->get_state().id());
+    position_tracking_controller_two->get_lifecycle_state().id());
 
   // Deactivate the first preceding controller (diff_drive_controller) and
   // activate the other preceding controller (diff_drive_controller_two)
@@ -1397,64 +1406,96 @@ TEST_P(
 
   // Following controllers should stay active
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_right_wheel_controller->get_lifecycle_state().id());
   // The original preceding controller (diff_drive_controller) should be inactive while
   // the other preceding controller should be active (diff_drive_controller_two)
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller_two->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller_two->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller_two->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller_two->get_lifecycle_state().id());
 
   // Activate all the controllers again in group and deactivate the diff_drive_controller_two
   switch_test_controllers(
     {POSITION_TRACKING_CONTROLLER_TWO, DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER,
-     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER},
+     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER, ALL_STATE_BROADCASTER},
     {DIFF_DRIVE_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
     controller_interface::return_type::OK);
+
+  // Now configure a second all state broadcaster and see if it succeeds
+
+  auto all_state_broadcaster_two = std::make_shared<test_controller::TestController>();
+
+  all_state_broadcaster_two->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::ALL, {}});
+  all_state_broadcaster_two->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::NONE, {}});
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      all_state_broadcaster_two, "all_state_broadcaster_two",
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller("all_state_broadcaster_two"));
+  }
+
   // Following controllers should stay active
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_right_wheel_controller->get_lifecycle_state().id());
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    diff_drive_controller_two->get_state().id());
+    diff_drive_controller_two->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
   // This is false, because it only uses the state interfaces and exposes state interfaces
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    position_tracking_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller_two->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller_two->get_lifecycle_state().id());
 }
 
 TEST_P(
@@ -1489,6 +1530,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1525,15 +1569,17 @@ TEST_P(
 
   // Verify preceding controller (diff_drive_controller) is inactive
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Attempt to deactivate inactive controller (diff_drive_controller)
   DeactivateController(
@@ -1552,19 +1598,23 @@ TEST_P(
   // Check to see preceding controller (diff_drive_controller) is still inactive and
   // following controllers (pid_left_wheel_controller) (pid_left_wheel_controller) are still active
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_right_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    diff_drive_controller->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Test Case 6: following controller is deactivated but preceding controller will be activated
   // --> return error; controllers stay in the same state
@@ -1578,10 +1628,15 @@ TEST_P(
   // should be deactivated (if BEST_EFFORT)
   // If STRICT, preceding controller should stay deactivated and following controller
   // should stay activated
-  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
-  EXPECT_EQ(expected.at(test_param.strictness).state, pid_left_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    expected.at(test_param.strictness).state,
+    pid_right_wheel_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    expected.at(test_param.strictness).state,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
 
   // Test Case 7: following controller deactivation but preceding controller is active
   // --> return error; controllers stay in the same state as they were
@@ -1598,11 +1653,14 @@ TEST_P(
 
   // Expect all controllers to be active
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_right_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
 
   // Attempt to deactivate following controllers
   switch_test_controllers(
@@ -1611,11 +1669,14 @@ TEST_P(
 
   // All controllers should still be active
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_right_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
 
   // Attempt to deactivate a following controller
   switch_test_controllers(
@@ -1624,47 +1685,11 @@ TEST_P(
 
   // All controllers should still be active
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-
-  // Test Case: middle preceding/following controller deactivation but the most preceding and the
-  // lowest following controllers are active
-  // --> return error; controllers stay in the same state as they were
-
-  // Activate all controllers for this test
-  ActivateController(
-    POSITION_TRACKING_CONTROLLER, controller_interface::return_type::OK,
-    std::future_status::timeout);
-
-  // Expect all controllers to be active
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
-
-  // Attempt to deactivate the middle preceding/following controller
-  switch_test_controllers(
-    {}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness, std::future_status::ready,
-    expected.at(test_param.strictness).return_type);
-
-  // All controllers should still be active
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
+    diff_drive_controller->get_lifecycle_state().id());
 }
 
 TEST_P(
@@ -1700,6 +1725,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1737,21 +1765,26 @@ TEST_P(
 
   // Verify that initially all of them are in active state
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    pid_left_wheel_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
+    pid_right_wheel_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
+    position_tracking_controller->get_lifecycle_state().id());
 
   // There is different error and timeout behavior depending on strictness
   static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
@@ -1778,16 +1811,19 @@ TEST_P(
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   // SensorFusionController continues to stay in the chained mode as it is still using the state
   // interfaces
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // DiffDrive (preceding) controller is activated --> PID controller in chained mod
   // Let's try to deactivate the diff_drive_control, it should fail as there are still other
@@ -1803,14 +1839,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Trying to deactivate the sensor fusion controller, however, it won't be deactivated as the
   // robot localization controller is still active
@@ -1823,14 +1862,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    robot_localization_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the robot localization controller and see that the sensor fusion controller is still
   // active but not in the chained mode
@@ -1841,14 +1883,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the sensor_fusion controller and this should be successful as there are no other
   // controllers using it's interfaces
@@ -1858,14 +1903,17 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the odometry publisher controller and now the diff_drive should continue active but
   // not in chained mode
@@ -1875,15 +1923,17 @@ TEST_P(
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 
   // Deactivate the diff_drive_controller as all it's following controllers that uses it's
   // interfaces are deactivated
@@ -1894,12 +1944,14 @@ TEST_P(
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_lifecycle_state().id());
 
   // all controllers are deactivated --> chained mode is not changed
   DeactivateAndCheckController(
@@ -1911,15 +1963,17 @@ TEST_P(
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    odom_publisher_controller->get_state().id());
+    sensor_fusion_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    robot_localization_controller->get_state().id());
+    odom_publisher_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_lifecycle_state().id());
 }
 
 TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_adding_in_random_order)
@@ -1953,6 +2007,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -2010,36 +2067,45 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   // update controllers
   std::vector<double> reference = {32.0, 128.0};
 
-  sensor_fusion_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  robot_localization_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  odom_publisher_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  const rclcpp::Time zero_time(0, 0, RCL_ROS_TIME);
+  sensor_fusion_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
+  robot_localization_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
+  odom_publisher_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
 
   // update 'Position Tracking' controller
-  for (auto & value : diff_drive_controller->reference_interfaces_)
+  for (auto & value : diff_drive_controller->ordered_exported_reference_interfaces_)
   {
-    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+    ASSERT_EQ(value->get_optional().value(), 0.0);  // default reference values are 0.0
   }
   position_tracking_controller->external_commands_for_testing_[0] = reference[0];
   position_tracking_controller->external_commands_for_testing_[1] = reference[1];
-  position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  position_tracking_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(position_tracking_controller->internal_counter, 8u);
 
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], reference[0]);  // position_controller
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], reference[1]);  // is pass-through
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    reference[0]);  // position_controller
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+    reference[1]);  // is pass-through
 
   // update 'Diff Drive' Controller
-  diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  diff_drive_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(diff_drive_controller->internal_counter, 10u);
   // default reference values are 0.0 - they should be changed now
   EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);    // 32-0
   EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);  // 128-0
-  ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-  ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_LEFT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_RIGHT_WHEEL_REF);
 
   // update PID controllers that are writing to hardware
-  pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_left_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 14u);
-  pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_right_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 12u);
 
   // update hardware ('read' is  sufficient for test hardware)
@@ -2048,19 +2114,27 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
   // 32 / 2
   EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_LEFT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
 
   // 128 - 0
   EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
   // 128 / 2
   EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_right_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_RIGHT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_RIGHT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
 
   // update all controllers at once and see that all have expected values --> also checks the order
   // of controller execution

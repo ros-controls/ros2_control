@@ -1,70 +1,182 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/migration/Jazzy.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/migration.rst
 
-Iron to Jazzy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Migration Guides: Kilted Kaiju to Lyrical Luth
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-controller_manager
-******************
-* Rename ``class_type`` to ``plugin_name`` (`#780 <https://github.com/ros-controls/ros2_control/pull/780>`_)
-* CM now subscribes to ``robot_description`` topic instead of ``~/robot_description`` (`#1410 <https://github.com/ros-controls/ros2_control/pull/1410>`_). As a consequence, when using multiple controller managers, you have to remap the topic within the launch file, an example for a python launch file:
+This list summarizes important changes between Kilted Kaiju (previous) and Lyrical Luth (current) releases, where changes to user code might be necessary.
+
+
+controller_interface
+********************
+
+ChainableControllerInterface
+----------------------------
+
+* The ``on_export_state_interfaces()`` method is deprecated and replaced by ``on_export_state_interfaces_list()`` (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_). The new method returns shared pointers instead of objects by value:
+
+  .. code-block:: cpp
+
+     // Old (deprecated)
+     std::vector<hardware_interface::StateInterface> on_export_state_interfaces()
+
+     // New
+     std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()
+
+  Example migration:
+
+  .. code-block:: cpp
+
+     // Old implementation
+     std::vector<hardware_interface::StateInterface>
+     MyController::on_export_state_interfaces()
+     {
+       std::vector<hardware_interface::StateInterface> state_interfaces;
+       state_interfaces.emplace_back(
+         std::string(get_node()->get_name()) + "/my_state", "position", &my_state_value_);
+       return state_interfaces;
+     }
+
+     // New implementation
+     std::vector<hardware_interface::StateInterface::SharedPtr>
+     MyController::on_export_state_interfaces_list()
+     {
+       std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
+       auto state_interface = std::make_shared<hardware_interface::StateInterface>(
+         std::string(get_node()->get_name()) + "/my_state", "position");
+       state_interface->set_value(std::numeric_limits<double>::quiet_NaN());
+       state_interfaces.push_back(state_interface);
+       return state_interfaces;
+     }
+
+* The ``on_export_reference_interfaces()`` method is deprecated and replaced by ``on_export_reference_interfaces_list()`` (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_). The new method returns shared pointers instead of objects by value:
+
+  .. code-block:: cpp
+
+     // Old (deprecated)
+     std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces()
+
+     // New
+     std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
+
+  Example migration:
+
+  .. code-block:: cpp
+
+     // Old implementation
+     std::vector<hardware_interface::CommandInterface>
+     MyController::on_export_reference_interfaces()
+     {
+       reference_interfaces_.resize(1, std::numeric_limits<double>::quiet_NaN());
+       std::vector<hardware_interface::CommandInterface> reference_interfaces;
+       reference_interfaces.emplace_back(
+         std::string(get_node()->get_name()) + "/my_ref", "velocity", &reference_interfaces_[0]);
+       return reference_interfaces;
+     }
+
+     // New implementation
+     std::vector<hardware_interface::CommandInterface::SharedPtr>
+     MyController::on_export_reference_interfaces_list()
+     {
+       std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
+       auto cmd_interface = std::make_shared<hardware_interface::CommandInterface>(
+         std::string(get_node()->get_name()) + "/my_ref", "velocity");
+       cmd_interface->set_value(std::numeric_limits<double>::quiet_NaN());
+       reference_interfaces.push_back(cmd_interface);
+       return reference_interfaces;
+     }
+
+* The exported state interfaces are now returned as ``ConstSharedPtr`` from ``export_state_interfaces()`` to ensure they are read-only for consumers (`#1767 <https://github.com/ros-controls/ros2_control/pull/1767>`_).
+
+* The internal storage variables will be removed in upcoming releases. Controllers should now use the ordered exported interface containers (``ordered_exported_state_interfaces_`` and ``ordered_exported_reference_interfaces_``) which store shared pointers instead of raw values (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_).
+
+* The controller manager's ros arguments are no longer forwarded to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
+  So, any remapping done at the controller manager level will not be visible to the controllers anymore.
+  It is recommended to use the ``--controller-ros-args`` option of the spawner to pass ros arguments to controllers.
 
   .. code-block:: python
 
-    remappings=[
-                ('/robot_description', '/custom_1/robot_description'),
-            ]
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        remappings=[("/diffbot_base_controller/cmd_vel", "/cmd_vel")],
+        output="both",
+    )
 
-* Changes from `(PR #1256) <https://github.com/ros-controls/ros2_control/pull/1256>`__
+  to
 
-  * All ``joints`` defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`, otherwise the following error is shown:
+  .. code-block:: python
 
-      The published robot description file (URDF) seems not to be genuine. The following error was caught: <unknown_joint> not found in URDF.
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+    )
+    spawner_node = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "diffbot_base_controller",
+            "--controller-ros-args",
+            "--remap",
+            "/diffbot_base_controller/cmd_vel:=/cmd_vel",
+        ],
+    )
 
-    This is to ensure that the URDF and the ``<ros2_control>``-tag are consistent. E.g., for configuration ports use ``gpio`` interface types instead.
-
-  * The syntax for mimic joints is changed to the `official URDF specification <https://wiki.ros.org/urdf/XML/joint>`__. The parameters within the ``ros2_control`` tag are not supported any more. Instead of
-
-    .. code-block:: xml
-
-      <ros2_control name="GazeboSystem" type="system">
-        <joint name="right_finger_joint">
-          <command_interface name="position"/>
-          <state_interface name="position">
-            <param name="initial_value">0.15</param>
-          </state_interface>
-          <state_interface name="velocity"/>
-          <state_interface name="effort"/>
-        </joint>
-        <joint name="left_finger_joint">
-          <param name="mimic">right_finger_joint</param>
-          <param name="multiplier">1</param>
-          <command_interface name="position"/>
-          <state_interface name="position"/>
-          <state_interface name="velocity"/>
-          <state_interface name="effort"/>
-        </joint>
-      </ros2_control>
-
-    define your mimic joints directly in the joint definitions:
-
-    .. code-block:: xml
-
-      <joint name="right_finger_joint" type="prismatic">
-        <axis xyz="0 1 0"/>
-        <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
-        <parent link="base"/>
-        <child link="finger_right"/>
-        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-      </joint>
-      <joint name="left_finger_joint" type="prismatic">
-        <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
-        <axis xyz="0 1 0"/>
-        <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
-        <parent link="base"/>
-        <child link="finger_left"/>
-        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-      </joint>
+controller_manager
+******************
 
 hardware_interface
 ******************
-* ``test_components`` was moved to its own package. Update the dependencies if you are using them. (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
+
+* The signature for the ``on_init`` method in all
+  ``hardware_interface::*Interface`` classes has changed (`#2323
+  <https://github.com/ros-controls/ros2_control/pull/2323>`_,
+  `#2589 <https://github.com/ros-controls/ros2_control/pull/2589>`__) from
+
+  .. code-block:: cpp
+
+     CallbackReturn on_init(const hardware_interface::HardwareInfo& info)
+
+  to
+
+  .. code-block:: cpp
+
+     CallbackReturn on_init(const HardwareComponentInterfaceParams& params)
+
+  The ``HardwareInfo`` object can be accessed from the ``HardwareComponentInterfaceParams`` object using
+  ``params.hardware_info``. See :ref:`writing_new_hardware_component` for advanced usage of the
+  ``HardwareComponentInterfaceParams`` object.
+
+* The signature for the ``init()`` method in all
+  ``hardware_interface::*Interface`` classes has changed (`#2344
+  <https://github.com/ros-controls/ros2_control/pull/2344>`_,
+  `#2589 <https://github.com/ros-controls/ros2_control/pull/2589>`__) from
+
+
+  .. code-block:: cpp
+
+     CallbackReturn init(const HardwareInfo & hardware_info, rclcpp::Logger logger, rclcpp::Clock::SharedPtr clock)
+
+  to
+
+  .. code-block:: cpp
+
+     CallbackReturn init(const hardware_interface::HardwareComponentParams & params)
+
+
+* The ``initialize`` methods of all hardware components (such as ``Actuator``, ``Sensor``, etc.)
+  have been changed from passing a ``const HardwareInfo &`` to passing a ``const
+  HardwareComponentParams &`` (`#2323 <https://github.com/ros-controls/ros2_control/pull/2323>`_,
+  `#2589 <https://github.com/ros-controls/ros2_control/pull/2589>`__).
+
+* The ``get_value`` of LoanedStateInterface and LoanedCommandInterface is now accessed using ``get_optional`` method. The value will be returned as an ``std::optional<T>``. (`#2061 <https://github.com/ros-controls/ros2_control/pull/2061>`_).
+
+  This change was made to better handle cases where the interface value may not be accessible due to a concurrent access from other threads in the system.
+
+* The ``double get_value()`` of standard StateInterface and CommandInterface is now accessed using  ``get_optional`` or ``bool get_value(T & value, bool wait_for_lock)`` method. The value will be returned as an ``std::optional<T>`` when using ``get_optional`` (`#2831 <https://github.com/ros-controls/ros2_control/pull/2831>`_).
+
+  Likewise, the ``set_value`` method has been updated to ``bool set_value(const T & value, bool wait_for_lock)`` and return value is to indicate success or failure of the operation (`#2831 <https://github.com/ros-controls/ros2_control/pull/2831>`_).
+
+  You can use the return values of these methods to handle cases where the interface value may not be accessible due to a concurrent access from other threads in the system. You can set the ``wait_for_lock`` parameter to ``true`` to block until the lock is acquired, however, this is not real-time safe and should be used with caution in real-time contexts.

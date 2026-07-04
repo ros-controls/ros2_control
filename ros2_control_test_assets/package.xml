@@ -2,14 +2,17 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros2_control_test_assets</name>
-  <version>4.13.0</version>
-  <description>The package provides shared test resources for ros2_control stack
-  </description>
+  <version>6.8.0</version>
+  <description>Shared test resources for ros2_control stack</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <maintainer email="sai.kishor@pal-robotics.com">Sai Kishor Kothakota</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

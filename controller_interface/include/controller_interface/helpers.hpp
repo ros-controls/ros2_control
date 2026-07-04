@@ -15,33 +15,51 @@
 #ifndef CONTROLLER_INTERFACE__HELPERS_HPP_
 #define CONTROLLER_INTERFACE__HELPERS_HPP_
 
+#include <algorithm>
 #include <functional>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
+// Add hardware interface helpers here, so all inherited controllers can use them
+#include "hardware_interface/helpers.hpp"
+
 namespace controller_interface
 {
-/// Reorder interfaces with references according to joint names or full interface names.
 /**
+ * @brief Reorder interfaces with references according to joint names or full interface names.
+ *
  * Method to reorder and check if all expected interfaces are provided for the joint.
  * Fill `ordered_interfaces` with references from `unordered_interfaces` in the same order as in
  * `ordered_names`.
  *
- * \param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
- * \param[in] ordered_names vector with ordered names to order \p unordered_interfaces.
+ * @param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
+ * @param[in] ordered_names vector with ordered names to order @p unordered_interfaces.
  *  The valued inputs are list of joint names or interface full names.
- *  If joint names are used for ordering, \p interface_type specifies valid interface.
- *  If full interface names are used for ordering, \p interface_type should be empty string ("").
- * \param[in] interface_type used for ordering interfaces with respect to joint names.
- * \param[out] ordered_interfaces vector with ordered interfaces.
- * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
+ *  If joint names are used for ordering, @p interface_type specifies valid interface.
+ *  If full interface names are used for ordering, @p interface_type should be empty string ("").
+ * @param[in] interface_type used for ordering interfaces with respect to joint names.
+ * @param[out] ordered_interfaces vector with ordered interfaces. Has to have the same capacity as
+ * @p ordered_names size. Throws otherwise.
+ * @throws std::range_error if the capacity of ordered_interfaces is less than the size of
+ * ordered_names.
+ * @return true if all interfaces or joints in @p ordered_names are found, otherwise false.
  */
 template <typename T>
 bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,
   const std::string & interface_type, std::vector<std::reference_wrapper<T>> & ordered_interfaces)
 {
-  ordered_interfaces.reserve(ordered_names.size());
+  if (ordered_interfaces.capacity() < ordered_names.size())
+  {
+    throw std::range_error(
+      "Capacity of ordered_interfaces (" + std::to_string(ordered_interfaces.capacity()) +
+      ") has to be equal or higher as size of ordered_names (" +
+      std::to_string(ordered_names.size()) +
+      ") for realtime reasons. Please reserve sufficient space in the on_configure method to avoid "
+      "allocating memory in real-time loop.");
+  }
   for (const auto & name : ordered_names)
   {
     for (auto & interface : unordered_interfaces)

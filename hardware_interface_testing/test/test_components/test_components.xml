@@ -5,6 +5,12 @@
       Test Actuator
     </description>
   </class>
+  <class name="test_actuator_exclusive_interfaces" type="TestActuatorExclusiveInterfaces" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Actuator
+    </description>
+  </class>
+
 
   <class name="test_sensor" type="TestSensor" base_class_type="hardware_interface::SensorInterface">
     <description>
@@ -33,6 +39,12 @@
   <class name="test_uninitializable_system" type="TestUninitializableSystem" base_class_type="hardware_interface::SystemInterface">
     <description>
       Test Uninitializable System
+    </description>
+  </class>
+
+  <class name="test_actuator_exclusive_interfaces" type="TestActuatorExclusiveInterfaces" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Actuator with Exclusive Interfaces
     </description>
   </class>
 </library>

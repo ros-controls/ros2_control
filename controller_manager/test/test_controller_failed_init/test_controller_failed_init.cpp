@@ -14,11 +14,6 @@
 
 #include "test_controller_failed_init.hpp"
 
-#include <memory>
-#include <string>
-
-#include "lifecycle_msgs/msg/transition.hpp"
-
 namespace test_controller_failed_init
 {
 TestControllerFailedInit::TestControllerFailedInit() : controller_interface::ControllerInterface()

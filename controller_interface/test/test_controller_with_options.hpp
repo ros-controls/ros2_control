@@ -16,11 +16,9 @@
 #define TEST_CONTROLLER_WITH_OPTIONS_HPP_
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include "controller_interface/controller_interface.hpp"
-#include "hardware_interface/types/lifecycle_state_names.hpp"
 
 namespace controller_with_options
 {

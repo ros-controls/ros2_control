@@ -1,0 +1,37 @@
+name: Kilted Downstream Build
+# description: 'Build & test downstream packages from source.'
+# author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/kilted-semi-binary-downstream-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros_controls.kilted.repos'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-downstream:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    with:
+      ros_distro: kilted
+      ros_repo: testing
+      ref_for_scheduled_build: kilted
+      upstream_workspace: ros2_control.kilted.repos
+      # we don't test target_workspace, we just build it
+      not_test_build: true
+      # we test the downstream packages, which are part of our organization
+      downstream_workspace: ros_controls.kilted.repos
+      not_test_downstream: false

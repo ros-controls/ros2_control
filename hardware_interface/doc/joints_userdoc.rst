@@ -85,7 +85,6 @@ Mimic joints defined in the URDF are parsed from the resource manager and stored
 From the officially released packages, the following packages are already using this information:
 
 * :ref:`mock_components (generic system) <mock_components_userdoc>`
-* :ref:`gazebo_ros2_control <gazebo_ros2_control>`
 * :ref:`gz_ros2_control <gz_ros2_control>`
 
 As the URDF specifies only the kinematics, the mimic tag has to be independent of the hardware interface type used in ros2_control. This means that we interpret this info in the following way:

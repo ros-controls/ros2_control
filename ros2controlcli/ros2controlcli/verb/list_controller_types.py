@@ -29,7 +29,7 @@ class ListControllerTypesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             response = list_controller_types(node, args.controller_manager)
             types_and_classes = zip(response.types, response.base_classes)
             for c in types_and_classes:

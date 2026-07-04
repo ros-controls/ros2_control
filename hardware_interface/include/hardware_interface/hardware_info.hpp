@@ -15,8 +15,11 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <fmt/compile.h>
+
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
@@ -35,15 +38,19 @@ struct InterfaceInfo
    */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
-  std::string min;
+  std::string min = "";
   /// (Optional) Maximal allowed values of the interface.
-  std::string max;
+  std::string max = "";
   /// (Optional) Initial value of the interface.
-  std::string initial_value;
-  /// (Optional) The datatype of the interface, e.g. "bool", "int". Used by GPIOs.
-  std::string data_type;
-  /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
+  std::string initial_value = "";
+  /// (Optional) The datatype of the interface, e.g. "bool", "int".
+  std::string data_type = "double";
+  /// (Optional) If the handle is an array, the size of the array.
   int size;
+  /// (Optional) Key-value pairs of command/stateInterface parameters. This is
+  /// useful for drivers that operate on protocols like modbus, where each
+  /// interface needs own address(register), datatype, etc.
+  std::unordered_map<std::string, std::string> parameters;
   /// (Optional) enable or disable the limits for the command interfaces
   bool enable_limits;
 };
@@ -79,6 +86,9 @@ struct ComponentInfo
   ///  Hold the value of the mimic attribute if given, NOT_SET otherwise
   MimicAttribute is_mimic = MimicAttribute::NOT_SET;
 
+  /// Whether limits are enabled for this component (set at joint level with <limits enable="..."/>)
+  bool enable_limits = true;
+
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints and GPIOs.
@@ -102,6 +112,7 @@ struct JointInfo
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given actuator loaded from URDF for a transmission
@@ -113,6 +124,7 @@ struct ActuatorInfo
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
+  bool read_only = false;
 };
 
 /// Contains semantic info about a given transmission loaded from URDF
@@ -126,7 +138,236 @@ struct TransmissionInfo
   std::unordered_map<std::string, std::string> parameters;
 };
 
+/**
+ * Hardware handles supported types
+ */
+
+using HANDLE_DATATYPE = std::variant<
+  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
+class HandleDataType
+{
+public:
+  enum Value : int8_t
+  {
+    UNKNOWN = -1,
+    DOUBLE,
+    FLOAT32,
+    BOOL,
+    UINT8,
+    INT8,
+    UINT16,
+    INT16,
+    UINT32,
+    INT32,
+  };
+
+  HandleDataType() = default;
+  constexpr HandleDataType(Value value) : value_(value) {}  // NOLINT(runtime/explicit)
+  explicit HandleDataType(const std::string & data_type)
+  {
+    if (data_type == "double")
+    {
+      value_ = DOUBLE;
+    }
+    else if (data_type == "bool")
+    {
+      value_ = BOOL;
+    }
+    else if (data_type == "float32")
+    {
+      value_ = FLOAT32;
+    }
+    else if (data_type == "uint8")
+    {
+      value_ = UINT8;
+    }
+    else if (data_type == "int8")
+    {
+      value_ = INT8;
+    }
+    else if (data_type == "uint16")
+    {
+      value_ = UINT16;
+    }
+    else if (data_type == "int16")
+    {
+      value_ = INT16;
+    }
+    else if (data_type == "uint32")
+    {
+      value_ = UINT32;
+    }
+    else if (data_type == "int32")
+    {
+      value_ = INT32;
+    }
+    else
+    {
+      value_ = UNKNOWN;
+    }
+  }
+
+  operator Value() const { return value_; }
+
+  explicit operator bool() const = delete;
+
+  constexpr bool operator==(HandleDataType other) const { return value_ == other.value_; }
+  constexpr bool operator!=(HandleDataType other) const { return value_ != other.value_; }
+
+  constexpr bool operator==(Value other) const { return value_ == other; }
+  constexpr bool operator!=(Value other) const { return value_ != other; }
+
+  std::string to_string() const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return "double";
+      case BOOL:
+        return "bool";
+      case FLOAT32:
+        return "float32";
+      case UINT8:
+        return "uint8";
+      case INT8:
+        return "int8";
+      case UINT16:
+        return "uint16";
+      case INT16:
+        return "int16";
+      case UINT32:
+        return "uint32";
+      case INT32:
+        return "int32";
+      default:
+        return "unknown";
+    }
+  }
+
+  /**
+   * @brief Check if the HandleDataType can be casted to double.
+   * @return True if the HandleDataType can be casted to double, false otherwise.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  bool is_castable_to_double() const
+  {
+    switch (value_)
+    {
+      case DOUBLE:   // fallthrough
+      case FLOAT32:  // fallthrough
+      case BOOL:     // fallthrough
+      case UINT8:    // fallthrough
+      case INT8:     // fallthrough
+      case UINT16:   // fallthrough
+      case INT16:    // fallthrough
+      case UINT32:   // fallthrough
+      case INT32:
+        return true;
+      default:
+        return false;  // unknown type cannot be converted
+    }
+  }
+
+  /**
+   * @brief Cast the given value to double.
+   * @param value The value to be casted.
+   * @return The casted value.
+   * @throw std::runtime_error if the HandleDataType cannot be casted to double.
+   * @note Once we add support for more data types, this function should be updated
+   */
+  double cast_to_double(const HANDLE_DATATYPE & value) const
+  {
+    switch (value_)
+    {
+      case DOUBLE:
+        return std::get<double>(value);
+      case FLOAT32:
+        return static_cast<double>(std::get<float>(value));
+      case BOOL:
+        return static_cast<double>(std::get<bool>(value));
+      case UINT8:
+        return static_cast<double>(std::get<uint8_t>(value));
+      case INT8:
+        return static_cast<double>(std::get<int8_t>(value));
+      case UINT16:
+        return static_cast<double>(std::get<uint16_t>(value));
+      case INT16:
+        return static_cast<double>(std::get<int16_t>(value));
+      case UINT32:
+        return static_cast<double>(std::get<uint32_t>(value));
+      case INT32:
+        return static_cast<double>(std::get<int32_t>(value));
+      default:
+        throw std::runtime_error(
+          fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));
+    }
+  }
+
+  HandleDataType from_string(const std::string & data_type) { return HandleDataType(data_type); }
+
+private:
+  Value value_ = UNKNOWN;
+};
+
+/**
+ * This structure stores information about an interface for a specific hardware which should be
+ * instantiated internally.
+ */
+struct InterfaceDescription
+{
+  InterfaceDescription(const std::string & prefix_name_in, const InterfaceInfo & interface_info_in)
+  : prefix_name(prefix_name_in),
+    interface_info(interface_info_in),
+    interface_name(prefix_name + "/" + interface_info.name)
+  {
+  }
+
+  /**
+   * Name of the interface defined by the user.
+   */
+  std::string prefix_name;
+
+  /**
+   * Information about the Interface type (position, velocity,...) as well as limits and so on.
+   */
+  InterfaceInfo interface_info;
+
+  /**
+   * Name of the interface
+   */
+  std::string interface_name;
+
+  const std::string & get_prefix_name() const { return prefix_name; }
+
+  const std::string & get_interface_name() const { return interface_info.name; }
+
+  const std::string & get_name() const { return interface_name; }
+
+  const std::string & get_data_type_string() const { return interface_info.data_type; }
+
+  HandleDataType get_data_type() const { return HandleDataType(interface_info.data_type); }
+};
+
+struct HardwareAsyncParams
+{
+  /// Thread priority for the async worker thread
+  int thread_priority = 50;
+  /// Scheduling policy for the async worker thread
+  std::string scheduling_policy = "synchronized";
+  /// CPU affinity cores for the async worker thread
+  std::vector<int> cpu_affinity_cores = {};
+  /// Whether to print warnings when the async thread doesn't meet its deadline
+  bool print_warnings = true;
+};
+
 /// This structure stores information about hardware defined in a robot's URDF.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 struct HardwareInfo
 {
   /// Name of the hardware.
@@ -135,8 +376,14 @@ struct HardwareInfo
   std::string type;
   ///  Hardware group to which the hardware belongs.
   std::string group;
+  /// Component's read and write rates in Hz.
+  unsigned int rw_rate;
   /// Component is async
   bool is_async;
+  /// Async thread priority
+  [[deprecated("Use async_params instead.")]] int thread_priority;
+  /// Async Parameters
+  HardwareAsyncParams async_params;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
   std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.
@@ -181,6 +428,11 @@ struct HardwareInfo
    */
   std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_

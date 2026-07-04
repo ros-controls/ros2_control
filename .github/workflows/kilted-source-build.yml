@@ -1,0 +1,32 @@
+name: Kilted Source Build
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - kilted
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/kilted-source-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.kilted.repos'
+  pull_request:
+    branches:
+      - kilted
+    paths:
+      - .github/workflows/kilted-source-build.yml
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 3 * * MON-FRI'
+
+jobs:
+  source:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
+    with:
+      ros_distro: kilted
+      ref: kilted
+      container: ubuntu:24.04

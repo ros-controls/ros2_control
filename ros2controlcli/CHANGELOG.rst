@@ -2,6 +2,159 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+
+6.7.1 (2026-05-12)
+------------------
+
+6.7.0 (2026-04-23)
+------------------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_)
+* Contributors: Shlok Mehndiratta
+
+6.6.0 (2026-04-17)
+------------------
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+
+6.4.0 (2026-02-03)
+------------------
+
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+* Add `unconfigure` state to `set_controller_state` verb (`#2913 <https://github.com/ros-controls/ros2_control/issues/2913>`_)
+* Add `cleanup_controller` lifecycle transition (`#2414 <https://github.com/ros-controls/ros2_control/issues/2414>`_)
+* Contributors: Soham Patil
+
+6.2.0 (2025-12-10)
+------------------
+
+6.1.0 (2025-12-01)
+------------------
+
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+* Added `view_hardware_status` ros2cli verb (`#2495 <https://github.com/ros-controls/ros2_control/issues/2495>`_)
+* Contributors: Soham Patil
+
+5.7.0 (2025-10-03)
+------------------
+
+5.6.0 (2025-08-26)
+------------------
+
+5.5.0 (2025-07-31)
+------------------
+
+5.4.0 (2025-07-21)
+------------------
+* Fix setuptools deprecations (`#2395 <https://github.com/ros-controls/ros2_control/issues/2395>`_)
+* Contributors: mosfet80
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+* Cleanup deprecations in `ros_control`  (`#2258 <https://github.com/ros-controls/ros2_control/issues/2258>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+* [CM] Set default strictness of switch_controllers using parameters (`#2168 <https://github.com/ros-controls/ros2_control/issues/2168>`_)
+* Add `data_type` field to the HardwareInterfaces message (`#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.29.0 (2025-05-04)
+-------------------
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* [CLI] print update_rate and is_async on verbose (`#2126 <https://github.com/ros-controls/ros2_control/issues/2126>`_)
+* [CM] Extend the list controller and hardware components messages (`#2102 <https://github.com/ros-controls/ros2_control/issues/2102>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* [CM] Add message field to the `switch_controller` service (`#2088 <https://github.com/ros-controls/ros2_control/issues/2088>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
+4.25.0 (2025-01-29)
+-------------------
+
+4.24.0 (2025-01-13)
+-------------------
+
+4.23.0 (2024-12-29)
+-------------------
+
+4.22.0 (2024-12-20)
+-------------------
+
+4.21.0 (2024-12-06)
+-------------------
+* [Spawner] Accept parsing multiple `--param-file` arguments to spawner  (`#1805 <https://github.com/ros-controls/ros2_control/issues/1805>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.20.0 (2024-11-08)
+-------------------
+
+4.19.0 (2024-10-26)
+-------------------
+* [ros2controlcli] Fix the missing exported state interface printing (`#1800 <https://github.com/ros-controls/ros2_control/issues/1800>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.18.0 (2024-10-07)
+-------------------
+* [ros2controlcli] add params file parsing to load_controller verb and add namespacing support  (`#1703 <https://github.com/ros-controls/ros2_control/issues/1703>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.17.0 (2024-09-11)
+-------------------
+* [ros2controlcli] fix list_controllers when no controllers are loaded (`#1721 <https://github.com/ros-controls/ros2_control/issues/1721>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.16.1 (2024-08-24)
+-------------------
+
+4.16.0 (2024-08-22)
+-------------------
+* Refactor spawner to be able to reuse code for ros2controlcli (`#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_)
+* Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
+4.15.0 (2024-08-05)
+-------------------
+
+4.14.0 (2024-07-23)
+-------------------
+
 4.13.0 (2024-07-08)
 -------------------
 * Remove ament linters (`#1601 <https://github.com/ros-controls/ros2_control/issues/1601>`_)

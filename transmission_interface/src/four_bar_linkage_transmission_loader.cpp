@@ -16,12 +16,9 @@
 
 #include <memory>
 
-#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include "rclcpp/logging.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "transmission_interface/four_bar_linkage_transmission.hpp"
 
 namespace transmission_interface
