@@ -44,7 +44,7 @@ public:
   /**
    * @brief Control step. Updates command interfaces from reference inputs and current states.
    * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
-   * 
+   *
    * @param[in] time The time at the start of this control loop iteration
    * @param[in] period The measured time taken by the last control loop iteration
    * @returns return_type::OK if update is successfully, otherwise return_type::ERROR.
@@ -134,7 +134,7 @@ protected:
   /**
    * @brief Update reference from input topics when not in chained mode.
    * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
-   * 
+   *
    * Each chainable controller implements this method to update reference from subscribers when not
    * in chained mode.
    *
@@ -146,7 +146,7 @@ protected:
   /**
    * @brief Execute calculations of the controller and update command interfaces.
    * @note This method needs to be real-time safe and thread-safe to be called in the control loop.
-   * 
+   *
    * Update method for chainable controllers.
    * In this method is valid to assume that \reference_interfaces_ hold the values for calculation
    * of the commands in the current control step.
