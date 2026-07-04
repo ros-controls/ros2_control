@@ -523,7 +523,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       double stopping_distance =
         std::fabs((-desired_vel_[index] * desired_vel_[index]) / (2 * stopping_deccel));
       // compute stopping duration at stopping_deccel
-      double stopping_duration = std::fabs((desired_vel_[index]) / (stopping_deccel));
+      const double stopping_duration = std::fabs((desired_vel_[index]) / (stopping_deccel));
 
       // Check that joint limits are beyond stopping_distance and desired_velocity is towards
       // that limit
