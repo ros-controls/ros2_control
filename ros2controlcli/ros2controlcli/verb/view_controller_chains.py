@@ -156,6 +156,9 @@ def show_graph(
     make_state_node(s, state_interfaces)
     make_command_node(s, command_interfaces)
 
+    # Set of (consumer_ctrl, short_iface) pairs whose state comes from another controller
+    exp_state_consumers = {(consumer_ctrl, iface) for _, consumer_ctrl, iface in exp_state_edges}
+
     for source_ctrl, consumer_ctrl, iface in exp_state_edges:
         s.edge(
             "{}:{}".format(source_ctrl, "controller_start_exp_state_" + iface),
@@ -171,10 +174,12 @@ def show_graph(
                 "{}:{}".format(target_ctrl, "controller_end_" + iface),
             )
         for state_connection in state_connections[controller_name]:
-            s.edge(
-                "{}:{}".format("state_interfaces", "state_start_" + state_connection),
-                "{}:{}".format(controller_name, "state_end_" + state_connection),
-            )
+            # Only draw hw edge if this interface is not sourced from another controller's exp state
+            if (controller_name, state_connection) not in exp_state_consumers:
+                s.edge(
+                    "{}:{}".format("state_interfaces", "state_start_" + state_connection),
+                    "{}:{}".format(controller_name, "state_end_" + state_connection),
+                )
         for command_connection in command_connections[controller_name]:
             s.edge(
                 "{}:{}".format(controller_name, "command_start_" + command_connection),
@@ -234,12 +239,15 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
                 hw_cmds.add(cmd_iface)
         command_connections[controller.name] = hw_cmds
 
-        # Classify required_state_interfaces as hw or consumed exported state
-        hw_states = set()
+        # All required state interfaces need input ports; strip controller prefix for exp-state ones
+        ctrl_states = set()
         for state_iface in controller.required_state_interfaces:
-            if state_iface not in exported_state_owners:
-                hw_states.add(state_iface)
-        state_connections[controller.name] = hw_states
+            if state_iface in exported_state_owners:
+                _, short_iface = exported_state_owners[state_iface]
+                ctrl_states.add(short_iface)
+            else:
+                ctrl_states.add(state_iface)
+        state_connections[controller.name] = ctrl_states
 
     # Build edges for (exp state) → (state): controller exports state that another controller reads
     exp_state_edges = []
