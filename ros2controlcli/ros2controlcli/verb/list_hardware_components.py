@@ -31,7 +31,7 @@ class ListHardwareComponentsVerb(VerbExtension):
             "--verbose",
             "-v",
             action="store_true",
-            help="List hardware components with command and state interfaces",
+            help="List hardware components with command and state interfaces along with their data types",
         )
         add_controller_mgr_parsers(parser)
 
@@ -60,8 +60,11 @@ class ListHardwareComponentsVerb(VerbExtension):
                 print(
                     f"\tplugin name: {plugin_name}\n"
                     f"\tstate: id={component.state.id} label={activity_color}{component.state.label}{bcolors.ENDC}\n"
+                    f"\tread/write rate: {component.rw_rate} Hz\n"
+                    f"\tis_async: {component.is_async}\n"
                     f"\tcommand interfaces"
                 )
+                data_type_str = ""
                 for cmd_interface in component.command_interfaces:
                     if cmd_interface.is_available:
                         available_str = f"{bcolors.OKBLUE}[available]{bcolors.ENDC}"
@@ -73,7 +76,10 @@ class ListHardwareComponentsVerb(VerbExtension):
                     else:
                         claimed_str = "[unclaimed]"
 
-                    print(f"\t\t{cmd_interface.name} {available_str} {claimed_str}")
+                    if args.verbose:
+                        data_type_str = f" [{cmd_interface.data_type}]"
+
+                    print(f"\t\t{cmd_interface.name}{data_type_str} {available_str} {claimed_str}")
 
                 if args.verbose:
                     print("\tstate interfaces")
@@ -83,6 +89,8 @@ class ListHardwareComponentsVerb(VerbExtension):
                         else:
                             available_str = f"{bcolors.WARNING}[unavailable]{bcolors.ENDC}"
 
-                        print(f"\t\t{state_interface.name} {available_str}")
+                        print(
+                            f"\t\t{state_interface.name} [{state_interface.data_type}] {available_str}"
+                        )
 
         return 0

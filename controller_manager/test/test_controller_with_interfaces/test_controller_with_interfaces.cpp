@@ -28,8 +28,12 @@ TestControllerWithInterfaces::on_init()
 }
 
 controller_interface::return_type TestControllerWithInterfaces::update(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
 {
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error("ROS Time is required for the controller to operate.");
+  }
   return controller_interface::return_type::OK;
 }
 

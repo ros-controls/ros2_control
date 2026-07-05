@@ -122,9 +122,10 @@ const auto valid_urdf_ros2_control_system_multi_interface_and_custom_interface_p
         <param name="register_size">4</param>
       </state_interface>
       <state_interface name="effort"/>
-      <param name="modbus_server_ip">1.1.1.1</param>
-      <param name="modbus_server_port">1234</param>
-      <param name="use_persistent_connection">true</param>
+      <param name="modbus_server_ip"> 1.1.1.1</param>
+      <param name="modbus_server_port">1234
+      </param>
+      <param name="use_persistent_connection"> true</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position">
@@ -135,12 +136,12 @@ const auto valid_urdf_ros2_control_system_multi_interface_and_custom_interface_p
       </command_interface>
       <state_interface name="position">
         <param name="register">21</param>
-        <param name="data_type">int32_t</param>
+        <param name="data_type">int32_t </param>
       </state_interface>
       <state_interface name="velocity"/>
       <state_interface name="effort">
         <param name="register">21</param>
-        <param name="data_type">int32_t</param>
+        <param name="data_type"> int32_t </param>
       </state_interface>
       <param name="modbus_server_ip">192.168.178.123</param>
       <param name="modbus_server_port">4321</param>
@@ -351,13 +352,13 @@ const auto valid_urdf_ros2_control_system_multi_joints_transmission =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/DifferentialTransmission</plugin>
-      <actuator name="joint1_motor" role="actuator1"/>
+      <actuator name="joint1_motor" role="actuator1" read_only="true"/>
       <actuator name="joint2_motor" role="actuator2"/>
       <joint name="joint1" role="joint1">
         <mechanical_reduction>10</mechanical_reduction>
         <offset>0.5</offset>
       </joint>
-      <joint name="joint2" role="joint2">
+      <joint name="joint2" role="joint2" read_only="false">
         <mechanical_reduction>50</mechanical_reduction>
       </joint>
     </transmission>
@@ -732,6 +733,32 @@ const auto valid_urdf_ros2_control_parameter_empty =
       <command_interface name="position">
       </command_interface>
     </joint>
+  </ros2_control>
+)";
+
+const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type_on_joint_sensor_and_gpio =
+  R"(
+  <ros2_control name="RRBotSystemWithSizeAndDataType" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="status" data_type="bool"/>
+      <command_interface name="enable" data_type="bool"/>
+    </joint>
+    <sensor name="trigger">
+      <command_interface name="safety" data_type="bool"/>
+      <state_interface name="safety" data_type="bool"/>
+    </sensor>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
+    </gpio>
   </ros2_control>
 )";
 

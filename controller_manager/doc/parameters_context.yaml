@@ -15,7 +15,13 @@ hardware_components_initial_state: |
             - "base3"
 
 diagnostics.threshold.controllers.periodicity: |
-  The ``periodicity`` diagnostics will be published only for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity.
+  The ``periodicity`` diagnostics will be published for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity. It is also published for the synchronous controllers that have a different update rate than the controller manager update rate.
 
-diagnostics.threshold.controllers.execution_time: |
-  The ``execution_time`` diagnostics will be published for all controllers. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period cycle to execute it's update cycle.
+diagnostics.threshold.controllers.execution_time.mean_error: |
+  The ``execution_time`` diagnostics will be published for all controllers. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period to execute its update cycle.
+
+diagnostics.threshold.hardware_components.periodicity: |
+  The ``periodicity`` diagnostics will be published for the asynchronous hardware components, because any affect to the synchronous hardware components will be reflected directly in the controller manager's periodicity. It is also published for the synchronous hardware components that have a different read/write rate than the controller manager update rate.
+
+diagnostics.threshold.hardware_components.execution_time.mean_error: |
+  The ``execution_time`` diagnostics will be published for all hardware components. The ``mean_error`` for a synchronous hardware component will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous hardware component will be computed against its desired read/write period, as the hardware component can take a maximum of the desired period to execute the read/write cycle.

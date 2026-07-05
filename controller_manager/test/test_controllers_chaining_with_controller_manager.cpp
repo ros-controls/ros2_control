@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -21,6 +21,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -91,9 +92,19 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
+  {
+  }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
   {
   }
 };
@@ -106,11 +117,15 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    const std::regex velocity_pattern(R"(velocity\s*=\s*"-?[0-9]+(\.[0-9]+)?")");
+    const std::string velocity_replacement = R"(velocity="10000.0")";
+    const std::string diffbot_urdf_large_limits = std::regex_replace(
+      ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
+
+    rclcpp::NodeOptions node_options{};
     cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::diffbot_urdf, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      executor_, diffbot_urdf_large_limits, true, TEST_CM_NAME, "", node_options);
+
     run_updater_ = false;
   }
 
@@ -127,6 +142,7 @@ public:
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
     sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
     robot_localization_controller = std::make_shared<TestableTestChainableController>();
+    all_state_broadcaster = std::make_shared<test_controller::TestController>();
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
@@ -203,11 +219,17 @@ public:
       position_tracking_cmd_ifs_cfg);
     position_tracking_controller_two->set_state_interface_configuration(
       position_tracking_state_ifs_cfg);
+
+    // Use ALL state interfaces
+    all_state_broadcaster->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::ALL, {}});
+    all_state_broadcaster->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::NONE, {}});
   }
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(9u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(10u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
@@ -217,6 +239,7 @@ public:
     EXPECT_EQ(2, robot_localization_controller.use_count());
     EXPECT_EQ(2, odom_publisher_controller.use_count());
     EXPECT_EQ(2, position_tracking_controller_two.use_count());
+    EXPECT_EQ(2, all_state_broadcaster.use_count());
 
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -245,6 +268,9 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       position_tracking_controller_two->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      all_state_broadcaster->get_lifecycle_state().id());
   }
 
   // order or controller configuration is not important therefore we can reuse the same method
@@ -359,6 +385,13 @@ public:
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
+
+    cm_->configure_controller(ALL_STATE_BROADCASTER);
+    EXPECT_EQ(
+      all_state_broadcaster->get_lifecycle_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
   }
 
   template <
@@ -414,8 +447,10 @@ public:
       // successful xor deactivated
       if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface))
+          << "The interface :'" << interface << "' should exist but it does not";
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface))
+          << "The interface :'" << interface << "' should be claimed but it is not claimed";
       }
       else
       {
@@ -513,21 +548,29 @@ public:
 
     // check if values are set properly in controllers
     ASSERT_EQ(
-      diff_drive_controller->reference_interfaces_[0], reference[0]);  // command from Position to
+      diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      reference[0]);  // command from Position to
     ASSERT_EQ(
-      diff_drive_controller->reference_interfaces_[1], reference[1]);  // DiffDrive is forwarded
+      diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+      reference[1]);  // DiffDrive is forwarded
 
     // Command of DiffDrive controller are references of PID controllers
     EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(diff_drive_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_REF);
-    ASSERT_EQ(diff_drive_controller->command_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_REF);
-    ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-    ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+    ASSERT_EQ(
+      diff_drive_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_REF);
+    ASSERT_EQ(
+      diff_drive_controller->command_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_REF);
+    ASSERT_EQ(
+      pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      EXP_LEFT_WHEEL_REF);
+    ASSERT_EQ(
+      pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+      EXP_RIGHT_WHEEL_REF);
 
     EXP_STATE_ODOM_X = chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_STATE_ODOM_Y = chained_estimate_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(sensor_fusion_controller->state_interfaces_values_.size(), 3u);
+    ASSERT_EQ(sensor_fusion_controller->ordered_exported_state_interfaces_.size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data().size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -537,21 +580,29 @@ public:
 
     EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
     EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-    ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-    ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+    ASSERT_EQ(
+      pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+      EXP_LEFT_WHEEL_HW_STATE);
     // DiffDrive uses the same state
-    ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
     // The state doesn't change wrt to any data from the hardware calculation
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
     ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
 
     EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
     EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-    ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
     ASSERT_EQ(
-      pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+      pid_right_wheel_controller->command_interfaces_[0].get_optional().value(),
+      EXP_RIGHT_WHEEL_CMD);
+    ASSERT_EQ(
+      pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+      EXP_RIGHT_WHEEL_HW_STATE);
     // DiffDrive uses the same state
-    ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+    ASSERT_EQ(
+      diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
     // The state doesn't change wrt to any data from the hardware calculation
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
     ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -575,6 +626,7 @@ public:
   static constexpr char ROBOT_LOCALIZATION_CONTROLLER[] = "robot_localization_controller";
   static constexpr char ODOM_PUBLISHER_CONTROLLER[] = "odometry_publisher_controller";
   static constexpr char POSITION_TRACKING_CONTROLLER_TWO[] = "position_tracking_controller_two";
+  static constexpr char ALL_STATE_BROADCASTER[] = "all_state_broadcaster";
 
   const std::vector<std::string> PID_LEFT_WHEEL_REFERENCE_INTERFACES = {
     "pid_left_wheel_controller/velocity"};
@@ -605,6 +657,7 @@ public:
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller_two;
+  std::shared_ptr<test_controller::TestController> all_state_broadcaster;
 
   testing::WithParamInterface<Strictness>::ParamType test_param;
 
@@ -662,6 +715,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -760,33 +816,42 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   std::vector<double> reference = {32.0, 128.0};
 
   // update 'Position Tracking' controller
-  for (auto & value : diff_drive_controller->reference_interfaces_)
+  for (auto & value : diff_drive_controller->ordered_exported_reference_interfaces_)
   {
-    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+    ASSERT_EQ(value->get_optional().value(), 0.0);  // default reference values are 0.0
   }
   position_tracking_controller->external_commands_for_testing_[0] = reference[0];
   position_tracking_controller->external_commands_for_testing_[1] = reference[1];
-  position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  const rclcpp::Time zero_time(0, 0, RCL_ROS_TIME);
+  position_tracking_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(position_tracking_controller->internal_counter, 8u);
 
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], reference[0]);  // position_controller
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], reference[1]);  // is pass-through
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    reference[0]);  // position_controller
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+    reference[1]);  // is pass-through
 
   // update 'Diff Drive' Controller
-  diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  diff_drive_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(diff_drive_controller->internal_counter, 10u);
   // default reference values are 0.0 - they should be changed now
   EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);    // 32-0
   EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);  // 128-0
-  ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-  ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_LEFT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_RIGHT_WHEEL_REF);
 
   // run the update cycles of the robot localization and odom publisher controller
-  sensor_fusion_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  sensor_fusion_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 6u);
-  robot_localization_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  robot_localization_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(robot_localization_controller->internal_counter, 4u);
-  odom_publisher_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  odom_publisher_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(odom_publisher_controller->internal_counter, 2u);
   EXP_STATE_ODOM_X =
     chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);  // 32-0 / dt
@@ -800,9 +865,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
 
   // update PID controllers that are writing to hardware
-  pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_left_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 14u);
-  pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_right_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 12u);
 
   // update hardware ('read' is  sufficient for test hardware)
@@ -811,10 +876,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
   // 32 / 2
   EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_LEFT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
   // The state doesn't change wrt to any data from the hardware calculation
   ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
@@ -823,13 +892,17 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
   // 128 / 2
   EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_right_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_RIGHT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_RIGHT_WHEEL_HW_STATE);
   ASSERT_EQ(odom_publisher_controller->internal_counter, 2u);
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 6u);
   ASSERT_EQ(robot_localization_controller->internal_counter, 4u);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
   // The state doesn't change wrt to any data from the hardware calculation
   ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
   ASSERT_EQ(odom_publisher_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -877,6 +950,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1110,6 +1186,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1234,6 +1313,9 @@ TEST_P(
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1277,22 +1359,28 @@ TEST_P(
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Deactivate position_tracking_controller and activate position_tracking_controller_two
   switch_test_controllers(
-    {POSITION_TRACKING_CONTROLLER_TWO}, {POSITION_TRACKING_CONTROLLER}, test_param.strictness,
-    std::future_status::timeout, controller_interface::return_type::OK);
+    {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, {POSITION_TRACKING_CONTROLLER},
+    test_param.strictness, std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
 
   // Now deactivate the position_tracking_controller_two and it should be in inactive state
   switch_test_controllers(
-    {}, {POSITION_TRACKING_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
-    controller_interface::return_type::OK);
+    {}, {POSITION_TRACKING_CONTROLLER_TWO, ALL_STATE_BROADCASTER}, test_param.strictness,
+    std::future_status::timeout, controller_interface::return_type::OK);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller_two->get_lifecycle_state().id());
@@ -1350,9 +1438,28 @@ TEST_P(
   // Activate all the controllers again in group and deactivate the diff_drive_controller_two
   switch_test_controllers(
     {POSITION_TRACKING_CONTROLLER_TWO, DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER,
-     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER},
+     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER, ALL_STATE_BROADCASTER},
     {DIFF_DRIVE_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
     controller_interface::return_type::OK);
+
+  // Now configure a second all state broadcaster and see if it succeeds
+
+  auto all_state_broadcaster_two = std::make_shared<test_controller::TestController>();
+
+  all_state_broadcaster_two->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::ALL, {}});
+  all_state_broadcaster_two->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::NONE, {}});
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      all_state_broadcaster_two, "all_state_broadcaster_two",
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller("all_state_broadcaster_two"));
+  }
+
   // Following controllers should stay active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
@@ -1372,6 +1479,9 @@ TEST_P(
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     sensor_fusion_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    all_state_broadcaster->get_lifecycle_state().id());
   // This is false, because it only uses the state interfaces and exposes state interfaces
   EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
@@ -1420,6 +1530,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1612,6 +1725,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1892,6 +2008,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   cm_->add_controller(
     position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    all_state_broadcaster, ALL_STATE_BROADCASTER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1948,36 +2067,45 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   // update controllers
   std::vector<double> reference = {32.0, 128.0};
 
-  sensor_fusion_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  robot_localization_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  odom_publisher_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  const rclcpp::Time zero_time(0, 0, RCL_ROS_TIME);
+  sensor_fusion_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
+  robot_localization_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
+  odom_publisher_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
 
   // update 'Position Tracking' controller
-  for (auto & value : diff_drive_controller->reference_interfaces_)
+  for (auto & value : diff_drive_controller->ordered_exported_reference_interfaces_)
   {
-    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+    ASSERT_EQ(value->get_optional().value(), 0.0);  // default reference values are 0.0
   }
   position_tracking_controller->external_commands_for_testing_[0] = reference[0];
   position_tracking_controller->external_commands_for_testing_[1] = reference[1];
-  position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  position_tracking_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(position_tracking_controller->internal_counter, 8u);
 
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], reference[0]);  // position_controller
-  ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], reference[1]);  // is pass-through
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    reference[0]);  // position_controller
+  ASSERT_EQ(
+    diff_drive_controller->ordered_exported_reference_interfaces_[1]->get_optional().value(),
+    reference[1]);  // is pass-through
 
   // update 'Diff Drive' Controller
-  diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  diff_drive_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(diff_drive_controller->internal_counter, 10u);
   // default reference values are 0.0 - they should be changed now
   EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);    // 32-0
   EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);  // 128-0
-  ASSERT_EQ(pid_left_wheel_controller->reference_interfaces_[0], EXP_LEFT_WHEEL_REF);
-  ASSERT_EQ(pid_right_wheel_controller->reference_interfaces_[0], EXP_RIGHT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_left_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_LEFT_WHEEL_REF);
+  ASSERT_EQ(
+    pid_right_wheel_controller->ordered_exported_reference_interfaces_[0]->get_optional().value(),
+    EXP_RIGHT_WHEEL_REF);
 
   // update PID controllers that are writing to hardware
-  pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_left_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 14u);
-  pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  pid_right_wheel_controller->update(zero_time, rclcpp::Duration::from_seconds(0.01));
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 12u);
 
   // update hardware ('read' is  sufficient for test hardware)
@@ -1986,19 +2114,27 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
   // 32 / 2
   EXP_LEFT_WHEEL_HW_STATE = hardware_calculation(EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->command_interfaces_[0].get_value(), EXP_LEFT_WHEEL_CMD);
-  ASSERT_EQ(pid_left_wheel_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_left_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_left_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_LEFT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[0].get_value(), EXP_LEFT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[0].get_optional().value(), EXP_LEFT_WHEEL_HW_STATE);
 
   // 128 - 0
   EXP_RIGHT_WHEEL_CMD = chained_ctrl_calculation(EXP_RIGHT_WHEEL_REF, EXP_RIGHT_WHEEL_HW_STATE);
   // 128 / 2
   EXP_RIGHT_WHEEL_HW_STATE = hardware_calculation(EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->command_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_CMD);
-  ASSERT_EQ(pid_right_wheel_controller->state_interfaces_[0].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    pid_right_wheel_controller->command_interfaces_[0].get_optional().value(), EXP_RIGHT_WHEEL_CMD);
+  ASSERT_EQ(
+    pid_right_wheel_controller->state_interfaces_[0].get_optional().value(),
+    EXP_RIGHT_WHEEL_HW_STATE);
   // DiffDrive uses the same state
-  ASSERT_EQ(diff_drive_controller->state_interfaces_[1].get_value(), EXP_RIGHT_WHEEL_HW_STATE);
+  ASSERT_EQ(
+    diff_drive_controller->state_interfaces_[1].get_optional().value(), EXP_RIGHT_WHEEL_HW_STATE);
 
   // update all controllers at once and see that all have expected values --> also checks the order
   // of controller execution

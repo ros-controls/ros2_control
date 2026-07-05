@@ -4,6 +4,7 @@ project(controller_manager_msgs)
 find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
@@ -11,6 +12,8 @@ set(msg_files
   msg/ChainConnection.msg
   msg/HardwareComponentState.msg
   msg/HardwareInterface.msg
+  msg/NamedLifecycleState.msg
+  msg/ControllerManagerActivity.msg
 )
 set(srv_files
   srv/ConfigureController.srv
@@ -23,13 +26,13 @@ set(srv_files
   srv/SetHardwareComponentState.srv
   srv/SwitchController.srv
   srv/UnloadController.srv
+  srv/CleanupController.srv
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
-  DEPENDENCIES builtin_interfaces lifecycle_msgs
-  ADD_LINTER_TESTS
+  DEPENDENCIES builtin_interfaces lifecycle_msgs std_msgs
 )
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()

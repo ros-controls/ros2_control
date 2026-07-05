@@ -19,14 +19,21 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <rclcpp/time.hpp>
+#include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "hardware_interface/types/statistics_types.hpp"
 namespace hardware_interface
 {
+struct HardwareComponentStatisticsData
+{
+  ros2_control::MovingAverageStatisticsData execution_time;
+  ros2_control::MovingAverageStatisticsData periodicity;
+};
 /// Hardware Component Information
 /**
  * This struct contains information about a given hardware component.
@@ -59,6 +66,12 @@ struct HardwareComponentInfo
 
   /// List of provided command interfaces by the component.
   std::vector<std::string> command_interfaces;
+
+  /// Read cycle statistics of the component.
+  std::shared_ptr<HardwareComponentStatisticsData> read_statistics = nullptr;
+
+  /// Write cycle statistics of the component.
+  std::shared_ptr<HardwareComponentStatisticsData> write_statistics = nullptr;
 };
 
 }  // namespace hardware_interface

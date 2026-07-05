@@ -25,13 +25,12 @@ A generic example which shows the structure is provided below. More specific exa
         <param name="example_param">value</param>
       </hardware>
       <joint name="name_of_the_component">
-        <command_interface name="interface_name">
-          <!-- All of them are optional. `data_type` and `size` are used for GPIOs. Size is length of an array. -->
+        <!-- `data_type` argument is optional (defaults to double). -->
+        <command_interface name="interface_name" data_type="double">
+          <!-- All of them are optional. -->
           <param name="min">-1</param>
           <param name="max">1</param>
           <param name="initial_value">0.0</param>
-          <param name="data_type"></param>
-          <param name="size">5</param>
            <!-- Optional. Added to the key/value storage parameters -->
           <param name="own_param_1">some_value</param>
           <param name="own_param_2">other_value</param>
@@ -54,10 +53,7 @@ Sensors
 *****************************
 ``<sensor>``-tag groups multiple state interfaces describing, e.g., internal states of hardware.
 
-Depending on the type of sensor, there exist a couple of specific semantic components with broadcasters shipped with ros2_controllers, e.g.
-
-- :ref:`Imu Sensor Broadcaster <imu_sensor_broadcaster_userdoc>`
-- :ref:`Force Torque Sensor Broadcaster <force_torque_sensor_broadcaster_userdoc>`
+Depending on the type of sensor, there exist a couple of specific semantic components with broadcasters shipped with ros2_controllers, see details in the :ref:`semantic_components <semantic_components>`.
 
 GPIOs
 *****************************
@@ -79,6 +75,22 @@ Hardware Component Groups serve as a critical organizational mechanism within co
 
 Hardware Component Groups play a vital role in propagating errors across interconnected hardware components. For instance, in a manipulator system, grouping actuators together allows for error propagation. If one actuator fails within the group, the error can propagate to the other actuators, signaling a potential issue across the system. By default, the actuator errors are isolated to their own hardware component, allowing the rest to continue operation unaffected. In the provided ros2_control configuration, the ``<group>`` tag within each ``<ros2_control>`` block signifies the grouping of hardware components, enabling error propagation mechanisms within the system.
 
+Data Types
+*****************************
+By default, command and state interfaces use the ``double`` data type.
+However, other data types can be specified using the optional ``data_type`` argument in the ``<command_interface>`` and ``<state_interface>`` tags.
+The following data types are supported, with their default initial value if not specified:
+
+* double (default): NaN
+* float32: NaN
+* bool: false
+* uint8: 255
+* int8: 127
+* uint16: 65535
+* int16: 32767
+* uint32: 4294967295
+* int32: 2147483647
+
 Examples
 *****************************
 The following examples show how to use the different hardware interface types in a ``ros2_control`` URDF.
@@ -87,9 +99,9 @@ They can be combined together within the different hardware component types (sys
 1. Robot with multiple GPIO interfaces
 
    - RRBot System
-   - Digital: 4 inputs and 2 outputs
-   - Analog: 2 inputs and 1 output
-   - Vacuum valve at the flange (on/off)
+   - Digital: 4 inputs and 2 outputs (bool)
+   - Analog: 2 inputs and 1 output (uint16)
+   - Vacuum valve at the flange (bool)
 
 
   .. code:: xml
@@ -116,24 +128,24 @@ They can be combined together within the different hardware component types (sys
         <state_interface name="position"/>
       </joint>
       <gpio name="flange_digital_IOs">
-        <command_interface name="digital_output1"/>
-        <state_interface name="digital_output1"/>    <!-- Needed to know current state of the output -->
-        <command_interface name="digital_output2"/>
-        <state_interface name="digital_output2"/>
-        <state_interface name="digital_input1"/>
-        <state_interface name="digital_input2"/>
+        <command_interface name="digital_output1" data_type="bool"/>
+        <state_interface name="digital_output1" data_type="bool"/>    <!-- Needed to know current state of the output -->
+        <command_interface name="digital_output2" data_type="bool"/>
+        <state_interface name="digital_output2" data_type="bool"/>
+        <state_interface name="digital_input1" data_type="bool"/>
+        <state_interface name="digital_input2" data_type="bool"/>
       </gpio>
       <gpio name="flange_analog_IOs">
-        <command_interface name="analog_output1"/>
-        <state_interface name="analog_output1">    <!-- Needed to know current state of the output -->
+        <command_interface name="analog_output1" data_type="uint16"/>
+        <state_interface name="analog_output1" data_type="uint16">    <!-- Needed to know current state of the output -->
           <param name="initial_value">3.1</param>  <!-- Optional initial value for mock_hardware -->
         </state_interface>
-        <state_interface name="analog_input1"/>
-        <state_interface name="analog_input2"/>
+        <state_interface name="analog_input1" data_type="uint16"/>
+        <state_interface name="analog_input2" data_type="uint16"/>
       </gpio>
       <gpio name="flange_vacuum">
-        <command_interface name="vacuum"/>
-        <state_interface name="vacuum"/>    <!-- Needed to know current state of the output -->
+        <command_interface name="vacuum" data_type="bool"/>
+        <state_interface name="vacuum" data_type="bool"/>    <!-- Needed to know current state of the output -->
       </gpio>
     </ros2_control>
 

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-
 #include <array>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/handle.hpp"
@@ -33,6 +33,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
@@ -43,10 +44,10 @@ namespace
 {
 const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
-constexpr unsigned int TRIGGER_READ_WRITE_ERROR_CALLS = 10000;
 }  // namespace
 
 using namespace ::testing;  // NOLINT
+using namespace std::chrono_literals;
 
 namespace test_components
 {
@@ -54,8 +55,6 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
-  std::string get_name() const override { return "DummyActuatorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -95,8 +94,6 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
-  std::string get_name() const override { return "DummySensorDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -118,8 +115,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
-  std::string get_name() const override { return "DummySystemDefault"; }
-
   std::vector<hardware_interface::InterfaceDescription>
   export_unlisted_state_interface_descriptions() override
   {
@@ -158,8 +153,22 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 };
 
 }  // namespace test_components
+class TestComponentInterfaces : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
-TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    std::this_thread::sleep_for(50ms);
+  }
+  void TearDown() override { executor_->cancel(); }
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
+};
+TEST_F(TestComponentInterfaces, dummy_actuator_default_custom_export)
 {
   hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuatorDefault>());
@@ -171,8 +180,12 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_component");
-  auto state =
-    actuator_hw.initialize(dummy_actuator, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = dummy_actuator;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  auto state = actuator_hw.initialize(params);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -225,7 +238,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
   }
 }
 
-TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
+TEST_F(TestComponentInterfaces, dummy_sensor_default_custom_export)
 {
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensorDefault>());
 
@@ -237,8 +250,12 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_component");
-  auto state =
-    sensor_hw.initialize(voltage_sensor_res, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = voltage_sensor_res;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  auto state = sensor_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -250,7 +267,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
     EXPECT_EQ("sens1/voltage", state_interfaces[position]->get_name());
     EXPECT_EQ("voltage", state_interfaces[position]->get_interface_name());
     EXPECT_EQ("sens1", state_interfaces[position]->get_prefix_name());
-    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
+    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_optional().value()));
   }
   {
     auto [contains, position] =
@@ -262,7 +279,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
   }
 }
 
-TEST(TestComponentInterfaces, dummy_system_default_custom_export)
+TEST_F(TestComponentInterfaces, dummy_system_default_custom_export)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
 
@@ -274,8 +291,12 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_component");
-  auto state =
-    system_hw.initialize(dummy_system, node->get_logger(), node->get_node_clock_interface());
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = dummy_system;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -380,6 +401,6 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

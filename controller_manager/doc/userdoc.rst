@@ -13,8 +13,10 @@ Determinism
 For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
 
 Independent of the kernel installed, the main thread of Controller Manager attempts to
-configure ``SCHED_FIFO`` with a priority of ``50``.
-By default, the user does not have permission to set such a high priority.
+configure ``SCHED_FIFO`` with a priority of ``50``. Read more about the scheduling policies
+`for example here <https://blogs.oracle.com/linux/post/task-priority>`__.
+
+For real-time tasks, a priority range of 0 to 99 is expected, with higher numbers indicating higher priority. By default, users do not have permission to set such high priorities.
 To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
 
 .. code-block:: console
@@ -28,22 +30,46 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 
     @realtime soft rtprio 99
     @realtime soft priority 99
-    @realtime soft memlock 102400
+    @realtime soft memlock unlimited
     @realtime hard rtprio 99
     @realtime hard priority 99
-    @realtime hard memlock 102400
+    @realtime hard memlock unlimited
 
 The limits will be applied after you log out and in again.
+
+You can run ros2_control with real-time requirements also from a docker container. Pass the following capability options to allow the container to set the thread priority and lock memory, e.g.,
+
+.. code-block:: console
+
+    $ docker run -it \
+        --cap-add=sys_nice \
+        --ulimit rtprio=99 \
+        --ulimit memlock=-1 \
+        --rm --net host <IMAGE>
+
+For more information, see the Docker engine documentation about `resource_constraints <https://docs.docker.com/engine/containers/resource_constraints/#configure-the-real-time-scheduler>`__ and `linux capabilities <https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities>`__.
 
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
 Alternatives to the standard kernel include
 
-- `Real-time Ubuntu 22.04 LTS Beta <https://ubuntu.com/blog/real-time-ubuntu-released>`_ on Ubuntu 22.04
-- `linux-image-rt-amd64 <https://packages.debian.org/bullseye/linux-image-rt-amd64>`_ on Debian Bullseye
-- lowlatency kernel (``sudo apt install linux-lowlatency``) on any ubuntu
+- `Real-time Ubuntu <https://ubuntu.com/real-time>`_ on Ubuntu
+- `linux-raspi-realtime <https://packages.ubuntu.com/resolute/linux-raspi-realtime>`_ on Ubuntu on Raspberry Pi: ``sudo apt install linux-raspi-realtime``
+- `linux-image-rt-amd64 <https://packages.debian.org/search?searchon=names&keywords=linux-image-rt-amd64>`__ or `linux-image-rt-arm64 <https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=linux-image-rt-arm64>`__ on Debian for 64-bit PCs
+- `lowlatency kernel <https://ubuntu.com/blog/industrial-embedded-systems>`__ (``sudo apt install linux-lowlatency``) on any Ubuntu
 
 Though installing a realtime-kernel will definitely get the best results when it comes to low
 jitter, using a lowlatency kernel can improve things a lot with being really easy to install.
+
+.. note::
+  Avoid using the get_lifecycle_state() method in the real-time control loop of the controllers and the hardware components as it is not real-time safe.
+
+Publishers
+-----------
+
+~/activity [controller_manager_msgs::msg::ControllerManagerActivity]
+  A topic that is published every time there is a change of state of the controllers or hardware components managed by the controller manager.
+  The message contains the list of the controllers and the hardware components that are managed by the controller manager along with their lifecycle states.
+  The topic is published using the "transient local" quality of service, so subscribers should also be "transient local".
 
 Subscribers
 -----------
@@ -141,9 +167,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--controller-ros-args CONTROLLER_ROS_ARGS]
-                  controller_names [controller_names ...]
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
+               [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS]
+               controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -154,21 +180,109 @@ There are two scripts to interact with controller manager from launch files:
                             Name of the controller manager ROS node
       -p PARAM_FILE, --param-file PARAM_FILE
                             Controller param file to be loaded into controller node before configure. Pass multiple times to load different files for different controllers or to override the parameters of the same controller.
-      -n NAMESPACE, --namespace NAMESPACE
-                            DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -u, --unload-on-kill  Wait until this application is interrupted and unload controller
+      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager service to be available
+      --switch-timeout SWITCH_TIMEOUT
+                            Time to wait for a successful state switch of controllers. Useful when switching cannot be performed immediately, e.g., paused simulations at startup
       --service-call-timeout SERVICE_CALL_TIMEOUT
                             Time to wait for the service response from the controller manager
-      --switch-timeout SWITCH_TIMEOUT
-                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
-                            simulations at startup
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
+      --switch-asap, --no-switch-asap
+                            Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.
       --controller-ros-args CONTROLLER_ROS_ARGS
-                            The --ros-args to be passed to the controller node for remapping topics etc
+                            The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
+
+    When launching ``spawner`` with ROS parameter files that use substitutions (for example, launch ``allow_substs=True``),
+    the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
+    with any explicit ``--param-file`` arguments passed to the spawner command.
+
+.. note::
+  If a single parameter file is used for multiple controllers, the spawner will automatically forward the resolved path(s) to each controller. The following methods are recommended:
+
+  .. code-block:: console
+
+    Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "my_controller",
+            "--param-file",
+            PathSubstitution(FindPackageShare("my_config_pkg"))
+            / "config"
+            / "controllers.yaml",
+        ],
+    ),
+
+  (or)
+
+  .. code-block:: console
+
+    Node(
+        package="controller_manager",
+        executable="spawner",
+        parameters=[
+            ParameterFile(
+                PathSubstitution(FindPackageShare("my_config_pkg"))
+                / "config"
+                / "controllers.yaml",
+            ),
+        ],
+        arguments=[
+            "my_controller"
+        ],
+    ),
+
+The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. For example, to spawn two controllers with different parameter files and remapping topics, the following command can be used:
+
+.. code-block:: console
+
+    $ ros2 run controller_manager spawner --controller position_trajectory_controller \
+        --param-file /path/to/position_trajectory_controller_params.yaml \
+        --controller-ros-args "--ros-args --remap /joint_states:=/rrbot/joint_states" \
+        --controller velocity_trajectory_controller \
+        --param-file /path/to/velocity_trajectory_controller_params.yaml \
+        --controller-ros-args "--ros-args --remap /joint_states:=/rrbot/joint_states"
+
+.. code-block:: console
+
+    $ ros2 run  controller_manager spawner --controller -h
+    Usage: spawner [global_options] --controller <name> [controller_options] --controller <name> ...
+
+    Global Options:
+    usage: spawner [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
+                  [--switch-asap | --no-switch-asap] [-u] [-h]
+
+    options:
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager
+      --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
+                            Timeout for controller manager services
+      --switch-timeout SWITCH_TIMEOUT
+                            Timeout for switch controller service
+      --service-call-timeout SERVICE_CALL_TIMEOUT
+                            Timeout for service calls
+      --activate-as-group   Activate controllers as a group
+      --switch-asap, --no-switch-asap
+                            Switch controllers as soon as possible
+      -u, --unload-on-kill  Deactivate the active controllers and unload them on SIGINT or SIGTERM
+      -h, --help            Show help
+
+    Controller Options:
+    usage: spawner [-p PARAM_FILE] [--load-only] [--inactive] [--controller-ros-args CONTROLLER_ROS_ARGS] controller_name
+
+    positional arguments:
+      controller_name       Name of the controller
+
+    options:
+      -p PARAM_FILE, --param-file PARAM_FILE
+                            Parameter files to load for the controller
+      --load-only           Load the controller but do not configure/activate it
+      --inactive            Configure the controller but do not switch it
+      --controller-ros-args CONTROLLER_ROS_ARGS
+                            ROS arguments to pass to the controller
 
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
@@ -364,6 +478,24 @@ thread_priority (optional; int; default: 50)
 use_sim_time (optional; bool; default: false)
   Enables the use of simulation time in the ``controller_manager`` node.
 
+overruns.manage (optional; bool; default: true)
+  Enables or disables the handling of overruns in the real-time loop of the ``controller_manager`` node.
+  If set to true, the controller manager will detect overruns caused by system time changes or longer execution times of the controllers and hardware components.
+  If an overrun is detected, the controller manager will print a warning message to the console.
+  When used with ``use_sim_time`` set to true, this parameter is ignored and the overrun handling is disabled.
+
+hardware_synchronization.expect_blocking_read_write (optional; bool; default: false)
+  If true, the controller manager will not sleep actively. Use this, when there is a hardware
+  interface running that will block during its read or write operation until receiving new data
+  from the hardware.
+
+hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
+  The minimum sleep time in seconds for the control node's real-time loop. This is used to
+  prevent the control node from running too fast, which can cause high CPU
+  usage if the hardware doesn't block in read / write. This is only used when
+  ``expect_blocking_read_write`` is set to true.
+  If the cycle is shorter than this, it will sleep for this period and print a warning.
+
 Concepts
 -----------
 
@@ -382,4 +514,50 @@ Hardware and Controller Errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
-Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller (or) the entire controller chain it is part of, then the controller manager will try to start any available fallback controllers.
+
+Factors that affect Determinism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When run under the conditions determined in the above section, the determinism is assured up to the limitations of the hardware and the real-time kernel. However, there are some situations that can affect determinism:
+
+* When a controller fails to activate in the realtime loop, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
+* If a controller does not complete a successful update cycle in the realtime loop (for example, returns ``return_type::ERROR``), the controller manager will deactivate that controller (or) the entire controller chain it is part of. It will then invoke ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the interfaces used by the affected controller(s). These actions can introduce jitter into the main control loop.
+
+Support for Asynchronous Updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :titlesonly:
+
+   Asynchronous Controllers <running_controllers_asynchronously.rst>
+
+For details on running controllers asynchronously, see :ref:`running_controllers_asynchronously`.
+
+Monitoring and Tuning
+----------------------
+
+ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` and also ``/controller_manager/introspection_data/*`` topics. This can be used to fine tune the controller update rate.
+
+Different Clocks used by Controller Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The controller manager internally uses the following two different clocks for a non-simulation setup:
+
+- ``RCL_ROS_TIME``: This clock is used mostly in the non-realtime loops.
+- ``RCL_STEADY_TIME``: This clock is used mostly in the realtime loops for the ``read``, ``update``, and ``write`` loops. However, when the controller manager is used in a simulation environment, the ``RCL_ROS_TIME`` clock is used for triggering the ``read``, ``update``, and ``write`` loops.
+
+The ``time`` argument in the ``read`` and ``write`` methods of the hardware components is of type ``RCL_STEADY_TIME``, as most of the hardware expects the time to be monotonic and not affected by the system time changes. However, the ``time`` argument in the ``update`` method of the controller is of type ``RCL_ROS_TIME`` as the controller is the one that interacts with other nodes or topics to receive the commands or publish the state. This ``time`` argument can be used by the controllers to validate the received commands or to publish the state at the correct timestamp.
+The ``period`` argument in the ``read``, ``update`` and ``write`` methods is calculated using the trigger clock of type ``RCL_STEADY_TIME`` so it is always monotonic.
+
+The reason behind using different clocks is to avoid the issues related to the affect of system time changes in the realtime loops. The ``ros2_control_node`` now also detects the overruns caused by the system time changes and longer execution times of the controllers and hardware components. The controller manager will print a warning message if the controller or hardware component misses the update cycle due to the system time changes or longer execution times.
+
+Color Output Handling
+^^^^^^^^^^^^^^^^^^^^^
+
+The helper scripts (``spawner`` and ``hardware_spawner``) now use an environment-aware ``bcolors`` class.
+The color output automatically adapts to the environment:
+
+* ``RCUTILS_COLORIZED_OUTPUT=0`` -> disables color output
+* ``RCUTILS_COLORIZED_OUTPUT=1`` -> forces color output
+* Unset -> automatically detects TTY and enables color only in interactive
+  terminals

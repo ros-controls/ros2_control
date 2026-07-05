@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - jazzy
     paths:
       - '**.hpp'
       - '**.h'
@@ -13,15 +13,19 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.jazzy.repos'
+  pull_request:
+    branches:
+      - jazzy
+    paths:
+      - .github/workflows/jazzy-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
-    - cron: '03 3 * * *'
+    - cron: '03 3 * * MON-FRI'
 
 jobs:
   source:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: jazzy
-      ref: master
-      ros2_repo_branch: master
+      ref: jazzy
       container: ubuntu:24.04

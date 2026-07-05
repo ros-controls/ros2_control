@@ -9,13 +9,19 @@ on:
       - '**.h'
       - '**.cpp'
       - '**.py'
+      - '**.yaml'
       - '.github/workflows/humble-source-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.humble.repos'
+  pull_request:
+    branches:
+      - humble
+    paths:
+      - .github/workflows/humble-source-build.yml
   schedule:
     # Run every day to detect flakiness and broken dependencies
-    - cron: '03 3 * * *'
+    - cron: '03 3 * * MON-FRI'
 
 jobs:
   source:
@@ -23,5 +29,4 @@ jobs:
     with:
       ros_distro: humble
       ref: humble
-      ros2_repo_branch: humble
-      os_name: ubuntu-22.04
+      container: ubuntu:22.04

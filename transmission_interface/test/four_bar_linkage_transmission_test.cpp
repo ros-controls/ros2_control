@@ -14,10 +14,10 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gmock/gmock.h>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "random_generator_utils.hpp"
 #include "transmission_interface/four_bar_linkage_transmission.hpp"
@@ -88,6 +88,13 @@ TEST(PreconditionsTest, AccessorValidation)
   EXPECT_THAT(-4.0, DoubleNear(trans.get_joint_reduction()[1], EPS));
   EXPECT_THAT(1.0, DoubleNear(trans.get_joint_offset()[0], EPS));
   EXPECT_THAT(-1.0, DoubleNear(trans.get_joint_offset()[1], EPS));
+
+  ASSERT_THAT(
+    trans.get_supported_joint_interfaces(),
+    testing::ElementsAre(HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT));
+  ASSERT_THAT(
+    trans.get_supported_actuator_interfaces(),
+    testing::ElementsAre(HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_EFFORT));
 }
 
 void testConfigureWithBadHandles(std::string interface_name)
@@ -297,8 +304,8 @@ TEST_F(WhiteBoxTest, MoveFirstJointOnly)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(100.0, DoubleNear(j_val[0], EPS));
-    EXPECT_THAT(0.0, DoubleNear(j_val[1], EPS));
+    EXPECT_THAT(200.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(200.0, DoubleNear(j_val[1], EPS));
   }
 
   // Velocity interface
@@ -349,7 +356,7 @@ TEST_F(WhiteBoxTest, MoveSecondJointOnly)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(0.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(100.0, DoubleNear(j_val[0], EPS));
     EXPECT_THAT(200.0, DoubleNear(j_val[1], EPS));
   }
 
@@ -402,8 +409,8 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
     auto joint2_handle = JointHandle("joint2", HW_IF_EFFORT, j_vec[1]);
     trans.configure({joint1_handle, joint2_handle}, {a1_handle, a2_handle});
     trans.actuator_to_joint();
-    EXPECT_THAT(-60.0, DoubleNear(j_val[0], EPS));
-    EXPECT_THAT(-160.0, DoubleNear(j_val[1], EPS));
+    EXPECT_THAT(-160.0, DoubleNear(j_val[0], EPS));
+    EXPECT_THAT(-400.0, DoubleNear(j_val[1], EPS));
   }
 
   // Velocity interface

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adrià Roig Moreno
+/// @author Adrià Roig Moreno
 
 #ifndef JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
@@ -30,6 +30,8 @@ namespace joint_limits
 class JointSoftLimiter : public JointSaturationLimiter<JointControlInterfacesData>
 {
 public:
+  virtual ~JointSoftLimiter() = default;
+
   bool on_init() override
   {
     const bool result = (number_of_joints_ == 1);

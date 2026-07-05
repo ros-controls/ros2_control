@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <utility>
@@ -20,6 +19,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
+#include "gmock/gmock.h"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_controller/test_controller.hpp"
 
@@ -46,9 +46,19 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & node_namespace = "")
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & node_options = controller_manager::get_cm_node_options())
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, node_namespace)
+      std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
+  {
+  }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
   {
   }
 };
@@ -70,6 +80,7 @@ public:
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void configure_and_try_switch_that_returns_error()
@@ -79,6 +90,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
 
     // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
     cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
@@ -90,6 +102,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   void try_successful_switch()
@@ -101,6 +114,7 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_controller_->get_lifecycle_state().id());
+    ASSERT_EQ(test_controller_->get_lifecycle_id(), test_controller_->get_lifecycle_state().id());
   }
 
   std::shared_ptr<test_controller::TestController> test_controller_;

@@ -23,6 +23,7 @@ from controller_manager_msgs.srv import (
     SetHardwareComponentState,
     SwitchController,
     UnloadController,
+    CleanupController,
 )
 
 import rclpy
@@ -35,20 +36,33 @@ try:
     from rclpy.parameter import get_parameter_value
 except ImportError:
     from ros2param.api import get_parameter_value
-from ros2param.api import call_set_parameters
+from rcl_interfaces.srv import SetParameters
 
 
-# from https://stackoverflow.com/a/287944
+import os
+import sys
+
+
+def _color_enabled():
+    """Respect RCUTILS_COLORIZED_OUTPUT: 0=off, 1=on, unset=auto-detect TTY."""
+    env = os.getenv("RCUTILS_COLORIZED_OUTPUT")
+    if env == "0":
+        return False
+    if env == "1":
+        return True
+    return sys.stdout.isatty()
+
+
 class bcolors:
-    MAGENTA = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
+    MAGENTA = "\033[95m" if _color_enabled() else ""
+    OKBLUE = "\033[94m" if _color_enabled() else ""
+    OKCYAN = "\033[96m" if _color_enabled() else ""
+    OKGREEN = "\033[92m" if _color_enabled() else ""
+    WARNING = "\033[93m" if _color_enabled() else ""
+    FAIL = "\033[91m" if _color_enabled() else ""
+    ENDC = "\033[0m" if _color_enabled() else ""
+    BOLD = "\033[1m" if _color_enabled() else ""
+    UNDERLINE = "\033[4m" if _color_enabled() else ""
 
 
 class ServiceNotFoundError(Exception):
@@ -133,7 +147,7 @@ def service_caller(
                     f"Could not contact service {fully_qualified_service_name}"
                 )
         elif not cli.wait_for_service(10.0):
-            node.get_logger().warn(f"Could not contact service {fully_qualified_service_name}")
+            node.get_logger().warning(f"Could not contact service {fully_qualified_service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
@@ -275,7 +289,7 @@ def switch_controllers(
     controller_manager_name,
     deactivate_controllers,
     activate_controllers,
-    strict,
+    strictness,
     activate_asap,
     timeout,
     call_timeout=10.0,
@@ -283,10 +297,7 @@ def switch_controllers(
     request = SwitchController.Request()
     request.activate_controllers = activate_controllers
     request.deactivate_controllers = deactivate_controllers
-    if strict:
-        request.strictness = SwitchController.Request.STRICT
-    else:
-        request.strictness = SwitchController.Request.BEST_EFFORT
+    request.strictness = strictness
     request.activate_asap = activate_asap
     request.timeout = rclpy.duration.Duration(seconds=timeout).to_msg()
     return service_caller(
@@ -307,6 +318,21 @@ def unload_controller(
         node,
         f"{controller_manager_name}/unload_controller",
         UnloadController,
+        request,
+        service_timeout,
+        call_timeout,
+    )
+
+
+def cleanup_controller(
+    node, controller_manager_name, controller_name, service_timeout=0.0, call_timeout=10.0
+):
+    request = CleanupController.Request()
+    request.name = controller_name
+    return service_caller(
+        node,
+        f"{controller_manager_name}/cleanup_controller",
+        CleanupController,
         request,
         service_timeout,
         call_timeout,
@@ -343,10 +369,9 @@ def get_params_files_with_controller_parameters(
                         )
                         break
                     controller_parameter_files.append(parameter_file)
-
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
-                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_parameter_files.append(parameter_file)
     return controller_parameter_files
 
@@ -378,9 +403,9 @@ def get_parameter_from_param_files(
                         break
                     controller_param_dict = parameters[key]
 
-                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY][key]
-                if WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
                     controller_param_dict = parameters[WILDCARD_KEY]
 
                 if controller_param_dict and (
@@ -414,8 +439,14 @@ def set_controller_parameters(
     parameter_string = str(parameter_value)
     parameter.value = get_parameter_value(string_value=parameter_string)
 
-    response = call_set_parameters(
-        node=node, node_name=controller_manager_name, parameters=[parameter]
+    request = SetParameters.Request()
+    request.parameters = [parameter]
+
+    response = service_caller(
+        node,
+        f"{controller_manager_name}/set_parameters",
+        SetParameters,
+        request,
     )
     assert len(response.results) == 1
     result = response.results[0]

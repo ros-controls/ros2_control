@@ -2,6 +2,107 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+
+6.7.1 (2026-05-12)
+------------------
+
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Remove linters from msg package (`#3059 <https://github.com/ros-controls/ros2_control/issues/3059>`_)
+* Contributors: Christoph Fröhlich
+
+6.4.0 (2026-02-03)
+------------------
+
+6.3.2 (2026-01-10)
+------------------
+
+6.3.1 (2025-12-30)
+------------------
+
+6.3.0 (2025-12-29)
+------------------
+* Add `cleanup_controller` lifecycle transition (`#2414 <https://github.com/ros-controls/ros2_control/issues/2414>`_)
+* Contributors: Soham Patil
+
+6.2.0 (2025-12-10)
+------------------
+
+6.1.0 (2025-12-01)
+------------------
+
+6.0.2 (2025-11-09)
+------------------
+
+6.0.1 (2025-11-03)
+------------------
+
+6.0.0 (2025-10-27)
+------------------
+
+5.7.0 (2025-10-03)
+------------------
+
+5.6.0 (2025-08-26)
+------------------
+* Update doc to clarify BEST_EFFORT behavior when switching controllers (`#2448 <https://github.com/ros-controls/ros2_control/issues/2448>`_)
+* Fix typos in the documentation of SwitchController strictness (`#2445 <https://github.com/ros-controls/ros2_control/issues/2445>`_)
+* Contributors: Johannes Huemer, Peter Mitrano (AR)
+
+5.5.0 (2025-07-31)
+------------------
+
+5.4.0 (2025-07-21)
+------------------
+
+5.3.0 (2025-07-02)
+------------------
+
+5.2.0 (2025-06-07)
+------------------
+
+5.1.0 (2025-05-24)
+------------------
+* Cleanup deprecations in `ros_control`  (`#2258 <https://github.com/ros-controls/ros2_control/issues/2258>`_)
+* Contributors: Sai Kishor Kothakota
+
+5.0.0 (2025-05-21)
+------------------
+* Add `data_type` field to the HardwareInterfaces message (`#2204 <https://github.com/ros-controls/ros2_control/issues/2204>`_)
+* Add new strictness modes to SwitchController service (`#2224 <https://github.com/ros-controls/ros2_control/issues/2224>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.29.0 (2025-05-04)
+-------------------
+
+4.28.1 (2025-04-17)
+-------------------
+
+4.28.0 (2025-04-10)
+-------------------
+* [CM] Extend the list controller and hardware components messages (`#2102 <https://github.com/ros-controls/ros2_control/issues/2102>`_)
+* Improve package descriptions & update maintainers (`#2103 <https://github.com/ros-controls/ros2_control/issues/2103>`_)
+* [CM] Add message field to the `switch_controller` service (`#2088 <https://github.com/ros-controls/ros2_control/issues/2088>`_)
+* [CM] Add controller_manager activity topic (`#2006 <https://github.com/ros-controls/ros2_control/issues/2006>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+4.27.0 (2025-03-01)
+-------------------
+
+4.26.0 (2025-02-07)
+-------------------
+
 4.25.0 (2025-01-29)
 -------------------
 

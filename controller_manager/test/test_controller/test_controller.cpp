@@ -19,6 +19,19 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
+namespace
+{
+void verify_internal_lifecycle_id(uint8_t expected_id, uint8_t actual_id)
+{
+  if (expected_id != actual_id)
+  {
+    throw std::runtime_error(
+      "Internal lifecycle ID does not match the expected lifecycle ID. Expected: " +
+      std::to_string(expected_id) + ", Actual: " + std::to_string(actual_id));
+  }
+}
+}  // namespace
+
 namespace test_controller
 {
 TestController::TestController()
@@ -30,6 +43,7 @@ TestController::TestController()
 
 controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -45,6 +59,7 @@ controller_interface::InterfaceConfiguration TestController::command_interface_c
 
 controller_interface::InterfaceConfiguration TestController::state_interface_configuration() const
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
@@ -59,11 +74,20 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 }
 
 controller_interface::return_type TestController::update(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_update)
+  {
+    throw std::runtime_error("Exception from TestController::update() as requested.");
+  }
+  if (time.get_clock_type() != RCL_ROS_TIME)
+  {
+    throw std::runtime_error("ROS Time is required for the controller to operate.");
+  }
   if (is_async())
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 / (2 * get_update_rate())));
+    std::this_thread::sleep_for(std::chrono::microseconds(1000000u / (2 * get_update_rate())));
   }
   update_period_ = period;
   ++internal_counter;
@@ -71,7 +95,7 @@ controller_interface::return_type TestController::update(
   // set value to hardware to produce and test different behaviors there
   if (!std::isnan(set_first_command_interface_value_to))
   {
-    command_interfaces_[0].set_value(set_first_command_interface_value_to);
+    (void)command_interfaces_[0].set_value(set_first_command_interface_value_to);
     // reset to be easier to test
     set_first_command_interface_value_to = std::numeric_limits<double>::quiet_NaN();
   }
@@ -90,18 +114,31 @@ controller_interface::return_type TestController::update(
       RCLCPP_DEBUG(
         get_node()->get_logger(), "Setting value of command interface '%s' to %f",
         command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
-      command_interfaces_[i].set_value(external_commands_for_testing_[i]);
+      (void)command_interfaces_[i].set_value(external_commands_for_testing_[i]);
     }
   }
 
   return controller_interface::return_type::OK;
 }
 
-CallbackReturn TestController::on_init() { return CallbackReturn::SUCCESS; }
+CallbackReturn TestController::on_init()
+{
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_initialize)
+  {
+    throw std::runtime_error("Exception from TestController::on_init() as requested.");
+  }
+  return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   auto ctrl_node = get_node();
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_configure)
+  {
+    throw std::runtime_error("Exception from TestController::on_configure() as requested.");
+  }
   if (!ctrl_node->has_parameter("command_interfaces"))
   {
     ctrl_node->declare_parameter("command_interfaces", std::vector<std::string>({}));
@@ -146,8 +183,34 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
   return CallbackReturn::SUCCESS;
 }
 
+CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
+  if (throw_on_activate)
+  {
+    throw std::runtime_error("Exception from TestController::on_activate() as requested.");
+  }
+  // Resize to match the actual number of claimed command interfaces. Using names.size() in
+  // set_command_interface_configuration() gives the wrong count for ALL (0 names), REGEX (pattern
+  // count != match count), and INDIVIDUAL_BEST_EFFORT (some names may not exist).
+  if (external_commands_for_testing_.size() != command_interfaces_.size())
+  {
+    external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
+  }
+  if (activation_processing_time > 0.0)
+  {
+    RCLCPP_INFO(
+      get_node()->get_logger(), "Sleeping for %.3f seconds to simulate activation processing time",
+      activation_processing_time);
+    std::this_thread::sleep_for(std::chrono::duration<double>(activation_processing_time));
+  }
+
+  return CallbackReturn::SUCCESS;
+}
+
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (simulate_cleanup_failure)
   {
     return CallbackReturn::FAILURE;
@@ -162,6 +225,7 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
 
 CallbackReturn TestController::on_shutdown(const rclcpp_lifecycle::State &)
 {
+  verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (shutdown_calls)
   {
     (*shutdown_calls)++;
@@ -187,7 +251,7 @@ std::vector<double> TestController::get_state_interface_data() const
   std::vector<double> state_intr_data;
   for (const auto & interface : state_interfaces_)
   {
-    state_intr_data.push_back(interface.get_value());
+    state_intr_data.push_back(interface.get_optional().value());
   }
   return state_intr_data;
 }

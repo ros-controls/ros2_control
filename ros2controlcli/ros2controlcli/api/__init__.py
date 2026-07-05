@@ -19,7 +19,8 @@ from ros2cli.node.direct import DirectNode
 
 from ros2node.api import NodeNameCompleter
 
-from ros2param.api import call_list_parameters
+from rcl_interfaces.srv import ListParameters
+import rclpy
 
 import argparse
 
@@ -29,9 +30,19 @@ class ControllerNameCompleter:
 
     def __call__(self, prefix, parsed_args, **kwargs):
         with DirectNode(parsed_args) as node:
-            parameter_names = call_list_parameters(
-                node=node, node_name=parsed_args.controller_manager
+            # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
+            client = node.create_client(
+                ListParameters, f"{parsed_args.controller_manager}/list_parameters"
             )
+            if not client.wait_for_service(timeout_sec=5.0):
+                return []
+            request = ListParameters.Request()
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(node, future)
+            response = future.result()
+            if response is None:
+                return []
+            parameter_names = response.result.names
             suffix = ".type"
             return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
 

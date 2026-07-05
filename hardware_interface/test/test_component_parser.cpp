@@ -11,18 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <gmock/gmock.h>
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <cmath>
 #include <string>
 
+#include "gmock/gmock.h"
 #include "hardware_interface/component_parser.hpp"
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
-
-#ifdef _WIN32
-#define M_PI 3.1415926535897932384626433832795
-#endif
 
 using namespace ::testing;  // NOLINT
 
@@ -734,16 +734,20 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].role, "joint1");
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].mechanical_reduction, 10.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[0].offset, 0.5);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].name, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].role, "joint2");
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].mechanical_reduction, 50.0);
   EXPECT_EQ(hardware_info.transmissions[0].joints[1].offset, 0.0);
+  EXPECT_FALSE(hardware_info.transmissions[0].joints[1].read_only);
 
   ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(2));
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].name, "joint1_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[0].role, "actuator1");
+  EXPECT_TRUE(hardware_info.transmissions[0].actuators[0].read_only);
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].name, "joint2_motor");
   EXPECT_EQ(hardware_info.transmissions[0].actuators[1].role, "actuator2");
+  EXPECT_FALSE(hardware_info.transmissions[0].actuators[1].read_only);
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
@@ -880,7 +884,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
 
   ASSERT_FALSE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
@@ -952,7 +970,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
   ASSERT_FALSE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
@@ -966,6 +998,96 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
 
   ASSERT_THAT(hardware_info.gpios, SizeIs(1));
 
+  EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
+  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
+  EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].name, "digital_output");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].size, 2);
+  EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_input");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].size, 3);
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "image");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].data_type, "cv::Mat");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
+}
+
+TEST_F(
+  TestComponentParser,
+  successfully_parse_valid_urdf_system_with_bool_data_type_on_joint_sensor_and_gpio)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::
+      valid_urdf_ros2_control_system_robot_with_size_and_data_type_on_joint_sensor_and_gpio +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "RRBotSystemWithSizeAndDataType");
+  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(
+    hardware_info.hardware_plugin_name,
+    "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(1));
+  ASSERT_FALSE(hardware_info.is_async);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, std::numeric_limits<int>::max());
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].name, "enable");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].data_type, "bool");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_cmd_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].command_interfaces[1]);
+  auto bool_cmd_itf = hardware_interface::CommandInterface(bool_cmd_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_cmd_itf.get_data_type());
+
+  EXPECT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, "status");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].data_type, "bool");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].size, 1);
+  hardware_interface::InterfaceDescription bool_state_description(
+    hardware_info.joints[0].name, hardware_info.joints[0].state_interfaces[1]);
+  auto bool_state_itf = hardware_interface::StateInterface(bool_state_description);
+  ASSERT_EQ(hardware_interface::HandleDataType::BOOL, bool_state_itf.get_data_type());
+
+  ASSERT_THAT(hardware_info.sensors, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].name, "trigger");
+  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].name, "safety");
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0].size, 1);
+  EXPECT_THAT(hardware_info.sensors[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].name, "safety");
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.sensors[0].command_interfaces[0].size, 1);
+
+  ASSERT_THAT(hardware_info.gpios, SizeIs(1));
   EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
@@ -1098,8 +1220,12 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_velocity,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_effort,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").max_position, DoubleNear(0.5, 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").min_position, DoubleNear(-1.5, 1e-5));
   EXPECT_THAT(hardware_info.soft_limits.at("joint2").k_position, DoubleNear(10.0, 1e-5));
@@ -1221,8 +1347,12 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_unavailable
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_velocity,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_effort,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
 
   EXPECT_TRUE(hardware_info.limits.at("joint3").has_position_limits);
   EXPECT_THAT(hardware_info.limits.at("joint3").min_position, DoubleNear(-M_PI, 1e-5));
@@ -1354,7 +1484,27 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.group, IsEmpty());
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 30);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 30);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "detached");
+  ASSERT_FALSE(hardware_info.async_params.print_warnings);
+  ASSERT_EQ(3u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores,
+    testing::ContainerEq(std::vector<int>({2, 4, 6})));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
@@ -1367,7 +1517,24 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   ASSERT_THAT(hardware_info.joints, IsEmpty());
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 50);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 50);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_TRUE(hardware_info.async_params.print_warnings);
+  ASSERT_TRUE(hardware_info.async_params.cpu_affinity_cores.empty());
 
   EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
@@ -1391,7 +1558,25 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
   EXPECT_EQ(hardware_info.gpios[0].name, "configuration");
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   ASSERT_TRUE(hardware_info.is_async);
-  ASSERT_EQ(hardware_info.thread_priority, 70);
+  // TODO(anyone): remove this line once thread_priority is removed
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+  ASSERT_EQ(hardware_info.thread_priority, hardware_info.async_params.thread_priority);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+  ASSERT_EQ(hardware_info.async_params.thread_priority, 70);
+  ASSERT_EQ(hardware_info.async_params.scheduling_policy, "synchronized");
+  ASSERT_EQ(1u, hardware_info.async_params.cpu_affinity_cores.size());
+  ASSERT_THAT(
+    hardware_info.async_params.cpu_affinity_cores, testing::ContainerEq(std::vector<int>({1})));
 }
 
 TEST_F(TestComponentParser, successfully_parse_parameter_empty)
@@ -1752,6 +1937,152 @@ TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardw
   EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_vacuum/vacuum");
 }
 
+TEST_F(TestComponentParser, successfully_parse_urdf_with_disabled_limits)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_with_disabled_limits) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(3));
+
+  // First hardware: TestActuatorHardware with joint1
+  // joint1 has <limits enable="false"/> at the joint level, so all interfaces should have
+  // enable_limits=false
+  EXPECT_EQ(hw_info[0].name, "TestActuatorHardware");
+  EXPECT_EQ(hw_info[0].type, "actuator");
+  ASSERT_THAT(hw_info[0].joints, SizeIs(1));
+  EXPECT_EQ(hw_info[0].joints[0].name, "joint1");
+
+  // All command interfaces on joint1 should have enable_limits=false
+  ASSERT_THAT(hw_info[0].joints[0].command_interfaces, SizeIs(4));
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[2].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].command_interfaces[3].name, "max_velocity");
+  EXPECT_FALSE(hw_info[0].joints[0].command_interfaces[3].enable_limits);
+
+  // All state interfaces on joint1 should have enable_limits=false
+  ASSERT_THAT(hw_info[0].joints[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hw_info[0].joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[0].joints[0].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[0].joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[0].joints[0].state_interfaces[1].enable_limits);
+
+  // Verify that joint1 limits are disabled (has_*_limits should be false)
+  ASSERT_THAT(hw_info[0].limits, SizeIs(1));
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_position_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_velocity_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_effort_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[0].limits.at("joint1").has_jerk_limits);
+
+  // Second hardware: TestSensorHardware - no limits element, so enable_limits should be true
+  // (default)
+  EXPECT_EQ(hw_info[1].name, "TestSensorHardware");
+  EXPECT_EQ(hw_info[1].type, "sensor");
+  ASSERT_THAT(hw_info[1].sensors, SizeIs(1));
+  EXPECT_EQ(hw_info[1].sensors[0].name, "sensor1");
+  ASSERT_THAT(hw_info[1].sensors[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[1].sensors[0].state_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[1].sensors[0].state_interfaces[0].enable_limits);
+
+  // Third hardware: TestSystemHardware with joint2 and joint3
+  EXPECT_EQ(hw_info[2].name, "TestSystemHardware");
+  EXPECT_EQ(hw_info[2].type, "system");
+  ASSERT_THAT(hw_info[2].joints, SizeIs(2));
+
+  // joint2 has <limits enable="false"/> at the joint level, so all interfaces should have
+  // enable_limits=false
+  EXPECT_EQ(hw_info[2].joints[0].name, "joint2");
+  ASSERT_THAT(hw_info[2].joints[0].command_interfaces, SizeIs(2));
+  EXPECT_EQ(hw_info[2].joints[0].command_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[2].joints[0].command_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].command_interfaces[1].name, "max_acceleration");
+  EXPECT_FALSE(hw_info[2].joints[0].command_interfaces[1].enable_limits);
+
+  ASSERT_THAT(hw_info[2].joints[0].state_interfaces, SizeIs(3));
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[0].state_interfaces[2].name, HW_IF_ACCELERATION);
+  EXPECT_FALSE(hw_info[2].joints[0].state_interfaces[2].enable_limits);
+
+  // joint3 has <limits enable="false"/> only on the position command interface
+  // Other interfaces should have enable_limits=true (default)
+  EXPECT_EQ(hw_info[2].joints[1].name, "joint3");
+  ASSERT_THAT(hw_info[2].joints[1].command_interfaces, SizeIs(2));
+  // Position command interface should have enable_limits=false (explicitly set)
+  EXPECT_EQ(hw_info[2].joints[1].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_FALSE(hw_info[2].joints[1].command_interfaces[0].enable_limits);
+  // Velocity command interface should have enable_limits=true (default, no limits element)
+  EXPECT_EQ(hw_info[2].joints[1].command_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[2].joints[1].command_interfaces[1].enable_limits);
+
+  // All state interfaces on joint3 should have enable_limits=true (default)
+  ASSERT_THAT(hw_info[2].joints[1].state_interfaces, SizeIs(3));
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[0].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[1].enable_limits);
+  EXPECT_EQ(hw_info[2].joints[1].state_interfaces[2].name, HW_IF_ACCELERATION);
+  EXPECT_TRUE(hw_info[2].joints[1].state_interfaces[2].enable_limits);
+
+  // Verify limits for TestSystemHardware joints
+  ASSERT_THAT(hw_info[2].limits, SizeIs(2));
+  // joint2 has limits disabled at the joint level, but only has velocity command interface, even
+  // then all the limits should be disabled by default
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_position_limits);
+  EXPECT_THAT(
+    hw_info[2].limits.at("joint2").max_position,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hw_info[2].limits.at("joint2").min_position,
+    DoubleNear(-std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_velocity_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_effort_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint2").has_jerk_limits);
+
+  // joint3 has only position command interface limits disabled
+  // position limits should be disabled (has position cmd_if with enable_limits=false)
+  // velocity limits remain enabled (from URDF, velocity cmd_if has enable_limits=true)
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_position_limits);
+  EXPECT_TRUE(hw_info[2].limits.at("joint3").has_velocity_limits);
+  EXPECT_THAT(hw_info[2].limits.at("joint3").max_velocity, DoubleNear(0.2, 1e-5));
+  EXPECT_TRUE(hw_info[2].limits.at("joint3").has_effort_limits);
+  EXPECT_THAT(hw_info[2].limits.at("joint3").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_acceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_deceleration_limits);
+  EXPECT_FALSE(hw_info[2].limits.at("joint3").has_jerk_limits);
+
+  // Verify soft_limits - joint2 has a safety_controller in the URDF but since joint2's
+  // limits are disabled, we should still have soft_limits parsed from the URDF
+  ASSERT_THAT(hw_info[2].soft_limits, SizeIs(1));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").max_position, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").min_position, DoubleNear(-1.5, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").k_position, DoubleNear(10.0, 1e-5));
+  EXPECT_THAT(hw_info[2].soft_limits.at("joint2").k_velocity, DoubleNear(20.0, 1e-5));
+
+  // GPIO interfaces - no limits element, so enable_limits should be true (default)
+  ASSERT_THAT(hw_info[2].gpios, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].name, "configuration");
+  ASSERT_THAT(hw_info[2].gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].command_interfaces[0].name, "max_tcp_jerk");
+  EXPECT_TRUE(hw_info[2].gpios[0].command_interfaces[0].enable_limits);
+  ASSERT_THAT(hw_info[2].gpios[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hw_info[2].gpios[0].state_interfaces[0].name, "max_tcp_jerk");
+  EXPECT_TRUE(hw_info[2].gpios[0].state_interfaces[0].enable_limits);
+}
+
 TEST_F(TestComponentParser, successfully_parse_valid_sdf)
 {
   std::string sdf_to_test = ros2_control_test_assets::diff_drive_robot_sdf;
@@ -1785,4 +2116,100 @@ TEST_F(TestComponentParser, successfully_parse_valid_sdf)
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
+}
+
+TEST_F(TestComponentParser, missing_hardware_plugin_tag_includes_component_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="MySpecificRobot" type="system">
+        <hardware>
+          <!-- plugin tag intentionally missing -->
+          <param name="some_param">1.0</param>
+        </hardware>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("MySpecificRobot"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<plugin>"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("<hardware>"));
+  }
+}
+
+TEST_F(TestComponentParser, missing_joint_attribute_includes_joint_name)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position"/>
+        </joint>
+        <joint name="joint2">
+          <!-- missing name attribute here is tricky since we parse it first,
+               let's test missing attribute in command_interface instead -->
+          <command_interface>
+            <param name="min">-1</param>
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("name"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("command_interface"));
+    // Ideally it should say it failed for joint2, but tag_name is "command_interface"
+  }
+}
+
+TEST_F(TestComponentParser, parameter_missing_name_includes_parent_context)
+{
+  const std::string broken_urdf =
+    R"(
+    <?xml version="1.0"?>
+    <robot name="robot">
+      <ros2_control name="RRBot" type="system">
+        <hardware>
+          <plugin>some_plugin</plugin>
+        </hardware>
+        <joint name="joint1">
+          <command_interface name="position">
+            <param>1.0</param> <!-- Missing name attribute -->
+          </command_interface>
+        </joint>
+      </ros2_control>
+    </robot>
+    )";
+
+  try
+  {
+    parse_control_resources_from_urdf(broken_urdf);
+    FAIL() << "Should have thrown std::runtime_error";
+  }
+  catch (const std::runtime_error & e)
+  {
+    EXPECT_THAT(std::string(e.what()), HasSubstr("joint1"));
+    EXPECT_THAT(std::string(e.what()), HasSubstr("parameter name"));
+  }
 }

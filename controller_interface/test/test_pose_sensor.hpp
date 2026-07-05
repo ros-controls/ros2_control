@@ -15,13 +15,12 @@
 #ifndef TEST_POSE_SENSOR_HPP_
 #define TEST_POSE_SENSOR_HPP_
 
-#include <gmock/gmock.h>
-
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "semantic_components/pose_sensor.hpp"
 
 class TestablePoseSensor : public semantic_components::PoseSensor
