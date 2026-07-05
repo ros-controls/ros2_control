@@ -30,12 +30,15 @@ def make_controller_node(
     command_interfaces,
     input_chain_connections,
     output_chain_connections,
-    port_map,
+    chain_cmd_connections,
 ):
     state_interfaces = sorted(list(state_interfaces))
     command_interfaces = sorted(list(command_interfaces))
     input_chain_connections = sorted(list(input_chain_connections))
-    output_chain_connections = sorted(list(output_chain_connections))
+    output_chain_connections = sorted(
+        list(output_chain_connections)
+    )  # (target_ctrl, iface) tuples
+    chain_cmd_connections = sorted(list(chain_cmd_connections))  # (target_ctrl, iface) tuples
 
     inputs_str = ""
     for ind, state_interface in enumerate(state_interfaces):
@@ -53,7 +56,6 @@ def make_controller_node(
         inputs_str += "<{}> {} {} ".format(
             "controller_end_" + input_controller, input_controller + " (exp ref)", deliminator
         )
-        port_map["controller_end_" + input_controller] = controller_name
 
     outputs_str = ""
     for ind, command_interface in enumerate(command_interfaces):
@@ -64,13 +66,24 @@ def make_controller_node(
             "command_start_" + command_interface, command_interface + " (cmd)", deliminator
         )
 
-    for ind, output_controller in enumerate(output_chain_connections):
+    for ind, output_iface in enumerate(output_chain_connections):
         deliminator = "|"
-        if ind == len(output_controller) - 1:
+        if ind == len(output_iface) - 1:
             deliminator = ""
         outputs_str += "<{}> {} {} ".format(
-            "controller_start_" + output_controller,
-            output_controller + " (exp state)",
+            "controller_start_exp_state_" + output_iface,
+            output_iface + " (exp state)",
+            deliminator,
+        )
+
+    for ind, (target_ctrl, chain_cmd) in enumerate(chain_cmd_connections):
+        deliminator = "|"
+        if ind == len(chain_cmd) - 1:
+            deliminator = ""
+        port_key = target_ctrl + "/" + chain_cmd
+        outputs_str += "<{}> {} {} ".format(
+            "command_start_chain_" + port_key,
+            chain_cmd + " (cmd)",
             deliminator,
         )
 
@@ -108,6 +121,8 @@ def make_state_node(s, state_interfaces):
 def show_graph(
     input_chain_connections,
     output_chain_connections,
+    chain_cmd_connections,
+    exp_state_edges,
     command_connections,
     state_connections,
     command_interfaces,
@@ -119,11 +134,11 @@ def show_graph(
         filename="/tmp/controller_diagram.gv",
         node_attr={"shape": "record", "style": "rounded"},
     )
-    port_map = dict()
     # get all controller names
     controller_names = set()
     controller_names = controller_names.union({name for name in input_chain_connections})
     controller_names = controller_names.union({name for name in output_chain_connections})
+    controller_names = controller_names.union({name for name in chain_cmd_connections})
     controller_names = controller_names.union({name for name in command_connections})
     controller_names = controller_names.union({name for name in state_connections})
     # create node for each controller
@@ -135,19 +150,25 @@ def show_graph(
             command_connections[controller_name],
             input_chain_connections[controller_name],
             output_chain_connections[controller_name],
-            port_map,
+            chain_cmd_connections[controller_name],
         )
 
     make_state_node(s, state_interfaces)
     make_command_node(s, command_interfaces)
 
+    for source_ctrl, consumer_ctrl, iface in exp_state_edges:
+        s.edge(
+            "{}:{}".format(source_ctrl, "controller_start_exp_state_" + iface),
+            "{}:{}".format(consumer_ctrl, "state_end_" + iface),
+        )
+
     for controller_name in controller_names:
-        for connection in output_chain_connections[controller_name]:
+        for target_ctrl, iface in chain_cmd_connections[controller_name]:
+            # (cmd) output of preceding controller → (exp ref) input of following controller
+            port_key = target_ctrl + "/" + iface
             s.edge(
-                "{}:{}".format(controller_name, "controller_start_" + connection),
-                "{}:{}".format(
-                    port_map["controller_end_" + connection], "controller_end_" + connection
-                ),
+                "{}:{}".format(controller_name, "command_start_chain_" + port_key),
+                "{}:{}".format(target_ctrl, "controller_end_" + iface),
             )
         for state_connection in state_connections[controller_name]:
             s.edge(
@@ -179,20 +200,60 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
     state_connections = dict()
     input_chain_connections = {x.name: set() for x in list_controllers_response.controller}
     output_chain_connections = {x.name: set() for x in list_controllers_response.controller}
+    chain_cmd_connections = {x.name: set() for x in list_controllers_response.controller}
+
+    # Build lookup: prefixed reference interface name -> owning controller name
+    # e.g. "pid_controller_left_wheel_joint/left_wheel_joint/velocity" -> "pid_controller_left_wheel_joint"
+    ref_interface_owners = {}
+    for ctrl in list_controllers_response.controller:
+        for ref_iface in ctrl.reference_interfaces:
+            ref_interface_owners[f"{ctrl.name}/{ref_iface}"] = ctrl.name
+
+    # Build lookup: prefixed exported state interface name -> (owning controller, short name)
+    exported_state_owners = {}
+    for ctrl in list_controllers_response.controller:
+        for exp_state in ctrl.exported_state_interfaces:
+            exported_state_owners[f"{ctrl.name}/{exp_state}"] = (ctrl.name, exp_state)
 
     for controller in list_controllers_response.controller:
-        for chain_connection in controller.chain_connections:
-            for reference_interface in chain_connection.reference_interfaces:
-                output_chain_connections[controller.name].add(reference_interface)
+        # Exported state output ports: what this controller publishes as state
+        for exp_state in controller.exported_state_interfaces:
+            output_chain_connections[controller.name].add(exp_state)
+
         for reference_interface in controller.reference_interfaces:
             input_chain_connections[controller.name].add(reference_interface)
 
-        command_connections[controller.name] = set(controller.required_command_interfaces)
-        state_connections[controller.name] = set(controller.required_state_interfaces)
+        # Classify required_command_interfaces as hw or chained (cmd → exp ref)
+        hw_cmds = set()
+        for cmd_iface in controller.required_command_interfaces:
+            if cmd_iface in ref_interface_owners:
+                target_ctrl = ref_interface_owners[cmd_iface]
+                short_iface = cmd_iface.removeprefix(target_ctrl + "/")
+                chain_cmd_connections[controller.name].add((target_ctrl, short_iface))
+            else:
+                hw_cmds.add(cmd_iface)
+        command_connections[controller.name] = hw_cmds
+
+        # Classify required_state_interfaces as hw or consumed exported state
+        hw_states = set()
+        for state_iface in controller.required_state_interfaces:
+            if state_iface not in exported_state_owners:
+                hw_states.add(state_iface)
+        state_connections[controller.name] = hw_states
+
+    # Build edges for (exp state) → (state): controller exports state that another controller reads
+    exp_state_edges = []
+    for controller in list_controllers_response.controller:
+        for state_iface in controller.required_state_interfaces:
+            if state_iface in exported_state_owners:
+                source_ctrl, short_iface = exported_state_owners[state_iface]
+                exp_state_edges.append((source_ctrl, controller.name, short_iface))
 
     show_graph(
         input_chain_connections,
         output_chain_connections,
+        chain_cmd_connections,
+        exp_state_edges,
         command_connections,
         state_connections,
         command_interfaces,
