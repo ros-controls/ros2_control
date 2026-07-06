@@ -225,8 +225,8 @@ inline bool declare_parameters(
  * server will overwrite existing values. Values in @p limits not specified in the parameter server
  * remain unchanged.
  *
- * @return True if a limits specification is found (i.e., the @p joint_limits/joint_name parameter
- * exists in @p node), false otherwise.
+ * @return True if a limits specification is found (i.e., if at least one parameter exists under
+ * the `joint_limits.joint_name` namespace), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -665,8 +665,8 @@ inline bool check_for_limits_update(
  * @param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
  * parameter server will overwrite existing values.
  * @return True if a complete soft limits specification is found (i.e., if all @p k_position,
- * @p k_velocity, @p soft_lower_limit and @p soft_upper_limit exist in
- * @p joint_limits/joint_name namespace), false otherwise.
+ * @p k_velocity, @p soft_lower_limit and @p soft_upper_limit exist under
+ * the `joint_limits.joint_name` namespace), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
