@@ -220,7 +220,10 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       {
         desired_pos_[index] =
           current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
-        clamp_pos_limit();
+        if (joint_limits_[index].has_position_limits)
+        {
+          clamp_pos_limit();
+        }
       }
 
       desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
@@ -437,6 +440,13 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_j
       }
     }
 
+    // Re-clamp desired velocity after acceleration/jerk may have recomputed it
+    if (
+      has_desired_velocity && joint_limits_[index].has_velocity_limits &&
+      std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
+    {
+      clamp_vel_limit();
+    }
     // Re-clamp desired position after acceleration/jerk may have recomputed it
     if (has_desired_position && joint_limits_[index].has_position_limits)
     {
