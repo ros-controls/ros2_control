@@ -273,17 +273,6 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
 
-<<<<<<< HEAD
-=======
-  ament_add_gmock(test_controller_manager_with_resource_manager
-  test/test_controller_manager_with_resource_manager.cpp
-  )
-  target_link_libraries(test_controller_manager_with_resource_manager
-    controller_manager
-    hardware_interface::hardware_interface
-    ros2_control_test_assets::ros2_control_test_assets
-  )
-
   ament_add_gmock(test_sleeping_policies
     test/test_sleeping_policies.cpp
     src/sleeping_policies.cpp
@@ -295,7 +284,6 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
->>>>>>> 2296fd8 (Make sleep in ros2_control node optional (#3213))
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
