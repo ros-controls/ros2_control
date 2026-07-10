@@ -3572,3 +3572,14 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_excep
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());
 }
+
+class TestControllerManagerZeroUpdateRate
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestControllerManagerZeroUpdateRate, update_rate_is_positive_after_construction)
+{
+  EXPECT_GT(cm_->get_update_rate(), 0u)
+    << "Controller manager update rate must be positive to avoid modulo-by-zero UB";
+}

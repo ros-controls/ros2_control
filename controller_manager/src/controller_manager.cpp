@@ -732,6 +732,11 @@ void ControllerManager::initialize_parameters()
       this->get_node_parameters_interface(), this->get_logger());
     params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
     update_rate_ = static_cast<unsigned int>(params_->update_rate);
+    if (update_rate_ == 0u)
+    {
+      RCLCPP_ERROR(get_logger(), "Update rate cannot be zero. Using default value of 100 Hz.");
+      update_rate_ = 100u;
+    }
     trigger_clock_ =
       use_sim_time_ ? this->get_clock() : std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
     RCLCPP_INFO(
