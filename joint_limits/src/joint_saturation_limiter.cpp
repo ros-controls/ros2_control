@@ -40,9 +40,22 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     return false;
   }
 
-  // TODO(gwalck) compute if the max are not implicitly violated with the given dt
-  // e.g. for max vel 2.0 and max acc 5.0, with dt >0.4
-  // velocity max is implicitly already violated due to max_acc * dt > 2.0
+  for (size_t i = 0; i < number_of_joints_; ++i)
+  {
+    if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
+    {
+      const double implicit_vel = joint_limits_[i].max_acceleration * dt_seconds;
+      if (implicit_vel > joint_limits_[i].max_velocity)
+      {
+        RCLCPP_WARN_STREAM_THROTTLE(
+          node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+          "Joint '" << joint_names_[i] << "': dt (" << dt_seconds
+                    << ") is too large for max_acceleration (" << joint_limits_[i].max_acceleration
+                    << ") and max_velocity (" << joint_limits_[i].max_velocity
+                    << "); max_acc * dt = " << implicit_vel << " exceeds max_velocity");
+      }
+    }
+  }
 
   // check for required inputs combination
   const bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
@@ -202,6 +215,19 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
         {
           // vel_cmd from integration of desired_acc, needed even if no vel output
           desired_vel[index] = current_joint_velocities[index] + desired_acc[index] * dt_seconds;
+          // reclap the desired_vel if desired_vel exceedes max velocity
+          if (
+            joint_limits_[index].has_velocity_limits &&
+            std::fabs(desired_vel[index]) > joint_limits_[index].max_velocity)
+          {
+            desired_vel[index] =
+              std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
+            desired_acc[index] =
+              (desired_vel[index] - current_joint_velocities[index]) / dt_seconds;
+            limited_jnts_vel.emplace_back(joint_names_[index]);
+            limits_enforced = true;
+          }
+
           if (has_desired_position)
           {
             // pos_cmd from from double integration of desired_acc
