@@ -215,19 +215,6 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
         {
           // vel_cmd from integration of desired_acc, needed even if no vel output
           desired_vel[index] = current_joint_velocities[index] + desired_acc[index] * dt_seconds;
-          // reclap the desired_vel if desired_vel exceedes max velocity
-          if (
-            joint_limits_[index].has_velocity_limits &&
-            std::fabs(desired_vel[index]) > joint_limits_[index].max_velocity)
-          {
-            desired_vel[index] =
-              std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
-            desired_acc[index] =
-              (desired_vel[index] - current_joint_velocities[index]) / dt_seconds;
-            limited_jnts_vel.emplace_back(joint_names_[index]);
-            limits_enforced = true;
-          }
-
           if (has_desired_position)
           {
             // pos_cmd from from double integration of desired_acc
