@@ -158,7 +158,7 @@ TEST_F(JointSaturationLimiterTest, when_within_limits_expect_no_limits_applied_w
     // within limits
     desired_joint_states_.positions[0] = 1.0;
     desired_joint_states_.velocities[0] = 1.5;     // valid pos derivative as well
-    desired_joint_states_.accelerations[0] = 2.9;  // valid pos derivative as well
+    desired_joint_states_.accelerations[0] = 2.0;  // valid pos derivative as well
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if no limits applied
@@ -166,7 +166,7 @@ TEST_F(JointSaturationLimiterTest, when_within_limits_expect_no_limits_applied_w
       desired_joint_states_, 0,
       1.0,  // pos unchanged
       1.5,  // vel unchanged
-      2.9   // acc = vel / 1.0
+      2.0   // acc = vel / 1.0
     );
   }
 }

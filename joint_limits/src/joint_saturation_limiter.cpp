@@ -40,21 +40,52 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     return false;
   }
 
-  for (size_t i = 0; i < number_of_joints_; ++i)
+  // if the dt is changed then recalculate the max_acceleration/max_deceleration if implicit vel
+  // exceeds max vel
+  if (std::fabs(dt_seconds - prev_dt_seconds_) > 1e-9)
   {
-    if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
+    for (size_t i = 0; i < number_of_joints_; ++i)
     {
-      const double implicit_vel = joint_limits_[i].max_acceleration * dt_seconds;
-      if (implicit_vel > joint_limits_[i].max_velocity)
+      if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
       {
-        RCLCPP_WARN_STREAM_THROTTLE(
-          node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-          "Joint '" << joint_names_[i] << "': dt (" << dt_seconds
-                    << ") is too large for max_acceleration (" << joint_limits_[i].max_acceleration
-                    << ") and max_velocity (" << joint_limits_[i].max_velocity
-                    << "); max_acc * dt = " << implicit_vel << " exceeds max_velocity");
+        const double implicit_vel = joint_limits_[i].max_acceleration * dt_seconds;
+        if (implicit_vel > joint_limits_[i].max_velocity)
+        {
+          RCLCPP_WARN_STREAM_THROTTLE(
+            node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+            "Joint '" << joint_names_[i] << "': dt (" << dt_seconds
+                      << ") is too large for max_acceleration ("
+                      << joint_limits_[i].max_acceleration << ") and max_velocity ("
+                      << joint_limits_[i].max_velocity << "); max_acc * dt = " << implicit_vel
+                      << " exceeds max_velocity");
+          effective_max_acc_[i] = joint_limits_[i].max_velocity / dt_seconds;
+        }
+        else
+        {
+          effective_max_acc_[i] = joint_limits_[i].max_acceleration;
+        }
+      }
+      if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_deceleration_limits)
+      {
+        const double implicit_vel = joint_limits_[i].max_deceleration * dt_seconds;
+        if (implicit_vel > joint_limits_[i].max_velocity)
+        {
+          RCLCPP_WARN_STREAM_THROTTLE(
+            node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+            "Joint '" << joint_names_[i] << "': dt (" << dt_seconds
+                      << ") is too large for max_deceleration ("
+                      << joint_limits_[i].max_deceleration << ") and max_velocity ("
+                      << joint_limits_[i].max_velocity << "); max_dec * dt = " << implicit_vel
+                      << " exceeds max_velocity");
+          effective_max_dec_[i] = joint_limits_[i].max_velocity / dt_seconds;
+        }
+        else
+        {
+          effective_max_dec_[i] = joint_limits_[i].max_deceleration;
+        }
       }
     }
+    prev_dt_seconds_ = dt_seconds;
   }
 
   // check for required inputs combination
@@ -198,8 +229,8 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
           // limit deceleration
           if (joint_limits_[index].has_deceleration_limits)
           {
-            limit_applied = apply_acc_or_dec_limit(
-              joint_limits_[index].max_deceleration, desired_acc, limited_jnts_dec);
+            limit_applied =
+              apply_acc_or_dec_limit(effective_max_dec_[index], desired_acc, limited_jnts_dec);
             deceleration_limit_applied = true;
           }
         }
@@ -207,8 +238,8 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
         // limit acceleration (fallback to acceleration if no deceleration limits)
         if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
         {
-          limit_applied = apply_acc_or_dec_limit(
-            joint_limits_[index].max_acceleration, desired_acc, limited_jnts_acc);
+          limit_applied =
+            apply_acc_or_dec_limit(effective_max_acc_[index], desired_acc, limited_jnts_acc);
         }
 
         if (limit_applied)
@@ -266,11 +297,11 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       double stopping_deccel = std::fabs(desired_vel[index] / dt_seconds);
       if (joint_limits_[index].has_deceleration_limits)
       {
-        stopping_deccel = joint_limits_[index].max_deceleration;
+        stopping_deccel = effective_max_dec_[index];
       }
       else if (joint_limits_[index].has_acceleration_limits)
       {
-        stopping_deccel = joint_limits_[index].max_acceleration;
+        stopping_deccel = effective_max_dec_[index];
       }
 
       double stopping_distance =

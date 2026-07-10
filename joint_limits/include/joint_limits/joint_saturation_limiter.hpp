@@ -50,6 +50,11 @@ public:
   bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
+    const auto num_joints = this->number_of_joints_;
+    prev_dt_seconds_ = 0.0;
+    effective_max_acc_.assign(num_joints, 0.0);
+    effective_max_dec_.assign(num_joints, 0.0);
+
     return true;
   }
 
@@ -91,6 +96,11 @@ protected:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
   std::mutex mutex_;
+
+private:
+  std::vector<double> effective_max_acc_;
+  std::vector<double> effective_max_dec_;
+  double prev_dt_seconds_;
 };
 
 template <typename JointLimitsStateDataType>
