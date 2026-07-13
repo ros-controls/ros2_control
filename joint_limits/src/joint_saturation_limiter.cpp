@@ -93,7 +93,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
 
   // display limitations
 
-  auto log_limits = [&](const std::vector<bool> & hits, const std::string & msg)
+  auto log_limits = [&](const std::vector<bool> & hits, const char * msg)
   {
     std::string out_str = "";
     for (size_t i = 0; i < number_of_joints_; ++i)
@@ -423,7 +423,7 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
                             0.5 * desired_acc_[index] * dt_seconds * dt_seconds;
     }
   }
-  auto log_limits = [&](const std::vector<bool> & hits, const std::string & msg)
+  auto log_limits = [&](const std::vector<bool> & hits, const char * msg)
   {
     std::string out_str = "";
     for (size_t i = 0; i < number_of_joints_; ++i)
