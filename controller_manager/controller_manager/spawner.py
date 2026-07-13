@@ -379,12 +379,15 @@ def main(args=None):
                 if not os.path.isfile(param_file):
                     raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
-    # Use the first controller name for the logger/lock
+    # Use the first controller name for the node/lock
     first_controller_name = controllers[0]["name"]
-    logger = rclpy.logging.get_logger("ros2_control_controller_spawner_" + first_controller_name)
+    spawner_node_name = "spawner_" + first_controller_name
+    # Fallback logger in case node creation fails; replaced by node.get_logger() below
+    logger = rclpy.logging.get_logger("spawner")
 
     try:
-        spawner_node_name = "spawner_" + first_controller_name
+        node = Node(spawner_node_name)
+        logger = node.get_logger()
         # Get the environment variable $ROS_HOME or default to ~/.ros
         ros_home = os.getenv("ROS_HOME", os.path.join(os.path.expanduser("~"), ".ros"))
         ros_control_lock_dir = os.path.join(ros_home, "locks")
@@ -425,9 +428,6 @@ def main(args=None):
             logger.info(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
         else:
             logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
-
-        node = Node(spawner_node_name)
-        logger = node.get_logger()
 
         spawner_namespace = node.get_namespace()
 
