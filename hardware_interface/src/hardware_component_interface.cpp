@@ -124,8 +124,12 @@ CallbackReturn HardwareComponentInterface::init(
   {
     std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    impl_->hardware_component_node_ = std::make_shared<rclcpp::Node>(
-      node_name, params.node_namespace, define_custom_node_options());
+
+    auto options = define_custom_node_options();
+    options.arguments({"--ros-args", "-r", "__node:=" + node_name});
+
+    impl_->hardware_component_node_ =
+      std::make_shared<rclcpp::Node>(node_name, params.node_namespace, options);
     locked_executor->add_node(impl_->hardware_component_node_->get_node_base_interface());
   }
   else
@@ -153,13 +157,7 @@ CallbackReturn HardwareComponentInterface::init(
     }
   }
 
-  if (publish_rate == 0.0)
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
-  }
-  else
+  if (publish_rate > 0.0)
   {
     control_msgs::msg::HardwareStatus status_msg_template;
     if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
@@ -553,11 +551,19 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
 void HardwareComponentInterface::pause_async_operations()
-
 {
   if (async_handler_)
   {
     async_handler_->pause_execution();
+  }
+}
+
+void HardwareComponentInterface::stop_async_handler()
+{
+  if (async_handler_)
+  {
+    async_handler_->stop_thread();
+    async_handler_.reset();
   }
 }
 

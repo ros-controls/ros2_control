@@ -14,17 +14,23 @@
 
 // Authors: Karsten Knese, Denis Stogl
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -351,21 +357,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("external_joint", "external_state_interface", nullptr));
-
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    state_interface_ = std::make_shared<hardware_interface::StateInterface>(
+      "external_joint", "external_state_interface");
+    state_interfaces.emplace_back(state_interface_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "external_joint", "external_command_interface", nullptr));
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    command_interface_ = std::make_shared<hardware_interface::CommandInterface>(
+      "external_joint", "external_command_interface");
+    command_interfaces.emplace_back(command_interface_);
 
     return command_interfaces;
   }
@@ -381,6 +389,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   {
     return hardware_interface::return_type::OK;
   }
+
+  hardware_interface::StateInterface::SharedPtr state_interface_;
+  hardware_interface::CommandInterface::SharedPtr command_interface_;
 };
 
 TEST_F(ResourceManagerTest, post_initialization_add_components)
@@ -1325,6 +1336,39 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
   EXPECT_EQ(reference_interface_values[1], 2.0);
   EXPECT_EQ(reference_interface_values[2], 33.3);
 
+  // DUPLICATE PREVENTION TEST
+
+  // Count before first call (interfaces should NOT be available yet)
+  size_t count_initial = rm.available_command_interfaces().size();
+
+  // Make reference interfaces available (first call)
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Count after first call
+  size_t count_before = rm.available_command_interfaces().size();
+
+  EXPECT_GT(count_before, count_initial) << "First call should have added interfaces";
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_command_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate reference interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_command_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_reference_interfaces_unavailable(CONTROLLER_NAME);
+
   // remove reference interfaces from resource manager
   rm.remove_controller_reference_interfaces(CONTROLLER_NAME);
 
@@ -1340,6 +1384,93 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
+TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
+{
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
+
+  std::string CONTROLLER_NAME = "test_controller";
+  std::vector<std::string> STATE_INTERFACE_NAMES = {"state1", "state2", "state3"};
+  std::vector<std::string> FULL_STATE_INTERFACE_NAMES = {
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[0],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[1],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[2]};
+
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+  std::vector<double> state_interface_values = {1.0, 2.0, 3.0};
+
+  for (size_t i = 0; i < STATE_INTERFACE_NAMES.size(); ++i)
+  {
+    state_interfaces.push_back(
+      std::make_shared<hardware_interface::StateInterface>(
+        CONTROLLER_NAME, STATE_INTERFACE_NAMES[i], &state_interface_values[i]));
+  }
+
+  rm.import_controller_exported_state_interfaces(CONTROLLER_NAME, state_interfaces);
+
+  ASSERT_THAT(
+    rm.get_controller_exported_state_interface_names(CONTROLLER_NAME),
+    testing::ElementsAreArray(FULL_STATE_INTERFACE_NAMES));
+
+  // check interfaces NOT available initially
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+  // Count before first make available call
+  size_t count_initial = rm.available_state_interfaces().size();
+
+  // make interface available
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Verify first call changed the count
+  size_t count_after_first = rm.available_state_interfaces().size();
+  EXPECT_GT(count_after_first, count_initial) << "First call should have added interfaces";
+
+  // DUPLICATE PREVENTION TEST
+
+  // Count before second call
+  size_t count_before = rm.available_state_interfaces().size();
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_state_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate state interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_state_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_exported_state_interfaces_unavailable(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+
+  // remove
+  rm.remove_controller_exported_state_interfaces(CONTROLLER_NAME);
+
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_FALSE(rm.state_interface_exists(interface));
+  }
+}
+
 class MockExecutor : public rclcpp::executors::SingleThreadedExecutor
 {
 public:
@@ -1347,14 +1478,18 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-
+  // cppcheck-suppress syntaxError
+#if RCLCPP_VERSION_GTE(31, 0, 0)
+  void add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
+#else
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-
   std::vector<std::string> added_node_names;
 };
 
@@ -2758,6 +2893,114 @@ TEST_F(ResourceManagerTestCommandLimitEnforcement, test_command_interfaces_limit
   setup_resource_manager_and_do_initial_checks();
 
   check_limit_enforcement();
+}
+
+class ResourceManagerTestReadWriteException : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks(bool handle_exceptions)
+  {
+    hardware_interface::ResourceManagerParams rm_params;
+    rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+    rm_params.clock = node_.get_clock();
+    rm_params.logger = node_.get_logger();
+    rm_params.update_rate = 100;
+    rm_params.handle_exceptions = handle_exceptions;
+    rm = std::make_shared<TestableResourceManager>(rm_params);
+    activate_components(*rm);
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    // with default values read and write should run without any problems
+    {
+      auto [result, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      auto [result, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_EQ(result, hardware_interface::return_type::OK);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+
+  const rclcpp::Time time = rclcpp::Time(0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+};
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->read(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_with_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(true);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=true: should not throw, returns ERROR
+  auto [result, failed_hardware_names] = rm->write(time, duration);
+  EXPECT_EQ(result, hardware_interface::return_type::ERROR);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_read_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on read for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->read(time, duration), std::runtime_error);
+}
+
+TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_handle_exceptions)
+{
+  setup_resource_manager_and_do_initial_checks(false);
+
+  // trigger exception on write for the actuator
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_THROW_VALUE));
+
+  // with handle_exceptions=false: should throw
+  EXPECT_THROW(rm->write(time, duration), std::runtime_error);
+}
+
+/// @note this is a non-deterministic test and this type of tests are hard to reproduce due to
+// vtable stuff
+TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
+{
+  // TestActuatorHardware uses "detached" scheduling policy in async_hardware_resources.
+  const auto minimal_robot_urdf_async =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::async_hardware_resources) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  auto rm = std::make_unique<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
+  activate_components(*rm);
+
+  // Trigger at least one async read cycle so the DETACHED thread is running.
+  auto time = node_.get_clock()->now();
+  const rclcpp::Duration duration(0, 1'000'000);
+  rm->read(time, duration);
+
+  // Drop the ResourceManager without calling shutdown_components() first.
+  // Before the fix this races with the async thread and crashes with "pure virtual method called".
+  EXPECT_NO_FATAL_FAILURE(rm.reset());
 }
 
 int main(int argc, char ** argv)

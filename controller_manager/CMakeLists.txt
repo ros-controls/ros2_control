@@ -36,7 +36,6 @@ generate_parameter_library(controller_manager_parameters
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
-target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
@@ -55,7 +54,10 @@ target_link_libraries(controller_manager PUBLIC
                       ${std_msgs_TARGETS}
                       ${controller_manager_msgs_TARGETS})
 
-add_executable(ros2_control_node src/ros2_control_node.cpp)
+add_executable(ros2_control_node
+  src/ros2_control_node.cpp
+  src/sleeping_policies.cpp
+)
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
 )
@@ -148,6 +150,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_failed_init
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -225,7 +228,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
-    TIMEOUT 180
+    TIMEOUT 240
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager
@@ -234,6 +237,19 @@ if(BUILD_TESTING)
   )
   target_compile_definitions(
     test_spawner_unspawner
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
+
+  ament_add_gmock(test_advanced_spawner
+    test/test_advanced_spawner.cpp
+    TIMEOUT 180
+  )
+  target_link_libraries(test_advanced_spawner
+    controller_manager
+    test_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  target_compile_definitions(
+    test_advanced_spawner
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
   ament_add_gmock(test_hardware_spawner
@@ -254,6 +270,26 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
+  )
+
+  ament_add_gmock(test_controller_manager_with_resource_manager
+  test/test_controller_manager_with_resource_manager.cpp
+  )
+  target_link_libraries(test_controller_manager_with_resource_manager
+    controller_manager
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_sleeping_policies
+    test/test_sleeping_policies.cpp
+    src/sleeping_policies.cpp
+    TIMEOUT 60
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_sleeping_policies
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
   )
 
   find_package(ament_cmake_pytest REQUIRED)

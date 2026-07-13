@@ -85,6 +85,8 @@ public:
   rclcpp::Duration update_period_ = rclcpp::Duration::from_seconds(0.);
 
   bool throw_on_initialize = false;
+  bool throw_on_configure = false;
+  bool throw_on_activate = false;
   bool throw_on_update = false;
 };
 

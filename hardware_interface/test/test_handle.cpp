@@ -15,10 +15,7 @@
 #include <thread>
 
 #include "gmock/gmock.h"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "hardware_interface/handle.hpp"
-#pragma GCC diagnostic pop
 #include "hardware_interface/hardware_info.hpp"
 
 using hardware_interface::CommandInterface;

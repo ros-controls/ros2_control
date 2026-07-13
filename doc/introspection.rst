@@ -14,7 +14,7 @@ All the registered variables are published over 3 topics: ``~/introspection_data
 
 The topics ``~/introspection_data/full`` and ``~/introspection_data/values`` are always published on every update cycle asynchronously, provided that there is at least one subscriber to these topics.
 
-The topic ``~/introspection_data/full`` can be used to integrate with your custom visualization tools or to track the variables from the command line. The topic ``~/introspection_data/names`` and ``~/introspection_data/values`` are to be used for visualization tools like `PlotJuggler <https://plotjuggler.io/>`_ or `RQT plot <http://wiki.ros.org/rqt_plot>`_ to visualize the data.
+The topic ``~/introspection_data/full`` can be used to integrate with your custom visualization tools or to track the variables from the command line. The topic ``~/introspection_data/names`` and ``~/introspection_data/values`` are to be used for visualization tools like `PlotJuggler <https://github.com/PlotJuggler/PlotJuggler>`_ or `RQT plot <http://wiki.ros.org/rqt_plot>`_ to visualize the data.
 
 .. note::
   If you have a high frequency of data, it is recommended to use the ``~/introspection_data/names`` and ``~/introspection_data/values`` topic. So, that the data transferred and stored is minimized.
@@ -78,7 +78,7 @@ Types of entities that can be introspected
 Data Visualization
 *******************
 
-Data can be visualized with any tools that display ROS topics, but we recommend `PlotJuggler <https://plotjuggler.io/>`_ for viewing high resolution live data, or data in bags.
+Data can be visualized with any tools that display ROS topics, but we recommend `PlotJuggler <https://github.com/PlotJuggler/PlotJuggler>`_ for viewing high resolution live data, or data in bags.
 
 1. Open ``PlotJuggler`` by running ``ros2 run plotjuggler plotjuggler`` from the command line.
 

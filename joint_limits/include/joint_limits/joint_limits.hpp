@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adolfo Rodriguez Tsouroukdissian
+/// @author Adolfo Rodriguez Tsouroukdissian
 
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HPP_
@@ -24,7 +24,8 @@
 namespace joint_limits
 {
 /**
- * JointLimits structure stores values from from yaml definition or `<limits>` tag in URDF.
+ * @brief Store joint limits values from YAML definition or URDF `<limits>` tag.
+ *
  * The mapping from URDF attributes to members is the following:
  *   lower --> min_position
  *   upper --> max_position
@@ -67,6 +68,23 @@ struct JointLimits
   bool has_effort_limits;
   bool angle_wraparound;
 
+  void disable_all_limits()
+  {
+    has_position_limits = false;
+    has_velocity_limits = false;
+    has_acceleration_limits = false;
+    has_deceleration_limits = false;
+    has_jerk_limits = false;
+    has_effort_limits = false;
+    min_position = -std::numeric_limits<double>::max();
+    max_position = std::numeric_limits<double>::max();
+    max_velocity = std::numeric_limits<double>::max();
+    max_acceleration = std::numeric_limits<double>::max();
+    max_deceleration = std::numeric_limits<double>::max();
+    max_jerk = std::numeric_limits<double>::max();
+    max_effort = std::numeric_limits<double>::max();
+  }
+
   std::string to_string() const
   {
     std::stringstream ss_output;
@@ -90,8 +108,7 @@ struct JointLimits
 };
 
 /**
- * SoftJointLimits stores values from the `<safety_controller>` tag of URDF.
- * The meaning of the fields are:
+ * @brief Store soft joint limits values from the URDF `<safety_controller>` tag.
  *
  * An element can contain the following attributes:
  *

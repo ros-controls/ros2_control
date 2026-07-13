@@ -43,7 +43,7 @@ public:
 
   explicit HardwareComponent(HardwareComponent && other) noexcept;
 
-  ~HardwareComponent() = default;
+  ~HardwareComponent();
 
   HardwareComponent(const HardwareComponent & other) = delete;
 

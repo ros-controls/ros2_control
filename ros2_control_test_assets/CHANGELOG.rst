@@ -2,6 +2,40 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)
+* Controller Manager recovery from invalid URDF errors (`#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_)
+* Contributors: Sai Kishor Kothakota, VitezGabriela
+
+6.7.1 (2026-05-12)
+------------------
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich
+
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+* Add 6D robot description to ros2_control_test_assets (`#3032 <https://github.com/ros-controls/ros2_control/issues/3032>`_)
+* Unify transmission tests using shared minimal robot URDF in test assets (`#3031 <https://github.com/ros-controls/ros2_control/issues/3031>`_)
+* Contributors: Naitik
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.4.0 (2026-02-03)
+------------------
+* Fix disabling joint limits via URDF (`#2992 <https://github.com/ros-controls/ros2_control/issues/2992>`_)
+* Strip leading and trailing whitespaces while parsing components (`#2974 <https://github.com/ros-controls/ros2_control/issues/2974>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.3.2 (2026-01-10)
 ------------------
 
