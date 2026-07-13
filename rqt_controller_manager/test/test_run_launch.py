@@ -35,6 +35,7 @@ def generate_test_description():
                 executable="rqt_controller_manager",
                 package="rqt_controller_manager",
                 name=node_name,
+                arguments=["--force-discover"],
                 additional_env={"QT_QPA_PLATFORM": "offscreen"},
             ),
             launch_testing.actions.ReadyToTest(),
