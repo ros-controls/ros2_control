@@ -301,7 +301,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       }
       else if (joint_limits_[index].has_acceleration_limits)
       {
-        stopping_deccel = effective_max_dec_[index];
+        stopping_deccel = effective_max_acc_[index];
       }
 
       double stopping_distance =

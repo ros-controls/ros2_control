@@ -517,6 +517,35 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_with_no_maxdec_exp
   }
 }
 
+TEST_F(JointSaturationLimiterTest, when_implicit_vel_exceeds_max_vel_expect_vel_enforced)
+{
+  SetupNode("joint_saturation_limiter_nodeclimit");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 500000000);  // 0.5 seconds
+    // Joint limits: max_vel = 2.0, max_acc = 5.0, no decel limits
+    // implicit_vel = max_acc * dt = 5.0 * 0.5 = 2.5 > max_vel (2.0)
+    // effective_max_acc = max_vel / dt = 2.0 / 0.5 = 4.0
+
+    current_joint_states_.positions[0] = 0.0;
+    current_joint_states_.velocities[0] = -0.5;
+    desired_joint_states_.positions.clear();
+    desired_joint_states_.velocities[0] = 3.0;  // exceeds max_vel -> clamped to 2.0
+    // After vel clamping: desired_acc = (2.0 - (-0.5)) / 0.5 = 5.0 > effective_max_acc (4.0)
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // Acc limited to effective_max_acc = 4.0 (not raw max_acc = 5.0)
+    // Vel recomputed: -0.5 + 4.0 * 0.5 = 1.5
+    ASSERT_NEAR(desired_joint_states_.velocities[0], 1.5, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.accelerations[0], 4.0, COMMON_THRESHOLD);
+  }
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleMock(&argc, argv);
