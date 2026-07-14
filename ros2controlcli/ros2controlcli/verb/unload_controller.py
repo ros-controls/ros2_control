@@ -22,7 +22,8 @@ from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameC
 
 
 def get_inactive_controller_names(controllers):
-    """Return the names of controllers currently in the 'inactive' state.
+    """
+    Return the names of controllers currently in the 'inactive' state.
 
     :return: list of controller name strings whose state == "inactive"
     """
