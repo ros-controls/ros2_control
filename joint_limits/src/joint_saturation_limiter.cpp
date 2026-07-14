@@ -41,9 +41,10 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   }
 
   // check if implicit vel exceeds max velocity, then calculate the
-  // max_acceleration/max_deceleration
+  // max reduction among all joints
   if (!impl_vel_check_)
   {
+    double max_reduction_factor = 1.0f;
     for (size_t i = 0; i < number_of_joints_; ++i)
     {
       if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
@@ -57,7 +58,8 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
             "max_acc * dt = %f exceeds max_velocity",
             joint_names_[i].c_str(), dt_seconds, joint_limits_[i].max_acceleration,
             joint_limits_[i].max_velocity, implicit_vel);
-          joint_limits_[i].max_acceleration = joint_limits_[i].max_velocity / dt_seconds;
+          const double reduction_factor = joint_limits_[i].max_velocity / implicit_vel;
+          max_reduction_factor = std::min(reduction_factor, max_reduction_factor);
         }
       }
       if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_deceleration_limits)
@@ -71,8 +73,22 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
             "max_dec * dt = %f exceeds max_velocity",
             joint_names_[i].c_str(), dt_seconds, joint_limits_[i].max_deceleration,
             joint_limits_[i].max_velocity, implicit_vel);
-          joint_limits_[i].max_deceleration = joint_limits_[i].max_velocity / dt_seconds;
+          const double reduction_factor = joint_limits_[i].max_velocity / implicit_vel;
+          max_reduction_factor = std::min(reduction_factor, max_reduction_factor);
         }
+      }
+    }
+    // Scale down effective acc/dec for all joints
+    if (max_reduction_factor < 1.0)
+    {
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+        "Scaling all joints acceleration and deceleration limits by factor: %f",
+        max_reduction_factor);
+      for (size_t i = 0; i < number_of_joints_; ++i)
+      {
+        joint_limits_[i].max_acceleration *= max_reduction_factor;
+        joint_limits_[i].max_deceleration *= max_reduction_factor;
       }
     }
     impl_vel_check_ = true;
