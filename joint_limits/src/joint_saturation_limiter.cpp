@@ -106,9 +106,9 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     if (!out_str.empty())
     {
       out_str.pop_back();  // remove trailing space
-      RCLCPP_WARN_STREAM_THROTTLE(
-        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-        "Joint(s) [" << out_str << "] " << msg);
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD, "Joint(s) [%s] %s",
+        out_str.c_str(), msg);
     }
   };
 
@@ -436,9 +436,9 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
     if (!out_str.empty())
     {
       out_str.pop_back();  // remove trailing space
-      RCLCPP_WARN_STREAM_THROTTLE(
-        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-        "Joint(s) [" << out_str << "] " << msg);
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD, "Joint(s) [%s] %s",
+        out_str.c_str(), msg);
     }
   };
 
