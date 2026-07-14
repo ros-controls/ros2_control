@@ -157,16 +157,45 @@ TEST_F(JointSaturationLimiterTest, when_within_limits_expect_no_limits_applied_w
 
     // within limits
     desired_joint_states_.positions[0] = 1.0;
-    desired_joint_states_.velocities[0] = 1.5;     // valid pos derivative as well
-    desired_joint_states_.accelerations[0] = 2.0;  // valid pos derivative as well
+    desired_joint_states_.velocities[0] = 1.5;       // valid pos derivative as well
+    desired_joint_states_.accelerations[0] = 1.333;  // valid pos derivative as well
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if no limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      1.0,  // pos unchanged
-      1.5,  // vel unchanged
-      2.0   // acc = vel / 1.0
+      1.0,   // pos unchanged
+      1.5,   // vel unchanged
+      1.333  // acc = vel / 1.0
+    );
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_derivative_too_high_expect_lower_effective_limits)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+    // pos, vel, acc, dec = 1.0, 2.0, 5.0, 7.5
+
+    // within limits
+    desired_joint_states_.positions[0] = 1.0;
+    desired_joint_states_.velocities[0] = 1.5;     // valid pos derivative as well
+    desired_joint_states_.accelerations[0] = 2.9;  // valid pos derivative as well
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if limits applied
+    CHECK_STATE_SINGLE_JOINT(
+      desired_joint_states_, 0,
+      0.6665,  // pos = 0.0 + 0.5 * 1.333 * 1.0^2
+      1.333,   // vel = 0.0 + 1.333 * 1.0
+      1.333    // acc = 5*0.266 = 1.333 (reduction ratio = max_vel/implicit_vel -> 2.0/7.5 = 0.266)
     );
   }
 }
