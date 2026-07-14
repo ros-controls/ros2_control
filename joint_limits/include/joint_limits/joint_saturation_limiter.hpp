@@ -50,11 +50,7 @@ public:
   bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
-    const auto num_joints = this->number_of_joints_;
-    prev_dt_seconds_ = 0.0;
-    effective_max_acc_.assign(num_joints, 0.0);
-    effective_max_dec_.assign(num_joints, 0.0);
-
+    impl_vel_check_ = false;
     return true;
   }
 
@@ -90,6 +86,7 @@ public:
   {
     std::lock_guard<std::mutex> lock(mutex_);
     prev_command_ = JointLimitsStateDataType();
+    impl_vel_check_ = false;
   }
 
 protected:
@@ -98,9 +95,8 @@ protected:
   std::mutex mutex_;
 
 private:
-  std::vector<double> effective_max_acc_;
-  std::vector<double> effective_max_dec_;
-  double prev_dt_seconds_;
+  bool impl_vel_check_;  // this flag is used to check if implicit vel exceeds max vel, then update
+                         // max acc/dec to effective acc and dec
 };
 
 template <typename JointLimitsStateDataType>
