@@ -109,7 +109,7 @@ jobs:
 
   semi-binary:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -123,7 +123,7 @@ jobs:
 
   semi-binary-clang:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -141,7 +141,7 @@ jobs:
 
   build-downstream:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -158,7 +158,7 @@ jobs:
 
   binary:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -176,7 +176,7 @@ jobs:
 
   coverage_rolling:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
     secrets: inherit
     with:
@@ -184,7 +184,7 @@ jobs:
 
   compatibility-build:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -198,7 +198,7 @@ jobs:
 
   abi_check:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
     strategy:
       fail-fast: false
@@ -209,7 +209,7 @@ jobs:
 
   debian_semi_binary_build:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false
@@ -223,7 +223,7 @@ jobs:
 
   rhel_semi_binary_build:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
     strategy:
       fail-fast: false
@@ -237,7 +237,7 @@ jobs:
 
   binary-windows:
     needs: [quality_gate]
-    if: ${{ needs.quality_gate.result == 'success' }}
+    if: ${{ always() && needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
     with:
       ros_distro: rolling
