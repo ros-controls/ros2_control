@@ -34,14 +34,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pre-commit:
+  pre-commit-rolling:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [lyrical, rolling]
     with:
-      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_distro: rolling
+
+  pre-commit-lyrical:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
+    with:
+      ros_distro: lyrical
+
+  pre-commit-gate:
+    needs: [pre-commit-rolling, pre-commit-lyrical]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate pre-commit gate
+        run: |
+          if [[ "${{ needs.pre-commit-rolling.result }}" == "success" && "${{ needs.pre-commit-lyrical.result }}" == "success" ]]; then
+            echo "Pre-commit gate passed."
+            exit 0
+          fi
+          echo "Pre-commit gate failed."
+          exit 1
 
   detect-docs-changes:
     runs-on: ubuntu-latest
@@ -102,7 +117,7 @@ jobs:
           exit 1
 
   semi-binary:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -115,7 +130,7 @@ jobs:
       ref_for_scheduled_build: master
 
   semi-binary-clang:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -132,7 +147,7 @@ jobs:
       not_test_build: true
 
   build-downstream:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -148,7 +163,7 @@ jobs:
       not_test_downstream: false
 
   binary:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -165,14 +180,14 @@ jobs:
       ref_for_scheduled_build: master
 
   coverage_rolling:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
     secrets: inherit
     with:
       ros_distro: rolling
 
   compatibility-build:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -185,7 +200,7 @@ jobs:
       ref_for_scheduled_build: master
 
   abi_check:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
     strategy:
       fail-fast: false
@@ -195,7 +210,7 @@ jobs:
       ros_distro: ${{ matrix.ROS_DISTRO }}
 
   debian_semi_binary_build:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false
@@ -208,7 +223,7 @@ jobs:
       skip_packages: rqt_controller_manager
 
   rhel_semi_binary_build:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
     strategy:
       fail-fast: false
@@ -221,7 +236,7 @@ jobs:
       skip_packages: rqt_controller_manager
 
   binary-windows:
-    needs: [pre-commit, docs-gate]
+    needs: [pre-commit-gate, docs-gate]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
     with:
       ros_distro: rolling
