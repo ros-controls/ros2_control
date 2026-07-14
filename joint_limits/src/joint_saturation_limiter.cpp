@@ -418,9 +418,9 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       ostr << jnt << " ";
     }
     ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
+    RCLCPP_WARN_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed velocity limits, limiting");
+      "Joint(s) [%s] would exceed velocity limits, limiting", ostr.str().c_str());
   }
 
   if (limited_jnts_acc.size() > 0)
@@ -431,9 +431,9 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       ostr << jnt << " ";
     }
     ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
+    RCLCPP_WARN_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed acceleration limits, limiting");
+      "Joint(s) [%s] would exceed acceleration limits, limiting", ostr.str().c_str());
   }
 
   if (limited_jnts_dec.size() > 0)
