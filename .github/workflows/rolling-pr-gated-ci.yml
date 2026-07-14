@@ -34,17 +34,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pre-commit-rolling:
+  pre_commit_rolling:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
     with:
       ros_distro: rolling
 
-  pre-commit-lyrical:
+  pre_commit_lyrical:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
     with:
       ros_distro: lyrical
 
-  detect-docs-changes:
+  detect_docs_changes:
     runs-on: ubuntu-latest
     outputs:
       docs_changed: ${{ steps.docs_changed.outputs.docs_changed }}
@@ -73,34 +73,34 @@ jobs:
             echo "docs_changed=${{ steps.filter.outputs.docs }}" >> "$GITHUB_OUTPUT"
           fi
 
-  check-docs:
+  check_docs:
     name: Check Docs
-    needs: [detect-docs-changes]
-    if: ${{ needs.detect-docs-changes.outputs.docs_changed == 'true' }}
+    needs: [detect_docs_changes]
+    if: ${{ needs.detect_docs_changes.outputs.docs_changed == 'true' }}
     uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@rolling
     with:
       ROS2_CONTROL_PR: ${{ github.ref }}
 
-  check-docs-noop:
-    needs: [detect-docs-changes]
-    if: ${{ needs.detect-docs-changes.outputs.docs_changed != 'true' }}
+  check_docs_noop:
+    needs: [detect_docs_changes]
+    if: ${{ needs.detect_docs_changes.outputs.docs_changed != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "No docs changes detected. Skipping docs build."
 
-  quality-gate:
-    needs: [pre-commit-rolling, pre-commit-lyrical, check-docs, check-docs-noop]
+  quality_gate:
+    needs: [pre_commit_rolling, pre_commit_lyrical, check_docs, check_docs_noop]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - name: Validate quality gate
         run: |
-          if [[ "${{ needs.pre-commit-rolling.result }}" != "success" || "${{ needs.pre-commit-lyrical.result }}" != "success" ]]; then
+          if [[ "${{ needs.pre_commit_rolling.result }}" != "success" || "${{ needs.pre_commit_lyrical.result }}" != "success" ]]; then
             echo "Pre-commit gate failed."
             exit 1
           fi
 
-          if [[ "${{ needs.check-docs.result }}" == "success" || "${{ needs.check-docs-noop.result }}" == "success" ]]; then
+          if [[ "${{ needs.check_docs.result }}" == "success" || "${{ needs.check_docs_noop.result }}" == "success" ]]; then
             echo "Quality gate passed."
             exit 0
           fi
@@ -108,8 +108,8 @@ jobs:
           exit 1
 
   semi-binary:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -122,8 +122,8 @@ jobs:
       ref_for_scheduled_build: master
 
   semi-binary-clang:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -140,8 +140,8 @@ jobs:
       not_test_build: true
 
   build-downstream:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -157,8 +157,8 @@ jobs:
       not_test_downstream: false
 
   binary:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -175,16 +175,16 @@ jobs:
       ref_for_scheduled_build: master
 
   coverage_rolling:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
     secrets: inherit
     with:
       ros_distro: rolling
 
   compatibility-build:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -197,8 +197,8 @@ jobs:
       ref_for_scheduled_build: master
 
   abi_check:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
     strategy:
       fail-fast: false
@@ -208,8 +208,8 @@ jobs:
       ros_distro: ${{ matrix.ROS_DISTRO }}
 
   debian_semi_binary_build:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false
@@ -222,8 +222,8 @@ jobs:
       skip_packages: rqt_controller_manager
 
   rhel_semi_binary_build:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
     strategy:
       fail-fast: false
@@ -236,8 +236,8 @@ jobs:
       skip_packages: rqt_controller_manager
 
   binary-windows:
-    needs: [quality-gate]
-    if: ${{ needs.quality-gate.result == 'success' }}
+    needs: [quality_gate]
+    if: ${{ needs.quality_gate.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
     with:
       ros_distro: rolling
