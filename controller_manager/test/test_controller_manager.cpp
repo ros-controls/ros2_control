@@ -3576,10 +3576,17 @@ TEST_F(TestControllerManagerNotHandlingExceptions, controller_configure_on_excep
 class TestControllerManagerZeroUpdateRate
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
+public:
+  TestControllerManagerZeroUpdateRate()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, "",
+      {rclcpp::Parameter("update_rate", 0)})
+  {
+  }
 };
 
-TEST_F(TestControllerManagerZeroUpdateRate, update_rate_is_positive_after_construction)
+TEST_F(TestControllerManagerZeroUpdateRate, zero_update_rate_falls_back_to_default)
 {
-  EXPECT_GT(cm_->get_update_rate(), 0u)
-    << "Controller manager update rate must be positive to avoid modulo-by-zero UB";
+  EXPECT_EQ(cm_->get_update_rate(), 100u)
+    << "Controller manager should fall back to 100 Hz when update_rate is set to 0";
 }
