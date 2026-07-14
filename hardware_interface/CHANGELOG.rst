@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.16.0 (2026-07-14)
+-------------------
 * Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_) (`#3460 <https://github.com/ros-controls/ros2_control/issues/3460>`_)
 * Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_) (`#3186 <https://github.com/ros-controls/ros2_control/issues/3186>`_)
 * Contributors: mergify[bot]
