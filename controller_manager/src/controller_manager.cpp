@@ -743,7 +743,7 @@ void ControllerManager::initialize_parameters()
     RCLCPP_ERROR(
       this->get_logger(),
       "Exception thrown while initializing controller manager parameters: %s \n", e.what());
-    throw e;
+    throw;
   }
 }
 

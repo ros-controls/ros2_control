@@ -31,6 +31,7 @@ endforeach()
 
 generate_parameter_library(controller_manager_parameters
   src/controller_manager_parameters.yaml
+  include/controller_manager/validate_controller_manager_parameters.hpp
 )
 
 add_library(controller_manager SHARED

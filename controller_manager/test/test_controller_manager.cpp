@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,6 +28,47 @@
 
 using ::testing::_;
 using ::testing::Return;
+
+class TestControllerManagerUpdateRateParameter : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+
+  static void TearDownTestCase() { rclcpp::shutdown(); }
+
+  void expect_update_rate_rejected(const std::int64_t update_rate)
+  {
+    auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    auto node_options = controller_manager::get_cm_node_options();
+    node_options.parameter_overrides({rclcpp::Parameter("update_rate", update_rate)});
+
+    EXPECT_THROW(
+      std::make_shared<controller_manager::ControllerManager>(
+        executor, ros2_control_test_assets::minimal_robot_urdf, true, TEST_CM_NAME, "",
+        node_options),
+      rclcpp::exceptions::InvalidParameterValueException);
+  }
+};
+
+TEST_F(TestControllerManagerUpdateRateParameter, rejects_zero) { expect_update_rate_rejected(0); }
+
+TEST_F(TestControllerManagerUpdateRateParameter, rejects_negative_value)
+{
+  expect_update_rate_rejected(-1);
+}
+
+TEST_F(TestControllerManagerUpdateRateParameter, rejects_value_that_overflows_storage)
+{
+  const auto max_update_rate = static_cast<std::uint64_t>(std::numeric_limits<unsigned int>::max());
+  const auto max_parameter_value =
+    static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+  if (max_update_rate >= max_parameter_value)
+  {
+    GTEST_SKIP() << "The update-rate parameter cannot represent a value larger than unsigned int";
+  }
+
+  expect_update_rate_rejected(static_cast<std::int64_t>(max_update_rate + 1));
+}
 
 class TestControllerManagerWithStrictness
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
