@@ -2,6 +2,11 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix joint limits namespace wording (`#3445 <https://github.com/ros-controls/ros2_control/issues/3445>`_) (`#3448 <https://github.com/ros-controls/ros2_control/issues/3448>`_)
+* Contributors: mergify[bot]
+
 5.15.0 (2026-07-01)
 -------------------
 * Fix disable velocity and effort limiting feature (`#3425 <https://github.com/ros-controls/ros2_control/issues/3425>`_) (`#3437 <https://github.com/ros-controls/ros2_control/issues/3437>`_)

@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_) (`#3186 <https://github.com/ros-controls/ros2_control/issues/3186>`_)
+* Contributors: mergify[bot]
+
 5.15.0 (2026-07-01)
 -------------------
 * Improve docstring of the semantic_components for consistency (`#3338 <https://github.com/ros-controls/ros2_control/issues/3338>`_) (`#3422 <https://github.com/ros-controls/ros2_control/issues/3422>`_)

@@ -2,6 +2,9 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.15.0 (2026-07-01)
 -------------------
 

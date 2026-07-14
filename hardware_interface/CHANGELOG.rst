@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_) (`#3460 <https://github.com/ros-controls/ros2_control/issues/3460>`_)
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_) (`#3186 <https://github.com/ros-controls/ros2_control/issues/3186>`_)
+* Contributors: mergify[bot]
+
 5.15.0 (2026-07-01)
 -------------------
 * Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_) (`#3430 <https://github.com/ros-controls/ros2_control/issues/3430>`_)

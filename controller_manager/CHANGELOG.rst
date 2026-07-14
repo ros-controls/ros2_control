@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_) (`#3460 <https://github.com/ros-controls/ros2_control/issues/3460>`_)
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_) (`#3186 <https://github.com/ros-controls/ros2_control/issues/3186>`_)
+* Make sleep in ros2_control node optional (`#3213 <https://github.com/ros-controls/ros2_control/issues/3213>`_) (`#3453 <https://github.com/ros-controls/ros2_control/issues/3453>`_)
+* Contributors: mergify[bot]
+
 5.15.0 (2026-07-01)
 -------------------
 * Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_) (`#3428 <https://github.com/ros-controls/ros2_control/issues/3428>`_)
