@@ -50,7 +50,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       if (joint_limits_[i].has_position_limits && joint_limits_[i].has_velocity_limits)
       {
         const double implicit_pos = joint_limits_[i].max_velocity * dt_seconds;
-        if (implicit_pos > joint_limits_[i].max_velocity)
+        if (implicit_pos > joint_limits_[i].max_position)
         {
           RCLCPP_WARN_THROTTLE(
             node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
