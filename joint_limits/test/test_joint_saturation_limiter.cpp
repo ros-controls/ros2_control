@@ -575,6 +575,64 @@ TEST_F(JointSaturationLimiterTest, when_implicit_vel_exceeds_max_vel_expect_vel_
   }
 }
 
+TEST_F(JointSaturationLimiterTest, when_implicit_pos_exceeds_max_pos_expect_pos_enforced)
+{
+  SetupNode("joint_saturation_limiter_pos_vel");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+    // pos, vel = 1.0, 2.0
+
+    // within limits
+    desired_joint_states_.positions[0] = 1.0;   // valid pos derivative as well
+    desired_joint_states_.velocities[0] = 1.5;  // valid pos derivative as well
+    // max vel * dt = 2 * 1 = 2 > max pos = 1
+    // max pos / max vel * dt = 1 / 2 = 0.5 reduction factor
+    // max vel = 2 * 0.5 = 1
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if limits applied
+    ASSERT_NEAR(desired_joint_states_.positions[0], 1.0, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.velocities[0], 1.0, COMMON_THRESHOLD);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_implicit_pos_exceeds_max_pos_expect_pos_enforced_on_joints)
+{
+  SetupNode("joint_saturation_limiter_pos_vel");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init({"foo_joint", "foo_joint2"});
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+    // joint 0: pos=[-1,1], vel=2; joint 1: pos=[-2,2], vel=5
+
+    desired_joint_states_.positions[0] = 1.0;
+    desired_joint_states_.velocities[0] = 1.5;
+    desired_joint_states_.positions[1] = -2.0;
+    desired_joint_states_.velocities[1] = -3.0;
+    // joint 0: factor = 1.0/2.0 = 0.5
+    // joint 1: factor = 2.0/5.0 = 0.4
+    // applied factor = min(0.5, 0.4) = 0.4
+    // max_vel[0] = 2.0 * 0.4 = 0.8
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if limits applied (factor 0.4 from joint 1 dominates)
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.8, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.velocities[0], 0.8, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.positions[1], -2.0, COMMON_THRESHOLD);
+    ASSERT_NEAR(desired_joint_states_.velocities[1], -2.0, COMMON_THRESHOLD);
+  }
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleMock(&argc, argv);
