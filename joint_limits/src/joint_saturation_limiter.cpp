@@ -47,7 +47,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     double max_reduction_factor = 1.0f;
     for (size_t i = 0; i < number_of_joints_; ++i)
     {
-      if (joint_limits_[i].has_position_limits && joint_limits_[i].has_acceleration_limits)
+      if (joint_limits_[i].has_position_limits && joint_limits_[i].has_velocity_limits)
       {
         const double implicit_pos = joint_limits_[i].max_velocity * dt_seconds;
         if (implicit_pos > joint_limits_[i].max_velocity)

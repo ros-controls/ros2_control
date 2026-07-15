@@ -222,9 +222,9 @@ TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_vel_exceeded_expect_limi
     // check if limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      -1.333,  // pos = = 0.0 + 0.5 * 1.333 * 1.0^2 (since min position is 0)
-      1.333,   // vel = 0.0 + 1.333 * 1.0
-      1.333    // acc = 5*0.266 = 1.333 (reduction ratio = max_vel/implicit_vel -> 2.0/7.5 = 0.266)
+      -1.3335,  // pos = = -2.0 + 0.5 * 1.333 * 1.0^2 (as acc limits are triggered)
+      1.333,    // vel = 0.0 + 1.333 * 1.0
+      1.333     // acc = 5*0.266 = 1.333 (reduction ratio = max_vel/implicit_vel -> 2.0/7.5 = 0.266)
     );
 
     // check opposite velocity direction (sign copy)
@@ -237,8 +237,8 @@ TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_vel_exceeded_expect_limi
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      0.0,   // pos = 1.0 - 0.5 * 2.0 * 1.0^2 (since max pos is 1)
-      -2.0,  // vel = 0.0 - 2 * 1.0
+      0.0,   // pos = 2.0 + (-2.0) * 1.0 (as acc limits are not triggered)
+      -2.0,  // vel = 0.0 + (-2.0) * 1.0
       -2.0   // dec = 7.5*0.266 = 2.0 (reduction ratio = max_vel/implicit_vel -> 2.0/7.5 = 0.266)
     );
   }
