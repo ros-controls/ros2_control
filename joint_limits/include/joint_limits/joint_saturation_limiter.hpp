@@ -119,8 +119,20 @@ private:
   std::vector<bool> dec_limit_hit_;
 
   /**
-   * @brief
-   * Clamps the joint limits
+   * @brief Clamps the joint limits for desired position, velocity and acceleration.
+   *
+   * @param[in] has_desired_position whether desired position is available.
+   * @param[in] has_desired_velocity whether desired velocity is available.
+   * @param[in] has_desired_acceleration whether desired acceleration is available.
+   * @param[in] has_current_velocity whether current velocity is available.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[out] limits_enforced true if limits are enforced, otherwise false.
+   * @param[in] current_joint_velocities current joint velocities.
+   * @param[out] braking_near_position_limit_triggered true if braking near position limit was
+   * triggered.
+   * @param[in] dt_seconds time delta in seconds to calculate missing integrals and derivation in
+   * joint limits.
    */
   void clamp_joint_limits(
     const bool has_desired_position, const bool has_desired_velocity,
@@ -131,8 +143,16 @@ private:
     bool & braking_near_position_limit_triggered, const double dt_seconds);
 
   /**
-   * @brief
-   * Handles the braking near position limit
+   * @brief Handles the braking near position limit.
+   *
+   * Reduces joint velocity and acceleration when a joint is approaching its position limit
+   * to prevent overshooting.
+   *
+   * @param[in] current_joint_velocities current joint velocities.
+   * @param[in] dt_seconds time delta in seconds to calculate missing integrals and derivation.
+   * @param[in] has_desired_position whether desired position is available.
+   * @param[in] has_desired_velocity whether desired velocity is available.
+   * @param[in] current_joint_states current joint states a robot is in.
    */
   void handle_braking_near_position_limit(
     const std::vector<double> & current_joint_velocities, double dt_seconds,
