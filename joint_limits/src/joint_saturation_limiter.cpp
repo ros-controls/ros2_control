@@ -40,11 +40,41 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     return false;
   }
 
-  // check if implicit vel exceeds max velocity, then calculate the
-  // max reduction among all joints
+  // check if implicit pos and vel exceeds max position and velocity respectively, then calculate
+  // the max reduction among all joints for max velocity and max acc/dec
   if (!impl_vel_check_)
   {
     double max_reduction_factor = 1.0f;
+    for (size_t i = 0; i < number_of_joints_; ++i)
+    {
+      if (joint_limits_[i].has_position_limits && joint_limits_[i].has_acceleration_limits)
+      {
+        const double implicit_pos = joint_limits_[i].max_velocity * dt_seconds;
+        if (implicit_pos > joint_limits_[i].max_velocity)
+        {
+          RCLCPP_WARN_THROTTLE(
+            node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+            "Joint %s: dt (%f) is too large for max_vel (%f) and max_position (%f); "
+            "max_vel * dt = %f exceeds max_position",
+            joint_names_[i].c_str(), dt_seconds, joint_limits_[i].max_velocity,
+            joint_limits_[i].max_position, implicit_pos);
+          const double reduction_factor = joint_limits_[i].max_position / implicit_pos;
+          max_reduction_factor = std::min(reduction_factor, max_reduction_factor);
+        }
+      }
+    }
+    // Scale down effective velocity for all joints
+    if (max_reduction_factor < 1.0)
+    {
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+        "Scaling all joints max velocity limits by factor: %f", max_reduction_factor);
+      for (size_t i = 0; i < number_of_joints_; ++i)
+      {
+        joint_limits_[i].max_velocity *= max_reduction_factor;
+      }
+    }
+    max_reduction_factor = 1.0f;  // reset to 1
     for (size_t i = 0; i < number_of_joints_; ++i)
     {
       if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
