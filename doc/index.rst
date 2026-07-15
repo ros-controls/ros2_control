@@ -16,6 +16,15 @@ API Documentation
 
 API documentation is parsed by doxygen and can be found `here <../../api/index.html>`_
 
+==================
+Controller Manager
+==================
+
+.. toctree::
+   :titlesonly:
+
+   Controller Manager <../controller_manager/doc/userdoc.rst>
+
 ========
 Concepts
 ========
@@ -23,19 +32,21 @@ Concepts
 .. toctree::
    :titlesonly:
 
-   Controller Manager <../controller_manager/doc/userdoc.rst>
    Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
    Joint Kinematics <../hardware_interface/doc/joints_userdoc.rst>
    Joint Limiting <../hardware_interface/doc/joint_limiting.rst>
    Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
    Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
+   Support for Asynchronous Updates <../controller_manager/doc/async_updates.rst>
+   Different Clocks used by Controller Manager <../controller_manager/doc/clocks.rst>
 
-=====================================
+=============================
 Guidelines and Best Practices
-=====================================
+=============================
 
 .. toctree::
    :titlesonly:
 
    Debugging the Controller Manager and Plugins <debugging.rst>
    Introspecting Controllers and Hardware Components <introspection.rst>
+   Monitoring and Tuning <monitoring_and_tuning.rst>
