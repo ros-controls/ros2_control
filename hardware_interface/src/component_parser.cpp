@@ -76,6 +76,7 @@ constexpr const auto kThreadPriorityAttribute = "thread_priority";
 constexpr const auto kAffinityCoresAttribute = "affinity";
 constexpr const auto kSchedulingPolicyAttribute = "scheduling_policy";
 constexpr const auto kPrintWarningsAttribute = "print_warnings";
+constexpr const auto kThreadNameAttribute = "thread_name";
 
 }  // namespace
 
@@ -765,6 +766,11 @@ HardwareInfo parse_resource_from_xml(
           {
             hardware.async_params.scheduling_policy =
               to_lower_case(get_attribute_value(async_it, kSchedulingPolicyAttribute, kAsyncTag));
+          }
+          if (async_it->FindAttribute(kThreadNameAttribute))
+          {
+            hardware.async_params.thread_name =
+              get_attribute_value(async_it, kThreadNameAttribute, kAsyncTag);
           }
           if (async_it->FindAttribute(kThreadPriorityAttribute))
           {
