@@ -604,6 +604,9 @@ void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
       desired_pos_[index] = current_joint_states.positions[index] +
                             current_joint_velocities[index] * dt_seconds +
                             0.5 * desired_acc_[index] * dt_seconds * dt_seconds;
+      // Final clamp for position
+      desired_pos_[index] = std::clamp(
+        desired_pos_[index], joint_limits_[index].min_position, joint_limits_[index].max_position);
     }
   }
 
