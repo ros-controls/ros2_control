@@ -557,6 +557,7 @@ ControllerManager::ControllerManager(
   if (is_resource_manager_initialized())
   {
     set_initial_hardware_components_state();
+    set_initial_controller_components_state();
     init_services();
   }
 }
@@ -587,6 +588,7 @@ ControllerManager::ControllerManager(
   {
     init_controller_manager();
     set_initial_hardware_components_state();
+    set_initial_controller_components_state();
     init_services();
   }
   else
@@ -802,6 +804,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
     "Resource Manager has been successfully initialized. Starting Controller Manager "
     "services...");
 
+  set_initial_controller_components_state();
   init_services();
 }
 
@@ -1832,6 +1835,73 @@ controller_interface::return_type ControllerManager::configure_controller(
   rt_controllers_wrapper_.get_unused_list(guard).clear();
 
   return controller_interface::return_type::OK;
+}
+
+void ControllerManager::set_initial_controller_components_state()
+{
+  // The controller manager is not aware of its own controllers before they are loaded.
+  // We have to search for parameters ending with '.type' and '.initial_state' and assume
+  // that these are controller names.
+
+  constexpr std::string_view suffix = "initial_state";
+
+  const std::vector<std::string> parameter_names = this->list_parameters({}, 2).names;
+
+  std::vector<std::string> controller_names;
+  for (const std::string & name : parameter_names)
+  {
+    if (name.ends_with(".type"))
+    {
+      controller_names.push_back(name.substr(0, name.find('.')));
+    }
+  }
+
+  for (const std::string & controller_name : controller_names)
+  {
+    const std::string param_name = fmt::format(FMT_COMPILE("{}.{}"), controller_name, suffix);
+    if (!has_parameter(param_name))
+    {
+      continue;
+    }
+
+    const std::string target_state = get_parameter(param_name).as_string();
+
+    RCLCPP_DEBUG(
+      get_logger(), "setting '%s' state to: '%s'", controller_name.c_str(), target_state.c_str());
+
+    // controller states and transitions:
+    // UNLOADED -> load -> UNCONFIGURED -> configure -> INACTIVE -> activate -> ACTIVE
+
+    if (target_state == "unconfigured" || target_state == "inactive" || target_state == "active")
+    {
+      if (load_controller(controller_name).get() == nullptr)
+      {
+        RCLCPP_ERROR(get_logger(), "cannot load '%s'", controller_name.c_str());
+        return;
+      }
+    }
+
+    if (target_state == "inactive" || target_state == "active")
+    {
+      if (configure_controller(controller_name) != controller_interface::return_type::OK)
+      {
+        RCLCPP_ERROR(get_logger(), "cannot configure '%s'", controller_name.c_str());
+        return;
+      }
+    }
+
+    if (target_state == "active")
+    {
+      if (
+        switch_controller(
+          {controller_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT) !=
+        controller_interface::return_type::OK)
+      {
+        RCLCPP_ERROR(get_logger(), "cannot activate '%s'", controller_name.c_str());
+        return;
+      }
+    }
+  }
 }
 
 void ControllerManager::clear_requests()
