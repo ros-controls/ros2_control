@@ -4649,14 +4649,6 @@ void ControllerManager::hardware_components_diagnostic_callback(
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     stat.add(component_name + state_suffix, component_info.state.label());
-    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-    {
-      all_active = false;
-    }
-    else
-    {
-      atleast_one_hw_active = true;
-    }
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       auto update_stats =
