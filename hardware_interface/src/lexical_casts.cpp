@@ -64,7 +64,7 @@ std::optional<FloatingPointType> parse_floating_point_with_from_chars(const std:
 
 std::optional<double> stod(const std::string & s)
 {
-#if __cplusplus < 202002L
+#if __cplusplus < 202002L || defined(__APPLE__)
   // convert from string using no locale
   // Impl with std::istringstream
   std::istringstream stream(s);
@@ -84,7 +84,7 @@ std::optional<double> stod(const std::string & s)
 
 std::optional<float> stof(const std::string & s)
 {
-#if __cplusplus < 202002L
+#if __cplusplus < 202002L || defined(__APPLE__)
   // convert from string using no locale
   // Impl with std::istringstream
   std::istringstream stream(s);
