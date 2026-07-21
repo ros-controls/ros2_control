@@ -4902,18 +4902,18 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
   for (const std::string & arg : cm_node_options_.arguments())
   {
+    const bool prev_is_remap_or_param_flag =
+      !node_options_arguments.empty() &&
+      (node_options_arguments.back() == RCL_REMAP_FLAG ||
+       node_options_arguments.back() == RCL_SHORT_REMAP_FLAG ||
+       node_options_arguments.back() == RCL_PARAM_FLAG ||
+       node_options_arguments.back() == RCL_SHORT_PARAM_FLAG);
     if (
-      arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
-      arg.find("robot_description") != std::string::npos)
+      prev_is_remap_or_param_flag &&
+      (arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos ||
+       arg.find("robot_description") != std::string::npos))
     {
-      if (
-        node_options_arguments.back() == RCL_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG ||
-        node_options_arguments.back() == RCL_PARAM_FLAG ||
-        node_options_arguments.back() == RCL_SHORT_PARAM_FLAG)
-      {
-        node_options_arguments.pop_back();
-      }
+      node_options_arguments.pop_back();
       continue;
     }
 
