@@ -151,7 +151,7 @@ protected:
     std::size_t interface_counter{0};
     for (auto i = 0u; i < data_.size(); ++i)
     {
-      if (existing_axes_[i])
+      if (existing_axes_[i] && interface_counter < state_interfaces_.size())
       {
         const auto data = state_interfaces_[interface_counter].get().get_optional();
         if (data.has_value())
