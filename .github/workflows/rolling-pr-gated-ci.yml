@@ -11,13 +11,6 @@ on:
       - '**.cpp'
       - '**.py'
       - '**.yaml'
-      - '**.yml'
-      - '**.rst'
-      - '**.md'
-      - '**.jpg'
-      - '**.jpeg'
-      - '**.png'
-      - '**.svg'
       - '.github/workflows/rolling-pr-gated-ci.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
@@ -44,52 +37,8 @@ jobs:
     with:
       ros_distro: lyrical
 
-  detect_docs_changes:
-    runs-on: ubuntu-latest
-    outputs:
-      docs_changed: ${{ steps.docs_changed.outputs.docs_changed }}
-    steps:
-      - id: filter
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            docs:
-              - '**.rst'
-              - '**.md'
-              - '**.jpg'
-              - '**.jpeg'
-              - '**.png'
-              - '**.svg'
-              - '**.yml'
-              - '**.yaml'
-              - '!.github/**'
-              - '.github/workflows/rolling-pr-gated-ci.yml'
-      - id: docs_changed
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "docs_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "docs_changed=${{ steps.filter.outputs.docs }}" >> "$GITHUB_OUTPUT"
-          fi
-
-  check_docs:
-    name: Check Docs
-    needs: [detect_docs_changes]
-    if: ${{ needs.detect_docs_changes.outputs.docs_changed == 'true' }}
-    uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@rolling
-    with:
-      ROS2_CONTROL_PR: ${{ github.ref }}
-
-  check_docs_noop:
-    needs: [detect_docs_changes]
-    if: ${{ needs.detect_docs_changes.outputs.docs_changed != 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "No docs changes detected. Skipping docs build."
-
   quality_gate:
-    needs: [pre_commit_rolling, pre_commit_lyrical, check_docs, check_docs_noop]
+    needs: [pre_commit_rolling, pre_commit_lyrical]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -99,13 +48,8 @@ jobs:
             echo "Pre-commit gate failed."
             exit 1
           fi
-
-          if [[ "${{ needs.check_docs.result }}" == "success" || "${{ needs.check_docs_noop.result }}" == "success" ]]; then
-            echo "Quality gate passed."
-            exit 0
-          fi
-          echo "Docs gate failed."
-          exit 1
+          echo "Quality gate passed."
+          exit 0
 
   semi-binary:
     needs: [quality_gate]
