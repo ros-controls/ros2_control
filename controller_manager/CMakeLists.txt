@@ -253,6 +253,15 @@ if(BUILD_TESTING)
     test_advanced_spawner
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
 
+  ament_add_gmock(test_controller_manager_with_resource_manager
+    test/test_controller_manager_with_resource_manager.cpp
+  )
+  target_link_libraries(test_controller_manager_with_resource_manager
+    controller_manager
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   ament_add_gmock(test_hardware_spawner
     test/test_hardware_spawner.cpp
     TIMEOUT 120
@@ -281,15 +290,6 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_sleeping_policies
     controller_manager
-    ros2_control_test_assets::ros2_control_test_assets
-  )
-
-  ament_add_gmock(test_controller_manager_with_resource_manager
-    test/test_controller_manager_with_resource_manager.cpp
-  )
-  target_link_libraries(test_controller_manager_with_resource_manager
-    controller_manager
-    hardware_interface::hardware_interface
     ros2_control_test_assets::ros2_control_test_assets
   )
 
