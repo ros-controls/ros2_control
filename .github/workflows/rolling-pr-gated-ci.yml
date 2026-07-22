@@ -83,23 +83,6 @@ jobs:
       cxx_compiler: clang++
       not_test_build: true
 
-  build-downstream:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
-    strategy:
-      fail-fast: false
-      matrix:
-        ROS_DISTRO: [lyrical, rolling]
-    with:
-      ros_distro: ${{ matrix.ROS_DISTRO }}
-      ros_repo: testing
-      ref_for_scheduled_build: master
-      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
-      not_test_build: true
-      downstream_workspace: ros_controls.${{ matrix.ROS_DISTRO }}.repos
-      not_test_downstream: false
-
   binary:
     needs: [quality_gate]
     if: ${{ always() && needs.quality_gate.result == 'success' }}
@@ -151,6 +134,35 @@ jobs:
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
 
+  ubuntu_gate:
+    needs: [semi-binary, semi-binary-clang, binary, coverage_rolling, compatibility-build]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Ubuntu gate
+        run: |
+          if [[ "${{ needs.semi-binary.result }}" != "success" ]]; then
+            echo "semi-binary failed"
+            exit 1
+          fi
+          if [[ "${{ needs.semi-binary-clang.result }}" != "success" ]]; then
+            echo "semi-binary-clang failed"
+            exit 1
+          fi
+          if [[ "${{ needs.binary.result }}" != "success" ]]; then
+            echo "binary failed"
+            exit 1
+          fi
+          if [[ "${{ needs.coverage_rolling.result }}" != "success" ]]; then
+            echo "coverage_rolling failed"
+            exit 1
+          fi
+          if [[ "${{ needs.compatibility-build.result }}" != "success" ]]; then
+            echo "compatibility-build failed"
+            exit 1
+          fi
+          echo "Ubuntu gate passed."
+
   debian_semi_binary_build:
     needs: [quality_gate]
     if: ${{ always() && needs.quality_gate.result == 'success' }}
@@ -187,3 +199,20 @@ jobs:
       ros_distro: rolling
       pixi_dependencies: typeguard jinja2 boost compilers cpp-expected
       upstream_workspace: ros2_control.rolling.repos
+
+  build-downstream:
+    needs: [ubuntu_gate]
+    if: ${{ always() && needs.ubuntu_gate.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      ref_for_scheduled_build: master
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      not_test_build: true
+      downstream_workspace: ros_controls.${{ matrix.ROS_DISTRO }}.repos
+      not_test_downstream: false
