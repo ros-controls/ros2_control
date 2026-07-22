@@ -37,23 +37,9 @@ jobs:
     with:
       ros_distro: lyrical
 
-  quality_gate:
-    needs: [pre_commit_rolling, pre_commit_lyrical]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate quality gate
-        run: |
-          if [[ "${{ needs.pre_commit_rolling.result }}" != "success" || "${{ needs.pre_commit_lyrical.result }}" != "success" ]]; then
-            echo "Pre-commit gate failed."
-            exit 1
-          fi
-          echo "Quality gate passed."
-          exit 0
-
   semi-binary:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -66,8 +52,8 @@ jobs:
       ref_for_scheduled_build: master
 
   semi-binary-clang:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -84,8 +70,8 @@ jobs:
       not_test_build: true
 
   binary:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -102,16 +88,16 @@ jobs:
       ref_for_scheduled_build: master
 
   coverage_rolling:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
     secrets: inherit
     with:
       ros_distro: rolling
 
   compatibility-build:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       fail-fast: false
@@ -124,8 +110,8 @@ jobs:
       ref_for_scheduled_build: master
 
   abi_check:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
     strategy:
       fail-fast: false
@@ -135,8 +121,8 @@ jobs:
       ros_distro: ${{ matrix.ROS_DISTRO }}
 
   debian_semi_binary_build:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       fail-fast: false
@@ -149,8 +135,8 @@ jobs:
       skip_packages: rqt_controller_manager
 
   rhel_semi_binary_build:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
     strategy:
       fail-fast: false
@@ -163,8 +149,8 @@ jobs:
       skip_packages: rqt_controller_manager
 
   binary-windows:
-    needs: [quality_gate]
-    if: ${{ always() && needs.quality_gate.result == 'success' }}
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
     with:
       ros_distro: rolling
