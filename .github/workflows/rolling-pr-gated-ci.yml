@@ -40,7 +40,7 @@ jobs:
   semi-binary:
     needs: [pre_commit_rolling, pre_commit_lyrical]
     if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@ici-output
     strategy:
       fail-fast: false
       matrix:
@@ -54,7 +54,7 @@ jobs:
   semi-binary-clang:
     needs: [pre_commit_rolling, pre_commit_lyrical]
     if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@ici-output
     strategy:
       fail-fast: false
       matrix:
@@ -72,7 +72,7 @@ jobs:
   binary:
     needs: [pre_commit_rolling, pre_commit_lyrical]
     if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@ici-output
     strategy:
       fail-fast: false
       matrix:
@@ -98,7 +98,7 @@ jobs:
   compatibility-build:
     needs: [pre_commit_rolling, pre_commit_lyrical]
     if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@ici-output
     strategy:
       fail-fast: false
       matrix:
@@ -159,8 +159,8 @@ jobs:
 
   build-downstream:
     needs: [semi-binary, semi-binary-clang, binary, coverage_rolling, compatibility-build]
-    if: ${{ always() && needs['semi-binary'].result == 'success' && needs['semi-binary-clang'].result == 'success' && needs.binary.result == 'success' && needs.coverage_rolling.result == 'success' && needs['compatibility-build'].result == 'success' }}
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    if: ${{ always() && needs['semi-binary'].outputs.build_target_workspace_succeeded == 'true' && needs['semi-binary-clang'].outputs.build_target_workspace_succeeded == 'true' && needs.binary.outputs.build_target_workspace_succeeded == 'true' && needs.coverage_rolling.result == 'success' && needs['compatibility-build'].outputs.build_target_workspace_succeeded == 'true' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@ici-output
     strategy:
       fail-fast: false
       matrix:
