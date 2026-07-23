@@ -144,8 +144,8 @@ The ros2_control_node executable uses the following parameters from the ``contro
 lock_memory (optional; bool; default: false for a non-realtime kernel, true for a realtime kernel)
   Locks the memory of the ``controller_manager`` node at startup to physical RAM in order to avoid page faults
   and to prevent the node from being swapped out to disk.
-  Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
-  The following command can be used to set the memory locking limit temporarily : ``ulimit -l unlimited``.
+  Find more information about the setup for memory locking in the following link: `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
+  The following command can be used to set the memory locking limit temporarily: ``ulimit -l unlimited``.
 
 cpu_affinity (optional; int (or) int_array;)
   Sets the CPU affinity of the ``controller_manager`` node to the specified CPU core.
@@ -242,13 +242,13 @@ The workaround for this is to specify another node name remap rule in the ``Node
 .. code-block:: cpp
 
     auto options = controller_manager::get_cm_node_options();
-      options.arguments({
-        "--ros-args",
-        "--remap", "_target_node_name:__node:=dst_node_name",
-        "--log-level", "info"});
+    options.arguments({
+      "--ros-args",
+      "--remap", "_target_node_name:__node:=dst_node_name",
+      "--log-level", "info"});
 
-      auto cm = std::make_shared<controller_manager::ControllerManager>(
-        executor, "_target_node_name", "some_optional_namespace", options);
+    auto cm = std::make_shared<controller_manager::ControllerManager>(
+      executor, "_target_node_name", "some_optional_namespace", options);
 
 
 Helper Scripts
