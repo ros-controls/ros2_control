@@ -11,7 +11,7 @@ ROS Interface
 -------------
 
 Publishers
-^^^^^^^^^^^
+^^^^^^^^^^
 
 ~/activity [controller_manager_msgs::msg::ControllerManagerActivity]
   A topic that is published every time there is a change of state of the controllers or hardware components managed by the controller manager.
@@ -19,7 +19,7 @@ Publishers
   The topic is published using the "transient local" quality of service, so subscribers should also be "transient local".
 
 Subscribers
-^^^^^^^^^^^^
+^^^^^^^^^^^
 
 robot_description [std_msgs::msg::String]
   String with the URDF xml, e.g., from ``robot_state_publisher``.
@@ -28,7 +28,7 @@ robot_description [std_msgs::msg::String]
 
 
 Parameters
-^^^^^^^^^^^
+^^^^^^^^^^
 
 <controller_name>.type
   Name of a plugin exported using ``pluginlib`` for a controller.
@@ -266,9 +266,7 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
-               [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS]
-               controller_names [controller_names ...]
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS] controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -351,8 +349,7 @@ The ``spawner`` now supports per controller arguments, while parsing the argumen
     Usage: spawner [global_options] --controller <name> [controller_options] --controller <name> ...
 
     Global Options:
-    usage: spawner [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
-                  [--switch-asap | --no-switch-asap] [-u] [-h]
+    usage: spawner [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [-u] [-h]
 
     options:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
@@ -483,9 +480,7 @@ The parsed controller config file can follow the same conventions as the typical
 .. code-block:: console
 
     $ ros2 run controller_manager hardware_spawner -h
-    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                            (--activate | --configure)
-                            hardware_component_names [hardware_component_names ...]
+    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] (--activate | --configure) hardware_component_names [hardware_component_names ...]
 
     positional arguments:
       hardware_component_names
