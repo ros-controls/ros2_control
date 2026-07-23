@@ -8,7 +8,7 @@ Support for Asynchronous Updates
 .. toctree::
    :titlesonly:
 
-   Asynchronous Controllers <running_controllers_asynchronously.rst>
+   Asynchronous Controllers <running_controllers_asynchronously>
 
 For details on running controllers asynchronously, see :ref:`running_controllers_asynchronously`.
 

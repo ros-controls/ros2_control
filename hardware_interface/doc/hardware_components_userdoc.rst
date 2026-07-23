@@ -14,11 +14,11 @@ Guidelines and Best Practices
 .. toctree::
    :titlesonly:
 
-   Hardware Interface Types <hardware_interface_types_userdoc.rst>
-   Writing a Hardware Component <writing_new_hardware_component.rst>
-   Different Update Rates <different_update_rates_userdoc.rst>
-   Asynchronous Execution <asynchronous_components.rst>
-   Semantic Components <semantic_components.rst>
+   Hardware Interface Types <hardware_interface_types_userdoc>
+   Writing a Hardware Component <writing_new_hardware_component>
+   Different Update Rates <different_update_rates_userdoc>
+   Asynchronous Execution <asynchronous_components>
+   Semantic Components <semantic_components>
 
 
 Lifecycle of a Hardware Component

@@ -23,7 +23,7 @@ Controller Manager
 .. toctree::
    :titlesonly:
 
-   Controller Manager <../controller_manager/doc/userdoc.rst>
+   Controller Manager <../controller_manager/doc/userdoc>
 
 ========
 Concepts
@@ -32,13 +32,13 @@ Concepts
 .. toctree::
    :titlesonly:
 
-   Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
-   Joint Kinematics <../hardware_interface/doc/joints_userdoc.rst>
-   Joint Limiting <../hardware_interface/doc/joint_limiting.rst>
-   Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
-   Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
-   Support for Asynchronous Updates <../controller_manager/doc/async_updates.rst>
-   Different Clocks used by Controller Manager <../controller_manager/doc/clocks.rst>
+   Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining>
+   Joint Kinematics <../hardware_interface/doc/joints_userdoc>
+   Joint Limiting <../hardware_interface/doc/joint_limiting>
+   Hardware Components <../hardware_interface/doc/hardware_components_userdoc>
+   Mock Components <../hardware_interface/doc/mock_components_userdoc>
+   Support for Asynchronous Updates <../controller_manager/doc/async_updates>
+   Different Clocks used by Controller Manager <../controller_manager/doc/clocks>
 
 =============================
 Guidelines and Best Practices
@@ -47,6 +47,6 @@ Guidelines and Best Practices
 .. toctree::
    :titlesonly:
 
-   Debugging the Controller Manager and Plugins <debugging.rst>
-   Introspecting Controllers and Hardware Components <introspection.rst>
-   Monitoring and Tuning <monitoring_and_tuning.rst>
+   Debugging the Controller Manager and Plugins <debugging>
+   Introspecting Controllers and Hardware Components <introspection>
+   Monitoring and Tuning <monitoring_and_tuning>
