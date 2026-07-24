@@ -9,11 +9,4 @@ Support for Asynchronous Updates
    :titlesonly:
 
    Asynchronous Controllers <running_controllers_asynchronously>
-
-For details on running controllers asynchronously, see :ref:`running_controllers_asynchronously`.
-
-Asynchronous Hardware Components
---------------------------------
-
-.. note::
-   This info is missing.
+   Asynchronous Hardware Components <../../hardware_interface/doc/asynchronous_components>
