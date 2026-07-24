@@ -178,7 +178,7 @@ hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
 
 
 Handling Multiple Controller Managers (single/multiple)
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 
