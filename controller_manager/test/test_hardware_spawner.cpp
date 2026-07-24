@@ -180,6 +180,15 @@ public:
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
+
+    // If a robot_description is already being published in the environment (e.g., by
+    // robot_state_publisher), the CM's transient_local subscription will receive it immediately
+    // and initialize the RM.  These tests require an uninitialized CM, so skip in that case.
+    if (cm_->is_resource_manager_initialized())
+    {
+      GTEST_SKIP() << "Skipping WithoutRobotDescription tests: robot_description already received "
+                      "from the environment (e.g. robot_state_publisher is running).";
+    }
   }
 
   void TearDown() override { update_executor_->cancel(); }
