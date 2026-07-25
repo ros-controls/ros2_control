@@ -41,6 +41,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   }
 
   /** WARN users if implicit vel exceeds max velocity */
+  // TODO(Sachin): Replace this code from the other PR to scale down the implicit
   for (size_t i = 0; i < number_of_joints_; ++i)
   {
     if (joint_limits_[i].has_velocity_limits && joint_limits_[i].has_acceleration_limits)
