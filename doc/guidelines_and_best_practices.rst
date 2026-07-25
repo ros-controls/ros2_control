@@ -7,4 +7,3 @@ Guidelines and Best Practices
 
    Debugging the Controller Manager and Plugins <debugging>
    Introspecting Controllers and Hardware Components <introspection>
-   Monitoring and Tuning <monitoring_and_tuning>

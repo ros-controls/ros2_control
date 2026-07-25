@@ -96,3 +96,10 @@ Data can be visualized with any tools that display ROS topics, but we recommend 
 
    .. image:: images/plotjuggler_visualizing_data.png
       :alt: PlotJuggler Visualizing Data
+
+.. _monitoring_and_tuning:
+
+Monitoring and Tuning
+*********************
+
+ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` and also ``/controller_manager/introspection_data/*`` topics. This can be used to fine tune the controller update rate.
