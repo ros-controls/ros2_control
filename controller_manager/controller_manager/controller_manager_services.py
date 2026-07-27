@@ -28,6 +28,7 @@ from controller_manager_msgs.srv import (
 
 import rclpy
 import yaml
+import json
 from rcl_interfaces.msg import Parameter
 
 # @note: The versions conditioning is added here to support the source-compatibility with Humble
@@ -436,7 +437,7 @@ def set_controller_parameters(
 ):
     parameter = Parameter()
     parameter.name = controller_name + "." + parameter_name
-    parameter_string = str(parameter_value)
+    parameter_string = json.dumps(parameter_value)
     parameter.value = get_parameter_value(string_value=parameter_string)
 
     request = SetParameters.Request()
@@ -476,6 +477,43 @@ def set_controller_parameters(
         )
         return False
     return True
+
+
+def get_controller_ros_params_from_param_files(
+    node, controller_name: str, namespace: str, parameter_files: list
+):
+    """Extract all ros__parameters for a controller from YAML parameter files."""
+    WILDCARD_KEY = "/**"
+    ROS_PARAMS_KEY = "ros__parameters"
+    namespaced_controller = (
+        f"/{controller_name}" if namespace == "/" else f"{namespace}/{controller_name}"
+    )
+    for parameter_file in parameter_files:
+        with open(parameter_file) as f:
+            parameters = yaml.safe_load(f)
+            for key in [
+                controller_name,
+                namespaced_controller,
+                f"{WILDCARD_KEY}/{controller_name}",
+                f"{WILDCARD_KEY}{namespaced_controller}",
+            ]:
+                controller_param_dict = None
+                if key in parameters:
+                    if key == controller_name and namespace != "/":
+                        continue
+                    controller_param_dict = parameters[key]
+                elif WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                    controller_param_dict = parameters[WILDCARD_KEY][key]
+                elif WILDCARD_KEY in parameters and ROS_PARAMS_KEY in parameters[WILDCARD_KEY]:
+                    controller_param_dict = parameters[WILDCARD_KEY]
+
+                if (
+                    controller_param_dict
+                    and isinstance(controller_param_dict, dict)
+                    and ROS_PARAMS_KEY in controller_param_dict
+                ):
+                    return controller_param_dict[ROS_PARAMS_KEY]
+    return {}
 
 
 def set_controller_parameters_from_param_files(
@@ -518,4 +556,18 @@ def set_controller_parameters_from_param_files(
                 fallback_controllers,
             ):
                 return False
+
+        # Store all controller ros__parameters on the CM so they can be
+        # forwarded as NodeOptions::parameter_overrides (#3497)
+        ros_params = get_controller_ros_params_from_param_files(
+            node, controller_name, spawner_namespace, controller_parameter_files
+        )
+        for param_name, param_value in ros_params.items():
+            if param_name in ("type", "fallback_controllers"):
+                continue  # already set above
+            if not set_controller_parameters(
+                node, controller_manager_name, controller_name, param_name, param_value
+            ):
+                return False
+
     return True

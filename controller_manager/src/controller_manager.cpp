@@ -4980,6 +4980,28 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(parameters_file);
   }
 
+  // Forward controller parameters from CM to the controller node as
+  // parameter overrides.  --params-file arguments in NodeOptions may not be
+  // processed by rclcpp::LifecycleNode on some distributions (#3497).  The
+  // spawner already stores these params on the CM node; we read them back
+  // and inject via parameter_overrides so they reliably reach the controller.
+  const std::string prefix = controller.info.name + ".";
+  const auto prefixed_params = this->list_parameters({prefix}, 0).names;
+  for (const auto & full_name : prefixed_params)
+  {
+    const std::string param_name = full_name.substr(prefix.length());
+    if (param_name.empty() || param_name == "type" || param_name == "params_file")
+    {
+      continue;
+    }
+    rclcpp::Parameter param;
+    if (this->get_parameter(full_name, param))
+    {
+      controller_node_options.parameter_overrides().push_back(
+        rclcpp::Parameter(param_name, param.get_parameter_value()));
+    }
+  }
+
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   if (use_sim_time_)
   {
