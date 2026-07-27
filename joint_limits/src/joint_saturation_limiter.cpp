@@ -45,12 +45,11 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   // velocity max is implicitly already violated due to max_acc * dt > 2.0
 
   // check for required inputs combination
-  const bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
-  const bool has_desired_velocity = (desired_joint_states.velocities.size() == number_of_joints_);
-  const bool has_desired_acceleration =
-    (desired_joint_states.accelerations.size() == number_of_joints_);
-  const bool has_current_position = (current_joint_states.positions.size() == number_of_joints_);
-  const bool has_current_velocity = (current_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
+  bool has_desired_velocity = (desired_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_acceleration = (desired_joint_states.accelerations.size() == number_of_joints_);
+  bool has_current_position = (current_joint_states.positions.size() == number_of_joints_);
+  bool has_current_velocity = (current_joint_states.velocities.size() == number_of_joints_);
 
   // pos state and vel or pos cmd is required, vel state is optional
   if (!(has_current_position && (has_desired_position || has_desired_velocity)))
