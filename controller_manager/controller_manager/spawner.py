@@ -447,10 +447,6 @@ def main(args=None):
         else:
             logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
 
-<<<<<<< HEAD
-        node = Node(spawner_node_name)
-        logger = node.get_logger()
-
         if node.get_namespace() != "/" and global_args.namespace:
             raise RuntimeError(
                 f"Setting namespace through both '--namespace {global_args.namespace}' arg and the ROS 2 standard way "
@@ -468,9 +464,6 @@ def main(args=None):
         spawner_namespace = (
             global_args.namespace if global_args.namespace else node.get_namespace()
         )
-=======
-        spawner_namespace = node.get_namespace()
->>>>>>> ceef16a (Create spawner logger before lock-result is logged (#3462))
 
         if not spawner_namespace.startswith("/"):
             spawner_namespace = f"/{spawner_namespace}"
