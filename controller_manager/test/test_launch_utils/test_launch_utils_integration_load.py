@@ -102,7 +102,7 @@ class TestControllerLoad(unittest.TestCase):
     def test_controller_loaded(self, launch_service, proc_output, controller_name):
 
         # Small delay to ensure controller finishes activation
-        time.sleep(2.0)
+        # check_controllers_running already waits up to its timeout
 
         # The utility checks state via /controller_manager/list_controllers
         # and raises if any controller in the list is not in the expected state.

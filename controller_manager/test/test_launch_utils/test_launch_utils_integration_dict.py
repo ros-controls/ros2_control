@@ -36,9 +36,9 @@ from controller_manager.launch_utils import (
 @pytest.mark.launch_test
 def generate_test_description():
     """
-    Generate launch description for testing.
+    Generate launch description for testing the dict-based spawner helper.
 
-    THIS VERSION CREATES ALL NEEDED FILES DYNAMICALLY AND USES THE COMBINED CONFIG.
+    Uses the combined controller YAML installed with the package.
     """
 
     urdf = FileContent(
@@ -124,7 +124,7 @@ class TestControllerSpawnerList(unittest.TestCase):
 
     def test_controllers_start(self, controller_list):
         cnames = controller_list.copy()
-        time.sleep(8.0)  # Wait 8 seconds before checking controller status
+        # check_controllers_running already waits up to its timeout
         check_controllers_running(self.node, cnames, state="active")
 
     def test_spawner_exit_code(self, proc_info):
