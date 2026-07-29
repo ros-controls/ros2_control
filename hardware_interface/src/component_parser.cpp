@@ -67,6 +67,7 @@ constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
 constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
+constexpr const auto kReadOnlyAttribute = "read_only";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
 constexpr const auto kReadWriteRateAttribute = "rw_rate";
@@ -554,6 +555,9 @@ JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element
   JointInfo joint_info;
   joint_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
   joint_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  const auto * read_only_attr = element_it->FindAttribute(kReadOnlyAttribute);
+  joint_info.read_only =
+    read_only_attr ? parse_bool(ros2_control::strip(read_only_attr->Value())) : false;
   joint_info.mechanical_reduction =
     get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 1.0);
   joint_info.offset =
@@ -566,6 +570,9 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
   ActuatorInfo actuator_info;
   actuator_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
   actuator_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  const auto * read_only_attr = element_it->FindAttribute(kReadOnlyAttribute);
+  actuator_info.read_only =
+    read_only_attr ? parse_bool(ros2_control::strip(read_only_attr->Value())) : false;
   actuator_info.mechanical_reduction =
     get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 1.0);
   actuator_info.offset =
@@ -675,7 +682,7 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       transmission.actuators.push_back(
         ActuatorInfo{
           "actuator1", transmission.joints[0].state_interfaces,
-          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
+          transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0, false});
     }
   }
 }
@@ -698,20 +705,6 @@ HardwareInfo parse_resource_from_xml(
   hardware.async_params.thread_priority = hardware.is_async
                                             ? parse_thread_priority_attribute(ros2_control_it)
                                             : std::numeric_limits<int>::max();
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  hardware.thread_priority = hardware.async_params.thread_priority;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -762,20 +755,6 @@ HardwareInfo parse_resource_from_xml(
           if (async_it->FindAttribute(kThreadPriorityAttribute))
           {
             hardware.async_params.thread_priority = parse_thread_priority_attribute(async_it);
-            // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-            hardware.thread_priority = hardware.async_params.thread_priority;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
           }
           if (async_it->FindAttribute(kPrintWarningsAttribute))
           {

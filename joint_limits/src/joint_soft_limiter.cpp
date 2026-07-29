@@ -210,7 +210,9 @@ bool JointSoftLimiter::on_enforce(
       joint_name, hard_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
       dt_seconds);
 
-    if (hard_limits.has_acceleration_limits && actual.has_velocity())
+    if (
+      hard_limits.has_velocity_limits && hard_limits.has_acceleration_limits &&
+      actual.has_velocity())
     {
       soft_min_vel =
         std::max(actual.velocity.value() - hard_limits.max_acceleration * dt_seconds, soft_min_vel);

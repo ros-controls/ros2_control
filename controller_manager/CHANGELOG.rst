@@ -2,6 +2,20 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.8.0 (2026-07-01)
+------------------
+* Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_)
+* document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_)
+* Wait to terminate test until spawner exits (`#3373 <https://github.com/ros-controls/ros2_control/issues/3373>`_)
+* Increase timeout of test_spawner_unspawner (`#3381 <https://github.com/ros-controls/ros2_control/issues/3381>`_)
+* fix typo in state and reference export methods (`#3347 <https://github.com/ros-controls/ros2_control/issues/3347>`_)
+* Enforce cleanup_controller on more exit points of configure_controller (`#3192 <https://github.com/ros-controls/ros2_control/issues/3192>`_)
+* Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_)
+* Controller Manager recovery from invalid URDF errors (`#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_)
+* Fix duplicate fallback controllers from the controller chain (`#3108 <https://github.com/ros-controls/ros2_control/issues/3108>`_)
+* Added default value to the fallback param declarations (`#3270 <https://github.com/ros-controls/ros2_control/issues/3270>`_)
+* Contributors: Christian Rauch, Christoph Fröhlich, Kevin Gilliam, Lucas Alvarez, Sai Kishor Kothakota, VitezGabriela
+
 6.7.1 (2026-05-12)
 ------------------
 * Fix size assertion in test_chainable_controller (`#3284 <https://github.com/ros-controls/ros2_control/issues/3284>`_)
