@@ -55,9 +55,6 @@ def generate_test_description():
     }
     controller_list = list(ctrl_dict.keys())
 
-    # ===== GENERATE SPAWNER LAUNCH DESCRIPTION =====
-    print(f"Spawning controllers: {controller_list}")
-
     # ===== CREATE LAUNCH DESCRIPTION =====
     return LaunchDescription(
         [
