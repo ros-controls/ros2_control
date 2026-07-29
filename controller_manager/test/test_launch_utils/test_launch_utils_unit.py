@@ -85,7 +85,7 @@ class TestLaunchUtils(unittest.TestCase):
 
     def test_generate_load_controller_launch_description(self):
         """Test load controller description with valid single string params."""
-        controllers = ["test_controller_load"]
+        controllers = "test_controller_load"
         result = generate_load_controller_launch_description(controllers)
         actions = self._extract_actions(result)
         self.assertIsInstance(result, LaunchDescription)

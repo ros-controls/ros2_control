@@ -66,7 +66,7 @@ def generate_test_description():
             ),
             generate_load_controller_launch_description(
                 controller_name="controller1",
-                controller_params_file=[robot_controllers],
+                controller_params_file=robot_controllers,
                 extra_spawner_args=["--inactive"],
             ),
             ReadyToTest(),
