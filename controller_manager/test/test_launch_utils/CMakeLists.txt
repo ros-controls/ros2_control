@@ -23,16 +23,18 @@ install(
 )
 
 # Register each test with ament
-ament_add_pytest_test(test_launch_utils_unit test_launch_utils_unit.py
-    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}
-    PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_SOURCE_DIR}:${PYTHONPATH}
+ament_add_pytest_test(test_launch_utils_unit
+    test_launch_utils_unit.py
 )
 ament_add_pytest_test(test_launch_utils_integration_list
   test_launch_utils_integration_list.py
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
 )
 ament_add_pytest_test(test_launch_utils_integration_dict
   test_launch_utils_integration_dict.py
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
 )
 ament_add_pytest_test(test_launch_utils_integration_load
   test_launch_utils_integration_load.py
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
 )
