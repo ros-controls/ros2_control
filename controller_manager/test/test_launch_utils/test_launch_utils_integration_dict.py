@@ -119,8 +119,4 @@ class TestShutdown(unittest.TestCase):
 
     def test_exit_codes(self, proc_info):
         """Verify all processes exited successfully."""
-        launch_testing.asserts.assertExitCodes(
-            proc_info,
-            # All other processes (ros2_control_node, etc.) must exit cleanly (0)
-            allowable_exit_codes=[0, 1, -2, -15],
-        )
+        launch_testing.asserts.assertExitCodes(proc_info, allowable_exit_codes=[0])
