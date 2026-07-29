@@ -114,7 +114,6 @@ class TestControllerSpawnerList(unittest.TestCase):
 
 
 @launch_testing.post_shutdown_test()
-# class TestProcessOutput(unittest.TestCase):
 class TestShutdown(unittest.TestCase):
     """Post-shutdown tests."""
 
