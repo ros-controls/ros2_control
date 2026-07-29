@@ -12,16 +12,6 @@ install(
   DESTINATION share/${PROJECT_NAME}/test/test_launch_utils
 )
 
-# Make sure test files get installed into the test tree
-install(
-  FILES
-    test_launch_utils_unit.py
-    test_launch_utils_integration_list.py
-    test_launch_utils_integration_dict.py
-    test_launch_utils_integration_load.py
-  DESTINATION share/${PROJECT_NAME}/test/test_launch_utils
-)
-
 # Register each test with ament
 ament_add_pytest_test(test_launch_utils_unit
     test_launch_utils_unit.py
