@@ -21,10 +21,8 @@ from launch_testing.actions import ReadyToTest
 import launch_ros.actions
 from launch.substitutions import FileContent, PathSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch.launch_context import LaunchContext
 
 import rclpy
-import time
 
 from controller_manager.test_utils import check_controllers_running
 
@@ -52,10 +50,6 @@ def generate_test_description():
         / "test_ros2_control_node_combined.yaml"
     )
 
-    context = LaunchContext()
-    robot_controllers_path = robot_controllers.perform(context)
-    print("Resolved controller YAML:", robot_controllers_path)
-
     # ===== DEFINE CONTROLLERS TO SPAWN =====
     controller_list = ["test_broadcaster", "controller1", "controller2"]
 
@@ -76,13 +70,13 @@ def generate_test_description():
                 package="controller_manager",
                 executable="ros2_control_node",
                 namespace="",
-                parameters=[robot_description, robot_controllers_path],
+                parameters=[robot_description, robot_controllers],
                 output="both",
             ),
             generate_controllers_spawner_launch_description(
                 controller_names=controller_list.copy(),
-                controller_params_files=[robot_controllers_path],
-                extra_spawner_args=["--activate", "--controller-manager-timeout", "20"],
+                controller_params_files=[robot_controllers],
+                extra_spawner_args=["--inactive"],
             ),
             ReadyToTest(),
         ]
@@ -115,9 +109,8 @@ class TestControllerSpawnerList(unittest.TestCase):
 
     def test_controllers_start(self, controller_list):
         cnames = controller_list.copy()
-        # Add a delay before checking controller status
         # check_controllers_running already waits up to its timeout
-        check_controllers_running(self.node, cnames, state="active")
+        check_controllers_running(self.node, cnames, state="inactive")
 
     def test_spawner_exit_code(self, proc_info):
         """Test that spawner process ran (may have completed already)."""

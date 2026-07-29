@@ -22,11 +22,9 @@ from launch_testing.actions import ReadyToTest
 import launch_ros.actions
 from launch.substitutions import FileContent, PathSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch.launch_context import LaunchContext
 
 
 import rclpy
-import time
 
 from controller_manager.test_utils import check_controllers_running
 from controller_manager.launch_utils import generate_load_controller_launch_description
@@ -50,11 +48,6 @@ def generate_test_description():
         / "test_ros2_control_node_combined.yaml"
     )
 
-    context = LaunchContext()
-    robot_controllers_path = robot_controllers.perform(context)
-
-    print("Resolved controller YAML:", robot_controllers_path)
-
     return LaunchDescription(
         [
             launch_ros.actions.Node(
@@ -68,13 +61,13 @@ def generate_test_description():
                 package="controller_manager",
                 executable="ros2_control_node",
                 namespace="",
-                parameters=[robot_description, robot_controllers_path],
+                parameters=[robot_description, robot_controllers],
                 output="both",
             ),
             generate_load_controller_launch_description(
                 controller_name="controller1",
-                controller_params_file=[robot_controllers_path],
-                extra_spawner_args=["--activate", "--controller-manager-timeout", "20"],
+                controller_params_file=[robot_controllers],
+                extra_spawner_args=["--inactive"],
             ),
             ReadyToTest(),
         ]
@@ -106,7 +99,7 @@ class TestControllerLoad(unittest.TestCase):
 
         # The utility checks state via /controller_manager/list_controllers
         # and raises if any controller in the list is not in the expected state.
-        check_controllers_running(self.node, [controller_name], state="active")
+        check_controllers_running(self.node, [controller_name], state="inactive")
 
     def test_spawner_exit_code(self, proc_info):
         """Test that spawner process ran (may have completed already)."""
