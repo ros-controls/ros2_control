@@ -99,7 +99,6 @@ return_type ControllerInterfaceBase::init(
     // no rclcpp::ParameterValue unsigned int specialization
     auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
-    auto_declare<int>("thread_priority", -100);
 
     realtime_tools::AsyncFunctionHandlerParams::declare(
       impl_->node_, "async_parameters.", impl_->ctrl_itf_params_.update_rate);
