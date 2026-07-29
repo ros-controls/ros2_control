@@ -92,7 +92,14 @@ class TestControllerLoad(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_controller_loaded(self, launch_service, proc_output, controller_name):
+    def test_controller_loaded(self, proc_info, controller_name):
+        check_controllers_running(self.node, [controller_name], state="inactive")
+
+        # Wait for controller_spawner to finish and verify successful exit.
+        proc_info.assertWaitForShutdown(process="spawner", timeout=30)
+        launch_testing.asserts.assertExitCodes(proc_info, process="spawner")
+
+        # Re-check controllers after spawner has exited.
         check_controllers_running(self.node, [controller_name], state="inactive")
 
 
