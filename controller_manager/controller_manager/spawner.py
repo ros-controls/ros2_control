@@ -434,12 +434,20 @@ def main(args=None):
             )
             return 1
 
+        # Create the node once the lock is acquired, so that all subsequent log
+        # messages are published to /rosout with the node's actual (possibly
+        # remapped) name. The node is created after the lock to keep node
+        # creation serialized between concurrent spawners.
+        node = Node(spawner_node_name)
+        logger = node.get_logger()
+
         # print only once when the lock is finally acquired, but with info level if it failed once
         if hit_timeout:
             logger.info(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
         else:
             logger.debug(bcolors.OKGREEN + "Spawner lock acquired!" + bcolors.ENDC)
 
+<<<<<<< HEAD
         node = Node(spawner_node_name)
         logger = node.get_logger()
 
@@ -460,6 +468,9 @@ def main(args=None):
         spawner_namespace = (
             global_args.namespace if global_args.namespace else node.get_namespace()
         )
+=======
+        spawner_namespace = node.get_namespace()
+>>>>>>> ceef16a (Create spawner logger before lock-result is logged (#3462))
 
         if not spawner_namespace.startswith("/"):
             spawner_namespace = f"/{spawner_namespace}"
