@@ -101,26 +101,9 @@ class TestControllerSpawnerList(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_spawner_nodes_launched(self, proc_info):
-        """Ensure processes are running."""
-        process_names = proc_info.process_names()
-        self.assertGreater(len(process_names), 0)
-        print(f"\n[TEST] Active processes: {process_names}")
-
     def test_controllers_start(self, controller_list):
         cnames = controller_list.copy()
-        # check_controllers_running already waits up to its timeout
         check_controllers_running(self.node, cnames, state="inactive")
-
-    def test_spawner_exit_code(self, proc_info):
-        """Test that spawner process ran (may have completed already)."""
-        process_names = proc_info.process_names()
-        print(f"\n[TEST] Checking for spawner in: {process_names}")
-
-        # The spawner may have already completed successfully and exited
-        # So we just verify that we have processes running
-        self.assertGreater(len(process_names), 0)
-        print(f"[TEST] ? Launch has {len(process_names)} active processes")
 
 
 @launch_testing.post_shutdown_test()

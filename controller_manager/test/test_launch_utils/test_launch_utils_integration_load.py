@@ -93,23 +93,7 @@ class TestControllerLoad(unittest.TestCase):
         self.node.destroy_node()
 
     def test_controller_loaded(self, launch_service, proc_output, controller_name):
-
-        # Small delay to ensure controller finishes activation
-        # check_controllers_running already waits up to its timeout
-
-        # The utility checks state via /controller_manager/list_controllers
-        # and raises if any controller in the list is not in the expected state.
         check_controllers_running(self.node, [controller_name], state="inactive")
-
-    def test_spawner_exit_code(self, proc_info):
-        """Test that spawner process ran (may have completed already)."""
-        process_names = proc_info.process_names()
-        print(f"\n[TEST] Checking for spawner in: {process_names}")
-
-        # The spawner may have already completed successfully and exited
-        # So we just verify that we have processes running
-        self.assertGreater(len(process_names), 0)
-        print(f"[TEST] ? Launch has {len(process_names)} active processes")
 
 
 @launch_testing.post_shutdown_test()
