@@ -21,7 +21,7 @@ The topic ``~/introspection_data/full`` can be used to integrate with your custo
 
 .. _monitoring_and_tuning:
 
-Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic. Additionally, the ros2_control ``controller_interface`` has a ``ControllerUpdateStats`` structure which can be used to monitor the controller update rate and the missed update cycles. The data is published to the ``/diagnostics`` and also ``/controller_manager/introspection_data/*`` topics. This can be used to fine tune the controller update rate.
+Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic, a summary is also published to the ``/diagnostics`` topic.
 
 All the registered variables are published over 3 topics: ``~/statistics/full``, ``~/statistics/names``, and ``~/statistics/values``.
 - The ``~/statistics/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
