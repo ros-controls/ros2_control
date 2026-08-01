@@ -99,4 +99,3 @@ Data can be visualized with any tools that display ROS topics, but we recommend 
 
    .. image:: images/plotjuggler_visualizing_data.png
       :alt: PlotJuggler Visualizing Data
-
