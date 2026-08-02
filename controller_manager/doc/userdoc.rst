@@ -266,15 +266,12 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-<<<<<<< HEAD
     usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u]
                   [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT]
-                  [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap]
-                  [--controller-ros-args CONTROLLER_ROS_ARGS]
+                  [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group]
+                  [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS]
+                  [--controller [CONTROLLER ...]]
                   controller_names [controller_names ...]
-=======
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--service-call-timeout SERVICE_CALL_TIMEOUT] [--activate-as-group] [--switch-asap | --no-switch-asap] [--controller-ros-args CONTROLLER_ROS_ARGS] controller_names [controller_names ...]
->>>>>>> a1b85d0 (doc: reorder ros2_control TOC (#3478))
 
     positional arguments:
       controller_names      List of controllers
@@ -284,26 +281,30 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       -p PARAM_FILE, --param-file PARAM_FILE
-                            Controller param file to be loaded into controller node before configure. Pass multiple times to load different files for
-                            different controllers or to override the parameters of the same controller.
+                            Controller param file to be loaded into controller node before configure. Pass
+                            multiple times to load different files for different controllers or to override the
+                            parameters of the same controller.
       -n NAMESPACE, --namespace NAMESPACE
                             DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload controllers
+      -u, --unload-on-kill  Wait until this application is interrupted (SIGINT or SIGTERM) and deactivate/unload
+                            controllers
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager service to be available
       --switch-timeout SWITCH_TIMEOUT
-                            Time to wait for a successful state switch of controllers. Useful when switching cannot be performed immediately, e.g.,
-                            paused simulations at startup
+                            Time to wait for a successful state switch of controllers. Useful when switching
+                            cannot be performed immediately, e.g., paused simulations at startup
       --service-call-timeout SERVICE_CALL_TIMEOUT
                             Time to wait for the service response from the controller manager
-      --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers
-                            altogether
+      --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for
+                            activating all chainable controllers altogether
       --switch-asap, --no-switch-asap
-                            Option to switch the controllers in the realtime loop at the earliest possible time or in the non-realtime loop.
+                            Option to switch the controllers in the realtime loop at the earliest possible time or
+                            in the non-realtime loop.
       --controller-ros-args CONTROLLER_ROS_ARGS
-                            The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass multiple times for every argument.
+                            The --ros-args to be passed to the controller node, e.g., for remapping topics. Pass
+                            multiple times for every argument.
 
     When launching ``spawner`` with ROS parameter files that use substitutions (for example, launch ``allow_substs=True``),
     the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
