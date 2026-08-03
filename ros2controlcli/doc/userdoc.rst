@@ -29,8 +29,7 @@ list_controllers
 .. code-block:: console
 
     $ ros2 control list_controllers -h
-    usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-s] [--claimed-interfaces] [--required-state-interfaces] [--required-command-interfaces] [--chained-interfaces] [--exported-interfaces] [--verbose] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
-                                     [--ros-args ...]
+    usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-s] [--claimed-interfaces] [--required-state-interfaces] [--required-command-interfaces] [--chained-interfaces] [--exported-interfaces] [--verbose] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
     Output the list of loaded controllers, their type and status
 
@@ -297,8 +296,7 @@ switch_controllers
 .. code-block:: console
 
     $ ros2 control switch_controllers -h
-    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [-s] [--deactivate [DEACTIVATE ...]] [--activate [ACTIVATE ...]] [--strict] [--activate-asap] [--switch-timeout SWITCH_TIMEOUT]
-                                          [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
+    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [-s] [--deactivate [DEACTIVATE ...]] [--activate [ACTIVATE ...]] [--strict] [--activate-asap] [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
     Switch controllers in a controller manager
 
@@ -346,7 +344,7 @@ unload_controller
       --ros-args ...        Pass arbitrary arguments to the executable
 
 cleanup_controller
-----------------------
+------------------
 
 .. code-block:: console
 
