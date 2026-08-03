@@ -19,7 +19,9 @@ The topic ``~/introspection_data/full`` can be used to integrate with your custo
 .. note::
   If you have a high frequency of data, it is recommended to use the ``~/introspection_data/names`` and ``~/introspection_data/values`` topic. So, that the data transferred and stored is minimized.
 
-Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic.
+.. _monitoring_and_tuning:
+
+Along with the above introspection data, the ``controller_manager`` also publishes the statistics of the execution time and periodicity of the read and write cycles of the hardware components and the update cycle of the controllers. This is done by registering the statistics of these variables and publishing them on the ``~/statistics`` topic, a summary is also published to the ``/diagnostics`` topic.
 
 All the registered variables are published over 3 topics: ``~/statistics/full``, ``~/statistics/names``, and ``~/statistics/values``.
 - The ``~/statistics/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
@@ -74,6 +76,7 @@ Types of entities that can be introspected
 
   .. note::
     Registering the variables for introspection is not real-time safe. It is recommended to register the variables in the ``on_configure`` method only.
+
 
 Data Visualization
 *******************
