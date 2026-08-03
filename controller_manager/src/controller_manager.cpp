@@ -1614,12 +1614,11 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  const auto & state = controller->get_lifecycle_state();
-  if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  if (!is_controller_unconfigured(*controller))
   {
     RCLCPP_ERROR(
       get_logger(), "Controller '%s' can not be configured from '%s' state.",
-      controller_name.c_str(), state.label().c_str());
+      controller_name.c_str(), controller->get_lifecycle_state().label().c_str());
     return controller_interface::return_type::ERROR;
   }
 
