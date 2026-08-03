@@ -64,13 +64,15 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_controller_loaded(
+def get_loaded_controller_state(
     node, controller_manager, controller_name, service_timeout=0.0, call_timeout=10.0
 ):
+    """Return the lifecycle state of the controller, or None if it is not loaded."""
     controllers = list_controllers(
         node, controller_manager, service_timeout, call_timeout
     ).controller
-    return any(c.name == controller_name for c in controllers)
+    match = first_match(controllers, lambda c: c.name == controller_name)
+    return match.state if match else None
 
 
 def parse_args_advanced(args):
@@ -448,13 +450,14 @@ def main(args=None):
         for controller in controllers:
             controller_name = controller["name"]
 
-            if is_controller_loaded(
+            loaded_state = get_loaded_controller_state(
                 node,
                 controller_manager_name,
                 controller_name,
                 controller_manager_timeout,
                 service_call_timeout,
-            ):
+            )
+            if loaded_state is not None:
                 logger.warning(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
@@ -503,18 +506,23 @@ def main(args=None):
                 logger.info(
                     bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
+                loaded_state = "unconfigured"
 
             if not controller["load_only"]:
-                ret = configure_controller(
-                    node,
-                    controller_manager_name,
-                    controller_name,
-                    controller_manager_timeout,
-                    service_call_timeout,
-                )
-                if not ret.ok:
-                    logger.error(bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC)
-                    return 1
+                # configure_controller only accepts the unconfigured state
+                if loaded_state == "unconfigured":
+                    ret = configure_controller(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        controller_manager_timeout,
+                        service_call_timeout,
+                    )
+                    if not ret.ok:
+                        logger.error(
+                            bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
+                        )
+                        return 1
 
                 if not controller["inactive"]:
                     if activate_as_group:
