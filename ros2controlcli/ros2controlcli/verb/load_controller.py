@@ -54,7 +54,9 @@ class LoadControllerVerb(VerbExtension):
     def main(self, *, args):
         with NodeStrategy(args).direct_node as node:
             controllers = list_controllers(node, args.controller_manager, 20.0).controller
-            if any(c.name == args.controller_name for c in controllers):
+            matched = next((c for c in controllers if c.name == args.controller_name), None)
+            loaded_state = matched.state if matched else None
+            if loaded_state is not None:
                 print(
                     f"{bcolors.WARNING}Controller : {args.controller_name} already loaded, skipping load_controller!{bcolors.ENDC}"
                 )
@@ -86,18 +88,20 @@ class LoadControllerVerb(VerbExtension):
                 print(
                     f"{bcolors.OKBLUE}Successfully loaded controller {args.controller_name}{bcolors.ENDC}"
                 )
+                loaded_state = "unconfigured"
 
             if args.set_state:
 
-                # we in any case configure the controller
-                response = configure_controller(
-                    node, args.controller_manager, args.controller_name
-                )
-                if not response.ok:
-                    print(
-                        f"{bcolors.FAIL}Error configuring controller : {args.controller_name}{bcolors.ENDC}"
+                # configure_controller only accepts the unconfigured state
+                if loaded_state == "unconfigured":
+                    response = configure_controller(
+                        node, args.controller_manager, args.controller_name
                     )
-                    return 1
+                    if not response.ok:
+                        print(
+                            f"{bcolors.FAIL}Error configuring controller : {args.controller_name}{bcolors.ENDC}"
+                        )
+                        return 1
 
                 if args.set_state == "active":
                     response = switch_controllers(
