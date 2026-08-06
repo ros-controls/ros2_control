@@ -147,6 +147,7 @@ class ControllerManager(Plugin):
     def shutdown_plugin(self):
         self._update_cm_list_timer.stop()
         self._update_ctrl_list_timer.stop()
+        self._update_hw_components_list_timer.stop()
         self._popup_widget.hide()
 
     def save_settings(self, plugin_settings, instance_settings):
@@ -165,7 +166,13 @@ class ControllerManager(Plugin):
             pass
 
     def _update_cm_list(self):
-        update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
+        try:
+            update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_cm_list_timer.stop()
+                return
+            raise
 
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
@@ -179,7 +186,13 @@ class ControllerManager(Plugin):
             return
 
         # Find controllers associated to the selected controller manager
-        controllers = self._list_controllers()
+        try:
+            controllers = self._list_controllers()
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_ctrl_list_timer.stop()
+                return
+            raise
 
         # Update controller display, if necessary
         if self._controllers != controllers:
@@ -322,7 +335,13 @@ class ControllerManager(Plugin):
             return
 
         # Find hw_components associated to the selected controller manager
-        hw_components = self._list_hw_components()
+        try:
+            hw_components = self._list_hw_components()
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_hw_components_list_timer.stop()
+                return
+            raise
 
         # Update controller display, if necessary
         if self._hw_components != hw_components:
@@ -644,11 +663,16 @@ def _list_controller_managers(node):
     @return List of controller manager node names
     @rtype list of str
     """
-    return [
-        name.rstrip("list_controllers").rstrip("/")
-        for name, _ in get_service_names_and_types(node=node)
-        if name.endswith("list_controllers")
-    ]
+    try:
+        return [
+            name.rstrip("list_controllers").rstrip("/")
+            for name, _ in get_service_names_and_types(node=node)
+            if name.endswith("list_controllers")
+        ]
+    except Exception as e:
+        if "destruction was requested" in str(e) or "context is not valid" in str(e):
+            return []
+        raise
 
 
 def _get_parameter_controller_names(node, node_name):

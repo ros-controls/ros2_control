@@ -705,20 +705,6 @@ HardwareInfo parse_resource_from_xml(
   hardware.async_params.thread_priority = hardware.is_async
                                             ? parse_thread_priority_attribute(ros2_control_it)
                                             : std::numeric_limits<int>::max();
-  // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-  hardware.thread_priority = hardware.async_params.thread_priority;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
@@ -769,20 +755,6 @@ HardwareInfo parse_resource_from_xml(
           if (async_it->FindAttribute(kThreadPriorityAttribute))
           {
             hardware.async_params.thread_priority = parse_thread_priority_attribute(async_it);
-            // TODO(anyone): remove this line once thread_priority is removed
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-            hardware.thread_priority = hardware.async_params.thread_priority;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
           }
           if (async_it->FindAttribute(kPrintWarningsAttribute))
           {
