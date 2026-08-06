@@ -32,7 +32,8 @@ import pytest
 import unittest
 
 from launch import LaunchDescription
-from launch.substitutions import Command, PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import FileContent
 from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
@@ -67,17 +68,14 @@ def generate_test_description():
         output="both",
         parameters=[
             {
-                "robot_description": Command(
-                    [
-                        "cat ",
-                        PathJoinSubstitution(
-                            [
-                                FindPackageShare("ros2_control_test_assets"),
-                                "urdf",
-                                "test_hardware_components.urdf",
-                            ]
-                        ),
-                    ]
+                "robot_description": FileContent(
+                    PathJoinSubstitution(
+                        [
+                            FindPackageShare("ros2_control_test_assets"),
+                            "urdf",
+                            "test_hardware_components.urdf",
+                        ]
+                    )
                 )
             }
         ],
