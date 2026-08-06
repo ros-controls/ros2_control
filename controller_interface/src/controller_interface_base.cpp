@@ -248,6 +248,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   {
     realtime_tools::AsyncFunctionHandlerParams async_params;
     async_params.thread_priority = 50;  // default value
+    async_params.exec_rate = impl_->ctrl_itf_params_.update_rate;
     const int thread_priority_param =
       static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
     if (thread_priority_param >= 0 && thread_priority_param <= 99)
