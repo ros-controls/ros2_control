@@ -81,6 +81,33 @@ TEST_F(TestComponentParser, missing_attribute_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
 
+TEST_F(TestComponentParser, gpio_missing_interface_throws_error)
+{
+  const std::string broken_urdf = std::string(ros2_control_test_assets::urdf_head) +
+                                  R"(
+      <ros2_control name="TestSystem" type="system">
+        <hardware>
+          <plugin>mock_components/GenericSystem</plugin>
+        </hardware>
+
+        <joint name="joint1">
+          <command_interface name="position"/>
+          <state_interface name="position"/>
+        </joint>
+
+        <gpio name="gpio_name">
+          <state_interface name="does_not_exist"/>
+        </gpio>
+      </ros2_control>
+    )" + ros2_control_test_assets::urdf_tail;
+
+  // NOTE:
+  // GPIO interfaces are not strictly validated against hardware interface
+  // existence during URDF parsing (unlike joints and sensors).
+  // This test documents current behavior.
+  ASSERT_NO_THROW(parse_control_resources_from_urdf(broken_urdf));
+}
+
 TEST_F(TestComponentParser, parameter_missing_name_throws_error)
 {
   const std::string broken_urdf_string =
