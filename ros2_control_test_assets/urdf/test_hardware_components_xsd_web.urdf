@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<robot name="MinimalRobot">
+<robot name="MinimalRobot" xmlns:ros2_control="http://control.ros.org/schema/">
   <link name="world" />
   <joint name="base_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
