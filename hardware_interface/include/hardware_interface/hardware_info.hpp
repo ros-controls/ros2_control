@@ -358,6 +358,8 @@ struct HardwareAsyncParams
   std::vector<int> cpu_affinity_cores = {};
   /// Whether to print warnings when the async thread doesn't meet its deadline
   bool print_warnings = true;
+  /// Custom name for the async worker thread
+  std::string thread_name = "";
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
