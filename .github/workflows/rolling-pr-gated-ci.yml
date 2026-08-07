@@ -1,0 +1,175 @@
+name: Rolling PR Gated CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/rolling-pr-gated-ci.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.rolling.repos'
+      - 'ros2_control.lyrical.repos'
+      - 'ros2_control-not-released.rolling.repos'
+      - 'ros2_control-not-released.lyrical.repos'
+      - 'ros_controls.rolling.repos'
+      - 'ros_controls.lyrical.repos'
+      - 'codecov.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre_commit_rolling:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
+    with:
+      ros_distro: rolling
+
+  pre_commit_lyrical:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
+    with:
+      ros_distro: lyrical
+
+  semi-binary:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+
+  semi-binary-clang:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+      additional_debs: clang
+      c_compiler: clang
+      cxx_compiler: clang++
+      not_test_build: true
+
+  binary:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+        ROS_REPO: [main, testing]
+        exclude:
+          - ROS_DISTRO: rolling
+            ROS_REPO: main
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: ${{ matrix.ROS_REPO }}
+      upstream_workspace: ros2_control-not-released.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+
+  coverage_rolling:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
+    secrets: inherit
+    with:
+      ros_distro: rolling
+
+  compatibility-build:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [humble, jazzy, kilted, lyrical]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      upstream_workspace: ros2_control.rolling.repos
+      ref_for_scheduled_build: master
+
+  abi_check:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+
+  debian_semi_binary_build:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+      skip_packages: rqt_controller_manager
+
+  rhel_semi_binary_build:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+      skip_packages: rqt_controller_manager
+
+  binary-windows:
+    needs: [pre_commit_rolling, pre_commit_lyrical]
+    if: ${{ always() && needs.pre_commit_rolling.result == 'success' && needs.pre_commit_lyrical.result == 'success' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
+    with:
+      ros_distro: rolling
+      pixi_dependencies: typeguard jinja2 boost compilers cpp-expected
+      upstream_workspace: ros2_control.rolling.repos
+
+  build-downstream:
+    needs: [semi-binary, semi-binary-clang, binary, coverage_rolling, compatibility-build]
+    if: ${{ always() && needs['semi-binary'].outputs.build_target_workspace_succeeded == 'true' && needs['semi-binary-clang'].outputs.build_target_workspace_succeeded == 'true' && needs.binary.outputs.build_target_workspace_succeeded == 'true' && needs.coverage_rolling.result == 'success' && needs['compatibility-build'].outputs.build_target_workspace_succeeded == 'true' }}
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [lyrical, rolling]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      ros_repo: testing
+      ref_for_scheduled_build: master
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      not_test_build: true
+      downstream_workspace: ros_controls.${{ matrix.ROS_DISTRO }}.repos
+      not_test_downstream: false
