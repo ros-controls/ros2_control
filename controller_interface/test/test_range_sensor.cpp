@@ -50,7 +50,7 @@ public:
 
   std::unique_lock<std::shared_mutex> lock_for_test()
   {
-    return std::unique_lock<std::shared_mutex>(handle_mutex_);
+    return std::unique_lock<std::shared_mutex>(get_mutex());
   }
 };
 
@@ -95,7 +95,8 @@ TEST(RangeSensorTest, reports_nan_when_value_lock_is_unavailable)
 
   ASSERT_TRUE(range_sensor.assign_loaned_state_interfaces(state_interfaces));
 
-  const auto exclusive_lock = range_state->lock_for_test();
+  auto exclusive_lock = range_state->lock_for_test();
+  ASSERT_TRUE(exclusive_lock.owns_lock());
 
   EXPECT_TRUE(std::isnan(range_sensor.get_range()));
 
