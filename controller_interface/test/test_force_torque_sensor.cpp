@@ -274,3 +274,48 @@ TEST_F(ForceTorqueSensorTest, validate_all_custom_names)
   // validate the count of state_interfaces_
   ASSERT_EQ(force_torque_sensor_->state_interfaces_.size(), 0u);
 }
+
+TEST_F(ForceTorqueSensorTest, get_values_after_release_interfaces)
+{
+  force_torque_sensor_ = std::make_unique<TestableForceTorqueSensor>(sensor_name_);
+
+  auto force_x = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[0], &force_values_[0]);
+  auto force_y = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[1], &force_values_[1]);
+  auto force_z = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[2], &force_values_[2]);
+  auto torque_x = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[3], &torque_values_[0]);
+  auto torque_y = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[4], &torque_values_[1]);
+  auto torque_z = std::make_shared<hardware_interface::StateInterface>(
+    sensor_name_, fts_interface_names_[5], &torque_values_[2]);
+
+  std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
+  temp_state_interfaces.reserve(6);
+  temp_state_interfaces.emplace_back(force_x);
+  temp_state_interfaces.emplace_back(force_y);
+  temp_state_interfaces.emplace_back(force_z);
+  temp_state_interfaces.emplace_back(torque_x);
+  temp_state_interfaces.emplace_back(torque_y);
+  temp_state_interfaces.emplace_back(torque_z);
+
+  force_torque_sensor_->assign_loaned_state_interfaces(temp_state_interfaces);
+
+  geometry_msgs::msg::Wrench message_before_release;
+  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(message_before_release));
+
+  force_torque_sensor_->release_interfaces();
+  ASSERT_EQ(force_torque_sensor_->state_interfaces_.size(), 0u);
+
+  // Access after release can happen during shutdown/deactivation cycles.
+  geometry_msgs::msg::Wrench message_after_release;
+  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(message_after_release));
+  ASSERT_EQ(message_after_release.force.x, message_before_release.force.x);
+  ASSERT_EQ(message_after_release.force.y, message_before_release.force.y);
+  ASSERT_EQ(message_after_release.force.z, message_before_release.force.z);
+  ASSERT_EQ(message_after_release.torque.x, message_before_release.torque.x);
+  ASSERT_EQ(message_after_release.torque.y, message_before_release.torque.y);
+  ASSERT_EQ(message_after_release.torque.z, message_before_release.torque.z);
+}
