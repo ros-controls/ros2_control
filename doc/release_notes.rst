@@ -25,6 +25,7 @@ controller_manager
 * Removed forwarding of the controller manager's ros arguments to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
 * The ``spawner`` now forwards all the parameter files parsed to the spawner node to the spawned controllers. This would support ``allow_substs`` approach. (`#3136 <https://github.com/ros-controls/ros2_control/pull/3136>`__)
 * ``configure_controller`` no longer implicitly cleans up an ``inactive`` controller before configuring; it now strictly requires the ``unconfigured`` state and returns an error otherwise. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
+* The ``spawner`` skips configuring an already configured controller. Use the new ``--reconfigure`` argument to cleanup and configure it again. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
 
 hardware_interface
 ******************

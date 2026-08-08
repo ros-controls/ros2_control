@@ -22,6 +22,7 @@ import time
 import warnings
 
 from controller_manager import (
+    cleanup_controller,
     configure_controller,
     list_controllers,
     load_controller,
@@ -133,6 +134,11 @@ def parse_args_advanced(args):
         "--inactive", action="store_true", help="Configure the controller but do not switch it"
     )
     controller_parser.add_argument(
+        "--reconfigure",
+        action="store_true",
+        help="Cleanup and configure the controller again",
+    )
+    controller_parser.add_argument(
         "--controller-ros-args",
         action="append",
         default=None,
@@ -189,6 +195,7 @@ def parse_args_advanced(args):
         c_parser.add_argument("-p", "--param-file", action="append", default=[])
         c_parser.add_argument("--load-only", action="store_true")
         c_parser.add_argument("--inactive", action="store_true")
+        c_parser.add_argument("--reconfigure", action="store_true")
         c_parser.add_argument("--controller-ros-args", action="append", default=None)
 
         c_namespace, c_unknown = c_parser.parse_known_args(controller_args)
@@ -199,6 +206,7 @@ def parse_args_advanced(args):
                 "param_files": c_namespace.param_file,
                 "load_only": c_namespace.load_only,
                 "inactive": c_namespace.inactive,
+                "reconfigure": c_namespace.reconfigure,
                 "controller_ros_args": c_namespace.controller_ros_args,
             }
         )
@@ -235,6 +243,12 @@ def parse_native_args(args):
     parser.add_argument(
         "--inactive",
         help="Load and configure the controller, however do not activate them",
+        action="store_true",
+        required=False,
+    )
+    parser.add_argument(
+        "--reconfigure",
+        help="Cleanup and configure the controller again",
         action="store_true",
         required=False,
     )
@@ -307,6 +321,7 @@ def parse_native_args(args):
                 "param_files": global_namespace_args.param_file,
                 "load_only": global_namespace_args.load_only,
                 "inactive": global_namespace_args.inactive,
+                "reconfigure": global_namespace_args.reconfigure,
                 "controller_ros_args": global_namespace_args.controller_ros_args,
             }
         )
@@ -506,6 +521,19 @@ def main(args=None):
                 logger.info(
                     bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
+                loaded_state = "unconfigured"
+
+            if controller["reconfigure"] and loaded_state not in (None, "unconfigured"):
+                ret = cleanup_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    service_call_timeout,
+                )
+                if not ret.ok:
+                    logger.error(bcolors.FAIL + "Failed to cleanup controller" + bcolors.ENDC)
+                    return 1
                 loaded_state = "unconfigured"
 
             if not controller["load_only"]:
