@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add RangeSensor unit coverage (`#3522 <https://github.com/ros-controls/ros2_control/issues/3522>`_)
+* Document realtime-safe methods (`#3392 <https://github.com/ros-controls/ros2_control/issues/3392>`_)
+* Contributors: Dennis Lanov, Shivam Maurya
+
 6.8.0 (2026-07-01)
 ------------------
 * Improve docstring of the semantic_components for consistency (`#3338 <https://github.com/ros-controls/ros2_control/issues/3338>`_)
