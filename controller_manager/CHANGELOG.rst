@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3525 <https://github.com/ros-controls/ros2_control/issues/3525>`_)
+* doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3517 <https://github.com/ros-controls/ros2_control/issues/3517>`_)
+* Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_) (`#3511 <https://github.com/ros-controls/ros2_control/issues/3511>`_)
+* Create spawner logger before lock-result is logged (`#3462 <https://github.com/ros-controls/ros2_control/issues/3462>`_) (`#3506 <https://github.com/ros-controls/ros2_control/issues/3506>`_)
+* Guard controller update rate against modulo-by-zero UB (`#3454 <https://github.com/ros-controls/ros2_control/issues/3454>`_) (`#3477 <https://github.com/ros-controls/ros2_control/issues/3477>`_)
+* Contributors: mergify[bot]
+
 5.16.0 (2026-07-14)
 -------------------
 * Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_) (`#3460 <https://github.com/ros-controls/ros2_control/issues/3460>`_)
