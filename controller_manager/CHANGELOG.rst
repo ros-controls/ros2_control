@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.17.0 (2026-08-10)
+-------------------
 * Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3525 <https://github.com/ros-controls/ros2_control/issues/3525>`_)
 * doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3517 <https://github.com/ros-controls/ros2_control/issues/3517>`_)
 * Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_) (`#3511 <https://github.com/ros-controls/ros2_control/issues/3511>`_)

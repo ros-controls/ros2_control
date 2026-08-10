@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.17.0 (2026-08-10)
+-------------------
 * doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3517 <https://github.com/ros-controls/ros2_control/issues/3517>`_)
 * Contributors: mergify[bot]
 
