@@ -2,6 +2,11 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* rqt_cm: Robustify test and fix shutdown races (backport `#3396 <https://github.com/ros-controls/ros2_control/issues/3396>`_) (`#3464 <https://github.com/ros-controls/ros2_control/issues/3464>`_)
+* Contributors: mergify[bot]
+
 4.46.0 (2026-07-01)
 -------------------
 

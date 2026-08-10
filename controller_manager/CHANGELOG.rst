@@ -2,6 +2,18 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3524 <https://github.com/ros-controls/ros2_control/issues/3524>`_)
+* doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3516 <https://github.com/ros-controls/ros2_control/issues/3516>`_)
+* Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_) (`#3510 <https://github.com/ros-controls/ros2_control/issues/3510>`_)
+* Create spawner logger before lock-result is logged (backport `#3462 <https://github.com/ros-controls/ros2_control/issues/3462>`_) (`#3505 <https://github.com/ros-controls/ros2_control/issues/3505>`_)
+* Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3394 <https://github.com/ros-controls/ros2_control/issues/3394>`_)
+* Add cmath for windows build (`#3496 <https://github.com/ros-controls/ros2_control/issues/3496>`_)
+* Guard controller update rate against modulo-by-zero UB (`#3454 <https://github.com/ros-controls/ros2_control/issues/3454>`_) (`#3476 <https://github.com/ros-controls/ros2_control/issues/3476>`_)
+* Make sleep in ros2_control node optional (backport `#3213 <https://github.com/ros-controls/ros2_control/issues/3213>`_) (`#3452 <https://github.com/ros-controls/ros2_control/issues/3452>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 4.46.0 (2026-07-01)
 -------------------
 * Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_) (`#3427 <https://github.com/ros-controls/ros2_control/issues/3427>`_)
