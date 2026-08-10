@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.47.0 (2026-08-10)
+-------------------
 * Avoid Windows TRUE/FALSE macro collisions in hardware_interface (`#3486 <https://github.com/ros-controls/ros2_control/issues/3486>`_) (`#3526 <https://github.com/ros-controls/ros2_control/issues/3526>`_)
 * doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3516 <https://github.com/ros-controls/ros2_control/issues/3516>`_)
 * Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3394 <https://github.com/ros-controls/ros2_control/issues/3394>`_)
