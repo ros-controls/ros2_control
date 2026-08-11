@@ -102,6 +102,13 @@ if(BUILD_TESTING)
     ${sensor_msgs_TARGETS}
   )
 
+  ament_add_gmock(test_range_sensor test/test_range_sensor.cpp)
+  target_link_libraries(test_range_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
+  )
+
   # Semantic component command interface tests
 
   ament_add_gmock(test_semantic_component_command_interface
