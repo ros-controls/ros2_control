@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.9.0 (2026-08-10)
+------------------
+* Avoid Windows TRUE/FALSE macro collisions in hardware_interface (`#3486 <https://github.com/ros-controls/ros2_control/issues/3486>`_)
+* doc: reorder ros2_control TOC (`#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_)
+* Remove deprecated HardwareInfo::thread_priority member (`#3484 <https://github.com/ros-controls/ros2_control/issues/3484>`_)
+* Use stream parsing for hardware_interface floats on Apple (`#3485 <https://github.com/ros-controls/ros2_control/issues/3485>`_)
+* Contributors: Aniruddh Yelluri, Ismet Vahidezade, Tobias Fischer
+
 6.8.0 (2026-07-01)
 ------------------
 * hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_)

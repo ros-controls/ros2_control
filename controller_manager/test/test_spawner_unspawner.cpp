@@ -1461,3 +1461,36 @@ TEST_F(TestLoadController, spawner_test_parsing_same_params_file_multiple_times)
   ASSERT_EQ(params_file_info.size(), 1ul);
   ASSERT_EQ(params_file_info[0], fallback_test_file_path);
 }
+
+TEST_F(TestLoadController, spawner_test_reconfigure_controller)
+{
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --inactive"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  auto ctrl_1 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_TRUE(ctrl_1.c->command_interface_configuration().names.empty());
+
+  // this parameter is only read in on_configure()
+  ctrl_1.c->get_node()->set_parameter(
+    rclcpp::Parameter("command_interfaces", std::vector<std::string>({"joint1/position"})));
+
+  // not configured again, so the changed parameter is not applied
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --inactive"), 0);
+  EXPECT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_TRUE(ctrl_1.c->command_interface_configuration().names.empty());
+
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --inactive --reconfigure"), 0);
+  EXPECT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_THAT(
+    ctrl_1.c->command_interface_configuration().names,
+    std::vector<std::string>({"joint1/position"}));
+
+  cm_->unload_controller("ctrl_1");
+}
