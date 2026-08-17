@@ -11,8 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
@@ -53,7 +59,152 @@ double execution_time_upper_bound(double strict_value)
 {
   return kStrictTimingTests ? strict_value : strict_value * kRelaxedExecutionTimeUpperBoundFactor;
 }
+
+class BlockingUpdateController : public test_controller::TestController
+{
+public:
+  controller_interface::return_type update(const rclcpp::Time &, const rclcpp::Duration &) override
+  {
+    if (!block_updates_.load())
+    {
+      return controller_interface::return_type::OK;
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(update_mutex_);
+      update_running_.store(true);
+    }
+    update_condition_.notify_all();
+
+    std::unique_lock<std::mutex> lock(update_mutex_);
+    update_condition_.wait(lock, [this]() { return release_update_; });
+    update_running_.store(false);
+    return controller_interface::return_type::OK;
+  }
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override
+  {
+    deactivated_during_update_.store(update_running_.load());
+    return CallbackReturn::SUCCESS;
+  }
+
+  bool wait_until_update_is_running()
+  {
+    std::unique_lock<std::mutex> lock(update_mutex_);
+    return update_condition_.wait_for(
+      lock, std::chrono::seconds(5), [this]() { return update_running_.load(); });
+  }
+
+  void release_update()
+  {
+    {
+      std::lock_guard<std::mutex> lock(update_mutex_);
+      release_update_ = true;
+    }
+    update_condition_.notify_all();
+  }
+
+  void block_updates() { block_updates_.store(true); }
+
+  bool deactivated_during_update() const { return deactivated_during_update_.load(); }
+
+private:
+  using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+  std::mutex update_mutex_;
+  std::condition_variable update_condition_;
+  std::atomic<bool> block_updates_{false};
+  std::atomic<bool> update_running_{false};
+  std::atomic<bool> deactivated_during_update_{false};
+  bool release_update_{false};
+};
 }  // namespace
+
+class TestControllerManagerShutdown
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+protected:
+  std::shared_ptr<BlockingUpdateController> add_and_activate_blocking_controller(bool is_async)
+  {
+    auto controller = std::make_shared<BlockingUpdateController>();
+    controller_manager::ControllerSpec controller_spec;
+    controller_spec.c = controller;
+    controller_spec.info.name = test_controller::TEST_CONTROLLER_NAME;
+    controller_spec.info.type = test_controller::TEST_CONTROLLER_CLASS_NAME;
+    controller_spec.last_update_cycle_time =
+      std::make_shared<rclcpp::Time>(0, 0, cm_->get_trigger_clock()->get_clock_type());
+    cm_->add_controller(controller_spec);
+
+    controller->get_node()->set_parameter({"is_async", is_async});
+    EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller->configure().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller->get_node()->activate().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller->get_lifecycle_state().id());
+    return controller;
+  }
+};
+
+TEST_F(TestControllerManagerShutdown, shutdown_waits_for_running_control_update)
+{
+  auto controller = add_and_activate_blocking_controller(false);
+  ASSERT_FALSE(controller->is_async());
+
+  controller->block_updates();
+  time_ = cm_->get_trigger_clock()->now();
+  std::thread update_thread([this]() { cm_->update(time_, rclcpp::Duration::from_seconds(0.01)); });
+  if (!controller->wait_until_update_is_running())
+  {
+    controller->release_update();
+    update_thread.join();
+    ADD_FAILURE() << "controller update did not start within five seconds";
+    return;
+  }
+
+  auto shutdown_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::shutdown_controllers, cm_);
+  const auto shutdown_status = shutdown_future.wait_for(std::chrono::milliseconds(100));
+
+  controller->release_update();
+  update_thread.join();
+  const bool shutdown_succeeded = shutdown_future.get();
+
+  EXPECT_EQ(std::future_status::timeout, shutdown_status)
+    << "shutdown must wait until the in-flight controller update returns";
+  EXPECT_FALSE(controller->deactivated_during_update());
+  EXPECT_TRUE(shutdown_succeeded);
+
+  cm_.reset();
+  executor_.reset();
+}
+
+TEST_F(TestControllerManagerShutdown, shutdown_waits_for_running_async_controller_update)
+{
+  auto controller = add_and_activate_blocking_controller(true);
+  ASSERT_TRUE(controller->is_async());
+
+  controller->block_updates();
+  time_ = cm_->get_trigger_clock()->now();
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  ASSERT_TRUE(controller->wait_until_update_is_running());
+
+  auto shutdown_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::shutdown_controllers, cm_);
+  const auto shutdown_status = shutdown_future.wait_for(std::chrono::milliseconds(100));
+
+  EXPECT_EQ(std::future_status::timeout, shutdown_status)
+    << "shutdown must wait until the asynchronous controller update returns";
+  EXPECT_FALSE(controller->deactivated_during_update());
+
+  controller->release_update();
+  EXPECT_TRUE(shutdown_future.get());
+  EXPECT_FALSE(controller->deactivated_during_update());
+
+  cm_.reset();
+  executor_.reset();
+}
 
 class TestControllerManagerWithStrictness
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
