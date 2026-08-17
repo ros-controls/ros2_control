@@ -49,7 +49,6 @@ If joint limits are active for a specific interface, the controller_manger will 
 
 Configuration of Limits
 ########################
-
 tba
 
 Description of the Limiter Algorithms
