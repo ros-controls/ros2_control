@@ -65,49 +65,6 @@ public:
   void TearDown() override { update_executor_->cancel(); }
 
 protected:
-  bool wait_for_loaded_controller_count(
-    size_t expected_count, std::chrono::milliseconds timeout = std::chrono::seconds(2))
-  {
-    const auto start = std::chrono::steady_clock::now();
-    while ((std::chrono::steady_clock::now() - start) < timeout)
-    {
-      if (cm_->get_loaded_controllers().size() == expected_count)
-      {
-        return true;
-      }
-      std::this_thread::sleep_for(20ms);
-    }
-
-    return cm_->get_loaded_controllers().size() == expected_count;
-  }
-
-  bool wait_for_loaded_controller(
-    const std::string & controller_name,
-    std::chrono::milliseconds timeout = std::chrono::seconds(2))
-  {
-    const auto start = std::chrono::steady_clock::now();
-    while ((std::chrono::steady_clock::now() - start) < timeout)
-    {
-      const auto loaded_controllers = cm_->get_loaded_controllers();
-      const auto it = std::find_if(
-        loaded_controllers.begin(), loaded_controllers.end(),
-        [&controller_name](const auto & controller)
-        { return controller.info.name == controller_name; });
-
-      if (it != loaded_controllers.end())
-      {
-        return true;
-      }
-      std::this_thread::sleep_for(20ms);
-    }
-
-    const auto loaded_controllers = cm_->get_loaded_controllers();
-    return std::any_of(
-      loaded_controllers.begin(), loaded_controllers.end(),
-      [&controller_name](const auto & controller)
-      { return controller.info.name == controller_name; });
-  }
-
   rclcpp::TimerBase::SharedPtr update_timer_;
 
   // Using a MultiThreadedExecutor so we can call update on a separate thread from service callbacks
@@ -912,7 +869,7 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
       std::string(kControllerManagerTimeout) + " --param-file " + test_file_path),
     0);
 
-  ASSERT_TRUE(wait_for_loaded_controller_count(2ul));
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 2ul));
 
   const auto loaded_after_first_spawn = cm_->get_loaded_controllers();
 
@@ -964,9 +921,11 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
     << "Should fail as the ctrl_with_joint1_command_interface and "
        "ctrl_with_joint2_command_interface are active";
 
-  ASSERT_TRUE(wait_for_loaded_controller("ctrl_with_joint1_and_joint2_command_interfaces"))
+  ASSERT_TRUE(
+    controller_manager::test::wait_for_loaded_controller(
+      cm_, "ctrl_with_joint1_and_joint2_command_interfaces"))
     << "Expected the controller to be loaded, even if activation fails.";
-  ASSERT_TRUE(wait_for_loaded_controller_count(3ul));
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 3ul));
 
   const auto loaded_after_failed_activation = cm_->get_loaded_controllers();
   const auto it_ctrl_with_joint1_and_joint2_command_interfaces = std::find_if(
@@ -997,7 +956,7 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
 
   EXPECT_EQ(call_unspawner("ctrl_with_joint1_command_interface -c test_controller_manager"), 0);
 
-  ASSERT_TRUE(wait_for_loaded_controller_count(2ul));
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 2ul));
   EXPECT_EQ(
     call_advanced_spawner(
       "--controller ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
@@ -1011,7 +970,7 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
 
   EXPECT_EQ(call_unspawner("ctrl_with_joint2_command_interface -c test_controller_manager"), 0);
 
-  ASSERT_TRUE(wait_for_loaded_controller_count(1ul));
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 1ul));
   EXPECT_EQ(
     call_advanced_spawner(
       "--controller ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "

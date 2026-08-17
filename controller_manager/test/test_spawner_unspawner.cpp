@@ -470,6 +470,8 @@ TEST_F(TestLoadController, spawner_test_with_global_wildcard_entries)
 
 TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
 {
+  constexpr auto kControllerManagerTimeout = "5.0";
+
   const std::string test_file_path =
     std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_interfaces.yaml");
 
@@ -479,14 +481,22 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
     call_spawner(
       "ctrl_with_joint1_command_interface ctrl_with_joint2_command_interface -c "
       "test_controller_manager "
-      "--controller-manager-timeout 5.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "-p " +
       test_file_path),
     0);
 
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 2ul));
 
-  auto ctrl_with_joint2_command_interface = cm_->get_loaded_controllers()[0];
+  const auto loaded_after_first_spawn = cm_->get_loaded_controllers();
+  const auto it_ctrl_with_joint2_command_interface =
+    controller_manager::test::find_loaded_controller_by_name(
+      loaded_after_first_spawn, "ctrl_with_joint2_command_interface");
+  ASSERT_NE(it_ctrl_with_joint2_command_interface, loaded_after_first_spawn.end());
+  const auto ctrl_with_joint2_command_interface = *it_ctrl_with_joint2_command_interface;
+
   ASSERT_EQ(ctrl_with_joint2_command_interface.info.name, "ctrl_with_joint2_command_interface");
   ASSERT_EQ(
     ctrl_with_joint2_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -499,7 +509,12 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
     ctrl_with_joint2_command_interface.c->command_interface_configuration().names,
     std::vector<std::string>({"joint2/velocity"}));
 
-  auto ctrl_with_joint1_command_interface = cm_->get_loaded_controllers()[1];
+  const auto it_ctrl_with_joint1_command_interface =
+    controller_manager::test::find_loaded_controller_by_name(
+      loaded_after_first_spawn, "ctrl_with_joint1_command_interface");
+  ASSERT_NE(it_ctrl_with_joint1_command_interface, loaded_after_first_spawn.end());
+  const auto ctrl_with_joint1_command_interface = *it_ctrl_with_joint1_command_interface;
+
   ASSERT_EQ(ctrl_with_joint1_command_interface.info.name, "ctrl_with_joint1_command_interface");
   ASSERT_EQ(
     ctrl_with_joint1_command_interface.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -515,16 +530,30 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 5.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "-p " +
       test_file_path),
     256)
     << "Should fail as the ctrl_with_joint1_command_interface and "
        "ctrl_with_joint2_command_interface are active";
 
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+  ASSERT_TRUE(
+    controller_manager::test::wait_for_loaded_controller(
+      cm_, "ctrl_with_joint1_and_joint2_command_interfaces"))
+    << "Expected the controller to be loaded, even if activation fails.";
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 3ul));
 
-  auto ctrl_with_joint1_and_joint2_command_interfaces = cm_->get_loaded_controllers()[0];
+  const auto loaded_after_failed_activation = cm_->get_loaded_controllers();
+  const auto it_ctrl_with_joint1_and_joint2_command_interfaces =
+    controller_manager::test::find_loaded_controller_by_name(
+      loaded_after_failed_activation, "ctrl_with_joint1_and_joint2_command_interfaces");
+  ASSERT_NE(
+    it_ctrl_with_joint1_and_joint2_command_interfaces, loaded_after_failed_activation.end());
+  const auto ctrl_with_joint1_and_joint2_command_interfaces =
+    *it_ctrl_with_joint1_and_joint2_command_interfaces;
+
   ASSERT_EQ(
     ctrl_with_joint1_and_joint2_command_interfaces.info.name,
     "ctrl_with_joint1_and_joint2_command_interfaces");
@@ -544,11 +573,13 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
 
   EXPECT_EQ(call_unspawner("ctrl_with_joint1_command_interface -c test_controller_manager"), 0);
 
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 2ul));
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 5.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "-p " +
       test_file_path),
     256)
@@ -556,11 +587,13 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
 
   EXPECT_EQ(call_unspawner("ctrl_with_joint2_command_interface -c test_controller_manager"), 0);
 
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 1ul));
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 5.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "-p " +
       test_file_path),
     0)
