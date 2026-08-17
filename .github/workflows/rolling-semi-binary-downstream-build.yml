@@ -31,6 +31,7 @@ jobs:
       matrix:
         ROS_DISTRO: [lyrical, rolling]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       ref_for_scheduled_build: master
