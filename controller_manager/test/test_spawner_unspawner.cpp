@@ -636,9 +636,9 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   };
 
   // Run Spawner A with --unload-on-kill in background, keep it alive long enough to ensure
-  // Spawner B should succeed, in spite of the waiting for Spawner A's timeout.
+  // Spawner B can verify lock release behavior.
   std::string spawner_a_cmd =
-    "timeout --signal=INT 12 "
+    "timeout --signal=INT 30 "
     "$(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
     "ctrl_1 -c test_controller_manager --unload-on-kill";
   auto spawner_a_future = std::async(
@@ -684,12 +684,18 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
   EXPECT_EQ(spawner_a_future.wait_for(std::chrono::seconds(0)), std::future_status::timeout)
     << "Spawner A exited already; lock-contention scenario might not be exercised";
 
-  // Wait for Spawner A to be killed by timeout and verify it did not exit successfully
+  // Interrupt Spawner A as soon as lock behavior is validated to avoid waiting for timeout.
+  int interrupt_exit_code = std::system(
+    "pkill -INT -f 'controller_manager/[s]pawner ctrl_1 -c test_controller_manager "
+    "--unload-on-kill'");
+  EXPECT_EQ(interrupt_exit_code, 0) << "Failed to interrupt Spawner A";
+
+  // Wait for Spawner A to exit and verify it did not exit successfully.
   int spawner_a_exit_code = spawner_a_future.get();
   EXPECT_NE(spawner_a_exit_code, 0)
-    << "Spawner A (wrapped by timeout) unexpectedly exited with success status";
+    << "Spawner A unexpectedly exited with success status after interrupt";
 
-  // After Spawner A times out, ctrl_1 should be unloaded, leaving only ctrl_2 active.
+  // After Spawner A is interrupted, ctrl_1 should be unloaded, leaving only ctrl_2 active.
   ASSERT_THAT(get_loaded_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
   ASSERT_THAT(get_active_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
 }
