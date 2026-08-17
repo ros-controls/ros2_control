@@ -39,17 +39,17 @@ constexpr double kRelaxedTimingLowerBoundFactor = 0.9;
 constexpr double kRelaxedTimingUpperBoundFactor = 1.1;
 constexpr double kRelaxedExecutionTimeUpperBoundFactor = 2.5;
 
-double timing_lower_bound(const double strict_value)
+double timing_lower_bound(double strict_value)
 {
   return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingLowerBoundFactor;
 }
 
-double timing_upper_bound(const double strict_value)
+double timing_upper_bound(double strict_value)
 {
   return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingUpperBoundFactor;
 }
 
-double execution_time_upper_bound(const double strict_value)
+double execution_time_upper_bound(double strict_value)
 {
   return kStrictTimingTests ? strict_value : strict_value * kRelaxedExecutionTimeUpperBoundFactor;
 }
