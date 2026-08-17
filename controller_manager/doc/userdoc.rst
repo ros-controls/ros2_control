@@ -685,7 +685,7 @@ Generates a launch description that automatically loads and activates controller
       controller_params_files=[os.path.join(config_dir, 'controllers.yaml')],
       extra_spawner_args=['--load-only']
     )
-    return LaunchDescription([spawner])
+    return spawner
 
 **Parameters:**
 
