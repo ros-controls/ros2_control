@@ -479,7 +479,7 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
     call_spawner(
       "ctrl_with_joint1_command_interface ctrl_with_joint2_command_interface -c "
       "test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout 5.0 "
       "-p " +
       test_file_path),
     0);
@@ -515,7 +515,7 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout 5.0 "
       "-p " +
       test_file_path),
     256)
@@ -548,7 +548,7 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout 5.0 "
       "-p " +
       test_file_path),
     256)
@@ -560,7 +560,7 @@ TEST_F(TestLoadController, spawner_test_failed_activation_of_controllers)
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout 5.0 "
       "-p " +
       test_file_path),
     0)
