@@ -897,6 +897,8 @@ TEST_F(TestLoadController, advanced_spawner_test_with_global_wildcard_entries)
 
 TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controllers)
 {
+  constexpr auto kControllerManagerTimeout = "5.0";
+
   const std::string test_file_path =
     std::string(PARAMETERS_FILE_PATH) + std::string("test_controller_spawner_with_interfaces.yaml");
 
@@ -906,8 +908,8 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
     call_advanced_spawner(
       "--controller ctrl_with_joint1_command_interface --param-file " + test_file_path +
       " --controller ctrl_with_joint2_command_interface -c  test_controller_manager "
-      "--controller-manager-timeout 1.0 --param-file " +
-      test_file_path),
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) + " --param-file " + test_file_path),
     0);
 
   ASSERT_TRUE(wait_for_loaded_controller_count(2ul));
@@ -953,7 +955,9 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
   EXPECT_EQ(
     call_advanced_spawner(
       "--controller ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "--param-file " +
       test_file_path),
     256)
@@ -997,7 +1001,9 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
   EXPECT_EQ(
     call_advanced_spawner(
       "--controller ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "--param-file " +
       test_file_path),
     256)
@@ -1009,7 +1015,9 @@ TEST_F(TestLoadController, advanced_spawner_test_failed_activation_of_controller
   EXPECT_EQ(
     call_advanced_spawner(
       "--controller ctrl_with_joint1_and_joint2_command_interfaces -c test_controller_manager "
-      "--controller-manager-timeout 1.0 "
+      "--controller-manager-timeout " +
+      std::string(kControllerManagerTimeout) +
+      " "
       "--param-file " +
       test_file_path),
     0)
