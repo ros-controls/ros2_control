@@ -43,7 +43,7 @@ if(BUILD_TESTING)
 
   option(ROS2_CONTROL_STRICT_TIMING_TESTS
     "Use strict timing-sensitive assertions in ros2_control tests. Turn ON for RT-capable local validation."
-    OFF)
+    ON)
 
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
   target_link_libraries(test_resource_manager

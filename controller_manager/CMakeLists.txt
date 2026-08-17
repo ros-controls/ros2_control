@@ -69,7 +69,7 @@ if(BUILD_TESTING)
 
   option(ROS2_CONTROL_STRICT_TIMING_TESTS
     "Use strict timing-sensitive assertions in ros2_control tests. Turn ON for RT-capable local validation."
-    OFF)
+    ON)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
