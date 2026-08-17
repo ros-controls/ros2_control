@@ -690,10 +690,9 @@ TEST_F(TestLoadController, unload_on_kill_does_not_block_other_spawners)
     "--unload-on-kill'");
   EXPECT_EQ(interrupt_exit_code, 0) << "Failed to interrupt Spawner A";
 
-  // Wait for Spawner A to exit and verify it did not exit successfully.
-  int spawner_a_exit_code = spawner_a_future.get();
-  EXPECT_NE(spawner_a_exit_code, 0)
-    << "Spawner A unexpectedly exited with success status after interrupt";
+  // Wait for Spawner A to exit. Exit status after SIGINT is platform-dependent,
+  // so validate behavior via controller state checks below.
+  spawner_a_future.get();
 
   // After Spawner A is interrupted, ctrl_1 should be unloaded, leaving only ctrl_2 active.
   ASSERT_THAT(get_loaded_controller_names(), testing::UnorderedElementsAre("ctrl_2"));
