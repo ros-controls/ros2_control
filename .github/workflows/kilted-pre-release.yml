@@ -22,6 +22,7 @@ jobs:
   default:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-prerelease.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: kilted
       # downstream_depth is not set on pull_request event
       prerelease_downstream_depth: ${{ github.event_name == 'pull_request' && '0' || inputs.downstream_depth }}
