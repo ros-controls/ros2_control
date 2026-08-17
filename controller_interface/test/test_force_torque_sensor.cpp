@@ -311,7 +311,7 @@ TEST_F(ForceTorqueSensorTest, get_values_after_release_interfaces)
 
   // Access after release can happen during shutdown/deactivation cycles.
   geometry_msgs::msg::Wrench message_after_release;
-  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(message_after_release));
+  ASSERT_FALSE(force_torque_sensor_->get_values_as_message(message_after_release));
   ASSERT_EQ(message_after_release.force.x, message_before_release.force.x);
   ASSERT_EQ(message_after_release.force.y, message_before_release.force.y);
   ASSERT_EQ(message_after_release.force.z, message_before_release.force.z);
