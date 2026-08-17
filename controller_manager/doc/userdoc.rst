@@ -519,7 +519,7 @@ Programmatic controller lifecycle (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Prefer the high-level service wrapper functions in
-``controller_manager.controller_manager.controller_manager_services`` for lifecycle scripts
+``controller_manager.controller_manager_services`` for lifecycle scripts
 (e.g. ``load_controller``, ``configure_controller``, ``switch_controllers``, ``cleanup_controller``, ``unload_controller``)
 instead of exposing internal service-client singletons.
 
@@ -561,7 +561,7 @@ instead of exposing internal service-client singletons.
     main()
 
 Notes:
-- Import path: controller_manager.controller_manager.controller_manager_services (matches repository layout).
+- Import path: controller_manager.controller_manager_services (matches repository layout).
 - Response fields differ between services; examples use getattr to handle ``success`` vs ``ok``.
 
 launch_utils
