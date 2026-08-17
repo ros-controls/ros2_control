@@ -50,6 +50,13 @@ return_type ChainableControllerInterface::update(
 std::vector<hardware_interface::StateInterface::ConstSharedPtr>
 ChainableControllerInterface::export_state_interfaces()
 {
+  // Reset internal state before calling the export methods so that stale names from a previous
+  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause the
+  // default on_export_state_interfaces() to generate ghost interfaces.
+  exported_state_interfaces_.clear();
+  exported_state_interface_names_.clear();
+  ordered_exported_state_interfaces_.clear();
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   auto state_interfaces = on_export_state_interfaces();
@@ -60,9 +67,6 @@ ChainableControllerInterface::export_state_interfaces()
   ordered_exported_state_interfaces_.reserve(
     state_interfaces.size() + state_interfaces_list.size());
   exported_state_interface_names_.reserve(state_interfaces.size() + state_interfaces_list.size());
-  exported_state_interfaces_.clear();
-  exported_state_interface_names_.clear();
-  ordered_exported_state_interfaces_.clear();
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
@@ -160,6 +164,13 @@ ChainableControllerInterface::export_state_interfaces()
 std::vector<hardware_interface::CommandInterface::SharedPtr>
 ChainableControllerInterface::export_reference_interfaces()
 {
+  // Reset internal state before calling the export methods so that stale names from a previous
+  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause the
+  // default on_export_reference_interfaces() to generate ghost interfaces.
+  exported_reference_interfaces_.clear();
+  exported_reference_interface_names_.clear();
+  ordered_exported_reference_interfaces_.clear();
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   auto reference_interfaces = on_export_reference_interfaces();
@@ -172,9 +183,6 @@ ChainableControllerInterface::export_reference_interfaces()
     reference_interfaces.size() + reference_interfaces_list.size());
   ordered_exported_reference_interfaces_.reserve(
     reference_interfaces.size() + reference_interfaces_list.size());
-  exported_reference_interfaces_.clear();
-  exported_reference_interface_names_.clear();
-  ordered_exported_reference_interfaces_.clear();
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces

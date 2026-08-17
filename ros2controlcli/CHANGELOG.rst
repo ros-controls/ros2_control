@@ -2,6 +2,32 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.9.0 (2026-08-10)
+------------------
+* Make configure_controller lifecycle transition strict (no multi-hop) (`#3196 <https://github.com/ros-controls/ros2_control/issues/3196>`_)
+* doc: reorder ros2_control TOC (`#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_)
+* Contributors: Aniruddh Yelluri, Vedh
+
+6.8.0 (2026-07-01)
+------------------
+
+6.7.1 (2026-05-12)
+------------------
+
+6.7.0 (2026-04-23)
+------------------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_)
+* Contributors: Shlok Mehndiratta
+
+6.6.0 (2026-04-17)
+------------------
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+
 6.4.0 (2026-02-03)
 ------------------
 

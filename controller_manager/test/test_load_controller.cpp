@@ -221,56 +221,21 @@ TEST_P(TestLoadedControllerParametrized, can_not_start_finalized_controller)
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_lifecycle_state().id());
 }
 
-TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_cleaned_up)
+TEST_P(TestLoadedControllerParametrized, configure_controller_requires_unconfigured_state)
 {
   const auto test_param = GetParam();
 
   EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
 
   start_test_controller(test_param.strictness);
-
   stop_test_controller(test_param.strictness);
-
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
 
-  std::shared_ptr<test_controller::TestController> test_controller =
-    std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
-  size_t cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
-  // Configure from inactive state: controller can no be cleaned-up
-  test_controller->simulate_cleanup_failure = true;
+  // configure_controller must reject any state other than UNCONFIGURED
   EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
-  EXPECT_EQ(0u, cleanup_calls);
-}
-
-TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configured)
-{
-  const auto test_param = GetParam();
-
-  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
-
-  start_test_controller(test_param.strictness);
-
-  stop_test_controller(test_param.strictness);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
-
-  std::shared_ptr<test_controller::TestController> test_controller =
-    std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
-  size_t cleanup_calls = 0;
-  test_controller->cleanup_calls = &cleanup_calls;
-  // Configure from inactive state
-  test_controller->simulate_cleanup_failure = false;
-  {
-    ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
-  }
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
-  EXPECT_EQ(1u, cleanup_calls);
 }
 
 INSTANTIATE_TEST_SUITE_P(

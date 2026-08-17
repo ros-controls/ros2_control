@@ -6,10 +6,11 @@ set_compiler_options()
 export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  fmt
   hardware_interface
+  pal_statistics
   rclcpp_lifecycle
   realtime_tools
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -23,15 +24,16 @@ add_library(controller_interface SHARED
   src/controller_interface.cpp
   src/chainable_controller_interface.cpp
 )
-target_compile_features(controller_interface PUBLIC cxx_std_17)
 target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
+  ${pal_statistics_INCLUDE_DIRS}
 )
 target_link_libraries(controller_interface PUBLIC
                       hardware_interface::hardware_interface
                       rclcpp_lifecycle::rclcpp_lifecycle
                       realtime_tools::realtime_tools
+                      ${pal_statistics_LIBRARIES}
                       fmt::fmt)
 
 if(BUILD_TESTING)
@@ -100,6 +102,13 @@ if(BUILD_TESTING)
     ${sensor_msgs_TARGETS}
   )
 
+  ament_add_gmock(test_range_sensor test/test_range_sensor.cpp)
+  target_link_libraries(test_range_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
+  )
+
   # Semantic component command interface tests
 
   ament_add_gmock(test_semantic_component_command_interface
@@ -120,6 +129,11 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_controller_tf_prefix test/test_controller_tf_prefix.cpp)
   target_link_libraries(test_controller_tf_prefix
+    controller_interface
+  )
+
+  ament_add_gmock(test_test_utils test/test_test_utils.cpp)
+  target_link_libraries(test_test_utils
     controller_interface
   )
 endif()

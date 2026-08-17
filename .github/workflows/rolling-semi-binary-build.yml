@@ -17,6 +17,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
+      - 'ros2_control.lyrical.repos'
   push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
@@ -33,8 +34,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [rolling]
+        ROS_DISTRO: [lyrical, rolling]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
@@ -46,6 +48,7 @@ jobs:
       matrix:
         ROS_DISTRO: [rolling]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos

@@ -190,7 +190,10 @@ CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*pre
   {
     throw std::runtime_error("Exception from TestController::on_activate() as requested.");
   }
-  if (external_commands_for_testing_.empty())
+  // Resize to match the actual number of claimed command interfaces. Using names.size() in
+  // set_command_interface_configuration() gives the wrong count for ALL (0 names), REGEX (pattern
+  // count != match count), and INDIVIDUAL_BEST_EFFORT (some names may not exist).
+  if (external_commands_for_testing_.size() != command_interfaces_.size())
   {
     external_commands_for_testing_.resize(command_interfaces_.size(), 0.0);
   }
@@ -208,11 +211,6 @@ CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*pre
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
-  if (simulate_cleanup_failure)
-  {
-    return CallbackReturn::FAILURE;
-  }
-
   if (cleanup_calls)
   {
     (*cleanup_calls)++;
