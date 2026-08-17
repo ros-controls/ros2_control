@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <array>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
@@ -32,6 +33,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
@@ -48,12 +50,12 @@ constexpr unsigned int TRIGGER_READ_WRITE_ERROR_CALLS = 10000;
 }  // namespace
 
 using namespace ::testing;  // NOLINT
+using namespace std::chrono_literals;
 
 namespace test_components
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-// BEGIN (Handle export change): for backward compatibility
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
   CallbackReturn on_init(
@@ -65,12 +67,12 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    position_state_ = 0.0;
-    velocity_state_ = 0.0;
+    std::ignore = position_state_->set_value(0.0);
+    std::ignore = velocity_state_->set_value(0.0);
 
     if (recoverable_error_happened_)
     {
-      velocity_command_ = 0.0;
+      std::ignore = velocity_command_->set_value(0.0);
     }
 
     read_calls_ = 0;
@@ -79,32 +81,29 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
     // We can read a position and a velocity
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint1", hardware_interface::HW_IF_POSITION, &position_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    position_state_ = std::make_shared<hardware_interface::StateInterface>(
+      "joint1", hardware_interface::HW_IF_POSITION);
+    velocity_state_ = std::make_shared<hardware_interface::StateInterface>(
+      "joint1", hardware_interface::HW_IF_VELOCITY);
+    state_interfaces.push_back(position_state_);
+    state_interfaces.push_back(velocity_state_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
     // We can command in velocity
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_command_));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    velocity_command_ = std::make_shared<hardware_interface::CommandInterface>(
+      "joint1", hardware_interface::HW_IF_VELOCITY);
+    std::ignore = velocity_command_->set_value(0.0);
+    command_interfaces.push_back(velocity_command_);
     return command_interfaces;
   }
 
@@ -130,15 +129,19 @@ class DummyActuator : public hardware_interface::ActuatorInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    position_state_ += velocity_command_;
-    velocity_state_ = velocity_command_;
+    double velocity_cmd = 0.0;
+    std::ignore = velocity_command_->get_value(velocity_cmd, false);
+    double position = 0.0;
+    std::ignore = position_state_->get_value(position, false);
+    std::ignore = position_state_->set_value(position + velocity_cmd);
+    std::ignore = velocity_state_->set_value(velocity_cmd);
 
     return hardware_interface::return_type::OK;
   }
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    velocity_state_ = 0;
+    std::ignore = velocity_state_->set_value(0.0);
     return CallbackReturn::SUCCESS;
   }
 
@@ -157,16 +160,15 @@ class DummyActuator : public hardware_interface::ActuatorInterface
   }
 
 private:
-  double position_state_ = std::numeric_limits<double>::quiet_NaN();
-  double velocity_state_ = std::numeric_limits<double>::quiet_NaN();
-  double velocity_command_ = 0.0;
+  hardware_interface::StateInterface::SharedPtr position_state_;
+  hardware_interface::StateInterface::SharedPtr velocity_state_;
+  hardware_interface::CommandInterface::SharedPtr velocity_command_;
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;
   unsigned int write_calls_ = 0;
   bool recoverable_error_happened_ = false;
 };
-// END
 
 class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
@@ -266,7 +268,6 @@ private:
   bool recoverable_error_happened_ = false;
 };
 
-// BEGIN (Handle export change): for backward compatibility
 class DummySensor : public hardware_interface::SensorInterface
 {
   CallbackReturn on_init(
@@ -278,20 +279,18 @@ class DummySensor : public hardware_interface::SensorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    voltage_level_ = 0.0;
+    std::ignore = voltage_level_->set_value(0.0);
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
     // We can read some voltage level
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("sens1", "voltage", &voltage_level_));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    voltage_level_ = std::make_shared<hardware_interface::StateInterface>("sens1", "voltage");
+    state_interfaces.push_back(voltage_level_);
     return state_interfaces;
   }
 
@@ -305,7 +304,7 @@ class DummySensor : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
-    voltage_level_ = voltage_level_hw_value_;
+    std::ignore = voltage_level_->set_value(voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
 
@@ -324,14 +323,13 @@ class DummySensor : public hardware_interface::SensorInterface
   }
 
 private:
-  double voltage_level_ = std::numeric_limits<double>::quiet_NaN();
+  hardware_interface::StateInterface::SharedPtr voltage_level_;
   double voltage_level_hw_value_ = 0x666;
 
   // Helper variables to initiate error on read
   int read_calls_ = 0;
   bool recoverable_error_happened_ = false;
 };
-// END
 
 class DummySensorDefault : public hardware_interface::SensorInterface
 {
@@ -459,7 +457,6 @@ private:
   bool recoverable_error_happened_ = false;
 };
 
-// BEGIN (Handle export change): for backward compatibility
 class DummySystem : public hardware_interface::SystemInterface
 {
   CallbackReturn on_init(
@@ -473,15 +470,15 @@ class DummySystem : public hardware_interface::SystemInterface
   {
     for (auto i = 0ul; i < 3; ++i)
     {
-      position_state_[i] = 0.0;
-      velocity_state_[i] = 0.0;
+      std::ignore = position_state_[i]->set_value(0.0);
+      std::ignore = velocity_state_[i]->set_value(0.0);
     }
     // reset command only if error is initiated
     if (recoverable_error_happened_)
     {
       for (auto i = 0ul; i < 3; ++i)
       {
-        velocity_command_[i] = 0.0;
+        std::ignore = velocity_command_[i]->set_value(0.0);
       }
     }
 
@@ -491,50 +488,46 @@ class DummySystem : public hardware_interface::SystemInterface
     return CallbackReturn::SUCCESS;
   }
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
     // We can read a position and a velocity
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint1", hardware_interface::HW_IF_POSITION, &position_state_[0]));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_[0]));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint2", hardware_interface::HW_IF_POSITION, &position_state_[1]));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint2", hardware_interface::HW_IF_VELOCITY, &velocity_state_[1]));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint3", hardware_interface::HW_IF_POSITION, &position_state_[2]));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        "joint3", hardware_interface::HW_IF_VELOCITY, &velocity_state_[2]));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    position_state_[0] = std::make_shared<hardware_interface::StateInterface>(
+      "joint1", hardware_interface::HW_IF_POSITION);
+    velocity_state_[0] = std::make_shared<hardware_interface::StateInterface>(
+      "joint1", hardware_interface::HW_IF_VELOCITY);
+    position_state_[1] = std::make_shared<hardware_interface::StateInterface>(
+      "joint2", hardware_interface::HW_IF_POSITION);
+    velocity_state_[1] = std::make_shared<hardware_interface::StateInterface>(
+      "joint2", hardware_interface::HW_IF_VELOCITY);
+    position_state_[2] = std::make_shared<hardware_interface::StateInterface>(
+      "joint3", hardware_interface::HW_IF_POSITION);
+    velocity_state_[2] = std::make_shared<hardware_interface::StateInterface>(
+      "joint3", hardware_interface::HW_IF_VELOCITY);
+    state_interfaces.push_back(position_state_[0]);
+    state_interfaces.push_back(velocity_state_[0]);
+    state_interfaces.push_back(position_state_[1]);
+    state_interfaces.push_back(velocity_state_[1]);
+    state_interfaces.push_back(position_state_[2]);
+    state_interfaces.push_back(velocity_state_[2]);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
     // We can command in velocity
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_command_[0]));
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "joint2", hardware_interface::HW_IF_VELOCITY, &velocity_command_[1]));
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "joint3", hardware_interface::HW_IF_VELOCITY, &velocity_command_[2]));
-#pragma GCC diagnostic pop
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    velocity_command_[0] = std::make_shared<hardware_interface::CommandInterface>(
+      "joint1", hardware_interface::HW_IF_VELOCITY);
+    velocity_command_[1] = std::make_shared<hardware_interface::CommandInterface>(
+      "joint2", hardware_interface::HW_IF_VELOCITY);
+    velocity_command_[2] = std::make_shared<hardware_interface::CommandInterface>(
+      "joint3", hardware_interface::HW_IF_VELOCITY);
+    command_interfaces.push_back(velocity_command_[0]);
+    command_interfaces.push_back(velocity_command_[1]);
+    command_interfaces.push_back(velocity_command_[2]);
     return command_interfaces;
   }
 
@@ -560,10 +553,14 @@ class DummySystem : public hardware_interface::SystemInterface
       return hardware_interface::return_type::ERROR;
     }
 
+    double velocity_cmd = 0.0;
+    std::ignore = velocity_command_[0]->get_value(velocity_cmd, false);
     for (size_t i = 0; i < 3; ++i)
     {
-      position_state_[i] += velocity_command_[0];
-      velocity_state_[i] = velocity_command_[0];
+      double position = 0.0;
+      std::ignore = position_state_[i]->get_value(position, false);
+      std::ignore = position_state_[i]->set_value(position + velocity_cmd);
+      std::ignore = velocity_state_[i]->set_value(velocity_cmd);
     }
     return hardware_interface::return_type::OK;
   }
@@ -572,7 +569,7 @@ class DummySystem : public hardware_interface::SystemInterface
   {
     for (size_t i = 0; i < 3; ++i)
     {
-      velocity_state_[i] = 0.0;
+      std::ignore = velocity_state_[i]->set_value(0.0);
     }
     return CallbackReturn::SUCCESS;
   }
@@ -592,20 +589,15 @@ class DummySystem : public hardware_interface::SystemInterface
   }
 
 private:
-  std::array<double, 3> position_state_ = {
-    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-     std::numeric_limits<double>::quiet_NaN()}};
-  std::array<double, 3> velocity_state_ = {
-    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-     std::numeric_limits<double>::quiet_NaN()}};
-  std::array<double, 3> velocity_command_ = {{0.0, 0.0, 0.0}};
+  std::array<hardware_interface::StateInterface::SharedPtr, 3> position_state_;
+  std::array<hardware_interface::StateInterface::SharedPtr, 3> velocity_state_;
+  std::array<hardware_interface::CommandInterface::SharedPtr, 3> velocity_command_;
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;
   unsigned int write_calls_ = 0;
   bool recoverable_error_happened_ = false;
 };
-// END
 
 class DummySystemDefault : public hardware_interface::SystemInterface
 {
@@ -778,18 +770,35 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
 };
 
 }  // namespace test_components
+class TestComponentInterfaces : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    std::this_thread::sleep_for(50ms);
+  }
+  void TearDown() override { executor_->cancel(); }
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
+};
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_actuator)
+TEST_F(TestComponentInterfaces, dummy_actuator)
 {
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -879,7 +888,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_actuator_default)
+TEST_F(TestComponentInterfaces, dummy_actuator_default)
 {
   hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuatorDefault>());
@@ -895,6 +904,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
   params.hardware_info = dummy_actuator;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
@@ -1008,16 +1018,19 @@ TEST(TestComponentInterfaces, dummy_actuator_default)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_sensor)
+TEST_F(TestComponentInterfaces, dummy_sensor)
 {
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = sensor_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1045,7 +1058,7 @@ TEST(TestComponentInterfaces, dummy_sensor)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_sensor_default)
+TEST_F(TestComponentInterfaces, dummy_sensor_default)
 {
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensorDefault>());
 
@@ -1061,6 +1074,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default)
   params.hardware_info = voltage_sensor_res;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = sensor_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1092,7 +1106,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default)
   EXPECT_EQ(0x666, state_interfaces[si_sens1_vol]->get_optional().value());
 }
 
-TEST(TestComponentInterfaces, dummy_sensor_default_joint)
+TEST_F(TestComponentInterfaces, dummy_sensor_default_joint)
 {
   hardware_interface::Sensor sensor_hw(
     std::make_unique<test_components::DummySensorJointDefault>());
@@ -1109,6 +1123,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   params.hardware_info = sensor_res;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = sensor_hw.initialize(params);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   ASSERT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1151,16 +1166,19 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_system)
+TEST_F(TestComponentInterfaces, dummy_system)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1284,7 +1302,7 @@ TEST(TestComponentInterfaces, dummy_system)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_system_default)
+TEST_F(TestComponentInterfaces, dummy_system_default)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
 
@@ -1300,6 +1318,7 @@ TEST(TestComponentInterfaces, dummy_system_default)
   params.hardware_info = dummy_system;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1500,16 +1519,20 @@ TEST(TestComponentInterfaces, dummy_system_default)
   EXPECT_EQ(hardware_interface::return_type::OK, system_hw.perform_command_mode_switch({}, {}));
 }
 
-TEST(TestComponentInterfaces, dummy_command_mode_system)
+TEST_F(TestComponentInterfaces, dummy_command_mode_system)
 {
   hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystemPreparePerform>());
-  hardware_interface::HardwareInfo mock_hw_info{};
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1537,16 +1560,19 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_actuator_read_error_behavior)
 {
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1607,7 +1633,7 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
 {
   hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuatorDefault>());
@@ -1624,6 +1650,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
   params.hardware_info = dummy_actuator;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
@@ -1683,16 +1710,19 @@ TEST(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_actuator_write_error_behavior)
 {
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1748,7 +1778,7 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
 {
   hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuatorDefault>());
@@ -1765,6 +1795,7 @@ TEST(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
   params.hardware_info = dummy_actuator;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = actuator_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -1823,16 +1854,19 @@ TEST(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_sensor_read_error_behavior)
 {
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_sensor_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = sensor_hw.initialize(params);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
@@ -1898,7 +1932,7 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
 {
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensorDefault>());
 
@@ -1914,6 +1948,7 @@ TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
   params.hardware_info = voltage_sensor_res;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = sensor_hw.initialize(params);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
@@ -1963,16 +1998,19 @@ TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_system_read_error_behavior)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -2033,7 +2071,7 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_system_default_read_error_behavior)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
 
@@ -2049,6 +2087,7 @@ TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
   params.hardware_info = dummy_system;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -2109,16 +2148,19 @@ TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
 }
 
 // BEGIN (Handle export change): for backward compatibility
-TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_system_write_error_behavior)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
-  hardware_interface::HardwareInfo mock_hw_info{};
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;  // prevent indeterminate value from enabling async mode
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
   hardware_interface::HardwareComponentParams params;
   params.hardware_info = mock_hw_info;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -2179,7 +2221,7 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
 }
 // END
 
-TEST(TestComponentInterfaces, dummy_system_default_write_error_behavior)
+TEST_F(TestComponentInterfaces, dummy_system_default_write_error_behavior)
 {
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
 
@@ -2195,6 +2237,7 @@ TEST(TestComponentInterfaces, dummy_system_default_write_error_behavior)
   params.hardware_info = dummy_system;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
+  params.executor = executor_;
   auto state = system_hw.initialize(params);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());

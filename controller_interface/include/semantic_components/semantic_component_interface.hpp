@@ -42,11 +42,12 @@ public:
 
   virtual ~SemanticComponentInterface() = default;
 
-  /// Assign loaned state interfaces from the hardware.
   /**
+   * @brief Assign loaned state interfaces from the hardware.
+   *
    * Assign loaned state interfaces on the controller start.
    *
-   * \param[in] state_interfaces vector of interfaces provided by the controller.
+   * @param[in] state_interfaces vector of interfaces provided by the controller.
    */
   bool assign_loaned_state_interfaces(
     std::vector<hardware_interface::LoanedStateInterface> & state_interfaces)
@@ -55,17 +56,20 @@ public:
       state_interfaces, interface_names_, "", state_interfaces_);
   }
 
-  /// Release loaned interfaces from the hardware.
+  /**
+   * @brief Release loaned interfaces from the hardware.
+   */
   void release_interfaces() { state_interfaces_.clear(); }
 
-  /// Definition of state interface names for the component.
   /**
-   * The function should be used in "state_interface_configuration()" of a controller to provide
-   * standardized interface names semantic component.
+   * @brief Definition of state interface names for the component.
    *
-   * \default Default implementation defined state interfaces as "name/NR" where NR is number
+   * The function should be used in "state_interface_configuration()" of a controller to provide
+   * standardized interface names for the semantic component.
+   *
+   * Default implementation defined state interfaces as "name/NR" where NR is number
    * from 0 to size of values;
-   * \return list of strings with state interface names for the semantic component.
+   * @return list of strings with state interface names for the semantic component.
    */
   virtual std::vector<std::string> get_state_interface_names()
   {
@@ -79,9 +83,10 @@ public:
     return interface_names_;
   }
 
-  /// Return all values.
   /**
-   * \return true if it gets all the values, else false
+   * @brief Return all values.
+   *
+   * @return true if it gets all the values, else false
    */
   bool get_values(std::vector<double> & values) const
   {
@@ -98,9 +103,10 @@ public:
     return true;
   }
 
-  /// Return values as MessageReturnType
   /**
-   * \return false by default
+   * @brief Return values as MessageReturnType
+   *
+   * @return false by default
    */
   bool get_values_as_message(MessageReturnType & /* message */) { return false; }
 

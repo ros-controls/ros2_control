@@ -54,7 +54,7 @@ TEST_F(IMUSensorTest, validate_all)
   auto orientation_z = std::make_shared<hardware_interface::StateInterface>(
     sensor_name_, imu_interface_names_[2], &orientation_values_[2]);
   auto orientation_w = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[3], &orientation_values_[4]);
+    sensor_name_, imu_interface_names_[3], &orientation_values_[3]);
 
   // assign values to angular velocity
   auto angular_velocity_x = std::make_shared<hardware_interface::StateInterface>(
