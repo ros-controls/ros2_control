@@ -14,12 +14,13 @@
 //
 // Author: Denis Stogl
 
+#include <chrono>
 #include <cmath>
+#include <future>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include <thread>
 
 #include "gmock/gmock.h"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -2760,6 +2761,7 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
       executor->cancel();
       executor_thread.join();
       FAIL() << "Service not available";
+      return;
     }
 
     auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -2771,6 +2773,7 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
       executor->cancel();
       executor_thread.join();
       FAIL() << "Service call timed out";
+      return;
     }
     ASSERT_TRUE(result_future.get()->success);
 
@@ -2787,6 +2790,7 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
       executor->cancel();
       executor_thread.join();
       FAIL() << "Service call timed out";
+      return;
     }
     ASSERT_TRUE(result_future.get()->success);
 

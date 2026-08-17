@@ -35,6 +35,7 @@ add_library(hardware_interface SHARED
   src/hardware_component_interface.cpp
   src/lexical_casts.cpp
 )
+target_compile_features(hardware_interface PUBLIC cxx_std_17)
 target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
@@ -53,17 +54,17 @@ target_link_libraries(hardware_interface PUBLIC
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}
-                      ${std_srvs_TARGETS}
                       fmt::fmt)
 
 add_library(mock_components SHARED
   src/mock_components/generic_system.cpp
 )
+target_compile_features(mock_components PUBLIC cxx_std_17)
 target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(mock_components PUBLIC hardware_interface)
+target_link_libraries(mock_components PUBLIC hardware_interface ${std_srvs_TARGETS})
 
 pluginlib_export_plugin_description_file(
   hardware_interface mock_components_plugin_description.xml)
@@ -117,7 +118,11 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
-  target_link_libraries(test_generic_system hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  target_link_libraries(test_generic_system
+    hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+    ${std_srvs_TARGETS}
+  )
 endif()
 
 install(

@@ -349,7 +349,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 {
   if (command_propagation_disabled_.load(std::memory_order_acquire))
   {
-    RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");
+    static rclcpp::Clock default_clock(RCL_STEADY_TIME);
+    auto & clock = get_node() ? *get_node()->get_clock() : default_clock;
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), clock, 1000,
+      "Command propagation is disabled - no values will be returned!");
     return return_type::OK;
   }
 
