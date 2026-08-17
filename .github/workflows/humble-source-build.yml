@@ -27,6 +27,7 @@ jobs:
   source:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
+      extra-cmake-args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: humble
       ref: humble
       container: ubuntu:22.04

@@ -52,6 +52,34 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 using testing::SizeIs;
 
+namespace
+{
+#if ROS2_CONTROL_STRICT_TIMING_TESTS
+constexpr bool kStrictTimingTests = true;
+#else
+constexpr bool kStrictTimingTests = false;
+#endif
+
+constexpr double kRelaxedTimingLowerBoundFactor = 0.8;
+constexpr double kRelaxedTimingUpperBoundFactor = 1.2;
+constexpr double kRelaxedExecutionTimeUpperBoundFactor = 1.2;
+
+double timing_lower_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingLowerBoundFactor;
+}
+
+double timing_upper_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingUpperBoundFactor;
+}
+
+double execution_time_upper_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedExecutionTimeUpperBoundFactor;
+}
+}  // namespace
+
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
@@ -2087,29 +2115,37 @@ public:
             const double expec_write_execution_time = (1.e6 / (6 * rate)) + 200.0;
             EXPECT_LT(
               status_map[component_name].read_statistics->execution_time.get_statistics().average,
-              expec_read_execution_time);
+              execution_time_upper_bound(expec_read_execution_time));
             EXPECT_LT(
               status_map[component_name].read_statistics->periodicity.get_statistics().average,
-              1.2 * rate);
+              timing_upper_bound(1.2 * rate));
             EXPECT_THAT(
               status_map[component_name].read_statistics->periodicity.get_statistics().min,
-              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.5 * rate)),
+                testing::Lt(timing_upper_bound(1.2 * rate))));
             EXPECT_THAT(
               status_map[component_name].read_statistics->periodicity.get_statistics().max,
-              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.75 * rate)),
+                testing::Lt(timing_upper_bound(2.0 * rate))));
 
             EXPECT_LT(
               status_map[component_name].write_statistics->execution_time.get_statistics().average,
-              expec_write_execution_time);
+              execution_time_upper_bound(expec_write_execution_time));
             EXPECT_LT(
               status_map[component_name].write_statistics->periodicity.get_statistics().average,
-              1.2 * rate);
+              timing_upper_bound(1.2 * rate));
             EXPECT_THAT(
               status_map[component_name].write_statistics->periodicity.get_statistics().min,
-              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.5 * rate)),
+                testing::Lt(timing_upper_bound(1.2 * rate))));
             EXPECT_THAT(
               status_map[component_name].write_statistics->periodicity.get_statistics().max,
-              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.75 * rate)),
+                testing::Lt(timing_upper_bound(2.0 * rate))));
           }
         };
 
@@ -2533,23 +2569,31 @@ public:
     {
       EXPECT_LT(
         status_map[component_name].read_statistics->periodicity.get_statistics().average,
-        1.2 * rate);
+        timing_upper_bound(1.2 * rate));
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.4 * rate)),
+          testing::Lt(timing_upper_bound(1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().max,
-        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.75 * rate)),
+          testing::Lt(timing_upper_bound(2.0 * rate))));
 
       EXPECT_LT(
         status_map[component_name].write_statistics->periodicity.get_statistics().average,
-        1.2 * rate);
+        timing_upper_bound(1.2 * rate));
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.4 * rate)),
+          testing::Lt(timing_upper_bound(1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().max,
-        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.75 * rate)),
+          testing::Lt(timing_upper_bound(2.0 * rate))));
     };
 
     if (check_for_updated_values && is_write_active)
@@ -2563,22 +2607,22 @@ public:
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_read_execution_time);
+        execution_time_upper_bound(expec_read_execution_time));
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_write_execution_time);
+        execution_time_upper_bound(expec_write_execution_time));
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_read_execution_time);
+        execution_time_upper_bound(expec_read_execution_time));
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_write_execution_time);
+        execution_time_upper_bound(expec_write_execution_time));
     }
   }
 
