@@ -24,7 +24,6 @@ add_library(controller_interface SHARED
   src/controller_interface.cpp
   src/chainable_controller_interface.cpp
 )
-target_compile_features(controller_interface PUBLIC cxx_std_17)
 target_include_directories(controller_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_interface>
@@ -98,6 +97,13 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_gps_sensor test/test_gps_sensor.cpp)
   target_link_libraries(test_gps_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+    ${sensor_msgs_TARGETS}
+  )
+
+  ament_add_gmock(test_range_sensor test/test_range_sensor.cpp)
+  target_link_libraries(test_range_sensor
     controller_interface
     hardware_interface::hardware_interface
     ${sensor_msgs_TARGETS}

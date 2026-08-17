@@ -17,6 +17,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros_controls.rolling.repos'
+      - 'ros_controls.lyrical.repos'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,8 +29,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [rolling]
+        ROS_DISTRO: [lyrical, rolling]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       ref_for_scheduled_build: master

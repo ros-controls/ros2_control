@@ -61,6 +61,15 @@ public:
       std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
+  {
+  }
 };
 
 class TestControllerManagerWithTestableCM

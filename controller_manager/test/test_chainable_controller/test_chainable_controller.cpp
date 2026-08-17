@@ -180,7 +180,7 @@ CallbackReturn TestChainableController::on_configure(
     {
       auto joint_commands = rt_command_ptr_.readFromNonRT();
 
-      if (msg->data.size() != (*joint_commands)->data.size())
+      if (msg->data.size() == (*joint_commands)->data.size())
       {
         rt_command_ptr_.writeFromNonRT(msg);
       }

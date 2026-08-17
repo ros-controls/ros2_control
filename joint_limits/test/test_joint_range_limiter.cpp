@@ -337,6 +337,61 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(outside_limits_pos, -1.0, 0.0, true);
 }
 
+TEST_F(JointSaturationLimiterTest, when_velocity_limits_disabled_expect_no_velocity_enforcement)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  // velocity limits are disabled, but position and acceleration limits are still active
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  limits.has_velocity_limits = false;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);
+
+  auto test_velocity_passes_through =
+    [&](const std::optional<double> & actual_position, double desired_velocity)
+  {
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing velocity passthrough for actual position: " + std::to_string(act_pos) +
+      ", desired velocity: " + std::to_string(desired_velocity) +
+      " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    desired_state_.velocity = desired_velocity;
+    ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_TRUE(desired_state_.has_velocity());
+    EXPECT_NEAR(desired_state_.velocity.value(), desired_velocity, COMMON_THRESHOLD);
+  };
+
+  // Normal operating region: any velocity must pass through unchanged
+  test_velocity_passes_through(0.0, 1000.0);
+  test_velocity_passes_through(0.0, -1000.0);
+
+  test_velocity_passes_through(5.0, 1000.0);
+  test_velocity_passes_through(5.0, -1000.0);
+  test_velocity_passes_through(6.0, 1000.0);
+  test_velocity_passes_through(-5.0, -1000.0);
+  test_velocity_passes_through(-5.0, 1000.0);
+  test_velocity_passes_through(-6.0, -1000.0);
+
+  test_velocity_passes_through(0.0, 1000.0);
+  test_velocity_passes_through(0.0, -1000.0);
+  test_velocity_passes_through(0.0, 1000.0);
+}
+
 TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
 {
   SetupNode("joint_saturation_limiter");
@@ -450,6 +505,85 @@ TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-5.0, -0.2, -30.0, 0.0, true);
   test_limit_enforcing(-5.0, -0.2, 400.0, 200.0, true);
   test_limit_enforcing(-5.0, -0.2, 30.0, 30.0, false);
+}
+
+TEST_F(JointSaturationLimiterTest, when_effort_limits_disabled_expect_no_effort_enforcement)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  // effort limits are OFF, but position and velocity limits are still active
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  limits.has_effort_limits = false;  // <-- disabled
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+
+  auto test_effort_passes_through = [&](
+                                      const std::optional<double> & actual_position,
+                                      const std::optional<double> & actual_velocity,
+                                      double desired_effort)
+  {
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing effort passthrough for actual position: " + std::to_string(act_pos) +
+      ", actual velocity: " + std::to_string(act_vel) + ", desired effort: " +
+      std::to_string(desired_effort) + " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.effort = desired_effort;
+    // With effort limits disabled, enforce() must NOT clamp effort regardless of
+    // the position/velocity state it must pass through completely untouched.
+    ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_TRUE(desired_state_.has_effort());
+    EXPECT_NEAR(desired_state_.effort.value(), desired_effort, COMMON_THRESHOLD);
+  };
+
+  // Normal operating region: any effort must pass through unchanged
+  test_effort_passes_through(0.0, 0.0, 10000.0);
+  test_effort_passes_through(0.0, 0.0, -10000.0);
+
+  // At max position + zero velocity (old code zeroed upper_limit to 0.0 here)
+  test_effort_passes_through(5.0, 0.0, 10000.0);
+  test_effort_passes_through(5.0, 0.0, -10000.0);
+  // Beyond max position
+  test_effort_passes_through(6.0, 0.0, 10000.0);
+  test_effort_passes_through(6.0, 0.0, -10000.0);
+
+  // At max position + positive velocity (moving further out)
+  test_effort_passes_through(5.0, 0.2, 10000.0);
+  test_effort_passes_through(5.0, 0.2, -10000.0);
+
+  // At min position + zero velocity (old code zeroed lower_limit to 0.0 here)
+  test_effort_passes_through(-5.0, 0.0, 10000.0);
+  test_effort_passes_through(-5.0, 0.0, -10000.0);
+  // At min position + negative velocity (moving further out)
+  test_effort_passes_through(-5.0, -0.2, 10000.0);
+  test_effort_passes_through(-5.0, -0.2, -10000.0);
+
+  // Over max velocity (old code zeroed upper_limit to 0.0 here)
+  test_effort_passes_through(0.0, 1.5, 10000.0);
+  test_effort_passes_through(0.0, 1.5, -10000.0);
+  // Over negative max velocity
+  test_effort_passes_through(0.0, -1.5, 10000.0);
+  test_effort_passes_through(0.0, -1.5, -10000.0);
 }
 
 TEST_F(JointSaturationLimiterTest, check_desired_acceleration_only_cases)
@@ -670,6 +804,115 @@ TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.8, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
+}
+
+TEST_F(JointSaturationLimiterTest, when_command_is_nan_expect_no_limiting)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -M_PI;
+  limits.max_position = M_PI;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  limits.has_effort_limits = true;
+  limits.max_effort = 200.0;
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 2.0;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Configure());
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+
+  // NaN position must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.position.value()));
+
+  // NaN velocity must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.velocity = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.velocity.value()));
+
+  // NaN effort must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.effort = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.effort.value()));
+
+  // NaN acceleration must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.acceleration = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.acceleration.value()));
+
+  // NaN jerk must pass through unchanged
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.jerk = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isnan(desired_state_.jerk.value()));
+
+  // NaN must not corrupt prev_command_ — a subsequent finite command must still be limited.
+  ASSERT_TRUE(Init(limits));
+  actual_state_ = {};
+  actual_state_.position = 0.0;
+  actual_state_.velocity = 0.0;
+  desired_state_ = {};
+  desired_state_.position = 0.0;
+  ASSERT_FALSE(
+    joint_limiter_->enforce(actual_state_, desired_state_, period));  // seed prev_command
+
+  desired_state_.position = nan;
+  EXPECT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));  // NaN, no change
+
+  desired_state_.position = M_PI * 2.0;  // well outside position limits
+  EXPECT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_TRUE(std::isfinite(desired_state_.position.value()));
+  EXPECT_LE(desired_state_.position.value(), limits.max_position);
+}
+
+TEST_F(JointSaturationLimiterTest, when_switching_command_interface_expect_no_bad_optional_access)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -M_PI;
+  limits.max_position = M_PI;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  ASSERT_TRUE(Init(limits));
+
+  // Configure with an effort-only state (no position) to simulate a controller
+  // that was previously running in effort mode. on_configure sets
+  // prev_command_ = current_joint_states, so prev_command_.position stays nullopt.
+  joint_limits::JointControlInterfacesData effort_only_state;
+  effort_only_state.joint_name = "foo_joint";
+  effort_only_state.effort = 0.0;
+  ASSERT_TRUE(joint_limiter_->configure(effort_only_state));
+
+  rclcpp::Duration period(0, 100000000);  // 0.1 second
+
+  // Sending a position command while prev_command_.position is nullopt must not
+  // throw bad_optional_access inside compute_position_limits.
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = M_PI * 2.0;  // outside limits
+  EXPECT_NO_THROW(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_LE(desired_state_.position.value(), limits.max_position);
 }
 
 int main(int argc, char ** argv)

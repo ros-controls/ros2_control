@@ -342,15 +342,37 @@ protected:
   unsigned int update_rate_;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_ = nullptr;
 
 private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+
+  /// Initialize controller manager publishers, diagnostics, introspection, and shutdown handling.
   void init_controller_manager();
 
+  /// Initialize controller manager parameters.
+  /**
+   * Declares controller manager parameters, reads them from the generated parameter listener, and
+   * caches values used by the real-time update loop.
+   */
   void initialize_parameters();
+
+  /// Initialize the robot description subscription and wait notification timer.
+  /**
+   * Used when the controller manager starts without a valid robot description, or when a robot
+   * description failed to initialize hardware and the manager should keep waiting for a
+   * replacement.
+   */
+  void init_robot_description_callback();
+
+  /// Set the initial lifecycle state of hardware components.
+  /**
+   * Applies the hardware_components_initial_state parameters after the resource manager has loaded
+   * and initialized components from a valid robot description.
+   */
+  void set_initial_hardware_components_state();
 
   /**
    * Call cleanup to change the given controller lifecycle node to the unconfigured state.
@@ -682,6 +704,8 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  bool activate_all_hw_components_ = false;
 
   struct ControllerManagerExecutionTime
   {
