@@ -758,8 +758,8 @@ Provides an alternative way to specify controllers using a dictionary format, al
 
 **Parameters:**
 
-- ``controller_info_dict`` (dict): Dictionary with controller names as keys and configuration dictionaries as values
-  - Each value should contain ``controller_params_file`` (str or list[str], optional): Path(s) to parameter file(s)
+- ``controller_info_dict`` (dict[str, str | list[str] | None]): Dictionary with controller names as keys and parameter file path(s) as values.
+  Each value may be a ``str`` (single YAML), ``list[str]`` (multiple YAMLs applied in order), or ``None`` if no parameter file is needed
 - ``extra_spawner_args`` (list[str], optional): Additional arguments to pass to spawner. Defaults to ``[]``
 
 **Python Usage Example:**
