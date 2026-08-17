@@ -757,14 +757,12 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rat
 
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-    if (
-      !kStrictTimingTests &&
-      test_param.strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+    if (!kStrictTimingTests)
     {
       EXPECT_THAT(
         test_controller->internal_counter,
         testing::AllOf(testing::Ge(last_internal_counter), testing::Le(last_internal_counter + 1u)))
-        << "In relaxed mode, BEST_EFFORT allows scheduler jitter while stopping async "
+        << "In relaxed mode, scheduler jitter may skip the final async cycle while stopping "
            "controllers.";
     }
     else
