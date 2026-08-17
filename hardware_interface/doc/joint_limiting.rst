@@ -50,6 +50,8 @@ If joint limits are active for a specific interface, the controller_manger will 
 Configuration of Limits
 ########################
 
+tba
 
-
-7. **Test Before Deployment**: Verify joint behavior with configured limits using simulation before real hardware
+Description of the Limiter Algorithms
+######################################
+tba
