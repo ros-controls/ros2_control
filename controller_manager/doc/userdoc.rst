@@ -528,11 +528,10 @@ instead of exposing internal service-client singletons.
 .. code-block:: python
 
   import rclpy
-  from rclpy.node import Node
   from controller_manager.controller_manager_services import (
     load_controller, configure_controller, switch_controllers, cleanup_controller, unload_controller
   )
-  from controller_manager_msgs.srv import LoadController
+  from controller_manager_msgs.srv import SwitchController
 
   def main():
     rclpy.init()
@@ -547,7 +546,7 @@ instead of exposing internal service-client singletons.
         node.get_logger().info("Controller configured")
       resp = switch_controllers(
         node, cm_name, deactivate_controllers=[], activate_controllers=['my_controller'],
-        strictness=2, activate_asap=False, timeout=0.0
+        strictness=SwitchController.Request.STRICT, activate_asap=False, timeout=0.0
       )
       if getattr(resp, 'ok', False):
         node.get_logger().info('Controller activated')
@@ -561,6 +560,7 @@ instead of exposing internal service-client singletons.
     main()
 
 Notes:
+
 - Import path: controller_manager.controller_manager_services (matches repository layout).
 - Response fields differ between services; examples use getattr to handle ``success`` vs ``ok``.
 
@@ -612,7 +612,7 @@ Generates a launch description that automatically loads and activates controller
 **Parameters:**
 
 - ``controller_names`` (list[str]): Names of controllers to load. Example: ``['joint_state_broadcaster', 'joint_trajectory_controller']``
-- ``controller_params_files`` (list[str], optional): Paths to YAML parameter files for controllers. Defaults to ``None``
+- ``controller_params_files`` (list, optional): Paths to YAML parameter files for controllers. Each item can be a plain string path or a Launch substitution (e.g., ``PathJoinSubstitution([...])``). Defaults to ``None``
 - ``extra_spawner_args`` (list[str], optional): Additional arguments to pass to spawner (e.g., ``['--load-only', '--inactive']``). Defaults to ``[]``
 
 **Return Value:**
@@ -697,18 +697,12 @@ Provides an alternative way to specify controllers using a dictionary format, al
     config_dir = PathSubstitution(FindPackageShare('my_robot_bringup') / 'config')
     # Define controllers with per-controller configurations
     controller_info_dict = {
-      'joint_state_broadcaster': {
-        'controller_params_file': os.path.join(config_dir, 'common_params.yaml')
-      },
-      'position_trajectory_controller': {
-        'controller_params_file': [
-          os.path.join(config_dir, 'common_params.yaml'),
-          os.path.join(config_dir, 'position_controller.yaml'),
-        ]
-      },
-      'velocity_trajectory_controller': {
-        'controller_params_file': os.path.join(config_dir, 'velocity_controller.yaml')
-      },
+      'joint_state_broadcaster': os.path.join(config_dir, 'common_params.yaml'),
+      'position_trajectory_controller': [
+        os.path.join(config_dir, 'common_params.yaml'),
+        os.path.join(config_dir, 'position_controller.yaml'),
+      ],
+      'velocity_trajectory_controller': os.path.join(config_dir, 'velocity_controller.yaml'),
     }
     spawner = generate_controllers_spawner_launch_description_from_dict(
       controller_info_dict,
