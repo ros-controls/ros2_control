@@ -11,7 +11,7 @@ on:
       - '**.cpp'
       - '**.py'
       - '**.yaml'
-      - '.github/workflows/rolling-pr-gated-ci.yml'
+      - '.github/workflows/*.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
