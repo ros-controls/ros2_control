@@ -24,6 +24,11 @@ from ros2controlcli.api import add_controller_mgr_parsers
 import pygraphviz as pgz
 
 
+def make_record_fields(port_prefix, names):
+    """Build the ``<port> label`` fields of a record label for a list of names."""
+    return [f"<{port_prefix + name}> {name}" for name in names]
+
+
 def make_controller_node(
     s,
     controller_name,
@@ -38,54 +43,26 @@ def make_controller_node(
     input_controllers = sorted(list(input_controllers))
     output_controllers = sorted(list(output_controllers))
 
-    inputs_str = ""
-    for ind, state_interface in enumerate(state_interfaces):
-        deliminator = "|"
-        if ind == len(state_interface) - 1:
-            deliminator = ""
-        inputs_str += "<{}> {} {} ".format(
-            "state_end_" + state_interface, state_interface, deliminator
-        )
+    # A record label separates its fields with '|', so the delimiter has to be placed
+    # *between* the fields of the whole input (or output) side, not per interface kind.
+    inputs_str = " | ".join(
+        make_record_fields("state_end_", state_interfaces)
+        + make_record_fields("controller_end_", input_controllers)
+    )
+    outputs_str = " | ".join(
+        make_record_fields("command_start_", command_interfaces)
+        + make_record_fields("controller_start_", output_controllers)
+    )
 
-    for ind, input_controller in enumerate(input_controllers):
-        deliminator = "|"
-        if ind == len(input_controller) - 1:
-            deliminator = ""
-        inputs_str += "<{}> {} {} ".format(
-            "controller_end_" + input_controller, input_controller, deliminator
-        )
+    for input_controller in input_controllers:
         port_map["controller_end_" + input_controller] = controller_name
-
-    outputs_str = ""
-    for ind, command_interface in enumerate(command_interfaces):
-        deliminator = "|"
-        if ind == len(command_interface) - 1:
-            deliminator = ""
-        outputs_str += "<{}> {} {} ".format(
-            "command_start_" + command_interface, command_interface, deliminator
-        )
-
-    for ind, output_controller in enumerate(output_controllers):
-        deliminator = "|"
-        if ind == len(output_controller) - 1:
-            deliminator = ""
-        outputs_str += "<{}> {} {} ".format(
-            "controller_start_" + output_controller, output_controller, deliminator
-        )
 
     s.add_node(controller_name, label=f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
 
 
 def make_command_node(s, command_interfaces):
     command_interfaces = sorted(list(command_interfaces))
-    outputs_str = ""
-    for ind, command_interface in enumerate(command_interfaces):
-        deliminator = "|"
-        if ind == len(command_interfaces) - 1:
-            deliminator = ""
-        outputs_str += "<{}> {} {} ".format(
-            "command_end_" + command_interface, command_interface, deliminator
-        )
+    outputs_str = " | ".join(make_record_fields("command_end_", command_interfaces))
 
     s.add_node(
         "command_interfaces", label="{}|{{{{{}}}}}".format("command_interfaces", outputs_str)
@@ -94,14 +71,7 @@ def make_command_node(s, command_interfaces):
 
 def make_state_node(s, state_interfaces):
     state_interfaces = sorted(list(state_interfaces))
-    inputs_str = ""
-    for ind, state_interface in enumerate(state_interfaces):
-        deliminator = "|"
-        if ind == len(state_interfaces) - 1:
-            deliminator = ""
-        inputs_str += "<{}> {} {} ".format(
-            "state_start_" + state_interface, state_interface, deliminator
-        )
+    inputs_str = " | ".join(make_record_fields("state_start_", state_interfaces))
 
     s.add_node("state_interfaces", label="{}|{{{{{}}}}}".format("state_interfaces", inputs_str))
 
