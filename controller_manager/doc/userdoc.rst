@@ -589,14 +589,11 @@ Generates a launch description that automatically loads and activates controller
 
   from controller_manager.launch_utils import generate_controllers_spawner_launch_description
   from launch import LaunchDescription
-  import os
-  from ament_index_python.packages import get_package_share_directory
+  from launch.substitutions import PathSubstitution
+  from launch_ros.substitutions import FindPackageShare
 
   def generate_launch_description():
-    config_dir = os.path.join(
-      get_package_share_directory('my_robot_bringup'),
-      'config'
-    )
+    config_dir = PathSubstitution(FindPackageShare('my_robot_bringup')) / 'config'
     # Example 1: Load with controller parameters already in controller_manager
     spawner = generate_controllers_spawner_launch_description(
       ['joint_state_broadcaster']
@@ -604,7 +601,7 @@ Generates a launch description that automatically loads and activates controller
     # Example 2: Load with parameter file and extra arguments
     spawner = generate_controllers_spawner_launch_description(
       ['joint_trajectory_controller'],
-      controller_params_files=[os.path.join(config_dir, 'controllers.yaml')],
+      controller_params_files=[config_dir / 'controllers.yaml'],
       extra_spawner_args=['--load-only']
     )
     return spawner
@@ -630,26 +627,23 @@ Returns a ``LaunchDescription`` containing:
   from launch import LaunchDescription
   from launch_ros.actions import Node
   from controller_manager.launch_utils import generate_controllers_spawner_launch_description
-  import os
-  from ament_index_python.packages import get_package_share_directory
+  from launch.substitutions import PathSubstitution
+  from launch_ros.substitutions import FindPackageShare
 
   def generate_launch_description():
     # Get configuration paths
-    config_dir = os.path.join(
-      get_package_share_directory('my_robot_bringup'),
-      'config'
-    )
+    config_dir = PathSubstitution(FindPackageShare('my_robot_bringup')) / 'config'
     # Create controller manager node
     control_node = Node(
       package='controller_manager',
       executable='ros2_control_node',
-      parameters=[os.path.join(config_dir, 'ros2_controllers.yaml')],
+      parameters=[config_dir / 'ros2_controllers.yaml'],
       output='both',
     )
     # Create spawner for multiple controllers
     controllers_spawner = generate_controllers_spawner_launch_description(
       ['joint_state_broadcaster', 'joint_trajectory_controller'],
-      controller_params_files=[os.path.join(config_dir, 'controllers.yaml')],
+      controller_params_files=[config_dir / 'controllers.yaml'],
     )
     return LaunchDescription([
       control_node,
@@ -690,19 +684,19 @@ Provides an alternative way to specify controllers using a dictionary format, al
 
   from controller_manager.launch_utils import generate_controllers_spawner_launch_description_from_dict
   from launch import LaunchDescription
-  import os
-  from ament_index_python.packages import get_package_share_directory
+  from launch.substitutions import PathSubstitution
+  from launch_ros.substitutions import FindPackageShare
 
   def generate_launch_description():
-    config_dir = PathSubstitution(FindPackageShare('my_robot_bringup') / 'config')
+    config_dir = PathSubstitution(FindPackageShare('my_robot_bringup')) / 'config'
     # Define controllers with per-controller configurations
     controller_info_dict = {
-      'joint_state_broadcaster': os.path.join(config_dir, 'common_params.yaml'),
+      'joint_state_broadcaster': config_dir / 'common_params.yaml',
       'position_trajectory_controller': [
-        os.path.join(config_dir, 'common_params.yaml'),
-        os.path.join(config_dir, 'position_controller.yaml'),
+        config_dir / 'common_params.yaml',
+        config_dir / 'position_controller.yaml',
       ],
-      'velocity_trajectory_controller': os.path.join(config_dir, 'velocity_controller.yaml'),
+      'velocity_trajectory_controller': config_dir / 'velocity_controller.yaml',
     }
     spawner = generate_controllers_spawner_launch_description_from_dict(
       controller_info_dict,
