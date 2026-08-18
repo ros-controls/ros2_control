@@ -223,6 +223,18 @@ TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_
     ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
 }
 
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_state_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_state_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_command_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_command_keys_urdf);
+}
+
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 {
   // we validate the results manually
