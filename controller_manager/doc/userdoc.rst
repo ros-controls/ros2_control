@@ -551,6 +551,10 @@ instead of exposing internal service-client singletons.
       if getattr(resp, 'ok', False):
         node.get_logger().info('Controller activated')
     finally:
+      switch_controllers(
+        node, cm_name, deactivate_controllers=['my_controller'], activate_controllers=[],
+        strictness=SwitchController.Request.STRICT, activate_asap=False, timeout=0.0
+      )
       cleanup_controller(node, cm_name, 'my_controller')
       unload_controller(node, cm_name, 'my_controller')
       node.destroy_node()
@@ -675,7 +679,7 @@ Provides an alternative way to specify controllers using a dictionary format, al
 **Parameters:**
 
 - ``controller_info_dict`` (dict[str, str | list[str] | None]): Dictionary with controller names as keys and parameter file path(s) as values.
-  Each value may be a ``str`` (single YAML), ``list[str]`` (multiple YAMLs applied in order), or ``None`` if no parameter file is needed
+  Each value may be a ``str`` (single YAML), ``list[str]`` (multiple YAMLs applied in order), ``[]`` (no parameter file), or ``None`` if no parameter file is needed
 - ``extra_spawner_args`` (list[str], optional): Additional arguments to pass to spawner. Defaults to ``[]``
 
 **Python Usage Example:**
