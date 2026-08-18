@@ -2738,6 +2738,22 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
   executor->add_node(client_node);
 
   std::thread executor_thread([executor]() { executor->spin(); });
+  struct ScopeGuard
+  {
+    std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exec;
+    std::thread & thread;
+    ~ScopeGuard()
+    {
+      if (exec)
+      {
+        exec->cancel();
+      }
+      if (thread.joinable())
+      {
+        thread.join();
+      }
+    }
+  } guard{executor, executor_thread};
 
   {
     TestableResourceManager rm(rm_node, executor, urdf);
@@ -2758,8 +2774,6 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
 
     if (!client->wait_for_service(std::chrono::seconds(10)))
     {
-      executor->cancel();
-      executor_thread.join();
       FAIL() << "Service not available";
       return;
     }
@@ -2770,8 +2784,6 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
 
     if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
     {
-      executor->cancel();
-      executor_thread.join();
       FAIL() << "Service call timed out";
       return;
     }
@@ -2787,8 +2799,6 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
     result_future = client->async_send_request(request);
     if (result_future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
     {
-      executor->cancel();
-      executor_thread.join();
       FAIL() << "Service call timed out";
       return;
     }
@@ -2798,9 +2808,6 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
     ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
     EXPECT_EQ(2.2, j1p_s.get_optional().value());
   }
-
-  executor->cancel();
-  executor_thread.join();
 }
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)

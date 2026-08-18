@@ -353,7 +353,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     auto & clock = get_node() ? *get_node()->get_clock() : default_clock;
     RCLCPP_WARN_THROTTLE(
       get_logger(), clock, 1000,
-      "Command propagation is disabled - no values will be returned!");
+      "Command propagation is disabled - commands will not be mirrored to state interfaces!");
     return return_type::OK;
   }
 
