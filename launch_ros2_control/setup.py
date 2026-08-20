@@ -32,7 +32,11 @@ setup(
     author_email="36795178+SuperJappie08@users.noreply.github.com",
     description="A launch extension for ros2_control",
     license="Apache-2.0",
-    tests_require=["pytest"],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     entry_points={
         "launch.frontend.launch_extension": [
             "launch_ros2_control = launch_ros2_control",

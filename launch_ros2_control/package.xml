@@ -15,9 +15,6 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>controller_manager</exec_depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>ament_xmllint</test_depend>
   <test_depend>python3-pytest</test_depend>
   <test_depend>python3-pytest-timeout</test_depend>
 
