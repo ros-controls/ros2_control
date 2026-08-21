@@ -338,6 +338,25 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());
+
+  // Cleanup controller (inactive -> unconfigured) without unloading it, and verify the
+  // activity topic reflects the new state. This does not go through the RT controller-list
+  // switch that unload/switch_controller use, so it needs its own explicit publish.
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->cleanup_controller(test_controller::TEST_CONTROLLER_NAME));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(
+    cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
   auto unload_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
     test_controller::TEST_CONTROLLER_NAME);
