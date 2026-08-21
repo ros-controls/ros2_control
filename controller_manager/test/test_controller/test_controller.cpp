@@ -211,11 +211,6 @@ CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*pre
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
-  if (simulate_cleanup_failure)
-  {
-    return CallbackReturn::FAILURE;
-  }
-
   if (cleanup_calls)
   {
     (*cleanup_calls)++;
