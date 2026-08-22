@@ -339,9 +339,6 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());
 
-  // Cleanup controller (inactive -> unconfigured) without unloading it, and verify the
-  // activity topic reflects the new state. This does not go through the RT controller-list
-  // switch that unload/switch_controller use, so it needs its own explicit publish.
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->cleanup_controller(test_controller::TEST_CONTROLLER_NAME));

@@ -1551,8 +1551,6 @@ controller_interface::return_type ControllerManager::cleanup_controller(
   if (result == controller_interface::return_type::OK)
   {
     RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
-    // Cleanup does not go through the RT controller-list switch, so the activity topic
-    // is not updated by the on_switch_callback_ above -- publish it here explicitly.
     publish_activity();
   }
 
