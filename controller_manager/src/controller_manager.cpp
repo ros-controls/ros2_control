@@ -1551,6 +1551,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
   if (result == controller_interface::return_type::OK)
   {
     RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
+    publish_activity();
   }
 
   return result;
