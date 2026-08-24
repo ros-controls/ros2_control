@@ -1614,27 +1614,15 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  const auto & state = controller->get_lifecycle_state();
-  if (
-    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
-    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  if (!is_controller_unconfigured(*controller))
   {
     RCLCPP_ERROR(
       get_logger(), "Controller '%s' can not be configured from '%s' state.",
-      controller_name.c_str(), state.label().c_str());
+      controller_name.c_str(), controller->get_lifecycle_state().label().c_str());
     return controller_interface::return_type::ERROR;
   }
 
-  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    if (cleanup_controller(*found_it) != controller_interface::return_type::OK)
-    {
-      return controller_interface::return_type::ERROR;
-    }
-  }
-  // For cases, when the controller ends up in the unconfigured state from any other state
+  // Remove any stale exported interfaces from a prior configure cycle before re-configuring.
   cleanup_controller_exported_interfaces(*found_it);
 
   try
@@ -4691,14 +4679,6 @@ void ControllerManager::hardware_components_diagnostic_callback(
   for (const auto & [component_name, component_info] : hw_components_info)
   {
     stat.add(component_name + state_suffix, component_info.state.label());
-    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-    {
-      all_active = false;
-    }
-    else
-    {
-      atleast_one_hw_active = true;
-    }
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       auto update_stats =

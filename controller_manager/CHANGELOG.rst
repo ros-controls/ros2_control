@@ -2,6 +2,18 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.9.0 (2026-08-10)
+------------------
+* Make configure_controller lifecycle transition strict (no multi-hop) (`#3196 <https://github.com/ros-controls/ros2_control/issues/3196>`_)
+* Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_)
+* doc: reorder ros2_control TOC (`#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_)
+* Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_)
+* Create spawner logger before lock-result is logged (`#3462 <https://github.com/ros-controls/ros2_control/issues/3462>`_)
+* remove unused code in hardware components diagnostics (`#3488 <https://github.com/ros-controls/ros2_control/issues/3488>`_)
+* Guard controller update rate against modulo-by-zero UB (`#3454 <https://github.com/ros-controls/ros2_control/issues/3454>`_)
+* Make sleep in ros2_control node optional (`#3213 <https://github.com/ros-controls/ros2_control/issues/3213>`_)
+* Contributors: Advitya Singh, Aniruddh Yelluri, Christian Rauch, FAN YUCHEN, Felix Exner, Rishitha, Vedh, robkwan
+
 6.8.0 (2026-07-01)
 ------------------
 * Unload controller upon sigterm (`#3406 <https://github.com/ros-controls/ros2_control/issues/3406>`_)

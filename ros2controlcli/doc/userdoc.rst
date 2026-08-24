@@ -30,8 +30,7 @@ list_controllers
 .. code-block:: console
 
     $ ros2 control list_controllers -h
-    usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-s] [--claimed-interfaces] [--required-state-interfaces] [--required-command-interfaces] [--chained-interfaces] [--exported-interfaces] [--verbose] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
-                                     [--ros-args ...]
+    usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-s] [--claimed-interfaces] [--required-state-interfaces] [--required-command-interfaces] [--chained-interfaces] [--exported-interfaces] [--verbose] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
     Output the list of loaded controllers, their type and status
 
@@ -298,8 +297,7 @@ switch_controllers
 .. code-block:: console
 
     $ ros2 control switch_controllers -h
-    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [-s] [--deactivate [DEACTIVATE ...]] [--activate [ACTIVATE ...]] [--strict] [--activate-asap] [--switch-timeout SWITCH_TIMEOUT]
-                                          [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
+    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [-s] [--deactivate [DEACTIVATE ...]] [--activate [ACTIVATE ...]] [--strict] [--activate-asap] [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
     Switch controllers in a controller manager
 
@@ -328,7 +326,7 @@ unload_controller
 .. code-block:: console
 
     $ ros2 control unload_controller -h
-    usage: ros2 control unload_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name
+    usage: ros2 control unload_controller [-h] [--spin-time SPIN_TIME] [-s] [--all-inactive] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] [controller_name]
 
     Unload a controller in a controller manager
 
@@ -340,14 +338,29 @@ unload_controller
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
+      --all-inactive        Unload all controllers currently in the 'inactive' state
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
 
+Either ``controller_name`` or ``--all-inactive`` must be given, but not both.
+
+Example unloading a single controller:
+
+.. code-block:: console
+
+    $ ros2 control unload_controller test_controller_name
+
+Example unloading every currently inactive controller:
+
+.. code-block:: console
+
+    $ ros2 control unload_controller --all-inactive
+
 cleanup_controller
-----------------------
+------------------
 
 .. code-block:: console
 
@@ -393,7 +406,7 @@ view_controller_chains
 
 
 view_hardware_status
-----------------------
+--------------------
 
 .. code-block:: console
 
