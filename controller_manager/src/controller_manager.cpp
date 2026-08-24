@@ -785,6 +785,115 @@ controller_interface::return_type ControllerManager::unload_controller(
   return controller_interface::return_type::OK;
 }
 
+<<<<<<< HEAD
+=======
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const controller_manager::ControllerSpec & controller)
+{
+  try
+  {
+    cleanup_controller_exported_interfaces(controller);
+    const auto new_state = controller.c->get_node()->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' is not cleaned-up properly, it is still in state '%s'",
+        controller.info.name.c_str(), new_state.label().c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught exception while cleaning-up the controller '%s'",
+      controller.info.name.c_str());
+    params_->handle_exceptions ? void() : throw;
+    return controller_interface::return_type::ERROR;
+  }
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const std::string & controller_name)
+{
+  const auto & controllers = get_loaded_controllers();
+
+  auto found_it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+
+  if (found_it == controllers.end())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Could not cleanup controller with name '%s' because no controller with this name exists",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  auto controller = found_it->c;
+
+  if (is_controller_unconfigured(*controller))
+  {
+    // all good nothing to do!
+    return controller_interface::return_type::OK;
+  }
+
+  RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
+
+  auto state = controller->get_lifecycle_state();
+  if (
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Controller '%s' can not be cleaned-up from '%s' state.",
+      controller_name.c_str(), state.label().c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Calling cleanup for controller '%s'", controller_name.c_str());
+  auto result = cleanup_controller(*found_it);
+
+  if (result == controller_interface::return_type::OK)
+  {
+    RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
+    publish_activity();
+  }
+
+  return result;
+}
+
+void ControllerManager::shutdown_controller(
+  const controller_manager::ControllerSpec & controller) const
+{
+  try
+  {
+    const auto new_state = controller.c->get_node()->shutdown();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to shutdown the controller '%s' before unloading!",
+        controller.info.name.c_str());
+    }
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Caught exception of type : %s while shutdown the controller '%s' before unloading: %s",
+      typeid(e).name(), controller.info.name.c_str(), e.what());
+    params_->handle_exceptions ? void() : throw;
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Failed to shutdown the controller '%s' before unloading",
+      controller.info.name.c_str());
+    params_->handle_exceptions ? void() : throw;
+  }
+}
+
+>>>>>>> ffcf444 (Publish controller_manager activity on cleanup_controller (#3561))
 std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 {
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
