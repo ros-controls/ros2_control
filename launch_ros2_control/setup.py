@@ -27,9 +27,9 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="Jasper van Brakel",
-    maintainer_email="36795178+SuperJappie08@users.noreply.github.com",
+    maintainer_email="J.C.vanBrakel@tudelft.nl",
     author="Jasper van Brakel",
-    author_email="36795178+SuperJappie08@users.noreply.github.com",
+    author_email="J.C.vanBrakel@tudelft.nl",
     description="A launch extension for ros2_control",
     license="Apache-2.0",
     extras_require={

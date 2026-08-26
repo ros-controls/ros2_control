@@ -5,11 +5,10 @@
   <version>0.0.0</version>
   <description>A launch extension for ros2_control</description>
 
-  <maintainer email="36795178+SuperJappie08@users.noreply.github.com">Jasper van Brakel</maintainer>
+  <maintainer email="J.C.vanBrakel@tudelft.nl">Jasper van Brakel</maintainer>
 
   <license>Apache-2.0</license>
-
-  <author email="36795178+SuperJappie08@users.noreply.github.com">Jasper van Brakel</author>
+  <author email="J.C.vanBrakel@tudelft.nl">Jasper van Brakel</author>
 
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>launch</exec_depend>
