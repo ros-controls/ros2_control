@@ -35,59 +35,70 @@ def make_controller_node(
     state_interfaces = sorted(list(state_interfaces))
     command_interfaces = sorted(list(command_interfaces))
     input_chain_connections = sorted(list(input_chain_connections))
-    output_chain_connections = sorted(
-        list(output_chain_connections)
-    )  # (target_ctrl, iface) tuples
-    chain_cmd_connections = sorted(list(chain_cmd_connections))  # (target_ctrl, iface) tuples
+    output_chain_connections = sorted(list(output_chain_connections))
+    chain_cmd_connections = sorted(list(chain_cmd_connections))
 
     inputs_str = ""
+
     for ind, state_interface in enumerate(state_interfaces):
-        deliminator = "|"
-        if ind == len(state_interfaces) - 1:
-            deliminator = ""
+        delimiter = "|" if ind < len(state_interfaces) - 1 else ""
         inputs_str += "<{}> {} {} ".format(
-            "state_end_" + state_interface, state_interface + " (state)", deliminator
+            "state_end_" + state_interface,
+            state_interface + " (state)",
+            delimiter,
         )
 
+    # Separate state inputs from chained-controller inputs.
+    if state_interfaces and input_chain_connections:
+        inputs_str += "|"
+
     for ind, input_controller in enumerate(input_chain_connections):
-        deliminator = "|"
-        if ind == len(input_chain_connections) - 1:
-            deliminator = ""
+        delimiter = "|" if ind < len(input_chain_connections) - 1 else ""
         inputs_str += "<{}> {} {} ".format(
-            "controller_end_" + input_controller, input_controller + " (exp ref)", deliminator
+            "controller_end_" + input_controller,
+            input_controller + " (exp ref)",
+            delimiter,
         )
 
     outputs_str = ""
+
     for ind, command_interface in enumerate(command_interfaces):
-        deliminator = "|"
-        if ind == len(command_interfaces) - 1:
-            deliminator = ""
+        delimiter = "|" if ind < len(command_interfaces) - 1 else ""
         outputs_str += "<{}> {} {} ".format(
-            "command_start_" + command_interface, command_interface + " (cmd)", deliminator
+            "command_start_" + command_interface,
+            command_interface + " (cmd)",
+            delimiter,
         )
 
+    # Separate command outputs from exported-state outputs.
+    if command_interfaces and output_chain_connections:
+        outputs_str += "|"
+
     for ind, output_iface in enumerate(output_chain_connections):
-        deliminator = "|"
-        if ind == len(output_chain_connections) - 1:
-            deliminator = ""
+        delimiter = "|" if ind < len(output_chain_connections) - 1 else ""
         outputs_str += "<{}> {} {} ".format(
             "controller_start_exp_state_" + output_iface,
             output_iface + " (exp state)",
-            deliminator,
+            delimiter,
         )
 
+    # Separate exported-state outputs from chained command outputs.
+    if output_chain_connections and chain_cmd_connections:
+        outputs_str += "|"
+
     for ind, (target_ctrl, chain_cmd) in enumerate(chain_cmd_connections):
-        deliminator = "|"
-        if ind == len(chain_cmd_connections) - 1:
-            deliminator = ""
+        delimiter = "|" if ind < len(chain_cmd_connections) - 1 else ""
         port_key = target_ctrl + "/" + chain_cmd
         outputs_str += "<{}> {} {} ".format(
             "command_start_chain_" + port_key,
             chain_cmd + " (cmd)",
-            deliminator,
+            delimiter,
         )
 
-    s.node(controller_name, f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
+    s.node(
+        controller_name,
+        f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}",
+    )
 
 
 def make_command_node(s, command_interfaces):
