@@ -43,7 +43,7 @@ def make_controller_node(
     inputs_str = ""
     for ind, state_interface in enumerate(state_interfaces):
         deliminator = "|"
-        if ind == len(state_interface) - 1:
+        if ind == len(state_interfaces) - 1:
             deliminator = ""
         inputs_str += "<{}> {} {} ".format(
             "state_end_" + state_interface, state_interface + " (state)", deliminator
@@ -51,7 +51,7 @@ def make_controller_node(
 
     for ind, input_controller in enumerate(input_chain_connections):
         deliminator = "|"
-        if ind == len(input_controller) - 1:
+        if ind == len(input_chain_connections) - 1:
             deliminator = ""
         inputs_str += "<{}> {} {} ".format(
             "controller_end_" + input_controller, input_controller + " (exp ref)", deliminator
@@ -60,7 +60,7 @@ def make_controller_node(
     outputs_str = ""
     for ind, command_interface in enumerate(command_interfaces):
         deliminator = "|"
-        if ind == len(command_interface) - 1:
+        if ind == len(command_interfaces) - 1:
             deliminator = ""
         outputs_str += "<{}> {} {} ".format(
             "command_start_" + command_interface, command_interface + " (cmd)", deliminator
@@ -68,7 +68,7 @@ def make_controller_node(
 
     for ind, output_iface in enumerate(output_chain_connections):
         deliminator = "|"
-        if ind == len(output_iface) - 1:
+        if ind == len(output_chain_connections) - 1:
             deliminator = ""
         outputs_str += "<{}> {} {} ".format(
             "controller_start_exp_state_" + output_iface,
@@ -78,7 +78,7 @@ def make_controller_node(
 
     for ind, (target_ctrl, chain_cmd) in enumerate(chain_cmd_connections):
         deliminator = "|"
-        if ind == len(chain_cmd) - 1:
+        if ind == len(chain_cmd_connections) - 1:
             deliminator = ""
         port_key = target_ctrl + "/" + chain_cmd
         outputs_str += "<{}> {} {} ".format(
