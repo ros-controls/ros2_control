@@ -9,7 +9,7 @@ The state of the all the registered entities are published at the end of every `
 
 All the registered variables are published over 3 topics: ``~/introspection_data/full``, ``~/introspection_data/names``, and ``~/introspection_data/values``.
 - The ``~/introspection_data/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
-- The ``~/introspection_data/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a a variables is registered and unregistered.
+- The ``~/introspection_data/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a variables is registered and unregistered.
 - The ``~/introspection_data/values`` topic publishes the values of the registered variables. This topic contains the values of the variables registered.
 
 The topics ``~/introspection_data/full`` and ``~/introspection_data/values`` are always published on every update cycle asynchronously, provided that there is at least one subscriber to these topics.
@@ -25,10 +25,10 @@ Along with the above introspection data, the ``controller_manager`` also publish
 
 All the registered variables are published over 3 topics: ``~/statistics/full``, ``~/statistics/names``, and ``~/statistics/values``.
 - The ``~/statistics/full`` topic publishes the full introspection data along with names and values in a single message. This can be useful to track or view variables and information from command line.
-- The ``~/statistics/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a a variables is registered and unregistered.
+- The ``~/statistics/names`` topic publishes the names of the registered variables. This topic contains the names of the variables registered. This is only published every time a variables is registered and unregistered.
 - The ``~/statistics/values`` topic publishes the values of the registered variables. This topic contains the values of the variables registered.
 
-This topic is mainly used to introspect the behaviour of the realtime loops, this is very crucial for hardware that need to meet strict deadlines and also to understand the which component of the ecosystem is consuming more time in the realtime loop.
+This topic is mainly used to introspect the behaviour of the realtime loops, this is very crucial for hardware that need to meet strict deadlines and also to understand which component of the ecosystem is consuming more time in the realtime loop.
 
 How to introspect internal variables of controllers and hardware components
 ============================================================================
