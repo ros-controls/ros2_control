@@ -117,7 +117,7 @@ bool is_interface_a_chained_interface(
   {
     RCLCPP_FATAL(
       rclcpp::get_logger("ControllerManager::utils"),
-      "Character '/', was not find in the interface name '%s'. This should never happen. "
+      "Character '/', was not found in the interface name '%s'. This should never happen. "
       "Stop the controller manager immediately and restart it.",
       interface_name.c_str());
     throw std::runtime_error("Mismatched interface name. See the FATAL message above.");
