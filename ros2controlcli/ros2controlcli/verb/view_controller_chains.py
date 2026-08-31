@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+import tempfile
+
 from controller_manager import list_controllers, list_hardware_components
 
 from ros2cli.node.direct import add_arguments
@@ -23,135 +27,138 @@ from ros2controlcli.api import add_controller_mgr_parsers
 import graphviz
 
 
+# Port names of the record fields. Every port is keyed on the *full* interface name, i.e. the name
+# including the owning controller's prefix for chained interfaces, because that is what makes a
+# port unique: a controller can read both "joint1/position" from the hardware and
+# "filter/joint1/position" exported by another controller.
+def _state_input_port(interface):
+    return "state_end_" + interface
+
+
+def _command_output_port(interface):
+    return "command_start_" + interface
+
+
+def _reference_input_port(interface):
+    return "controller_end_" + interface
+
+
+def _exported_state_output_port(interface):
+    return "controller_start_" + interface
+
+
+def _hw_state_output_port(interface):
+    return "state_start_" + interface
+
+
+def _hw_command_input_port(interface):
+    return "command_end_" + interface
+
+
+def _record_label(title, inputs, outputs):
+    """
+    Assemble a graphviz record label.
+
+    :param title: text of the first field, i.e. the name of the node.
+    :param inputs: list of (port, text) tuples shown in the left column.
+    :param outputs: list of (port, text) tuples shown in the right column.
+    """
+
+    def fields(entries):
+        return " | ".join("<{}> {}".format(port, text) for port, text in entries)
+
+    # an empty group would be rendered as an empty field, so skip it
+    groups = "|".join("{" + fields(entries) + "}" for entries in (inputs, outputs) if entries)
+    return f"{title}|{{{groups}}}"
+
+
 def make_controller_node(
     s,
     controller_name,
     state_interfaces,
     command_interfaces,
-    input_chain_connections,
-    output_chain_connections,
-    chain_cmd_connections,
+    reference_interfaces,
+    exported_state_interfaces,
+    reference_interface_owners,
+    exported_state_owners,
 ):
-    state_interfaces = sorted(list(state_interfaces))
-    command_interfaces = sorted(list(command_interfaces))
-    input_chain_connections = sorted(list(input_chain_connections))
-    output_chain_connections = sorted(list(output_chain_connections))
-    chain_cmd_connections = sorted(list(chain_cmd_connections))
+    # Interfaces read from the hardware, and those read from another controller's exported state.
+    hw_states = sorted(i for i in state_interfaces if i not in exported_state_owners)
+    chained_states = sorted(i for i in state_interfaces if i in exported_state_owners)
+    # Interfaces written to the hardware, and those written to another controller's reference.
+    hw_commands = sorted(i for i in command_interfaces if i not in reference_interface_owners)
+    chained_commands = sorted(i for i in command_interfaces if i in reference_interface_owners)
 
-    inputs_str = ""
+    inputs = [(_state_input_port(i), i + " (state)") for i in hw_states]
+    inputs += [(_state_input_port(i), i + " (exp state)") for i in chained_states]
+    inputs += [(_reference_input_port(i), i + " (exp ref)") for i in sorted(reference_interfaces)]
 
-    for ind, state_interface in enumerate(state_interfaces):
-        delimiter = "|" if ind < len(state_interfaces) - 1 else ""
-        inputs_str += "<{}> {} {} ".format(
-            "state_end_" + state_interface,
-            state_interface + " (state)",
-            delimiter,
-        )
+    outputs = [(_command_output_port(i), i + " (cmd)") for i in hw_commands]
+    outputs += [
+        (_exported_state_output_port(i), i + " (exp state)")
+        for i in sorted(exported_state_interfaces)
+    ]
+    outputs += [(_command_output_port(i), i + " (cmd)") for i in chained_commands]
 
-    # Separate state inputs from chained-controller inputs.
-    if state_interfaces and input_chain_connections:
-        inputs_str += "|"
-
-    for ind, input_controller in enumerate(input_chain_connections):
-        delimiter = "|" if ind < len(input_chain_connections) - 1 else ""
-        inputs_str += "<{}> {} {} ".format(
-            "controller_end_" + input_controller,
-            input_controller + " (exp ref)",
-            delimiter,
-        )
-
-    outputs_str = ""
-
-    for ind, command_interface in enumerate(command_interfaces):
-        delimiter = "|" if ind < len(command_interfaces) - 1 else ""
-        outputs_str += "<{}> {} {} ".format(
-            "command_start_" + command_interface,
-            command_interface + " (cmd)",
-            delimiter,
-        )
-
-    # Separate command outputs from exported-state outputs.
-    if command_interfaces and output_chain_connections:
-        outputs_str += "|"
-
-    for ind, output_iface in enumerate(output_chain_connections):
-        delimiter = "|" if ind < len(output_chain_connections) - 1 else ""
-        outputs_str += "<{}> {} {} ".format(
-            "controller_start_exp_state_" + output_iface,
-            output_iface + " (exp state)",
-            delimiter,
-        )
-
-    # Separate exported-state outputs from chained command outputs.
-    if output_chain_connections and chain_cmd_connections:
-        outputs_str += "|"
-
-    for ind, (target_ctrl, chain_cmd) in enumerate(chain_cmd_connections):
-        delimiter = "|" if ind < len(chain_cmd_connections) - 1 else ""
-        port_key = target_ctrl + "/" + chain_cmd
-        outputs_str += "<{}> {} {} ".format(
-            "command_start_chain_" + port_key,
-            chain_cmd + " (cmd)",
-            delimiter,
-        )
-
-    s.node(
-        controller_name,
-        f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}",
-    )
+    s.node(controller_name, _record_label(controller_name, inputs, outputs))
 
 
 def make_command_node(s, command_interfaces):
-    command_interfaces = sorted(list(command_interfaces))
-    outputs_str = ""
-    for ind, command_interface in enumerate(command_interfaces):
-        deliminator = "|"
-        if ind == len(command_interfaces) - 1:
-            deliminator = ""
-        outputs_str += "<{}> {} {} ".format(
-            "command_end_" + command_interface, command_interface, deliminator
-        )
-
-    s.node("command_interfaces", "{}|{{{{{}}}}}".format("hw command_interfaces", outputs_str))
+    outputs = [(_hw_command_input_port(i), i) for i in sorted(command_interfaces)]
+    s.node("command_interfaces", _record_label("hw command_interfaces", outputs, []))
 
 
 def make_state_node(s, state_interfaces):
-    state_interfaces = sorted(list(state_interfaces))
-    inputs_str = ""
-    for ind, state_interface in enumerate(state_interfaces):
-        deliminator = "|"
-        if ind == len(state_interfaces) - 1:
-            deliminator = ""
-        inputs_str += "<{}> {} {} ".format(
-            "state_start_" + state_interface, state_interface, deliminator
-        )
+    inputs = [(_hw_state_output_port(i), i) for i in sorted(state_interfaces)]
+    s.node("state_interfaces", _record_label("hw state_interfaces", inputs, []))
 
-    s.node("state_interfaces", "{}|{{{{{}}}}}".format("hw state_interfaces", inputs_str))
+
+def _render(s, view, directory):
+    """Render the graph, either into a viewer or into a file, and report where it ended up."""
+    if view:
+        if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY") or os.name == "nt":
+            try:
+                s.render(directory=tempfile.gettempdir(), view=True, cleanup=True)
+                return
+            except Exception as ex:  # no viewer available for the format
+                print(
+                    f"Could not open a viewer ({ex}), saving the diagram instead.", file=sys.stderr
+                )
+        else:
+            print(
+                "No display detected, saving the diagram instead of opening a viewer.",
+                file=sys.stderr,
+            )
+    # graphviz remembers the directory of a previous render() call, so always be explicit
+    path = s.render(directory=directory or os.curdir, view=False, cleanup=True)
+    print(f"Saved controller diagram to {os.path.abspath(path)}")
 
 
 def show_graph(
-    input_chain_connections,
-    output_chain_connections,
-    chain_cmd_connections,
-    exp_state_edges,
+    reference_interfaces,
+    exported_state_interfaces,
     command_connections,
     state_connections,
+    reference_interface_owners,
+    exported_state_owners,
     command_interfaces,
     state_interfaces,
-    visualize,
+    view=True,
+    directory=None,
 ):
     s = graphviz.Digraph(
         "g",
-        filename="/tmp/controller_diagram.gv",
+        filename="controller_diagram",
+        graph_attr={"rankdir": "LR", "ranksep": "2"},
         node_attr={"shape": "record", "style": "rounded"},
     )
     # get all controller names
-    controller_names = set()
-    controller_names = controller_names.union({name for name in input_chain_connections})
-    controller_names = controller_names.union({name for name in output_chain_connections})
-    controller_names = controller_names.union({name for name in chain_cmd_connections})
-    controller_names = controller_names.union({name for name in command_connections})
-    controller_names = controller_names.union({name for name in state_connections})
+    controller_names = sorted(
+        set(reference_interfaces)
+        | set(exported_state_interfaces)
+        | set(command_connections)
+        | set(state_connections)
+    )
     # create node for each controller
     for controller_name in controller_names:
         make_controller_node(
@@ -159,125 +166,86 @@ def show_graph(
             controller_name,
             state_connections[controller_name],
             command_connections[controller_name],
-            input_chain_connections[controller_name],
-            output_chain_connections[controller_name],
-            chain_cmd_connections[controller_name],
+            reference_interfaces[controller_name],
+            exported_state_interfaces[controller_name],
+            reference_interface_owners,
+            exported_state_owners,
         )
 
     make_state_node(s, state_interfaces)
     make_command_node(s, command_interfaces)
 
-    # Set of (consumer_ctrl, short_iface) pairs whose state comes from another controller
-    exp_state_consumers = {(consumer_ctrl, iface) for _, consumer_ctrl, iface in exp_state_edges}
-
-    for source_ctrl, consumer_ctrl, iface in exp_state_edges:
-        s.edge(
-            "{}:{}".format(source_ctrl, "controller_start_exp_state_" + iface),
-            "{}:{}".format(consumer_ctrl, "state_end_" + iface),
-        )
-
     for controller_name in controller_names:
-        for target_ctrl, iface in chain_cmd_connections[controller_name]:
-            # (cmd) output of preceding controller → (exp ref) input of following controller
-            port_key = target_ctrl + "/" + iface
-            s.edge(
-                "{}:{}".format(controller_name, "command_start_chain_" + port_key),
-                "{}:{}".format(target_ctrl, "controller_end_" + iface),
-            )
-        for state_connection in state_connections[controller_name]:
-            # Only draw hw edge if this interface is not sourced from another controller's exp state
-            if (controller_name, state_connection) not in exp_state_consumers:
-                s.edge(
-                    "{}:{}".format("state_interfaces", "state_start_" + state_connection),
-                    "{}:{}".format(controller_name, "state_end_" + state_connection),
-                )
-        for command_connection in command_connections[controller_name]:
-            s.edge(
-                "{}:{}".format(controller_name, "command_start_" + command_connection),
-                "{}:{}".format("command_interfaces", "command_end_" + command_connection),
-            )
+        for interface in sorted(state_connections[controller_name]):
+            # state comes either from a hardware component or from another controller's exp state
+            if interface in exported_state_owners:
+                owner, exported_name = exported_state_owners[interface]
+                source = "{}:{}".format(owner, _exported_state_output_port(exported_name))
+            else:
+                source = "{}:{}".format("state_interfaces", _hw_state_output_port(interface))
+            s.edge(source, "{}:{}".format(controller_name, _state_input_port(interface)))
 
-    s.attr(ranksep="2")
-    s.attr(rankdir="LR")
-    if visualize:
-        s.view()
-    else:
-        s.render(filename="controller_diagram", view=False, cleanup=True)
+        for interface in sorted(command_connections[controller_name]):
+            # commands go either to a hardware component or to another controller's exp reference
+            if interface in reference_interface_owners:
+                owner, reference_name = reference_interface_owners[interface]
+                target = "{}:{}".format(owner, _reference_input_port(reference_name))
+            else:
+                target = "{}:{}".format("command_interfaces", _hw_command_input_port(interface))
+            s.edge("{}:{}".format(controller_name, _command_output_port(interface)), target)
+
+    _render(s, view, directory)
+    return s
 
 
-def parse_response(list_controllers_response, list_hardware_response, visualize=True):
+def parse_response(list_controllers_response, list_hardware_response, view=True, directory=None):
     command_interfaces = {
         x.name for hw in list_hardware_response.component for x in hw.command_interfaces
     }
     state_interfaces = {
         x.name for hw in list_hardware_response.component for x in hw.state_interfaces
     }
-    command_connections = dict()
-    state_connections = dict()
-    input_chain_connections = {x.name: set() for x in list_controllers_response.controller}
-    output_chain_connections = {x.name: set() for x in list_controllers_response.controller}
-    chain_cmd_connections = {x.name: set() for x in list_controllers_response.controller}
+    # interfaces a chainable controller exports, without the controller name prefix
+    reference_interfaces = {
+        x.name: set(x.reference_interfaces) for x in list_controllers_response.controller
+    }
+    exported_state_interfaces = {
+        x.name: set(x.exported_state_interfaces) for x in list_controllers_response.controller
+    }
 
-    # Build lookup: prefixed reference interface name -> owning controller name
-    # e.g. "pid_controller_left_wheel_joint/left_wheel_joint/velocity" -> "pid_controller_left_wheel_joint"
-    ref_interface_owners = {}
-    for ctrl in list_controllers_response.controller:
-        for ref_iface in ctrl.reference_interfaces:
-            ref_interface_owners[f"{ctrl.name}/{ref_iface}"] = ctrl.name
-
-    # Build lookup: prefixed exported state interface name -> (owning controller, short name)
+    # Lookups from the full interface name, as claimed by the *following* controller, to the
+    # controller exporting it and the name it exports it under. The controller manager strips the
+    # controller name prefix in the ListControllers response, so it has to be added back here, e.g.
+    # ("left_wheel_joint/velocity", "pid_left") -> "pid_left/left_wheel_joint/velocity"
+    reference_interface_owners = {}
     exported_state_owners = {}
-    for ctrl in list_controllers_response.controller:
-        for exp_state in ctrl.exported_state_interfaces:
-            exported_state_owners[f"{ctrl.name}/{exp_state}"] = (ctrl.name, exp_state)
-
     for controller in list_controllers_response.controller:
-        # Exported state output ports: what this controller publishes as state
-        for exp_state in controller.exported_state_interfaces:
-            output_chain_connections[controller.name].add(exp_state)
+        for interface in controller.reference_interfaces:
+            reference_interface_owners[f"{controller.name}/{interface}"] = (
+                controller.name,
+                interface,
+            )
+        for interface in controller.exported_state_interfaces:
+            exported_state_owners[f"{controller.name}/{interface}"] = (controller.name, interface)
 
-        for reference_interface in controller.reference_interfaces:
-            input_chain_connections[controller.name].add(reference_interface)
+    command_connections = {
+        x.name: set(x.required_command_interfaces) for x in list_controllers_response.controller
+    }
+    state_connections = {
+        x.name: set(x.required_state_interfaces) for x in list_controllers_response.controller
+    }
 
-        # Classify required_command_interfaces as hw or chained (cmd → exp ref)
-        hw_cmds = set()
-        for cmd_iface in controller.required_command_interfaces:
-            if cmd_iface in ref_interface_owners:
-                target_ctrl = ref_interface_owners[cmd_iface]
-                short_iface = cmd_iface.removeprefix(target_ctrl + "/")
-                chain_cmd_connections[controller.name].add((target_ctrl, short_iface))
-            else:
-                hw_cmds.add(cmd_iface)
-        command_connections[controller.name] = hw_cmds
-
-        # All required state interfaces need input ports; strip controller prefix for exp-state ones
-        ctrl_states = set()
-        for state_iface in controller.required_state_interfaces:
-            if state_iface in exported_state_owners:
-                _, short_iface = exported_state_owners[state_iface]
-                ctrl_states.add(short_iface)
-            else:
-                ctrl_states.add(state_iface)
-        state_connections[controller.name] = ctrl_states
-
-    # Build edges for (exp state) → (state): controller exports state that another controller reads
-    exp_state_edges = []
-    for controller in list_controllers_response.controller:
-        for state_iface in controller.required_state_interfaces:
-            if state_iface in exported_state_owners:
-                source_ctrl, short_iface = exported_state_owners[state_iface]
-                exp_state_edges.append((source_ctrl, controller.name, short_iface))
-
-    show_graph(
-        input_chain_connections,
-        output_chain_connections,
-        chain_cmd_connections,
-        exp_state_edges,
+    return show_graph(
+        reference_interfaces,
+        exported_state_interfaces,
         command_connections,
         state_connections,
+        reference_interface_owners,
+        exported_state_owners,
         command_interfaces,
         state_interfaces,
-        visualize,
+        view=view,
+        directory=directory,
     )
 
 
@@ -289,7 +257,8 @@ class ViewControllerChainsVerb(VerbExtension):
         parser.add_argument(
             "--save",
             action="store_true",
-            help="Save PDF to controller_diagram.pdf instead of viewing image",
+            help="Save the diagram as controller_diagram.pdf in the current directory instead of "
+            "opening it in a viewer",
         )
         add_controller_mgr_parsers(parser)
 
@@ -297,7 +266,5 @@ class ViewControllerChainsVerb(VerbExtension):
         with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
             list_hardware_response = list_hardware_components(node, args.controller_manager)
-            parse_response(
-                list_controllers_response, list_hardware_response, visualize=not args.save
-            )
+            parse_response(list_controllers_response, list_hardware_response, view=not args.save)
             return 0
