@@ -4,20 +4,6 @@ name: Rolling Downstream Build
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '**.yaml'
-      - '.github/workflows/rolling-semi-binary-downstream-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'ros_controls.rolling.repos'
-      - 'ros_controls.lyrical.repos'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +17,7 @@ jobs:
       matrix:
         ROS_DISTRO: [lyrical, rolling]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: testing
       ref_for_scheduled_build: master

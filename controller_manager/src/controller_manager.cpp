@@ -117,7 +117,7 @@ bool is_interface_a_chained_interface(
   {
     RCLCPP_FATAL(
       rclcpp::get_logger("ControllerManager::utils"),
-      "Character '/', was not find in the interface name '%s'. This should never happen. "
+      "Character '/', was not found in the interface name '%s'. This should never happen. "
       "Stop the controller manager immediately and restart it.",
       interface_name.c_str());
     throw std::runtime_error("Mismatched interface name. See the FATAL message above.");
@@ -1551,6 +1551,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
   if (result == controller_interface::return_type::OK)
   {
     RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
+    publish_activity();
   }
 
   return result;
@@ -1876,7 +1877,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   {
     RCLCPP_FATAL(
       get_logger(),
-      "The internal deactivate and activat requests command interface lists are not empty at the "
+      "The internal deactivate and activate requests command interface lists are not empty at the "
       "switch_controller() call. This should never happen.");
     throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
   }
@@ -3840,7 +3841,7 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
       {
         RCLCPP_DEBUG(
           get_logger(),
-          "Controller with name '%s' can not be deactivated since is not active. "
+          "Controller with name '%s' can not be deactivated since it is not active. "
           "The controller will be removed from the list later."
           "Skipping adding following controllers to 'from' chained mode request.",
           controller.info.name.c_str());
