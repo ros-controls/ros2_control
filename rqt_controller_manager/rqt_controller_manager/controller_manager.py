@@ -24,6 +24,7 @@ from controller_manager.controller_manager_services import (
     list_hardware_components,
     set_hardware_component_state,
     load_controller,
+    spin_until_future_complete,
     switch_controllers,
     unload_controller,
 )
@@ -649,7 +650,7 @@ def _get_controller_type(node, node_name, ctrl_name):
     request = GetParameters.Request()
     request.names = [ctrl_name]
     future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
+    spin_until_future_complete(node, future)
     response = future.result()
     return response.values[0].string_value if response and response.values else ""
 
@@ -683,7 +684,7 @@ def _get_parameter_controller_names(node, node_name):
         return []
     request = ListParameters.Request()
     future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
+    spin_until_future_complete(node, future)
     response = future.result()
     names = response.result.names if response else []
 

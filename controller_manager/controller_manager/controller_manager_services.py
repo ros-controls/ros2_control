@@ -98,6 +98,22 @@ class SingletonServiceCaller:
         return cls._clients[(node, fully_qualified_service_name)]
 
 
+def spin_until_future_complete(node, future, timeout_sec=None):
+    """
+    Wait for a future without reassigning a node that already belongs to an executor.
+
+    rqt plugins reuse a shared node that is already managed by rqt's executor. Calling the
+    top-level rclpy helper on that node can move it through a different executor and trip
+    wait-set bookkeeping for action clients and other waitables.
+    """
+    executor = getattr(node, "executor", None)
+    if executor is None:
+        rclpy.spin_until_future_complete(node, future, timeout_sec=timeout_sec)
+        return
+
+    executor.spin_until_future_complete(future, timeout_sec=timeout_sec)
+
+
 def service_caller(
     node,
     service_name,
@@ -153,7 +169,7 @@ def service_caller(
     future = None
     for attempt in range(max_attempts):
         future = cli.call_async(request)
-        rclpy.spin_until_future_complete(node, future, timeout_sec=call_timeout)
+        spin_until_future_complete(node, future, timeout_sec=call_timeout)
         if future.result() is None:
             node.get_logger().warning(
                 f"Failed getting a result from calling {fully_qualified_service_name} in "
