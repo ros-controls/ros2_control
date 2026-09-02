@@ -27,9 +27,30 @@ namespace joint_limits
 {
 namespace internal
 {
-constexpr double POSITION_BOUNDS_TOLERANCE = 0.002;
-// 0.5 degrees (or) approx. 1 cm for the prismatic joint
-constexpr double OUT_OF_BOUNDS_EXCEPTION_TOLERANCE = 0.0087;
+/// Tolerances are expressed as a fraction of the joint's range (max_position - min_position),
+/// so that they scale with the joint instead of being fixed absolute values.
+constexpr double POSITION_BOUNDS_TOLERANCE_RATIO = 0.001;
+constexpr double OUT_OF_BOUNDS_EXCEPTION_TOLERANCE_RATIO = 0.005;
+
+/**
+ * @brief Compute the position bounds tolerance, scaled with the joint's range.
+ * @param limits The joint limits.
+ * @return The tolerance allowed beyond the position limits.
+ */
+inline double position_bounds_tolerance(const JointLimits & limits)
+{
+  return POSITION_BOUNDS_TOLERANCE_RATIO * (limits.max_position - limits.min_position);
+}
+
+/**
+ * @brief Compute the out-of-bounds exception tolerance, scaled with the joint's range.
+ * @param limits The joint limits.
+ * @return The tolerance beyond which an exception is thrown.
+ */
+inline double out_of_bounds_exception_tolerance(const JointLimits & limits)
+{
+  return OUT_OF_BOUNDS_EXCEPTION_TOLERANCE_RATIO * (limits.max_position - limits.min_position);
+}
 }  // namespace internal
 
 /**
