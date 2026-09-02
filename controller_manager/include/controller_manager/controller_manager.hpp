@@ -15,6 +15,8 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <atomic>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -91,6 +93,9 @@ public:
 
   /// Shutdown all controllers in the controller manager.
   /**
+   * Waits for in-flight read, update, and write calls to finish and prevents new control-loop
+   * activity from starting. This operation is terminal for the controller manager's control loop.
+   *
    * \return true if all controllers are successfully shutdown, false otherwise.
    */
   bool shutdown_controllers();
@@ -345,6 +350,45 @@ protected:
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_ = nullptr;
 
 private:
+  // The high bit marks a terminal stop request; the remaining bits count in-flight read, update,
+  // and write calls. Normal control-loop activity uses only lock-free atomic operations. The
+  // non-real-time shutdown path waits until the count reaches zero.
+  bool begin_control_loop_activity();
+  void end_control_loop_activity();
+  void request_control_loop_stop();
+
+  class ControlLoopActivityGuard
+  {
+  public:
+    explicit ControlLoopActivityGuard(ControllerManager & manager)
+    : manager_(manager), active_(manager_.begin_control_loop_activity())
+    {
+    }
+
+    ControlLoopActivityGuard(const ControlLoopActivityGuard &) = delete;
+    ControlLoopActivityGuard & operator=(const ControlLoopActivityGuard &) = delete;
+    ControlLoopActivityGuard(ControlLoopActivityGuard &&) = delete;
+    ControlLoopActivityGuard & operator=(ControlLoopActivityGuard &&) = delete;
+
+    ~ControlLoopActivityGuard()
+    {
+      if (active_)
+      {
+        manager_.end_control_loop_activity();
+      }
+    }
+
+    explicit operator bool() const { return active_; }
+
+  private:
+    ControllerManager & manager_;
+    bool active_;
+  };
+
+  static constexpr std::uint32_t kControlLoopStopRequested = std::uint32_t{1} << 31;
+  static constexpr std::uint32_t kControlLoopActivityCount = ~kControlLoopStopRequested;
+  static_assert(std::atomic<std::uint32_t>::is_always_lock_free);
+
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
@@ -665,6 +709,10 @@ private:
   };
 
   bool use_sim_time_;
+  // Keep the shutdown coordination state in the existing padding before trigger_clock_. This
+  // preserves ControllerManager's public ABI while still giving the real-time loop a lock-free
+  // state transition.
+  std::atomic<std::uint32_t> control_loop_state_{0};
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
