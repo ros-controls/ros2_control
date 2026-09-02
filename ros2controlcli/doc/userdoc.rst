@@ -296,8 +296,9 @@ view_controller_chains
 
 .. code-block:: console
 
-    $ ros2 control view_controller_chains -h
-    usage: ros2 control view_controller_chains [-h] [--spin-time SPIN_TIME] [-s] [--save] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
+    $ ros2 control view_controller_chains --help
+    usage: ros2 control view_controller_chains [-h] [--spin-time SPIN_TIME] [-s] [--save] [-c CONTROLLER_MANAGER]
+                                              [--include-hidden-nodes]
 
     Generates a diagram of the loaded chained controllers
 
@@ -306,12 +307,12 @@ view_controller_chains
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
-      --save                Save the diagram as controller_diagram.pdf in the current directory instead of opening it in a viewer
+      --save                Save the diagram as controller_diagram.pdf in the current directory instead of opening it in a
+                            viewer
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       --include-hidden-nodes
                             Consider hidden nodes as well
-      --ros-args ...        Pass arbitrary arguments to the executable
 
 The diagram is opened in the default PDF viewer. If no viewer is available, for example when
 working over SSH, it is saved as ``controller_diagram.pdf`` in the current directory instead, which
