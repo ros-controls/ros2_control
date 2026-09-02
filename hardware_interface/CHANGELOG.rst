@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.17.0 (2026-08-10)
 -------------------
 * Avoid Windows TRUE/FALSE macro collisions in hardware_interface (`#3486 <https://github.com/ros-controls/ros2_control/issues/3486>`_) (`#3527 <https://github.com/ros-controls/ros2_control/issues/3527>`_)
