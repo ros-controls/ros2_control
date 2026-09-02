@@ -69,6 +69,8 @@ def _record_label(title, inputs, outputs):
 
     # an empty group would be rendered as an empty field, so skip it
     groups = "|".join("{" + fields(entries) + "}" for entries in (inputs, outputs) if entries)
+    if not groups:
+        return title
     return f"{title}|{{{groups}}}"
 
 
