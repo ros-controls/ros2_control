@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix a few typos (`#3567 <https://github.com/ros-controls/ros2_control/issues/3567>`_) (`#3568 <https://github.com/ros-controls/ros2_control/issues/3568>`_)
+* Publish controller_manager activity on cleanup_controller (`#3561 <https://github.com/ros-controls/ros2_control/issues/3561>`_) (`#3563 <https://github.com/ros-controls/ros2_control/issues/3563>`_)
+* docs: Add documentation for utility scripts in controller_manager (`#3175 <https://github.com/ros-controls/ros2_control/issues/3175>`_) (`#3550 <https://github.com/ros-controls/ros2_control/issues/3550>`_)
+* Add test for --unload-on-kill spawner lock behavior (`#3035 <https://github.com/ros-controls/ros2_control/issues/3035>`_) (`#3539 <https://github.com/ros-controls/ros2_control/issues/3539>`_)
+* Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_) (`#3537 <https://github.com/ros-controls/ros2_control/issues/3537>`_)
+* Contributors: mergify[bot]
+
 4.47.0 (2026-08-10)
 -------------------
 * Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3524 <https://github.com/ros-controls/ros2_control/issues/3524>`_)

@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix view_controller_chains (backport `#2026 <https://github.com/ros-controls/ros2_control/issues/2026>`_) (`#3588 <https://github.com/ros-controls/ros2_control/issues/3588>`_)
+* Extend unload controller to unload all inactive controllers (`#3466 <https://github.com/ros-controls/ros2_control/issues/3466>`_) (`#3558 <https://github.com/ros-controls/ros2_control/issues/3558>`_)
+* Contributors: mergify[bot]
+
 4.47.0 (2026-08-10)
 -------------------
 * doc: reorder ros2_control TOC (backport `#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_) (`#3516 <https://github.com/ros-controls/ros2_control/issues/3516>`_)

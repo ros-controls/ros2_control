@@ -2,6 +2,9 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.47.0 (2026-08-10)
 -------------------
 * Controller Manager recovery from invalid URDF errors (backport `#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_) (`#3394 <https://github.com/ros-controls/ros2_control/issues/3394>`_)

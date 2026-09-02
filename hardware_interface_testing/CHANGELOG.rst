@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_) (`#3537 <https://github.com/ros-controls/ros2_control/issues/3537>`_)
+* Contributors: mergify[bot]
+
 4.47.0 (2026-08-10)
 -------------------
 

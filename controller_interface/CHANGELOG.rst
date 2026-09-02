@@ -2,6 +2,9 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.47.0 (2026-08-10)
 -------------------
 * Add RangeSensor unit coverage (`#3522 <https://github.com/ros-controls/ros2_control/issues/3522>`_) (`#3528 <https://github.com/ros-controls/ros2_control/issues/3528>`_)
