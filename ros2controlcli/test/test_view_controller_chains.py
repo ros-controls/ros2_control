@@ -264,7 +264,7 @@ class TestViewControllerChains(unittest.TestCase):
         )
 
     def test_chained_controllers(self):
-        """A controller commanding another controller's reference interfaces, example_12 style."""
+        """A controller commanding another controller's reference interfaces, example_16 style."""
         list_controllers_response = ListControllers.Response()
         list_hardware_response = ListHardwareComponents.Response()
 
