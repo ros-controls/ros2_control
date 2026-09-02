@@ -65,7 +65,7 @@ def _record_label(title, inputs, outputs):
     """
 
     def fields(entries):
-        return " | ".join("<{}> {}".format(port, text) for port, text in entries)
+        return " | ".join(f"<{port}> {text}" for port, text in entries)
 
     # an empty group would be rendered as an empty field, so skip it
     groups = "|".join("{" + fields(entries) + "}" for entries in (inputs, outputs) if entries)
@@ -182,19 +182,19 @@ def show_graph(
             # state comes either from a hardware component or from another controller's exp state
             if interface in exported_state_owners:
                 owner, exported_name = exported_state_owners[interface]
-                source = "{}:{}".format(owner, _exported_state_output_port(exported_name))
+                source = f"{owner}:{_exported_state_output_port(exported_name)}"
             else:
                 source = "{}:{}".format("state_interfaces", _hw_state_output_port(interface))
-            s.edge(source, "{}:{}".format(controller_name, _state_input_port(interface)))
+            s.edge(source, f"{controller_name}:{_state_input_port(interface)}")
 
         for interface in sorted(command_connections[controller_name]):
             # commands go either to a hardware component or to another controller's exp reference
             if interface in reference_interface_owners:
                 owner, reference_name = reference_interface_owners[interface]
-                target = "{}:{}".format(owner, _reference_input_port(reference_name))
+                target = f"{owner}:{_reference_input_port(reference_name)}"
             else:
                 target = "{}:{}".format("command_interfaces", _hw_command_input_port(interface))
-            s.edge("{}:{}".format(controller_name, _command_output_port(interface)), target)
+            s.edge(f"{controller_name}:{_command_output_port(interface)}", target)
 
     _render(s, view, directory)
     return s
