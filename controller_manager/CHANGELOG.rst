@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.18.0 (2026-09-02)
+-------------------
 * Fix a few typos (`#3567 <https://github.com/ros-controls/ros2_control/issues/3567>`_) (`#3569 <https://github.com/ros-controls/ros2_control/issues/3569>`_)
 * Publish controller_manager activity on cleanup_controller (`#3561 <https://github.com/ros-controls/ros2_control/issues/3561>`_) (`#3564 <https://github.com/ros-controls/ros2_control/issues/3564>`_)
 * docs: Add documentation for utility scripts in controller_manager (`#3175 <https://github.com/ros-controls/ros2_control/issues/3175>`_) (`#3551 <https://github.com/ros-controls/ros2_control/issues/3551>`_)
