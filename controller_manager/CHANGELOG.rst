@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.54.1 (2026-09-02)
+-------------------
 * Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3523 <https://github.com/ros-controls/ros2_control/issues/3523>`_)
 * Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_) (`#3509 <https://github.com/ros-controls/ros2_control/issues/3509>`_)
 * document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_) (`#3398 <https://github.com/ros-controls/ros2_control/issues/3398>`_)
