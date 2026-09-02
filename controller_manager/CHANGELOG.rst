@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Refactor launch test to use launch substitutions instead of os (`#3142 <https://github.com/ros-controls/ros2_control/issues/3142>`_) (`#3523 <https://github.com/ros-controls/ros2_control/issues/3523>`_)
+* Add tests for launch_utils of controller manager (`#2768 <https://github.com/ros-controls/ros2_control/issues/2768>`_) (`#3509 <https://github.com/ros-controls/ros2_control/issues/3509>`_)
+* document Ubuntu realtime kernel on Raspberry Pi (`#3397 <https://github.com/ros-controls/ros2_control/issues/3397>`_) (`#3398 <https://github.com/ros-controls/ros2_control/issues/3398>`_)
+* Wait to terminate test until spawner exits (`#3373 <https://github.com/ros-controls/ros2_control/issues/3373>`_) (`#3383 <https://github.com/ros-controls/ros2_control/issues/3383>`_)
+* Contributors: mergify[bot]
+
 2.54.0 (2026-04-02)
 -------------------
 * Bump version of pre-commit hooks (`#3181 <https://github.com/ros-controls/ros2_control/issues/3181>`_) (`#3182 <https://github.com/ros-controls/ros2_control/issues/3182>`_)

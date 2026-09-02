@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix view_controller_chains (backport `#2026 <https://github.com/ros-controls/ros2_control/issues/2026>`_) (`#3587 <https://github.com/ros-controls/ros2_control/issues/3587>`_)
+* Contributors: mergify[bot]
+
 2.54.0 (2026-04-02)
 -------------------
 
