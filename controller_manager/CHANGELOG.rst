@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix a few typos (`#3567 <https://github.com/ros-controls/ros2_control/issues/3567>`_)
+* Publish controller_manager activity on cleanup_controller (`#3561 <https://github.com/ros-controls/ros2_control/issues/3561>`_)
+* docs: Add documentation for utility scripts in controller_manager (`#3175 <https://github.com/ros-controls/ros2_control/issues/3175>`_)
+* Add test for --unload-on-kill spawner lock behavior (`#3035 <https://github.com/ros-controls/ros2_control/issues/3035>`_)
+* Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_)
+* Contributors: Christoph Fröhlich, Dr. Denis, Naitik, Peter Mitrano (AR), ultrasage-danz
+
 6.9.0 (2026-08-10)
 ------------------
 * Make configure_controller lifecycle transition strict (no multi-hop) (`#3196 <https://github.com/ros-controls/ros2_control/issues/3196>`_)

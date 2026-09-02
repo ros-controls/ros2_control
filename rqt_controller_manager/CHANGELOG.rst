@@ -2,6 +2,9 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 6.9.0 (2026-08-10)
 ------------------
 * rqt_cm: Robustify test and fix shutdown races (`#3396 <https://github.com/ros-controls/ros2_control/issues/3396>`_)
