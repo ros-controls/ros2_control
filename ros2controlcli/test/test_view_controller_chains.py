@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import tempfile
 import unittest
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.msg import HardwareInterface
@@ -21,6 +22,19 @@ from controller_manager_msgs.srv import ListControllers
 from controller_manager_msgs.srv import ListHardwareComponents
 
 from ros2controlcli.verb.view_controller_chains import parse_response
+
+
+def render(list_controllers_response, list_hardware_response):
+    """Render the diagram into a temporary directory and return the generated graph."""
+    with tempfile.TemporaryDirectory() as directory:
+        return parse_response(
+            list_controllers_response, list_hardware_response, view=False, directory=directory
+        )
+
+
+def edges(graph):
+    """Return the set of "tail:port -> head:port" edges of the graph, without quoting."""
+    return {line.strip().replace('"', "") for line in graph.source.splitlines() if "->" in line}
 
 
 class TestViewControllerChains(unittest.TestCase):
@@ -74,14 +88,11 @@ class TestViewControllerChains(unittest.TestCase):
 
         list_controllers_response.controller = controller_list
 
-        list_controllers_response_component = HardwareComponentState()
-        list_controllers_response_component.state_interfaces = state_interfaces
-        list_controllers_response_component.command_interfaces = command_interfaces
-        list_hardware_response.component.append(list_controllers_response_component)
-        try:
-            parse_response(list_controllers_response, list_hardware_response, visualize=False)
-        except Exception:
-            self.assertTrue(0, "parse_response failed!")
+        hardware_component = HardwareComponentState()
+        hardware_component.state_interfaces = state_interfaces
+        hardware_component.command_interfaces = command_interfaces
+        list_hardware_response.component.append(hardware_component)
+        render(list_controllers_response, list_hardware_response)
 
     def test_complete_example(self):
         list_controllers_response = ListControllers.Response()
@@ -243,11 +254,128 @@ class TestViewControllerChains(unittest.TestCase):
 
         list_hardware_response.component = [hardware_component]
 
-        try:
-            parse_response(
-                list_controllers_response,
-                list_hardware_response,
-                visualize=False,
-            )
-        except Exception:
-            self.assertTrue(0, "parse_response failed!")
+        graph = render(list_controllers_response, list_hardware_response)
+
+        # every controller reads its state interfaces from the hardware
+        self.assertIn(
+            "state_interfaces:state_start_joint_1/position -> "
+            "joint_trajectory_controller:state_end_joint_1/position",
+            edges(graph),
+        )
+
+    def test_chained_controllers(self):
+        """A controller commanding another controller's reference interfaces, example_16 style."""
+        list_controllers_response = ListControllers.Response()
+        list_hardware_response = ListHardwareComponents.Response()
+
+        diff_drive_controller = ControllerState()
+        diff_drive_controller.name = "diff_drive_controller"
+        diff_drive_controller.state = "active"
+        diff_drive_controller.required_command_interfaces = [
+            "pid_left/left_wheel_joint/velocity",
+            "pid_right/right_wheel_joint/velocity",
+        ]
+        diff_drive_controller.required_state_interfaces = [
+            "left_wheel_joint/position",
+            "right_wheel_joint/position",
+        ]
+
+        pid_controllers = []
+        for side in ("left", "right"):
+            pid_controller = ControllerState()
+            pid_controller.name = f"pid_{side}"
+            pid_controller.state = "active"
+            pid_controller.is_chainable = True
+            pid_controller.is_chained = True
+            # the controller manager reports these without the controller name prefix
+            pid_controller.reference_interfaces = [f"{side}_wheel_joint/velocity"]
+            pid_controller.exported_state_interfaces = [f"{side}_wheel_joint/velocity"]
+            pid_controller.required_command_interfaces = [f"{side}_wheel_joint/velocity"]
+            pid_controller.required_state_interfaces = [f"{side}_wheel_joint/velocity"]
+            pid_controllers.append(pid_controller)
+
+        list_controllers_response.controller = [diff_drive_controller] + pid_controllers
+
+        hardware_component = HardwareComponentState()
+        hardware_component.name = "diffbot"
+        hardware_component.command_interfaces = [
+            HardwareInterface(name=f"{side}_wheel_joint/velocity") for side in ("left", "right")
+        ]
+        hardware_component.state_interfaces = [
+            HardwareInterface(name=f"{side}_wheel_joint/{interface}")
+            for side in ("left", "right")
+            for interface in ("position", "velocity")
+        ]
+        list_hardware_response.component = [hardware_component]
+
+        graph = render(list_controllers_response, list_hardware_response)
+        graph_edges = edges(graph)
+
+        # the chained command ends on the reference interface of the preceding controller ...
+        self.assertIn(
+            "diff_drive_controller:command_start_pid_left/left_wheel_joint/velocity -> "
+            "pid_left:controller_end_left_wheel_joint/velocity",
+            graph_edges,
+        )
+        # ... and not on the hardware, which does not offer that interface at all
+        self.assertNotIn(
+            "diff_drive_controller:command_start_pid_left/left_wheel_joint/velocity -> "
+            "command_interfaces:command_end_pid_left/left_wheel_joint/velocity",
+            graph_edges,
+        )
+        # only the last controller of the chain writes to the hardware
+        self.assertIn(
+            "pid_left:command_start_left_wheel_joint/velocity -> "
+            "command_interfaces:command_end_left_wheel_joint/velocity",
+            graph_edges,
+        )
+
+    def test_exported_state_interfaces(self):
+        """A controller reading a state interface exported by another controller."""
+        list_controllers_response = ListControllers.Response()
+        list_hardware_response = ListHardwareComponents.Response()
+
+        filter_controller = ControllerState()
+        filter_controller.name = "filter"
+        filter_controller.state = "active"
+        filter_controller.is_chainable = True
+        # a filter typically exports its output under the name of the interface it filters
+        filter_controller.exported_state_interfaces = ["joint1/velocity"]
+        filter_controller.required_state_interfaces = ["joint1/velocity"]
+
+        broadcaster = ControllerState()
+        broadcaster.name = "state_broadcaster"
+        broadcaster.state = "active"
+        # the broadcaster reads the raw and the filtered velocity, which share the same name
+        broadcaster.required_state_interfaces = ["joint1/velocity", "filter/joint1/velocity"]
+
+        list_controllers_response.controller = [filter_controller, broadcaster]
+
+        hardware_component = HardwareComponentState()
+        hardware_component.name = "rrbot"
+        hardware_component.command_interfaces = [HardwareInterface(name="joint1/position")]
+        hardware_component.state_interfaces = [
+            HardwareInterface(name="joint1/position"),
+            HardwareInterface(name="joint1/velocity"),
+        ]
+        list_hardware_response.component = [hardware_component]
+
+        graph = render(list_controllers_response, list_hardware_response)
+        graph_edges = edges(graph)
+
+        # the filtered velocity comes from the filter ...
+        self.assertIn(
+            "filter:controller_start_joint1/velocity -> "
+            "state_broadcaster:state_end_filter/joint1/velocity",
+            graph_edges,
+        )
+        # ... and the raw velocity still comes from the hardware, for both consumers
+        self.assertIn(
+            "state_interfaces:state_start_joint1/velocity -> "
+            "state_broadcaster:state_end_joint1/velocity",
+            graph_edges,
+        )
+        self.assertIn(
+            "state_interfaces:state_start_joint1/velocity -> filter:state_end_joint1/velocity",
+            graph_edges,
+        )
