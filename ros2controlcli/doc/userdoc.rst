@@ -297,11 +297,7 @@ view_controller_chains
 .. code-block:: console
 
     $ ros2 control view_controller_chains -h
-<<<<<<< HEAD
-    usage: ros2 view_controller_chains
-=======
     usage: ros2 control view_controller_chains [-h] [--spin-time SPIN_TIME] [-s] [--save] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
->>>>>>> 174e281 (Fix view_controller_chains (#2026))
 
     Generates a diagram of the loaded chained controllers
 
@@ -315,8 +311,6 @@ view_controller_chains
                             Name of the controller manager ROS node
       --include-hidden-nodes
                             Consider hidden nodes as well
-<<<<<<< HEAD
-=======
       --ros-args ...        Pass arbitrary arguments to the executable
 
 The diagram is opened in the default PDF viewer. If no viewer is available, for example when
@@ -328,25 +322,3 @@ Interfaces exchanged between controllers are shown with the name of the exportin
 prefix: an interface labeled ``(exp ref)`` is a reference interface a chainable controller exports
 for the preceding controller to write, and one labeled ``(exp state)`` is a state interface it
 exports for other controllers to read.
-
-
-view_hardware_status
---------------------
-
-.. code-block:: console
-
-    $ ros2 control view_hardware_status -h
-    usage: ros2 control view_hardware_status [-h] [--spin-time SPIN_TIME] [-s] [-i HARDWARE_ID] [-d DEVICE_ID]
-
-    Echo hardware status messages with filtering capabilities
-
-    options:
-      -h, --help            show this help message and exit
-      --spin-time SPIN_TIME
-                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      -s, --use-sim-time    Enable ROS simulation time
-      -i HARDWARE_ID, --hardware-id HARDWARE_ID
-                            Filter by a specific hardware component ID.
-      -d DEVICE_ID, --device-id DEVICE_ID
-                            Filter by a specific device ID within a hardware component.
->>>>>>> 174e281 (Fix view_controller_chains (#2026))
