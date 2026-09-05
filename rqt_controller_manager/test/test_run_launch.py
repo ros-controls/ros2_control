@@ -54,5 +54,7 @@ class TestFixture(unittest.TestCase):
         rclpy.shutdown()
 
     def test_node_start(self, proc_output):
-        time.sleep(2)
+        end_time = time.time() + 30.0
+        while time.time() < end_time and node_name not in self.node.get_node_names():
+            time.sleep(0.1)
         assert node_name in self.node.get_node_names()
