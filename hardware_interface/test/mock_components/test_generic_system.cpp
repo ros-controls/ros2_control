@@ -2706,6 +2706,43 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   EXPECT_EQ(0.11, j1p_c.get_optional().value());
 }
 
+class TestGenericSystemJointNames : public TestGenericSystem,
+                                    public ::testing::WithParamInterface<std::string>
+{
+};
+
+TEST_P(TestGenericSystemJointNames, command_mode_switch_matches_complete_joint_name)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hw_sys_2dof_calc_dyn_with_velocity_control_mode_position_state_only_ +
+              ros2_control_test_assets::urdf_tail;
+  const std::string original_name = "joint2";
+  const auto & joint_name = GetParam();
+  size_t pos = 0;
+  while ((pos = urdf.find(original_name, pos)) != std::string::npos)
+  {
+    urdf.replace(pos, original_name.size(), joint_name);
+    pos += joint_name.size();
+  }
+
+  TestableResourceManager rm(node_, urdf);
+  activate_components(rm, {"MockHardwareSystem"});
+  auto position = rm.claim_state_interface(joint_name + "/position");
+  auto velocity_command = rm.claim_command_interface(joint_name + "/velocity");
+  const double initial_position = position.get_optional().value();
+
+  const std::vector<std::string> start_interfaces = {joint_name + "/velocity"};
+  EXPECT_TRUE(rm.prepare_command_mode_switch(start_interfaces, {}));
+  EXPECT_TRUE(rm.perform_command_mode_switch(start_interfaces, {}));
+  ASSERT_TRUE(velocity_command.set_value(1.0));
+  ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
+  EXPECT_NEAR(initial_position + PERIOD_SEC, position.get_optional().value(), COMPARE_DELTA);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  OverlappingNames, TestGenericSystemJointNames,
+  ::testing::Values("joint10", "prefix_joint1", "controller/joint1"));
+
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
 {
   auto check_prepare_command_mode_switch =
