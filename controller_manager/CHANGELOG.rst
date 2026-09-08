@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.18.1 (2026-09-08)
+-------------------
 * Add test_depend on launch_testing_ament_cmake to controller_manager (`#3595 <https://github.com/ros-controls/ros2_control/issues/3595>`_) (`#3599 <https://github.com/ros-controls/ros2_control/issues/3599>`_)
 * Contributors: mergify[bot]
 
