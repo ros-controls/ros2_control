@@ -2,6 +2,9 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.10.1 (2026-09-08)
+-------------------
+
 6.10.0 (2026-09-02)
 -------------------
 * Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_)
