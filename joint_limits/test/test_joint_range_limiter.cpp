@@ -235,7 +235,8 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(std::nullopt, 0.12, 0.12, false);
   test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
 
-  const double outside_limits_pos = 5.0 + (2.0 * joint_limits::internal::POSITION_BOUNDS_TOLERANCE);
+  const double position_tolerance = joint_limits::internal::position_bounds_tolerance(limits);
+  const double outside_limits_pos = 5.0 + (2.0 * position_tolerance);
   // The cases where the actual position value exist
   test_limit_enforcing(4.5, 5.0, 0.5, true);
   test_limit_enforcing(4.8, 5.0, 0.2, true);
@@ -260,23 +261,15 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(-1.0 * outside_limits_pos, 1.0, 0.0, true);
   // If the reported actual position is within the limits and the tolerance, then the velocity is
   // allowed to move into the range, but not away from the range
-  test_limit_enforcing(
-    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -3.0, 0.0, true);
-  test_limit_enforcing(
-    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 1.0, 1.0, false);
-  test_limit_enforcing(
-    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 0.2, 0.2, false);
-  test_limit_enforcing(
-    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 2.0, 1.0, true);
+  test_limit_enforcing(-5.0 - position_tolerance / 2.0, -3.0, 0.0, true);
+  test_limit_enforcing(-5.0 - position_tolerance / 2.0, 1.0, 1.0, false);
+  test_limit_enforcing(-5.0 - position_tolerance / 2.0, 0.2, 0.2, false);
+  test_limit_enforcing(-5.0 - position_tolerance / 2.0, 2.0, 1.0, true);
 
-  test_limit_enforcing(
-    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 3.0, 0.0, true);
-  test_limit_enforcing(
-    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -1.0, -1.0, false);
-  test_limit_enforcing(
-    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -0.2, -0.2, false);
-  test_limit_enforcing(
-    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -2.0, -1.0, true);
+  test_limit_enforcing(5.0 + position_tolerance / 2.0, 3.0, 0.0, true);
+  test_limit_enforcing(5.0 + position_tolerance / 2.0, -1.0, -1.0, false);
+  test_limit_enforcing(5.0 + position_tolerance / 2.0, -0.2, -0.2, false);
+  test_limit_enforcing(5.0 + position_tolerance / 2.0, -2.0, -1.0, true);
 
   // Now remove the position limits and only test with acceleration limits
   limits.has_position_limits = false;
