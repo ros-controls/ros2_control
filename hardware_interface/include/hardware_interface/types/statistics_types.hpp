@@ -259,6 +259,7 @@ public:
 
   void reset()
   {
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     statistics_data_.average = std::numeric_limits<double>::quiet_NaN();
     statistics_data_.min = std::numeric_limits<double>::quiet_NaN();
     statistics_data_.max = std::numeric_limits<double>::quiet_NaN();
@@ -267,16 +268,42 @@ public:
   }
 
   /**
-   * @brief Get the statistics data.
-   * @return statistics data.
+   * @brief Get a reference to the statistics data, e.g. for registering it for introspection.
+   * @note The referenced data is updated concurrently by update_statistics().
+   * @return reference to the statistics data.
    */
-  const StatisticData & get_statistics() const
+  const StatisticData & get_statistics_const_ptr() const
   {
     std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     return statistics_data_;
   }
 
-  const double & get_current_data() const
+  /**
+   * @brief Get a copy of the statistics data.
+   * @return statistics data.
+   */
+  StatisticData get_statistics() const
+  {
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
+    return statistics_data_;
+  }
+
+  /**
+   * @brief Get a reference to the current data value, e.g. for registering it for introspection.
+   * @note The referenced data is updated concurrently by update_statistics().
+   * @return reference to the current data value.
+   */
+  const double & get_current_data_const_ptr() const
+  {
+    std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
+    return current_data_;
+  }
+
+  /**
+   * @brief Get a copy of the current data value.
+   * @return current data value.
+   */
+  double get_current_data() const
   {
     std::unique_lock<DEFAULT_MUTEX> lock(mutex_);
     return current_data_;

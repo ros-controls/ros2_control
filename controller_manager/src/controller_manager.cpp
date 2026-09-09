@@ -1127,15 +1127,16 @@ void ControllerManager::set_initial_hardware_components_state()
       component_name + ".stats/read_cycle/periodicity";
     register_controller_manager_statistics(
       read_cycle_exec_time_prefix,
-      &component_info.read_statistics->execution_time.get_statistics());
+      &component_info.read_statistics->execution_time.get_statistics_const_ptr());
     REGISTER_ENTITY(
       hardware_interface::CM_STATISTICS_KEY, read_cycle_exec_time_prefix + "/current_value",
-      &component_info.read_statistics->execution_time.get_current_data());
+      &component_info.read_statistics->execution_time.get_current_data_const_ptr());
     register_controller_manager_statistics(
-      read_cycle_periodicity_prefix, &component_info.read_statistics->periodicity.get_statistics());
+      read_cycle_periodicity_prefix,
+      &component_info.read_statistics->periodicity.get_statistics_const_ptr());
     REGISTER_ENTITY(
       hardware_interface::CM_STATISTICS_KEY, read_cycle_periodicity_prefix + "/current_value",
-      &component_info.read_statistics->periodicity.get_current_data());
+      &component_info.read_statistics->periodicity.get_current_data_const_ptr());
     if (component_info.write_statistics)
     {
       const std::string write_cycle_exec_time_prefix =
@@ -1144,16 +1145,16 @@ void ControllerManager::set_initial_hardware_components_state()
         component_name + ".stats/write_cycle/periodicity";
       register_controller_manager_statistics(
         write_cycle_exec_time_prefix,
-        &component_info.write_statistics->execution_time.get_statistics());
+        &component_info.write_statistics->execution_time.get_statistics_const_ptr());
       REGISTER_ENTITY(
         hardware_interface::CM_STATISTICS_KEY, write_cycle_exec_time_prefix + "/current_value",
-        &component_info.write_statistics->execution_time.get_current_data());
+        &component_info.write_statistics->execution_time.get_current_data_const_ptr());
       register_controller_manager_statistics(
         write_cycle_periodicity_prefix,
-        &component_info.write_statistics->periodicity.get_statistics());
+        &component_info.write_statistics->periodicity.get_statistics_const_ptr());
       REGISTER_ENTITY(
         hardware_interface::CM_STATISTICS_KEY, write_cycle_periodicity_prefix + "/current_value",
-        &component_info.write_statistics->periodicity.get_current_data());
+        &component_info.write_statistics->periodicity.get_current_data_const_ptr());
     }
   }
 }
