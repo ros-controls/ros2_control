@@ -621,6 +621,7 @@ ControllerManager::~ControllerManager()
 
 bool ControllerManager::shutdown_controllers()
 {
+  request_control_loop_stop();
   RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
   // Shutdown all controllers
   std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
@@ -633,6 +634,7 @@ bool ControllerManager::shutdown_controllers()
     {
       RCLCPP_INFO(
         get_logger(), "Deactivating controller '%s'", controller.c->get_node()->get_name());
+      controller.c->prepare_for_deactivation();
       controller.c->get_node()->deactivate();
       controller.c->release_interfaces();
     }
@@ -648,6 +650,44 @@ bool ControllerManager::shutdown_controllers()
     executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   }
   return ctrls_shutdown_status;
+}
+
+bool ControllerManager::begin_control_loop_activity()
+{
+  const auto previous_state = control_loop_state_.fetch_add(1, std::memory_order_acq_rel);
+  if ((previous_state & kControlLoopStopRequested) == 0)
+  {
+    return true;
+  }
+
+  const auto state_before_release = control_loop_state_.fetch_sub(1, std::memory_order_release);
+  if ((state_before_release & kControlLoopActivityCount) == 1)
+  {
+    control_loop_state_.notify_all();
+  }
+  return false;
+}
+
+void ControllerManager::end_control_loop_activity()
+{
+  const auto state_before_release = control_loop_state_.fetch_sub(1, std::memory_order_release);
+  if (
+    (state_before_release & kControlLoopStopRequested) != 0 &&
+    (state_before_release & kControlLoopActivityCount) == 1)
+  {
+    control_loop_state_.notify_all();
+  }
+}
+
+void ControllerManager::request_control_loop_stop()
+{
+  auto state = control_loop_state_.fetch_or(kControlLoopStopRequested, std::memory_order_acq_rel) |
+               kControlLoopStopRequested;
+  while ((state & kControlLoopActivityCount) != 0)
+  {
+    control_loop_state_.wait(state, std::memory_order_acquire);
+    state = control_loop_state_.load(std::memory_order_acquire);
+  }
 }
 
 void ControllerManager::init_controller_manager()
@@ -3271,6 +3311,12 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  ControlLoopActivityGuard activity_guard(*this);
+  if (!activity_guard)
+  {
+    return;
+  }
+
   periodicity_stats_.add_measurement(1.0 / period.seconds());
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
@@ -3369,6 +3415,12 @@ void ControllerManager::manage_switch()
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  ControlLoopActivityGuard activity_guard(*this);
+  if (!activity_guard)
+  {
+    return controller_interface::return_type::OK;
+  }
+
   const auto start_time = std::chrono::steady_clock::now();
   execution_time_.switch_time = 0.0;
   execution_time_.switch_chained_mode_time = 0.0;
@@ -3594,6 +3646,12 @@ controller_interface::return_type ControllerManager::update(
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  ControlLoopActivityGuard activity_guard(*this);
+  if (!activity_guard)
+  {
+    return;
+  }
+
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->write(time, period);
 
