@@ -14,11 +14,14 @@
 
 #include "controller_manager/controller_manager.hpp"
 
+#include <errno.h>
 #include <fmt/compile.h>
+#include <chrono>
 
 #include <memory>
 #include <set>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -33,6 +36,8 @@
 #include "rclcpp_lifecycle/state.hpp"
 
 #include "controller_manager/controller_manager_parameters.hpp"
+#include "controller_manager/sleeping_policies.hpp"
+#include "realtime_tools/realtime_helpers.hpp"
 
 namespace  // utility
 {
@@ -716,6 +721,30 @@ void ControllerManager::initialize_parameters()
   try
   {
     use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
+    lock_memory_ =
+      this->get_parameter_or<bool>("lock_memory", realtime_tools::has_realtime_kernel());
+    thread_priority_ = this->get_parameter_or<int>("thread_priority", 50);
+    control_loop_timing_config_ = {
+      .use_sim_time = use_sim_time_,
+      .manage_overruns = this->get_parameter_or<bool>("overruns.manage", true),
+      .expect_blocking_read_write =
+        this->get_parameter_or<bool>("hardware_synchronization.expect_blocking_read_write", false),
+      .minimum_cycle_time =
+        this->get_parameter_or<double>("hardware_synchronization.minimum_cycle_time", 0.0001),
+    };
+    rclcpp::Parameter cpu_affinity_param;
+    if (this->get_parameter("cpu_affinity", cpu_affinity_param))
+    {
+      if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+      {
+        cpu_affinity_ = {static_cast<int>(cpu_affinity_param.as_int())};
+      }
+      else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+      {
+        const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+        cpu_affinity_.assign(cpu_affinity_param_array.begin(), cpu_affinity_param_array.end());
+      }
+    }
 
     if (!this->has_parameter("overruns.print_warnings"))
     {
@@ -744,6 +773,97 @@ void ControllerManager::initialize_parameters()
       this->get_logger(),
       "Exception thrown while initializing controller manager parameters: %s \n", e.what());
     throw e;
+  }
+}
+
+void ControllerManager::run_control_loop()
+{
+  const auto timing_config = control_loop_timing_config_;
+  const auto thread_priority = thread_priority_;
+  const auto cpus = cpu_affinity_;
+
+  if (lock_memory_)
+  {
+    const auto lock_result = realtime_tools::lock_memory();
+    if (!lock_result.first)
+    {
+      RCLCPP_WARN(get_logger(), "Unable to lock the memory: '%s'", lock_result.second.c_str());
+    }
+  }
+
+  RCLCPP_INFO(get_logger(), "update rate is %d Hz", get_update_rate());
+  RCLCPP_INFO(
+    get_logger(), "Overruns handling is : %s",
+    timing_config.manage_overruns ? "enabled" : "disabled");
+  RCLCPP_INFO(
+    get_logger(), "Spawning %s RT thread with scheduler priority: %d", get_name(), thread_priority);
+
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), timing_config.expect_blocking_read_write,
+    "Synchronizing control loop with hardware.");
+
+  const auto controller_manager =
+    std::shared_ptr<ControllerManager>(this, [](ControllerManager *) {});
+  if (!cpus.empty())
+  {
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
+    if (!affinity_result.first)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
+    }
+  }
+
+  if (!realtime_tools::configure_sched_fifo(thread_priority))
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
+      "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
+      "for details on how to enable realtime scheduling.",
+      errno, strerror(errno));
+  }
+  else
+  {
+    RCLCPP_INFO(
+      get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+      thread_priority);
+  }
+
+  get_clock()->wait_until_started();
+  get_clock()->sleep_for(rclcpp::Duration::from_seconds(1.0 / get_update_rate()));
+
+  ControlLoopState state;
+  state.period = std::chrono::nanoseconds(1'000'000'000 / get_update_rate());
+  state.previous_time = get_trigger_clock()->now();
+  std::this_thread::sleep_for(state.period);
+  state.next_iteration_time = std::chrono::steady_clock::now();
+  while (rclcpp::ok())
+  {
+    const auto current_time = get_trigger_clock()->now();
+    const auto measured_period = current_time - state.previous_time;
+    state.previous_time = current_time;
+
+    read(get_trigger_clock()->now(), measured_period);
+    update(get_trigger_clock()->now(), measured_period);
+    write(get_trigger_clock()->now(), measured_period);
+    state.cycle_end_time = get_trigger_clock()->now();
+
+    if (timing_config.use_sim_time)
+    {
+      if (!sleep_for_sim_time(controller_manager, state))
+      {
+        break;
+      }
+    }
+    else if (timing_config.expect_blocking_read_write)
+    {
+      sleep_for_blocking_read_write(controller_manager, timing_config, state);
+    }
+    else
+    {
+      sleep_for_periodic_cycle(controller_manager, timing_config, state);
+    }
   }
 }
 

@@ -35,6 +35,7 @@ generate_parameter_library(controller_manager_parameters
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
+  src/sleeping_policies.cpp
 )
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -56,7 +57,6 @@ target_link_libraries(controller_manager PUBLIC
 
 add_executable(ros2_control_node
   src/ros2_control_node.cpp
-  src/sleeping_policies.cpp
 )
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
@@ -290,7 +290,6 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_sleeping_policies
     test/test_sleeping_policies.cpp
-    src/sleeping_policies.cpp
     TIMEOUT 60
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )

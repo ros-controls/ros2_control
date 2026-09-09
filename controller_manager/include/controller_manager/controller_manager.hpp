@@ -60,6 +60,14 @@ class ParamListener;
 struct Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
+struct ControlLoopTimingConfig
+{
+  bool use_sim_time{false};
+  bool manage_overruns{true};
+  bool expect_blocking_read_write{false};
+  double minimum_cycle_time{0.0001};
+};
+
 rclcpp::NodeOptions get_cm_node_options();
 
 class ControllerManager : public rclcpp::Node
@@ -235,6 +243,8 @@ public:
    * \returns update rate of the controller manager.
    */
   unsigned int get_update_rate() const;
+
+  void run_control_loop();
 
   /// Get the trigger clock of the controller manager.
   /**
@@ -665,6 +675,10 @@ private:
   };
 
   bool use_sim_time_;
+  ControlLoopTimingConfig control_loop_timing_config_;
+  int thread_priority_;
+  std::vector<int> cpu_affinity_;
+  bool lock_memory_;
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
   RTControllerListWrapper rt_controllers_wrapper_;
