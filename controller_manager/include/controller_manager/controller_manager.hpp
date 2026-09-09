@@ -147,6 +147,8 @@ public:
    */
   controller_interface::return_type configure_controller(const std::string & controller_name);
 
+  void set_initial_controller_components_state();
+
   /// switch_controller Deactivates some controllers and activates others.
   /**
    * \param[in] activate_controllers is a list of controllers to activate.
