@@ -45,12 +45,11 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
   // velocity max is implicitly already violated due to max_acc * dt > 2.0
 
   // check for required inputs combination
-  const bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
-  const bool has_desired_velocity = (desired_joint_states.velocities.size() == number_of_joints_);
-  const bool has_desired_acceleration =
-    (desired_joint_states.accelerations.size() == number_of_joints_);
-  const bool has_current_position = (current_joint_states.positions.size() == number_of_joints_);
-  const bool has_current_velocity = (current_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
+  bool has_desired_velocity = (desired_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_acceleration = (desired_joint_states.accelerations.size() == number_of_joints_);
+  bool has_current_position = (current_joint_states.positions.size() == number_of_joints_);
+  bool has_current_velocity = (current_joint_states.velocities.size() == number_of_joints_);
 
   // pos state and vel or pos cmd is required, vel state is optional
   if (!(has_current_position && (has_desired_position || has_desired_velocity)))
@@ -61,34 +60,110 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     has_current_velocity ? current_joint_states.velocities
                          : std::vector<double>(number_of_joints_, 0.0);
 
-  // TODO(destogl): please check if we get too much malloc from this initialization,
-  // if so then we should use members instead local variables and initialize them in other method
-  std::vector<double> desired_pos(number_of_joints_);
-  std::vector<double> desired_vel(number_of_joints_);
-  std::vector<double> desired_acc(number_of_joints_);
-  std::vector<double> expected_vel(number_of_joints_);
-  std::vector<double> expected_pos(number_of_joints_);
+  // reset values of vectors
+  std::fill(desired_pos_.begin(), desired_pos_.end(), 0.0);
+  std::fill(desired_vel_.begin(), desired_vel_.end(), 0.0);
+  std::fill(desired_acc_.begin(), desired_acc_.end(), 0.0);
+  std::fill(expected_pos_.begin(), expected_pos_.end(), 0.0);
+  std::fill(expected_vel_.begin(), expected_vel_.end(), 0.0);
+
+  std::fill(pos_limit_hit_.begin(), pos_limit_hit_.end(), false);
+  std::fill(vel_limit_hit_.begin(), vel_limit_hit_.end(), false);
+  std::fill(acc_limit_hit_.begin(), acc_limit_hit_.end(), false);
+  std::fill(dec_limit_hit_.begin(), dec_limit_hit_.end(), false);
 
   // limits triggered
   std::vector<std::string> limited_jnts_pos, limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
 
   bool braking_near_position_limit_triggered = false;
 
+  clamp_joint_limits(
+    has_desired_position, has_desired_velocity, has_desired_acceleration, has_current_velocity,
+    current_joint_states, desired_joint_states, limits_enforced, current_joint_velocities,
+    braking_near_position_limit_triggered, dt_seconds);
+
+  // update variables according to triggers
+  if (braking_near_position_limit_triggered)
+  {
+    handle_braking_near_position_limit(
+      current_joint_velocities, dt_seconds, has_desired_position, has_desired_velocity,
+      current_joint_states);
+  }
+
+  // display limitations
+
+  auto log_limits = [&](const std::vector<bool> & hits, const char * msg)
+  {
+    std::string out_str = "";
+    for (size_t i = 0; i < number_of_joints_; ++i)
+    {
+      if (hits[i])
+      {
+        out_str += joint_names_[i] + " ";
+      }
+    }
+    if (!out_str.empty())
+    {
+      out_str.pop_back();  // remove trailing space
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD, "Joint(s) [%s] %s",
+        out_str.c_str(), msg);
+    }
+  };
+
+  log_limits(pos_limit_hit_, "would exceed position limits, limiting");
+  log_limits(vel_limit_hit_, "would exceed velocity limits, limiting");
+  log_limits(acc_limit_hit_, "would exceed acceleration limits, limiting");
+  log_limits(dec_limit_hit_, "would exceed deceleration limits, limiting");
+
+  if (has_desired_position)
+  {
+    desired_joint_states.positions = desired_pos_;
+  }
+  if (has_desired_velocity)
+  {
+    desired_joint_states.velocities = desired_vel_;
+  }
+  if (has_desired_acceleration)
+  {
+    desired_joint_states.accelerations = desired_acc_;
+  }
+
+  return limits_enforced;
+}
+
+template <>
+void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::clamp_joint_limits(
+  const bool has_desired_position, const bool has_desired_velocity,
+  const bool has_desired_acceleration, const bool has_current_velocity,
+  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+  trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, bool & limits_enforced,
+  const std::vector<double> & current_joint_velocities,
+  bool & braking_near_position_limit_triggered, const double dt_seconds)
+{
+  if (has_desired_position)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
+    {
+      desired_pos_[index] = desired_joint_states.positions[index];
+    }
+  }
+  if (has_desired_velocity)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
+    {
+      desired_vel_[index] = desired_joint_states.velocities[index];
+    }
+  }
+  if (has_desired_acceleration)
+  {
+    for (size_t index = 0; index < number_of_joints_; ++index)
+    {
+      desired_acc_[index] = desired_joint_states.accelerations[index];
+    }
+  }
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    if (has_desired_position)
-    {
-      desired_pos[index] = desired_joint_states.positions[index];
-    }
-    if (has_desired_velocity)
-    {
-      desired_vel[index] = desired_joint_states.velocities[index];
-    }
-    if (has_desired_acceleration)
-    {
-      desired_acc[index] = desired_joint_states.accelerations[index];
-    }
-
     if (has_desired_position)
     {
       // limit position
@@ -96,23 +171,25 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       {
         // clamp input pos_cmd
         auto pos = std::clamp(
-          desired_pos[index], joint_limits_[index].min_position, joint_limits_[index].max_position);
-        if (pos != desired_pos[index])
+          desired_pos_[index], joint_limits_[index].min_position,
+          joint_limits_[index].max_position);
+        if (pos != desired_pos_[index])
         {
-          desired_pos[index] = pos;
-          limited_jnts_pos.emplace_back(joint_names_[index]);
+          desired_pos_[index] = pos;
+          pos_limit_hit_[index] = true;
           limits_enforced = true;
         }
       }
       // priority to pos_cmd derivative over cmd_vel when not defined. If done always then we might
       // get jumps in the velocity based on the system's dynamics. Position limit clamping is done
       // below once again.
-      const double position_difference = desired_pos[index] - current_joint_states.positions[index];
+      const double position_difference =
+        desired_pos_[index] - current_joint_states.positions[index];
       if (
         std::fabs(position_difference) > VALUE_CONSIDERED_ZERO &&
-        std::fabs(desired_vel[index]) <= VALUE_CONSIDERED_ZERO)
+        std::fabs(desired_vel_[index]) <= VALUE_CONSIDERED_ZERO)
       {
-        desired_vel[index] = position_difference / dt_seconds;
+        desired_vel_[index] = position_difference / dt_seconds;
       }
     }
 
@@ -120,26 +197,27 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
     if (joint_limits_[index].has_velocity_limits)
     {
       // if desired velocity is not defined calculate it from positions
-      if (std::fabs(desired_vel[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_vel[index]))
+      if (
+        std::fabs(desired_vel_[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_vel_[index]))
       {
-        desired_vel[index] =
-          (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
+        desired_vel_[index] =
+          (desired_pos_[index] - current_joint_states.positions[index]) / dt_seconds;
       }
       // clamp input vel_cmd
-      if (std::fabs(desired_vel[index]) > joint_limits_[index].max_velocity)
+      if (std::fabs(desired_vel_[index]) > joint_limits_[index].max_velocity)
       {
-        desired_vel[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
-        limited_jnts_vel.emplace_back(joint_names_[index]);
+        desired_vel_[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel_[index]);
+        vel_limit_hit_[index] = true;
         limits_enforced = true;
 
         // recompute pos_cmd if needed
         if (has_desired_position)
         {
-          desired_pos[index] =
-            current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
+          desired_pos_[index] =
+            current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
         }
 
-        desired_acc[index] = (desired_vel[index] - current_joint_velocities[index]) / dt_seconds;
+        desired_acc_[index] = (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
       }
     }
 
@@ -153,12 +231,12 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
         // limiting acc or dec function
         auto apply_acc_or_dec_limit = [&](
                                         const double max_acc_or_dec, std::vector<double> & acc,
-                                        std::vector<std::string> & limited_jnts) -> bool
+                                        std::vector<bool> & limit_hit) -> bool
         {
           if (std::fabs(acc[index]) > max_acc_or_dec)
           {
             acc[index] = std::copysign(max_acc_or_dec, acc[index]);
-            limited_jnts.emplace_back(joint_names_[index]);
+            limit_hit[index] = true;
             limits_enforced = true;
             return true;
           }
@@ -168,25 +246,27 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
           }
         };
 
-        // if desired acceleration if not provided compute it from desired_vel and vel_state
+        // if desired acceleration if not provided compute it from desired_vel_ and vel_state
         if (
-          std::fabs(desired_acc[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_acc[index]))
+          std::fabs(desired_acc_[index]) <= VALUE_CONSIDERED_ZERO ||
+          std::isnan(desired_acc_[index]))
         {
-          desired_acc[index] = (desired_vel[index] - current_joint_velocities[index]) / dt_seconds;
+          desired_acc_[index] =
+            (desired_vel_[index] - current_joint_velocities[index]) / dt_seconds;
         }
 
         // check if decelerating - if velocity is changing toward 0
         bool deceleration_limit_applied = false;
         bool limit_applied = false;
         if (
-          (desired_acc[index] < 0 && current_joint_velocities[index] > 0) ||
-          (desired_acc[index] > 0 && current_joint_velocities[index] < 0))
+          (desired_acc_[index] < 0 && current_joint_velocities[index] > 0) ||
+          (desired_acc_[index] > 0 && current_joint_velocities[index] < 0))
         {
           // limit deceleration
           if (joint_limits_[index].has_deceleration_limits)
           {
             limit_applied = apply_acc_or_dec_limit(
-              joint_limits_[index].max_deceleration, desired_acc, limited_jnts_dec);
+              joint_limits_[index].max_deceleration, desired_acc_, dec_limit_hit_);
             deceleration_limit_applied = true;
           }
         }
@@ -195,19 +275,19 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
         if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
         {
           limit_applied = apply_acc_or_dec_limit(
-            joint_limits_[index].max_acceleration, desired_acc, limited_jnts_acc);
+            joint_limits_[index].max_acceleration, desired_acc_, acc_limit_hit_);
         }
 
         if (limit_applied)
         {
-          // vel_cmd from integration of desired_acc, needed even if no vel output
-          desired_vel[index] = current_joint_velocities[index] + desired_acc[index] * dt_seconds;
+          // vel_cmd from integration of desired_acc_, needed even if no vel output
+          desired_vel_[index] = current_joint_velocities[index] + desired_acc_[index] * dt_seconds;
           if (has_desired_position)
           {
-            // pos_cmd from from double integration of desired_acc
-            desired_pos[index] = current_joint_states.positions[index] +
-                                 current_joint_velocities[index] * dt_seconds +
-                                 0.5 * desired_acc[index] * dt_seconds * dt_seconds;
+            // pos_cmd from from double integration of desired_acc_
+            desired_pos_[index] = current_joint_states.positions[index] +
+                                  current_joint_velocities[index] * dt_seconds +
+                                  0.5 * desired_acc_[index] * dt_seconds * dt_seconds;
           }
         }
       }
@@ -221,22 +301,22 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       {
         // Check  immediate next step when using vel_cmd only, other cases already handled
         // integrate pos
-        expected_pos[index] =
-          current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
-        // if expected_pos over limit
+        expected_pos_[index] =
+          current_joint_states.positions[index] + desired_vel_[index] * dt_seconds;
+        // if expected_pos_ over limit
         auto pos = std::clamp(
-          expected_pos[index], joint_limits_[index].min_position,
+          expected_pos_[index], joint_limits_[index].min_position,
           joint_limits_[index].max_position);
-        if (pos != expected_pos[index])
+        if (pos != expected_pos_[index])
         {
           // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full
           // deceleration in any case limit pos to max
-          expected_pos[index] = pos;
+          expected_pos_[index] = pos;
           // and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be
           // zero)
-          desired_vel[index] =
-            (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
-          limited_jnts_pos.emplace_back(joint_names_[index]);
+          desired_vel_[index] =
+            (expected_pos_[index] - current_joint_states.positions[index]) / dt_seconds;
+          pos_limit_hit_[index] = true;
           limits_enforced = true;
         }
       }
@@ -250,7 +330,7 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       // Here we assume we will not trigger velocity limits while maximally decelerating.
       // This is a valid assumption if we are not currently at a velocity limit since we are just
       // coming to a rest.
-      double stopping_deccel = std::fabs(desired_vel[index] / dt_seconds);
+      double stopping_deccel = std::fabs(desired_vel_[index] / dt_seconds);
       if (joint_limits_[index].has_deceleration_limits)
       {
         stopping_deccel = joint_limits_[index].max_deceleration;
@@ -261,21 +341,21 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       }
 
       double stopping_distance =
-        std::fabs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_deccel));
+        std::fabs((-desired_vel_[index] * desired_vel_[index]) / (2 * stopping_deccel));
       // compute stopping duration at stopping_deccel
-      double stopping_duration = std::fabs((desired_vel[index]) / (stopping_deccel));
+      double stopping_duration = std::fabs((desired_vel_[index]) / (stopping_deccel));
 
       // Check that joint limits are beyond stopping_distance and desired_velocity is towards
       // that limit
       if (
-        (desired_vel[index] < 0 &&
+        (desired_vel_[index] < 0 &&
          (current_joint_states.positions[index] - joint_limits_[index].min_position <
           stopping_distance)) ||
-        (desired_vel[index] > 0 &&
+        (desired_vel_[index] > 0 &&
          (joint_limits_[index].max_position - current_joint_states.positions[index] <
           stopping_distance)))
       {
-        limited_jnts_pos.emplace_back(joint_names_[index]);
+        pos_limit_hit_[index] = true;
         braking_near_position_limit_triggered = true;
         limits_enforced = true;
       }
@@ -283,17 +363,17 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       {
         // compute the travel_distance at new desired velocity, with best case duration
         // stopping_duration
-        double motion_after_stopping_duration = desired_vel[index] * stopping_duration;
+        double motion_after_stopping_duration = desired_vel_[index] * stopping_duration;
         // re-check what happens if we don't slow down
         if (
-          (desired_vel[index] < 0 &&
+          (desired_vel_[index] < 0 &&
            (current_joint_states.positions[index] - joint_limits_[index].min_position <
             motion_after_stopping_duration)) ||
-          (desired_vel[index] > 0 &&
+          (desired_vel_[index] > 0 &&
            (joint_limits_[index].max_position - current_joint_states.positions[index] <
             motion_after_stopping_duration)))
         {
-          limited_jnts_pos.emplace_back(joint_names_[index]);
+          pos_limit_hit_[index] = true;
           braking_near_position_limit_triggered = true;
           limits_enforced = true;
         }
@@ -301,124 +381,70 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
       }
     }
   }
+}
 
-  // update variables according to triggers
-  if (braking_near_position_limit_triggered)
+template <>
+void JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::
+  handle_braking_near_position_limit(
+    const std::vector<double> & current_joint_velocities, double dt_seconds,
+    bool has_desired_position, bool has_desired_velocity,
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states)
+{
+  // this limit applies to all joints even if a single one is triggered
+  for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    // this limit applies to all joints even if a single one is triggered
-    for (size_t index = 0; index < number_of_joints_; ++index)
+    // Compute accel to stop
+    // Here we aren't explicitly maximally decelerating, but for joints near their limits this
+    // should still result in max decel being used
+    desired_acc_[index] = -current_joint_velocities[index] / dt_seconds;
+    if (joint_limits_[index].has_deceleration_limits)
     {
-      // Compute accel to stop
-      // Here we aren't explicitly maximally decelerating, but for joints near their limits this
-      // should still result in max decel being used
-      desired_acc[index] = -current_joint_velocities[index] / dt_seconds;
-      if (joint_limits_[index].has_deceleration_limits)
+      desired_acc_[index] = std::copysign(
+        std::min(std::fabs(desired_acc_[index]), joint_limits_[index].max_deceleration),
+        desired_acc_[index]);
+    }
+    else if (joint_limits_[index].has_acceleration_limits)
+    {
+      desired_acc_[index] = std::copysign(
+        std::min(std::fabs(desired_acc_[index]), joint_limits_[index].max_acceleration),
+        desired_acc_[index]);
+    }
+
+    // Recompute velocity and position
+    if (has_desired_velocity)
+    {
+      desired_vel_[index] = current_joint_velocities[index] + desired_acc_[index] * dt_seconds;
+    }
+    if (has_desired_position)
+    {
+      desired_pos_[index] = current_joint_states.positions[index] +
+                            current_joint_velocities[index] * dt_seconds +
+                            0.5 * desired_acc_[index] * dt_seconds * dt_seconds;
+    }
+  }
+  auto log_limits = [&](const std::vector<bool> & hits, const char * msg)
+  {
+    std::string out_str = "";
+    for (size_t i = 0; i < number_of_joints_; ++i)
+    {
+      if (hits[i])
       {
-        desired_acc[index] = std::copysign(
-          std::min(std::fabs(desired_acc[index]), joint_limits_[index].max_deceleration),
-          desired_acc[index]);
-      }
-      else if (joint_limits_[index].has_acceleration_limits)
-      {
-        desired_acc[index] = std::copysign(
-          std::min(std::fabs(desired_acc[index]), joint_limits_[index].max_acceleration),
-          desired_acc[index]);
-      }
-
-      // Recompute velocity and position
-      if (has_desired_velocity)
-      {
-        desired_vel[index] = current_joint_velocities[index] + desired_acc[index] * dt_seconds;
-      }
-      if (has_desired_position)
-      {
-        desired_pos[index] = current_joint_states.positions[index] +
-                             current_joint_velocities[index] * dt_seconds +
-                             0.5 * desired_acc[index] * dt_seconds * dt_seconds;
+        out_str += joint_names_[i] + " ";
       }
     }
-    std::ostringstream ostr;
-    for (auto jnt : limited_jnts_pos)
+    if (!out_str.empty())
     {
-      ostr << jnt << " ";
+      out_str.pop_back();  // remove trailing space
+      RCLCPP_WARN_THROTTLE(
+        node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD, "Joint(s) [%s] %s",
+        out_str.c_str(), msg);
     }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str()
-                   << "] would exceed position limits"
-                      " if continuing at current state, limiting all joints");
-  }
+  };
 
-  // display limitations
-
-  // if position limiting
-  if (limited_jnts_pos.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_jnts_pos)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed position limits, limiting");
-  }
-
-  if (limited_jnts_vel.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_jnts_vel)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed velocity limits, limiting");
-  }
-
-  if (limited_jnts_acc.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_jnts_acc)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed acceleration limits, limiting");
-  }
-
-  if (limited_jnts_dec.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_jnts_dec)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed deceleration limits, limiting");
-  }
-
-  if (has_desired_position)
-  {
-    desired_joint_states.positions = desired_pos;
-  }
-  if (has_desired_velocity)
-  {
-    desired_joint_states.velocities = desired_vel;
-  }
-  if (has_desired_acceleration)
-  {
-    desired_joint_states.accelerations = desired_acc;
-  }
-
-  return limits_enforced;
+  log_limits(
+    pos_limit_hit_,
+    "would exceed position limits"
+    " if continuing at current state, limiting all joints");
 }
 
 }  // namespace joint_limits
