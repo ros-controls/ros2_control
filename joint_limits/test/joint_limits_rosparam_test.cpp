@@ -458,6 +458,54 @@ TEST_F(
   }
 }
 
+TEST_F(JointLimitsRosParamTest, check_for_limits_update_accumulates_over_the_whole_batch)
+{
+  // A parameter event delivers the whole set at once. A change to any one of them has to
+  // be reported, no matter what follows it in the batch.
+  {
+    joint_limits::JointLimits limits;
+    limits.min_position = -1.0;
+    limits.max_position = 1.0;
+    limits.max_velocity = 2.0;
+
+    const std::vector<rclcpp::Parameter> parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.min_position", -5.0),  // changed
+      rclcpp::Parameter("joint_limits.foo_joint.max_velocity", 2.0)};  // unchanged
+
+    joint_limits::JointLimits updated_limits = limits;
+    EXPECT_TRUE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", parameters, node_->get_node_logging_interface(), updated_limits));
+    EXPECT_EQ(-5.0, updated_limits.min_position);
+
+    // ... and a batch that changes nothing still has to report no change
+    const std::vector<rclcpp::Parameter> unchanged_parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.min_position", -5.0),
+      rclcpp::Parameter("joint_limits.foo_joint.max_velocity", 2.0)};
+    EXPECT_FALSE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", unchanged_parameters, node_->get_node_logging_interface(), updated_limits));
+  }
+
+  {
+    joint_limits::SoftJointLimits soft_limits;
+    soft_limits.k_position = 10.0;
+    soft_limits.k_velocity = 20.0;
+    soft_limits.min_position = 0.1;
+    soft_limits.max_position = 0.9;
+
+    const std::vector<rclcpp::Parameter> parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.k_position", 30.0),   // changed
+      rclcpp::Parameter("joint_limits.foo_joint.k_velocity", 20.0)};  // unchanged
+
+    joint_limits::SoftJointLimits updated_limits = soft_limits;
+    EXPECT_TRUE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", parameters, node_->get_node_logging_interface(), updated_limits));
+    EXPECT_EQ(30.0, updated_limits.k_position);
+  }
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
