@@ -119,16 +119,19 @@ public:
   /**
    * @brief Return Wrench message with forces and torques.
    *
-   * Constructs and return a wrench message from the current values.
+   * Updates internal storage from the state interfaces and updates the Wrench message
+   * If no state interfaces are available, the message will be filled with old data
    * The method assumes that the interface names on the construction are in the following order:
    *   force X, force Y, force Z, torque X, torque Y, torque Z.
    *
-   * @param[out] message Wrench message from values
-   * @return always returns true
+   * @param[out] message Wrench message from values, updated from internal storage
+   * @return true when interfaces are available, false otherwise
    */
   bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
+    // data_ won't be updated if no state interfaces are available
     update_data_from_interfaces();
+
     message.force.x = data_[0];
     message.force.y = data_[1];
     message.force.z = data_[2];
@@ -136,7 +139,14 @@ public:
     message.torque.y = data_[4];
     message.torque.z = data_[5];
 
-    return true;
+    if (state_interfaces_.empty())
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
   }
 
 protected:
@@ -151,7 +161,7 @@ protected:
     std::size_t interface_counter{0};
     for (auto i = 0u; i < data_.size(); ++i)
     {
-      if (existing_axes_[i])
+      if (existing_axes_[i] && interface_counter < state_interfaces_.size())
       {
         const auto data = state_interfaces_[interface_counter].get().get_optional();
         if (data.has_value())

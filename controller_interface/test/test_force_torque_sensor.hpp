@@ -32,6 +32,7 @@ class TestableForceTorqueSensor : public semantic_components::ForceTorqueSensor
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_default_names);
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_custom_names);
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_custom_names);
+  FRIEND_TEST(ForceTorqueSensorTest, get_values_after_release_interfaces);
 
 public:
   // Use generation of interface names
