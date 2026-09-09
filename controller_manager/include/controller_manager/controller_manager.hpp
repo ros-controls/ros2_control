@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -657,9 +658,9 @@ private:
 
     std::vector<ControllerSpec> controllers_lists_[2];
     /// The index of the controller list with the most updated information
-    int updated_controllers_index_ = 0;
+    std::atomic<int> updated_controllers_index_{0};
     /// The index of the controllers list being used in the real-time thread.
-    int used_by_realtime_controllers_index_ = -1;
+    std::atomic<int> used_by_realtime_controllers_index_{-1};
     /// The callback to be called when the list is switched
     std::function<void()> on_switch_callback_ = nullptr;
   };
