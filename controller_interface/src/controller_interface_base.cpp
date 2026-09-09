@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include "controller_interface/helpers.hpp"
+
 #include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -73,9 +75,11 @@ return_type ControllerInterfaceBase::init(
 return_type ControllerInterfaceBase::init(
   const controller_interface::ControllerInterfaceParams & params)
 {
+  std::string node_name = ros2_control::get_component_node_name(params.controller_name);
+
   impl_->ctrl_itf_params_ = params;
   impl_->node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    params.controller_name, params.node_namespace, params.node_options,
+    node_name, params.node_namespace, params.node_options,
     false);  // disable LifecycleNode service interfaces
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
 

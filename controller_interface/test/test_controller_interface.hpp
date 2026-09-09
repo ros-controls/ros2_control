@@ -18,6 +18,7 @@
 #include "controller_interface/controller_interface.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_controller_interface";
+constexpr char TEST_CONTROLLER_NAMESPACE[] = "/test/controller/namespace";
 
 class TestableControllerInterface : public controller_interface::ControllerInterface
 {
