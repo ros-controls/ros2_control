@@ -81,6 +81,11 @@ CallbackReturn HardwareComponentInterface::init(
     async_thread_params.logger = get_logger();
     async_thread_params.exec_rate = params.hardware_info.rw_rate;
     async_thread_params.print_warnings = info_.async_params.print_warnings;
+    if (!info_.async_params.thread_name.empty()) {
+      async_thread_params.thread_name = info_.async_params.thread_name;
+    } else {
+      async_thread_params.thread_name = info_.name;
+    }
     RCLCPP_INFO(
       get_logger(), "Starting async handler with scheduler priority: %d and policy : %s",
       info_.async_params.thread_priority,
