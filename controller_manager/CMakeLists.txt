@@ -67,6 +67,10 @@ if(BUILD_TESTING)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(example_interfaces REQUIRED)
 
+  option(ROS2_CONTROL_STRICT_TIMING_TESTS
+    "Use strict timing-sensitive assertions in ros2_control tests. Turn ON for RT-capable local validation."
+    ON)
+
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC
@@ -112,6 +116,9 @@ if(BUILD_TESTING)
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  target_compile_definitions(
+    test_controller_manager
+    PRIVATE ROS2_CONTROL_STRICT_TIMING_TESTS=$<BOOL:${ROS2_CONTROL_STRICT_TIMING_TESTS}>)
 
   ament_add_gmock(test_controller_manager_with_namespace
     test/test_controller_manager_with_namespace.cpp
@@ -297,6 +304,10 @@ if(BUILD_TESTING)
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+
+  # Now include the launch_utils subfolder
+  add_subdirectory(test/test_launch_utils)
+
 endif()
 
 install(

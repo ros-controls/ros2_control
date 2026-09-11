@@ -41,7 +41,7 @@ public:
     const auto data = state_interfaces_[0].get().get_optional();
     if (data.has_value())
     {
-      return data.value();
+      return static_cast<float>(data.value());
     }
     return std::numeric_limits<float>::quiet_NaN();
   }

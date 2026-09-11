@@ -127,6 +127,13 @@ ChainableControllerInterface
 controller_manager
 ******************
 
+* ``configure_controller`` now performs a single-step lifecycle transition and
+  only accepts controllers in the ``unconfigured`` state (`#3196
+  <https://github.com/ros-controls/ros2_control/pull/3196>`__). Previously an
+  ``inactive`` controller was implicitly cleaned up and then reconfigured. To
+  reconfigure an ``inactive`` controller, call ``cleanup_controller`` first and
+  then ``configure_controller``.
+
 hardware_interface
 ******************
 

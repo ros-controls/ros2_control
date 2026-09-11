@@ -2,6 +2,21 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+* Fix view_controller_chains (`#2026 <https://github.com/ros-controls/ros2_control/issues/2026>`_)
+* Extend unload controller to unload all inactive controllers (`#3466 <https://github.com/ros-controls/ros2_control/issues/3466>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.9.0 (2026-08-10)
+------------------
+* Make configure_controller lifecycle transition strict (no multi-hop) (`#3196 <https://github.com/ros-controls/ros2_control/issues/3196>`_)
+* doc: reorder ros2_control TOC (`#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_)
+* Contributors: Aniruddh Yelluri, Vedh
+
 6.8.0 (2026-07-01)
 ------------------
 
