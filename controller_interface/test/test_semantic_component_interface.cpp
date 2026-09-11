@@ -95,14 +95,11 @@ TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
   std::vector<double> interface_values = {1.1, 3.3, 5.5};
 
   // assign 1.1 to interface_1, 3.3 to interface_3 and 5.5 to interface_5
-  auto interface_1 =
-    std::make_shared<hardware_interface::StateInterface>(component_name_, "1");
+  auto interface_1 = std::make_shared<hardware_interface::StateInterface>(component_name_, "1");
   std::ignore = interface_1->set_value(interface_values[0]);
-  auto interface_3 =
-    std::make_shared<hardware_interface::StateInterface>(component_name_, "3");
+  auto interface_3 = std::make_shared<hardware_interface::StateInterface>(component_name_, "3");
   std::ignore = interface_3->set_value(interface_values[1]);
-  auto interface_5 =
-    std::make_shared<hardware_interface::StateInterface>(component_name_, "5");
+  auto interface_5 = std::make_shared<hardware_interface::StateInterface>(component_name_, "5");
   std::ignore = interface_5->set_value(interface_values[2]);
 
   // create local state interface vector

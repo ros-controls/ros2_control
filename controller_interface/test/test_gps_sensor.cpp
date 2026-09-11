@@ -135,8 +135,9 @@ struct GPSSensorWithCovarianceTest : public testing::Test
       std::back_inserter(full_interface_names),
       [this](const auto & interface_name) { return gps_sensor_name + '/' + interface_name; });
     // Initialize all interface values to 0.0
-    for (auto & itf : {gps_state, gps_service, latitude, longitude, altitude, latitude_covariance,
-                       longitude_covariance, altitude_covariance})
+    for (auto & itf :
+         {gps_state, gps_service, latitude, longitude, altitude, latitude_covariance,
+          longitude_covariance, altitude_covariance})
     {
       std::ignore = itf->set_value(0.0);
     }
