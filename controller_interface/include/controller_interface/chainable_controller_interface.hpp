@@ -22,7 +22,6 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/handle.hpp"
-#include "rclcpp/version.h"
 
 namespace controller_interface
 {
@@ -63,25 +62,6 @@ public:
   bool is_in_chained_mode() const final;
 
 protected:
-// Deprecated methods kept for source-compatibility until Lyrical; removed on Rolling (rclcpp >=
-// 33, see https://github.com/ros/rosdistro).
-#if RCLCPP_VERSION_MAJOR < 33
-  /**
-   * @brief Virtual method that each chainable controller should implement to export its read-only
-   * chainable interfaces.
-   *
-   * Each chainable controller implements this methods where all its state(read only) interfaces are
-   * exported. The method has the same meaning as `export_state_interfaces` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * @returns list of StateInterfaces that other controller can use as their inputs.
-   */
-  [[deprecated(
-    "Replaced by std::vector<hardware_interface::StateInterface::ConstSharedPtr> "
-    "on_export_state_interfaces_list() method.")]]
-  virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces();
-#endif
-
   /**
    * @brief Virtual method implemented by chainable controllers to export read-only interfaces.
    *
@@ -94,22 +74,6 @@ protected:
   virtual std::vector<hardware_interface::StateInterface::SharedPtr>
   on_export_state_interfaces_list();
 
-#if RCLCPP_VERSION_MAJOR < 33
-  /**
-   * @brief Virtual method implemented by chainable controllers to export read/write interfaces.
-   *
-   * Each chainable controller implements this methods where all input (command) interfaces are
-   * exported. The method has the same meaning as `export_command_interface` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * @returns list of CommandInterfaces that other controller can use as their outputs.
-   */
-  [[deprecated(
-    "Replaced by std::vector<hardware_interface::CommandInterface::SharedPtr> "
-    "on_export_reference_interfaces_list() method.")]]
-  virtual std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces();
-#endif
-
   /**
    * @brief Virtual method that each chainable controller should implement to export its read/write
    * chainable interfaces.
@@ -121,11 +85,7 @@ protected:
    * @returns list of CommandInterfaces that other controller can use as their outputs.
    */
   virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
-#if RCLCPP_VERSION_MAJOR < 33
-  on_export_reference_interfaces_list();
-#else
   on_export_reference_interfaces_list() = 0;
-#endif
 
   /**
    * @brief Virtual method that each chainable controller should implement to switch chained mode.
@@ -178,21 +138,11 @@ protected:
   std::vector<hardware_interface::StateInterface::SharedPtr> ordered_exported_state_interfaces_;
   std::unordered_map<std::string, hardware_interface::StateInterface::SharedPtr>
     exported_state_interfaces_;
-#if RCLCPP_VERSION_MAJOR < 33
-  // BEGIN (Handle export change): for backward compatibility
-  std::vector<double> state_interfaces_values_;
-  // END
-#endif
 
   /**
    * @brief Storage of values for reference interfaces
    */
   std::vector<std::string> exported_reference_interface_names_;
-#if RCLCPP_VERSION_MAJOR < 33
-  // BEGIN (Handle export change): for backward compatibility
-  std::vector<double> reference_interfaces_;
-  // END
-#endif
   std::vector<hardware_interface::CommandInterface::SharedPtr>
     ordered_exported_reference_interfaces_;
   std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr>

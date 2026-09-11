@@ -17,7 +17,6 @@
 #include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "rclcpp/version.h"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::InterfaceDescription;
@@ -29,36 +28,6 @@ namespace
 constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
 }  // namespace
-
-#if RCLCPP_VERSION_MAJOR < 33
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST(TestHandle, command_interface)
-{
-  double value = 1.337;
-  CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
-  ASSERT_TRUE(interface.get_optional().has_value());
-  EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
-  EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
-  EXPECT_NO_THROW({ std::ignore = interface.set_value(0.0); });
-  ASSERT_TRUE(interface.get_optional().has_value());
-  EXPECT_DOUBLE_EQ(interface.get_optional().value(), 0.0);
-}
-#pragma GCC diagnostic pop
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST(TestHandle, state_interface)
-{
-  double value = 1.337;
-  StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
-  ASSERT_TRUE(interface.get_optional().has_value());
-  EXPECT_DOUBLE_EQ(interface.get_optional().value(), value);
-  // interface.set_value(5);  compiler error, no set_value function
-}
-#pragma GCC diagnostic pop
-#endif
 
 TEST(TestHandle, name_getters_work)
 {
@@ -74,22 +43,6 @@ TEST(TestHandle, value_methods_throw_for_nullptr)
   EXPECT_ANY_THROW(handle.get_optional().value());
   EXPECT_ANY_THROW(std::ignore = handle.set_value(0.0));
 }
-
-#if RCLCPP_VERSION_MAJOR < 33
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST(TestHandle, value_methods_work_on_non_nullptr)
-{
-  double value = 1.337;
-  CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
-  ASSERT_TRUE(handle.get_optional().has_value());
-  EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-  EXPECT_NO_THROW({ std::ignore = handle.set_value(0.0); });
-  ASSERT_TRUE(handle.get_optional().has_value());
-  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
-}
-#pragma GCC diagnostic pop
-#endif
 
 TEST(TestHandle, test_command_interface_limiter_on_set)
 {
@@ -607,114 +560,6 @@ TEST(TestHandle, interface_description_command_interface_name_getters_work)
   EXPECT_EQ(handle.get_interface_name(), POSITION_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME_1);
 }
-
-#if RCLCPP_VERSION_MAJOR < 33
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST(TestHandle, copy_constructor)
-{
-  {
-    double value = 1.337;
-    hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
-    hardware_interface::Handle copy(handle);
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    ASSERT_TRUE(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
-  }
-  {
-    double value = 1.337;
-    InterfaceInfo info;
-    info.name = FOO_INTERFACE;
-    info.data_type = "double";
-    InterfaceDescription itf_descr{JOINT_NAME, info};
-    hardware_interface::Handle handle{itf_descr};
-    EXPECT_TRUE(std::isnan(handle.get_optional().value()));
-    ASSERT_TRUE(handle.set_value(value));
-    hardware_interface::Handle copy(handle);
-    EXPECT_EQ(copy.get_name(), handle.get_name());
-    EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
-    EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    ASSERT_TRUE(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    ASSERT_TRUE(copy.set_value(0.52));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-  }
-}
-
-TEST(TesHandle, move_constructor)
-{
-  double value = 1.337;
-  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  hardware_interface::Handle moved{std::move(handle)};
-  EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
-  ASSERT_TRUE(moved.set_value(0.0));
-  EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
-}
-
-TEST(TestHandle, copy_assignment)
-{
-  {
-    double value_1 = 1.337;
-    double value_2 = 2.337;
-    hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value_1};
-    hardware_interface::Handle copy{JOINT_NAME, "random", &value_2};
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), value_2);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value_1);
-    copy = handle;
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), value_1);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value_1);
-    ASSERT_TRUE(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), 0.0);
-    EXPECT_DOUBLE_EQ(value_1, 0.0);
-    EXPECT_DOUBLE_EQ(value_2, 2.337);
-  }
-
-  {
-    double value = 1.337;
-    InterfaceInfo info;
-    info.name = FOO_INTERFACE;
-    info.data_type = "double";
-    InterfaceDescription itf_descr{JOINT_NAME, info};
-    hardware_interface::Handle handle{itf_descr};
-    EXPECT_TRUE(std::isnan(handle.get_optional().value()));
-    ASSERT_TRUE(handle.set_value(value));
-    hardware_interface::Handle copy = handle;
-    EXPECT_EQ(copy.get_name(), handle.get_name());
-    EXPECT_EQ(copy.get_interface_name(), handle.get_interface_name());
-    EXPECT_EQ(copy.get_prefix_name(), handle.get_prefix_name());
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), value);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    ASSERT_TRUE(copy.set_value(0.0));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.0);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-    ASSERT_TRUE(copy.set_value(0.52));
-    EXPECT_DOUBLE_EQ(copy.get_optional().value(), 0.52);
-    EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-  }
-}
-
-TEST(TestHandle, move_assignment)
-{
-  double value = 1.337;
-  double value_2 = 2.337;
-  hardware_interface::Handle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  hardware_interface::Handle moved{JOINT_NAME, "random", &value_2};
-  EXPECT_DOUBLE_EQ(moved.get_optional().value(), value_2);
-  EXPECT_DOUBLE_EQ(handle.get_optional().value(), value);
-  moved = std::move(handle);
-  EXPECT_DOUBLE_EQ(moved.get_optional().value(), value);
-  ASSERT_TRUE(moved.set_value(0.0));
-  EXPECT_DOUBLE_EQ(moved.get_optional().value(), 0.0);
-}
-#pragma GCC diagnostic pop
-#endif
 
 class TestableHandle : public hardware_interface::Handle
 {
