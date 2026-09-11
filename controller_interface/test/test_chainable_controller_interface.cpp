@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "gmock/gmock.h"
+#include "rclcpp/version.h"
 
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
@@ -279,3 +280,90 @@ TEST_F(ChainableControllerInterfaceTest, test_update_logic)
     exported_state_interfaces[0]->get_optional().value(),
     EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE + 1);
 }
+
+// Covers the deprecated on_export_state_interfaces()/on_export_reference_interfaces() overrides,
+// kept available for source-compatibility until Lyrical (see chainable_controller_interface.hpp).
+#if RCLCPP_VERSION_MAJOR < 33
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+class TestableLegacyChainableControllerInterface
+: public controller_interface::ChainableControllerInterface
+{
+public:
+  controller_interface::CallbackReturn on_init() override
+  {
+    name_prefix_of_interfaces_ = get_node()->get_name();
+    return controller_interface::CallbackReturn::SUCCESS;
+  }
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
+
+  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override
+  {
+    state_interfaces_values_.push_back(EXPORTED_STATE_INTERFACE_VALUE);
+    return {hardware_interface::StateInterface(
+      name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0])};
+  }
+
+  std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override
+  {
+    reference_interfaces_.push_back(INTERFACE_VALUE);
+    std::vector<hardware_interface::CommandInterface> command_interfaces;
+    command_interfaces.push_back(
+      hardware_interface::CommandInterface(
+        name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
+    return command_interfaces;
+  }
+
+  bool on_set_chained_mode(bool /*chained_mode*/) override { return true; }
+
+  controller_interface::return_type update_reference_from_subscribers(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return controller_interface::return_type::OK;
+  }
+
+  controller_interface::return_type update_and_write_commands(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return controller_interface::return_type::OK;
+  }
+
+  std::string name_prefix_of_interfaces_;
+};
+
+TEST_F(ChainableControllerInterfaceTest, export_legacy_state_and_reference_interfaces)
+{
+  TestableLegacyChainableControllerInterface controller;
+
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = TEST_CONTROLLER_NAME;
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+  ASSERT_NO_THROW(controller.get_node());
+
+  auto exported_state_interfaces = controller.export_state_interfaces();
+  ASSERT_THAT(exported_state_interfaces, SizeIs(1));
+  EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
+  EXPECT_EQ(exported_state_interfaces[0]->get_optional().value(), EXPORTED_STATE_INTERFACE_VALUE);
+
+  auto reference_interfaces = controller.export_reference_interfaces();
+  ASSERT_THAT(reference_interfaces, SizeIs(1));
+  EXPECT_EQ(reference_interfaces[0]->get_interface_name(), "test_itf");
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), INTERFACE_VALUE);
+}
+#pragma GCC diagnostic pop
+#endif

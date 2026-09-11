@@ -35,6 +35,7 @@
 #include "hardware_interface/macros.hpp"
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/version.h"
 
 namespace
 {
@@ -64,6 +65,19 @@ namespace hardware_interface
 class Handle
 {
 public:
+// Deprecated methods kept for source-compatibility until Lyrical; removed on Rolling (rclcpp >=
+// 33, see https://github.com/ros/rosdistro).
+#if RCLCPP_VERSION_MAJOR < 33
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+  Handle(const std::string & prefix_name, const std::string & interface_name, double * value_ptr)
+  : prefix_name_(prefix_name),
+    interface_name_(interface_name),
+    handle_name_(prefix_name_ + "/" + interface_name_),
+    value_ptr_(value_ptr)
+  {
+  }
+#endif
+
   explicit Handle(
     const std::string & prefix_name, const std::string & interface_name,
     const std::string & data_type = "double", const std::string & initial_value = "")
@@ -221,6 +235,11 @@ public:
           FMT_COMPILE("Invalid data type: '{}' for interface: {}. Check supported types."),
           data_type, handle_name_));
     }
+#if RCLCPP_VERSION_MAJOR < 33
+    value_ptr_ = (data_type_ == hardware_interface::HandleDataType::DOUBLE)
+                   ? std::get_if<double>(&value_)
+                   : nullptr;
+#endif
   }
 
   explicit Handle(const InterfaceDescription & interface_description)
@@ -231,19 +250,21 @@ public:
   {
   }
 
+#if RCLCPP_VERSION_MAJOR < 33
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const std::string & interface_name)
-  : interface_name_(interface_name), handle_name_("/" + interface_name_)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
 
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const char * interface_name)
-  : interface_name_(interface_name), handle_name_("/" + interface_name_)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
+#endif
 
   Handle(const Handle & other) noexcept { copy(other); }
 
@@ -265,6 +286,11 @@ public:
   }
 
   virtual ~Handle() = default;
+
+#if RCLCPP_VERSION_MAJOR < 33
+  /// Returns true if handle references a value.
+  inline operator bool() const { return value_ptr_ != nullptr; }
+#endif
 
   const std::string & get_name() const { return handle_name_; }
 
@@ -313,7 +339,12 @@ public:
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
+#if RCLCPP_VERSION_MAJOR < 33
+          THROW_ON_NULLPTR(value_ptr_);
+          return *value_ptr_;
+#else
           return std::get<double>(value_);
+#endif
         case HandleDataType::BOOL:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
@@ -460,7 +491,12 @@ public:
     // TODO(Manuel) set value_ directly if old functionality is removed
     if constexpr (std::is_same_v<T, double>)
     {
+#if RCLCPP_VERSION_MAJOR < 33
+      THROW_ON_NULLPTR(value_ptr_);
+      *value_ptr_ = value;
+#else
       value_ = value;
+#endif
     }
     else
     {
@@ -484,7 +520,14 @@ public:
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
-  bool is_valid() const { return !std::holds_alternative<std::monostate>(value_); }
+  bool is_valid() const
+  {
+#if RCLCPP_VERSION_MAJOR < 33
+    return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
+#else
+    return !std::holds_alternative<std::monostate>(value_);
+#endif
+  }
 
 protected:
   /**
@@ -510,7 +553,12 @@ protected:
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
+#if RCLCPP_VERSION_MAJOR < 33
+          THROW_ON_NULLPTR(value_ptr_);
+          value = *value_ptr_;
+#else
           value = std::get<double>(value_);
+#endif
           return true;
         case HandleDataType::BOOL:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
@@ -569,6 +617,16 @@ private:
     handle_name_ = other.handle_name_;
     value_ = other.value_;
     data_type_ = other.data_type_;
+#if RCLCPP_VERSION_MAJOR < 33
+    if (std::holds_alternative<std::monostate>(value_))
+    {
+      value_ptr_ = other.value_ptr_;
+    }
+    else
+    {
+      value_ptr_ = std::get_if<double>(&value_);
+    }
+#endif
   }
 
   void swap(Handle & first, Handle & second) noexcept
@@ -579,6 +637,9 @@ private:
     std::swap(first.handle_name_, second.handle_name_);
     std::swap(first.value_, second.value_);
     std::swap(first.data_type_, second.data_type_);
+#if RCLCPP_VERSION_MAJOR < 33
+    std::swap(first.value_ptr_, second.value_ptr_);
+#endif
   }
 
 protected:
@@ -588,6 +649,11 @@ protected:
   std::string handle_name_;
   HANDLE_DATATYPE value_ = std::monostate{};
   HandleDataType data_type_ = HandleDataType::DOUBLE;
+#if RCLCPP_VERSION_MAJOR < 33
+  // BEGIN (Handle export change): for backward compatibility
+  // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
+  double * value_ptr_ = nullptr;
+#endif
   // END
   mutable std::shared_mutex handle_mutex_;
 
@@ -617,16 +683,38 @@ public:
         get_name().c_str());
       return;
     }
+#if RCLCPP_VERSION_MAJOR < 33
+    if (value_ptr_ || data_type_.is_castable_to_double())
+    {
+      std::function<double()> f = [this]()
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
+    }
+#else
     if (data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
+#endif
   }
 
   void unregisterIntrospection() const
   {
+#if RCLCPP_VERSION_MAJOR < 33
+    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
+#else
     if (is_valid() && (data_type_.is_castable_to_double()))
+#endif
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -695,6 +783,25 @@ public:
         get_name().c_str());
       return;
     }
+#if RCLCPP_VERSION_MAJOR < 33
+    if (value_ptr_ || data_type_.is_castable_to_double())
+    {
+      std::function<double()> f = [this]()
+      {
+        if (value_ptr_)
+        {
+          return *value_ptr_;
+        }
+        else
+        {
+          return data_type_.cast_to_double(value_);
+        }
+      };
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+      DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
+        "command_interface." + get_name() + ".is_limited", &is_command_limited_);
+    }
+#else
     if (data_type_.is_castable_to_double())
     {
       std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
@@ -702,11 +809,17 @@ public:
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
     }
+#endif
   }
 
   void unregisterIntrospection() const
   {
-    if (is_valid() && data_type_.is_castable_to_double())
+#if RCLCPP_VERSION_MAJOR < 33
+    const bool should_unregister = is_valid() && (value_ptr_ || data_type_.is_castable_to_double());
+#else
+    const bool should_unregister = is_valid() && data_type_.is_castable_to_double();
+#endif
+    if (should_unregister)
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(
