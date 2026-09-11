@@ -456,25 +456,15 @@ public:
     {
       return false;
     }
-    // BEGIN (Handle export change): for backward compatibility
-    // TODO(Manuel) set value_ directly if old functionality is removed
-    if constexpr (std::is_same_v<T, double>)
+    if (!std::holds_alternative<T>(value_))
     {
-      value_ = value;
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
     }
-    else
-    {
-      if (!std::holds_alternative<T>(value_))
-      {
-        throw std::runtime_error(
-          fmt::format(
-            FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
-            get_type_name<T>(), get_name(), data_type_.to_string()));
-      }
-      value_ = value;
-    }
+    value_ = value;
     return true;
-    // END
   }
 
   std::shared_mutex & get_mutex() const { return handle_mutex_; }

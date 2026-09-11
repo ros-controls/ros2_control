@@ -31,17 +31,10 @@ constexpr auto FOO_INTERFACE = "FooInterface";
 
 TEST(TestHandle, name_getters_work)
 {
-  StateInterface handle{JOINT_NAME, FOO_INTERFACE, nullptr};
+  StateInterface handle{JOINT_NAME, FOO_INTERFACE};
   EXPECT_EQ(handle.get_name(), std::string(JOINT_NAME) + "/" + std::string(FOO_INTERFACE));
   EXPECT_EQ(handle.get_interface_name(), FOO_INTERFACE);
   EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME);
-}
-
-TEST(TestHandle, value_methods_throw_for_nullptr)
-{
-  CommandInterface handle{JOINT_NAME, FOO_INTERFACE, nullptr};
-  EXPECT_ANY_THROW(handle.get_optional().value());
-  EXPECT_ANY_THROW(std::ignore = handle.set_value(0.0));
 }
 
 TEST(TestHandle, test_command_interface_limiter_on_set)
