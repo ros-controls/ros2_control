@@ -46,11 +46,14 @@ TEST_F(MagneticFieldSensorTest, validate_all)
 
   // Assign values
   auto magnetic_field_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, magnetic_field_interface_names_[0], &magnetic_field_values_[0]);
+    sensor_name_, magnetic_field_interface_names_[0]);
+  std::ignore = magnetic_field_x->set_value(magnetic_field_values_[0]);
   auto magnetic_field_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, magnetic_field_interface_names_[1], &magnetic_field_values_[1]);
+    sensor_name_, magnetic_field_interface_names_[1]);
+  std::ignore = magnetic_field_y->set_value(magnetic_field_values_[1]);
   auto magnetic_field_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, magnetic_field_interface_names_[2], &magnetic_field_values_[2]);
+    sensor_name_, magnetic_field_interface_names_[2]);
+  std::ignore = magnetic_field_z->set_value(magnetic_field_values_[2]);
 
   // Create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;

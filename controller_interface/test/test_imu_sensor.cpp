@@ -47,30 +47,40 @@ TEST_F(IMUSensorTest, validate_all)
   std::vector<std::string> interface_names = imu_sensor_->get_state_interface_names();
 
   // assign values to orientation
-  auto orientation_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[0], &orientation_values_[0]);
-  auto orientation_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[1], &orientation_values_[1]);
-  auto orientation_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[2], &orientation_values_[2]);
-  auto orientation_w = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[3], &orientation_values_[3]);
+  auto orientation_x =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[0]);
+  std::ignore = orientation_x->set_value(orientation_values_[0]);
+  auto orientation_y =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[1]);
+  std::ignore = orientation_y->set_value(orientation_values_[1]);
+  auto orientation_z =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[2]);
+  std::ignore = orientation_z->set_value(orientation_values_[2]);
+  auto orientation_w =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[3]);
+  std::ignore = orientation_w->set_value(orientation_values_[3]);
 
   // assign values to angular velocity
-  auto angular_velocity_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[4], &angular_velocity_values_[0]);
-  auto angular_velocity_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[5], &angular_velocity_values_[1]);
-  auto angular_velocity_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[6], &angular_velocity_values_[2]);
+  auto angular_velocity_x =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[4]);
+  std::ignore = angular_velocity_x->set_value(angular_velocity_values_[0]);
+  auto angular_velocity_y =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[5]);
+  std::ignore = angular_velocity_y->set_value(angular_velocity_values_[1]);
+  auto angular_velocity_z =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[6]);
+  std::ignore = angular_velocity_z->set_value(angular_velocity_values_[2]);
 
   // assign values to linear acceleration
-  auto linear_acceleration_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[7], &linear_acceleration_values_[0]);
-  auto linear_acceleration_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[8], &linear_acceleration_values_[1]);
-  auto linear_acceleration_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, imu_interface_names_[9], &linear_acceleration_values_[2]);
+  auto linear_acceleration_x =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[7]);
+  std::ignore = linear_acceleration_x->set_value(linear_acceleration_values_[0]);
+  auto linear_acceleration_y =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[8]);
+  std::ignore = linear_acceleration_y->set_value(linear_acceleration_values_[1]);
+  auto linear_acceleration_z =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, imu_interface_names_[9]);
+  std::ignore = linear_acceleration_z->set_value(linear_acceleration_values_[2]);
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
