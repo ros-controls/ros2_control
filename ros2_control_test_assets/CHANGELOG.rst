@@ -2,6 +2,15 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
+6.9.0 (2026-08-10)
+------------------
+
 6.8.0 (2026-07-01)
 ------------------
 * Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)

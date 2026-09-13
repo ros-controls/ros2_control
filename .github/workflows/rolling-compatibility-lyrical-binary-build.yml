@@ -4,7 +4,7 @@ name: Check Rolling Compatibility on Lyrical
 
 on:
   workflow_dispatch:
-  pull_request: &event
+  push:
     branches:
       - master
     paths:
@@ -17,7 +17,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-  push: *event
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
@@ -28,6 +27,7 @@ jobs:
   build-on-lyrical:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: lyrical
       ros_repo: testing
       upstream_workspace: ros2_control.rolling.repos

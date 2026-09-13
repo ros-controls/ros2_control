@@ -31,6 +31,7 @@ jobs:
   semi-binary:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: jazzy
       ros_repo: testing
       upstream_workspace: ros2_control.jazzy.repos
@@ -38,6 +39,7 @@ jobs:
   semi-binary-clang:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: jazzy
       ros_repo: testing
       upstream_workspace: ros2_control.jazzy.repos

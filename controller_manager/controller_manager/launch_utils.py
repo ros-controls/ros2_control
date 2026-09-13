@@ -37,9 +37,9 @@ def generate_controllers_spawner_launch_description(
       # Passing controller parameter file to load the controller (Controller type is retrieved from config file)
       generate_controllers_spawner_launch_description(
         ['joint_state_broadcaster'],
-        controller_params_files=[os.path.join(get_package_share_directory('my_pkg'),
-                                            'config', 'controller_params.yaml')],
-        extra_spawner_args=[--load-only]
+        controller_params_files=[PathJoinSubstitution([FindPackageShare('my_pkg'),
+                                            'config', 'controller_params.yaml'])],
+        extra_spawner_args=['--load-only']
         )
 
     """

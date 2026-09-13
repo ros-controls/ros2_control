@@ -217,10 +217,16 @@ return_type GenericSystem::prepare_command_mode_switch(
 
   for (const auto & key : start_interfaces)
   {
-    // check if interface is joint
+    // Match only command interfaces declared by this joint.
     auto joint_it_found = std::find_if(
       info.joints.begin(), info.joints.end(),
-      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+      [&key](const auto & joint)
+      {
+        return std::any_of(
+          joint.command_interfaces.begin(), joint.command_interfaces.end(),
+          [&key, &joint](const auto & command_interface)
+          { return key == joint.name + "/" + command_interface.name; });
+      });
 
     if (joint_it_found != info.joints.end())
     {
@@ -289,11 +295,17 @@ return_type GenericSystem::perform_command_mode_switch(
 
   for (const auto & key : start_interfaces)
   {
-    // check if interface is joint
+    // Match only command interfaces declared by this joint.
     const auto & info = get_hardware_info();
     auto joint_it_found = std::find_if(
       info.joints.begin(), info.joints.end(),
-      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+      [&key](const auto & joint)
+      {
+        return std::any_of(
+          joint.command_interfaces.begin(), joint.command_interfaces.end(),
+          [&key, &joint](const auto & command_interface)
+          { return key == joint.name + "/" + command_interface.name; });
+      });
 
     if (joint_it_found != info.joints.end())
     {

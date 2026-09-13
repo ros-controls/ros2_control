@@ -2,6 +2,17 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
+6.9.0 (2026-08-10)
+------------------
+* rqt_cm: Robustify test and fix shutdown races (`#3396 <https://github.com/ros-controls/ros2_control/issues/3396>`_)
+* Contributors: Christoph Fröhlich
+
 6.8.0 (2026-07-01)
 ------------------
 * fix Qt API (`#3367 <https://github.com/ros-controls/ros2_control/issues/3367>`_)

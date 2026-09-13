@@ -70,7 +70,6 @@ public:
   rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr service_;
   unsigned int internal_counter = 0;
   double activation_processing_time = 0.0;
-  bool simulate_cleanup_failure = false;
   // Variable where we store when shutdown was called, pointer because the controller
   // is usually destroyed after shutdown
   size_t * cleanup_calls = nullptr;

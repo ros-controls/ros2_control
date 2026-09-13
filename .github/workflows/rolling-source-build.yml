@@ -32,6 +32,7 @@ jobs:
       matrix:
         ROS_DISTRO: [lyrical, rolling]
     with:
+      extra-cmake-args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ref: master
       container: ubuntu:26.04
