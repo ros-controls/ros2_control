@@ -2807,6 +2807,10 @@ TEST_F(TestGenericSystem, toggle_command_propagation_service)
     // Verify Enabled again - state should now update to 2.2
     ASSERT_EQ(rm.read(TIME, PERIOD).result, hardware_interface::return_type::OK);
     EXPECT_EQ(2.2, j1p_s.get_optional().value());
+
+    // Stop executor before rm is destroyed to prevent concurrent teardown issues
+    guard.exec->cancel();
+    guard.thread.join();
   }
 }
 

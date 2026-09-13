@@ -93,7 +93,7 @@ private:
   bool calculate_dynamics_;
   std::vector<size_t> joint_control_mode_;
 
-  std::atomic<bool> command_propagation_disabled_;
+  std::atomic<bool> command_propagation_disabled_{false};
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_command_propagation_srv_;
 };
 
