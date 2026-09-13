@@ -15,6 +15,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   realtime_tools
   TinyXML2
   joint_limits
+  std_srvs
   urdf
   pal_statistics
   fmt
@@ -61,7 +62,7 @@ target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(mock_components PUBLIC hardware_interface)
+target_link_libraries(mock_components PUBLIC hardware_interface ${std_srvs_TARGETS})
 
 pluginlib_export_plugin_description_file(
   hardware_interface mock_components_plugin_description.xml)
@@ -115,7 +116,11 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
-  target_link_libraries(test_generic_system hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  target_link_libraries(test_generic_system
+    hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+    ${std_srvs_TARGETS}
+  )
 endif()
 
 install(
