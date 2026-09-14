@@ -47,12 +47,12 @@ TEST_F(LedDeviceTest, validate_all)
   std::vector<std::string> interface_names = led_device_->get_command_interface_names();
 
   // Assign values to position
-  auto led_r = std::make_shared<hardware_interface::CommandInterface>(
-    device_name_, interface_names_[0], &led_values_[0]);
-  auto led_g = std::make_shared<hardware_interface::CommandInterface>(
-    device_name_, interface_names_[1], &led_values_[1]);
-  auto led_b = std::make_shared<hardware_interface::CommandInterface>(
-    device_name_, interface_names_[2], &led_values_[2]);
+  auto led_r =
+    std::make_shared<hardware_interface::CommandInterface>(device_name_, interface_names_[0]);
+  auto led_g =
+    std::make_shared<hardware_interface::CommandInterface>(device_name_, interface_names_[1]);
+  auto led_b =
+    std::make_shared<hardware_interface::CommandInterface>(device_name_, interface_names_[2]);
 
   // Create command interface vector in jumbled order
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
@@ -69,9 +69,9 @@ TEST_F(LedDeviceTest, validate_all)
   const std::vector<double> test_led_values_cmd = {0.1, 0.2, 0.3};
   EXPECT_TRUE(led_device_->set_values(test_led_values_cmd));
 
-  EXPECT_EQ(led_values_[0], test_led_values_cmd[0]);
-  EXPECT_EQ(led_values_[1], test_led_values_cmd[1]);
-  EXPECT_EQ(led_values_[2], test_led_values_cmd[2]);
+  EXPECT_EQ(led_r->get_optional().value(), test_led_values_cmd[0]);
+  EXPECT_EQ(led_g->get_optional().value(), test_led_values_cmd[1]);
+  EXPECT_EQ(led_b->get_optional().value(), test_led_values_cmd[2]);
 
   // Validate correct assignment from message
   std_msgs::msg::ColorRGBA temp_message;
@@ -81,9 +81,9 @@ TEST_F(LedDeviceTest, validate_all)
   EXPECT_TRUE(led_device_->set_values_from_message(temp_message));
 
   double float_tolerance = 1e-6;
-  EXPECT_NEAR(led_values_[0], test_led_values_cmd[0], float_tolerance);
-  EXPECT_NEAR(led_values_[1], test_led_values_cmd[1], float_tolerance);
-  EXPECT_NEAR(led_values_[2], test_led_values_cmd[2], float_tolerance);
+  EXPECT_NEAR(led_r->get_optional().value(), test_led_values_cmd[0], float_tolerance);
+  EXPECT_NEAR(led_g->get_optional().value(), test_led_values_cmd[1], float_tolerance);
+  EXPECT_NEAR(led_b->get_optional().value(), test_led_values_cmd[2], float_tolerance);
 
   // Release command interfaces
   led_device_->release_interfaces();
