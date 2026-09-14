@@ -707,7 +707,16 @@ void ControllerManager::init_controller_manager()
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
 
-  init_robot_description_callback();
+  get_parameter("robot_description", robot_description_);
+  if (robot_description_.empty())
+  {
+    init_robot_description_callback();
+  }
+  else
+  {
+    RCLCPP_INFO(get_logger(), "Loading robot description from parameter....");
+    init_resource_manager(robot_description_);
+  }
 }
 
 void ControllerManager::initialize_parameters()
