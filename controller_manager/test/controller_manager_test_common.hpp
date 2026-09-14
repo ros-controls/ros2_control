@@ -15,7 +15,9 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
+#include <atomic>
 #include <chrono>
+#include <future>
 #include <memory>
 #include <string>
 #include <thread>
@@ -149,16 +151,7 @@ class TestControllerManagerSrvs
 public:
   TestControllerManagerSrvs() {}
 
-  ~TestControllerManagerSrvs() override
-  {
-    RCLCPP_DEBUG(cm_->get_logger(), "Stopping controller manager updater thread");
-    stop_runner_ = true;
-    if (cm_rt_thread_.joinable())
-    {
-      cm_rt_thread_.join();
-    }
-    RCLCPP_DEBUG(cm_->get_logger(), "Controller manager updater thread stopped");
-  }
+  ~TestControllerManagerSrvs() override { stopCmRtThread(); }
 
   void SetUp() override
   {
@@ -210,23 +203,44 @@ public:
   template <typename T>
   std::shared_ptr<typename T::Response> call_service_and_wait(
     rclcpp::Client<T> & client, std::shared_ptr<typename T::Request> request,
-    rclcpp::Executor & service_executor, bool update_controller_while_spinning = false)
+    rclcpp::Executor & service_executor)
   {
     EXPECT_TRUE(client.wait_for_service(std::chrono::milliseconds(500)));
     auto result = client.async_send_request(request);
-    // Wait for the result.
-    if (update_controller_while_spinning)
+    EXPECT_EQ(
+      service_executor.spin_until_future_complete(result), rclcpp::FutureReturnCode::SUCCESS);
+    return result.get();
+  }
+
+  void stopCmRtThread()
+  {
+    if (!cm_rt_thread_.joinable())
     {
-      while (service_executor.spin_until_future_complete(result, std::chrono::milliseconds(50)) !=
-             rclcpp::FutureReturnCode::SUCCESS)
-      {
-        cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
-      }
+      return;
     }
-    else
+    RCLCPP_DEBUG(cm_->get_logger(), "Stopping controller manager updater thread");
+    stop_runner_ = true;
+    cm_rt_thread_.join();
+    stop_runner_ = false;
+    RCLCPP_DEBUG(cm_->get_logger(), "Controller manager updater thread stopped");
+  }
+
+  controller_interface::return_type switch_controller_with_update(
+    const std::vector<std::string> & activate_controllers,
+    const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap)
+  {
+    stopCmRtThread();
+    auto result = std::async(
+      std::launch::async,
+      [&]
+      {
+        return cm_->switch_controller(
+          activate_controllers, deactivate_controllers, strictness, activate_asap,
+          rclcpp::Duration(0, 0));
+      });
+    while (result.wait_for(std::chrono::milliseconds(10)) != std::future_status::ready)
     {
-      EXPECT_EQ(
-        service_executor.spin_until_future_complete(result), rclcpp::FutureReturnCode::SUCCESS);
+      cm_->update(time_, PERIOD);
     }
     return result.get();
   }
