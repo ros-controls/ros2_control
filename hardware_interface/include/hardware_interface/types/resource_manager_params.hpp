@@ -94,8 +94,10 @@ struct ResourceManagerParams
    * @brief The update rate (in Hz) of the ControllerManager.
    * This can be used by ResourceManager to configure asynchronous hardware components
    * or for other timing considerations.
+   * @note Must be set to a non-zero value before calling load_and_initialize_components,
+   * otherwise initialization will fail.
    */
-  unsigned int update_rate = 100;
+  unsigned int update_rate = 0;
 
   /**
    * @brief If true, the ResourceManager will catch exceptions thrown during the different
