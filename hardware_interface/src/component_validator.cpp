@@ -33,6 +33,28 @@ bool validate_urdf_with_xsd(const std::string & urdf, const std::string & xsd_fi
     return false;
   }
 
+  // Check that the root element contains a ros2_control tag
+  const xmlNodePtr doc_root = xmlDocGetRootElement(doc);
+  if (doc_root && std::strcmp(reinterpret_cast<const char *>(doc_root->name), "robot") == 0)
+  {
+    bool has_ros2_control = false;
+    for (xmlNodePtr child = doc_root->children; child; child = child->next)
+    {
+      if (
+        child->type == XML_ELEMENT_NODE &&
+        std::strcmp(reinterpret_cast<const char *>(child->name), "ros2_control") == 0)
+      {
+        has_ros2_control = true;
+        break;
+      }
+    }
+    if (!has_ros2_control)
+    {
+      xmlFreeDoc(doc);
+      throw std::runtime_error("no 'ros2_control' tag found in the URDF");
+    }
+  }
+
   // Load XSD
   xmlSchemaParserCtxtPtr schemaCtx = xmlSchemaNewParserCtxt(xsd_file_path.c_str());
   if (!schemaCtx)

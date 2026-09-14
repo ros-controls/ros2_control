@@ -66,8 +66,8 @@ TEST_F(TestComponentValidator, empty_urdf_throws_error)
   const std::string empty_urdf =
     "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns:xacro=\"http://www.ros.org\"></robot>";
 
-  ASSERT_TRUE(validate_urdf_with_xsd(
-    empty_urdf, xsd_file_path));  // TODO(Sachin): discuss if should use throw error
+  ASSERT_THROW(validate_urdf_with_xsd(empty_urdf, xsd_file_path), std::runtime_error);
+
 }
 
 TEST_F(TestComponentValidator, validate_valid_urdf_with_xsd)
