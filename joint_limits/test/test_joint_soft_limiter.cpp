@@ -427,7 +427,8 @@ TEST_F(JointSoftLimiterTest, check_desired_velocity_only_cases)
     EXPECT_FALSE(desired_state_.has_jerk());
   };
 
-  const double outside_limits_pos = 5.0 + (2.0 * joint_limits::internal::POSITION_BOUNDS_TOLERANCE);
+  const double position_tolerance = joint_limits::internal::position_bounds_tolerance(limits);
+  const double outside_limits_pos = 5.0 + (2.0 * position_tolerance);
   auto test_generic_cases = [&](const joint_limits::SoftJointLimits & soft_joint_limits)
   {
     ASSERT_TRUE(Init(limits, soft_joint_limits));
