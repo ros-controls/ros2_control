@@ -42,6 +42,7 @@ target_include_directories(hardware_interface PUBLIC
   ${pal_statistics_INCLUDE_DIRS}
 )
 target_link_libraries(hardware_interface PUBLIC
+                      ament_index_cpp::ament_index_cpp
                       rclcpp::rclcpp
                       rclcpp_lifecycle::rclcpp_lifecycle
                       pluginlib::pluginlib
