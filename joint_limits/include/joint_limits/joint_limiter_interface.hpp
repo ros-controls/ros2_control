@@ -51,6 +51,7 @@ public:
    * @param[in] param_itf node parameters interface object to access parameters.
    * @param[in] logging_itf node logging interface to log if error happens.
    * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -133,7 +134,14 @@ public:
   }
 
   /**
-   * @brief Initialize joints from directly provided names and limits.
+   * @brief Initialize joints from directly provided names, limits, and soft joint limits.
+   *
+   * @param[in] joint_names names of the joints to initialize.
+   * @param[in] joint_limits hard joint limits for each joint.
+   * @param[in] soft_joint_limits soft joint limits for each joint.
+   * @param[in] param_itf node parameters interface for parameter handling.
+   * @param[in] logging_itf node logging interface for logging.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -164,6 +172,11 @@ public:
    * @brief Initialize joints using a Node pointer.
    *
    * For details see other init method.
+   *
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] node pointer to the node to get parameter and logging interfaces.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names, const rclcpp::Node::SharedPtr & node,
@@ -178,6 +191,12 @@ public:
    * @brief Initialize joints using a LifecycleNode pointer.
    *
    * For details see other init method.
+   *
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] lifecycle_node pointer to the lifecycle node to get parameter and logging
+   * interfaces.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -189,6 +208,12 @@ public:
       lifecycle_node->get_node_logging_interface(), robot_description_topic);
   }
 
+  /**
+   * @brief Configure the joint limiter with the current joint states.
+   *
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @return true if configuration was successful, otherwise false.
+   */
   virtual bool configure(const JointLimitsStateDataType & current_joint_states)
   {
     return on_configure(current_joint_states);
@@ -212,6 +237,9 @@ public:
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
+  /**
+   * @brief Reset the internal states of the joint limiter.
+   */
   virtual void reset_internals() = 0;
 
 protected:
@@ -227,15 +255,16 @@ protected:
    * @brief Configure the limiter's internal states and libraries.
    *
    * Implementation-specific configuration of limiter's internal states and libraries.
-   * @return true if initialization was successful, otherwise false.
+   *
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @return true if configuration was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
   /**
    * @brief Enforce joint limits for multiple dependent physical quantities.
    *
-   * Filter-specific implementation of the joint limits enforce algorithm for multiple dependent
-   * physical quantities.
+   * Filter-specific implementation of the joint limits enforce algorithm.
    *
    * @param[in] current_joint_states current joint states a robot is in.
    * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
