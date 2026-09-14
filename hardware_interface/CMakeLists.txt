@@ -89,6 +89,9 @@ if(BUILD_TESTING)
   ament_add_gmock(test_lexical_casts test/test_lexical_casts.cpp)
   target_link_libraries(test_lexical_casts hardware_interface)
 
+  ament_add_gmock(test_statistics_types test/test_statistics_types.cpp)
+  target_link_libraries(test_statistics_types hardware_interface)
+
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_link_libraries(test_component_interfaces hardware_interface ros2_control_test_assets::ros2_control_test_assets)
 
