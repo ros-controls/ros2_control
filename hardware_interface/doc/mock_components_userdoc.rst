@@ -21,6 +21,7 @@ Features:
 
   - support for mimic joints, which is parsed from the URDF (see the `URDF wiki <http://wiki.ros.org/urdf/XML/joint>`__)
   - mirroring commands to states with and without offset
+  - dynamic toggling of command propagation at runtime via ROS service ``~/set_command_propagation`` (type ``std_srvs/srv/SetBool``)
   - fake command interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
   - fake gpio interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
 
@@ -82,6 +83,7 @@ disable_commands (optional; boolean; default: false)
   Disables mirroring commands to states.
   This option is helpful to simulate an erroneous connection to the hardware when nothing breaks, but suddenly there is no feedback from a hardware interface.
   Or it can help you to test your setup when the hardware is running without feedback, i.e., in open loop configuration.
+  Can also be toggled dynamically at runtime via the ROS service ``~/set_command_propagation`` (type ``std_srvs/srv/SetBool``).
 
 mock_gpio_commands (optional; boolean; default: false)
   Creates fake command interfaces for faking GPIO states with an external command.
