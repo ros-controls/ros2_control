@@ -4,7 +4,7 @@ name: Rolling Binary Build
 
 on:
   workflow_dispatch:
-  pull_request: &event
+  push:
     branches:
       - master
     paths:
@@ -18,7 +18,6 @@ on:
       - '**/CMakeLists.txt'
       - 'ros2_control-not-released.rolling.repos'
       - 'ros2_control-not-released.lyrical.repos'
-  push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * MON-FRI'

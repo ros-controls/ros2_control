@@ -4,7 +4,7 @@ name: Rolling Windows Semi-Binary Build
 
 on:
   workflow_dispatch:
-  pull_request: &event
+  push:
     branches:
       - master
     paths:
@@ -17,7 +17,6 @@ on:
       - 'ros2_control.rolling.repos'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-  push: *event
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
@@ -29,5 +28,5 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-win-build.yml@master
     with:
       ros_distro: rolling
-      pixi_dependencies: typeguard jinja2 boost compilers cpp-expected
+      pixi_dependencies: typeguard jinja2 libboost-devel compilers cpp-expected
       upstream_workspace: ros2_control.rolling.repos

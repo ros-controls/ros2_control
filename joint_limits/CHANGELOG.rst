@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
 6.9.0 (2026-08-10)
 ------------------
 * Fix joint limits namespace wording (`#3445 <https://github.com/ros-controls/ros2_control/issues/3445>`_)

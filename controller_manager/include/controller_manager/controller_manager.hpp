@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -561,6 +562,8 @@ private:
 
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
+  /// Lock-free snapshot of the overrun warning setting used by the real-time loop.
+  std::atomic_bool overruns_print_warnings_{true};
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
