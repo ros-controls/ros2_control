@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/controller_spec.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "controller_manager_test_common.hpp"
@@ -23,6 +24,7 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/parameter.hpp"
+#include "test_controller/test_controller.hpp"
 
 using ::testing::_;
 using ::testing::Return;
@@ -396,4 +398,93 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
       {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
+}
+
+// Regression test for https://github.com/ros-controls/ros2_control/issues/3444
+//
+// Deactivating a hardware component through the service has to have the same
+// effect on the controllers that depend on it as a hardware self-deactivation
+// does: the controllers must be stopped so that they no longer run and no
+// longer keep the interfaces claimed.
+TEST_F(
+  TestControllerManagerHWManagementSrvsWithoutParams,
+  manual_hardware_deactivation_stops_dependent_controllers)
+{
+  using lifecycle_msgs::msg::State;
+
+  // Load the test controller with real interfaces so that it actually claims
+  // hardware: joint1/position lives on TestActuatorHardware, joint2/velocity on
+  // TestSystemHardware. Without interfaces the controller would not depend on any
+  // hardware component and the scenario could not be reproduced.
+  hardware_interface::ControllerInfo controller_info;
+  controller_info.name = test_controller::TEST_CONTROLLER_NAME;
+  controller_info.type = test_controller::TEST_CONTROLLER_CLASS_NAME;
+  controller_info.parameters_files = {
+    std::string(PARAMETERS_FILE_PATH) + "test_hardware_management_controller_params.yaml"};
+
+  auto loaded_ctrl = std::make_shared<test_controller::TestController>();
+  controller_manager::ControllerSpec controller_spec;
+  controller_spec.info = controller_info;
+  controller_spec.c = loaded_ctrl;
+  ASSERT_NE(nullptr, cm_->add_controller(controller_spec));
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)));
+
+  // The controller is active and has claimed the hardware interfaces.
+  {
+    auto loaded = cm_->get_loaded_controllers();
+    ASSERT_EQ(1u, loaded.size());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, loaded[0].c->get_lifecycle_state().id());
+  }
+
+  // Manually deactivate the actuator hardware that provides joint1.
+  ASSERT_TRUE(set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, INACTIVE));
+
+  // The hardware is inactive ...
+  list_hardware_components_and_check(
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{true, true}, {true, true, true}},                                      // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // Nothing must stay claimed once the owning hardware is inactive.
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // ... and the controller that depended on it must have been stopped, so it
+  // no longer claims the interfaces and no longer runs.
+  {
+    auto loaded = cm_->get_loaded_controllers();
+    ASSERT_EQ(1u, loaded.size());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, loaded[0].c->get_lifecycle_state().id())
+      << "Controller stayed active although its hardware component was deactivated";
+  }
+
+  // Re-activating the hardware must not silently re-activate the controller:
+  // the user has to switch it on explicitly.
+  ASSERT_TRUE(set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, ACTIVE));
+  {
+    auto loaded = cm_->get_loaded_controllers();
+    ASSERT_EQ(1u, loaded.size());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, loaded[0].c->get_lifecycle_state().id())
+      << "Controller was re-activated implicitly by hardware activation";
+  }
 }
