@@ -1,0 +1,9 @@
+test_controller_name:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    command_interfaces:
+      - "joint1/position"
+      - "joint2/velocity"
+    state_interfaces:
+      - "joint1/position"
+      - "joint2/position"

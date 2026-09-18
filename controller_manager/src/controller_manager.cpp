@@ -3246,6 +3246,33 @@ void ControllerManager::set_hardware_component_state_srv_cb(
     hw_components_info = resource_manager_->get_components_status();
     response->state.id = hw_components_info[request->name].state.id();
     response->state.label = hw_components_info[request->name].state.label();
+
+    // If the hardware component is no longer active, the controllers that depend on it have to be
+    // deactivated, otherwise they keep running without the interfaces they require. This mirrors
+    // what the read()/write() paths do when hardware reports a self-deactivation.
+    const bool hardware_is_active = hw_components_info[request->name].state.id() ==
+                                    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+    if (response->ok && !hardware_is_active)
+    {
+      std::vector<std::string> controllers_to_deactivate =
+        resource_manager_->get_cached_controllers_to_hardware(request->name);
+      if (!controllers_to_deactivate.empty())
+      {
+        RCLCPP_INFO(
+          get_logger(),
+          "Deactivating the following controllers as their hardware component '%s' is no longer "
+          "active: [ %s]",
+          request->name.c_str(),
+          rt_buffer_.get_concatenated_string(controllers_to_deactivate).c_str());
+
+        std::vector<ControllerSpec> & rt_controller_list =
+          rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+        perform_hardware_command_mode_change(
+          rt_controller_list, {}, controllers_to_deactivate,
+          "set_hardware_component_state service");
+        deactivate_controllers(rt_controller_list, controllers_to_deactivate);
+      }
+    }
   }
   else
   {
