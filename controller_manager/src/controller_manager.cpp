@@ -3298,8 +3298,9 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
+    // No command mode switch is attempted here: the failed component has already been driven to
+    // the error state and its command interfaces have been removed from the available list, so
+    // any switch on them would be rejected before it could reach the component.
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -3622,8 +3623,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-    perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
+    // No command mode switch is attempted here for the same reason as in the read() error path:
+    // the component is already in the error state and its command interfaces are unavailable.
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
