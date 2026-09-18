@@ -3250,27 +3250,39 @@ void ControllerManager::set_hardware_component_state_srv_cb(
     // If the hardware component is no longer active, the controllers that depend on it have to be
     // deactivated, otherwise they keep running without the interfaces they require. This mirrors
     // what the read()/write() paths do when hardware reports a self-deactivation.
+    //
+    // The switch is requested through switch_controller() and not by calling
+    // deactivate_controllers() directly: this service callback does not run in the real-time
+    // thread, so the request has to go through the regular handshake which makes the real-time
+    // loop skip the controllers while they are being deactivated.
     const bool hardware_is_active = hw_components_info[request->name].state.id() ==
                                     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
     if (response->ok && !hardware_is_active)
     {
-      std::vector<std::string> controllers_to_deactivate =
+      const std::vector<std::string> controllers_to_deactivate =
         resource_manager_->get_cached_controllers_to_hardware(request->name);
       if (!controllers_to_deactivate.empty())
       {
         RCLCPP_INFO(
           get_logger(),
           "Deactivating the following controllers as their hardware component '%s' is no longer "
-          "active: [ %s]",
+          "active: [%s]",
           request->name.c_str(),
-          rt_buffer_.get_concatenated_string(controllers_to_deactivate).c_str());
+          fmt::format("{}", fmt::join(controllers_to_deactivate, ", ")).c_str());
 
-        std::vector<ControllerSpec> & rt_controller_list =
-          rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-        perform_hardware_command_mode_change(
-          rt_controller_list, {}, controllers_to_deactivate,
-          "set_hardware_component_state service");
-        deactivate_controllers(rt_controller_list, controllers_to_deactivate);
+        // BEST_EFFORT: controllers that are already inactive are dropped from the request instead
+        // of failing the whole switch, which matches the behaviour of the read()/write() paths.
+        if (
+          switch_controller(
+            {}, controllers_to_deactivate,
+            controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
+          controller_interface::return_type::OK)
+        {
+          RCLCPP_ERROR(
+            get_logger(),
+            "Failed to deactivate the controllers that depend on the hardware component '%s'",
+            request->name.c_str());
+        }
       }
     }
   }
