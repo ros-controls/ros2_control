@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <atomic>
 #include <cstddef>
 #include <cstdlib>
 #include <memory>
@@ -95,20 +94,39 @@ std::string make_urdf(const std::size_t number_of_joints)
 ///
 /// These are declared at namespace scope and the operator new below reads them directly rather than
 /// through accessors, because they are also used by the alternate fixture further down.
-std::atomic<bool> g_counting{false};
-std::atomic<std::size_t> g_allocations{0};
-std::atomic<std::size_t> g_bytes{0};
+///
+/// They are thread_local on purpose. The process runs background threads (the RMW/DDS threads, the
+/// executor thread of the node) that allocate on their own schedule, and a process-wide counter
+/// attributes those allocations to whichever measured cycle happens to overlap them. That makes the
+/// test fail under machine load even though the measured code allocated nothing.
+///
+/// The trade-off is the mirror image: only allocations made by the thread that runs the measured
+/// loop are seen. That is the correct scope here because both measured loops are synchronous
+/// calls on the test thread, and the set_value() case additionally asserts that the limiter really
+/// clamped the command, so a silently not-instrumented path cannot pass unnoticed. If one of these
+/// paths ever moves to another thread, the counter has to move with it.
+///
+/// Plain counters suffice for the same reason: each measured cycle runs on a single thread.
+thread_local bool g_counting{false};
+thread_local std::size_t g_allocations{0};
+thread_local std::size_t g_bytes{0};
 }  // namespace
 
 // Replacing the global allocation functions lets the test observe every allocation made through
 // them, no matter which shared library performs it. This matters here because the measured loop
 // runs inside libhardware_interface.so and not in the test binary itself.
+//
+// This interposition is an ELF property. On Windows a DLL resolves operator new through its own
+// import table, so the replacement below does not reach libhardware_interface.dll and the counters
+// would stay at zero regardless of what the measured code does. The assertions above would then
+// pass without observing anything. Windows CI does not run this test, but a local run there does
+// not validate the fix either.
 void * operator new(std::size_t size)
 {
-  if (g_counting.load(std::memory_order_relaxed))
+  if (g_counting)
   {
-    g_allocations.fetch_add(1, std::memory_order_relaxed);
-    g_bytes.fetch_add(size, std::memory_order_relaxed);
+    ++g_allocations;
+    g_bytes += size;
   }
   void * const ptr = std::malloc(size == 0u ? 1u : size);
   if (ptr == nullptr)
@@ -189,14 +207,14 @@ protected:
       resource_manager_->enforce_command_limits(period_);
     }
 
-    g_allocations.store(0u, std::memory_order_relaxed);
-    g_bytes.store(0u, std::memory_order_relaxed);
+    g_allocations = 0u;
+    g_bytes = 0u;
     for (std::size_t i = 0; i < kMeasuredCycles; ++i)
     {
       command_joints_out_of_range(command_out_of_range);
-      g_counting.store(true, std::memory_order_relaxed);
+      g_counting = true;
       resource_manager_->enforce_command_limits(period_);
-      g_counting.store(false, std::memory_order_relaxed);
+      g_counting = false;
     }
   }
 
@@ -208,13 +226,13 @@ protected:
       run_read_write();
     }
 
-    g_allocations.store(0u, std::memory_order_relaxed);
-    g_bytes.store(0u, std::memory_order_relaxed);
+    g_allocations = 0u;
+    g_bytes = 0u;
     for (std::size_t i = 0; i < kMeasuredCycles; ++i)
     {
-      g_counting.store(true, std::memory_order_relaxed);
+      g_counting = true;
       run_read_write();
-      g_counting.store(false, std::memory_order_relaxed);
+      g_counting = false;
     }
   }
 
@@ -237,7 +255,7 @@ protected:
     {
       return;
     }
-    g_counting.store(false, std::memory_order_relaxed);
+    g_counting = false;
     for (auto & interface : claimed_interfaces_)
     {
       ASSERT_TRUE(interface.set_value(kOutOfRangeCommand));
@@ -262,9 +280,9 @@ TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate)
 {
   measure_enforce_command_limits(false);
 
-  EXPECT_EQ(g_allocations.load(), 0u)
-    << "enforce_command_limits() performed " << g_allocations.load() << " heap allocations over "
-    << kMeasuredCycles << " cycles (" << g_bytes.load() << " bytes) with " << kJointCount
+  EXPECT_EQ(g_allocations, 0u)
+    << "enforce_command_limits() performed " << g_allocations << " heap allocations over "
+    << kMeasuredCycles << " cycles (" << g_bytes << " bytes) with " << kJointCount
     << " long-named joints. This path runs in the real-time update loop and must not touch the "
     << "heap in steady state.";
 }
@@ -275,9 +293,9 @@ TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate_when_clamping)
 {
   measure_enforce_command_limits(true);
 
-  EXPECT_EQ(g_allocations.load(), 0u)
-    << "enforce_command_limits() performed " << g_allocations.load() << " heap allocations over "
-    << kMeasuredCycles << " clamping cycles (" << g_bytes.load() << " bytes) with " << kJointCount
+  EXPECT_EQ(g_allocations, 0u)
+    << "enforce_command_limits() performed " << g_allocations << " heap allocations over "
+    << kMeasuredCycles << " clamping cycles (" << g_bytes << " bytes) with " << kJointCount
     << " long-named joints. This path runs in the real-time update loop and must not touch the "
     << "heap in steady state.";
 }
@@ -290,9 +308,9 @@ TEST_F(RTAllocationTest, read_and_write_do_not_allocate)
 {
   measure_read_write();
 
-  EXPECT_EQ(g_allocations.load(), 0u)
-    << "read()/write() performed " << g_allocations.load() << " heap allocations over "
-    << kMeasuredCycles << " cycles (" << g_bytes.load() << " bytes). This path runs in the "
+  EXPECT_EQ(g_allocations, 0u)
+    << "read()/write() performed " << g_allocations << " heap allocations over " << kMeasuredCycles
+    << " cycles (" << g_bytes << " bytes). This path runs in the "
     << "real-time update loop and must not touch the heap in steady state.";
 }
 
@@ -355,16 +373,16 @@ protected:
       }
     }
 
-    g_allocations.store(0u, std::memory_order_relaxed);
-    g_bytes.store(0u, std::memory_order_relaxed);
+    g_allocations = 0u;
+    g_bytes = 0u;
     for (std::size_t i = 0; i < kMeasuredCycles; ++i)
     {
-      g_counting.store(true, std::memory_order_relaxed);
+      g_counting = true;
       for (auto & interface : claimed_interfaces_)
       {
         ASSERT_TRUE(interface.set_value(kInRangeCommand));
       }
-      g_counting.store(false, std::memory_order_relaxed);
+      g_counting = false;
     }
   }
 
@@ -387,10 +405,10 @@ TEST_F(CommandLimiterBindingTest, set_value_with_bound_limiter_does_not_allocate
 {
   measure_set_value();
 
-  EXPECT_EQ(g_allocations.load(), 0u)
-    << "LoanedCommandInterface::set_value() performed " << g_allocations.load()
-    << " heap allocations over " << kMeasuredCycles << " cycles (" << g_bytes.load()
-    << " bytes) with " << kJointCount
+  EXPECT_EQ(g_allocations, 0u)
+    << "LoanedCommandInterface::set_value() performed " << g_allocations
+    << " heap allocations over " << kMeasuredCycles << " cycles (" << g_bytes << " bytes) with "
+    << kJointCount
     << " long-named joints and the command limiter bound to the interfaces. The limiter callback "
     << "runs on the controller thread and must not touch the heap in steady state.";
 }
