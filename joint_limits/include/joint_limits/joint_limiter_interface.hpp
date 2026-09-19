@@ -24,7 +24,7 @@
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 namespace joint_limits
@@ -93,7 +93,7 @@ public:
           node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
           joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
       }
-      updated_limits_.writeFromNonRT(joint_limits_);
+      updated_limits_.set(joint_limits_);
 
       auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
       {
@@ -111,7 +111,7 @@ public:
 
         if (changed)
         {
-          updated_limits_.writeFromNonRT(updated_joint_limits);
+          updated_limits_.set(updated_joint_limits);
           RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
         }
 
@@ -148,7 +148,7 @@ public:
     soft_joint_limits_ = soft_joint_limits;
     node_param_itf_ = param_itf;
     node_logging_itf_ = logging_itf;
-    updated_limits_.writeFromNonRT(joint_limits_);
+    updated_limits_.set(joint_limits_);
 
     if ((number_of_joints_ != joint_limits_.size()) && has_logging_interface())
     {
@@ -208,8 +208,16 @@ public:
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
-    joint_limits_ = *(updated_limits_.readFromRT());
-    return on_enforce(current_joint_states, desired_joint_states, dt);
+    auto joint_limits_op = updated_limits_.try_get();
+    if (joint_limits_op.has_value())
+    {
+      joint_limits_ = joint_limits_op.value();
+      return on_enforce(current_joint_states, desired_joint_states, dt);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   virtual void reset_internals() = 0;
@@ -275,7 +283,7 @@ protected:
 
 private:
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_;
-  realtime_tools::RealtimeBuffer<std::vector<joint_limits::JointLimits>> updated_limits_;
+  realtime_tools::RealtimeThreadSafeBox<std::vector<joint_limits::JointLimits>> updated_limits_;
 };
 
 }  // namespace joint_limits
