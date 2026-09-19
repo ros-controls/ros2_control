@@ -1,0 +1,235 @@
+// Copyright 2026 ros2_control Developers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <atomic>
+#include <cstddef>
+#include <cstdlib>
+#include <memory>
+#include <new>
+#include <string>
+#include <vector>
+
+#include "gmock/gmock.h"
+#include "hardware_interface/resource_manager.hpp"
+#include "hardware_interface/types/resource_manager_params.hpp"
+#include "rclcpp/logging.hpp"
+#include "rclcpp/node.hpp"
+
+namespace
+{
+/// Number of joints used by the allocation test.
+constexpr std::size_t kJointCount = 8;
+
+/// Name of the hardware component declared in the generated URDF.
+const char * const kHardwareName = "RTAllocationSystem";
+
+/// Joint names are longer than the 15 characters of the libstdc++ small string buffer.
+std::string joint_name(const std::size_t index)
+{
+  return "shoulder_pan_joint_" + std::to_string(index);
+}
+
+/// Build a URDF with long-named revolute joints that declare position limits.
+/**
+ * The joint names are deliberately longer than the libstdc++ small string optimization buffer, so
+ * that composing "<joint_name>/<interface_type>" for the interface lookups cannot stay on the
+ * stack. This is what turns a lookup that looks allocation-free into a heap allocation per call.
+ */
+std::string make_urdf(const std::size_t number_of_joints)
+{
+  std::string urdf = R"(<?xml version="1.0"?>
+<robot name="rt_allocation_test">
+  <link name="base_link"/>
+)";
+  for (std::size_t i = 0; i < number_of_joints; ++i)
+  {
+    urdf += "  <link name=\"link_" + std::to_string(i) + "\"/>\n";
+  }
+  for (std::size_t i = 0; i < number_of_joints; ++i)
+  {
+    const std::string parent_link = i == 0 ? "base_link" : "link_" + std::to_string(i - 1);
+    urdf += "  <joint name=\"" + joint_name(i) + "\" type=\"revolute\">\n";
+    urdf += "    <parent link=\"" + parent_link + "\"/>\n";
+    urdf += "    <child link=\"link_" + std::to_string(i) + "\"/>\n";
+    urdf += "    <limit lower=\"-1.0\" upper=\"1.0\" effort=\"10.0\" velocity=\"1.0\"/>\n";
+    urdf += "  </joint>\n";
+  }
+  urdf += "  <ros2_control name=\"" + std::string(kHardwareName) + "\" type=\"system\">\n";
+  urdf += R"(    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+    </hardware>
+)";
+  for (std::size_t i = 0; i < number_of_joints; ++i)
+  {
+    urdf += "    <joint name=\"" + joint_name(i) + "\">\n";
+    urdf += R"(      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+)";
+  }
+  urdf += "  </ros2_control>\n</robot>\n";
+  return urdf;
+}
+
+/// Heap allocations observed through the replaced global operator new.
+std::atomic<bool> g_counting{false};
+std::atomic<std::size_t> g_allocations{0};
+std::atomic<std::size_t> g_bytes{0};
+}  // namespace
+
+// Replacing the global allocation functions lets the test observe every allocation made through
+// them, no matter which shared library performs it. This matters here because the measured loop
+// runs inside libhardware_interface.so and not in the test binary itself.
+void * operator new(std::size_t size)
+{
+  if (g_counting.load(std::memory_order_relaxed))
+  {
+    g_allocations.fetch_add(1, std::memory_order_relaxed);
+    g_bytes.fetch_add(size, std::memory_order_relaxed);
+  }
+  void * const ptr = std::malloc(size == 0u ? 1u : size);
+  if (ptr == nullptr)
+  {
+    throw std::bad_alloc();
+  }
+  return ptr;
+}
+
+void * operator new[](std::size_t size) { return ::operator new(size); }
+
+void operator delete(void * ptr) noexcept { std::free(ptr); }
+
+void operator delete[](void * ptr) noexcept { std::free(ptr); }
+
+void operator delete(void * ptr, std::size_t) noexcept { std::free(ptr); }
+
+void operator delete[](void * ptr, std::size_t) noexcept { std::free(ptr); }
+
+class RTAllocationTest : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    const std::string urdf = make_urdf(kJointCount);
+    hardware_interface::ResourceManagerParams params;
+    params.robot_description = urdf;
+    params.clock = node_.get_clock();
+    params.logger = node_.get_logger();
+    params.update_rate = 100u;
+    params.activate_all = true;
+
+    // `load = true` so that the URDF passed through params is loaded and initialized here.
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
+    // The controller manager does this when 'enforce_command_limits' is enabled, which is the
+    // default. Without imported joint limiters this test would measure an empty loop.
+    resource_manager_->import_joint_limiters(urdf);
+    ASSERT_TRUE(resource_manager_->are_components_initialized());
+
+    for (std::size_t i = 0; i < kJointCount; ++i)
+    {
+      claimed_interfaces_.push_back(
+        resource_manager_->claim_command_interface(joint_name(i) + "/position"));
+    }
+  }
+
+  /// Run the real-time limit enforcement loop and return how much heap memory it used.
+  /**
+   * @param command_out_of_range when true, every joint is commanded out of its limits before each
+   * cycle, so that the limiter clamps the command and the write-back path is exercised as well.
+   */
+  void measure_enforce_command_limits(const bool command_out_of_range)
+  {
+    // Warm up: the first cycles may allocate one-off state, and the reusable buffers only reach
+    // their steady-state capacity here. Only the steady state is relevant for real-time.
+    for (std::size_t i = 0; i < kWarmUpCycles; ++i)
+    {
+      command_joints_out_of_range(command_out_of_range);
+      resource_manager_->enforce_command_limits(period_);
+    }
+
+    g_allocations.store(0u, std::memory_order_relaxed);
+    g_bytes.store(0u, std::memory_order_relaxed);
+    for (std::size_t i = 0; i < kMeasuredCycles; ++i)
+    {
+      command_joints_out_of_range(command_out_of_range);
+      g_counting.store(true, std::memory_order_relaxed);
+      resource_manager_->enforce_command_limits(period_);
+      g_counting.store(false, std::memory_order_relaxed);
+    }
+  }
+
+  /// Write an out-of-range command to every joint, or nothing when @p enabled is false.
+  /**
+   * Setting a command interface runs the command limiter that is bound to it, which is a separate
+   * code path from enforce_command_limits(). Counting is paused around it so that the measurement
+   * only attributes the allocations of enforce_command_limits() itself.
+   */
+  void command_joints_out_of_range(const bool enabled)
+  {
+    if (!enabled)
+    {
+      return;
+    }
+    g_counting.store(false, std::memory_order_relaxed);
+    for (auto & interface : claimed_interfaces_)
+    {
+      ASSERT_TRUE(interface.set_value(kOutOfRangeCommand));
+    }
+  }
+
+  static constexpr double kOutOfRangeCommand = 5.0;
+  static constexpr std::size_t kWarmUpCycles = 50u;
+  static constexpr std::size_t kMeasuredCycles = 200u;
+
+  rclcpp::Node node_{"rt_allocations_test"};
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_interfaces_;
+  const rclcpp::Duration period_ = rclcpp::Duration::from_seconds(0.01);
+};
+
+// enforce_command_limits() runs on every single real-time control cycle, so it must not allocate.
+// Before this was fixed, update_joint_limiters_data() and update_joint_limiters_commands()
+// composed the "<joint_name>/<interface_type>" lookup keys with fmt::format(), which allocates for
+// every stored joint whose name does not fit into the std::string small string buffer.
+TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate)
+{
+  measure_enforce_command_limits(false);
+
+  EXPECT_EQ(g_allocations.load(), 0u)
+    << "enforce_command_limits() performed " << g_allocations.load() << " heap allocations over "
+    << kMeasuredCycles << " cycles (" << g_bytes.load() << " bytes) with " << kJointCount
+    << " long-named joints. This path runs in the real-time update loop and must not touch the "
+    << "heap in steady state.";
+}
+
+// Same as above, but with the commands out of range so that the limiter clamps them and the
+// command write-back path (update_joint_limiters_commands()) is taken on every cycle.
+TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate_when_clamping)
+{
+  measure_enforce_command_limits(true);
+
+  EXPECT_EQ(g_allocations.load(), 0u)
+    << "enforce_command_limits() performed " << g_allocations.load() << " heap allocations over "
+    << kMeasuredCycles << " clamping cycles (" << g_bytes.load() << " bytes) with " << kJointCount
+    << " long-named joints. This path runs in the real-time update loop and must not touch the "
+    << "heap in steady state.";
+}
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  testing::InitGoogleMock(&argc, argv);
+  return RUN_ALL_TESTS();
+}

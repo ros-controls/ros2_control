@@ -863,8 +863,7 @@ public:
     const auto fill_interface_data =
       [&](const std::string & interface_type, std::optional<double> & value)
     {
-      const std::string interface_name =
-        fmt::format(FMT_COMPILE("{}/{}"), joint_name, interface_type);
+      const std::string & interface_name = make_interface_key(joint_name, interface_type);
       if (interface_map.find(interface_name) != interface_map.end())
       {
         // If the command interface is not claimed, then the value is not set (or) if the
@@ -898,8 +897,8 @@ public:
     const auto set_interface_command =
       [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      const std::string interface_name =
-        fmt::format(FMT_COMPILE("{}/{}"), limited_command.joint_name, interface_type);
+      const std::string & interface_name =
+        make_interface_key(limited_command.joint_name, interface_type);
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
         auto itf_handle = interface_map.at(interface_name);
@@ -1434,6 +1433,29 @@ public:
   // To be used with the prepare and perform command switch for the hardware components
   std::vector<std::string> start_interfaces_buffer_;
   std::vector<std::string> stop_interfaces_buffer_;
+
+  /// Compose "<joint_name>/<interface_type>" without allocating on the hot path.
+  /**
+   * The joint limiter enforcement runs in the real-time update loop, so composing these
+   * keys with fmt::format() allocates on every call whenever the key does not fit into
+   * the std::string small-string buffer. Appending to a buffer that is reused keeps its
+   * capacity, so after the first call no allocation happens.
+   *
+   * The buffer is thread_local because this is reached both from the real-time update
+   * loop (ResourceManager::enforce_command_limits) and from controller threads via
+   * LoanedCommandInterface::set_value() for async controllers, which may run
+   * concurrently.
+   */
+  static const std::string & make_interface_key(
+    const std::string & joint_name, const std::string & interface_type)
+  {
+    static thread_local std::string buffer;
+    buffer.clear();
+    buffer += joint_name;
+    buffer += '/';
+    buffer += interface_type;
+    return buffer;
+  }
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
