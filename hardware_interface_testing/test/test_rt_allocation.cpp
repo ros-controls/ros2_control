@@ -34,6 +34,9 @@ constexpr std::size_t kJointCount = 8;
 /// Name of the hardware component declared in the generated URDF.
 const char * const kHardwareName = "RTAllocationSystem";
 
+/// Name of the hardware group. Also longer than the small string buffer, see above.
+const char * const kGroupName = "RTAllocationHardwareGroupWithLongName";
+
 /// Joint names are longer than the 15 characters of the libstdc++ small string buffer.
 std::string joint_name(const std::size_t index)
 {
@@ -68,8 +71,12 @@ std::string make_urdf(const std::size_t number_of_joints)
   urdf += "  <ros2_control name=\"" + std::string(kHardwareName) + "\" type=\"system\">\n";
   urdf += R"(    <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-    </hardware>
 )";
+  // Both the hardware name and the group name exceed the small string buffer, so read()/write()
+  // allocate when they copy them into a local std::string instead of binding to the returned
+  // const reference.
+  urdf += "      <group>" + std::string(kGroupName) + "</group>\n";
+  urdf += "    </hardware>\n";
   for (std::size_t i = 0; i < number_of_joints; ++i)
   {
     urdf += "    <joint name=\"" + joint_name(i) + "\">\n";
@@ -170,6 +177,31 @@ protected:
     }
   }
 
+  /// Run the real-time read()/write() cycle and return how much heap memory it used.
+  void measure_read_write()
+  {
+    for (std::size_t i = 0; i < kWarmUpCycles; ++i)
+    {
+      run_read_write();
+    }
+
+    g_allocations.store(0u, std::memory_order_relaxed);
+    g_bytes.store(0u, std::memory_order_relaxed);
+    for (std::size_t i = 0; i < kMeasuredCycles; ++i)
+    {
+      g_counting.store(true, std::memory_order_relaxed);
+      run_read_write();
+      g_counting.store(false, std::memory_order_relaxed);
+    }
+  }
+
+  void run_read_write()
+  {
+    const auto now = node_.get_clock()->now();
+    resource_manager_->read(now, period_);
+    resource_manager_->write(now, period_);
+  }
+
   /// Write an out-of-range command to every joint, or nothing when @p enabled is false.
   /**
    * Setting a command interface runs the command limiter that is bound to it, which is a separate
@@ -225,6 +257,20 @@ TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate_when_clamping)
     << kMeasuredCycles << " clamping cycles (" << g_bytes.load() << " bytes) with " << kJointCount
     << " long-named joints. This path runs in the real-time update loop and must not touch the "
     << "heap in steady state.";
+}
+
+// read() and write() run in the real-time update loop as well. They copied the component name and
+// the component group name out of the accessors, which return a const reference, into a local
+// std::string on every cycle. With a name longer than the small string buffer that is one heap
+// allocation per component per cycle for read() and one more for write().
+TEST_F(RTAllocationTest, read_and_write_do_not_allocate)
+{
+  measure_read_write();
+
+  EXPECT_EQ(g_allocations.load(), 0u)
+    << "read()/write() performed " << g_allocations.load() << " heap allocations over "
+    << kMeasuredCycles << " cycles (" << g_bytes.load() << " bytes). This path runs in the "
+    << "real-time update loop and must not touch the heap in steady state.";
 }
 
 int main(int argc, char ** argv)

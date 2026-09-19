@@ -2435,7 +2435,7 @@ HardwareReadWriteStatus ResourceManager::read(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
-      const std::string component_name = component.get_name();
+      const std::string & component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
@@ -2478,7 +2478,7 @@ HardwareReadWriteStatus ResourceManager::read(
           hardware_component_info.read_statistics->periodicity.update_statistics(
             read_statistics_collector.periodicity);
         }
-        const auto component_group = component.get_group_name();
+        const std::string & component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
@@ -2536,7 +2536,7 @@ HardwareReadWriteStatus ResourceManager::write(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
-      const std::string component_name = component.get_name();
+      const std::string & component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
@@ -2580,7 +2580,7 @@ HardwareReadWriteStatus ResourceManager::write(
           hardware_component_info.write_statistics->periodicity.update_statistics(
             write_statistics_collector.periodicity);
         }
-        const auto component_group = component.get_group_name();
+        const std::string & component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
