@@ -43,7 +43,7 @@ bool JointSoftLimiter::on_enforce(
     soft_joint_limits = soft_joint_limits_[0];
   }
 
-  const std::string joint_name = joint_names_[0];
+  const std::string & joint_name = joint_names_[0];
 
   if (!prev_command_.has_data())
   {

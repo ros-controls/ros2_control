@@ -57,7 +57,7 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   }
 
   const auto joint_limits = joint_limits_[0];
-  const std::string joint_name = joint_names_[0];
+  const std::string & joint_name = joint_names_[0];
   // The following conditional filling is needed for cases of having certain information missing
   if (!prev_command_.has_data())
   {
