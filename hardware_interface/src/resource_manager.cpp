@@ -1454,6 +1454,10 @@ public:
    * loop (ResourceManager::enforce_command_limits) and from controller threads via
    * LoanedCommandInterface::set_value() for async controllers, which may run
    * concurrently.
+   *
+   * The returned reference points into that shared buffer and therefore stays valid only
+   * until the next call on the same thread. Every caller has to consume it before that,
+   * which the current call sites do.
    */
   static const std::string & make_interface_key(
     const std::string & joint_name, const std::string & interface_type)
