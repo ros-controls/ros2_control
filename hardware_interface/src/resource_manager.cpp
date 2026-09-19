@@ -1100,7 +1100,16 @@ public:
                                     double value, bool & is_limited) -> double
           {
             is_limited = false;
-            joint_limits::JointInterfacesCommandLimiterData data;
+            // Reuse the scratch buffers across calls. Building this object and writing the joint
+            // name into its five strings allocates one heap block per string whenever the name
+            // does not fit into the small string buffer, and this closure runs on the controller
+            // thread through LoanedCommandInterface::set_value(). The buffer is thread_local and
+            // fully reset before use, so that a value left behind for another command interface
+            // of the same joint (or by a different controller thread) cannot leak into this call:
+            // update_joint_limiters_data() only writes the interfaces that are actually present,
+            // so the remaining fields must start out empty.
+            static thread_local joint_limits::JointInterfacesCommandLimiterData data;
+            data = joint_limits::JointInterfacesCommandLimiterData();
             data.set_joint_name(joint_name);
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)

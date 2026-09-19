@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/resource_manager_params.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 
@@ -91,6 +92,9 @@ std::string make_urdf(const std::size_t number_of_joints)
 }
 
 /// Heap allocations observed through the replaced global operator new.
+///
+/// These are declared at namespace scope and the operator new below reads them directly rather than
+/// through accessors, because they are also used by the alternate fixture further down.
 std::atomic<bool> g_counting{false};
 std::atomic<std::size_t> g_allocations{0};
 std::atomic<std::size_t> g_bytes{0};
@@ -116,6 +120,15 @@ void * operator new(std::size_t size)
 
 void * operator new[](std::size_t size) { return ::operator new(size); }
 
+// The replaced deallocation functions below hand the pointers back to std::free(), which is the
+// counterpart of the std::malloc() in operator new above. Once the surrounding std::make_unique()
+// calls are inlined, GCC pairs the two replacements and reports the std::free() as a mismatched
+// delete, which it is not. Silence that single false positive instead of restructuring the test.
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 11
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#endif
+
 void operator delete(void * ptr) noexcept { std::free(ptr); }
 
 void operator delete[](void * ptr) noexcept { std::free(ptr); }
@@ -123,6 +136,10 @@ void operator delete[](void * ptr) noexcept { std::free(ptr); }
 void operator delete(void * ptr, std::size_t) noexcept { std::free(ptr); }
 
 void operator delete[](void * ptr, std::size_t) noexcept { std::free(ptr); }
+
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 11
+#pragma GCC diagnostic pop
+#endif
 
 class RTAllocationTest : public ::testing::Test
 {
@@ -141,6 +158,12 @@ protected:
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
     // The controller manager does this when 'enforce_command_limits' is enabled, which is the
     // default. Without imported joint limiters this test would measure an empty loop.
+    //
+    // Note the ordering: importing after the components are loaded is enough for
+    // enforce_command_limits(), which looks the limiters up by joint name, but it does *not* bind
+    // the per-interface limiter callback, because bind_command_limiter_to_interface() only runs
+    // while the command interfaces are added during load_and_initialize_components(). See the
+    // CommandLimiterBindingTest below for the ordering the controller manager actually uses.
     resource_manager_->import_joint_limiters(urdf);
     ASSERT_TRUE(resource_manager_->are_components_initialized());
 
@@ -271,6 +294,105 @@ TEST_F(RTAllocationTest, read_and_write_do_not_allocate)
     << "read()/write() performed " << g_allocations.load() << " heap allocations over "
     << kMeasuredCycles << " cycles (" << g_bytes.load() << " bytes). This path runs in the "
     << "real-time update loop and must not touch the heap in steady state.";
+}
+
+/// Reproduces the ordering the controller manager uses, which is the opposite of the fixture
+/// above: the joint limiters are imported *before* the hardware is loaded, so that
+/// bind_command_limiter_to_interface() runs over the real command interfaces and
+/// LoanedCommandInterface::set_value() goes through the limiter.
+/**
+ * \sa ControllerManager::init_resource_manager(), which calls import_joint_limiters() and only
+ *     afterwards load_and_initialize_components().
+ */
+class CommandLimiterBindingTest : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    const std::string urdf = make_urdf(kJointCount);
+    hardware_interface::ResourceManagerParams params;
+    params.robot_description = urdf;
+    params.clock = node_.get_clock();
+    params.logger = node_.get_logger();
+    params.update_rate = 100u;
+    // The controller manager activates the components itself, after loading them, so the
+    // ResourceManager must not do it here.
+    params.activate_all = false;
+
+    resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
+    // Same order as the controller manager: limiters first, then load and activate.
+    resource_manager_->import_joint_limiters(urdf);
+    ASSERT_TRUE(resource_manager_->load_and_initialize_components(params));
+
+    rclcpp_lifecycle::State active(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+    ASSERT_EQ(
+      resource_manager_->set_component_state(kHardwareName, active),
+      hardware_interface::return_type::OK);
+
+    for (std::size_t i = 0; i < kJointCount; ++i)
+    {
+      claimed_interfaces_.push_back(
+        resource_manager_->claim_command_interface(joint_name(i) + "/position"));
+    }
+
+    // Setting an out-of-range command must come back clamped, which proves the limiter callback is
+    // actually bound. Without this the test would measure a pass-through set_value() and pass for
+    // the wrong reason.
+    ASSERT_TRUE(claimed_interfaces_.front().set_value(kOutOfRangeCommand));
+    ASSERT_LT(claimed_interfaces_.front().get_optional().value(), kOutOfRangeCommand);
+  }
+
+  /// Call set_value() on every claimed interface and return how much heap memory it used.
+  void measure_set_value()
+  {
+    // Warm up: the reusable scratch buffer inside the limiter callback reaches its steady-state
+    // capacity here.
+    for (std::size_t i = 0; i < kWarmUpCycles; ++i)
+    {
+      for (auto & interface : claimed_interfaces_)
+      {
+        ASSERT_TRUE(interface.set_value(kInRangeCommand));
+      }
+    }
+
+    g_allocations.store(0u, std::memory_order_relaxed);
+    g_bytes.store(0u, std::memory_order_relaxed);
+    for (std::size_t i = 0; i < kMeasuredCycles; ++i)
+    {
+      g_counting.store(true, std::memory_order_relaxed);
+      for (auto & interface : claimed_interfaces_)
+      {
+        ASSERT_TRUE(interface.set_value(kInRangeCommand));
+      }
+      g_counting.store(false, std::memory_order_relaxed);
+    }
+  }
+
+  static constexpr double kOutOfRangeCommand = 5.0;
+  static constexpr double kInRangeCommand = 0.5;
+  static constexpr std::size_t kWarmUpCycles = 50u;
+  static constexpr std::size_t kMeasuredCycles = 200u;
+
+  rclcpp::Node node_{"command_limiter_binding_test"};
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_interfaces_;
+};
+
+// LoanedCommandInterface::set_value() runs on the controller thread, but with the limiter bound it
+// still reaches the same real-time limit enforcement code. It used to build a fresh
+// JointInterfacesCommandLimiterData on every call, and set_joint_name() writes the joint name into
+// five std::string members, so a name longer than the small string buffer cost five heap
+// allocations per joint and call.
+TEST_F(CommandLimiterBindingTest, set_value_with_bound_limiter_does_not_allocate)
+{
+  measure_set_value();
+
+  EXPECT_EQ(g_allocations.load(), 0u)
+    << "LoanedCommandInterface::set_value() performed " << g_allocations.load()
+    << " heap allocations over " << kMeasuredCycles << " cycles (" << g_bytes.load()
+    << " bytes) with " << kJointCount
+    << " long-named joints and the command limiter bound to the interfaces. The limiter callback "
+    << "runs on the controller thread and must not touch the heap in steady state.";
 }
 
 int main(int argc, char ** argv)
