@@ -2412,7 +2412,8 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       std::this_thread::yield();
     }
     RCLCPP_INFO(get_logger(), "Requested controller switch from non-realtime loop");
-    // This should work as the realtime thread operation is read-only operation
+    // Safe from this thread: manage_switch() uses the list the realtime thread already announced,
+    // without re-announcing it, and controllers_lock_ is held here.
     manage_switch();
   }
 
@@ -2586,8 +2587,8 @@ void ControllerManager::deactivate_controllers(
 void ControllerManager::switch_chained_mode(
   const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode)
 {
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+  // Called from manage_switch(), which can run on the non-RT thread: must not re-announce.
+  std::vector<ControllerSpec> & rt_controller_list = rt_controllers_wrapper_.get_used_by_rt_list();
 
   for (const auto & controller_name : chained_mode_switch_list)
   {
@@ -3332,8 +3333,8 @@ void ControllerManager::manage_switch()
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
       .count();
 
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+  // This can run on the non-RT thread (activate_asap == false), so it must not re-announce.
+  std::vector<ControllerSpec> & rt_controller_list = rt_controllers_wrapper_.get_used_by_rt_list();
 
   const auto deact_start_time = std::chrono::steady_clock::now();
   deactivate_controllers(rt_controller_list, switch_params_.deactivate_request);
@@ -3713,7 +3714,13 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
 std::vector<ControllerSpec> &
 ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()
 {
-  used_by_realtime_controllers_index_ = updated_controllers_index_;
+  const int index = updated_controllers_index_;
+  used_by_realtime_controllers_index_ = index;
+  return controllers_lists_[index];
+}
+
+std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_used_by_rt_list()
+{
   return controllers_lists_[used_by_realtime_controllers_index_];
 }
 
