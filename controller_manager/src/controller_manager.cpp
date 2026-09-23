@@ -3293,8 +3293,30 @@ void ControllerManager::set_hardware_component_state_srv_cb(
   // unknown target does not stop the controllers before the component is told about it.
   if (hardware_is_active && is_hardware_deactivation_target(target_state))
   {
-    const std::vector<std::string> controllers_to_deactivate =
-      resource_manager_->get_cached_controllers_to_hardware(request->name);
+    // The cache in the resource manager is append-only, so it also lists controllers that have
+    // been deactivated or unloaded again in the meantime. Only the ones that are active right now
+    // are of interest: switch_controller() reports an unknown controller name as an error and
+    // BEST_EFFORT only tolerates that while the request still holds another name, so a stale entry
+    // would make the service refuse to touch a component that nothing is using any more.
+    const auto active_controllers_of_component = [this, &request]()
+    {
+      const auto & loaded_controllers = get_loaded_controllers();
+      std::vector<std::string> controller_names;
+      for (const auto & controller_name :
+           resource_manager_->get_cached_controllers_to_hardware(request->name))
+      {
+        auto controller_it = std::find_if(
+          loaded_controllers.begin(), loaded_controllers.end(),
+          std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+        if (controller_it != loaded_controllers.end() && is_controller_active(*controller_it->c))
+        {
+          controller_names.push_back(controller_name);
+        }
+      }
+      return controller_names;
+    };
+
+    const auto controllers_to_deactivate = active_controllers_of_component();
     if (!controllers_to_deactivate.empty())
     {
       RCLCPP_INFO(

@@ -493,6 +493,45 @@ TEST_F(
 // only after the transition does not work for those: prepare_command_mode_switch() rejects a
 // stop-request for interfaces that are no longer available, which leaves the controllers active on
 // interfaces that no longer exist.
+// The controller -> hardware cache in the resource manager is append-only, so it still holds
+// controllers that have been unloaded in the meantime. Those must not stop the service from
+// deactivating the component: nothing depends on it any more.
+TEST_F(
+  TestControllerManagerHWManagementSrvsWithoutParams,
+  manual_hardware_deactivation_after_controller_unload)
+{
+  load_and_activate_controller_with_interfaces();
+
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)));
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->unload_controller(test_controller::TEST_CONTROLLER_NAME));
+  ASSERT_EQ(0u, cm_->get_loaded_controllers().size());
+
+  EXPECT_TRUE(set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, INACTIVE));
+
+  list_hardware_components_and_check(
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{true, true}, {true, true, true}},                                      // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+}
+
 TEST_F(
   TestControllerManagerHWManagementSrvsWithoutParams,
   manual_hardware_unconfigured_stops_dependent_controllers)
