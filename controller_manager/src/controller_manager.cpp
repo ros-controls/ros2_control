@@ -90,6 +90,29 @@ inline bool is_controller_active(
   return is_controller_active(*controller);
 }
 
+/// Returns true if the target state takes a hardware component out of the active state.
+/**
+ * The target state is given either by its id or, if the id is not set, by its label, see
+ * ResourceManager::set_component_state().
+ */
+bool is_hardware_deactivation_target(const rclcpp_lifecycle::State & target_state)
+{
+  using lifecycle_msgs::msg::State;
+  switch (target_state.id())
+  {
+    case State::PRIMARY_STATE_INACTIVE:
+    case State::PRIMARY_STATE_UNCONFIGURED:
+    case State::PRIMARY_STATE_FINALIZED:
+      return true;
+    case State::PRIMARY_STATE_UNKNOWN:
+      return target_state.label() == hardware_interface::lifecycle_state_names::INACTIVE ||
+             target_state.label() == hardware_interface::lifecycle_state_names::UNCONFIGURED ||
+             target_state.label() == hardware_interface::lifecycle_state_names::FINALIZED;
+    default:
+      return false;
+  }
+}
+
 bool controller_name_compare(const controller_manager::ControllerSpec & a, const std::string & name)
 {
   return a.info.name == name;
@@ -3234,64 +3257,85 @@ void ControllerManager::set_hardware_component_state_srv_cb(
   RCLCPP_DEBUG(get_logger(), "set hardware component state '%s'", request->name.c_str());
 
   auto hw_components_info = resource_manager_->get_components_status();
-  if (hw_components_info.find(request->name) != hw_components_info.end())
-  {
-    rclcpp_lifecycle::State target_state(
-      request->target_state.id,
-      // the ternary operator is needed because label in State constructor cannot be an empty string
-      request->target_state.label.empty() ? "-" : request->target_state.label);
-    response->ok =
-      (resource_manager_->set_component_state(request->name, target_state) ==
-       hardware_interface::return_type::OK);
-    hw_components_info = resource_manager_->get_components_status();
-    response->state.id = hw_components_info[request->name].state.id();
-    response->state.label = hw_components_info[request->name].state.label();
-
-    // If the hardware component is no longer active, the controllers that depend on it have to be
-    // deactivated, otherwise they keep running without the interfaces they require. This mirrors
-    // what the read()/write() paths do when hardware reports a self-deactivation.
-    //
-    // The switch is requested through switch_controller() and not by calling
-    // deactivate_controllers() directly: this service callback does not run in the real-time
-    // thread, so the request has to go through the regular handshake which makes the real-time
-    // loop skip the controllers while they are being deactivated.
-    const bool hardware_is_active = hw_components_info[request->name].state.id() ==
-                                    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
-    if (response->ok && !hardware_is_active)
-    {
-      const std::vector<std::string> controllers_to_deactivate =
-        resource_manager_->get_cached_controllers_to_hardware(request->name);
-      if (!controllers_to_deactivate.empty())
-      {
-        RCLCPP_INFO(
-          get_logger(),
-          "Deactivating the following controllers as their hardware component '%s' is no longer "
-          "active: [%s]",
-          request->name.c_str(),
-          fmt::format("{}", fmt::join(controllers_to_deactivate, ", ")).c_str());
-
-        // BEST_EFFORT: controllers that are already inactive are dropped from the request instead
-        // of failing the whole switch, which matches the behaviour of the read()/write() paths.
-        if (
-          switch_controller(
-            {}, controllers_to_deactivate,
-            controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
-          controller_interface::return_type::OK)
-        {
-          RCLCPP_ERROR(
-            get_logger(),
-            "Failed to deactivate the controllers that depend on the hardware component '%s'",
-            request->name.c_str());
-        }
-      }
-    }
-  }
-  else
+  if (hw_components_info.find(request->name) == hw_components_info.end())
   {
     RCLCPP_ERROR(
       get_logger(), "hardware component with name '%s' does not exist", request->name.c_str());
     response->ok = false;
+    RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
+    return;
   }
+
+  rclcpp_lifecycle::State target_state(
+    request->target_state.id,
+    // the ternary operator is needed because label in State constructor cannot be an empty string
+    request->target_state.label.empty() ? "-" : request->target_state.label);
+
+  const bool hardware_is_active = hw_components_info[request->name].state.id() ==
+                                  lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+
+  // A component that is asked to leave the active state stops providing its interfaces, so the
+  // controllers that depend on it have to be deactivated. This mirrors what the read()/write()
+  // paths do when hardware reports a self-deactivation.
+  //
+  // The order matters: the controllers are stopped *before* the component is transitioned.
+  // Deactivating them afterwards does not work for the targets that drop the interfaces from the
+  // available list (unconfigured and finalized go through cleanup/shutdown), because
+  // prepare_command_mode_switch() rejects a stop-request for interfaces that are not available any
+  // more and the controllers stay active on interfaces that no longer exist. inactive happened to
+  // work only because deactivate_hardware() leaves the interfaces in place.
+  //
+  // The switch is requested through switch_controller() and not by calling deactivate_controllers()
+  // directly: this service callback does not run in the real-time thread, so the request has to go
+  // through the regular handshake which makes the real-time loop skip the controllers while they
+  // are being deactivated.
+  // Only the states that actually leave the active state are considered, so that an invalid or
+  // unknown target does not stop the controllers before the component is told about it.
+  if (hardware_is_active && is_hardware_deactivation_target(target_state))
+  {
+    const std::vector<std::string> controllers_to_deactivate =
+      resource_manager_->get_cached_controllers_to_hardware(request->name);
+    if (!controllers_to_deactivate.empty())
+    {
+      RCLCPP_INFO(
+        get_logger(),
+        "Deactivating the following controllers as their hardware component '%s' is leaving the "
+        "active state: [%s]",
+        request->name.c_str(),
+        fmt::format("{}", fmt::join(controllers_to_deactivate, ", ")).c_str());
+
+      // BEST_EFFORT: controllers that are already inactive are dropped from the request instead of
+      // failing the whole switch, which matches the behaviour of the read()/write() paths.
+      //
+      // The component is not transitioned when the controllers cannot be stopped, otherwise it
+      // would end up in the state this is meant to prevent: a component without interfaces that
+      // controllers still hold.
+      if (
+        switch_controller(
+          {}, controllers_to_deactivate,
+          controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
+        controller_interface::return_type::OK)
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Not changing the state of the hardware component '%s' as the controllers depending on "
+          "it could not be deactivated",
+          request->name.c_str());
+        response->ok = false;
+        response->state.id = hw_components_info[request->name].state.id();
+        response->state.label = hw_components_info[request->name].state.label();
+        RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
+        return;
+      }
+    }
+  }
+
+  response->ok =
+    (resource_manager_->set_component_state(request->name, target_state) ==
+     hardware_interface::return_type::OK);
+  hw_components_info = resource_manager_->get_components_status();
+  response->state.id = hw_components_info[request->name].state.id();
+  response->state.label = hw_components_info[request->name].state.label();
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
 }
