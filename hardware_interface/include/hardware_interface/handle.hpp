@@ -661,6 +661,13 @@ public:
     {
       std::function<double()> f = [this]()
       {
+        // The sampling runs on the introspection publisher thread while set_value() may write
+        // concurrently: take the shared lock (non-blocking) to synchronize with the writer.
+        std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
         if (value_ptr_)
         {
           return *value_ptr_;
@@ -749,6 +756,13 @@ public:
     {
       std::function<double()> f = [this]()
       {
+        // The sampling runs on the introspection publisher thread while set_value() may write
+        // concurrently: take the shared lock (non-blocking) to synchronize with the writer.
+        std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
         if (value_ptr_)
         {
           return *value_ptr_;
