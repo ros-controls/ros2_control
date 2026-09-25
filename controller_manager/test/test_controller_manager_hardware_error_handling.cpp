@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdarg>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <utility>
@@ -22,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rcutils/logging.h"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 #include "test_controller/test_controller.hpp"
 
@@ -37,6 +40,59 @@ using ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
+
+namespace
+{
+/// Substring of the log message that the fault deactivation paths must not produce.
+constexpr char MODE_SWITCH_ERROR_MESSAGE[] = "Error while attempting mode switch";
+
+/// Collects every log message of severity ERROR or higher while it is alive.
+class LogCapture
+{
+public:
+  LogCapture()
+  : previous_handler_(rcutils_logging_get_output_handler()), previous_messages_(messages())
+  {
+    messages().clear();
+    rcutils_logging_set_output_handler(&LogCapture::handler);
+  }
+
+  ~LogCapture()
+  {
+    rcutils_logging_set_output_handler(previous_handler_);
+    messages() = previous_messages_;
+  }
+
+  LogCapture(const LogCapture &) = delete;
+  LogCapture & operator=(const LogCapture &) = delete;
+
+  static std::vector<std::string> & messages()
+  {
+    static std::vector<std::string> captured_messages;
+    return captured_messages;
+  }
+
+private:
+  static void handler(
+    const rcutils_log_location_t * /*location*/, int severity, const char * /*name*/,
+    rcutils_time_point_value_t /*timestamp*/, const char * format, va_list * args)
+  {
+    if (severity < RCUTILS_LOG_SEVERITY_ERROR)
+    {
+      return;
+    }
+    char buffer[1024];
+    va_list args_copy;
+    va_copy(args_copy, *args);
+    vsnprintf(buffer, sizeof(buffer), format, args_copy);
+    va_end(args_copy);
+    messages().emplace_back(buffer);
+  }
+
+  rcutils_logging_output_handler_t previous_handler_;
+  std::vector<std::string> previous_messages_;
+};
+}  // namespace
 
 class TestControllerManagerWithTestableCM;
 
@@ -1046,6 +1102,65 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     EXPECT_GT(test_broadcaster_all->internal_counter, previous_counter_higher);
     EXPECT_GT(test_broadcaster_sensor->internal_counter, previous_counter_higher);
   }
+}
+
+TEST_P(TestControllerManagerWithTestableCM, no_mode_switch_error_on_hardware_read_error)
+{
+  const auto strictness = GetParam().strictness;
+  SetupAndConfigureControllers(strictness);
+
+  // Simulate error in read() on TEST_ACTUATOR_HARDWARE_NAME
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::READ_FAIL_VALUE;
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+
+  LogCapture log_capture;
+  EXPECT_NO_THROW(cm_->read(time_, PERIOD));
+
+  // The controllers tied to the failed component are still deactivated.
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_actuator->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_broadcaster_all->get_lifecycle_state().id());
+
+  // The failing component has already been torn down, so no mode switch is attempted and the
+  // misleading "Error while attempting mode switch" must not be logged.
+  EXPECT_THAT(
+    LogCapture::messages(),
+    ::testing::Not(::testing::Contains(::testing::HasSubstr(MODE_SWITCH_ERROR_MESSAGE))));
+  // The fault itself is still reported.
+  EXPECT_THAT(
+    LogCapture::messages(), ::testing::Contains(::testing::HasSubstr("resulted in an error")));
+}
+
+TEST_P(TestControllerManagerWithTestableCM, no_mode_switch_error_on_hardware_write_error)
+{
+  const auto strictness = GetParam().strictness;
+  SetupAndConfigureControllers(strictness);
+
+  // Simulate error in write() on TEST_ACTUATOR_HARDWARE_NAME
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+
+  LogCapture log_capture;
+  EXPECT_NO_THROW(cm_->write(time_, PERIOD));
+
+  // The controllers tied to the failed component are still deactivated.
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_actuator->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_broadcaster_all->get_lifecycle_state().id());
+
+  // Same as in the read() path: the switch would be rejected before reaching the component.
+  EXPECT_THAT(
+    LogCapture::messages(),
+    ::testing::Not(::testing::Contains(::testing::HasSubstr(MODE_SWITCH_ERROR_MESSAGE))));
+  // The fault itself is still reported.
+  EXPECT_THAT(
+    LogCapture::messages(), ::testing::Contains(::testing::HasSubstr("resulted in an error")));
 }
 
 INSTANTIATE_TEST_SUITE_P(
