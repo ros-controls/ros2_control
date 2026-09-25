@@ -107,18 +107,18 @@ controller_interface::return_type TestChainableController::update_reference_from
     }
   }
 
-  auto joint_commands = rt_command_ptr_.readFromRT();
+  auto joint_commands = rt_command_.get();
   for (size_t i = 0; i < ordered_exported_reference_interfaces_.size() &&
-                     i < reference_interface_names_.size() && i < (*joint_commands)->data.size();
+                     i < reference_interface_names_.size() && i < joint_commands.data.size();
        ++i)
   {
-    if (ordered_exported_reference_interfaces_[i]->set_value((*joint_commands)->data[i]))
+    if (ordered_exported_reference_interfaces_[i]->set_value(joint_commands.data[i]))
     {
       RCLCPP_INFO(
         get_node()->get_logger(),
         "Updated value of reference interface '%s' after applying external input is %f",
         (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
-        (*joint_commands)->data[i]);
+        joint_commands.data[i]);
     }
   }
 
@@ -176,28 +176,28 @@ CallbackReturn TestChainableController::on_configure(
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
     "~/commands", rclcpp::SystemDefaultsQoS(),
-    [this](const CmdType::SharedPtr msg)
+    [this](const CmdType msg)
     {
-      auto joint_commands = rt_command_ptr_.readFromNonRT();
+      auto joint_commands = rt_command_.get();
 
-      if (msg->data.size() == (*joint_commands)->data.size())
+      if (msg.data.size() == joint_commands.data.size())
       {
-        rt_command_ptr_.writeFromNonRT(msg);
+        rt_command_.set(msg);
       }
       else
       {
         RCLCPP_ERROR_THROTTLE(
           get_node()->get_logger(), *get_node()->get_clock(), 1000,
           "command size (%zu) does not match number of reference interfaces (%zu)",
-          (*joint_commands)->data.size(), reference_interface_names_.size());
+          joint_commands.data.size(), reference_interface_names_.size());
       }
     });
 
-  auto msg = std::make_shared<CmdType>();
-  msg->data.resize(reference_interface_names_.size());
+  auto msg = CmdType();
+  msg.data.resize(reference_interface_names_.size());
   RCLCPP_INFO(
-    get_node()->get_logger(), "Initialized command message with size %zu", msg->data.size());
-  rt_command_ptr_.writeFromNonRT(msg);
+    get_node()->get_logger(), "Initialized command message with size %zu", msg.data.size());
+  rt_command_.set(msg);
 
   return CallbackReturn::SUCCESS;
 }
@@ -208,14 +208,14 @@ CallbackReturn TestChainableController::on_activate(
   verify_internal_lifecycle_id(get_lifecycle_id(), get_lifecycle_state().id());
   if (!is_in_chained_mode())
   {
-    auto msg = rt_command_ptr_.readFromRT();
+    auto msg = rt_command_.get();
     for (size_t i = 0; i < ordered_exported_reference_interfaces_.size(); i++)
     {
       RCLCPP_INFO(
         get_node()->get_logger(),
         "The index i : %zu and the size %zu and the message is of size : %zu", i,
-        ordered_exported_reference_interfaces_.size(), (*msg)->data.size());
-      (*msg)->data[i] = ordered_exported_reference_interfaces_[i]->get_optional().value();
+        ordered_exported_reference_interfaces_.size(), msg.data.size());
+      msg.data[i] = ordered_exported_reference_interfaces_[i]->get_optional().value();
     }
   }
 

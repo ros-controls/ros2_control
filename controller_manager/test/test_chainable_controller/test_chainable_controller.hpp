@@ -21,7 +21,7 @@
 
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "rclcpp/subscription.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 #include "semantic_components/imu_sensor.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
@@ -90,7 +90,7 @@ public:
   std::vector<std::string> state_interfaces_to_export_ = {};
   std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
-  realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
+  realtime_tools::RealtimeThreadSafeBox<CmdType> rt_command_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
 };
 
