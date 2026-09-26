@@ -28,27 +28,17 @@
 
 namespace
 {
-/// Number of joints used by the allocation test.
 constexpr std::size_t kJointCount = 8;
-
-/// Name of the hardware component declared in the generated URDF.
 const char * const kHardwareName = "RTAllocationSystem";
-
-/// Name of the hardware group. Also longer than the small string buffer, see above.
 const char * const kGroupName = "RTAllocationHardwareGroupWithLongName";
 
-/// Joint names are longer than the 15 characters of the libstdc++ small string buffer.
+// Longer than the libstdc++ small string buffer on purpose: composing the interface lookup keys
+// only allocates when the name does not fit into it.
 std::string joint_name(const std::size_t index)
 {
   return "shoulder_pan_joint_" + std::to_string(index);
 }
 
-/// Build a URDF with long-named revolute joints that declare position limits.
-/**
- * The joint names are deliberately longer than the libstdc++ small string optimization buffer, so
- * that composing "<joint_name>/<interface_type>" for the interface lookups cannot stay on the
- * stack. This is what turns a lookup that looks allocation-free into a heap allocation per call.
- */
 std::string make_urdf(const std::size_t number_of_joints)
 {
   std::string urdf = R"(<?xml version="1.0"?>
@@ -72,9 +62,6 @@ std::string make_urdf(const std::size_t number_of_joints)
   urdf += R"(    <hardware>
       <plugin>mock_components/GenericSystem</plugin>
 )";
-  // Both the hardware name and the group name exceed the small string buffer, so read()/write()
-  // allocate when they copy them into a local std::string instead of binding to the returned
-  // const reference.
   urdf += "      <group>" + std::string(kGroupName) + "</group>\n";
   urdf += "    </hardware>\n";
   for (std::size_t i = 0; i < number_of_joints; ++i)
@@ -90,37 +77,20 @@ std::string make_urdf(const std::size_t number_of_joints)
   return urdf;
 }
 
-/// Heap allocations observed through the replaced global operator new.
-///
-/// These are declared at namespace scope and the operator new below reads them directly rather than
-/// through accessors, because they are also used by the alternate fixture further down.
-///
-/// They are thread_local on purpose. The process runs background threads (the RMW/DDS threads, the
-/// executor thread of the node) that allocate on their own schedule, and a process-wide counter
-/// attributes those allocations to whichever measured cycle happens to overlap them. That makes the
-/// test fail under machine load even though the measured code allocated nothing.
-///
-/// The trade-off is the mirror image: only allocations made by the thread that runs the measured
-/// loop are seen. That is the correct scope here because both measured loops are synchronous
-/// calls on the test thread, and the set_value() case additionally asserts that the limiter really
-/// clamped the command, so a silently not-instrumented path cannot pass unnoticed. If one of these
-/// paths ever moves to another thread, the counter has to move with it.
-///
-/// Plain counters suffice for the same reason: each measured cycle runs on a single thread.
+// thread_local: the RMW/DDS and executor threads allocate on their own schedule, and a
+// process-wide counter would attribute those to whichever measured cycle overlapped them. Only
+// the thread running the measured loop is counted here, which is where both loops run.
 thread_local bool g_counting{false};
 thread_local std::size_t g_allocations{0};
 thread_local std::size_t g_bytes{0};
 }  // namespace
 
-// Replacing the global allocation functions lets the test observe every allocation made through
-// them, no matter which shared library performs it. This matters here because the measured loop
-// runs inside libhardware_interface.so and not in the test binary itself.
+// Interposing the global allocation functions catches allocations made inside
+// libhardware_interface.so, which is where the measured loop runs.
 //
-// This interposition is an ELF property. On Windows a DLL resolves operator new through its own
-// import table, so the replacement below does not reach libhardware_interface.dll and the counters
-// would stay at zero regardless of what the measured code does. The assertions above would then
-// pass without observing anything. Windows CI does not run this test, but a local run there does
-// not validate the fix either.
+// ELF only: on Windows a DLL resolves operator new through its own import table, so this does not
+// reach libhardware_interface.dll and the counters stay at zero. A local Windows run therefore
+// does not validate the fix.
 void * operator new(std::size_t size)
 {
   if (g_counting)
@@ -138,10 +108,9 @@ void * operator new(std::size_t size)
 
 void * operator new[](std::size_t size) { return ::operator new(size); }
 
-// The replaced deallocation functions below hand the pointers back to std::free(), which is the
-// counterpart of the std::malloc() in operator new above. Once the surrounding std::make_unique()
-// calls are inlined, GCC pairs the two replacements and reports the std::free() as a mismatched
-// delete, which it is not. Silence that single false positive instead of restructuring the test.
+// std::free() is the counterpart of the std::malloc() above. Once the surrounding
+// std::make_unique() calls are inlined, GCC pairs the two replacements and reports a mismatched
+// delete that is not one.
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 11
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
@@ -172,16 +141,13 @@ protected:
     params.update_rate = 100u;
     params.activate_all = true;
 
-    // `load = true` so that the URDF passed through params is loaded and initialized here.
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, true);
-    // The controller manager does this when 'enforce_command_limits' is enabled, which is the
-    // default. Without imported joint limiters this test would measure an empty loop.
-    //
-    // Note the ordering: importing after the components are loaded is enough for
-    // enforce_command_limits(), which looks the limiters up by joint name, but it does *not* bind
-    // the per-interface limiter callback, because bind_command_limiter_to_interface() only runs
-    // while the command interfaces are added during load_and_initialize_components(). See the
-    // CommandLimiterBindingTest below for the ordering the controller manager actually uses.
+
+    // Importing after the components are loaded is enough for enforce_command_limits(), which
+    // looks the limiters up by joint name. It does not bind the per-interface limiter callback:
+    // bind_command_limiter_to_interface() only runs while the command interfaces are added during
+    // load_and_initialize_components(). CommandLimiterBindingTest below uses the ordering the
+    // controller manager actually applies.
     resource_manager_->import_joint_limiters(urdf);
     ASSERT_TRUE(resource_manager_->are_components_initialized());
 
@@ -192,15 +158,11 @@ protected:
     }
   }
 
-  /// Run the real-time limit enforcement loop and return how much heap memory it used.
-  /**
-   * @param command_out_of_range when true, every joint is commanded out of its limits before each
-   * cycle, so that the limiter clamps the command and the write-back path is exercised as well.
-   */
+  /// @param command_out_of_range command every joint out of its limits each cycle, so the limiter
+  /// clamps and the write-back path runs too.
   void measure_enforce_command_limits(const bool command_out_of_range)
   {
-    // Warm up: the first cycles may allocate one-off state, and the reusable buffers only reach
-    // their steady-state capacity here. Only the steady state is relevant for real-time.
+    // The reusable buffers reach their steady-state capacity here; only that is relevant.
     for (std::size_t i = 0; i < kWarmUpCycles; ++i)
     {
       command_joints_out_of_range(command_out_of_range);
@@ -218,7 +180,6 @@ protected:
     }
   }
 
-  /// Run the real-time read()/write() cycle and return how much heap memory it used.
   void measure_read_write()
   {
     for (std::size_t i = 0; i < kWarmUpCycles; ++i)
@@ -243,12 +204,8 @@ protected:
     resource_manager_->write(now, period_);
   }
 
-  /// Write an out-of-range command to every joint, or nothing when @p enabled is false.
-  /**
-   * Setting a command interface runs the command limiter that is bound to it, which is a separate
-   * code path from enforce_command_limits(). Counting is paused around it so that the measurement
-   * only attributes the allocations of enforce_command_limits() itself.
-   */
+  /// set_value() runs the bound command limiter, a separate path from enforce_command_limits(), so
+  /// counting is paused around it.
   void command_joints_out_of_range(const bool enabled)
   {
     if (!enabled)
@@ -272,10 +229,8 @@ protected:
   const rclcpp::Duration period_ = rclcpp::Duration::from_seconds(0.01);
 };
 
-// enforce_command_limits() runs on every single real-time control cycle, so it must not allocate.
-// Before this was fixed, update_joint_limiters_data() and update_joint_limiters_commands()
-// composed the "<joint_name>/<interface_type>" lookup keys with fmt::format(), which allocates for
-// every stored joint whose name does not fit into the std::string small string buffer.
+// The lookup keys were composed with fmt::format() on every cycle, which allocates for every joint
+// whose name does not fit into the std::string small string buffer.
 TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate)
 {
   measure_enforce_command_limits(false);
@@ -287,8 +242,7 @@ TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate)
     << "heap in steady state.";
 }
 
-// Same as above, but with the commands out of range so that the limiter clamps them and the
-// command write-back path (update_joint_limiters_commands()) is taken on every cycle.
+// Same, with the limiter clamping and the command write-back path taken.
 TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate_when_clamping)
 {
   measure_enforce_command_limits(true);
@@ -300,10 +254,8 @@ TEST_F(RTAllocationTest, enforce_command_limits_does_not_allocate_when_clamping)
     << "heap in steady state.";
 }
 
-// read() and write() run in the real-time update loop as well. They copied the component name and
-// the component group name out of the accessors, which return a const reference, into a local
-// std::string on every cycle. With a name longer than the small string buffer that is one heap
-// allocation per component per cycle for read() and one more for write().
+// The component and group names were copied out of the accessors into a local std::string on every
+// cycle, one heap allocation per component per call once the name passed the small string buffer.
 TEST_F(RTAllocationTest, read_and_write_do_not_allocate)
 {
   measure_read_write();
@@ -314,14 +266,9 @@ TEST_F(RTAllocationTest, read_and_write_do_not_allocate)
     << "real-time update loop and must not touch the heap in steady state.";
 }
 
-/// Reproduces the ordering the controller manager uses, which is the opposite of the fixture
-/// above: the joint limiters are imported *before* the hardware is loaded, so that
-/// bind_command_limiter_to_interface() runs over the real command interfaces and
-/// LoanedCommandInterface::set_value() goes through the limiter.
-/**
- * \sa ControllerManager::init_resource_manager(), which calls import_joint_limiters() and only
- *     afterwards load_and_initialize_components().
- */
+/// The ordering the controller manager uses, the reverse of the fixture above: limiters imported
+/// before the hardware is loaded, so bind_command_limiter_to_interface() runs over the real command
+/// interfaces and set_value() goes through the limiter.
 class CommandLimiterBindingTest : public ::testing::Test
 {
 protected:
@@ -333,12 +280,9 @@ protected:
     params.clock = node_.get_clock();
     params.logger = node_.get_logger();
     params.update_rate = 100u;
-    // The controller manager activates the components itself, after loading them, so the
-    // ResourceManager must not do it here.
     params.activate_all = false;
 
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
-    // Same order as the controller manager: limiters first, then load and activate.
     resource_manager_->import_joint_limiters(urdf);
     ASSERT_TRUE(resource_manager_->load_and_initialize_components(params));
 
@@ -353,18 +297,14 @@ protected:
         resource_manager_->claim_command_interface(joint_name(i) + "/position"));
     }
 
-    // Setting an out-of-range command must come back clamped, which proves the limiter callback is
-    // actually bound. Without this the test would measure a pass-through set_value() and pass for
-    // the wrong reason.
+    // Proves the limiter callback is bound; otherwise the test would measure a pass-through
+    // set_value() and pass for the wrong reason.
     ASSERT_TRUE(claimed_interfaces_.front().set_value(kOutOfRangeCommand));
     ASSERT_LT(claimed_interfaces_.front().get_optional().value(), kOutOfRangeCommand);
   }
 
-  /// Call set_value() on every claimed interface and return how much heap memory it used.
   void measure_set_value()
   {
-    // Warm up: the reusable scratch buffer inside the limiter callback reaches its steady-state
-    // capacity here.
     for (std::size_t i = 0; i < kWarmUpCycles; ++i)
     {
       for (auto & interface : claimed_interfaces_)
@@ -396,11 +336,9 @@ protected:
   std::vector<hardware_interface::LoanedCommandInterface> claimed_interfaces_;
 };
 
-// LoanedCommandInterface::set_value() runs on the controller thread, but with the limiter bound it
-// still reaches the same real-time limit enforcement code. It used to build a fresh
-// JointInterfacesCommandLimiterData on every call, and set_joint_name() writes the joint name into
-// five std::string members, so a name longer than the small string buffer cost five heap
-// allocations per joint and call.
+// set_value() on the controller thread reaches the same limit enforcement code. It used to build a
+// fresh JointInterfacesCommandLimiterData per call, whose five std::string members each allocated
+// for a name past the small string buffer.
 TEST_F(CommandLimiterBindingTest, set_value_with_bound_limiter_does_not_allocate)
 {
   measure_set_value();
