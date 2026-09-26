@@ -1100,14 +1100,10 @@ public:
                                     double value, bool & is_limited) -> double
           {
             is_limited = false;
-            // Reuse the scratch buffers across calls. Building this object and writing the joint
-            // name into its five strings allocates one heap block per string whenever the name
-            // does not fit into the small string buffer, and this closure runs on the controller
-            // thread through LoanedCommandInterface::set_value(). The buffer is thread_local and
-            // fully reset before use, so that a value left behind for another command interface
-            // of the same joint (or by a different controller thread) cannot leak into this call:
-            // update_joint_limiters_data() only writes the interfaces that are actually present,
-            // so the remaining fields must start out empty.
+            // Reused across calls and thread_local: constructing this per call allocates once per
+            // std::string member for names past the small string buffer, and this closure runs on
+            // the controller thread. Reset first, because update_joint_limiters_data() only fills
+            // in the interfaces that are present.
             static thread_local joint_limits::JointInterfacesCommandLimiterData data;
             data = joint_limits::JointInterfacesCommandLimiterData();
             data.set_joint_name(joint_name);
@@ -1443,22 +1439,11 @@ public:
   std::vector<std::string> start_interfaces_buffer_;
   std::vector<std::string> stop_interfaces_buffer_;
 
-  /// Compose "<joint_name>/<interface_type>" without allocating on the hot path.
-  /**
-   * The joint limiter enforcement runs in the real-time update loop, so composing these
-   * keys with fmt::format() allocates on every call whenever the key does not fit into
-   * the std::string small-string buffer. Appending to a buffer that is reused keeps its
-   * capacity, so after the first call no allocation happens.
-   *
-   * The buffer is thread_local because this is reached both from the real-time update
-   * loop (ResourceManager::enforce_command_limits) and from controller threads via
-   * LoanedCommandInterface::set_value() for async controllers, which may run
-   * concurrently.
-   *
-   * The returned reference points into that shared buffer and therefore stays valid only
-   * until the next call on the same thread. Every caller has to consume it before that,
-   * which the current call sites do.
-   */
+  /// Compose "<joint_name>/<interface_type>" into a reused buffer, so steady-state calls
+  /// allocate nothing. thread_local because this is reached from the real-time update loop
+  /// (enforce_command_limits) and from controller threads via
+  /// LoanedCommandInterface::set_value(). The returned reference is valid only until the next
+  /// call on the same thread.
   static const std::string & make_interface_key(
     const std::string & joint_name, const std::string & interface_type)
   {
