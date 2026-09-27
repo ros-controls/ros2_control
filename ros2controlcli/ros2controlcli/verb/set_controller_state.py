@@ -45,11 +45,13 @@ def trigger_transition(node, controller_manager, controller_name, transition):
     The controller manager rejects a transition that is not valid from the current state, and the
     error is reported to the user.
     """
+    # Only the switch_controller service explains why it failed
+    reason = "check controller_manager logs"
     if transition == "configure":
         response = configure_controller(node, controller_manager, controller_name)
     elif transition == "cleanup":
         response = cleanup_controller(node, controller_manager, controller_name)
-    else:
+    elif transition in ("activate", "deactivate"):
         deactivate = [controller_name] if transition == "deactivate" else []
         activate = [controller_name] if transition == "activate" else []
         # STRICT, so that an invalid switch fails instead of being skipped with ok=True
@@ -62,12 +64,12 @@ def trigger_transition(node, controller_manager, controller_name, transition):
             True,
             5.0,
         )
+        reason = response.message or reason
+    else:
+        raise ValueError(f"Unknown lifecycle transition '{transition}'")
 
     if not response.ok:
-        return (
-            f"Error during '{transition}' transition of {controller_name}, "
-            "check controller_manager logs"
-        )
+        return f"Error during '{transition}' transition of {controller_name}: {reason}"
 
     print(f"Successfully {TRANSITIONS[transition]} {controller_name}")
     return 0

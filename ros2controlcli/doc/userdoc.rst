@@ -265,8 +265,9 @@ set_controller_state
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
 
-The states ``unconfigured``, ``inactive`` and ``active`` are reached from the current state of the
-controller by calling the matching service. The lifecycle transitions ``configure``, ``cleanup``,
+For the states ``unconfigured``, ``inactive`` and ``active``, the command checks the current state
+of the controller and calls the service for the single transition that leads there; several
+transitions are not chained. The lifecycle transitions ``configure``, ``cleanup``,
 ``activate`` and ``deactivate`` are named as in ``ros2 lifecycle set`` and are sent to the
 controller manager without checking the current state first. The controller manager decides
 whether the transition is valid, and the command returns an error if it rejects the transition.

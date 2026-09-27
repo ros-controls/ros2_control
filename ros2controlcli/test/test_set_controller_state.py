@@ -17,17 +17,15 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import SwitchController
+from controller_manager_msgs.srv import (
+    CleanupController,
+    ConfigureController,
+    SwitchController,
+)
 
 from ros2controlcli.verb.set_controller_state import SetControllerStateVerb, trigger_transition
 
 MODULE = "ros2controlcli.verb.set_controller_state"
-
-
-def _response(ok):
-    response = MagicMock()
-    response.ok = ok
-    return response
 
 
 class TestSetControllerStateArguments(unittest.TestCase):
@@ -55,12 +53,12 @@ class TestSetControllerStateArguments(unittest.TestCase):
 
 class TestTriggerTransition(unittest.TestCase):
     def test_configure_and_cleanup_call_their_services(self):
-        for transition, service in [
-            ("configure", "configure_controller"),
-            ("cleanup", "cleanup_controller"),
+        for transition, service, response_type in [
+            ("configure", "configure_controller", ConfigureController.Response),
+            ("cleanup", "cleanup_controller", CleanupController.Response),
         ]:
             with self.subTest(transition=transition), patch(
-                f"{MODULE}.{service}", return_value=_response(True)
+                f"{MODULE}.{service}", return_value=response_type(ok=True)
             ) as mock_service, patch(f"{MODULE}.switch_controllers") as mock_switch:
                 node = MagicMock()
                 self.assertEqual(trigger_transition(node, "/cm", "ctrl", transition), 0)
@@ -73,7 +71,7 @@ class TestTriggerTransition(unittest.TestCase):
             ("deactivate", ["ctrl"], []),
         ]:
             with self.subTest(transition=transition), patch(
-                f"{MODULE}.switch_controllers", return_value=_response(True)
+                f"{MODULE}.switch_controllers", return_value=SwitchController.Response(ok=True)
             ) as mock_switch:
                 node = MagicMock()
                 self.assertEqual(trigger_transition(node, "/cm", "ctrl", transition), 0)
@@ -87,11 +85,20 @@ class TestTriggerTransition(unittest.TestCase):
                     5.0,
                 )
 
-    def test_failed_transition_is_reported(self):
-        with patch(f"{MODULE}.switch_controllers", return_value=_response(False)):
+    def test_failed_switch_reports_the_reason(self):
+        reason = "Controller with name 'ctrl' can not be deactivated since it is not active."
+        with patch(
+            f"{MODULE}.switch_controllers",
+            return_value=SwitchController.Response(ok=False, message=reason),
+        ):
             result = trigger_transition(MagicMock(), "/cm", "ctrl", "deactivate")
         self.assertIsInstance(result, str)
-        self.assertIn("deactivate", result)
+        self.assertIn("'deactivate'", result)
+        self.assertIn(reason, result)
+
+    def test_unknown_transition_raises(self):
+        with self.assertRaises(ValueError):
+            trigger_transition(MagicMock(), "/cm", "ctrl", "shutdown")
 
 
 class TestMain(unittest.TestCase):
@@ -99,13 +106,15 @@ class TestMain(unittest.TestCase):
         args = argparse.Namespace(controller_name="ctrl", state=state, controller_manager="/cm")
         with patch(f"{MODULE}.NodeStrategy"), patch(
             f"{MODULE}.list_controllers", return_value=MagicMock(controller=controllers)
-        ), patch(f"{MODULE}.trigger_transition", return_value=0) as mock_trigger:
+        ), patch(f"{MODULE}.trigger_transition", return_value=0) as mock_trigger, patch(
+            f"{MODULE}.switch_controllers", return_value=SwitchController.Response(ok=True)
+        ) as mock_switch:
             result = SetControllerStateVerb().main(args=args)
-        return result, mock_trigger
+        return result, mock_trigger, mock_switch
 
     def test_transition_skips_the_current_state_check(self):
         # 'configure' on an active controller is passed on; the controller manager decides
-        result, mock_trigger = self._run_main(
+        result, mock_trigger, _ = self._run_main(
             "configure", [ControllerState(name="ctrl", state="active")]
         )
         self.assertEqual(result, 0)
@@ -113,6 +122,16 @@ class TestMain(unittest.TestCase):
         self.assertEqual(mock_trigger.call_args.args[1:], ("/cm", "ctrl", "configure"))
 
     def test_transition_on_unloaded_controller_is_rejected(self):
-        result, mock_trigger = self._run_main("activate", [])
+        result, mock_trigger, _ = self._run_main("activate", [])
         self.assertIn("does not seem to be loaded", result)
         mock_trigger.assert_not_called()
+
+    def test_primary_state_keeps_its_previous_behavior(self):
+        # 'active' still checks the current state and uses the previous switch arguments
+        result, mock_trigger, mock_switch = self._run_main(
+            "active", [ControllerState(name="ctrl", state="inactive")]
+        )
+        self.assertEqual(result, 0)
+        mock_trigger.assert_not_called()
+        mock_switch.assert_called_once()
+        self.assertEqual(mock_switch.call_args.args[1:], ("/cm", [], ["ctrl"], True, True, 5.0))
