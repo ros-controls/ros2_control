@@ -1529,9 +1529,6 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
-  // Guard the shared parameters from the start: the real-time loop reads them
-  // (e.g. params_.handle_exceptions in read()/write()) while holding the same
-  // mutex with try_to_lock. See ros-controls/ros2_control#3611.
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
