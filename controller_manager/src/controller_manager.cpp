@@ -3293,12 +3293,22 @@ void ControllerManager::set_hardware_component_state_srv_cb(
   // unknown target does not stop the controllers before the component is told about it.
   if (hardware_is_active && is_hardware_deactivation_target(target_state))
   {
+    // Only the controllers that command this component have to be stopped. The component stops
+    // accepting commands once it leaves the active state, so a controller that keeps writing to it
+    // would drive hardware that is no longer listening. A controller that only reads the
+    // component's state interfaces keeps working and is left alone, which is also what
+    // ros2_control_demo_example_13 relies on: the joint state broadcasters must survive the
+    // transition of the hardware they read from.
+    //
     // The cache in the resource manager is append-only, so it also lists controllers that have
     // been deactivated or unloaded again in the meantime. Only the ones that are active right now
     // are of interest: switch_controller() reports an unknown controller name as an error and
     // BEST_EFFORT only tolerates that while the request still holds another name, so a stale entry
     // would make the service refuse to touch a component that nothing is using any more.
-    const auto active_controllers_of_component = [this, &request]()
+    const auto & component_command_interfaces =
+      hw_components_info.at(request->name).command_interfaces;
+
+    const auto active_controllers_of_component = [this, &request, &component_command_interfaces]()
     {
       const auto & loaded_controllers = get_loaded_controllers();
       std::vector<std::string> controller_names;
@@ -3308,7 +3318,22 @@ void ControllerManager::set_hardware_component_state_srv_cb(
         auto controller_it = std::find_if(
           loaded_controllers.begin(), loaded_controllers.end(),
           std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-        if (controller_it != loaded_controllers.end() && is_controller_active(*controller_it->c))
+        if (controller_it == loaded_controllers.end() || !is_controller_active(*controller_it->c))
+        {
+          continue;
+        }
+
+        const auto commanded_interfaces =
+          get_command_interfaces_names(controller_it->c, resource_manager_);
+        const bool commands_this_component = std::any_of(
+          commanded_interfaces.begin(), commanded_interfaces.end(),
+          [&component_command_interfaces](const std::string & interface_name)
+          {
+            return std::find(
+                     component_command_interfaces.begin(), component_command_interfaces.end(),
+                     interface_name) != component_command_interfaces.end();
+          });
+        if (commands_this_component)
         {
           controller_names.push_back(controller_name);
         }

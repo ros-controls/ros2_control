@@ -382,11 +382,25 @@ public:
    */
   void load_and_activate_controller_with_interfaces()
   {
+    load_and_activate_controller("test_hardware_management_controller_params.yaml");
+  }
+
+  /// Loads the test controller with state interfaces only and activates it.
+  /**
+   * joint1/position is read from TestActuatorHardware. The controller holds no command interface,
+   * so it does not send anything into the component and has to survive its deactivation.
+   */
+  void load_and_activate_state_only_controller()
+  {
+    load_and_activate_controller("test_hardware_management_state_only_controller_params.yaml");
+  }
+
+  void load_and_activate_controller(const std::string & parameters_file)
+  {
     hardware_interface::ControllerInfo controller_info;
     controller_info.name = test_controller::TEST_CONTROLLER_NAME;
     controller_info.type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-    controller_info.parameters_files = {
-      std::string(PARAMETERS_FILE_PATH) + "test_hardware_management_controller_params.yaml"};
+    controller_info.parameters_files = {std::string(PARAMETERS_FILE_PATH) + parameters_file};
 
     auto loaded_ctrl = std::make_shared<test_controller::TestController>();
     controller_manager::ControllerSpec controller_spec;
@@ -418,6 +432,16 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, loaded[0].c->get_lifecycle_state().id())
       << "Controller stayed active although its hardware component left the active state";
+  }
+
+  /// Asserts that the controller is still running.
+  void expect_controller_active() const
+  {
+    auto loaded = cm_->get_loaded_controllers();
+    ASSERT_EQ(1u, loaded.size());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, loaded[0].c->get_lifecycle_state().id())
+      << "Controller was stopped although it only reads state interfaces of the component";
   }
 };
 
@@ -486,6 +510,39 @@ TEST_F(
   // the user has to switch it on explicitly.
   ASSERT_TRUE(set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, ACTIVE));
   expect_controller_stopped();
+}
+
+// A controller that only reads the state interfaces of a component does not send anything into
+// hardware that stopped listening, so it must keep running when the component is deactivated
+// manually. The state interfaces stay available in the inactive state, which is what broadcasters
+// like the joint state broadcaster rely on: ros2_control_demo_example_13 keeps its joint state
+// broadcasters active across the deactivation of the hardware they read from.
+TEST_F(
+  TestControllerManagerHWManagementSrvsWithoutParams,
+  manual_hardware_deactivation_keeps_state_only_controller_active)
+{
+  load_and_activate_state_only_controller();
+
+  ASSERT_TRUE(set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, INACTIVE));
+
+  list_hardware_components_and_check(
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{true, true}, {true, true, true}},                                      // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // The commanding interfaces are free again, the ones that are only read stay untouched.
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  expect_controller_active();
 }
 
 // The same has to hold for the targets that also remove the component's interfaces from the
