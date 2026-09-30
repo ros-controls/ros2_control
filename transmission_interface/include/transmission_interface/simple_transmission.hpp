@@ -80,9 +80,6 @@ namespace transmission_interface
  *
  * \ingroup transmission_types
  */
-
-constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
-
 class SimpleTransmission : public Transmission
 {
 public:
@@ -131,14 +128,14 @@ public:
   {
     return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
             hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
-            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+            hardware_interface::HW_IF_FORCE,    hardware_interface::HW_IF_ABSOLUTE_POSITION};
   }
 
   std::vector<std::string> get_supported_joint_interfaces() const override
   {
     return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
             hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
-            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+            hardware_interface::HW_IF_FORCE,    hardware_interface::HW_IF_ABSOLUTE_POSITION};
   }
 
 protected:
@@ -223,7 +220,8 @@ inline void SimpleTransmission::configure(
   joint_effort_ = get_by_interface(joint_handles, hardware_interface::HW_IF_EFFORT);
   joint_torque_ = get_by_interface(joint_handles, hardware_interface::HW_IF_TORQUE);
   joint_force_ = get_by_interface(joint_handles, hardware_interface::HW_IF_FORCE);
-  joint_absolute_position_ = get_by_interface(joint_handles, HW_IF_ABSOLUTE_POSITION);
+  joint_absolute_position_ =
+    get_by_interface(joint_handles, hardware_interface::HW_IF_ABSOLUTE_POSITION);
 
   if (
     !joint_position_ && !joint_velocity_ && !joint_effort_ && !joint_torque_ && !joint_force_ &&
@@ -237,7 +235,8 @@ inline void SimpleTransmission::configure(
   actuator_effort_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_EFFORT);
   actuator_torque_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_TORQUE);
   actuator_force_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_FORCE);
-  actuator_absolute_position_ = get_by_interface(actuator_handles, HW_IF_ABSOLUTE_POSITION);
+  actuator_absolute_position_ =
+    get_by_interface(actuator_handles, hardware_interface::HW_IF_ABSOLUTE_POSITION);
 
   if (
     !actuator_position_ && !actuator_velocity_ && !actuator_effort_ && !actuator_torque_ &&

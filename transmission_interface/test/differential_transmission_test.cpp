@@ -20,6 +20,7 @@
 #include "random_generator_utils.hpp"
 #include "transmission_interface/differential_transmission.hpp"
 
+using hardware_interface::HW_IF_ABSOLUTE_POSITION;
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_FORCE;
 using hardware_interface::HW_IF_POSITION;
@@ -29,7 +30,6 @@ using testing::DoubleNear;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::DifferentialTransmission;
 using transmission_interface::Exception;
-using transmission_interface::HW_IF_ABSOLUTE_POSITION;
 using transmission_interface::JointHandle;
 // Floating-point value comparison threshold
 const double EPS = 1e-5;
