@@ -15,6 +15,7 @@
 #ifndef SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 
+#include <limits>
 #include <string>
 
 #include "semantic_components/semantic_component_interface.hpp"
@@ -51,18 +52,14 @@ private:
   /**
    * @brief Update the data array from the state interfaces.
    * @note This method is thread-safe and non-blocking.
-   * @note This method might return stale data if the data is not updated. This is to ensure that
-   * the data from the sensor is not discontinuous.
+   * @note Values are reported as NaN when the corresponding state interface cannot be read.
    */
   void update_data_from_interfaces()
   {
     for (auto i = 0u; i < data_.size(); ++i)
     {
       const auto data = state_interfaces_[i].get().get_optional();
-      if (data.has_value())
-      {
-        data_[i] = data.value();
-      }
+      data_[i] = data.value_or(std::numeric_limits<double>::quiet_NaN());
     }
   }
 
