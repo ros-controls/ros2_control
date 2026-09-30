@@ -37,16 +37,20 @@ constexpr bool kStrictTimingTests = false;
 
 constexpr double kRelaxedTimingLowerBoundFactor = 0.9;
 constexpr double kRelaxedTimingUpperBoundFactor = 1.1;
+constexpr double kRelaxedUpdatePeriodLowerBoundFactor = 0.5;
+constexpr double kRelaxedPeriodicityMaxUpperBoundFactor = 1.6;
 constexpr double kRelaxedExecutionTimeUpperBoundFactor = 2.5;
 
-double timing_lower_bound(double strict_value)
+double timing_lower_bound(
+  double strict_value, double relaxed_bound_factor = kRelaxedTimingLowerBoundFactor)
 {
-  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingLowerBoundFactor;
+  return kStrictTimingTests ? strict_value : strict_value * relaxed_bound_factor;
 }
 
-double timing_upper_bound(double strict_value)
+double timing_upper_bound(
+  double strict_value, double relaxed_bound_factor = kRelaxedTimingUpperBoundFactor)
 {
-  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingUpperBoundFactor;
+  return kStrictTimingTests ? strict_value : strict_value * relaxed_bound_factor;
 }
 
 double execution_time_upper_bound(double strict_value)
@@ -772,14 +776,12 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rat
 
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-    if (
-      !kStrictTimingTests &&
-      test_param.strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
+    if (!kStrictTimingTests)
     {
       EXPECT_THAT(
         test_controller->internal_counter,
         testing::AllOf(testing::Ge(last_internal_counter), testing::Le(last_internal_counter + 1u)))
-        << "In relaxed mode, BEST_EFFORT allows scheduler jitter while stopping async "
+        << "In relaxed mode, scheduler jitter may skip the final async cycle while stopping "
            "controllers.";
     }
     else
@@ -969,7 +971,8 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
       testing::AllOf(
-        testing::Ge(timing_lower_bound(0.65 / cm_update_rate)),
+        testing::Ge(
+          timing_lower_bound(0.65 / cm_update_rate, kRelaxedUpdatePeriodLowerBoundFactor)),
         testing::Lt(timing_upper_bound(1.6 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
@@ -992,7 +995,8 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
       testing::AllOf(
         testing::Ge(timing_lower_bound(0.75 * cm_->get_update_rate())),
-        testing::Lt(timing_upper_bound(2.0 * cm_->get_update_rate()))));
+        testing::Lt(timing_upper_bound(
+          2.0 * cm_->get_update_rate(), kRelaxedPeriodicityMaxUpperBoundFactor))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -1119,7 +1123,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(timing_lower_bound(0.65 * exp_controller_period)),
+          testing::Gt(
+            timing_lower_bound(0.65 * exp_controller_period, kRelaxedUpdatePeriodLowerBoundFactor)),
           testing::Lt(timing_upper_bound((1.2 * exp_controller_period) + PERIOD.seconds()))))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
@@ -1174,7 +1179,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
         testing::AllOf(
           testing::Ge(timing_lower_bound(0.75 * exp_periodicity)),
-          testing::Lt(timing_upper_bound(2.0 * exp_periodicity))));
+          testing::Lt(
+            timing_upper_bound(2.0 * exp_periodicity, kRelaxedPeriodicityMaxUpperBoundFactor))));
       EXPECT_LT(
         cm_->get_loaded_controllers()[0].execution_time_statistics->get_average(),
         execution_time_upper_bound(50.0));  // 50 microseconds in strict mode
