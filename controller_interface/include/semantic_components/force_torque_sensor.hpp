@@ -139,14 +139,7 @@ public:
     message.torque.y = data_[4];
     message.torque.z = data_[5];
 
-    if (state_interfaces_.empty())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return !state_interfaces_.empty();
   }
 
 protected:
