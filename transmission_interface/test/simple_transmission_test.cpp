@@ -18,7 +18,6 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
 
-using hardware_interface::HW_IF_ABSOLUTE_POSITION;
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_FORCE;
 using hardware_interface::HW_IF_POSITION;
@@ -26,6 +25,7 @@ using hardware_interface::HW_IF_TORQUE;
 using hardware_interface::HW_IF_VELOCITY;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::Exception;
+using transmission_interface::HW_IF_ABSOLUTE_POSITION;
 using transmission_interface::JointHandle;
 using transmission_interface::SimpleTransmission;
 

@@ -24,7 +24,7 @@
 
 namespace transmission_interface
 {
-/// Kept for backward compatibility, use hardware_interface::HW_IF_ABSOLUTE_POSITION instead.
+/// Retained for backward compatibility. Use hardware_interface::HW_IF_ABSOLUTE_POSITION instead.
 using hardware_interface::HW_IF_ABSOLUTE_POSITION;
 
 /// Abstract base class for representing mechanical transmissions.
