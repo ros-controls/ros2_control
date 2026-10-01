@@ -108,9 +108,6 @@ namespace transmission_interface
  *
  * \ingroup transmission_types
  */
-
-constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
-
 class DifferentialTransmission : public Transmission
 {
 public:
@@ -163,14 +160,14 @@ public:
   {
     return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
             hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
-            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+            hardware_interface::HW_IF_FORCE,    hardware_interface::HW_IF_ABSOLUTE_POSITION};
   }
 
   std::vector<std::string> get_supported_joint_interfaces() const override
   {
     return {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
             hardware_interface::HW_IF_EFFORT,   hardware_interface::HW_IF_TORQUE,
-            hardware_interface::HW_IF_FORCE,    HW_IF_ABSOLUTE_POSITION};
+            hardware_interface::HW_IF_FORCE,    hardware_interface::HW_IF_ABSOLUTE_POSITION};
   }
 
 protected:
@@ -254,7 +251,7 @@ void DifferentialTransmission::configure(
   joint_torque_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_TORQUE);
   joint_force_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_FORCE);
   joint_absolute_position_ =
-    get_ordered_handles(joint_handles, joint_names, HW_IF_ABSOLUTE_POSITION);
+    get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_ABSOLUTE_POSITION);
 
   if (!joint_position_.empty() && joint_position_.size() != 2)
   {
@@ -310,8 +307,8 @@ void DifferentialTransmission::configure(
     get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_TORQUE);
   actuator_force_ =
     get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_FORCE);
-  actuator_absolute_position_ =
-    get_ordered_handles(actuator_handles, actuator_names, HW_IF_ABSOLUTE_POSITION);
+  actuator_absolute_position_ = get_ordered_handles(
+    actuator_handles, actuator_names, hardware_interface::HW_IF_ABSOLUTE_POSITION);
 
   if (!actuator_position_.empty() && actuator_position_.size() != 2)
   {
