@@ -1,0 +1,8 @@
+# A controller without any command interface: it only reads the state interfaces that
+# TestActuatorHardware provides. It must stay active when that component is deactivated manually,
+# because it does not send commands into hardware that stopped listening.
+test_controller_name:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    state_interfaces:
+      - "joint1/position"
