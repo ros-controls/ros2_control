@@ -67,7 +67,7 @@ public:
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
-   * of async components.
+   * of async components. Must be non-zero, otherwise load_and_initialize_components will fail.
    * \param[in] clock_interface reference to the clock interface of the CM node for getting time
    * used for triggering async components and different read/write component rates.
    * \param[in] logger_interface reference to the logger interface of the CM node for logging.
@@ -76,7 +76,7 @@ public:
     const std::string & urdf,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 0);
 
   /// Constructor for the Resource Manager.
   /**
@@ -88,14 +88,14 @@ public:
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
    * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
-   * of async components.
+   * of async components. Must be non-zero, otherwise load_and_initialize_components will fail.
    * \param[in] clock reference to the clock of the CM node for getting time used for triggering
    * async components and different read/write component rates.
    * \param[in] logger logger of the CM node for logging.
    */
   explicit ResourceManager(
     const std::string & urdf, rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger,
-    bool activate_all = false, const unsigned int update_rate = 100);
+    bool activate_all = false, const unsigned int update_rate = 0);
 
   /// Constructor for the Resource Manager.
   /**
@@ -587,7 +587,7 @@ private:
   // aforementioned constructors.
   hardware_interface::ResourceManagerParams constructParams(
     rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger, const std::string & urdf = std::string(),
-    bool activate_all = false, unsigned int update_rate = 100);
+    bool activate_all = false, unsigned int update_rate = 0);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
