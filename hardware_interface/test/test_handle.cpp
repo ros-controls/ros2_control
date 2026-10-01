@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
+#include <chrono>
 #include <thread>
 
 #include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::InterfaceDescription;
@@ -1030,4 +1033,67 @@ TEST(TestHandle, handle_getters)
     EXPECT_TRUE(handle.get_value(val, false));
     EXPECT_EQ(val, true);
   }
+}
+
+TEST(TestHandle, introspection_sampling_concurrent_with_set_value)
+{
+  // Regression test for https://github.com/ros-controls/ros2_control/issues/3613:
+  // the introspection sampling lambdas registered by StateInterface and CommandInterface
+  // must synchronize with concurrent Handle::set_value() writers via handle_mutex_.
+  // Run with ThreadSanitizer to catch any data race between the sampler and the writers.
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("test_introspection_thread_safety");
+  INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(
+    node, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+    hardware_interface::DEFAULT_REGISTRY_KEY);
+
+  hardware_interface::InterfaceInfo info;
+  info.name = "position";
+  info.data_type = "double";
+  info.initial_value = "0.0";
+  hardware_interface::InterfaceDescription interface_description{"joint1", info};
+  StateInterface state_interface{interface_description};
+  CommandInterface command_interface{interface_description};
+  state_interface.registerIntrospection();
+  command_interface.registerIntrospection();
+
+  auto registry = pal_statistics::getRegistry(hardware_interface::DEFAULT_REGISTRY_KEY);
+  ASSERT_NE(registry, nullptr);
+
+  std::atomic<bool> done{false};
+  std::thread writer_thread(
+    [&]()
+    {
+      double value = 0.0;
+      while (!done)
+      {
+        // set_value() takes the unique (writer) lock on handle_mutex_
+        std::ignore = state_interface.set_value(value);
+        std::ignore = command_interface.set_value(value);
+        value += 1.0;
+      }
+    });
+  std::thread sampler_thread(
+    [&]()
+    {
+      while (!done)
+      {
+        // publishAsync() samples every registered introspection function, i.e. the
+        // sampling lambdas of the state and command interfaces above
+        std::ignore = registry->publishAsync();
+      }
+    });
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  done = true;
+  writer_thread.join();
+  sampler_thread.join();
+
+  EXPECT_TRUE(state_interface.get_optional().has_value());
+  EXPECT_TRUE(command_interface.get_optional().has_value());
+
+  state_interface.unregisterIntrospection();
+  command_interface.unregisterIntrospection();
+  pal_statistics::deleteRegistry(hardware_interface::DEFAULT_REGISTRY_KEY);
+  rclcpp::shutdown();
 }
