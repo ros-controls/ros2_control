@@ -14,10 +14,30 @@
 
 #include "test_magnetic_field_sensor.hpp"
 
+#include <cmath>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <vector>
+
+#include "hardware_interface/handle.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
+
+namespace
+{
+class LockableStateInterface : public hardware_interface::StateInterface
+{
+public:
+  using hardware_interface::StateInterface::StateInterface;
+
+  std::unique_lock<std::shared_mutex> lock_for_test()
+  {
+    return std::unique_lock<std::shared_mutex>(get_mutex());
+  }
+};
+}  // namespace
 
 void MagneticFieldSensorTest::TearDown() { magnetic_field_sensor_.reset(nullptr); }
 
@@ -79,4 +99,68 @@ TEST_F(MagneticFieldSensorTest, validate_all)
 
   // validate the count of state_interfaces_
   ASSERT_EQ(magnetic_field_sensor_->state_interfaces_.size(), 0u);
+}
+
+TEST_F(MagneticFieldSensorTest, unavailable_values_are_nan_before_first_sample)
+{
+  magnetic_field_sensor_ = std::make_unique<TestableMagneticFieldSensor>(sensor_name_);
+
+  auto magnetic_field_x = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[0], &magnetic_field_values_[0]);
+  auto magnetic_field_y = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[1], &magnetic_field_values_[1]);
+  auto magnetic_field_z = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[2], &magnetic_field_values_[2]);
+
+  std::vector<hardware_interface::LoanedStateInterface> state_interfaces;
+  state_interfaces.emplace_back(magnetic_field_x);
+  state_interfaces.emplace_back(magnetic_field_y);
+  state_interfaces.emplace_back(magnetic_field_z);
+  ASSERT_TRUE(magnetic_field_sensor_->assign_loaned_state_interfaces(state_interfaces));
+
+  auto x_lock = magnetic_field_x->lock_for_test();
+  auto y_lock = magnetic_field_y->lock_for_test();
+  auto z_lock = magnetic_field_z->lock_for_test();
+  ASSERT_TRUE(x_lock.owns_lock());
+  ASSERT_TRUE(y_lock.owns_lock());
+  ASSERT_TRUE(z_lock.owns_lock());
+
+  sensor_msgs::msg::MagneticField message;
+  ASSERT_TRUE(magnetic_field_sensor_->get_values_as_message(message));
+  EXPECT_TRUE(std::isnan(message.magnetic_field.x));
+  EXPECT_TRUE(std::isnan(message.magnetic_field.y));
+  EXPECT_TRUE(std::isnan(message.magnetic_field.z));
+}
+
+TEST_F(MagneticFieldSensorTest, unavailable_value_is_nan_after_a_successful_sample)
+{
+  magnetic_field_sensor_ = std::make_unique<TestableMagneticFieldSensor>(sensor_name_);
+
+  auto magnetic_field_x = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[0], &magnetic_field_values_[0]);
+  auto magnetic_field_y = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[1], &magnetic_field_values_[1]);
+  auto magnetic_field_z = std::make_shared<LockableStateInterface>(
+    sensor_name_, magnetic_field_interface_names_[2], &magnetic_field_values_[2]);
+
+  std::vector<hardware_interface::LoanedStateInterface> state_interfaces;
+  state_interfaces.emplace_back(magnetic_field_x);
+  state_interfaces.emplace_back(magnetic_field_y);
+  state_interfaces.emplace_back(magnetic_field_z);
+  ASSERT_TRUE(magnetic_field_sensor_->assign_loaned_state_interfaces(state_interfaces));
+
+  sensor_msgs::msg::MagneticField message;
+  ASSERT_TRUE(magnetic_field_sensor_->get_values_as_message(message));
+  EXPECT_DOUBLE_EQ(message.magnetic_field.x, magnetic_field_values_[0]);
+  EXPECT_DOUBLE_EQ(message.magnetic_field.y, magnetic_field_values_[1]);
+  EXPECT_DOUBLE_EQ(message.magnetic_field.z, magnetic_field_values_[2]);
+
+  magnetic_field_values_ = {{7.7, 8.8, 9.9}};
+  auto y_lock = magnetic_field_y->lock_for_test();
+  ASSERT_TRUE(y_lock.owns_lock());
+
+  ASSERT_TRUE(magnetic_field_sensor_->get_values_as_message(message));
+  EXPECT_DOUBLE_EQ(message.magnetic_field.x, magnetic_field_values_[0]);
+  EXPECT_TRUE(std::isnan(message.magnetic_field.y));
+  EXPECT_DOUBLE_EQ(message.magnetic_field.z, magnetic_field_values_[2]);
 }
