@@ -14,6 +14,9 @@
 
 #include <algorithm>
 #include <array>
+#include <future>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -117,6 +120,81 @@ TEST_F(GPSSensorTest, should_fill_gps_nav_sat_fix_msg_with_value_from_state_inte
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(gps_states.at(0), message.status.status);
   EXPECT_EQ(gps_states.at(1), message.status.service);
+  EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+  EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
+}
+
+TEST_F(GPSSensorTest, unavailable_status_should_be_unknown_and_recover)
+{
+  gps_states = {{1.0, 13.0, 48.1, 11.6, 231.0}};
+  ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
+
+  {
+    std::unique_lock<std::shared_mutex> lock(gps_state->get_mutex());
+    // Read from another thread while this thread holds the lock for all read attempts
+    EXPECT_EQ(
+      sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN,
+      std::async(std::launch::async, [this] { return sut.get_status(); }).get());
+    EXPECT_EQ(13u, sut.get_service());
+  }
+
+  gps_states.at(0) = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX, sut.get_status());
+  EXPECT_EQ(13u, sut.get_service());
+}
+
+TEST_F(GPSSensorTest, unavailable_service_should_be_unknown_and_recover)
+{
+  gps_states = {{1.0, 13.0, 48.1, 11.6, 231.0}};
+  ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
+  EXPECT_EQ(13u, sut.get_service());
+
+  {
+    std::unique_lock<std::shared_mutex> lock(gps_service->get_mutex());
+    // Read from another thread while this thread holds the lock for all read attempts
+    EXPECT_EQ(
+      sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN,
+      std::async(std::launch::async, [this] { return sut.get_service(); }).get());
+    EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
+  }
+
+  gps_states.at(1) = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::SERVICE_GPS, sut.get_service());
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
+}
+
+TEST_F(
+  GPSSensorTest, unavailable_status_and_service_should_fill_message_with_unknown_values_and_recover)
+{
+  gps_states = {{1.0, 13.0, 48.1, 11.6, 231.0}};
+  ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
+
+  sensor_msgs::msg::NavSatFix message;
+  ASSERT_TRUE(sut.get_values_as_message(message));
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, message.status.status);
+  EXPECT_EQ(13u, message.status.service);
+
+  {
+    std::unique_lock<std::shared_mutex> status_lock(gps_state->get_mutex());
+    std::unique_lock<std::shared_mutex> service_lock(gps_service->get_mutex());
+    // Keep both interfaces locked until the message has been read on another thread
+    EXPECT_TRUE(
+      std::async(
+        std::launch::async, [this, &message] { return sut.get_values_as_message(message); })
+        .get());
+    EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN, message.status.status);
+    EXPECT_EQ(sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN, message.status.service);
+    EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
+    EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
+    EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
+  }
+
+  gps_states = {{2.0, 3.0, 48.2, 11.7, 232.0}};
+  EXPECT_TRUE(sut.get_values_as_message(message));
+  EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX, message.status.status);
+  EXPECT_EQ(3u, message.status.service);
   EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
   EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
   EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);

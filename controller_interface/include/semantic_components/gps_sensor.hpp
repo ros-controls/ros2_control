@@ -68,7 +68,7 @@ public:
     {
       return static_cast<int8_t>(data.value());
     }
-    return std::numeric_limits<int8_t>::max();
+    return sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN;
   }
 
   /**
@@ -83,7 +83,7 @@ public:
     {
       return static_cast<uint16_t>(data.value());
     }
-    return std::numeric_limits<uint16_t>::max();
+    return sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN;
   }
 
   /**
