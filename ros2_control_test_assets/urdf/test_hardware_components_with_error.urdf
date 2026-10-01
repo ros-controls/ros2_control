@@ -69,10 +69,10 @@
       <plugin>test_hardware_components/TestTwoJointSystem</plugin>
     </hardware>
     <joint name="joint1">
-      <command_interface name="position">
+      <command_interface2 name="position">
         <param name="min">-1</param>
         <param name="max">1</param>
-      </command_interface>
+      </command_interface2>
       <state_interface name="position"/>
     </joint>
     <joint name="joint2">
