@@ -182,6 +182,46 @@ public:
       {}, strictness);
   }
 
+  void get_cm_status_message(
+    const std::string & topic, controller_manager_msgs::msg::ControllerManagerActivity & cm_msg)
+  {
+    controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr received_msg;
+    rclcpp::Node test_node("test_node");
+    auto subs_callback =
+      [&](const controller_manager_msgs::msg::ControllerManagerActivity::SharedPtr msg)
+    { received_msg = msg; };
+    auto subscription =
+      test_node.create_subscription<controller_manager_msgs::msg::ControllerManagerActivity>(
+        topic, rclcpp::QoS(1).reliable().transient_local(), subs_callback);
+
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(test_node.get_node_base_interface());
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // call update to publish the test value
+    // since update doesn't guarantee a published message, republish until received
+    int max_sub_check_loop_count = 5;  // max number of tries for pub/sub loop
+    while (max_sub_check_loop_count--)
+    {
+      const auto timeout = std::chrono::milliseconds{50};
+      const auto until = test_node.get_clock()->now() + timeout;
+      while (!received_msg && test_node.get_clock()->now() < until)
+      {
+        executor.spin_some();
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+      }
+      // check if message has been received
+      if (received_msg.get())
+      {
+        break;
+      }
+    }
+    ASSERT_GE(max_sub_check_loop_count, 0) << "Test was unable to publish a message through "
+                                              "controller manager activity";
+    ASSERT_TRUE(received_msg);
+    cm_msg = *received_msg;
+  }
+
   static constexpr char TEST_CONTROLLER_ACTUATOR_NAME[] = "test_controller_actuator";
   static constexpr char TEST_CONTROLLER_SYSTEM_NAME[] = "test_controller_system";
   static constexpr char TEST_BROADCASTER_ALL_NAME[] = "test_broadcaster_all";
@@ -721,6 +761,30 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_broadcaster_sensor->get_lifecycle_state().id());
 
+    // Make sure the activity topic reflects this
+    controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
+    const std::string cm_activity_topic =
+      std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
+
+    get_cm_status_message(cm_activity_topic, cm_msg);
+    EXPECT_EQ(cm_msg.hardware_components.size(), 3u);
+    EXPECT_EQ(cm_msg.controllers.size(), 4u);
+    EXPECT_EQ(cm_msg.controllers[0].name, TEST_BROADCASTER_SENSOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[1].name, TEST_BROADCASTER_ALL_NAME);
+    EXPECT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_msg.controllers[2].name, TEST_CONTROLLER_SYSTEM_NAME);
+    EXPECT_EQ(cm_msg.controllers[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[3].name, TEST_CONTROLLER_ACTUATOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
       << "Execute without errors to write value";
@@ -797,6 +861,30 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_broadcaster_sensor->get_lifecycle_state().id());
+
+    // Make sure the activity topic reflects this
+    controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
+    const std::string cm_activity_topic =
+      std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
+
+    get_cm_status_message(cm_activity_topic, cm_msg);
+    EXPECT_EQ(cm_msg.hardware_components.size(), 3u);
+    EXPECT_EQ(cm_msg.controllers.size(), 4u);
+    EXPECT_EQ(cm_msg.controllers[0].name, TEST_BROADCASTER_SENSOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[1].name, TEST_BROADCASTER_ALL_NAME);
+    EXPECT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_msg.controllers[2].name, TEST_CONTROLLER_SYSTEM_NAME);
+    EXPECT_EQ(cm_msg.controllers[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_msg.controllers[3].name, TEST_CONTROLLER_ACTUATOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
@@ -926,6 +1014,29 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_broadcaster_sensor->get_lifecycle_state().id());
 
+    controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
+    const std::string cm_activity_topic =
+      std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
+
+    get_cm_status_message(cm_activity_topic, cm_msg);
+    EXPECT_EQ(cm_msg.hardware_components.size(), 3u);
+    EXPECT_EQ(cm_msg.controllers.size(), 4u);
+    EXPECT_EQ(cm_msg.controllers[0].name, TEST_BROADCASTER_SENSOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[1].name, TEST_BROADCASTER_ALL_NAME);
+    EXPECT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[2].name, TEST_CONTROLLER_SYSTEM_NAME);
+    EXPECT_EQ(cm_msg.controllers[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[3].name, TEST_CONTROLLER_ACTUATOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
       << "Execute without errors to write value";
@@ -1002,6 +1113,29 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       test_broadcaster_sensor->get_lifecycle_state().id());
+
+    controller_manager_msgs::msg::ControllerManagerActivity cm_msg;
+    const std::string cm_activity_topic =
+      std::string("/") + std::string(TEST_CM_NAME) + std::string("/activity");
+
+    get_cm_status_message(cm_activity_topic, cm_msg);
+    EXPECT_EQ(cm_msg.hardware_components.size(), 3u);
+    EXPECT_EQ(cm_msg.controllers.size(), 4u);
+    EXPECT_EQ(cm_msg.controllers[0].name, TEST_BROADCASTER_SENSOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[1].name, TEST_BROADCASTER_ALL_NAME);
+    EXPECT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.controllers[2].name, TEST_CONTROLLER_SYSTEM_NAME);
+    EXPECT_EQ(cm_msg.controllers[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_msg.controllers[3].name, TEST_CONTROLLER_ACTUATOR_NAME);
+    EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
+    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
