@@ -360,6 +360,73 @@ TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
   EXPECT_FALSE(controller.is_in_chained_mode());
 }
 
+// When a chainable controller uses exported_reference_interface_names_ (the default API) and
+// export_reference_interfaces() / export_state_interfaces() is called multiple times (as happens
+// during cleanup → reconfigure cycles), the controller name must NOT be prepended recursively.
+TEST_F(ChainableControllerInterfaceTest, no_recursive_naming_prepend_during_cleanup_configure_loop)
+{
+  DefaultExportChainableController controller;
+
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name = "my_controller";
+  params.robot_description = "";
+  params.update_rate = 50;
+  params.node_namespace = "";
+  params.node_options = controller.define_custom_node_options();
+  ASSERT_EQ(controller.init(params), controller_interface::return_type::OK);
+
+  // Check export of reference and state works as expected
+  auto ref_ifaces = controller.export_reference_interfaces();
+  ASSERT_THAT(ref_ifaces, SizeIs(2));
+  EXPECT_EQ(ref_ifaces[0]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(ref_ifaces[0]->get_interface_name(), "r1");
+  EXPECT_EQ(ref_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(ref_ifaces[1]->get_interface_name(), "r2");
+
+  auto state_ifaces = controller.export_state_interfaces();
+  ASSERT_THAT(state_ifaces, SizeIs(2));
+  EXPECT_EQ(state_ifaces[0]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(state_ifaces[0]->get_interface_name(), "s1");
+  EXPECT_EQ(state_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(state_ifaces[1]->get_interface_name(), "s2");
+
+  // After the first export, we expect to hold "my_controller/X" on state and interface
+  // names. We must make sure that new calls to export don't treat this full name as a
+  // state/interface name and avoid prepending the controller name once more
+  EXPECT_NO_THROW(ref_ifaces = controller.export_reference_interfaces());
+  ASSERT_THAT(ref_ifaces, SizeIs(2));
+  EXPECT_EQ(ref_ifaces[0]->get_prefix_name(), "my_controller")
+    << "prefix was mangled (might be recursively prepended); got "
+    << ref_ifaces[0]->get_prefix_name() << "/" << ref_ifaces[0]->get_interface_name() << "'";
+  EXPECT_EQ(ref_ifaces[0]->get_interface_name(), "r1");
+  EXPECT_EQ(ref_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(ref_ifaces[1]->get_interface_name(), "r2");
+
+  EXPECT_NO_THROW(state_ifaces = controller.export_state_interfaces());
+  ASSERT_THAT(state_ifaces, SizeIs(2));
+  EXPECT_EQ(state_ifaces[0]->get_prefix_name(), "my_controller")
+    << "prefix was mangled (might be recursively prepended); got '"
+    << state_ifaces[0]->get_prefix_name() << '/' << state_ifaces[0]->get_interface_name() << "'";
+  EXPECT_EQ(state_ifaces[0]->get_interface_name(), "s1");
+  EXPECT_EQ(state_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(state_ifaces[1]->get_interface_name(), "s2");
+
+  // Final check
+  EXPECT_NO_THROW(ref_ifaces = controller.export_reference_interfaces());
+  ASSERT_THAT(ref_ifaces, SizeIs(2));
+  EXPECT_EQ(ref_ifaces[0]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(ref_ifaces[0]->get_interface_name(), "r1");
+  EXPECT_EQ(ref_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(ref_ifaces[1]->get_interface_name(), "r2");
+
+  EXPECT_NO_THROW(state_ifaces = controller.export_state_interfaces());
+  ASSERT_THAT(state_ifaces, SizeIs(2));
+  EXPECT_EQ(state_ifaces[0]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(state_ifaces[0]->get_interface_name(), "s1");
+  EXPECT_EQ(state_ifaces[1]->get_prefix_name(), "my_controller");
+  EXPECT_EQ(state_ifaces[1]->get_interface_name(), "s2");
+}
+
 TEST_F(ChainableControllerInterfaceTest, test_update_logic)
 {
   TestableChainableControllerInterface controller;
