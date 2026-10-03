@@ -452,37 +452,37 @@ inline bool check_for_limits_update(
     {
       if (param_name == param_base_name + ".min_position")
       {
-        changed = updated_limits.min_position != parameter.get_value<double>();
+        changed |= updated_limits.min_position != parameter.get_value<double>();
         updated_limits.min_position = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_position")
       {
-        changed = updated_limits.max_position != parameter.get_value<double>();
+        changed |= updated_limits.max_position != parameter.get_value<double>();
         updated_limits.max_position = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_velocity")
       {
-        changed = updated_limits.max_velocity != parameter.get_value<double>();
+        changed |= updated_limits.max_velocity != parameter.get_value<double>();
         updated_limits.max_velocity = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_acceleration")
       {
-        changed = updated_limits.max_acceleration != parameter.get_value<double>();
+        changed |= updated_limits.max_acceleration != parameter.get_value<double>();
         updated_limits.max_acceleration = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_deceleration")
       {
-        changed = updated_limits.max_deceleration != parameter.get_value<double>();
+        changed |= updated_limits.max_deceleration != parameter.get_value<double>();
         updated_limits.max_deceleration = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_jerk")
       {
-        changed = updated_limits.max_jerk != parameter.get_value<double>();
+        changed |= updated_limits.max_jerk != parameter.get_value<double>();
         updated_limits.max_jerk = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".max_effort")
       {
-        changed = updated_limits.max_effort != parameter.get_value<double>();
+        changed |= updated_limits.max_effort != parameter.get_value<double>();
         updated_limits.max_effort = parameter.get_value<double>();
       }
     }
@@ -818,22 +818,22 @@ inline bool check_for_limits_update(
     {
       if (param_name == param_base_name + ".k_position")
       {
-        changed = updated_limits.k_position != parameter.get_value<double>();
+        changed |= updated_limits.k_position != parameter.get_value<double>();
         updated_limits.k_position = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".k_velocity")
       {
-        changed = updated_limits.k_velocity != parameter.get_value<double>();
+        changed |= updated_limits.k_velocity != parameter.get_value<double>();
         updated_limits.k_velocity = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".soft_lower_limit")
       {
-        changed = updated_limits.min_position != parameter.get_value<double>();
+        changed |= updated_limits.min_position != parameter.get_value<double>();
         updated_limits.min_position = parameter.get_value<double>();
       }
       else if (param_name == param_base_name + ".soft_upper_limit")
       {
-        changed = updated_limits.max_position != parameter.get_value<double>();
+        changed |= updated_limits.max_position != parameter.get_value<double>();
         updated_limits.max_position = parameter.get_value<double>();
       }
     }
