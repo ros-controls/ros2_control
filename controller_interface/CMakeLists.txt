@@ -9,6 +9,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   fmt
   hardware_interface
   pal_statistics
+  rclcpp
   rclcpp_lifecycle
   realtime_tools
 )
@@ -31,6 +32,7 @@ target_include_directories(controller_interface PUBLIC
 )
 target_link_libraries(controller_interface PUBLIC
                       hardware_interface::hardware_interface
+                      rclcpp::rclcpp
                       rclcpp_lifecycle::rclcpp_lifecycle
                       realtime_tools::realtime_tools
                       ${pal_statistics_LIBRARIES}

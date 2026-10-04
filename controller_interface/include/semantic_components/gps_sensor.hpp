@@ -20,6 +20,7 @@
 #include <limits>
 #include <string>
 
+#include "rclcpp/version.h"
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 
@@ -36,6 +37,14 @@ template <GPSSensorOption sensor_option>
 class GPSSensor : public SemanticComponentInterface<sensor_msgs::msg::NavSatFix>
 {
 public:
+#if RCLCPP_VERSION_MAJOR >= 28
+  static constexpr int8_t STATUS_UNKNOWN = sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN;
+  static constexpr uint16_t SERVICE_UNKNOWN = sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN;
+#else
+  static constexpr int8_t STATUS_UNKNOWN = -2;
+  static constexpr uint16_t SERVICE_UNKNOWN = 0;
+#endif
+
   static_assert(
     sensor_option == GPSSensorOption::WithCovariance ||
       sensor_option == GPSSensorOption::WithoutCovariance,
@@ -69,8 +78,6 @@ public:
     {
       return static_cast<int8_t>(data.value());
     }
-    // NavSatStatus::STATUS_UNKNOWN is not available in ROS 2 Humble.
-    constexpr int8_t STATUS_UNKNOWN = -2;
     return STATUS_UNKNOWN;
   }
 
@@ -86,8 +93,6 @@ public:
     {
       return static_cast<uint16_t>(data.value());
     }
-    // NavSatStatus::SERVICE_UNKNOWN is not available in ROS 2 Humble.
-    constexpr uint16_t SERVICE_UNKNOWN = 0;
     return SERVICE_UNKNOWN;
   }
 
