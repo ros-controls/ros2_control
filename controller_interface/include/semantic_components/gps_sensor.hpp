@@ -16,6 +16,7 @@
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <string>
 
@@ -68,7 +69,9 @@ public:
     {
       return static_cast<int8_t>(data.value());
     }
-    return sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN;
+    // NavSatStatus::STATUS_UNKNOWN is not available in ROS 2 Humble.
+    constexpr int8_t STATUS_UNKNOWN = -2;
+    return STATUS_UNKNOWN;
   }
 
   /**
@@ -83,7 +86,9 @@ public:
     {
       return static_cast<uint16_t>(data.value());
     }
-    return sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN;
+    // NavSatStatus::SERVICE_UNKNOWN is not available in ROS 2 Humble.
+    constexpr uint16_t SERVICE_UNKNOWN = 0;
+    return SERVICE_UNKNOWN;
   }
 
   /**

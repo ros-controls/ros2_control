@@ -134,9 +134,7 @@ TEST_F(GPSSensorTest, unavailable_status_should_be_unknown_and_recover)
   {
     std::unique_lock<std::shared_mutex> lock(gps_state->get_mutex());
     // Read from another thread while this thread holds the lock for all read attempts
-    EXPECT_EQ(
-      sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN,
-      std::async(std::launch::async, [this] { return sut.get_status(); }).get());
+    EXPECT_EQ(-2, std::async(std::launch::async, [this] { return sut.get_status(); }).get());
     EXPECT_EQ(13u, sut.get_service());
   }
 
@@ -154,9 +152,7 @@ TEST_F(GPSSensorTest, unavailable_service_should_be_unknown_and_recover)
   {
     std::unique_lock<std::shared_mutex> lock(gps_service->get_mutex());
     // Read from another thread while this thread holds the lock for all read attempts
-    EXPECT_EQ(
-      sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN,
-      std::async(std::launch::async, [this] { return sut.get_service(); }).get());
+    EXPECT_EQ(0u, std::async(std::launch::async, [this] { return sut.get_service(); }).get());
     EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
   }
 
@@ -184,8 +180,8 @@ TEST_F(
       std::async(
         std::launch::async, [this, &message] { return sut.get_values_as_message(message); })
         .get());
-    EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN, message.status.status);
-    EXPECT_EQ(sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN, message.status.service);
+    EXPECT_EQ(-2, message.status.status);
+    EXPECT_EQ(0u, message.status.service);
     EXPECT_DOUBLE_EQ(gps_states.at(2), message.latitude);
     EXPECT_DOUBLE_EQ(gps_states.at(3), message.longitude);
     EXPECT_DOUBLE_EQ(gps_states.at(4), message.altitude);
