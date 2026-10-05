@@ -499,6 +499,7 @@ inline bool check_for_limits_update(
     {
       if (param_name == param_base_name + ".has_position_limits")
       {
+        const bool previous_has_position_limits = updated_limits.has_position_limits;
         updated_limits.has_position_limits = parameter.get_value<bool>();
         if (updated_limits.has_position_limits)
         {
@@ -520,11 +521,8 @@ inline bool check_for_limits_update(
               "'min_position' < 'max_position'");
             updated_limits.has_position_limits = false;
           }
-          else
-          {
-            changed = true;
-          }
         }
+        changed |= previous_has_position_limits != updated_limits.has_position_limits;
       }
       else if (param_name == param_base_name + ".has_velocity_limits")
       {
