@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.49.0 (2026-10-05)
+-------------------
 * Replace RT buffer with realtime thread safe box (`#3633 <https://github.com/ros-controls/ros2_control/issues/3633>`_) (`#3652 <https://github.com/ros-controls/ros2_control/issues/3652>`_)
 * docs(controller_manager): drop misadvised 'priority 99' limits (`#3640 <https://github.com/ros-controls/ros2_control/issues/3640>`_) (`#3650 <https://github.com/ros-controls/ros2_control/issues/3650>`_)
 * Robustify CM tests on CI (`#3542 <https://github.com/ros-controls/ros2_control/issues/3542>`_) (`#3626 <https://github.com/ros-controls/ros2_control/issues/3626>`_)
