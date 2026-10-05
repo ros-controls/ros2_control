@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.19.0 (2026-10-05)
+-------------------
 * Wait for the rqt node instead of sleeping a fixed 2s (`#3592 <https://github.com/ros-controls/ros2_control/issues/3592>`_) (`#3608 <https://github.com/ros-controls/ros2_control/issues/3608>`_)
 * Contributors: mergify[bot]
 

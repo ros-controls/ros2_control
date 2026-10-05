@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.19.0 (2026-10-05)
+-------------------
 * [joint_limits] Fix the changed flag over the whole parameter batch (`#3576 <https://github.com/ros-controls/ros2_control/issues/3576>`_) (`#3662 <https://github.com/ros-controls/ros2_control/issues/3662>`_)
 * Replace RT buffer with realtime thread safe box (`#3633 <https://github.com/ros-controls/ros2_control/issues/3633>`_) (`#3653 <https://github.com/ros-controls/ros2_control/issues/3653>`_)
 * Contributors: mergify[bot]
