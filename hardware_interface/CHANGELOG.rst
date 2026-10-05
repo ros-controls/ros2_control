@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Match complete command interfaces in GenericSystem mode switches (`#3596 <https://github.com/ros-controls/ros2_control/issues/3596>`_) (`#3600 <https://github.com/ros-controls/ros2_control/issues/3600>`_)
+* Contributors: mergify[bot]
+
 4.48.1 (2026-09-08)
 -------------------
 

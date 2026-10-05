@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Replace RT buffer with realtime thread safe box (`#3633 <https://github.com/ros-controls/ros2_control/issues/3633>`_) (`#3652 <https://github.com/ros-controls/ros2_control/issues/3652>`_)
+* docs(controller_manager): drop misadvised 'priority 99' limits (`#3640 <https://github.com/ros-controls/ros2_control/issues/3640>`_) (`#3650 <https://github.com/ros-controls/ros2_control/issues/3650>`_)
+* Robustify CM tests on CI (`#3542 <https://github.com/ros-controls/ros2_control/issues/3542>`_) (`#3626 <https://github.com/ros-controls/ros2_control/issues/3626>`_)
+* Fix data race in overrun warning parameter (`#3619 <https://github.com/ros-controls/ros2_control/issues/3619>`_) (`#3621 <https://github.com/ros-controls/ros2_control/issues/3621>`_)
+* Contributors: mergify[bot]
+
 4.48.1 (2026-09-08)
 -------------------
 * Add test_depend on launch_testing_ament_cmake to controller_manager (`#3595 <https://github.com/ros-controls/ros2_control/issues/3595>`_) (`#3598 <https://github.com/ros-controls/ros2_control/issues/3598>`_)
