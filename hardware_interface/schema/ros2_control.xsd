@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+
+  <!-- Reusable types -->
+  <xs:complexType name="paramType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="interfaceType">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="commandInterfaceType">
+    <xs:sequence>
+      <xs:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="jointOrGpioType">
+    <xs:sequence>
+      <xs:element name="command_interface" type="commandInterfaceType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="state_interface" type="interfaceType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+
+
+  <!-- Root robot element -->
+  <xs:element name="robot">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="link"/>
+        <xs:element ref="joint"/>
+        <xs:element ref="ros2_control"/>
+        <xs:element ref="transmission" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="material" minOccurs="0" maxOccurs="unbounded"/>
+        <!-- Add more URDF elements here as needed -->
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+
+  <!-- Minimal link and joint element definitions for validation -->
+  <xs:element name="link">
+    <xs:complexType mixed="true">
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="joint">
+    <xs:complexType mixed="true">
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="transmission" type="xs:anyType"/>
+  <xs:element name="material" type="xs:anyType"/>
+
+
+  <!-- ros2_control block -->
+  <xs:element name="ros2_control">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="hardware">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="plugin" type="xs:string"/>
+              <xs:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="joint" type="jointOrGpioType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="gpio" type="jointOrGpioType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="sensor" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="state_interface" type="interfaceType" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+              <xs:attribute name="name" type="xs:string" use="required"/>
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
