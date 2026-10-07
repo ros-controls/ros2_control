@@ -2,6 +2,11 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
 6.11.0 (2026-10-05)
 -------------------
 
