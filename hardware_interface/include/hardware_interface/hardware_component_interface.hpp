@@ -91,6 +91,16 @@ public:
    */
   CallbackReturn init(const hardware_interface::HardwareComponentParams & params);
 
+  /**
+   * \brief Initialize the hardware component and apply ROS arguments to its framework-managed node.
+   * \param[in] params Hardware component initialization parameters.
+   * \param[in] node_options_args ROS arguments inherited by the framework-managed hardware node.
+   * \returns CallbackReturn::SUCCESS if initialization succeeds.
+   */
+  CallbackReturn init(
+    const hardware_interface::HardwareComponentParams & params,
+    const std::vector<std::string> & node_options_args);
+
   /// User-overridable method to configure the structure of the HardwareStatus message.
   /**
    * To enable status publishing, override this method to pre-allocate the message structure
