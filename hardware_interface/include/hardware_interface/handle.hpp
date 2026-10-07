@@ -609,7 +609,17 @@ public:
     }
     if (data_type_.is_castable_to_double())
     {
-      std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
+      std::function<double()> f = [this]()
+      {
+        // The sampling runs on the introspection publisher thread while set_value() may write
+        // concurrently: take the shared lock (non-blocking) to synchronize with the writer.
+        std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+        return data_type_.cast_to_double(value_);
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
@@ -687,7 +697,17 @@ public:
     }
     if (data_type_.is_castable_to_double())
     {
-      std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
+      std::function<double()> f = [this]()
+      {
+        // The sampling runs on the introspection publisher thread while set_value() may write
+        // concurrently: take the shared lock (non-blocking) to synchronize with the writer.
+        std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+        return data_type_.cast_to_double(value_);
+      };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
