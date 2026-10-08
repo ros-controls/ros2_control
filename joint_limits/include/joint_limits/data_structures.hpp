@@ -42,6 +42,7 @@ DEFINE_LIMIT_STRUCT(PositionLimits)
 DEFINE_LIMIT_STRUCT(VelocityLimits)
 DEFINE_LIMIT_STRUCT(EffortLimits)
 DEFINE_LIMIT_STRUCT(AccelerationLimits)
+DEFINE_LIMIT_STRUCT(JerkLimits)
 
 struct JointControlInterfacesData
 {
