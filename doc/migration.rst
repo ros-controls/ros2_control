@@ -122,14 +122,14 @@ ChainableControllerInterface
 
   .. code-block:: cpp
 
-     static constexpr std::array<std::string_view, 3> kReferenceNames = {
+     static constexpr std::array<std::string_view, 3> reference_interface_names = {
        "angular_velocity.x", "angular_velocity.y", "angular_velocity.z"};
 
      std::vector<hardware_interface::CommandInterface::SharedPtr>
      MyController::on_export_reference_interfaces_list()
      {
        ref_itfs_.clear();
-       for (const auto & name : kReferenceNames)
+       for (const auto & name : reference_interface_names)
        {
          auto itf = std::make_shared<hardware_interface::CommandInterface>(
            get_node()->get_name(), std::string{name});
@@ -144,11 +144,21 @@ ChainableControllerInterface
   Migration checklist for a chainable controller:
 
   #. Rename ``on_export_state_interfaces()`` to ``on_export_state_interfaces_list()`` and ``on_export_reference_interfaces()`` to ``on_export_reference_interfaces_list()``, changing the return types to ``std::vector<...::SharedPtr>``.
-  #. Replace every ``emplace_back(prefix, name, &storage)`` with ``std::make_shared<...>(prefix, name)``, set the initial value with ``set_value()``, and store the pointer in a member.
+  #. Replace every ``emplace_back(prefix, name, &storage)`` with ``std::make_shared<...>(prefix, name)``, set the initial value with ``set_value()``, and store the pointer in a member. The prefix of every exported interface must begin with the controller's name (``get_node()->get_name()``), otherwise exporting throws a ``std::runtime_error``.
   #. Implement ``on_export_reference_interfaces_list()`` even if the controller has no reference interfaces; return an empty vector in that case.
   #. Remove the ``reference_interfaces_.resize(...)`` and ``state_interfaces_values_.resize(...)`` calls, usually found in ``on_configure()`` or the export methods.
   #. Replace every read of ``reference_interfaces_[i]`` with ``ref_itfs_[i]->get_optional()`` and every write with ``ref_itfs_[i]->set_value(...)``. Do the same for the member variables that backed the exported state interfaces. Check ``update_reference_from_subscribers()``, ``update_and_write_commands()``, ``on_set_chained_mode()``, ``on_activate()`` and ``on_deactivate()``, plus the controller's tests.
   #. Search the package for ``reference_interfaces_``, ``state_interfaces_values_``, ``on_export_state_interfaces()`` and ``on_export_reference_interfaces()``; no matches should remain.
+
+controller_manager
+******************
+
+* ``configure_controller`` now performs a single-step lifecycle transition and
+  only accepts controllers in the ``unconfigured`` state (`#3196
+  <https://github.com/ros-controls/ros2_control/pull/3196>`__). Previously an
+  ``inactive`` controller was implicitly cleaned up and then reconfigured. To
+  reconfigure an ``inactive`` controller, call ``cleanup_controller`` first and
+  then ``configure_controller``.
 
 * The controller manager's ros arguments are no longer forwarded to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
   So, any remapping done at the controller manager level will not be visible to the controllers anymore.
@@ -184,16 +194,6 @@ ChainableControllerInterface
             "/diffbot_base_controller/cmd_vel:=/cmd_vel",
         ],
     )
-
-controller_manager
-******************
-
-* ``configure_controller`` now performs a single-step lifecycle transition and
-  only accepts controllers in the ``unconfigured`` state (`#3196
-  <https://github.com/ros-controls/ros2_control/pull/3196>`__). Previously an
-  ``inactive`` controller was implicitly cleaned up and then reconfigured. To
-  reconfigure an ``inactive`` controller, call ``cleanup_controller`` first and
-  then ``configure_controller``.
 
 hardware_interface
 ******************
@@ -278,15 +278,6 @@ hardware_interface
 
   Interfaces not listed in the ``ros2_control`` tag are added by overriding ``export_unlisted_state_interface_descriptions()`` or ``export_unlisted_command_interface_descriptions()``. Override ``on_export_state_interfaces()`` or ``on_export_command_interfaces()`` only if full control over the exported interfaces is needed. See :ref:`writing_new_hardware_component` for details.
 
-  Migration checklist for a hardware component:
-
-  #. Delete the ``export_state_interfaces()`` and ``export_command_interfaces()`` overrides.
-  #. Make sure every interface they exported is listed in the ``ros2_control`` tag of the URDF; move the rest to ``export_unlisted_state_interface_descriptions()`` or ``export_unlisted_command_interface_descriptions()``.
-  #. In ``read()``, replace assignments to the member variables that backed the state interfaces (e.g. ``hw_positions_[i] = ...``) with ``set_state("<joint>/<interface>", value)``.
-  #. In ``write()``, replace reads of the member variables that backed the command interfaces with ``get_command<double>("<joint>/<interface>")``. Do the same in ``on_activate()``, ``on_deactivate()`` and ``perform_command_mode_switch()``.
-  #. Delete the now unused storage vectors (``hw_states_``, ``hw_commands_`` and similar) and their ``resize()`` calls in ``on_init()``.
-  #. Search the package for ``export_state_interfaces``, ``export_command_interfaces`` and ``&hw_``; no matches should remain.
-
   Loops over the old storage vectors map to loops over the interface maps of the framework (``joint_state_interfaces_``, ``joint_command_interfaces_``, and likewise for ``sensor_``, ``gpio_`` and ``unlisted_``), keyed by the fully qualified interface name, e.g. ``prefix/joint_1/velocity``:
 
   .. code-block:: cpp
@@ -304,6 +295,15 @@ hardware_interface
        set_state(name, 0.0);
      }
      set_command(name_of_command_interface_x, get_state(name_of_state_interface_y));
+
+  Migration checklist for a hardware component:
+
+  #. Delete the ``export_state_interfaces()`` and ``export_command_interfaces()`` overrides.
+  #. Make sure every interface they exported is listed in the ``ros2_control`` tag of the URDF; move the rest to ``export_unlisted_state_interface_descriptions()`` or ``export_unlisted_command_interface_descriptions()``.
+  #. In ``read()``, replace assignments to the member variables that backed the state interfaces (e.g. ``hw_positions_[i] = ...``) with ``set_state("<joint>/<interface>", value)``.
+  #. In ``write()``, replace reads of the member variables that backed the command interfaces with ``get_command<double>("<joint>/<interface>")``. Do the same in ``on_activate()``, ``on_deactivate()`` and ``perform_command_mode_switch()``.
+  #. Delete the now unused storage vectors (``hw_states_``, ``hw_commands_`` and similar) and their ``resize()`` calls in ``on_init()``.
+  #. Search the package for ``export_state_interfaces`` and ``export_command_interfaces``, and for addresses of the old storage members (e.g. ``&hw_``); no matches should remain.
 
   This migration has been possible since Jazzy, see `the Jazzy migration guide <https://control.ros.org/jazzy/doc/ros2_control/doc/migration.html#migration-of-command-stateinterfaces>`__.
 
