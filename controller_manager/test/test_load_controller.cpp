@@ -36,6 +36,46 @@ class TestLoadController : public ControllerManagerFixture<controller_manager::C
 {
 };
 
+class TestLoadControllerWithGlobalArguments : public TestLoadController
+{
+public:
+  static void SetUpTestCase()
+  {
+    const char * argv[] = {
+      "test_load_controller",
+      "--ros-args",
+      "--remap",
+      "__node:=remapped_controller_manager",
+      "--remap",
+      "__ns:=/test_robot",
+      "--params-file",
+      TEST_CONTROLLER_GLOBAL_PARAMS_FILE,
+      "--param",
+      "global_override:=42"};
+    rclcpp::init(static_cast<int>(sizeof(argv) / sizeof(argv[0])), argv);
+  }
+};
+
+TEST_F(TestLoadControllerWithGlobalArguments, controller_names_and_global_parameters_are_preserved)
+{
+  ASSERT_STREQ(cm_->get_name(), "remapped_controller_manager");
+  ASSERT_STREQ(cm_->get_namespace(), "/test_robot");
+  auto first = cm_->load_controller(CONTROLLER_NAME_1, TEST_CONTROLLER_CLASS_NAME);
+  auto second = cm_->load_controller(CONTROLLER_NAME_2, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  EXPECT_STREQ(first->get_node()->get_name(), CONTROLLER_NAME_1);
+  EXPECT_STREQ(second->get_node()->get_name(), CONTROLLER_NAME_2);
+  EXPECT_STREQ(first->get_node()->get_namespace(), "/test_robot");
+  EXPECT_STREQ(second->get_node()->get_namespace(), "/test_robot");
+  EXPECT_EQ(first->get_node()->get_parameter("update_rate").as_int(), 1337);
+  ASSERT_TRUE(first->get_node()->has_parameter("joints"));
+  EXPECT_EQ(
+    first->get_node()->get_parameter("joints").as_string_array(), strvec({"joint1", "joint2"}));
+  EXPECT_EQ(first->get_node()->get_parameter("global_override").as_int(), 42);
+  EXPECT_EQ(second->get_node()->get_parameter("global_override").as_int(), 42);
+}
+
 TEST_F(TestLoadController, load_unknown_controller)
 {
   ASSERT_EQ(cm_->load_controller("unknown_controller_name", "unknown_controller_type"), nullptr);

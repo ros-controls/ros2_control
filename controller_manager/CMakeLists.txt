@@ -112,6 +112,9 @@ if(BUILD_TESTING)
     test_controller_failed_init
     ros2_control_test_assets::ros2_control_test_assets
   )
+  target_compile_definitions(test_load_controller PRIVATE
+    TEST_CONTROLLER_GLOBAL_PARAMS_FILE="${CMAKE_CURRENT_SOURCE_DIR}/test/test_controller_global_arguments.yaml"
+  )
 
   ament_add_gmock(test_controllers_chaining_with_controller_manager
     test/test_controllers_chaining_with_controller_manager.cpp

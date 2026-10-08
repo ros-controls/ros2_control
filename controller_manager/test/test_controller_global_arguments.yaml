@@ -1,0 +1,4 @@
+/test_robot/test_controller1:
+  ros__parameters:
+    update_rate: 1337
+    joints: [joint1, joint2]

@@ -2701,7 +2701,10 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     rclcpp::NodeOptions()
       .allow_undeclared_parameters(true)
       .automatically_declare_parameters_from_overrides(true);
-  std::vector<std::string> node_options_arguments = controller_node_options.arguments();
+  // Keep the controller name even when the manager process has a global node-name remap.
+  // Continue using global arguments so Humble's startup parameter files remain available.
+  std::vector<std::string> node_options_arguments = {
+    RCL_ROS_ARGS_FLAG, RCL_REMAP_FLAG, "__node:=" + controller.info.name};
   for (const auto & parameters_file : controller.info.parameters_files)
   {
     if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
