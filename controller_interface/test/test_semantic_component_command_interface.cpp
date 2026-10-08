@@ -35,15 +35,12 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
 
   // validate assign_loaned_command_interfaces
   // create interfaces and assign values to it
-  std::vector<double> interface_values = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
-  auto cmd_interface_1 = std::make_shared<hardware_interface::CommandInterface>(
-    component_name_, "1", &interface_values[0]);
-  auto cmd_interface_2 = std::make_shared<hardware_interface::CommandInterface>(
-    component_name_, "2", &interface_values[1]);
-  auto cmd_interface_3 = std::make_shared<hardware_interface::CommandInterface>(
-    component_name_, "3", &interface_values[2]);
+  auto cmd_interface_1 =
+    std::make_shared<hardware_interface::CommandInterface>(component_name_, "1");
+  auto cmd_interface_2 =
+    std::make_shared<hardware_interface::CommandInterface>(component_name_, "2");
+  auto cmd_interface_3 =
+    std::make_shared<hardware_interface::CommandInterface>(component_name_, "3");
 
   // create local command interface vector
   std::vector<hardware_interface::LoanedCommandInterface> temp_command_interfaces;
@@ -63,9 +60,9 @@ TEST_F(SemanticCommandInterfaceTest, validate_command_interfaces)
   const std::vector<double> test_cmd_values = {0.1, 0.2, 0.3};
   EXPECT_TRUE(semantic_component_->set_values(test_cmd_values));
 
-  EXPECT_EQ(interface_values[0], test_cmd_values[0]);
-  EXPECT_EQ(interface_values[1], test_cmd_values[1]);
-  EXPECT_EQ(interface_values[2], test_cmd_values[2]);
+  EXPECT_EQ(cmd_interface_1->get_optional().value(), test_cmd_values[0]);
+  EXPECT_EQ(cmd_interface_2->get_optional().value(), test_cmd_values[1]);
+  EXPECT_EQ(cmd_interface_3->get_optional().value(), test_cmd_values[2]);
 
   // release the state_interfaces_
   semantic_component_->release_interfaces();
