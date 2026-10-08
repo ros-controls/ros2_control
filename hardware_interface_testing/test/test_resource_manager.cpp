@@ -1902,6 +1902,75 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
     std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_DEACTIVATE_VALUE);
 }
 
+TEST_F(ResourceManagerTestReadWriteError, state_switch_callback_called_on_hardware_read_error)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // shared_ptr so the callback never refers to a dead stack variable
+  auto callback_count = std::make_shared<int>(0);
+  rm->set_on_component_state_switch_callback([callback_count]() { ++(*callback_count); });
+
+  ASSERT_EQ(rm->read(time, duration).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(rm->write(time, duration).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(*callback_count, 0);
+
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::READ_FAIL_VALUE));
+  ASSERT_TRUE(claimed_itfs[1].set_value(test_constants::READ_FAIL_VALUE - 10.0));
+  EXPECT_EQ(rm->read(time, duration).result, hardware_interface::return_type::ERROR);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  EXPECT_EQ(*callback_count, 1);
+}
+
+TEST_F(ResourceManagerTestReadWriteError, state_switch_callback_called_on_hardware_write_error)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  auto callback_count = std::make_shared<int>(0);
+  rm->set_on_component_state_switch_callback([callback_count]() { ++(*callback_count); });
+
+  ASSERT_EQ(rm->read(time, duration).result, hardware_interface::return_type::OK);
+  ASSERT_EQ(rm->write(time, duration).result, hardware_interface::return_type::OK);
+  EXPECT_EQ(*callback_count, 0);
+
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_FAIL_VALUE));
+  ASSERT_TRUE(claimed_itfs[1].set_value(test_constants::WRITE_FAIL_VALUE - 10.0));
+  EXPECT_EQ(rm->write(time, duration).result, hardware_interface::return_type::ERROR);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(*callback_count, 1);
+}
+
+TEST_F(
+  ResourceManagerTestReadWriteError, state_switch_callback_called_once_when_several_components_fail)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  auto callback_count = std::make_shared<int>(0);
+  rm->set_on_component_state_switch_callback([callback_count]() { ++(*callback_count); });
+
+  ASSERT_TRUE(claimed_itfs[0].set_value(test_constants::WRITE_FAIL_VALUE));
+  ASSERT_TRUE(claimed_itfs[1].set_value(test_constants::WRITE_FAIL_VALUE));
+  EXPECT_EQ(rm->write(time, duration).result, hardware_interface::return_type::ERROR);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  // one notification per cycle, not one per failed component
+  EXPECT_EQ(*callback_count, 1);
+}
+
 TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
 {
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf, false);
