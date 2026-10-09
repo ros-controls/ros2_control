@@ -295,18 +295,24 @@ TEST_F(ForceTorqueSensorTest, get_values_after_release_interfaces)
 {
   force_torque_sensor_ = std::make_unique<TestableForceTorqueSensor>(sensor_name_);
 
-  auto force_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[0], &force_values_[0]);
-  auto force_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[1], &force_values_[1]);
-  auto force_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[2], &force_values_[2]);
-  auto torque_x = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[3], &torque_values_[0]);
-  auto torque_y = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[4], &torque_values_[1]);
-  auto torque_z = std::make_shared<hardware_interface::StateInterface>(
-    sensor_name_, fts_interface_names_[5], &torque_values_[2]);
+  auto force_x =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[0]);
+  std::ignore = force_x->set_value(force_values_[0]);
+  auto force_y =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[1]);
+  std::ignore = force_y->set_value(force_values_[1]);
+  auto force_z =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[2]);
+  std::ignore = force_z->set_value(force_values_[2]);
+  auto torque_x =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[3]);
+  std::ignore = torque_x->set_value(torque_values_[0]);
+  auto torque_y =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[4]);
+  std::ignore = torque_y->set_value(torque_values_[1]);
+  auto torque_z =
+    std::make_shared<hardware_interface::StateInterface>(sensor_name_, fts_interface_names_[5]);
+  std::ignore = torque_z->set_value(torque_values_[2]);
 
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
   temp_state_interfaces.reserve(6);
