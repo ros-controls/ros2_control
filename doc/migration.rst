@@ -104,10 +104,11 @@ ChainableControllerInterface
      controller_interface::return_type MyController::update_and_write_commands(
        const rclcpp::Time &, const rclcpp::Duration &)
      {
-       const auto reference = my_ref_itf_->get_optional();
-       if (reference.has_value() && !std::isnan(reference.value()))
+       const double reference =
+         my_ref_itf_->get_optional().value_or(std::numeric_limits<double>::quiet_NaN());
+       if (!std::isnan(reference))
        {
-         std::ignore = command_interfaces_[0].set_value(reference.value());
+         std::ignore = command_interfaces_[0].set_value(reference);
        }
        if (const auto state = state_interfaces_[0].get_optional(); state.has_value())
        {
