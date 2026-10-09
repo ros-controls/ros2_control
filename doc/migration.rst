@@ -81,7 +81,7 @@ ChainableControllerInterface
        return {my_ref_itf_};
      }
 
-* The exported state interfaces are now returned as ``ConstSharedPtr`` from ``export_state_interfaces()`` to ensure they are read-only for consumers (`#1767 <https://github.com/ros-controls/ros2_control/pull/1767>`_).
+* The exported state interfaces are now returned as ``ConstSharedPtr`` from ``ChainableControllerInterface::export_state_interfaces()`` to ensure they are read-only for consumers (`#1767 <https://github.com/ros-controls/ros2_control/pull/1767>`_).
 
 * The internal storage variables ``reference_interfaces_`` and ``state_interfaces_values_`` have been removed (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`_, `#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). Values now live inside the exported interfaces themselves. Keep the shared pointers created in ``on_export_*_interfaces_list()`` as members, or use the ordered exported interface containers (``ordered_exported_state_interfaces_`` and ``ordered_exported_reference_interfaces_``), and access the values through ``get_optional()`` and ``set_value()`` in ``update_reference_from_subscribers()``, ``update_and_write_commands()`` and ``on_set_chained_mode()``:
 
@@ -149,7 +149,7 @@ ChainableControllerInterface
   #. Implement ``on_export_reference_interfaces_list()`` even if the controller has no reference interfaces; return an empty vector in that case.
   #. Remove the ``reference_interfaces_.resize(...)`` and ``state_interfaces_values_.resize(...)`` calls, usually found in ``on_configure()`` or the export methods.
   #. Replace every read of ``reference_interfaces_[i]`` with ``ref_itfs_[i]->get_optional()`` and every write with ``ref_itfs_[i]->set_value(...)``. Do the same for the member variables that backed the exported state interfaces. Check ``update_reference_from_subscribers()``, ``update_and_write_commands()``, ``on_set_chained_mode()``, ``on_activate()`` and ``on_deactivate()``, plus the controller's tests.
-  #. Search the package for ``reference_interfaces_``, ``state_interfaces_values_``, ``on_export_state_interfaces()`` and ``on_export_reference_interfaces()``; no matches should remain.
+  #. Search the package for ``reference_interfaces_``, ``state_interfaces_values_``, ``on_export_state_interfaces()`` and ``on_export_reference_interfaces()`` in the controller sources; no matches should remain. Hardware components in the same package still use ``on_export_state_interfaces()``, so ignore matches there.
 
 controller_manager
 ******************
@@ -279,7 +279,7 @@ hardware_interface
 
   Interfaces not listed in the ``ros2_control`` tag are added by overriding ``export_unlisted_state_interface_descriptions()`` or ``export_unlisted_command_interface_descriptions()``. Override ``on_export_state_interfaces()`` or ``on_export_command_interfaces()`` only if full control over the exported interfaces is needed. See :ref:`writing_new_hardware_component` for details.
 
-  Loops over the old storage vectors map to loops over the interface maps of the framework (``joint_state_interfaces_``, ``joint_command_interfaces_``, and likewise for ``sensor_``, ``gpio_`` and ``unlisted_``), keyed by the fully qualified interface name, e.g. ``prefix/joint_1/velocity``:
+  Loops over the old storage vectors map to loops over the interface maps of the framework (``joint_state_interfaces_``, ``joint_command_interfaces_``, and likewise for ``sensor_``, ``gpio_`` and ``unlisted_``), keyed by the fully qualified interface name, e.g. ``prefix/joint_1/velocity``. The example below assumes all interfaces in the map are of type ``double``; ``set_state`` throws for interfaces of other data types:
 
   .. code-block:: cpp
 
@@ -308,8 +308,8 @@ hardware_interface
 
   This migration has been possible since Jazzy, see `the Jazzy migration guide <https://control.ros.org/jazzy/doc/ros2_control/doc/migration.html#migration-of-command-stateinterfaces>`__.
 
-* The ``Handle(prefix_name, interface_name, double * value_ptr)`` constructor of ``StateInterface`` and ``CommandInterface`` has been removed (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). Handles now always own their value. Construct them from an ``InterfaceDescription`` or with ``Handle(prefix_name, interface_name, data_type, initial_value)``.
+* The ``Handle(prefix_name, interface_name, double * value_ptr)`` constructor of ``StateInterface`` and ``CommandInterface`` has been removed (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). Handles now always own their value. Construct them from an ``InterfaceDescription`` or with ``Handle(prefix_name, interface_name, data_type, initial_value)``, where ``data_type`` and ``initial_value`` are strings defaulting to ``"double"`` and ``""`` (NaN). For a double interface ``Handle(prefix_name, interface_name)`` is enough.
 
 * ``Handle::operator bool()`` has been removed (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). Use ``is_valid()`` instead.
 
-* ``set_value<T>()`` on a handle now throws a ``std::runtime_error`` if ``T`` does not match the handle's data type, including ``double`` (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__).
+* ``set_value<T>()`` on a handle now throws a ``std::runtime_error`` if ``T`` does not match the handle's data type, including ``double`` (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). This error is raised at runtime, not at compile time: ``set_value(0)`` on a double interface throws because ``0`` is an ``int``; use ``set_value(0.0)``. The same applies to ``set_state`` and ``set_command`` of hardware components.

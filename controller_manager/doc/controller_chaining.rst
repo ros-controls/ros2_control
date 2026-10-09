@@ -62,7 +62,7 @@ A Controller Base-Class: ChainableController
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A ``ChainableController`` extends ``ControllerInterface`` class with ``virtual std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list() = 0`` method as well as ``virtual std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()`` method.
-This method should be implemented for each controller that **can be preceded** by another controller exporting all the reference/state interfaces.
+``on_export_reference_interfaces_list()`` must be implemented by each controller that **can be preceded** by another controller, exporting all the reference interfaces; ``on_export_state_interfaces_list()`` is optional and only needs to be overridden if the controller exports state interfaces.
 For simplicity reasons, it is assumed for now that controller's all reference interfaces are used by other controller. However, the state interfaces exported by the controller, can be used by multiple controllers at the same time and with the combination they want.
 Therefore, do not try to implement any exclusive combinations of reference interfaces, but rather write multiple controllers if you need exclusivity.
 
