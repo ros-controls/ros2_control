@@ -144,6 +144,7 @@ ChainableControllerInterface
 
   Migration checklist for a chainable controller:
 
+  #. Mark the existing ``on_export_state_interfaces()`` and ``on_export_reference_interfaces()`` overrides with ``override``. If an old method is declared without ``override``, it still compiles but is never called, so its interfaces are silently not exported; adding ``override`` makes the compiler flag every method that has to change.
   #. Rename ``on_export_state_interfaces()`` to ``on_export_state_interfaces_list()`` and ``on_export_reference_interfaces()`` to ``on_export_reference_interfaces_list()``, changing the return types to ``std::vector<...::SharedPtr>``.
   #. Replace every ``emplace_back(prefix, name, &storage)`` with ``std::make_shared<...>(prefix, name)``, set the initial value with ``set_value()``, and store the pointer in a member. The prefix of every exported interface must begin with the controller's name (``get_node()->get_name()``), otherwise exporting throws a ``std::runtime_error``.
   #. Implement ``on_export_reference_interfaces_list()`` even if the controller has no reference interfaces; return an empty vector in that case.
@@ -299,6 +300,7 @@ hardware_interface
 
   Migration checklist for a hardware component:
 
+  #. Mark the existing ``export_state_interfaces()`` and ``export_command_interfaces()`` overrides with ``override``. If an old method is declared without ``override``, it still compiles but is never called, so its interfaces are silently not exported; adding ``override`` makes the compiler flag every method that has to change.
   #. Delete the ``export_state_interfaces()`` and ``export_command_interfaces()`` overrides.
   #. Make sure every interface they exported is listed in the ``ros2_control`` tag of the URDF; move the rest to ``export_unlisted_state_interface_descriptions()`` or ``export_unlisted_command_interface_descriptions()``.
   #. In ``read()``, replace assignments to the member variables that backed the state interfaces (e.g. ``hw_positions_[i] = ...``) with ``set_state("<joint>/<interface>", value)``.
