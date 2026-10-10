@@ -135,23 +135,6 @@ public:
    */
   virtual rclcpp::NodeOptions define_custom_node_options() const;
 
-  /// Exports all state interfaces for this hardware interface.
-  /**
-   * Old way of exporting the StateInterfaces. If a empty vector is returned then
-   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
-   * then the exporting of the StateInterfaces is only done with this function and the ownership is
-   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
-   * be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
-  [[deprecated(
-    "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]] virtual std::vector<StateInterface>
-  export_state_interfaces();
-
   /**
    * Override this method to export custom StateInterfaces which are not defined in the URDF file.
    * Those interfaces will be added to the unlisted_state_interfaces_ map.
@@ -169,23 +152,6 @@ public:
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
   virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces();
-
-  /// Exports all command interfaces for this hardware interface.
-  /**
-   * Old way of exporting the CommandInterfaces. If a empty vector is returned then
-   * the on_export_command_interfaces() method is called. If a vector with CommandInterfaces is
-   * returned then the exporting of the CommandInterfaces is only done with this function and the
-   * ownership is transferred to the resource manager. The set_command(...), get_command(...), ...,
-   * can then not be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
-  [[deprecated(
-    "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is handled by the Framework.")]] virtual std::vector<CommandInterface>
-  export_command_interfaces();
 
   /**
    * Override this method to export custom CommandInterfaces which are not defined in the URDF file.
