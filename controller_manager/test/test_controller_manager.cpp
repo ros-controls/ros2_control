@@ -20,6 +20,7 @@
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rcl/time.h"
 #include "rclcpp/executor.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -1191,6 +1192,51 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
 INSTANTIATE_TEST_SUITE_P(
   per_controller_update_rate_check, TestControllerUpdateRates,
   testing::Values(10, 12, 16, 23, 37, 40, 50, 63, 71, 85, 90));
+
+class TestControllerManagerWithSimTime
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+public:
+  TestControllerManagerWithSimTime()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, "", {rclcpp::Parameter("use_sim_time", true)})
+  {
+  }
+};
+
+TEST_F(TestControllerManagerWithSimTime, controllers_are_updated_with_the_time_argument)
+{
+  // The node's clock holds the time of the last /clock message, here one that is not followed
+  // by another, as when they are delayed
+  const rclcpp::Time start_time(1, 0, RCL_ROS_TIME);
+  ASSERT_EQ(
+    RCL_RET_OK,
+    rcl_set_ros_time_override(cm_->get_clock()->get_clock_handle(), start_time.nanoseconds()));
+  ASSERT_TRUE(cm_->get_clock()->started());
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+  switch_test_controllers({test_controller::TEST_CONTROLLER_NAME}, {}, STRICT);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  // The simulation runs on
+  rclcpp::Time time = start_time;
+  for (size_t update_counter = 0; update_counter < 10; ++update_counter)
+  {
+    time += PERIOD;
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time, PERIOD));
+    EXPECT_EQ(time.nanoseconds(), test_controller->update_time_.nanoseconds());
+    EXPECT_EQ(PERIOD.nanoseconds(), test_controller->update_period_.nanoseconds());
+  }
+  EXPECT_EQ(start_time.nanoseconds(), cm_->get_clock()->now().nanoseconds());
+}
 
 class TestAsyncControllerUpdateRates
 : public ControllerManagerFixture<controller_manager::ControllerManager>
