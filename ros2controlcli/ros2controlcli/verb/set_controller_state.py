@@ -18,12 +18,61 @@ from controller_manager import (
     list_controllers,
     switch_controllers,
 )
+from controller_manager_msgs.srv import SwitchController
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
 from ros2cli.verb import VerbExtension
 
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
+
+PRIMARY_STATES = ["unconfigured", "inactive", "active"]
+
+# Lifecycle transitions named as in `ros2 lifecycle set`, mapped to the word used in the output.
+# There is no `shutdown`: the controller manager only finalizes a controller when unloading it.
+TRANSITIONS = {
+    "configure": "configured",
+    "cleanup": "cleaned up",
+    "activate": "activated",
+    "deactivate": "deactivated",
+}
+
+
+def trigger_transition(node, controller_manager, controller_name, transition):
+    """
+    Request a lifecycle transition of a controller without checking its current state first.
+
+    The controller manager rejects a transition that is not valid from the current state, and the
+    error is reported to the user.
+    """
+    # Only the switch_controller service explains why it failed
+    reason = "check controller_manager logs"
+    if transition == "configure":
+        response = configure_controller(node, controller_manager, controller_name)
+    elif transition == "cleanup":
+        response = cleanup_controller(node, controller_manager, controller_name)
+    elif transition in ("activate", "deactivate"):
+        deactivate = [controller_name] if transition == "deactivate" else []
+        activate = [controller_name] if transition == "activate" else []
+        # STRICT, so that an invalid switch fails instead of being skipped with ok=True
+        response = switch_controllers(
+            node,
+            controller_manager,
+            deactivate,
+            activate,
+            SwitchController.Request.STRICT,
+            True,
+            5.0,
+        )
+        reason = response.message or reason
+    else:
+        raise ValueError(f"Unknown lifecycle transition '{transition}'")
+
+    if not response.ok:
+        return f"Error during '{transition}' transition of {controller_name}: {reason}"
+
+    print(f"Successfully {TRANSITIONS[transition]} {controller_name}")
+    return 0
 
 
 class SetControllerStateVerb(VerbExtension):
@@ -35,8 +84,10 @@ class SetControllerStateVerb(VerbExtension):
         arg.completer = LoadedControllerNameCompleter()
         arg = parser.add_argument(
             "state",
-            choices=["unconfigured", "inactive", "active"],
-            help="State in which the controller should be changed to",
+            choices=[*PRIMARY_STATES, *TRANSITIONS],
+            help="State in which the controller should be changed to, or lifecycle transition "
+            "to trigger. Note: the 'finalized' state is reached via the 'unload_controller' "
+            "command.",
         )
         add_controller_mgr_parsers(parser)
 
@@ -48,6 +99,11 @@ class SetControllerStateVerb(VerbExtension):
                 matched_controller = [c for c in controllers if c.name == args.controller_name][0]
             except IndexError:
                 return f"controller {args.controller_name} does not seem to be loaded"
+
+            if args.state in TRANSITIONS:
+                return trigger_transition(
+                    node, args.controller_manager, args.controller_name, args.state
+                )
 
             if args.state == "unconfigured":
                 if matched_controller.state != "inactive":
