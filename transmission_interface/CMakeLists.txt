@@ -53,6 +53,11 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_four_bar_linkage_transmission transmission_interface)
 
+  ament_add_gmock(test_include_all_transmissions
+    test/include_all_transmissions_test.cpp
+  )
+  target_link_libraries(test_include_all_transmissions transmission_interface)
+
   ament_add_gmock(test_simple_transmission_loader
     test/simple_transmission_loader_test.cpp
   )
