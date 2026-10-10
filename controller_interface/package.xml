@@ -16,12 +16,14 @@
   <build_depend>fmt</build_depend>
   <build_depend>hardware_interface</build_depend>
   <build_depend>pal_statistics</build_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>realtime_tools</build_depend>
   <build_depend>ros2_control_cmake</build_depend>
 
   <build_export_depend>hardware_interface</build_export_depend>
   <build_export_depend>realtime_tools</build_export_depend>
+  <build_export_depend>rclcpp</build_export_depend>
   <build_export_depend>rclcpp_lifecycle</build_export_depend>
 
   <exec_depend>realtime_tools</exec_depend>
