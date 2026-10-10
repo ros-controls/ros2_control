@@ -17,6 +17,7 @@
 #include <fmt/compile.h>
 
 #include <memory>
+#include <numeric>
 #include <set>
 #include <string>
 #include <utility>
