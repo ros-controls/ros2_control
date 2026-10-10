@@ -50,64 +50,19 @@ return_type ChainableControllerInterface::update(
 std::vector<hardware_interface::StateInterface::ConstSharedPtr>
 ChainableControllerInterface::export_state_interfaces()
 {
-  // Reset internal state before calling the export methods so that stale names from a previous
-  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause the
-  // default on_export_state_interfaces() to generate ghost interfaces.
+  // Reset internal state before calling the export method so that stale names from a previous
+  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause ghost
+  // interfaces.
   exported_state_interfaces_.clear();
   exported_state_interface_names_.clear();
   ordered_exported_state_interfaces_.clear();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  auto state_interfaces = on_export_state_interfaces();
-#pragma GCC diagnostic pop
   const auto state_interfaces_list = on_export_state_interfaces_list();
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces_ptrs_vec;
-  state_interfaces_ptrs_vec.reserve(state_interfaces.size() + state_interfaces_list.size());
-  ordered_exported_state_interfaces_.reserve(
-    state_interfaces.size() + state_interfaces_list.size());
-  exported_state_interface_names_.reserve(state_interfaces.size() + state_interfaces_list.size());
+  state_interfaces_ptrs_vec.reserve(state_interfaces_list.size());
+  ordered_exported_state_interfaces_.reserve(state_interfaces_list.size());
+  exported_state_interface_names_.reserve(state_interfaces_list.size());
 
-  // check if the names of the controller state interfaces begin with the controller's name
-  for (const auto & interface : state_interfaces)
-  {
-    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
-    {
-      const std::string error_msg = fmt::format(
-        FMT_COMPILE(
-          "The prefix of the interface '{}' should begin with the controller's name '{}'. "
-          "This is mandatory for state interfaces. No state interface will be exported. "
-          "Please correct and recompile the controller with name '{}' and try again."),
-        interface.get_prefix_name(), get_node()->get_name(), get_node()->get_name());
-      throw std::runtime_error(error_msg);
-    }
-    auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
-    const auto interface_name = state_interface->get_name();
-    auto [it, succ] = exported_state_interfaces_.insert({interface_name, state_interface});
-    // either we have name duplicate which we want to avoid under all circumstances since interfaces
-    // need to be uniquely identify able or something else really went wrong. In any case abort and
-    // inform cm by throwing exception
-    if (!succ)
-    {
-      std::string error_msg = fmt::format(
-        FMT_COMPILE(
-          "Could not insert StateInterface<{}> into exported_state_interfaces_ map. "
-          "Check if you export duplicates. The map returned iterator with interface_name<{}>. "
-          "If its a duplicate adjust exportation of InterfacesDescription so that all the "
-          "interface names are unique."),
-        interface_name, it->second->get_name());
-      exported_state_interfaces_.clear();
-      exported_state_interface_names_.clear();
-      state_interfaces_ptrs_vec.clear();
-      throw std::runtime_error(error_msg);
-    }
-    ros2_control::add_item(ordered_exported_state_interfaces_, state_interface);
-    ros2_control::add_item(exported_state_interface_names_, interface_name);
-    state_interfaces_ptrs_vec.push_back(
-      std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
-  }
-
-  // New API
   for (const auto & interface_ptr : state_interfaces_list)
   {
     if (interface_ptr->get_prefix_name().find(get_node()->get_name()) != 0)
@@ -122,9 +77,6 @@ ChainableControllerInterface::export_state_interfaces()
     }
     const auto interface_name = interface_ptr->get_name();
     auto [it, succ] = exported_state_interfaces_.insert({interface_name, interface_ptr});
-    // either we have name duplicate which we want to avoid under all circumstances since interfaces
-    // need to be uniquely identify able or something else really went wrong. In any case abort and
-    // inform cm by throwing exception
     if (!succ)
     {
       std::string error_msg = fmt::format(
@@ -142,19 +94,17 @@ ChainableControllerInterface::export_state_interfaces()
     ros2_control::add_item(ordered_exported_state_interfaces_, interface_ptr);
     ros2_control::add_item(exported_state_interface_names_, interface_name);
     state_interfaces_ptrs_vec.push_back(interface_ptr);
-    ;
   }
 
-  const auto total_state_interfaces = state_interfaces.size() + state_interfaces_list.size();
-  if (exported_state_interfaces_.size() != total_state_interfaces)
+  if (exported_state_interfaces_.size() != state_interfaces_list.size())
   {
     std::string error_msg = fmt::format(
       FMT_COMPILE(
         "The internal storage for state interface ptrs 'exported_state_interfaces_' variable has "
         "size '{}', but it is expected to have the size '{}' equal to the number of exported "
-        "reference interfaces. Please correct and recompile the controller with name '{}' and try "
+        "state interfaces. Please correct and recompile the controller with name '{}' and try "
         "again."),
-      exported_state_interfaces_.size(), total_state_interfaces, get_node()->get_name());
+      exported_state_interfaces_.size(), state_interfaces_list.size(), get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
 
@@ -164,82 +114,19 @@ ChainableControllerInterface::export_state_interfaces()
 std::vector<hardware_interface::CommandInterface::SharedPtr>
 ChainableControllerInterface::export_reference_interfaces()
 {
-  // Reset internal state before calling the export methods so that stale names from a previous
-  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause the
-  // default on_export_reference_interfaces() to generate ghost interfaces.
+  // Reset internal state before calling the export method so that stale names from a previous
+  // configure cycle (e.g. after a failed activation that skipped on_cleanup) do not cause ghost
+  // interfaces.
   exported_reference_interfaces_.clear();
   exported_reference_interface_names_.clear();
   ordered_exported_reference_interfaces_.clear();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  auto reference_interfaces = on_export_reference_interfaces();
-#pragma GCC diagnostic pop
   const auto reference_interfaces_list = on_export_reference_interfaces_list();
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces_ptrs_vec;
-  reference_interfaces_ptrs_vec.reserve(
-    reference_interfaces.size() + reference_interfaces_list.size());
-  exported_reference_interface_names_.reserve(
-    reference_interfaces.size() + reference_interfaces_list.size());
-  ordered_exported_reference_interfaces_.reserve(
-    reference_interfaces.size() + reference_interfaces_list.size());
+  reference_interfaces_ptrs_vec.reserve(reference_interfaces_list.size());
+  exported_reference_interface_names_.reserve(reference_interfaces_list.size());
+  ordered_exported_reference_interfaces_.reserve(reference_interfaces_list.size());
 
-  // BEGIN (Handle export change): for backward compatibility
-  // check if the "reference_interfaces_" variable is resized to number of interfaces
-  if (reference_interfaces_.size() != reference_interfaces.size())
-  {
-    std::string error_msg = fmt::format(
-      FMT_COMPILE(
-        "The internal storage for reference values 'reference_interfaces_' variable has size '{}', "
-        "but it is expected to have the size '{}' equal to the number of exported reference "
-        "interfaces. Please correct and recompile the controller with name '{}' and try again."),
-      reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
-    throw std::runtime_error(error_msg);
-  }
-  // END
-
-  // check if the names of the reference interfaces begin with the controller's name
-  for (auto & interface : reference_interfaces)
-  {
-    if (interface.get_prefix_name().find(get_node()->get_name()) != 0)
-    {
-      std::string error_msg = fmt::format(
-        FMT_COMPILE(
-          "The prefix of the interface '{}' should begin with the controller's name '{}'. "
-          "This is mandatory for reference interfaces. Please correct and recompile the "
-          "controller with name '{}' and try again."),
-        interface.get_prefix_name(), get_node()->get_name(), get_node()->get_name());
-      throw std::runtime_error(error_msg);
-    }
-
-    hardware_interface::CommandInterface::SharedPtr reference_interface =
-      std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    const auto interface_name = reference_interface->get_name();
-    // check the exported interface name is unique
-    auto [it, succ] = exported_reference_interfaces_.insert({interface_name, reference_interface});
-    // either we have name duplicate which we want to avoid under all circumstances since interfaces
-    // need to be uniquely identify able or something else really went wrong. In any case abort and
-    // inform cm by throwing exception
-    if (!succ)
-    {
-      std::string error_msg = fmt::format(
-        FMT_COMPILE(
-          "Could not insert Reference interface<{}> into reference_interfaces_ map. "
-          "Check if you export duplicates. The map returned iterator with interface_name<{}>. "
-          "If its a duplicate adjust exportation of InterfacesDescription so that all the "
-          "interface names are unique."),
-        interface_name, it->second->get_name());
-      reference_interfaces_.clear();
-      exported_reference_interface_names_.clear();
-      reference_interfaces_ptrs_vec.clear();
-      throw std::runtime_error(error_msg);
-    }
-    ros2_control::add_item(ordered_exported_reference_interfaces_, reference_interface);
-    ros2_control::add_item(exported_reference_interface_names_, interface_name);
-    reference_interfaces_ptrs_vec.push_back(reference_interface);
-  }
-
-  // new API
   for (const auto & interface_ptr : reference_interfaces_list)
   {
     if (interface_ptr->get_prefix_name().find(get_node()->get_name()) != 0)
@@ -254,21 +141,16 @@ ChainableControllerInterface::export_reference_interfaces()
     }
 
     const auto interface_name = interface_ptr->get_name();
-    // check the exported interface name is unique
     auto [it, succ] = exported_reference_interfaces_.insert({interface_name, interface_ptr});
-    // either we have name duplicate which we want to avoid under all circumstances since interfaces
-    // need to be uniquely identify able or something else really went wrong. In any case abort and
-    // inform cm by throwing exception
     if (!succ)
     {
       std::string error_msg = fmt::format(
         FMT_COMPILE(
-          "Could not insert Reference interface<{}> into reference_interfaces_ map. "
+          "Could not insert Reference interface<{}> into exported_reference_interfaces_ map. "
           "Check if you export duplicates. The map returned iterator with interface_name<{}>. "
           "If its a duplicate adjust exportation of InterfacesDescription so that all the "
           "interface names are unique."),
         interface_name, it->second->get_name());
-      reference_interfaces_.clear();
       exported_reference_interface_names_.clear();
       reference_interfaces_ptrs_vec.clear();
       throw std::runtime_error(error_msg);
@@ -278,8 +160,7 @@ ChainableControllerInterface::export_reference_interfaces()
     reference_interfaces_ptrs_vec.push_back(interface_ptr);
   }
 
-  const auto total_ref_interfaces = reference_interfaces.size() + reference_interfaces_list.size();
-  if (exported_reference_interfaces_.size() != total_ref_interfaces)
+  if (exported_reference_interfaces_.size() != reference_interfaces_list.size())
   {
     std::string error_msg = fmt::format(
       FMT_COMPILE(
@@ -287,7 +168,8 @@ ChainableControllerInterface::export_reference_interfaces()
         "variable has size '{}', but it is expected to have the size '{}' equal to the number of "
         "exported reference interfaces. Please correct and recompile the controller with name '{}' "
         "and try again."),
-      exported_reference_interfaces_.size(), total_ref_interfaces, get_node()->get_name());
+      exported_reference_interfaces_.size(), reference_interfaces_list.size(),
+      get_node()->get_name());
     throw std::runtime_error(error_msg);
   }
 
@@ -324,38 +206,11 @@ bool ChainableControllerInterface::is_in_chained_mode() const { return in_chaine
 
 bool ChainableControllerInterface::on_set_chained_mode(bool /*chained_mode*/) { return true; }
 
-std::vector<hardware_interface::StateInterface>
-ChainableControllerInterface::on_export_state_interfaces()
-{
-  state_interfaces_values_.resize(exported_state_interface_names_.size(), 0.0);
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
-  {
-    state_interfaces.emplace_back(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]);
-  }
-  return state_interfaces;
-}
-
 std::vector<hardware_interface::StateInterface::SharedPtr>
 ChainableControllerInterface::on_export_state_interfaces_list()
 {
   // return empty vector by default.
   return {};
-}
-
-std::vector<hardware_interface::CommandInterface>
-ChainableControllerInterface::on_export_reference_interfaces()
-{
-  reference_interfaces_.resize(exported_reference_interface_names_.size(), 0.0);
-  std::vector<hardware_interface::CommandInterface> reference_interfaces;
-  for (size_t i = 0; i < exported_reference_interface_names_.size(); ++i)
-  {
-    reference_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        get_node()->get_name(), exported_reference_interface_names_[i], &reference_interfaces_[i]));
-  }
-  return reference_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface::SharedPtr>

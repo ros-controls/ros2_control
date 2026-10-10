@@ -64,15 +64,6 @@ namespace hardware_interface
 class Handle
 {
 public:
-  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
-  Handle(const std::string & prefix_name, const std::string & interface_name, double * value_ptr)
-  : prefix_name_(prefix_name),
-    interface_name_(interface_name),
-    handle_name_(prefix_name_ + "/" + interface_name_),
-    value_ptr_(value_ptr)
-  {
-  }
-
   explicit Handle(
     const std::string & prefix_name, const std::string & interface_name,
     const std::string & data_type = "double", const std::string & initial_value = "")
@@ -88,7 +79,6 @@ public:
       {
         value_ = initial_value.empty() ? std::numeric_limits<double>::quiet_NaN()
                                        : hardware_interface::stod(initial_value);
-        value_ptr_ = std::get_if<double>(&value_);
       }
       catch (const std::invalid_argument & err)
       {
@@ -102,7 +92,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? std::numeric_limits<float>::quiet_NaN()
                    : static_cast<float>(hardware_interface::stof(initial_value));
@@ -119,7 +108,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty() ? false : hardware_interface::parse_bool(initial_value);
       }
       catch (const std::invalid_argument & err)
@@ -134,7 +122,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<uint8_t>(std::numeric_limits<uint8_t>::max())
                    : static_cast<uint8_t>(hardware_interface::stoui8(initial_value));
@@ -151,7 +138,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<int8_t>(std::numeric_limits<int8_t>::max())
                    : static_cast<int8_t>(hardware_interface::stoi8(initial_value));
@@ -168,7 +154,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<uint16_t>(std::numeric_limits<uint16_t>::max())
                    : static_cast<uint16_t>(hardware_interface::stoui16(initial_value));
@@ -185,7 +170,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<int16_t>(std::numeric_limits<int16_t>::max())
                    : static_cast<int16_t>(hardware_interface::stoi16(initial_value));
@@ -202,7 +186,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<uint32_t>(std::numeric_limits<uint32_t>::max())
                    : static_cast<uint32_t>(hardware_interface::stoui32(initial_value));
@@ -219,7 +202,6 @@ public:
     {
       try
       {
-        value_ptr_ = nullptr;
         value_ = initial_value.empty()
                    ? static_cast<int32_t>(std::numeric_limits<int32_t>::max())
                    : static_cast<int32_t>(hardware_interface::stoi32(initial_value));
@@ -252,14 +234,14 @@ public:
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const std::string & interface_name)
-  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_)
   {
   }
 
   [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const char * interface_name)
-  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_)
   {
   }
 
@@ -283,9 +265,6 @@ public:
   }
 
   virtual ~Handle() = default;
-
-  /// Returns true if handle references a value.
-  inline operator bool() const { return value_ptr_ != nullptr; }
 
   const std::string & get_name() const { return handle_name_; }
 
@@ -334,8 +313,7 @@ public:
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
-          THROW_ON_NULLPTR(value_ptr_);
-          return *value_ptr_;
+          return std::get<double>(value_);
         case HandleDataType::BOOL:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
@@ -478,27 +456,15 @@ public:
     {
       return false;
     }
-    // BEGIN (Handle export change): for backward compatibility
-    // TODO(Manuel) set value_ directly if old functionality is removed
-    if constexpr (std::is_same_v<T, double>)
+    if (!std::holds_alternative<T>(value_))
     {
-      // If the template is of type double, check if the value_ptr_ is not nullptr
-      THROW_ON_NULLPTR(value_ptr_);
-      *value_ptr_ = value;
+      throw std::runtime_error(
+        fmt::format(
+          FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
+          get_type_name<T>(), get_name(), data_type_.to_string()));
     }
-    else
-    {
-      if (!std::holds_alternative<T>(value_))
-      {
-        throw std::runtime_error(
-          fmt::format(
-            FMT_COMPILE("Invalid data type: '{}' access for interface: {} expected: '{}'"),
-            get_type_name<T>(), get_name(), data_type_.to_string()));
-      }
-      value_ = value;
-    }
+    value_ = value;
     return true;
-    // END
   }
 
   std::shared_mutex & get_mutex() const { return handle_mutex_; }
@@ -508,10 +474,7 @@ public:
   /// Returns true if the handle data type can be casted to double.
   bool is_castable_to_double() const { return data_type_.is_castable_to_double(); }
 
-  bool is_valid() const
-  {
-    return (value_ptr_ != nullptr) || !std::holds_alternative<std::monostate>(value_);
-  }
+  bool is_valid() const { return !std::holds_alternative<std::monostate>(value_); }
 
 protected:
   /**
@@ -537,8 +500,7 @@ protected:
       switch (data_type_)
       {
         case HandleDataType::DOUBLE:
-          THROW_ON_NULLPTR(value_ptr_);
-          value = *value_ptr_;
+          value = std::get<double>(value_);
           return true;
         case HandleDataType::BOOL:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
@@ -597,14 +559,6 @@ private:
     handle_name_ = other.handle_name_;
     value_ = other.value_;
     data_type_ = other.data_type_;
-    if (std::holds_alternative<std::monostate>(value_))
-    {
-      value_ptr_ = other.value_ptr_;
-    }
-    else
-    {
-      value_ptr_ = std::get_if<double>(&value_);
-    }
   }
 
   void swap(Handle & first, Handle & second) noexcept
@@ -615,7 +569,6 @@ private:
     std::swap(first.handle_name_, second.handle_name_);
     std::swap(first.value_, second.value_);
     std::swap(first.data_type_, second.data_type_);
-    std::swap(first.value_ptr_, second.value_ptr_);
   }
 
 protected:
@@ -625,9 +578,6 @@ protected:
   std::string handle_name_;
   HANDLE_DATATYPE value_ = std::monostate{};
   HandleDataType data_type_ = HandleDataType::DOUBLE;
-  // BEGIN (Handle export change): for backward compatibility
-  // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
-  double * value_ptr_ = nullptr;
   // END
   mutable std::shared_mutex handle_mutex_;
 
@@ -657,26 +607,16 @@ public:
         get_name().c_str());
       return;
     }
-    if (value_ptr_ || data_type_.is_castable_to_double())
+    if (data_type_.is_castable_to_double())
     {
-      std::function<double()> f = [this]()
-      {
-        if (value_ptr_)
-        {
-          return *value_ptr_;
-        }
-        else
-        {
-          return data_type_.cast_to_double(value_);
-        }
-      };
+      std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name(), f);
     }
   }
 
   void unregisterIntrospection() const
   {
-    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
+    if (is_valid() && (data_type_.is_castable_to_double()))
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("state_interface." + get_name());
     }
@@ -745,19 +685,9 @@ public:
         get_name().c_str());
       return;
     }
-    if (value_ptr_ || data_type_.is_castable_to_double())
+    if (data_type_.is_castable_to_double())
     {
-      std::function<double()> f = [this]()
-      {
-        if (value_ptr_)
-        {
-          return *value_ptr_;
-        }
-        else
-        {
-          return data_type_.cast_to_double(value_);
-        }
-      };
+      std::function<double()> f = [this]() { return data_type_.cast_to_double(value_); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
         "command_interface." + get_name() + ".is_limited", &is_command_limited_);
@@ -766,7 +696,7 @@ public:
 
   void unregisterIntrospection() const
   {
-    if (is_valid() && (value_ptr_ || data_type_.is_castable_to_double()))
+    if (is_valid() && data_type_.is_castable_to_double())
     {
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name());
       DEFAULT_UNREGISTER_ROS2_CONTROL_INTROSPECTION(

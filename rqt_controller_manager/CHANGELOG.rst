@@ -2,6 +2,20 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.12.0 (2026-10-07)
+-------------------
+
+6.11.0 (2026-10-05)
+-------------------
+* Wait for the rqt node instead of sleeping a fixed 2s (`#3592 <https://github.com/ros-controls/ros2_control/issues/3592>`_)
+* Contributors: Puja Chaudhury
+
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
 6.9.0 (2026-08-10)
 ------------------
 * rqt_cm: Robustify test and fix shutdown races (`#3396 <https://github.com/ros-controls/ros2_control/issues/3396>`_)

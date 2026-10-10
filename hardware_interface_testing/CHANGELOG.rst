@@ -2,6 +2,22 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.12.0 (2026-10-07)
+-------------------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.11.0 (2026-10-05)
+-------------------
+
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+* Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_)
+* Contributors: Christoph Fröhlich
+
 6.9.0 (2026-08-10)
 ------------------
 
