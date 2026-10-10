@@ -3713,8 +3713,20 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
 std::vector<ControllerSpec> &
 ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()
 {
-  used_by_realtime_controllers_index_ = updated_controllers_index_;
-  return controllers_lists_[used_by_realtime_controllers_index_];
+  auto updated_controllers_index = updated_controllers_index_.load();
+  while (true)
+  {
+    // Announce the selected list, then confirm that the non-RT thread did not switch lists
+    // between the initial lookup and this announcement. The sequentially consistent operations
+    // are intentional: the announcement and recheck must be ordered with switch_updated_list().
+    used_by_realtime_controllers_index_.store(updated_controllers_index);
+    const auto latest_updated_controllers_index = updated_controllers_index_.load();
+    if (updated_controllers_index == latest_updated_controllers_index)
+    {
+      return controllers_lists_[updated_controllers_index];
+    }
+    updated_controllers_index = latest_updated_controllers_index;
+  }
 }
 
 std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_unused_list(
@@ -3726,7 +3738,7 @@ std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_un
   }
   controllers_lock_.unlock();
   // Get the index to the outdated controller list
-  int free_controllers_list = get_other_list(updated_controllers_index_);
+  int free_controllers_list = get_other_list(updated_controllers_index_.load());
 
   // Wait until the outdated controller list is not being used by the realtime thread
   wait_until_rt_not_using(free_controllers_list);
@@ -3741,7 +3753,7 @@ const std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::
     throw std::runtime_error("controllers_lock_ not owned by thread");
   }
   controllers_lock_.unlock();
-  return controllers_lists_[updated_controllers_index_];
+  return controllers_lists_[updated_controllers_index_.load()];
 }
 
 void ControllerManager::RTControllerListWrapper::switch_updated_list(
@@ -3752,8 +3764,8 @@ void ControllerManager::RTControllerListWrapper::switch_updated_list(
     throw std::runtime_error("controllers_lock_ not owned by thread");
   }
   controllers_lock_.unlock();
-  int former_current_controllers_list_ = updated_controllers_index_;
-  updated_controllers_index_ = get_other_list(former_current_controllers_list_);
+  int former_current_controllers_list_ = updated_controllers_index_.load();
+  updated_controllers_index_.store(get_other_list(former_current_controllers_list_));
   wait_until_rt_not_using(former_current_controllers_list_);
   if (on_switch_callback_)
   {
@@ -3776,7 +3788,7 @@ int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
 void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
   int index, std::chrono::microseconds sleep_period) const
 {
-  while (used_by_realtime_controllers_index_ == index)
+  while (used_by_realtime_controllers_index_.load() == index)
   {
     if (!rclcpp::ok())
     {
