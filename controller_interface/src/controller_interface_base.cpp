@@ -100,6 +100,15 @@ return_type ControllerInterfaceBase::init(
     auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", -100);
+
+    auto_declare<int>("async_parameters.thread_priority", 50);
+    auto_declare<std::string>("async_parameters.scheduling_policy", "synchronized");
+    auto_declare<std::vector<int64_t>>("async_parameters.cpu_affinity", std::vector<int64_t>());
+    auto_declare<int>("async_parameters.execution_rate", impl_->ctrl_itf_params_.update_rate);
+    auto_declare<bool>("async_parameters.wait_until_initial_trigger", true);
+    auto_declare<bool>("async_parameters.print_warnings", true);
+    auto_declare<std::string>("async_parameters.thread_name", "");
+
   }
   catch (const std::exception & e)
   {
@@ -258,6 +267,9 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         "instead.");
     }
     async_params.initialize(impl_->node_, "async_parameters.");
+    if (async_params.thread_name.empty()) {
+      async_params.thread_name = get_node()->get_name();
+    }
     if (async_params.scheduling_policy == realtime_tools::AsyncSchedulingPolicy::DETACHED)
     {
       RCLCPP_ERROR(
