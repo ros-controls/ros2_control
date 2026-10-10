@@ -458,6 +458,41 @@ TEST_F(
   }
 }
 
+TEST_F(JointLimitsRosParamTest, position_limits_flag_reports_only_real_updates)
+{
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -1.0;
+  limits.max_position = 1.0;
+
+  const std::vector<rclcpp::Parameter> parameters{
+    rclcpp::Parameter("joint_limits.foo_joint.has_position_limits", false)};
+
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_FALSE(limits.has_position_limits);
+
+  // Reapplying the same value must not report a change.
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_FALSE(limits.has_position_limits);
+
+  const std::vector<rclcpp::Parameter> enable_parameters{
+    rclcpp::Parameter("joint_limits.foo_joint.has_position_limits", true)};
+
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", enable_parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_TRUE(limits.has_position_limits);
+
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", enable_parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_TRUE(limits.has_position_limits);
+}
+
 TEST_F(JointLimitsRosParamTest, check_for_limits_update_accumulates_over_the_whole_batch)
 {
   // A parameter event delivers the whole set at once. A change to any one of them has to
