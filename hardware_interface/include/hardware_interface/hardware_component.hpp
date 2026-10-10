@@ -54,6 +54,10 @@ public:
   const rclcpp_lifecycle::State & initialize(
     const hardware_interface::HardwareComponentParams & params);
 
+  const rclcpp_lifecycle::State & initialize(
+    const hardware_interface::HardwareComponentParams & params,
+    const std::vector<std::string> & node_options_args);
+
   const rclcpp_lifecycle::State & configure();
 
   const rclcpp_lifecycle::State & cleanup();

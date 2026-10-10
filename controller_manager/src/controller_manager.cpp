@@ -825,6 +825,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
   }
+  resource_manager_->set_hardware_component_node_options_args(this->get_node_options().arguments());
 
   resource_manager_->set_on_component_state_switch_callback(
     std::bind(&ControllerManager::publish_activity, this));

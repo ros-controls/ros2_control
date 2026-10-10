@@ -121,6 +121,12 @@ public:
    */
   bool shutdown_components();
 
+  /**
+   * @brief Set ROS arguments inherited by framework-managed hardware component nodes.
+   * @param node_options_args ROS arguments to apply when hardware components are initialized.
+   */
+  void set_hardware_component_node_options_args(const std::vector<std::string> & node_options_args);
+
   /// Load resources from on a given URDF.
   /**
    * The resource manager can be post-initialized with a given URDF.

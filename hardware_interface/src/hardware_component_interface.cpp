@@ -67,6 +67,13 @@ HardwareComponentInterface::~HardwareComponentInterface()
 CallbackReturn HardwareComponentInterface::init(
   const hardware_interface::HardwareComponentParams & params)
 {
+  return init(params, {});
+}
+
+CallbackReturn HardwareComponentInterface::init(
+  const hardware_interface::HardwareComponentParams & params,
+  const std::vector<std::string> & node_options_args)
+{
   impl_->clock_ = params.clock;
   impl_->logger_ = params.logger;
   info_ = params.hardware_info;
@@ -126,7 +133,16 @@ CallbackReturn HardwareComponentInterface::init(
     std::replace(node_name.begin(), node_name.end(), '/', '_');
 
     auto options = define_custom_node_options();
-    options.arguments({"--ros-args", "-r", "__node:=" + node_name});
+    auto custom_node_arguments = options.arguments();
+    // Remap rules are evaluated in order and processing stops at the first match. Put the
+    // framework-managed hardware node-name rule first so inherited global name remaps cannot
+    // rename this node, while later topic and service remaps remain available.
+    std::vector<std::string> node_arguments{
+      "--ros-args", "-r", node_name + ":__node:=" + node_name};
+    node_arguments.insert(
+      node_arguments.end(), custom_node_arguments.begin(), custom_node_arguments.end());
+    node_arguments.insert(node_arguments.end(), node_options_args.begin(), node_options_args.end());
+    options.arguments(node_arguments);
 
     impl_->hardware_component_node_ =
       std::make_shared<rclcpp::Node>(node_name, params.node_namespace, options);
