@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/helpers.hpp"
+
 #include "rclcpp/node_options.hpp"
 
 namespace hardware_interface
@@ -122,8 +124,8 @@ CallbackReturn HardwareComponentInterface::init(
 
   if (auto locked_executor = params.executor.lock())
   {
-    std::string node_name = hardware_interface::to_lower_case(params.hardware_info.name);
-    std::replace(node_name.begin(), node_name.end(), '/', '_');
+    std::string node_name = ros2_control::get_component_node_name(
+      hardware_interface::to_lower_case(params.hardware_info.name));
 
     auto options = define_custom_node_options();
     options.arguments({"--ros-args", "-r", "__node:=" + node_name});
