@@ -1831,6 +1831,9 @@ void ControllerManager::clear_requests()
   switch_params_.do_switch = false;
   switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
+  // The deadline belongs to one switch only. Clearing it here keeps unrelated later activation
+  // paths, such as the fallback controllers in update(), from seeing a stale deadline.
+  switch_params_.deadline = std::chrono::steady_clock::time_point::max();
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
   switch_params_.to_chained_mode_request.clear();
@@ -2375,6 +2378,12 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   else
   {
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+    // A finite timeout also bounds how far the switch may get: activate_controllers() stops
+    // activating further controllers once it passed. The "timeout of 0 means 1s" default above
+    // deliberately does not set a deadline, because callers that pass 0 ask for no bound, which is
+    // what the service definition documents, and switches that legitimately take longer must not
+    // start failing because of a default they did not choose.
+    switch_params_.deadline = std::chrono::steady_clock::now() + switch_params_.timeout;
   }
   switch_params_.ready_to_switch.store(false, std::memory_order_release);
   switch_params_.do_switch = true;
@@ -2383,6 +2392,10 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   {
     RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
     std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
+    // This wait cannot report a slow switch: the realtime loop holds switch_params_.mutex for the
+    // whole switch, so the predicate is already satisfied when this thread gets the mutex back. The
+    // deadline is enforced in activate_controllers() and in the finalization below instead; what
+    // this still catches is a request the realtime loop never executed within the timeout.
     if (!switch_params_.cv.wait_for(
           switch_params_guard, switch_params_.timeout,
           [this] { return !switch_params_.do_switch; }))
@@ -2414,6 +2427,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     RCLCPP_INFO(get_logger(), "Requested controller switch from non-realtime loop");
     // This should work as the realtime thread operation is read-only operation
+    // A slow activation here is reported by the finalization below, same as in the ASAP path.
     manage_switch();
   }
 
@@ -2426,6 +2440,13 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     resource_manager_, switch_params_.activate_request, switch_params_.deactivate_request,
     strictness, get_logger(), to, message);
 
+  // A switch that only finished after its deadline is still a timeout, and must not be reported as
+  // a success. The controllers keep the state the switch reached, which is the applied state.
+  if (switch_result == controller_interface::return_type::OK)
+  {
+    switch_result = report_late_switch_as_timeout(message);
+  }
+
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
   // clear unused list
@@ -2434,6 +2455,20 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   clear_requests();
 
   return switch_result;
+}
+
+controller_interface::return_type ControllerManager::report_late_switch_as_timeout(
+  std::string & message)
+{
+  if (!switch_params_.deadline_expired())
+  {
+    return controller_interface::return_type::OK;
+  }
+  message = fmt::format(
+    FMT_COMPILE("Switch controller timed out after {} seconds!"),
+    static_cast<double>(switch_params_.timeout.count()) / 1e9);
+  RCLCPP_ERROR(get_logger(), "%s", message.c_str());
+  return controller_interface::return_type::ERROR;
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_controller_impl(
@@ -2669,6 +2704,21 @@ void ControllerManager::activate_controllers(
         controller_name.c_str());
       continue;
     }
+    // A controller callback that is already running cannot be interrupted, so the deadline can
+    // only take effect before the next one starts. A controller that is skipped here stays
+    // inactive and evaluate_switch_result() turns the switch into an error, which triggers the
+    // rollback below for a STRICT switch. Only a request that is actually in flight is bounded:
+    // update() reuses this function for the fallback controllers while the deadline of an earlier
+    // switch may still be set, and those activations must never be blocked by it.
+    if (switch_params_.do_switch && switch_params_.deadline_expired())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Not activating controller '%s' anymore, the switch controller timeout expired.",
+        controller_name.c_str());
+      is_successful = false;
+      continue;
+    }
     auto controller = found_it->c;
     // reset the last update cycle time for newly activated controllers
     *found_it->last_update_cycle_time =
@@ -2793,6 +2843,16 @@ void ControllerManager::activate_controllers(
       resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
+  }
+  // The last callback cannot be interrupted either, so the deadline can still be observed here
+  // for it. Reporting the switch as failed is what keeps the caller from being told that a switch
+  // succeeded although it did not finish in time. Guarded by do_switch for the same reason as the
+  // per-controller check above.
+  if (switch_params_.do_switch && switch_params_.deadline_expired())
+  {
+    RCLCPP_WARN(
+      get_logger(), "The switch controller timeout expired during the activation of controllers.");
+    is_successful = false;
   }
   if (
     !is_successful && strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
