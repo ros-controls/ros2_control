@@ -499,6 +499,7 @@ inline bool check_for_limits_update(
     {
       if (param_name == param_base_name + ".has_position_limits")
       {
+        const bool previous_has_position_limits = updated_limits.has_position_limits;
         updated_limits.has_position_limits = parameter.get_value<bool>();
         if (updated_limits.has_position_limits)
         {
@@ -520,14 +521,12 @@ inline bool check_for_limits_update(
               "'min_position' < 'max_position'");
             updated_limits.has_position_limits = false;
           }
-          else
-          {
-            changed = true;
-          }
         }
+        changed |= previous_has_position_limits != updated_limits.has_position_limits;
       }
       else if (param_name == param_base_name + ".has_velocity_limits")
       {
+        const bool previous_has_velocity_limits = updated_limits.has_velocity_limits;
         updated_limits.has_velocity_limits = parameter.get_value<bool>();
         if (updated_limits.has_velocity_limits && std::isnan(updated_limits.max_velocity))
         {
@@ -537,13 +536,11 @@ inline bool check_for_limits_update(
             "and 'max_velocity' are not set or not have valid double values.");
           updated_limits.has_velocity_limits = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_has_velocity_limits != updated_limits.has_velocity_limits;
       }
       else if (param_name == param_base_name + ".has_acceleration_limits")
       {
+        const bool previous_has_acceleration_limits = updated_limits.has_acceleration_limits;
         updated_limits.has_acceleration_limits = parameter.get_value<bool>();
         if (updated_limits.has_acceleration_limits && std::isnan(updated_limits.max_acceleration))
         {
@@ -553,13 +550,11 @@ inline bool check_for_limits_update(
             "'max_acceleration' is not set or not have valid double values.");
           updated_limits.has_acceleration_limits = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_has_acceleration_limits != updated_limits.has_acceleration_limits;
       }
       else if (param_name == param_base_name + ".has_deceleration_limits")
       {
+        const bool previous_has_deceleration_limits = updated_limits.has_deceleration_limits;
         updated_limits.has_deceleration_limits = parameter.get_value<bool>();
         if (updated_limits.has_deceleration_limits && std::isnan(updated_limits.max_deceleration))
         {
@@ -569,13 +564,11 @@ inline bool check_for_limits_update(
             "'max_deceleration' is not set or not have valid double values.");
           updated_limits.has_deceleration_limits = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_has_deceleration_limits != updated_limits.has_deceleration_limits;
       }
       else if (param_name == param_base_name + ".has_jerk_limits")
       {
+        const bool previous_has_jerk_limits = updated_limits.has_jerk_limits;
         updated_limits.has_jerk_limits = parameter.get_value<bool>();
         if (updated_limits.has_jerk_limits && std::isnan(updated_limits.max_jerk))
         {
@@ -585,13 +578,11 @@ inline bool check_for_limits_update(
             "or not have valid double values.");
           updated_limits.has_jerk_limits = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_has_jerk_limits != updated_limits.has_jerk_limits;
       }
       else if (param_name == param_base_name + ".has_effort_limits")
       {
+        const bool previous_has_effort_limits = updated_limits.has_effort_limits;
         updated_limits.has_effort_limits = parameter.get_value<bool>();
         if (updated_limits.has_effort_limits && std::isnan(updated_limits.max_effort))
         {
@@ -601,13 +592,11 @@ inline bool check_for_limits_update(
             "set or not have valid double values.");
           updated_limits.has_effort_limits = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_has_effort_limits != updated_limits.has_effort_limits;
       }
       else if (param_name == param_base_name + ".angle_wraparound")
       {
+        const bool previous_angle_wraparound = updated_limits.angle_wraparound;
         updated_limits.angle_wraparound = parameter.get_value<bool>();
         if (updated_limits.angle_wraparound && updated_limits.has_position_limits)
         {
@@ -617,10 +606,7 @@ inline bool check_for_limits_update(
             "'has_position_limits' flag is set.");
           updated_limits.angle_wraparound = false;
         }
-        else
-        {
-          changed = true;
-        }
+        changed |= previous_angle_wraparound != updated_limits.angle_wraparound;
       }
     }
     catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
