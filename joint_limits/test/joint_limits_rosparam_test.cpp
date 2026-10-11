@@ -506,9 +506,9 @@ TEST_F(JointLimitsRosParamTest, other_limit_flags_report_only_effective_updates)
   const FlagCase flags[] = {
     {"has_velocity_limits", &JointLimits::has_velocity_limits, &JointLimits::max_velocity},
     {"has_acceleration_limits", &JointLimits::has_acceleration_limits,
-      &JointLimits::max_acceleration},
+     &JointLimits::max_acceleration},
     {"has_deceleration_limits", &JointLimits::has_deceleration_limits,
-      &JointLimits::max_deceleration},
+     &JointLimits::max_deceleration},
     {"has_jerk_limits", &JointLimits::has_jerk_limits, &JointLimits::max_jerk},
     {"has_effort_limits", &JointLimits::has_effort_limits, &JointLimits::max_effort},
   };
@@ -538,9 +538,10 @@ TEST_F(JointLimitsRosParamTest, other_limit_flags_report_only_effective_updates)
     EXPECT_FALSE(set_flag(false));
 
     // A rejected parameter type must not change the stored flag.
-    EXPECT_FALSE(joint_limits::check_for_limits_update(
-      "foo_joint", {rclcpp::Parameter(parameter_name, 1)},
-      node_->get_node_logging_interface(), limits));
+    EXPECT_FALSE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", {rclcpp::Parameter(parameter_name, 1)}, node_->get_node_logging_interface(),
+        limits));
     EXPECT_FALSE(limits.*flag.enabled);
   }
 }
@@ -580,14 +581,16 @@ TEST_F(JointLimitsRosParamTest, unchanged_flag_does_not_clear_other_batch_update
     rclcpp::Parameter("joint_limits.foo_joint.has_velocity_limits", false),
     rclcpp::Parameter("joint_limits.foo_joint.has_effort_limits", false)};
 
-  EXPECT_TRUE(joint_limits::check_for_limits_update(
-    "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
   EXPECT_DOUBLE_EQ(limits.max_velocity, 4.0);
   EXPECT_FALSE(limits.has_velocity_limits);
   EXPECT_FALSE(limits.has_effort_limits);
 
-  EXPECT_FALSE(joint_limits::check_for_limits_update(
-    "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
 }
 
 TEST_F(JointLimitsRosParamTest, check_for_limits_update_accumulates_over_the_whole_batch)
