@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
 #include <thread>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
@@ -876,4 +878,49 @@ TEST(TestHandle, handle_getters)
     EXPECT_TRUE(handle.get_value(val, false));
     EXPECT_EQ(val, true);
   }
+}
+
+// Regression test for the bool-to-double compatibility reads: they take a shared lock only, so
+// many threads can reach the warning below at the same time. Run with ThreadSanitizer to catch a
+// data race on the flag that guards the warning.
+TEST(TestHandle, bool_to_double_warning_is_race_free_across_threads)
+{
+  const std::string collision_interface = "collision";
+  const std::string itf_name = "joint1";
+  InterfaceInfo info;
+  info.name = collision_interface;
+  info.data_type = "bool";
+  info.initial_value = "true";
+  InterfaceDescription interface_descr(itf_name, info);
+  StateInterface handle{interface_descr};
+  ASSERT_TRUE(handle.set_value(true));
+
+  std::atomic_bool start{false};
+  const auto read_bool_as_double = [&handle, &start]()
+  {
+    while (!start)
+    {
+      std::this_thread::yield();
+    }
+    for (int i = 0; i < 1000; ++i)
+    {
+      std::ignore = handle.get_optional();
+      double value = 0.0;
+      std::ignore = handle.get_value(value, false);
+    }
+  };
+
+  std::vector<std::thread> readers;
+  for (int i = 0; i < 4; ++i)
+  {
+    readers.emplace_back(read_bool_as_double);
+  }
+  start = true;
+  for (auto & reader : readers)
+  {
+    reader.join();
+  }
+
+  // The readers only report the value; reaching this point without a sanitizer report is the check.
+  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
 }
