@@ -15,7 +15,10 @@
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 
+#include <chrono>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -25,14 +28,21 @@
 
 #include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
+// re-exported for derived controllers (REGISTER_ROS2_CONTROL_INTROSPECTION)
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "joint_limits/joint_limits.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pal_statistics/pal_statistics_utils.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace controller_interface
 {

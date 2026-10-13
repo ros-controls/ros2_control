@@ -16,8 +16,10 @@
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <string>
+#include <type_traits>
 
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"

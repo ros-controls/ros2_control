@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "controller_interface/controller_interface.hpp"

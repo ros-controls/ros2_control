@@ -14,12 +14,23 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <exception>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/logging.hpp"
+#include "rclcpp/utilities.hpp"
 
 namespace controller_interface
 {
