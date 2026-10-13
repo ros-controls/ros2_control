@@ -7,6 +7,7 @@ export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
+  rcl_interfaces
   realtime_tools
   rclcpp
   rclcpp_lifecycle
@@ -44,6 +45,7 @@ target_include_directories(joint_limiter_interface PUBLIC
 target_link_libraries(joint_limiter_interface PUBLIC
                       joint_limits
                       pluginlib::pluginlib
+                      ${rcl_interfaces_TARGETS}
                       ${trajectory_msgs_TARGETS})
 
 add_library(joint_limits_helpers SHARED
@@ -74,11 +76,10 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
-  find_package(pluginlib REQUIRED)
-  find_package(rclcpp REQUIRED)
+  find_package(lifecycle_msgs REQUIRED)
 
   ament_add_gmock(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_link_libraries(joint_limits_rosparam_test joint_limits fmt::fmt)
+  target_link_libraries(joint_limits_rosparam_test joint_limits ${lifecycle_msgs_TARGETS})
   target_compile_definitions(
     joint_limits_rosparam_test
     PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/")
@@ -99,21 +100,18 @@ if(BUILD_TESTING)
   add_rostest_with_parameters_gmock(test_joint_saturation_limiter test/test_joint_saturation_limiter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/joint_saturation_limiter_param.yaml
   )
-  target_include_directories(test_joint_saturation_limiter PRIVATE include)
   target_link_libraries(test_joint_saturation_limiter
                         joint_limiter_interface
                         pluginlib::pluginlib
                         rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
-  target_include_directories(test_joint_range_limiter PRIVATE include)
   target_link_libraries(test_joint_range_limiter
                         joint_limiter_interface
                         pluginlib::pluginlib
                         rclcpp::rclcpp)
 
   ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
-  target_include_directories(test_joint_soft_limiter PRIVATE include)
   target_link_libraries(test_joint_soft_limiter
                         joint_limiter_interface
                         pluginlib::pluginlib
