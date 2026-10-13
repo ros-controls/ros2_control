@@ -46,6 +46,9 @@ namespace
 /// Substring of the log message that the fault deactivation paths must not produce.
 constexpr char MODE_SWITCH_ERROR_MESSAGE[] = "Error while attempting mode switch";
 
+/// Substring of the log message that the rejected mode switch produces in the resource manager.
+constexpr char MODE_SWITCH_REJECTED_MESSAGE[] = "Not acceptable command interfaces combination";
+
 /// Collects every log message of severity ERROR or higher while it is alive.
 class LogCapture
 {
@@ -1124,11 +1127,17 @@ TEST_P(TestControllerManagerWithTestableCM, no_mode_switch_error_on_hardware_rea
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_broadcaster_all->get_lifecycle_state().id());
 
-  // The failing component has already been torn down, so no mode switch is attempted and the
+  // The switch is still requested on this path, but the component has already been torn down, so
+  // the request is rejected before it reaches the hardware. That rejection is expected here and the
   // misleading "Error while attempting mode switch" must not be logged.
   EXPECT_THAT(
     LogCapture::messages(),
     ::testing::Not(::testing::Contains(::testing::HasSubstr(MODE_SWITCH_ERROR_MESSAGE))));
+  // The switch is still requested: the resource manager reports the rejected interfaces, so the
+  // call is not skipped and the hardware would be asked if it were still reachable.
+  EXPECT_THAT(
+    LogCapture::messages(),
+    ::testing::Contains(::testing::HasSubstr(MODE_SWITCH_REJECTED_MESSAGE)));
   // The fault itself is still reported.
   EXPECT_THAT(
     LogCapture::messages(), ::testing::Contains(::testing::HasSubstr("resulted in an error")));
@@ -1154,10 +1163,14 @@ TEST_P(TestControllerManagerWithTestableCM, no_mode_switch_error_on_hardware_wri
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_broadcaster_all->get_lifecycle_state().id());
 
-  // Same as in the read() path: the switch would be rejected before reaching the component.
+  // Same as in the read() path: the switch is still requested, and the rejection is not reported
+  // as a failure of the fault handling.
   EXPECT_THAT(
     LogCapture::messages(),
     ::testing::Not(::testing::Contains(::testing::HasSubstr(MODE_SWITCH_ERROR_MESSAGE))));
+  EXPECT_THAT(
+    LogCapture::messages(),
+    ::testing::Contains(::testing::HasSubstr(MODE_SWITCH_REJECTED_MESSAGE)));
   // The fault itself is still reported.
   EXPECT_THAT(
     LogCapture::messages(), ::testing::Contains(::testing::HasSubstr("resulted in an error")));
