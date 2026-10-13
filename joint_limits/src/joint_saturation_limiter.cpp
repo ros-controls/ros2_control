@@ -17,8 +17,13 @@
 #include "joint_limits/joint_saturation_limiter.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <mutex>
+#include <sstream>
 
 #include "rclcpp/duration.hpp"
+#include "rclcpp/logging.hpp"
 
 constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
@@ -427,7 +432,6 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
 
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
-using int_map = std::map<int, int>;
 using JointTrajectoryPointSaturationLimiter =
   joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>;
 using JointTrajectoryPointLimiterInterfaceBase =
