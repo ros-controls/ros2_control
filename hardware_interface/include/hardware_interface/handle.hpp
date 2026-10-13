@@ -17,8 +17,8 @@
 
 #include <fmt/compile.h>
 
-#include <algorithm>
-#include <atomic>
+#include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -27,7 +27,14 @@
 #include <shared_mutex>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <typeinfo>
 #include <utility>
+#include <variant>
+
+#ifndef _WIN32
+#include <cxxabi.h>
+#endif
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/introspection.hpp"
