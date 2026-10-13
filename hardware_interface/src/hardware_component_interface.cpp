@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/helpers.hpp"
+#include "rcl/arguments.h"
 #include "rclcpp/node_options.hpp"
 
 namespace hardware_interface
@@ -126,7 +128,24 @@ CallbackReturn HardwareComponentInterface::init(
     std::replace(node_name.begin(), node_name.end(), '/', '_');
 
     auto options = define_custom_node_options();
-    options.arguments({"--ros-args", "-r", "__node:=" + node_name});
+    // extend (not replace) the plugin's custom arguments, then append the ones from the CM
+    std::vector<std::string> node_arguments = options.arguments();
+    if (!ros2_control::has_item(node_arguments, std::string(RCL_ROS_ARGS_FLAG)))
+    {
+      node_arguments.push_back(RCL_ROS_ARGS_FLAG);
+    }
+    node_arguments.insert(node_arguments.end(), {RCL_REMAP_FLAG, "__node:=" + node_name});
+    if (
+      !params.node_options_args.empty() &&
+      !ros2_control::has_item(params.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))
+    {
+      node_arguments.push_back(RCL_ROS_ARGS_FLAG);
+    }
+    node_arguments.insert(
+      node_arguments.end(), params.node_options_args.begin(), params.node_options_args.end());
+    options.arguments(node_arguments);
+    // only the explicitly forwarded arguments apply, as for the controllers
+    options.use_global_arguments(false);
 
     impl_->hardware_component_node_ =
       std::make_shared<rclcpp::Node>(node_name, params.node_namespace, options);

@@ -19,6 +19,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -887,6 +888,35 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
     hardware_interface::return_type::OK, actuator_hw.perform_command_mode_switch({""}, {""}));
 }
 // END
+
+TEST_F(TestComponentInterfaces, hardware_component_node_options_args)
+{
+  auto dummy = std::make_unique<test_components::DummyActuator>();
+  auto * dummy_ptr = dummy.get();
+  hardware_interface::Actuator actuator_hw(std::move(dummy));
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_actuator_components");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = mock_hw_info;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  // no leading --ros-args: it has to be added automatically
+  params.node_options_args = {"-p", "test_param:=42", "-r", "__ns:=/custom_ns"};
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, actuator_hw.initialize(params).id());
+
+  auto hw_node = dummy_ptr->get_node();
+  ASSERT_NE(hw_node, nullptr);
+  EXPECT_STREQ("mock_hw", hw_node->get_name());
+  EXPECT_STREQ("/custom_ns", hw_node->get_namespace());
+  const auto & overrides = hw_node->get_node_parameters_interface()->get_parameter_overrides();
+  ASSERT_EQ(1u, overrides.count("test_param"));
+  EXPECT_EQ(42, overrides.at("test_param").get<int64_t>());
+}
 
 TEST_F(TestComponentInterfaces, dummy_actuator_default)
 {
