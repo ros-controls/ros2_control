@@ -166,6 +166,10 @@ controller_manager
   So, any remapping done at the controller manager level will not be visible to the controllers anymore.
   It is recommended to use the ``--controller-ros-args`` option of the spawner to pass ros arguments to controllers.
 
+  .. note::
+    The forwarding has been reintroduced and extended to the hardware components' nodes, see the ``Forwarding ROS arguments`` section of the controller_manager documentation.
+    The controller manager's own node name and namespace remaps and the ``robot_description`` arguments are still not forwarded.
+
   .. code-block:: python
 
     control_node = Node(
