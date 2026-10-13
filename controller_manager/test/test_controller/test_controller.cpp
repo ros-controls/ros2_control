@@ -14,10 +14,18 @@
 
 #include "test_controller.hpp"
 
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <ios>
 #include <limits>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace
 {
