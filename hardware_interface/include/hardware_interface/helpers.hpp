@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -204,6 +205,36 @@ inline std::string strip(const std::string & str)
   }
   size_t end = str.find_last_not_of(whitespace);
   return str.substr(start, end - start + 1);
+}
+
+/**
+ * @brief Extract the namespace from a component's (hardware/controller interface) full name.
+ * @param str The component's full name.
+ * @return The namespace of the component without the trailing slash
+ */
+inline std::optional<std::string> get_component_node_namespace(const std::string & component_name)
+{
+  if (component_name.find("/") != std::string::npos)
+  {
+    return component_name.substr(0, component_name.find_last_of('/'));
+  }
+
+  return {};
+}
+
+/**
+ * @brief Extract the name from a component's (hardware/controller interface) full name.
+ * @param str The component's full name.
+ * @return The name of the component without the preceeding slash
+ */
+inline std::string get_component_node_name(const std::string & component_name)
+{
+  if (component_name.find("/") != std::string::npos)
+  {
+    return component_name.substr(component_name.find_last_of('/') + 1, component_name.length());
+  }
+
+  return component_name;
 }
 
 }  // namespace ros2_control

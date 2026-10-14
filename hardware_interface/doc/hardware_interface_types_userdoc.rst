@@ -40,6 +40,15 @@ A generic example which shows the structure is provided below. More specific exa
       </joint>
     </ros2_control>
 
+Name and Node Namespaces
+*****************************
+The name parameter of the ``<ros2_control>``-tag has :ref:`similar semantics to controller namespacing <doc/ros2_control/controller_manager/doc/userdoc:controller-namespacing>`:
+
+.. code:: xml
+   <ros2_control name="/my/namespaced/hw_interface" type="system">
+
+In this example, when the hardware component is activated, the attached lifecycle node will be named ``hw_interface`` and will be placed in the ``/my/namespaced`` namespace.
+
 Joints
 *****************************
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.

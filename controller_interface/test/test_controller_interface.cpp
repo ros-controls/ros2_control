@@ -66,6 +66,33 @@ TEST(TestableControllerInterface, init)
   rclcpp::shutdown();
 }
 
+TEST(TestableControllerInterface, init_with_namespace)
+{
+  char const * const argv[] = {""};
+  int argc = arrlen(argv);
+  rclcpp::init(argc, argv);
+
+  TestableControllerInterface controller;
+
+  // initialize, create node
+  controller_interface::ControllerInterfaceParams params;
+  params.controller_name =
+    std::string(TEST_CONTROLLER_NAMESPACE) + "/" + std::string(TEST_CONTROLLER_NAME);
+  params.robot_description = "";
+  params.update_rate = 10;
+  params.node_namespace = TEST_CONTROLLER_NAMESPACE;
+  params.node_options = controller.define_custom_node_options();
+  controller.init(params);
+
+  // Check names
+  ASSERT_EQ(std::string(controller.get_node()->get_name()), std::string(TEST_CONTROLLER_NAME));
+  ASSERT_EQ(
+    std::string(controller.get_node()->get_namespace()), std::string(TEST_CONTROLLER_NAMESPACE));
+
+  controller.get_node()->shutdown();
+  rclcpp::shutdown();
+}
+
 TEST(TestableControllerInterface, setting_negative_update_rate_in_configure)
 {
   // mocks the declaration of overrides parameters in a yaml file
