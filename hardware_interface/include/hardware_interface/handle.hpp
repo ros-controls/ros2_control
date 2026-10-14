@@ -17,6 +17,7 @@
 
 #include <fmt/compile.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>

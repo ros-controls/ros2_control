@@ -14,6 +14,8 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 
+#include <fmt/format.h>
+
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -25,8 +27,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
