@@ -45,8 +45,7 @@ target_include_directories(joint_limiter_interface PUBLIC
 target_link_libraries(joint_limiter_interface PUBLIC
                       joint_limits
                       pluginlib::pluginlib
-                      ${rcl_interfaces_TARGETS}
-                      ${trajectory_msgs_TARGETS})
+                      ${rcl_interfaces_TARGETS})
 
 add_library(joint_limits_helpers SHARED
   src/joint_limits_helpers.cpp
@@ -69,6 +68,7 @@ target_include_directories(joint_saturation_limiter PUBLIC
 target_link_libraries(joint_saturation_limiter PUBLIC
                       joint_limits_helpers
                       joint_limiter_interface)
+target_link_libraries(joint_saturation_limiter PRIVATE ${trajectory_msgs_TARGETS})
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
@@ -103,7 +103,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_joint_saturation_limiter
                         joint_limiter_interface
                         pluginlib::pluginlib
-                        rclcpp::rclcpp)
+                        rclcpp::rclcpp
+                        ${trajectory_msgs_TARGETS})
 
   ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
   target_link_libraries(test_joint_range_limiter

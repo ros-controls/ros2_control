@@ -24,6 +24,7 @@
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logging.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;

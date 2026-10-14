@@ -21,10 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
-
-#include "realtime_tools/async_function_handler.hpp"
 
 #include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/handle.hpp"
@@ -34,7 +31,6 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
 
-#include "lifecycle_msgs/msg/state.hpp"
 #include "pal_statistics/pal_statistics_utils.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node_options.hpp"

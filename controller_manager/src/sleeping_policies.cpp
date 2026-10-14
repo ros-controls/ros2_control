@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <thread>
 
+#include "controller_manager/controller_manager.hpp"
 #include "rclcpp/logging.hpp"
 
 bool sleep_for_sim_time(

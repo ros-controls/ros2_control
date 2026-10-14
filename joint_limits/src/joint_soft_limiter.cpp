@@ -22,6 +22,8 @@
 #include <limits>
 #include <mutex>
 
+#include "joint_limits/joint_limits_helpers.hpp"
+
 namespace joint_limits
 {
 

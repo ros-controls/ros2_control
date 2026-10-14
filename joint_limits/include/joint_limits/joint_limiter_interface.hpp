@@ -30,7 +30,6 @@
 #include "rclcpp/parameter.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "realtime_tools/realtime_thread_safe_box.hpp"
-#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 namespace joint_limits
 {
