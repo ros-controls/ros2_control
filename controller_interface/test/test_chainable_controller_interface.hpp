@@ -35,26 +35,13 @@ class TestableChainableControllerInterface
 : public controller_interface::ChainableControllerInterface
 {
 public:
-  FRIEND_TEST(ChainableControllerInterfaceTest, interfaces_storage_not_correct_size);
+  FRIEND_TEST(ChainableControllerInterfaceTest, export_state_interfaces);
+  FRIEND_TEST(ChainableControllerInterfaceTest, export_reference_interfaces);
   FRIEND_TEST(ChainableControllerInterfaceTest, test_update_logic);
-  FRIEND_TEST(ChainableControllerInterfaceTest, export_reference_interfaces_list_only);
-  FRIEND_TEST(ChainableControllerInterfaceTest, export_reference_interfaces_list_plus_legacy);
-  FRIEND_TEST(ChainableControllerInterfaceTest, export_state_interfaces_list_only);
-  FRIEND_TEST(ChainableControllerInterfaceTest, export_state_interfaces_list_plus_legacy);
-
-  TestableChainableControllerInterface()
-  {
-    reference_interfaces_.reserve(1);
-    reference_interfaces_.push_back(INTERFACE_VALUE);
-    state_interfaces_values_.reserve(1);
-    state_interfaces_values_.push_back(EXPORTED_STATE_INTERFACE_VALUE);
-  }
 
   controller_interface::CallbackReturn on_init() override
   {
-    // set default value
     name_prefix_of_interfaces_ = get_node()->get_name();
-
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
@@ -70,74 +57,33 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  // Implementation of ChainableController virtual methods
-  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override
-  {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-
-    if (legacy_export)
-    {
-      state_interfaces.push_back(
-        hardware_interface::StateInterface(
-          name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
-    }
-    return state_interfaces;
-  }
-
   std::vector<hardware_interface::StateInterface::SharedPtr> on_export_state_interfaces_list()
     override
   {
-    std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
-
-    if (pointers_export)
-    {
-      auto state_interface = std::make_shared<hardware_interface::StateInterface>(
-        name_prefix_of_interfaces_, "test_state_ptr");
-      state_interfaces.push_back(state_interface);
-    }
-
-    return state_interfaces;
-  }
-
-  // Implementation of ChainableController virtual methods
-  std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override
-  {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-
-    if (legacy_export)
-    {
-      command_interfaces.push_back(
-        hardware_interface::CommandInterface(
-          name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
-    }
-
-    return command_interfaces;
+    state_itf_ptr_ = std::make_shared<hardware_interface::StateInterface>(
+      name_prefix_of_interfaces_, "test_state");
+    std::ignore = state_itf_ptr_->set_value(EXPORTED_STATE_INTERFACE_VALUE);
+    return {state_itf_ptr_};
   }
 
   std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_reference_interfaces_list()
     override
   {
-    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
-    if (pointers_export)
-    {
-      auto command_interface = std::make_shared<hardware_interface::CommandInterface>(
-        name_prefix_of_interfaces_, "test_itf_ptr");
-      command_interfaces.push_back(command_interface);
-    }
-    return command_interfaces;
+    ref_itf_ptr_ = std::make_shared<hardware_interface::CommandInterface>(
+      name_prefix_of_interfaces_, "test_itf");
+    std::ignore = ref_itf_ptr_->set_value(INTERFACE_VALUE);
+    return {ref_itf_ptr_};
   }
 
   bool on_set_chained_mode(bool /*chained_mode*/) override
   {
-    if (reference_interfaces_[0] == 0.0)
+    const auto ref_val = ref_itf_ptr_->get_optional();
+    if (ref_val.has_value() && ref_val.value() == 0.0)
     {
-      state_interfaces_values_[0] = EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE;
+      std::ignore = state_itf_ptr_->set_value(EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE);
       return true;
     }
-    else
-    {
-      return false;
-    }
+    return false;
   }
 
   controller_interface::return_type update_reference_from_subscribers(
@@ -147,22 +93,20 @@ public:
     {
       return controller_interface::return_type::ERROR;
     }
-
-    reference_interfaces_[0] = reference_interface_value_;
+    std::ignore = ref_itf_ptr_->set_value(reference_interface_value_);
     return controller_interface::return_type::OK;
   }
 
   controller_interface::return_type update_and_write_commands(
     const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
-    if (reference_interfaces_[0] == INTERFACE_VALUE_UPDATE_ERROR)
+    const auto ref_val = ref_itf_ptr_->get_optional().value();
+    if (ref_val == INTERFACE_VALUE_UPDATE_ERROR)
     {
       return controller_interface::return_type::ERROR;
     }
-
-    reference_interfaces_[0] -= 1;
-    state_interfaces_values_[0] += 1;
-
+    std::ignore = ref_itf_ptr_->set_value(ref_val - 1.0);
+    std::ignore = state_itf_ptr_->set_value(state_itf_ptr_->get_optional().value() + 1.0);
     return controller_interface::return_type::OK;
   }
 
@@ -176,10 +120,10 @@ public:
     reference_interface_value_ = ref_itf_value;
   }
 
+  hardware_interface::CommandInterface::SharedPtr ref_itf_ptr_;
+  hardware_interface::StateInterface::SharedPtr state_itf_ptr_;
   std::string name_prefix_of_interfaces_;
   double reference_interface_value_ = INTERFACE_VALUE_INITIAL_REF;
-  bool pointers_export = false;
-  bool legacy_export = true;
 };
 
 class ChainableControllerInterfaceTest : public ::testing::Test

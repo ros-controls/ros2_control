@@ -247,63 +247,12 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
 
 std::vector<StateInterface::ConstSharedPtr> HardwareComponent::export_state_interfaces()
 {
-// BEGIN (Handle export change): for backward compatibility, can be removed if
-// export_command_interfaces() method is removed
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  std::vector<StateInterface> interfaces = impl_->export_state_interfaces();
-#pragma GCC diagnostic pop
-  // END: for backward compatibility
-
-  // If no StateInterfaces has been exported, this could mean:
-  // a) there is nothing to export -> on_export_state_interfaces() does return nothing as well
-  // b) default implementation for export_state_interfaces() is used -> new functionality ->
-  // Framework exports and creates everything
-  if (interfaces.empty())
-  {
-    return impl_->on_export_state_interfaces();
-  }
-
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
-  std::vector<StateInterface::ConstSharedPtr> interface_ptrs;
-  interface_ptrs.reserve(interfaces.size());
-  for (auto const & interface : interfaces)
-  {
-    interface_ptrs.emplace_back(std::make_shared<const StateInterface>(interface));
-  }
-  return interface_ptrs;
-  // END: for backward compatibility
+  return impl_->on_export_state_interfaces();
 }
 
 std::vector<CommandInterface::SharedPtr> HardwareComponent::export_command_interfaces()
 {
-// BEGIN (Handle export change): for backward compatibility, can be removed if
-// export_command_interfaces() method is removed
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  std::vector<CommandInterface> interfaces = impl_->export_command_interfaces();
-#pragma GCC diagnostic pop
-  // END: for backward compatibility
-
-  // If no CommandInterface has been exported, this could mean:
-  // a) there is nothing to export -> on_export_command_interfaces() does return nothing as well
-  // b) default implementation for export_command_interfaces() is used -> new functionality ->
-  // Framework exports and creates everything
-  if (interfaces.empty())
-  {
-    return impl_->on_export_command_interfaces();
-  }
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
-  std::vector<CommandInterface::SharedPtr> interface_ptrs;
-  interface_ptrs.reserve(interfaces.size());
-  for (auto & interface : interfaces)
-  {
-    interface_ptrs.emplace_back(std::make_shared<CommandInterface>(std::move(interface)));
-  }
-  return interface_ptrs;
-  // END: for backward compatibility
+  return impl_->on_export_command_interfaces();
 }
 
 return_type HardwareComponent::prepare_command_mode_switch(

@@ -81,8 +81,6 @@ namespace transmission_interface
  * \ingroup transmission_types
  */
 
-constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
-
 class SimpleTransmission : public Transmission
 {
 public:

@@ -2,6 +2,22 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.12.0 (2026-10-07)
+-------------------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.11.0 (2026-10-05)
+-------------------
+* Match complete command interfaces in GenericSystem mode switches (`#3596 <https://github.com/ros-controls/ros2_control/issues/3596>`_)
+* Contributors: vpfkfl753
+
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
 6.9.0 (2026-08-10)
 ------------------
 * Avoid Windows TRUE/FALSE macro collisions in hardware_interface (`#3486 <https://github.com/ros-controls/ros2_control/issues/3486>`_)
