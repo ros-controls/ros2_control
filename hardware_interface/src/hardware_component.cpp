@@ -14,7 +14,9 @@
 
 #include "hardware_interface/hardware_component.hpp"
 
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>

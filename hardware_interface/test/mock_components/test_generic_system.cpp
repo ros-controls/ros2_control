@@ -15,8 +15,10 @@
 // Author: Denis Stogl
 
 #include <cmath>
+#include <cstdint>
+#include <limits>
+#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "gmock/gmock.h"

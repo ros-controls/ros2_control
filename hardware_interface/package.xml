@@ -16,19 +16,25 @@
   <depend>backward_ros</depend>
   <depend>control_msgs</depend>
   <depend>joint_limits</depend>
+  <depend>libstatistics_collector</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pal_statistics</depend>
   <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>rcpputils</depend>
+  <depend>rcutils</depend>
   <depend>realtime_tools</depend>
+<<<<<<< HEAD
   <depend>sdformat_urdf</depend>
   <depend>tinyxml2_vendor</depend>
+=======
+  <depend>tinyxml2</depend>
+>>>>>>> bb84adc (Review "Include what you use" (#3696))
   <depend>urdf</depend>
   <depend>fmt</depend>
 
-  <build_depend>rcutils</build_depend>
-  <exec_depend>rcutils</exec_depend>
+  <exec_depend>sdformat_urdf</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>

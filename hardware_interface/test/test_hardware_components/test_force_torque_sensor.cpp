@@ -13,7 +13,12 @@
 // limitations under the License.
 
 #include <algorithm>
+<<<<<<< HEAD
 #include <cmath>
+=======
+#include <memory>
+#include <tuple>
+>>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"

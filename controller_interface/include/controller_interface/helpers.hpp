@@ -17,6 +17,10 @@
 
 #include <algorithm>
 #include <functional>
+<<<<<<< HEAD
+=======
+#include <stdexcept>
+>>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <string>
 #include <vector>
 

@@ -16,7 +16,7 @@
 #define HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
 
 #include <functional>
-#include <limits>
+#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
