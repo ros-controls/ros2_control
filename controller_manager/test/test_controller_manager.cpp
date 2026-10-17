@@ -1107,20 +1107,23 @@ TEST_F(TestControllerManagerWithSimTimeJump, slower_controller_keeps_running_aft
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
-  // Let the controller run normally for a while, so that its timing base is well established.
-  for (int i = 0; i < 10; ++i)
+  // During the switch the fixture's background updater runs an unknown number of cycles, so the
+  // absolute counter is not meaningful. Count the updates over a fixed window instead.
+  const auto counter_at_window_start = test_controller->internal_counter;
+  constexpr int kCyclesPerWindow = 10;
+  for (int i = 0; i < kCyclesPerWindow; ++i)
   {
     sim_time = sim_time + update_period;
     set_sim_time(sim_time);
     ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
   }
+  const auto updates_in_window = test_controller->internal_counter - counter_at_window_start;
+  // 10 controller manager cycles at 100 Hz equal 5 update cycles of a 50 Hz controller.
+  EXPECT_NEAR(static_cast<double>(updates_in_window), 5.0, 1.0)
+    << "The controller must keep its own update rate before the jump";
+
   const auto counter_before_jump = test_controller->internal_counter;
   ASSERT_GT(counter_before_jump, 0u);
-  // Outside of the jump the controller must still be triggered at its configured rate, i.e. not
-  // on every controller manager cycle. 10 controller manager cycles at 100 Hz equal 5 update
-  // cycles of a 50 Hz controller.
-  EXPECT_NEAR(static_cast<double>(counter_before_jump), 5.0, 1.0)
-    << "The controller must keep its own update rate before the jump";
 
   // The simulator resets its clock while the controller manager keeps running: simulation time
   // jumps from ~10.1 s back to 1 s and then advances again. The reset value is deliberately not
