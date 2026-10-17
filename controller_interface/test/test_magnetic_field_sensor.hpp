@@ -15,6 +15,7 @@
 #ifndef TEST_MAGNETIC_FIELD_SENSOR_HPP_
 #define TEST_MAGNETIC_FIELD_SENSOR_HPP_
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>

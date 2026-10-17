@@ -15,13 +15,19 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
+#include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <future>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "example_interfaces/srv/set_bool.hpp"
 #include "gmock/gmock.h"

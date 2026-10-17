@@ -18,10 +18,10 @@
 #include <cstdint>
 #include <limits>
 #include <regex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
 
 namespace hardware_interface

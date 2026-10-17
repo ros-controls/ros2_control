@@ -14,7 +14,10 @@
 
 #include <algorithm>
 #include <array>
+#include <iterator>
+#include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "gmock/gmock.h"

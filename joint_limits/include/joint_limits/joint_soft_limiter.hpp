@@ -19,8 +19,8 @@
 
 #include <cmath>
 #include "joint_limits/data_structures.hpp"
-#include "joint_limits/joint_limits_helpers.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
+#include "rclcpp/logging.hpp"
 
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 
