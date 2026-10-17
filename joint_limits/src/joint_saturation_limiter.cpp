@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <mutex>
 #include <sstream>
+#include <vector>
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logging.hpp"
