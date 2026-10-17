@@ -3237,6 +3237,45 @@ TEST_F(
   }
 }
 
+class TestControllerManagerRTListHandoff
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestControllerManagerRTListHandoff, switch_from_non_rt_thread_while_rt_loop_runs)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+
+  const std::vector<std::string> only_first = {test_controller::TEST_CONTROLLER_NAME};
+  const std::vector<std::string> none = {};
+  {
+    // Non-regression test: the runner drives update() from a background thread while
+    // switch_controller() with activate_asap = false runs manage_switch() here, on the non-RT
+    // thread. It does not reproduce the race on its own; only ThreadSanitizer detects that.
+    ControllerManagerRunner cm_runner(this);
+    for (int i = 0; i < 10; ++i)
+    {
+      ASSERT_EQ(
+        controller_interface::return_type::OK,
+        cm_->switch_controller(only_first, none, STRICT, false, rclcpp::Duration(0, 0)));
+      ASSERT_EQ(
+        controller_interface::return_type::OK,
+        cm_->switch_controller(none, only_first, STRICT, false, rclcpp::Duration(0, 0)));
+    }
+  }
+
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+}
+
 class TestControllerManagerWithHandlingExceptions
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {

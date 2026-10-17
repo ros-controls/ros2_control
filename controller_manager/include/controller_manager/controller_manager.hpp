@@ -608,6 +608,15 @@ private:
      */
     std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
 
+    /// get_used_by_rt_list Returns the list already announced as "used by rt"
+    /**
+     * \warning Does not modify the announcement, so unlike update_and_get_used_by_rt_list() it
+     * may also be called from the non-RT thread. The RT thread must have announced a list at
+     * least once before this is called.
+     * \return reference to the announced list
+     */
+    std::vector<ControllerSpec> & get_used_by_rt_list();
+
     /**
      * get_unused_list Waits until the "outdated" and "unused by rt"
      * lists match and returns a reference to it
@@ -659,10 +668,13 @@ private:
       int index, std::chrono::microseconds sleep_delay = std::chrono::microseconds(200)) const;
 
     std::vector<ControllerSpec> controllers_lists_[2];
+    // updated_controllers_index_ is written only by the non-RT thread under controllers_lock_,
+    // used_by_realtime_controllers_index_ only by the RT thread in
+    // update_and_get_used_by_rt_list(). Both are read cross-thread, hence atomic.
     /// The index of the controller list with the most updated information
-    int updated_controllers_index_ = 0;
+    std::atomic<int> updated_controllers_index_{0};
     /// The index of the controllers list being used in the real-time thread.
-    int used_by_realtime_controllers_index_ = -1;
+    std::atomic<int> used_by_realtime_controllers_index_{-1};
     /// The callback to be called when the list is switched
     std::function<void()> on_switch_callback_ = nullptr;
   };
