@@ -125,16 +125,16 @@ TEST_F(GPSSensorTest, should_fill_gps_nav_sat_fix_msg_with_value_from_state_inte
 
 TEST_F(GPSSensorTest, unavailable_status_should_be_unknown_and_recover)
 {
-  std::ignore = gps_state->set_value(1.0);
-  std::ignore = gps_service->set_value(13.0);
-  std::ignore = latitude->set_value(48.1);
-  std::ignore = longitude->set_value(11.6);
-  std::ignore = altitude->set_value(231.0);
+  std::ignore = gps_state.set_value(1.0);
+  std::ignore = gps_service.set_value(13.0);
+  std::ignore = latitude.set_value(48.1);
+  std::ignore = longitude.set_value(11.6);
+  std::ignore = altitude.set_value(231.0);
   ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
 
   {
-    std::unique_lock<std::shared_mutex> lock(gps_state->get_mutex());
+    std::unique_lock<std::shared_mutex> lock(gps_state.get_mutex());
     // Read from another thread while this thread holds the lock for all read attempts
     EXPECT_EQ(
       decltype(sut)::STATUS_UNKNOWN,
@@ -143,23 +143,23 @@ TEST_F(GPSSensorTest, unavailable_status_should_be_unknown_and_recover)
   }
 
   std::ignore =
-    gps_state->set_value(static_cast<double>(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX));
+    gps_state.set_value(static_cast<double>(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX));
   EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX, sut.get_status());
   EXPECT_EQ(13u, sut.get_service());
 }
 
 TEST_F(GPSSensorTest, unavailable_service_should_be_unknown_and_recover)
 {
-  std::ignore = gps_state->set_value(1.0);
-  std::ignore = gps_service->set_value(13.0);
-  std::ignore = latitude->set_value(48.1);
-  std::ignore = longitude->set_value(11.6);
-  std::ignore = altitude->set_value(231.0);
+  std::ignore = gps_state.set_value(1.0);
+  std::ignore = gps_service.set_value(13.0);
+  std::ignore = latitude.set_value(48.1);
+  std::ignore = longitude.set_value(11.6);
+  std::ignore = altitude.set_value(231.0);
   ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
   EXPECT_EQ(13u, sut.get_service());
 
   {
-    std::unique_lock<std::shared_mutex> lock(gps_service->get_mutex());
+    std::unique_lock<std::shared_mutex> lock(gps_service.get_mutex());
     // Read from another thread while this thread holds the lock for all read attempts
     EXPECT_EQ(
       decltype(sut)::SERVICE_UNKNOWN,
@@ -168,7 +168,7 @@ TEST_F(GPSSensorTest, unavailable_service_should_be_unknown_and_recover)
   }
 
   std::ignore =
-    gps_service->set_value(static_cast<double>(sensor_msgs::msg::NavSatStatus::SERVICE_GPS));
+    gps_service.set_value(static_cast<double>(sensor_msgs::msg::NavSatStatus::SERVICE_GPS));
   EXPECT_EQ(sensor_msgs::msg::NavSatStatus::SERVICE_GPS, sut.get_service());
   EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX, sut.get_status());
 }
@@ -176,11 +176,11 @@ TEST_F(GPSSensorTest, unavailable_service_should_be_unknown_and_recover)
 TEST_F(
   GPSSensorTest, unavailable_status_and_service_should_fill_message_with_unknown_values_and_recover)
 {
-  std::ignore = gps_state->set_value(1.0);
-  std::ignore = gps_service->set_value(13.0);
-  std::ignore = latitude->set_value(48.1);
-  std::ignore = longitude->set_value(11.6);
-  std::ignore = altitude->set_value(231.0);
+  std::ignore = gps_state.set_value(1.0);
+  std::ignore = gps_service.set_value(13.0);
+  std::ignore = latitude.set_value(48.1);
+  std::ignore = longitude.set_value(11.6);
+  std::ignore = altitude.set_value(231.0);
   ASSERT_TRUE(sut.assign_loaned_state_interfaces(state_interface));
 
   sensor_msgs::msg::NavSatFix message;
@@ -189,8 +189,8 @@ TEST_F(
   EXPECT_EQ(13u, message.status.service);
 
   {
-    std::unique_lock<std::shared_mutex> status_lock(gps_state->get_mutex());
-    std::unique_lock<std::shared_mutex> service_lock(gps_service->get_mutex());
+    std::unique_lock<std::shared_mutex> status_lock(gps_state.get_mutex());
+    std::unique_lock<std::shared_mutex> service_lock(gps_service.get_mutex());
     // Keep both interfaces locked until the message has been read on another thread
     EXPECT_TRUE(
       std::async(
@@ -203,11 +203,11 @@ TEST_F(
     EXPECT_DOUBLE_EQ(231.0, message.altitude);
   }
 
-  std::ignore = gps_state->set_value(2.0);
-  std::ignore = gps_service->set_value(3.0);
-  std::ignore = latitude->set_value(48.2);
-  std::ignore = longitude->set_value(11.7);
-  std::ignore = altitude->set_value(232.0);
+  std::ignore = gps_state.set_value(2.0);
+  std::ignore = gps_service.set_value(3.0);
+  std::ignore = latitude.set_value(48.2);
+  std::ignore = longitude.set_value(11.7);
+  std::ignore = altitude.set_value(232.0);
   EXPECT_TRUE(sut.get_values_as_message(message));
   EXPECT_EQ(sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX, message.status.status);
   EXPECT_EQ(3u, message.status.service);
