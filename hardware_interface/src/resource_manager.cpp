@@ -863,8 +863,7 @@ public:
     const auto fill_interface_data =
       [&](const std::string & interface_type, std::optional<double> & value)
     {
-      const std::string interface_name =
-        fmt::format(FMT_COMPILE("{}/{}"), joint_name, interface_type);
+      const std::string & interface_name = make_interface_key(joint_name, interface_type);
       if (interface_map.find(interface_name) != interface_map.end())
       {
         // If the command interface is not claimed, then the value is not set (or) if the
@@ -898,8 +897,8 @@ public:
     const auto set_interface_command =
       [&](const std::string & interface_type, const std::optional<double> & data)
     {
-      const std::string interface_name =
-        fmt::format(FMT_COMPILE("{}/{}"), limited_command.joint_name, interface_type);
+      const std::string & interface_name =
+        make_interface_key(limited_command.joint_name, interface_type);
       if (data.has_value() && interface_map.find(interface_name) != interface_map.end())
       {
         auto itf_handle = interface_map.at(interface_name);
@@ -1101,7 +1100,12 @@ public:
                                     double value, bool & is_limited) -> double
           {
             is_limited = false;
-            joint_limits::JointInterfacesCommandLimiterData data;
+            // Reused across calls and thread_local: constructing this per call allocates once per
+            // std::string member for names past the small string buffer, and this closure runs on
+            // the controller thread. Reset first, because update_joint_limiters_data() only fills
+            // in the interfaces that are present.
+            static thread_local joint_limits::JointInterfacesCommandLimiterData data;
+            data = joint_limits::JointInterfacesCommandLimiterData();
             data.set_joint_name(joint_name);
             update_joint_limiters_data(data.joint_name, state_interface_map_, data.actual);
             if (interface_name == hardware_interface::HW_IF_POSITION)
@@ -1434,6 +1438,22 @@ public:
   // To be used with the prepare and perform command switch for the hardware components
   std::vector<std::string> start_interfaces_buffer_;
   std::vector<std::string> stop_interfaces_buffer_;
+
+  /// Compose "<joint_name>/<interface_type>" into a reused buffer, so steady-state calls
+  /// allocate nothing. thread_local because this is reached from the real-time update loop
+  /// (enforce_command_limits) and from controller threads via
+  /// LoanedCommandInterface::set_value(). The returned reference is valid only until the next
+  /// call on the same thread.
+  static const std::string & make_interface_key(
+    const std::string & joint_name, const std::string & interface_type)
+  {
+    static thread_local std::string buffer;
+    buffer.clear();
+    buffer += joint_name;
+    buffer += '/';
+    buffer += interface_type;
+    return buffer;
+  }
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
@@ -2413,7 +2433,7 @@ HardwareReadWriteStatus ResourceManager::read(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
-      const std::string component_name = component.get_name();
+      const std::string & component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
@@ -2456,7 +2476,7 @@ HardwareReadWriteStatus ResourceManager::read(
           hardware_component_info.read_statistics->periodicity.update_statistics(
             read_statistics_collector.periodicity);
         }
-        const auto component_group = component.get_group_name();
+        const std::string & component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
@@ -2514,7 +2534,7 @@ HardwareReadWriteStatus ResourceManager::write(
     for (auto & component : components)
     {
       std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
-      const std::string component_name = component.get_name();
+      const std::string & component_name = component.get_name();
       if (!lock.owns_lock())
       {
         RCLCPP_DEBUG(
@@ -2558,7 +2578,7 @@ HardwareReadWriteStatus ResourceManager::write(
           hardware_component_info.write_statistics->periodicity.update_statistics(
             write_statistics_collector.periodicity);
         }
-        const auto component_group = component.get_group_name();
+        const std::string & component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }

@@ -208,16 +208,15 @@ public:
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
-    auto joint_limits_op = updated_limits_.try_get();
-    if (joint_limits_op.has_value())
-    {
-      joint_limits_ = joint_limits_op.value();
-      return on_enforce(current_joint_states, desired_joint_states, dt);
-    }
-    else
+    // Use the callback overload: the value-returning one copies the whole vector on this real-time
+    // path. joint_limits_ is already sized, so the assignment does not reallocate.
+    const bool limits_available = updated_limits_.try_get(
+      [this](const std::vector<joint_limits::JointLimits> & limits) { joint_limits_ = limits; });
+    if (!limits_available)
     {
       return false;
     }
+    return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
   virtual void reset_internals() = 0;
