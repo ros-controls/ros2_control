@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "control_msgs/msg/hardware_status.hpp"
 #include "gmock/gmock.h"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
@@ -769,6 +770,17 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
   }
 };
 
+class DummyActuatorWithNodeOptions : public DummyActuator
+{
+public:
+  rclcpp::NodeOptions define_custom_node_options() const override
+  {
+    auto options = DummyActuator::define_custom_node_options();
+    options.arguments({"--ros-args", "-r", "custom_topic:=custom_remapped_topic"});
+    return options;
+  }
+};
+
 }  // namespace test_components
 class TestComponentInterfaces : public ::testing::Test
 {
@@ -785,6 +797,43 @@ protected:
   void TearDown() override { executor_->cancel(); }
   std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
 };
+TEST_F(TestComponentInterfaces, framework_managed_node_inherits_ros_arguments)
+{
+  auto actuator_impl = std::make_unique<test_components::DummyActuatorWithNodeOptions>();
+  auto * actuator_impl_ptr = actuator_impl.get();
+  hardware_interface::Actuator actuator_hw(std::move(actuator_impl));
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = false;
+
+  rclcpp::Node::SharedPtr node =
+    std::make_shared<rclcpp::Node>("test_hardware_component_node_arguments");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = mock_hw_info;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  const std::vector<std::string> node_options_args = {
+    "--ros-args", "-r", "__node:=controller_manager", "-r",
+    "hardware_topic:=remapped_hardware_topic"};
+
+  const auto state = actuator_hw.initialize(params, node_options_args);
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+
+  const auto hardware_node = actuator_impl_ptr->get_node();
+  ASSERT_NE(nullptr, hardware_node);
+  EXPECT_STREQ("mock_hw", hardware_node->get_name());
+
+  const auto inherited_remap_publisher =
+    hardware_node->create_publisher<control_msgs::msg::HardwareStatus>("hardware_topic", 1);
+  EXPECT_STREQ("/remapped_hardware_topic", inherited_remap_publisher->get_topic_name());
+
+  const auto custom_options_publisher =
+    hardware_node->create_publisher<control_msgs::msg::HardwareStatus>("custom_topic", 1);
+  EXPECT_STREQ("/custom_remapped_topic", custom_options_publisher->get_topic_name());
+}
+
 // BEGIN (Handle export change): for backward compatibility
 TEST_F(TestComponentInterfaces, dummy_actuator)
 {

@@ -57,10 +57,17 @@ HardwareComponent::~HardwareComponent()
 const rclcpp_lifecycle::State & HardwareComponent::initialize(
   const hardware_interface::HardwareComponentParams & params)
 {
+  return initialize(params, {});
+}
+
+const rclcpp_lifecycle::State & HardwareComponent::initialize(
+  const hardware_interface::HardwareComponentParams & params,
+  const std::vector<std::string> & node_options_args)
+{
   std::unique_lock<std::recursive_mutex> lock(component_mutex_);
   if (impl_->get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(params))
+    switch (impl_->init(params, node_options_args))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_lifecycle_state(

@@ -266,7 +266,8 @@ public:
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state = hardware.initialize(component_params);
+      const rclcpp_lifecycle::State new_state =
+        hardware.initialize(component_params, hardware_component_node_options_args_);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
@@ -1386,6 +1387,7 @@ public:
   rclcpp::Clock::SharedPtr rm_clock_;
   rclcpp::Logger rm_logger_;
   bool handle_exception_ = true;
+  std::vector<std::string> hardware_component_node_options_args_;
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
@@ -1454,6 +1456,12 @@ ResourceManager::ResourceManager(rclcpp::Clock::SharedPtr clock, rclcpp::Logger 
 }
 
 ResourceManager::~ResourceManager() = default;
+
+void ResourceManager::set_hardware_component_node_options_args(
+  const std::vector<std::string> & node_options_args)
+{
+  resource_storage_->hardware_component_node_options_args_ = node_options_args;
+}
 
 ResourceManager::ResourceManager(
   const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
