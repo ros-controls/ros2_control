@@ -15,6 +15,7 @@
 #include "test_chainable_controller_interface.hpp"
 
 #include <memory>
+#include <stdexcept>
 
 #include "gmock/gmock.h"
 

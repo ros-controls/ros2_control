@@ -15,9 +15,10 @@
 #include <array>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include "gmock/gmock.h"
