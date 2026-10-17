@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD
-=======
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
 #include <algorithm>
 #include <chrono>
 #include <cmath>
->>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <cstdlib>
 #include <future>
 #include <memory>

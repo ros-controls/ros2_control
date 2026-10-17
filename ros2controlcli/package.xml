@@ -17,12 +17,8 @@
   <depend>ros2node</depend>
   <depend>controller_manager</depend>
   <depend>controller_manager_msgs</depend>
-<<<<<<< HEAD
-  <exec_depend>rosidl_runtime_py</exec_depend>
-=======
   <depend>control_msgs</depend>
   <exec_depend>lifecycle_msgs</exec_depend>
->>>>>>> bb84adc (Review "Include what you use" (#3696))
   <exec_depend>python3-graphviz</exec_depend>
   <exec_depend>ros2topic</exec_depend>
   <exec_depend>rosidl_runtime_py</exec_depend>
