@@ -2143,6 +2143,48 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   UpdateAllControllerAndCheck(reference, 3u);
 }
 
+TEST_P(
+  TestControllerChainingWithControllerManager,
+  test_chained_controllers_activation_with_mutually_claimed_interfaces)
+{
+  static constexpr char CONTROLLER_A[] = "chainable_controller_a";
+  static constexpr char CONTROLLER_B[] = "chainable_controller_b";
+  auto controller_a = std::make_shared<TestableTestChainableController>();
+  auto controller_b = std::make_shared<TestableTestChainableController>();
+
+  // A writes B's reference interface and B reads A's exported state interface, so both claims
+  // order A before B and the activation check must not follow them in a circle
+  controller_a->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(CONTROLLER_B) + "/reference"}});
+  controller_a->set_exported_state_interface_names({"estimate"});
+  controller_b->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(CONTROLLER_A) + "/estimate"}});
+  controller_b->set_reference_interface_names({"reference"});
+
+  // add the controllers against their execution order to test the sorting
+  cm_->add_controller(
+    controller_b, CONTROLLER_B, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    controller_a, CONTROLLER_A, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(CONTROLLER_A));
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(CONTROLLER_B));
+
+  switch_test_controllers({CONTROLLER_A, CONTROLLER_B}, {}, GetParam().strictness);
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_a->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_b->get_lifecycle_state().id());
+  EXPECT_TRUE(controller_b->is_in_chained_mode());
+
+  const auto controllers = cm_->get_loaded_controllers();
+  ASSERT_EQ(controllers.size(), 2u);
+  EXPECT_EQ(controllers[0].info.name, CONTROLLER_A);
+  EXPECT_EQ(controllers[1].info.name, CONTROLLER_B);
+}
+
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerChainingWithControllerManager,
   testing::Values(strict, best_effort));

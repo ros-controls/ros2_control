@@ -2080,8 +2080,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status =
-        check_following_controllers_for_activate(controllers, strictness, controller_it, message);
+      std::vector<std::string> visited_controllers;
+      status = check_following_controllers_for_activate(
+        controllers, strictness, controller_it, visited_controllers, message);
     }
 
     if (status == controller_interface::return_type::OK)
@@ -3885,12 +3886,14 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
 
 controller_interface::return_type ControllerManager::check_following_controllers_for_activate(
   const std::vector<ControllerSpec> & controllers, int strictness,
-  const ControllersListIterator controller_it, std::string & message)
+  const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+  std::string & message)
 {
   // we assume that the controller exists is checked in advance
   RCLCPP_DEBUG(
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
+  visited_controllers.push_back(controller_it->info.name);
 
   const auto controller_cmd_interfaces =
     get_command_interfaces_names(controller_it->c, resource_manager_);
@@ -3912,10 +3915,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       continue;
     }
-    // TODO(destogl): performance of this code could be optimized by adding additional lists with
-    // controllers that cache if the check has failed and has succeeded. Then the following would be
-    // done only once per controller, otherwise in complex scenarios the same controller is checked
-    // multiple times
 
     // check that all following controllers exits, are either: activated, will be activated, or
     // will not be deactivated
@@ -3980,11 +3979,13 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
 
     // Trigger recursion to check all the following controllers only if they are OK, add this
-    // controller update chained mode requests
+    // controller update chained mode requests. A visited controller is not checked again, because
+    // the claimed interfaces can lead back to a controller that is still being checked.
     if (
+      !ros2_control::has_item(visited_controllers, following_ctrl_it->info.name) &&
       check_following_controllers_for_activate(
-        controllers, strictness, following_ctrl_it, message) ==
-      controller_interface::return_type::ERROR)
+        controllers, strictness, following_ctrl_it, visited_controllers, message) ==
+        controller_interface::return_type::ERROR)
     {
       return controller_interface::return_type::ERROR;
     }
