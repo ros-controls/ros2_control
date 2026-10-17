@@ -87,7 +87,6 @@ def generate_controllers_spawner_launch_description(
         package="controller_manager",
         executable="spawner",
         arguments=spawner_arguments,
-        shell=True,
         output="screen",
     )
 
@@ -227,7 +226,6 @@ def generate_spawner_launch_description(controller_info_dict: dict, extra_spawne
         package="controller_manager",
         executable="spawner",
         arguments=spawner_arguments,
-        shell=True,
         output="screen",
     )
 
