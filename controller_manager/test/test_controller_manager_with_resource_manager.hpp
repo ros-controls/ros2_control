@@ -16,15 +16,12 @@
 #define TEST_CONTROLLER_MANAGER_WITH_RESOURCE_MANAGER_HPP_
 
 #include <memory>
-#include <string>
 
-#include <utility>
 #include "controller_manager/controller_manager.hpp"
 #include "gtest/gtest.h"
 #include "hardware_interface/resource_manager.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
-#include "ros2_control_test_assets/descriptions.hpp"
-#include "std_msgs/msg/string.hpp"
 
 class TestControllerManager : public controller_manager::ControllerManager
 {

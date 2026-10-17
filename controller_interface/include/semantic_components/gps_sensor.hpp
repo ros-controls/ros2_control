@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <limits>
 #include <string>
+#include <type_traits>
 
 #include "rclcpp/version.h"
 #include "semantic_components/semantic_component_interface.hpp"

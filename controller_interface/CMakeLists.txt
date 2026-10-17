@@ -8,6 +8,8 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   fmt
   hardware_interface
+  joint_limits
+  lifecycle_msgs
   pal_statistics
   rclcpp
   rclcpp_lifecycle
@@ -32,6 +34,8 @@ target_include_directories(controller_interface PUBLIC
 )
 target_link_libraries(controller_interface PUBLIC
                       hardware_interface::hardware_interface
+                      joint_limits::joint_limits
+                      ${lifecycle_msgs_TARGETS}
                       rclcpp::rclcpp
                       rclcpp_lifecycle::rclcpp_lifecycle
                       realtime_tools::realtime_tools
@@ -153,5 +157,7 @@ install(TARGETS controller_interface
 
 ament_export_targets(export_controller_interface HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+# message packages used only by the header-only semantic_components
+ament_export_dependencies(geometry_msgs sensor_msgs std_msgs)
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})

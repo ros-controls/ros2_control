@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 
