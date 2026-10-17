@@ -37,7 +37,6 @@ void check_and_swap_limits(double & lower_limit, double & upper_limit)
     std::swap(lower_limit, upper_limit);
   }
 }
-
 /**
  * @brief Verify if the actual position is within the limits and if not, log an error and throw an
  * exception.
@@ -53,9 +52,10 @@ void verify_actual_position_within_limits(
   if (actual_position.has_value() && limits.has_position_limits)
   {
     const double actual_pos = actual_position.value();
+    const double tolerance = out_of_bounds_exception_tolerance(limits);
     if (
-      actual_pos > (limits.max_position + internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE) ||
-      actual_pos < (limits.min_position - internal::OUT_OF_BOUNDS_EXCEPTION_TOLERANCE))
+      actual_pos > (limits.max_position + tolerance) ||
+      actual_pos < (limits.min_position - tolerance))
     {
       const std::string error_message = fmt::format(
         FMT_COMPILE(
@@ -149,6 +149,7 @@ VelocityLimits compute_velocity_limits(
   if (limits.has_position_limits && act_pos.has_value())
   {
     const double actual_pos = act_pos.value();
+    const double position_tolerance = internal::position_bounds_tolerance(limits);
     const double max_vel_with_pos_limits = (limits.max_position - actual_pos) / dt;
     const double min_vel_with_pos_limits = (limits.min_position - actual_pos) / dt;
     vel_limits.lower_limit = std::max(min_vel_with_pos_limits, vel_limits.lower_limit);
@@ -157,9 +158,9 @@ VelocityLimits compute_velocity_limits(
     if (actual_pos > limits.max_position || actual_pos < limits.min_position)
     {
       if (
-        (actual_pos < (limits.max_position + internal::POSITION_BOUNDS_TOLERANCE) &&
+        (actual_pos < (limits.max_position + position_tolerance) &&
          (actual_pos > limits.min_position) && desired_vel >= 0.0) ||
-        (actual_pos > (limits.min_position - internal::POSITION_BOUNDS_TOLERANCE) &&
+        (actual_pos > (limits.min_position - position_tolerance) &&
          (actual_pos < limits.max_position) && desired_vel <= 0.0))
       {
         RCLCPP_WARN_EXPRESSION(
@@ -174,8 +175,8 @@ VelocityLimits compute_velocity_limits(
       // If the joint reports a position way out of bounds, then it would mean something is
       // extremely wrong, so no velocity command should be allowed as it might damage the robot
       else if (
-        (actual_pos > (limits.max_position + internal::POSITION_BOUNDS_TOLERANCE)) ||
-        (actual_pos < (limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)))
+        (actual_pos > (limits.max_position + position_tolerance)) ||
+        (actual_pos < (limits.min_position - position_tolerance)))
       {
         RCLCPP_ERROR_ONCE(
           rclcpp::get_logger("joint_limiter_interface"),

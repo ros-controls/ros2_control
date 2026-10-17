@@ -147,10 +147,11 @@ bool JointSoftLimiter::on_enforce(
         -soft_joint_limits.k_position * (prev_command_position - soft_joint_limits.max_position),
         -hard_limits.max_velocity, hard_limits.max_velocity);
 
+      const double position_tolerance = internal::position_bounds_tolerance(hard_limits);
       if (
         std::isfinite(act_position) &&
-        ((act_position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
-         (act_position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE))))
+        ((act_position < (hard_limits.min_position - position_tolerance)) ||
+         (act_position > (hard_limits.max_position + position_tolerance))))
       {
         soft_min_vel = 0.0;
         soft_max_vel = 0.0;
