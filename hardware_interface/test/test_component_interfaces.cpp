@@ -13,12 +13,7 @@
 // limitations under the License.
 
 #include <array>
-<<<<<<< HEAD
 #include <limits>
-=======
-#include <chrono>
-#include <cmath>
->>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <memory>
 #include <stdexcept>
 #include <string>

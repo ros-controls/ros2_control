@@ -12,13 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD
-#include <array>
-#include <limits>
-=======
-#include <chrono>
 #include <cmath>
->>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <memory>
 #include <string>
 #include <thread>

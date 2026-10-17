@@ -15,12 +15,8 @@
 #ifndef USE_MATH_DEFINES
 #define USE_MATH_DEFINES
 #endif
-<<<<<<< HEAD
-
-=======
 #include <algorithm>
 #include <chrono>
->>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <cmath>
 #include <cstdlib>
 #include <future>
