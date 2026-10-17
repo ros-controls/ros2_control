@@ -260,6 +260,7 @@ public:
         "hardware_component.{}.{}", params.hardware_info.type, params.hardware_info.name));
     component_params.executor = params.executor;
     component_params.node_namespace = params.node_namespace;
+    component_params.node_options_args = params.node_options_args;
     RCLCPP_INFO(
       get_logger(), "Initialize hardware '%s' ", component_params.hardware_info.name.c_str());
 
@@ -1573,6 +1574,7 @@ bool ResourceManager::load_and_initialize_components(
     interface_params.clock = params.clock;
     interface_params.logger = params.logger;
     interface_params.node_namespace = params.node_namespace;
+    interface_params.node_options_args = params.hardware_components_node_options_args;
 
     if (individual_hardware_info.type == actuator_type)
     {

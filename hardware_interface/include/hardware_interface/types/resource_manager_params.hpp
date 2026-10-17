@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include "rclcpp/rclcpp.hpp"
 
 namespace hardware_interface
@@ -103,6 +104,13 @@ struct ResourceManagerParams
    * and will cause the ResourceManager to crash.
    */
   bool handle_exceptions = true;
+
+  /**
+   * @brief Extra node arguments passed to the nodes of all hardware components.
+   * They are forwarded to HardwareComponentParams::node_options_args of each component.
+   * Typically populated by the ControllerManager with its own forwarded node arguments.
+   */
+  std::vector<std::string> hardware_components_node_options_args;
 };
 
 }  // namespace hardware_interface

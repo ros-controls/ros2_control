@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/parameter.hpp"
+#include "test_controller/test_controller.hpp"
 
 using ::testing::_;
 using ::testing::Return;
@@ -396,4 +398,62 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
       {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
+}
+
+class TestControllerManagerForwardedArgs : public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    // mimic `ros2_control_node --ros-args ...`: the arguments end up in the CM's NodeOptions
+    rclcpp::NodeOptions options = controller_manager::get_cm_node_options();
+    options.arguments(
+      {"--ros-args", "-r", "__ns:=/cm_ns", "-p", "forwarded_param:=42", "-r",
+       "testsystemhardware:__ns:=/system_hw_ns", "-r", "fwd_test_controller:__ns:=/ctrl_ns"});
+    cm_ =
+      std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME, "", options);
+    run_updater_ = false;
+
+    auto msg = std_msgs::msg::String();
+    msg.data = ros2_control_test_assets::minimal_robot_urdf;
+    cm_->robot_description_callback(msg);
+
+    SetUpSrvsCMExecutor();
+  }
+};
+
+TEST_F(TestControllerManagerForwardedArgs, cm_arguments_are_forwarded_to_controllers_and_hardware)
+{
+  ASSERT_STREQ("/cm_ns", cm_->get_namespace());
+
+  auto controller = std::make_shared<test_controller::TestController>();
+  ASSERT_NE(
+    cm_->add_controller(
+      controller, "fwd_test_controller", test_controller::TEST_CONTROLLER_CLASS_NAME),
+    nullptr);
+  auto ctrl_node = controller->get_node();
+  // node specific remap is forwarded, CM's own `__ns` remap is not overriding it
+  EXPECT_STREQ("/ctrl_ns", ctrl_node->get_namespace());
+  EXPECT_STREQ("fwd_test_controller", ctrl_node->get_name());
+  EXPECT_EQ(
+    1u,
+    ctrl_node->get_node_parameters_interface()->get_parameter_overrides().count("forwarded_param"));
+
+  auto has_node = [this](const std::string & fqn)
+  {
+    for (int i = 0; i < 50; ++i)
+    {
+      const auto names = cm_->get_node_names();
+      if (std::find(names.begin(), names.end(), fqn) != names.end())
+      {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    return false;
+  };
+  EXPECT_TRUE(has_node("/system_hw_ns/testsystemhardware"));
+  // the CM's global `__ns` remap is not forwarded, the hardware is created in the CM's namespace
+  EXPECT_TRUE(has_node("/cm_ns/testactuatorhardware"));
 }
