@@ -12,7 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdexcept>
+
 #include "controller_manager/sleeping_policies.hpp"
+
+namespace controller_manager
+{
+SimTimeJumpHandler::SimTimeJumpHandler(const rclcpp::Clock::SharedPtr & clock) : clock_(clock)
+{
+  if (!clock_)
+  {
+    throw std::invalid_argument("Cannot observe time jumps of a null clock.");
+  }
+
+  rcl_jump_threshold_t threshold;
+  threshold.on_clock_change = false;
+  threshold.min_forward.nanoseconds = 0;    // 0 disables the threshold
+  threshold.min_backward.nanoseconds = -1;  // any backwards movement
+  jump_handler_ = clock_->create_jump_callback(
+    nullptr,
+    [this](const rcl_time_jump_t & jump)
+    {
+      if (jump.delta.nanoseconds >= 0)
+      {
+        return;
+      }
+      backward_jump_.store(true, std::memory_order_relaxed);
+      // The control loop waits for a deadline of the timeline that just ended, so wake it up.
+      clock_->cancel_sleep_or_wait();
+    },
+    threshold);
+}
+
+bool SimTimeJumpHandler::consume_backward_jump()
+{
+  return backward_jump_.exchange(false, std::memory_order_relaxed);
+}
+}  // namespace controller_manager
+
+rclcpp::Duration update_time_base_and_get_period(
+  controller_manager::ControlLoopState & state, const rclcpp::Time & current_time,
+  bool time_base_reset)
+{
+  if (time_base_reset)
+  {
+    // The time base belongs to the timeline that the simulator just left, so it cannot be used to
+    // derive a period for the current cycle.
+    state.previous_time = current_time;
+    return rclcpp::Duration(state.period);
+  }
+
+  const auto measured_period = current_time - state.previous_time;
+  state.previous_time = current_time;
+  return measured_period;
+}
 
 bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
@@ -21,6 +74,8 @@ bool sleep_for_sim_time(
   // Implement sleep logic for simulated time
   try
   {
+    // A cancelled sleep, e.g. because simulation time jumped backwards, returns false here. That
+    // is expected: the loop must continue in the new timeline instead of treating it as an error.
     cm->get_clock()->sleep_until(state.previous_time + state.period);
   }
   catch (const std::runtime_error & e)
@@ -30,7 +85,7 @@ bool sleep_for_sim_time(
       e.what());
     return false;
   }
-  return true;  // Placeholder return value
+  return true;
 }
 
 void sleep_for_blocking_read_write(

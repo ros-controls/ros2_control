@@ -142,12 +142,24 @@ int main(int argc, char ** argv)
       state.previous_time = cm->get_trigger_clock()->now();
       std::this_thread::sleep_for(state.period);
       state.next_iteration_time = std::chrono::steady_clock::now();
+
+      // Simulators can reset their clock while the node keeps running. Pending sleeps are then
+      // cancelled and the time base of the loop is re-based, see SimTimeJumpHandler.
+      std::unique_ptr<controller_manager::SimTimeJumpHandler> jump_handler = nullptr;
+      if (timing_config.use_sim_time)
+      {
+        jump_handler =
+          std::make_unique<controller_manager::SimTimeJumpHandler>(cm->get_trigger_clock());
+      }
+
       while (rclcpp::ok())
       {
         // calculate measured period
         auto const current_time = cm->get_trigger_clock()->now();
-        auto const measured_period = current_time - state.previous_time;
-        state.previous_time = current_time;
+        const bool time_base_reset =
+          jump_handler != nullptr && jump_handler->consume_backward_jump();
+        auto const measured_period =
+          update_time_base_and_get_period(state, current_time, time_base_reset);
 
         // execute update loop
         cm->read(cm->get_trigger_clock()->now(), measured_period);
