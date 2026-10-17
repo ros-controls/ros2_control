@@ -16,9 +16,9 @@
 #define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <string>
-#include <vector>
 
 #include "geometry_msgs/msg/wrench.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"

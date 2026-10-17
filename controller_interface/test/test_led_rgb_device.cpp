@@ -14,6 +14,8 @@
 
 #include "test_led_rgb_device.hpp"
 
+#include <algorithm>
+
 void LedDeviceTest::SetUp()
 {
   full_cmd_interface_names_.reserve(size_);
