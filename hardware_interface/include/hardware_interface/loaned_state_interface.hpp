@@ -50,7 +50,7 @@ public:
   }
 
   explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
-  : state_interface_(*state_interface),
+  : state_interface_(state_interface),
     interface_name_(state_interface->get_name()),
     deleter_(std::forward<Deleter>(deleter))
   {
@@ -62,27 +62,31 @@ public:
 
   virtual ~LoanedStateInterface()
   {
-    auto logger = rclcpp::get_logger(interface_name_);
-    RCLCPP_WARN_EXPRESSION(
-      logger,
-      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
-      "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
-      "get_value calls",
-      interface_name_.c_str(), get_value_statistics_.timeout_counter,
-      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
-      get_value_statistics_.total_counter);
+    if (state_interface_)
+    {
+      auto logger = rclcpp::get_logger(interface_name_);
+      RCLCPP_WARN_EXPRESSION(
+        logger,
+        (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+        "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
+        "get_value calls",
+        interface_name_.c_str(), get_value_statistics_.timeout_counter,
+        (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.failed_counter,
+        (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+        get_value_statistics_.total_counter);
+    }
     if (deleter_)
     {
       deleter_();
     }
   }
 
-  const std::string & get_name() const { return state_interface_.get_name(); }
+  const std::string & get_name() const { return state_interface_->get_name(); }
 
-  const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
+  const std::string & get_interface_name() const { return state_interface_->get_interface_name(); }
 
+<<<<<<< HEAD
   [[deprecated(
     "Replaced by get_name method, which is semantically more correct")]] const std::string
   get_full_name() const
@@ -91,6 +95,9 @@ public:
   }
 
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
+=======
+  const std::string & get_prefix_name() const { return state_interface_->get_prefix_name(); }
+>>>>>>> 000f5a7 (Use the pointers instead of reference in loaned interfaces (#2634))
 
   [[deprecated(
     "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
@@ -129,7 +136,7 @@ public:
     do
     {
       ++get_value_statistics_.total_counter;
-      const std::optional<T> data = state_interface_.get_optional<T>();
+      const std::optional<T> data = state_interface_->get_optional<T>();
       if (data.has_value())
       {
         return data;
@@ -177,10 +184,22 @@ public:
    * @brief Get the data type of the state interface.
    * @return The data type of the state interface.
    */
-  HandleDataType get_data_type() const { return state_interface_.get_data_type(); }
+  HandleDataType get_data_type() const { return state_interface_->get_data_type(); }
 
+<<<<<<< HEAD
 protected:
   const StateInterface & state_interface_;
+=======
+  /**
+   * @brief Check if the state interface can be casted to double.
+   * @return True if the state interface can be casted to double, false otherwise.
+   */
+  bool is_castable_to_double() const { return state_interface_->is_castable_to_double(); }
+
+protected:
+  StateInterface::ConstSharedPtr state_interface_;
+  std::string interface_name_;
+>>>>>>> 000f5a7 (Use the pointers instead of reference in loaned interfaces (#2634))
   Deleter deleter_;
   std::string interface_name_;
 
