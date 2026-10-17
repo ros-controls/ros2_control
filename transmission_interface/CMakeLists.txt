@@ -78,7 +78,7 @@ if(BUILD_TESTING)
     test_utils
     test/utils_test.cpp
   )
-  target_include_directories(test_utils PUBLIC include hardware_interface)
+  target_include_directories(test_utils PRIVATE include)
   target_link_libraries(test_utils hardware_interface::hardware_interface)
 endif()
 
