@@ -278,6 +278,9 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
     ${controller_manager_msgs_TARGETS}
   )
+  target_compile_definitions(test_hardware_management_srvs
+    PRIVATE PARAMETERS_FILE_PATH="${CMAKE_CURRENT_LIST_DIR}/test/"
+  )
 
   ament_add_gmock(test_controller_manager_with_resource_manager
   test/test_controller_manager_with_resource_manager.cpp
