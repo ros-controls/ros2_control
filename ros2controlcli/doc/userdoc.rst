@@ -264,6 +264,9 @@ set_controller_state
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
 
+The command applies the required lifecycle transitions to reach the target state. If a
+transition fails, it reports the controller's last successfully reached state.
+
 set_hardware_component_state
 ----------------------------
 
