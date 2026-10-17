@@ -1032,6 +1032,133 @@ INSTANTIATE_TEST_SUITE_P(
   per_controller_equal_and_higher_update_rate, TestControllerManagerWithUpdateRates,
   testing::Values(100, 232, 400));
 
+// Regression test for ros-controls/ros2_control#3697: controllers running slower than the
+// controller manager schedule their triggers from the time of their own last update. When
+// simulation time jumps backwards, that stored time belongs to the timeline the simulator just
+// left behind, so the controller must not stay skipped until simulation time reaches that old
+// value again.
+class TestControllerManagerWithSimTimeJump
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+public:
+  TestControllerManagerWithSimTimeJump()
+  : ControllerManagerFixture(
+      ros2_control_test_assets::minimal_robot_urdf, "", {rclcpp::Parameter("use_sim_time", true)})
+  {
+  }
+
+  void SetUp() override
+  {
+    ControllerManagerFixture::SetUp();
+    pass_robot_description_to_cm_and_rm();
+    // Feed the ROS clock of the controller manager directly instead of publishing /clock, so the
+    // test controls simulation time exactly and does not depend on an executor.
+    ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(cm_->get_clock()->get_clock_handle()));
+  }
+
+  void TearDown() override
+  {
+    EXPECT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(cm_->get_clock()->get_clock_handle()));
+    ControllerManagerFixture::TearDown();
+  }
+
+  void set_sim_time(const rclcpp::Time & time)
+  {
+    ASSERT_EQ(
+      RCL_RET_OK,
+      rcl_set_ros_time_override(cm_->get_clock()->get_clock_handle(), time.nanoseconds()));
+  }
+};
+
+TEST_F(TestControllerManagerWithSimTimeJump, slower_controller_keeps_running_after_backward_jump)
+{
+  constexpr unsigned int kControllerUpdateRate = 50;  // Controller manager runs at 100 Hz.
+  auto test_controller = std::make_shared<test_controller::TestController>();
+
+  const rclcpp::Time start_time(10, 0, RCL_ROS_TIME);
+  set_sim_time(start_time);
+
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  test_controller->get_node()->set_parameter(
+    rclcpp::Parameter("update_rate", static_cast<int>(kControllerUpdateRate)));
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    std::vector<std::string>{test_controller::TEST_CONTROLLER_NAME}, std::vector<std::string>{},
+    strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  const auto update_period = rclcpp::Duration::from_seconds(0.01);
+  rclcpp::Time sim_time = start_time;
+  ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
+  {
+    // The background updater of the fixture drives the update cycles that complete the switch.
+    // It is created only now, as it throws if the clock has not received simulation time yet.
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::seconds(5)));
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  // During the switch the fixture's background updater runs an unknown number of cycles, so the
+  // absolute counter is not meaningful. Count the updates over a fixed window instead.
+  const auto counter_at_window_start = test_controller->internal_counter;
+  constexpr int kCyclesPerWindow = 10;
+  for (int i = 0; i < kCyclesPerWindow; ++i)
+  {
+    sim_time = sim_time + update_period;
+    set_sim_time(sim_time);
+    ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
+  }
+  const auto updates_in_window = test_controller->internal_counter - counter_at_window_start;
+  // 10 controller manager cycles at 100 Hz equal 5 update cycles of a 50 Hz controller.
+  EXPECT_NEAR(static_cast<double>(updates_in_window), 5.0, 1.0)
+    << "The controller must keep its own update rate before the jump";
+
+  const auto counter_before_jump = test_controller->internal_counter;
+  ASSERT_GT(counter_before_jump, 0u);
+
+  // The simulator resets its clock while the controller manager keeps running: simulation time
+  // jumps from ~10.1 s back to 1 s and then advances again. The reset value is deliberately not
+  // zero, as a zero timestamp is treated as "no clock received" by the controller manager.
+  sim_time = rclcpp::Time(1, 0, RCL_ROS_TIME);
+  set_sim_time(sim_time);
+  ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
+  EXPECT_GT(test_controller->internal_counter, counter_before_jump)
+    << "The controller must be updated in the cycle in which the reset is observed";
+  // The controller must not receive a negative period on the jump cycle.
+  EXPECT_GE(test_controller->update_period_.seconds(), 0.0)
+    << "The controller received a negative period on the jump cycle";
+
+  // The controller has to keep running right after the jump instead of being skipped until
+  // simulation time climbs back to the value it had before the reset.
+  const auto counter_after_jump = test_controller->internal_counter;
+  for (int i = 0; i < 10; ++i)
+  {
+    sim_time = sim_time + update_period;
+    set_sim_time(sim_time);
+    ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
+  }
+  EXPECT_GT(test_controller->internal_counter, counter_after_jump)
+    << "The controller must keep running after simulation time jumped backwards";
+
+  // A second reset must be handled the same way, even though the time base was already re-based
+  // once. Jump back from ~1.1 s to 0.5 s, which is still ahead of the original start time.
+  const auto counter_before_second_jump = test_controller->internal_counter;
+  sim_time = rclcpp::Time(0, 500'000'000, RCL_ROS_TIME);
+  set_sim_time(sim_time);
+  ASSERT_EQ(controller_interface::return_type::OK, cm_->update(sim_time, update_period));
+  EXPECT_GT(test_controller->internal_counter, counter_before_second_jump)
+    << "A second backwards jump must also re-base the controller";
+}
+
 class TestControllerUpdateRates
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
   public testing::WithParamInterface<unsigned int>

@@ -2435,15 +2435,23 @@ HardwareReadWriteStatus ResourceManager::read(
         else
         {
           const double read_rate = hardware_component_info.rw_rate;
+          // Simulation time can jump backwards, e.g. when a simulator resets its world while the
+          // controller manager keeps running. The stored time then belongs to the timeline that
+          // was left behind, and comparing it against the current time would keep this component
+          // from being read until simulation time reaches that old value again.
+          const bool time_base_reset =
+            component.get_last_read_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED &&
+            current_time < component.get_last_read_time();
           const rclcpp::Duration actual_period =
-            component.get_last_read_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
-              ? current_time - component.get_last_read_time()
-              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(read_rate));
+            (component.get_last_read_time().get_clock_type() == RCL_CLOCK_UNINITIALIZED ||
+             time_base_reset)
+              ? rclcpp::Duration::from_seconds(1.0 / static_cast<double>(read_rate))
+              : (current_time - component.get_last_read_time());
 
           const double error_now = std::abs(actual_period.seconds() * read_rate - 1.0);
           const double error_if_skipped = std::abs(
             (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * read_rate - 1.0);
-          if (error_now <= error_if_skipped)
+          if (time_base_reset || error_now <= error_if_skipped)
           {
             ret_val = component.read(current_time, actual_period);
           }
@@ -2536,16 +2544,21 @@ HardwareReadWriteStatus ResourceManager::write(
         else
         {
           const double write_rate = hardware_component_info.rw_rate;
+          // See the read path above for why a backwards jump of simulation time is handled here.
+          const bool time_base_reset =
+            component.get_last_write_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED &&
+            current_time < component.get_last_write_time();
           const rclcpp::Duration actual_period =
-            component.get_last_write_time().get_clock_type() != RCL_CLOCK_UNINITIALIZED
-              ? current_time - component.get_last_write_time()
-              : rclcpp::Duration::from_seconds(1.0 / static_cast<double>(write_rate));
+            (component.get_last_write_time().get_clock_type() == RCL_CLOCK_UNINITIALIZED ||
+             time_base_reset)
+              ? rclcpp::Duration::from_seconds(1.0 / static_cast<double>(write_rate))
+              : (current_time - component.get_last_write_time());
 
           const double error_now = std::abs(actual_period.seconds() * write_rate - 1.0);
           const double error_if_skipped = std::abs(
             (actual_period.seconds() + 1.0 / resource_storage_->cm_update_rate_) * write_rate -
             1.0);
-          if (error_now <= error_if_skipped)
+          if (time_base_reset || error_now <= error_if_skipped)
           {
             ret_val = component.write(current_time, actual_period);
           }

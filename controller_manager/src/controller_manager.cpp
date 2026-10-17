@@ -3439,9 +3439,16 @@ controller_interface::return_type ControllerManager::update(
         (*loaded_controller.last_update_cycle_time ==
          rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
       const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      // Simulation time can jump backwards, e.g. when a simulator resets its world while the
+      // controller manager keeps running. The stored time base of the controller then belongs to
+      // the timeline that was left behind, and comparing it against the current time would make
+      // the controller miss its schedule until simulation time reaches that old value again.
+      const bool time_base_reset =
+        !first_update_cycle && current_time < *loaded_controller.last_update_cycle_time;
       const auto controller_actual_period =
-        first_update_cycle ? controller_period
-                           : (current_time - *loaded_controller.last_update_cycle_time);
+        (first_update_cycle || time_base_reset)
+          ? controller_period
+          : (current_time - *loaded_controller.last_update_cycle_time);
 
       const double error_now =
         std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);
@@ -3452,7 +3459,7 @@ controller_interface::return_type ControllerManager::update(
       const bool controller_go =
         run_controller_at_cm_rate ||
         (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (error_now <= error_if_skipped) || first_update_cycle;
+        (error_now <= error_if_skipped) || first_update_cycle || time_base_reset;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",

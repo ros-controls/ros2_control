@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <memory>
@@ -177,4 +178,122 @@ TEST_F(SleepingPoliciesTest, sleep_for_sim_time_returns_false_when_clock_types_m
   state.previous_time = cm_->get_trigger_clock()->now();
 
   EXPECT_FALSE(sleep_for_sim_time(cm_, state));
+}
+
+TEST_F(SleepingPoliciesTest, update_time_base_reports_measured_period)
+{
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::nanoseconds(10'000'000);
+  state.previous_time = cm_->get_trigger_clock()->now();
+
+  const auto current_time = state.previous_time + rclcpp::Duration::from_seconds(0.01);
+  const auto measured_period = update_time_base_and_get_period(state, current_time, false);
+
+  EXPECT_EQ(measured_period.nanoseconds(), 10'000'000);
+  EXPECT_EQ(state.previous_time, current_time);
+}
+
+TEST_F(SleepingPoliciesTest, update_time_base_reports_nominal_period_after_backward_jump)
+{
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::nanoseconds(10'000'000);
+  state.previous_time = cm_->get_trigger_clock()->now();
+
+  // Simulation time was reset, so the time base is ahead of the current time. The difference
+  // would be negative and must not be handed out as a period.
+  const auto current_time = state.previous_time - rclcpp::Duration::from_seconds(5.0);
+  const auto measured_period = update_time_base_and_get_period(state, current_time, true);
+
+  EXPECT_EQ(measured_period.nanoseconds(), state.period.count());
+  EXPECT_EQ(state.previous_time, current_time);
+}
+
+TEST_F(SleepingPoliciesTest, sim_time_jump_handler_detects_backward_jump)
+{
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::nanoseconds(10'000'000);
+
+  const auto clock = cm_->get_clock();
+  auto jump_handler = std::make_unique<controller_manager::SimTimeJumpHandler>(clock);
+  EXPECT_FALSE(jump_handler->consume_backward_jump());
+
+  // Move the clock backwards, as a simulator does when it resets its world.
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock->get_clock_handle()));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 10'000'000'000));
+  ASSERT_TRUE(clock->ros_time_is_active());
+  EXPECT_FALSE(jump_handler->consume_backward_jump());
+
+  // The jump is reported exactly once, no matter how often it is queried.
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 1'000'000'000));
+  EXPECT_TRUE(jump_handler->consume_backward_jump());
+  EXPECT_FALSE(jump_handler->consume_backward_jump());
+
+  // A forward jump must not be reported.
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 2'000'000'000));
+  EXPECT_FALSE(jump_handler->consume_backward_jump());
+
+  ASSERT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(clock->get_clock_handle()));
+}
+
+// Reproduces ros-controls/ros2_control#3697: with simulation time, a sleep waiting for a deadline
+// of the previous timeline must end when the simulator resets its clock backwards, instead of
+// blocking until simulation time catches up with the old deadline again.
+TEST_F(SleepingPoliciesTest, sleep_for_sim_time_recovers_from_backward_jump)
+{
+  const auto clock = cm_->get_clock();
+  // The clock that sleep_for_sim_time() sleeps on is the one that has to report the jumps.
+  controller_manager::SimTimeJumpHandler jump_handler(clock);
+
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock->get_clock_handle()));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 10'000'000'000));
+  ASSERT_TRUE(clock->ros_time_is_active());
+
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::milliseconds(100);
+  state.previous_time = clock->now();
+
+  std::atomic<bool> sleep_returned{false};
+  std::thread sleeper(
+    [&]()
+    {
+      // Blocks on a deadline of the current timeline, as the control loop does between cycles.
+      sleep_for_sim_time(cm_, state);
+      sleep_returned.store(true);
+    });
+
+  // Make sure the sleeper is actually blocked before resetting the clock.
+  std::this_thread::sleep_for(100ms);
+  ASSERT_FALSE(sleep_returned.load()) << "The sleep should be pending before the jump";
+
+  // Reset simulation time backwards by 9 s and keep it advancing afterwards, as a simulator does
+  // for `reset: {time_only: true}` or a timeline restart.
+  const auto jump_start = std::chrono::steady_clock::now();
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 1'000'000'000));
+
+  while (!sleep_returned.load() && std::chrono::steady_clock::now() - jump_start < 2s)
+  {
+    std::this_thread::sleep_for(5ms);
+  }
+
+  const bool returned = sleep_returned.load();
+  if (returned)
+  {
+    sleeper.join();
+  }
+  else
+  {
+    // The sleep is stuck on the deadline of the previous timeline; advancing simulation time past
+    // it lets the thread finish so the test can report the failure instead of hanging.
+    EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 20'000'000'000));
+    sleeper.join();
+  }
+
+  EXPECT_TRUE(returned)
+    << "sleep_for_sim_time() did not return after the simulation time jumped backwards";
+
+  // The loop must also learn about the jump, so that it can re-base its time base instead of
+  // handing a negative period to the controllers.
+  EXPECT_TRUE(jump_handler.consume_backward_jump());
+
+  ASSERT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(clock->get_clock_handle()));
 }
