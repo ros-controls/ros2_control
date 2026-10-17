@@ -318,7 +318,7 @@ public:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
           // is fixed
-          if (!notified_)
+          if (!notified_.exchange(true))
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()), "%s",
@@ -327,7 +327,6 @@ public:
                   "Casting bool to double for interface '{}'. Better use get_optional<bool>()."),
                 get_name())
                 .c_str());
-            notified_ = true;
           }
           return static_cast<double>(std::get<bool>(value_));
         case HandleDataType::FLOAT32:  // fallthrough
@@ -506,13 +505,12 @@ protected:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
           // is fixed
-          if (!notified_)
+          if (!notified_.exchange(true))
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()),
               "Casting bool to double for interface: %s. Better use get_optional<bool>().",
               get_name().c_str());
-            notified_ = true;
           }
           value = static_cast<double>(std::get<bool>(value_));
           return true;
@@ -585,7 +583,8 @@ private:
   // TODO(christophfroehlich): remove once
   // https://github.com/ros2/rclcpp/issues/2587
   // is fixed
-  mutable bool notified_ = false;
+  /// Atomic because the bool-to-double reads above hold a shared lock only, so they race here.
+  mutable std::atomic_bool notified_ = false;
 };
 
 class StateInterface : public Handle
