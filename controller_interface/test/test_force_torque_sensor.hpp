@@ -19,6 +19,7 @@
 #ifndef TEST_FORCE_TORQUE_SENSOR_HPP_
 #define TEST_FORCE_TORQUE_SENSOR_HPP_
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>

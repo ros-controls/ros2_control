@@ -12,12 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
+=======
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+>>>>>>> bb84adc (Review "Include what you use" (#3696))
 #include <cstdlib>
+#include <future>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "example_interfaces/srv/set_bool.hpp"
 #include "gmock/gmock.h"

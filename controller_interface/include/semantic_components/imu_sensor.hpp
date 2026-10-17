@@ -16,9 +16,8 @@
 #define SEMANTIC_COMPONENTS__IMU_SENSOR_HPP_
 
 #include <algorithm>
-#include <limits>
+#include <array>
 #include <string>
-#include <vector>
 
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/imu.hpp"

@@ -18,8 +18,10 @@
 
 #include "test_semantic_component_interface.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 void SemanticComponentInterfaceTest::TearDown() { semantic_component_.reset(nullptr); }
