@@ -73,6 +73,16 @@ bool wait_for_loaded_controller_count(
   return cm->get_loaded_controllers().size() == expected_count;
 }
 
+template <typename LoadedControllersT>
+auto find_loaded_controller_by_name(
+  const LoadedControllersT & loaded_controllers, const std::string & controller_name)
+{
+  return std::find_if(
+    loaded_controllers.begin(), loaded_controllers.end(),
+    [&controller_name](const auto & controller)
+    { return controller.info.name == controller_name; });
+}
+
 template <typename ControllerManagerT>
 bool wait_for_loaded_controller(
   const std::shared_ptr<ControllerManagerT> & cm, const std::string & controller_name,
@@ -82,33 +92,16 @@ bool wait_for_loaded_controller(
   while ((std::chrono::steady_clock::now() - start) < timeout)
   {
     const auto loaded_controllers = cm->get_loaded_controllers();
-    const auto it = std::find_if(
-      loaded_controllers.begin(), loaded_controllers.end(),
-      [&controller_name](const auto & controller)
-      { return controller.info.name == controller_name; });
-
-    if (it != loaded_controllers.end())
+    if (
+      find_loaded_controller_by_name(loaded_controllers, controller_name) !=
+      loaded_controllers.end())
     {
       return true;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
 
-  const auto loaded_controllers = cm->get_loaded_controllers();
-  return std::any_of(
-    loaded_controllers.begin(), loaded_controllers.end(),
-    [&controller_name](const auto & controller)
-    { return controller.info.name == controller_name; });
-}
-
-template <typename LoadedControllersT>
-auto find_loaded_controller_by_name(
-  const LoadedControllersT & loaded_controllers, const std::string & controller_name)
-{
-  return std::find_if(
-    loaded_controllers.begin(), loaded_controllers.end(),
-    [&controller_name](const auto & controller)
-    { return controller.info.name == controller_name; });
+  return false;
 }
 
 }  // namespace test
