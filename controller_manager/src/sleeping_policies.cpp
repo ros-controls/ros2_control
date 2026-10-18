@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdexcept>
-
 #include "controller_manager/sleeping_policies.hpp"
+
+#include <chrono>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <thread>
+
+#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace controller_manager
 {

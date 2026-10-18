@@ -18,8 +18,10 @@
 
 #include "test_imu_sensor.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 void IMUSensorTest::TearDown() { imu_sensor_.reset(nullptr); }

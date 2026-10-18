@@ -15,7 +15,6 @@
 #include <atomic>
 #include <chrono>
 #include <future>
-#include <memory>
 #include <thread>
 
 #include "controller_manager/sleeping_policies.hpp"

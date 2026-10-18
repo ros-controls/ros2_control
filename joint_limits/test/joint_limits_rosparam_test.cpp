@@ -16,8 +16,14 @@
 
 #include "joint_limits/joint_limits_rosparam.hpp"
 
+#include <cmath>
+#include <string>
+#include <vector>
+
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 class JointLimitsRosParamTest : public ::testing::Test

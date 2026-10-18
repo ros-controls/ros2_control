@@ -13,6 +13,9 @@
 // limitations under the License.
 #include "test_pose_sensor.hpp"
 
+#include <algorithm>
+#include <tuple>
+
 void PoseSensorTest::SetUp()
 {
   full_interface_names_.reserve(size_);
