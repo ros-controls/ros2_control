@@ -72,10 +72,13 @@ class TestSystem : public SystemInterface
       }
     }
     // Add max_acceleration command interface
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        info_.joints[0].name, info_.joints[0].command_interfaces[1].name,
-        &max_acceleration_command_));
+    if (info_.joints[0].command_interfaces.size() > 1)
+    {
+      command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(
+          info_.joints[0].name, info_.joints[0].command_interfaces[1].name,
+          &max_acceleration_command_));
+    }
 
     if (info_.joints.size() > 2)
     {
