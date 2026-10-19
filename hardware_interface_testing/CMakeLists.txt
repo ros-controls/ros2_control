@@ -62,6 +62,13 @@ if(BUILD_TESTING)
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})
 
+  ament_add_gmock(test_rt_allocation test/test_rt_allocation.cpp)
+  target_link_libraries(test_rt_allocation
+                        hardware_interface::hardware_interface
+                        rclcpp_lifecycle::rclcpp_lifecycle
+                        ros2_control_test_assets::ros2_control_test_assets
+                        ${lifecycle_msgs_TARGETS})
+
   ament_add_gmock(test_rm_exception_handling test/test_rm_exception_handling.cpp)
   target_link_libraries(test_rm_exception_handling
                         hardware_interface::hardware_interface
