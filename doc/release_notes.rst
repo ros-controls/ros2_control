@@ -36,6 +36,7 @@ ros2controlcli
 **************
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
 * Add option ``--all-inactive`` to ``unload_controller`` verb. (`#3466 <https://github.com/ros-controls/ros2_control/pull/3466>`__)
+* The ``set_controller_state`` verb also accepts the lifecycle transitions ``configure``, ``cleanup``, ``activate`` and ``deactivate``, as used by ``ros2 lifecycle set``. They are sent to the controller manager without checking the current state first. (`#3641 <https://github.com/ros-controls/ros2_control/pull/3641>`__)
 
 transmission_interface
 **********************
