@@ -3313,8 +3313,12 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    // The component has already been driven to the error state and its command interfaces have
+    // been removed from the available list, so the resource manager rejects the switch before
+    // dispatching it to any component. The call is kept for the unaffected components in the
+    // request; the expected rejection is not reported as an additional failure.
     perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read", false);
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -3637,8 +3641,10 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
+    // Same as in the read() error path: the call is kept for the unaffected components in the
+    // request; its expected rejection is not reported.
     perform_hardware_command_mode_change(
-      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
+      rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write", false);
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
@@ -3817,7 +3823,8 @@ rclcpp::Clock::SharedPtr ControllerManager::get_trigger_clock() const { return t
 void ControllerManager::perform_hardware_command_mode_change(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> & activate_controllers_list,
-  const std::vector<std::string> & deactivate_controllers_list, const std::string & rt_cycle_name)
+  const std::vector<std::string> & deactivate_controllers_list, const std::string & rt_cycle_name,
+  const bool print_error)
 {
   rt_buffer_.interfaces_to_start.clear();
   rt_buffer_.interfaces_to_stop.clear();
@@ -3834,8 +3841,8 @@ void ControllerManager::perform_hardware_command_mode_change(
           resource_manager_->perform_command_mode_switch(
             rt_buffer_.interfaces_to_start, rt_buffer_.interfaces_to_stop)))
     {
-      RCLCPP_ERROR(
-        get_logger(),
+      RCLCPP_ERROR_EXPRESSION(
+        get_logger(), print_error,
         "Error while attempting mode switch when deactivating controllers in %s cycle!",
         rt_cycle_name.c_str());
     }

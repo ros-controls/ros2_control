@@ -408,14 +408,17 @@ private:
    * \param[in] activate_controllers_list list of controllers to activate.
    * \param[in] deactivate_controllers_list list of controllers to deactivate.
    * \param[in] rt_cycle_name name of the real-time cycle.
+   * \param[in] print_error whether a rejected switch is reported as an error. The hardware fault
+   * paths pass `false`, because the component has already been driven to the error state there and
+   * the switch is rejected before it can reach it, so the failure carries no information.
    * \note This method is meant to be used only in the real-time control loops (`read`, `update` and
    * `write`).
    */
   void perform_hardware_command_mode_change(
     const std::vector<ControllerSpec> & rt_controller_list,
     const std::vector<std::string> & activate_controllers_list,
-    const std::vector<std::string> & deactivate_controllers_list,
-    const std::string & rt_cycle_name);
+    const std::vector<std::string> & deactivate_controllers_list, const std::string & rt_cycle_name,
+    const bool print_error = true);
 
   /**
    * If a controller is deactivated all following controllers (if any exist) should be switched
