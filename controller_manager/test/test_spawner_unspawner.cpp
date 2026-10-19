@@ -138,17 +138,23 @@ TEST_F(TestLoadController, spawner_without_type_parameter_or_arg_errors)
   EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
 }
 
-TEST_F(TestLoadController, spawner_ignores_empty_arguments)
+TEST_F(TestLoadController, spawner_empty_controller_ros_args_followed_by_remap)
 {
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  // Empty args reach the spawner when launched with shell=False and a substitution resolves to ""
-  EXPECT_EQ(call_spawner("ctrl_1 '' -c test_controller_manager ''"), 0);
+  ASSERT_EQ(
+    call_spawner(
+      "ctrl_1 -c test_controller_manager --controller-ros-args '' "
+      "--controller-ros-args '-r /ctrl_1/set_bool:=/set_bool'"),
+    0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   EXPECT_EQ(
     cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  auto node = rclcpp::Node::make_shared("set_bool_client");
+  auto set_bool_service = node->create_client<example_interfaces::srv::SetBool>("/set_bool");
+  EXPECT_TRUE(set_bool_service->wait_for_service(std::chrono::seconds(2)));
 }
 
 TEST_F(TestLoadController, spawner_test_type_in_param)

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
 
@@ -67,34 +67,26 @@ def generate_controllers_spawner_launch_description(
             if controller_params_file:
                 spawner_arguments += ["--param-file", controller_params_file]
 
-    # Setting --unload-on-kill if launch arg unload_on_kill is "true"
-    # See https://github.com/ros2/launch/issues/290
-    spawner_arguments += [
-        PythonExpression(
-            [
-                '"--unload-on-kill"',
-                ' if "true" == "',
-                LaunchConfiguration("unload_on_kill"),
-                '" else ""',
-            ]
-        )
-    ]
-
-    if extra_spawner_args:
-        spawner_arguments += extra_spawner_args
-
-    spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=spawner_arguments,
-        output="screen",
-    )
+    def create_spawner(context):
+        arguments = spawner_arguments.copy()
+        if LaunchConfiguration("unload_on_kill").perform(context) == "true":
+            arguments.append("--unload-on-kill")
+        if extra_spawner_args:
+            arguments.extend(extra_spawner_args)
+        return [
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                arguments=arguments,
+                output="screen",
+            )
+        ]
 
     return LaunchDescription(
         [
             declare_controller_mgr_name,
             declare_unload_on_kill,
-            spawner,
+            OpaqueFunction(function=create_spawner),
         ]
     )
 

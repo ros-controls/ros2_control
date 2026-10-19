@@ -757,7 +757,7 @@ TEST_F(TestLoadController, advanced_spawner_parsed_controller_ros_args)
   // Now test the remapping of the service name with the controller_ros_args
   EXPECT_EQ(
     call_advanced_spawner(
-      "--controller ctrl_2 --controller-ros-args '-r "
+      "--controller ctrl_2 --controller-ros-args '' --controller-ros-args '-r "
       "/ctrl_2/set_bool:=/set_bool' --controller-ros-args '--param "
       "run_cycle:=20 -p test_cycle:=-11.0' -c test_controller_manager"),
     0);
