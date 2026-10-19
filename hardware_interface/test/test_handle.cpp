@@ -15,6 +15,8 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdarg>
+#include <cstdio>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -28,6 +30,7 @@
 #include "gmock/gmock.h"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "rcutils/logging.h"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::InterfaceDescription;
@@ -38,6 +41,54 @@ namespace
 {
 constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
+
+class LogCapture
+{
+public:
+  LogCapture()
+  : previous_handler_(rcutils_logging_get_output_handler()), previous_messages_(messages())
+  {
+    messages().clear();
+    rcutils_logging_set_output_handler(&LogCapture::handler);
+  }
+
+  ~LogCapture()
+  {
+    rcutils_logging_set_output_handler(previous_handler_);
+    messages() = previous_messages_;
+  }
+
+  static std::size_t warning_count()
+  {
+    return static_cast<std::size_t>(messages().size());
+  }
+
+private:
+  static std::vector<std::string> & messages()
+  {
+    static std::vector<std::string> captured_messages;
+    return captured_messages;
+  }
+
+  static void handler(
+    const rcutils_log_location_t * /*location*/, int severity, const char * /*name*/,
+    rcutils_time_point_value_t /*timestamp*/, const char * format, va_list * args)
+  {
+    if (severity != RCUTILS_LOG_SEVERITY_WARN)
+    {
+      return;
+    }
+    char buffer[1024];
+    va_list args_copy;
+    va_copy(args_copy, *args);
+    vsnprintf(buffer, sizeof(buffer), format, args_copy);
+    va_end(args_copy);
+    messages().emplace_back(buffer);
+  }
+
+  rcutils_logging_output_handler_t previous_handler_;
+  std::vector<std::string> previous_messages_;
+};
 }  // namespace
 
 TEST(TestHandle, name_getters_work)
@@ -943,14 +994,18 @@ TEST(TestHandle, bool_to_double_warning_state_is_preserved_on_copy_and_move)
   InterfaceDescription interface_descr("joint1", info);
   StateInterface handle{interface_descr};
 
-  // Trigger the warning on the original handle.
+  LogCapture log_capture;
+
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
+  EXPECT_EQ(LogCapture::warning_count(), 1u);
 
   // A copy must not make the same one-time warning eligible again.
   StateInterface handle_copy{handle};
   EXPECT_DOUBLE_EQ(handle_copy.get_optional().value(), 1.0);
+  EXPECT_EQ(LogCapture::warning_count(), 1u);
 
   // Moving must carry the state as well.
   StateInterface handle_moved{std::move(handle_copy)};
   EXPECT_DOUBLE_EQ(handle_moved.get_optional().value(), 1.0);
+  EXPECT_EQ(LogCapture::warning_count(), 1u);
 }
