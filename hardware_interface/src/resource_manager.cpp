@@ -2418,6 +2418,8 @@ HardwareReadWriteStatus ResourceManager::read(
   {
     return read_write_status;
   }
+
+  bool any_component_errored = false;
   auto read_components = [&](auto & components, bool handle_exceptions)
   {
     for (auto & component : components)
@@ -2492,6 +2494,7 @@ HardwareReadWriteStatus ResourceManager::read(
       if (ret_val != return_type::OK)
       {
         component.error();
+        any_component_errored = true;
         read_write_status.result = return_type::ERROR;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
@@ -2502,6 +2505,11 @@ HardwareReadWriteStatus ResourceManager::read(
   read_components(resource_storage_->actuators_, params_.handle_exceptions);
   read_components(resource_storage_->sensors_, params_.handle_exceptions);
   read_components(resource_storage_->systems_, params_.handle_exceptions);
+
+  if (any_component_errored && resource_storage_->on_component_state_switch_callback_)
+  {
+    resource_storage_->on_component_state_switch_callback_();
+  }
 
   return read_write_status;
 }
@@ -2519,6 +2527,8 @@ HardwareReadWriteStatus ResourceManager::write(
   {
     return read_write_status;
   }
+
+  bool any_component_errored = false;
   auto write_components = [&](auto & components, bool handle_exceptions)
   {
     for (auto & component : components)
@@ -2591,6 +2601,7 @@ HardwareReadWriteStatus ResourceManager::write(
       if (ret_val == return_type::ERROR)
       {
         component.error();
+        any_component_errored = true;
         read_write_status.result = ret_val;
         read_write_status.failed_hardware_names.push_back(component_name);
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
@@ -2611,6 +2622,13 @@ HardwareReadWriteStatus ResourceManager::write(
 
   write_components(resource_storage_->actuators_, params_.handle_exceptions);
   write_components(resource_storage_->systems_, params_.handle_exceptions);
+
+  // error() changes the component's state, so listeners such as
+  // controller_manager/activity need to be told.
+  if (any_component_errored && resource_storage_->on_component_state_switch_callback_)
+  {
+    resource_storage_->on_component_state_switch_callback_();
+  }
 
   return read_write_status;
 }
