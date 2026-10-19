@@ -187,7 +187,47 @@ public:
 
     ASSERT_EQ(expected_future_status, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
-    ControllerManagerRunner<CtrlMgr> cm_runner(this);
+
+    if (expected_future_status == std::future_status::ready)
+    {
+      // The switch request was rejected without waiting for an update cycle.
+      EXPECT_EQ(expected_return, switch_future.get());
+      return;
+    }
+
+    // The switch request is pending. Drive the update loop from this thread instead of a
+    // free-running background updater thread: the first update cycle executes the switch in the
+    // update loop, and the following cycle picks up the updated controller list -- which also
+    // releases the waiting switch_controller call -- and updates the controllers with their new
+    // state. Waiting on the switch future before each update cycle gives the switch thread time
+    // to publish the updated controller list first, so that in the common case exactly two
+    // update cycles run per switch. With a free-running background updater instead, the number
+    // of executed update cycles between the switch and the caller's checks depends on thread
+    // scheduling, which makes tests asserting exact controller update counters flaky under load.
+    // Note that this only removes the dominant race: if the switch thread is starved for longer
+    // than the wait window before it publishes the updated controller list, extra update cycles
+    // run and the checked controllers' update counters come out too high.
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
+    auto wait_time = std::chrono::milliseconds(50);
+    int extra_update_cycles = 0;
+    while (switch_future.wait_for(wait_time) != std::future_status::ready)
+    {
+      // The loop can not be left early: the pending switch_controller call is released by the
+      // next update cycle picking up the updated controller list, and the std::async future
+      // blocks on destruction until the switch call returned. Report it as a failure instead of
+      // looping silently if the switch does not complete within a reasonable number of cycles.
+      constexpr int kMaxExtraUpdateCycles = 100;
+      if (extra_update_cycles == kMaxExtraUpdateCycles)
+      {
+        ADD_FAILURE() << "The switch_controller call did not complete after "
+                      << kMaxExtraUpdateCycles
+                      << " extra update cycles. The update counters checked after this switch are"
+                         " unreliable, the controller manager or the machine is overloaded.";
+      }
+      wait_time = std::chrono::milliseconds(5);
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
+      ++extra_update_cycles;
+    }
     EXPECT_EQ(expected_return, switch_future.get());
   }
 
