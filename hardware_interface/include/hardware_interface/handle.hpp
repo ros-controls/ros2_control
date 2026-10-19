@@ -566,6 +566,7 @@ private:
     handle_name_ = other.handle_name_;
     value_ = other.value_;
     data_type_ = other.data_type_;
+    notified_.store(other.notified_.load());
   }
 
   void swap(Handle & first, Handle & second) noexcept
@@ -576,6 +577,8 @@ private:
     std::swap(first.handle_name_, second.handle_name_);
     std::swap(first.value_, second.value_);
     std::swap(first.data_type_, second.data_type_);
+    const bool second_notified = second.notified_.exchange(first.notified_.load());
+    first.notified_.store(second_notified);
   }
 
 protected:

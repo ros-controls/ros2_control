@@ -933,3 +933,24 @@ TEST(TestHandle, bool_to_double_warning_is_race_free_across_threads)
   // The readers only report the value; reaching this point without a sanitizer report is the check.
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
 }
+
+TEST(TestHandle, bool_to_double_warning_state_is_preserved_on_copy_and_move)
+{
+  InterfaceInfo info;
+  info.name = "collision";
+  info.data_type = "bool";
+  info.initial_value = "true";
+  InterfaceDescription interface_descr("joint1", info);
+  StateInterface handle{interface_descr};
+
+  // Trigger the warning on the original handle.
+  EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
+
+  // A copy must not make the same one-time warning eligible again.
+  StateInterface handle_copy{handle};
+  EXPECT_DOUBLE_EQ(handle_copy.get_optional().value(), 1.0);
+
+  // Moving must carry the state as well.
+  StateInterface handle_moved{std::move(handle_copy)};
+  EXPECT_DOUBLE_EQ(handle_moved.get_optional().value(), 1.0);
+}
