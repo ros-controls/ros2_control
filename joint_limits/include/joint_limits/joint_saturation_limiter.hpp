@@ -18,7 +18,7 @@
 #define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 
 #include <memory>
-#include <vector>
+#include <mutex>
 
 #include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"

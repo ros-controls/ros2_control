@@ -36,7 +36,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
       .. code:: c++
       class HardwareInterfaceName : public hardware_interface::$InterfaceType$Interface
 
-   5. Add a constructor without parameters and the following public methods implementing ``LifecycleNodeInterface``: ``on_configure``, ``on_cleanup``, ``on_shutdown``, ``on_activate``, ``on_deactivate``, ``on_error``; and overriding ``$InterfaceType$Interface`` definition: ``on_init``, ``export_state_interfaces``, ``export_command_interfaces``, ``prepare_command_mode_switch`` (optional), ``perform_command_mode_switch`` (optional), ``read``, ``write``.
+   5. Add a constructor without parameters and the following public methods implementing ``LifecycleNodeInterface``: ``on_configure``, ``on_cleanup``, ``on_shutdown``, ``on_activate``, ``on_deactivate``, ``on_error``; and overriding ``$InterfaceType$Interface`` definition: ``on_init``, ``prepare_command_mode_switch`` (optional), ``perform_command_mode_switch`` (optional), ``read``, ``write``.
 
      For further explanation of hardware-lifecycle check the `pull request <https://github.com/ros-controls/ros2_control/pull/559/files#diff-2bd171d85b028c1b15b03b27d4e6dcbb87e52f705042bf111840e7a28ab268fc>`_ and for exact definitions of methods check the ``"hardware_interface/$interface_type$_interface.hpp"`` header or `doxygen documentation <https://control.ros.org/{REPOS_FILE_BRANCH}/doc/api/namespacehardware__interface.html>`_ for *Actuator*, *Sensor* or *System*.
 
@@ -111,7 +111,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
    #. ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` methods based on the interfaces defined in the ``ros2_control`` XML-tag, which gets parsed and the ``InterfaceDescription`` is created accordingly (check the `hardware_info.hpp <https://github.com/ros-controls/ros2_control/tree/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/hardware_info.hpp>`__).
 
       * To access the automatically created ``Command-/StateInterfaces`` we provide the ``std::unordered_map<std::string, InterfaceDescription>``, where the string is the fully qualified name of the interface and the ``InterfaceDescription`` is the configuration of the interface. The ``std::unordered_map<>`` are divided into ``type_state_interfaces_`` and ``type_command_interfaces_`` where type can be: ``joint``, ``sensor``, ``gpio`` and ``unlisted``. E.g. the ``CommandInterfaces`` for all joints can be found in the  ``joint_command_interfaces_`` map. The ``unlisted`` includes all interfaces not listed in the ``ros2_control`` XML-tag but were created by overriding the ``export_unlisted_command_interface_descriptions()`` or ``export_unlisted_state_interface_descriptions()`` function by creating some custom ``Command-/StateInterfaces``.
-      * For the ``Sensor``-type hardware interface there is no ``export_command_interfaces`` method.
+      * ``Sensor``-type hardware interfaces export no command interfaces; ``SensorInterface`` already overrides ``on_export_command_interfaces()`` to return an empty vector.
       * As a reminder, the full interface names have structure ``<joint_name>/<interface_type>``.
 
    #. (optional) If you want some unlisted ``Command-/StateInterfaces`` not included in the ``ros2_control`` XML-tag you can follow those steps:
@@ -150,9 +150,9 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    #.  Implement ``on_error`` method where different errors from all states are handled.
 
-   #.  Implement the ``read`` method getting the states from the hardware and storing them to internal variables defined in ``export_state_interfaces``.
+   #.  Implement the ``read`` method getting the states from the hardware and storing them in the state interfaces with ``set_state(name, value)``.
 
-   #.  Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
+   #.  Implement ``write`` method that commands the hardware based on the values read from the command interfaces with ``get_command(name)``.
 
    #. (optional) **Framework Managed Publisher**
 

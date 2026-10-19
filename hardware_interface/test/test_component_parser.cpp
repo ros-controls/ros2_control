@@ -14,8 +14,12 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
+#include <clocale>
 #include <cmath>
+#include <limits>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "hardware_interface/component_parser.hpp"

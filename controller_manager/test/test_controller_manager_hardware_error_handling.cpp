@@ -14,6 +14,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>

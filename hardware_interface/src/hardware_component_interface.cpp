@@ -15,11 +15,20 @@
 #include "hardware_interface/hardware_component_interface.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <exception>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "hardware_interface/lexical_casts.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/qos.hpp"
 
 namespace hardware_interface
 {
@@ -280,14 +289,6 @@ rclcpp::NodeOptions HardwareComponentInterface::define_custom_node_options() con
   return node_options;
 }
 
-std::vector<StateInterface> HardwareComponentInterface::export_state_interfaces()
-{
-  // return empty vector by default. For backward compatibility we try calling
-  // export_state_interfaces() and only when empty vector is returned call
-  // on_export_state_interfaces()
-  return {};
-}
-
 std::vector<hardware_interface::InterfaceDescription>
 HardwareComponentInterface::export_unlisted_state_interface_descriptions()
 {
@@ -340,14 +341,6 @@ std::vector<StateInterface::ConstSharedPtr> HardwareComponentInterface::on_expor
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
   return state_interfaces;
-}
-
-std::vector<CommandInterface> HardwareComponentInterface::export_command_interfaces()
-{
-  // return empty vector by default. For backward compatibility we try calling
-  // export_command_interfaces() and only when empty vector is returned call
-  // on_export_command_interfaces()
-  return {};
 }
 
 std::vector<hardware_interface::InterfaceDescription>

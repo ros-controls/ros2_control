@@ -15,13 +15,19 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
+#include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <future>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -130,6 +136,19 @@ TEST_F(TestLoadController, spawner_without_manager_errors_with_given_timeout)
 TEST_F(TestLoadController, spawner_without_type_parameter_or_arg_errors)
 {
   EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
+}
+
+TEST_F(TestLoadController, spawner_ignores_empty_arguments)
+{
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  // Empty args reach the spawner when launched with shell=False and a substitution resolves to ""
+  EXPECT_EQ(call_spawner("ctrl_1 '' -c test_controller_manager ''"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  EXPECT_EQ(
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
 TEST_F(TestLoadController, spawner_test_type_in_param)
