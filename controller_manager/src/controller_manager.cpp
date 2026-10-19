@@ -3314,9 +3314,9 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     // The component has already been driven to the error state and its command interfaces have
-    // been removed from the available list, so the switch is rejected before it can reach it. The
-    // call is kept so that the hardware is still asked, but its failure is expected and not
-    // reported.
+    // been removed from the available list, so the resource manager rejects the switch before
+    // dispatching it to any component. The call is kept for the unaffected components in the
+    // request; the expected rejection is not reported as an additional failure.
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read", false);
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
@@ -3641,7 +3641,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-    // Same as in the read() error path: the call is kept, its expected failure is not reported.
+    // Same as in the read() error path: the call is kept for the unaffected components in the
+    // request; its expected rejection is not reported.
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write", false);
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);

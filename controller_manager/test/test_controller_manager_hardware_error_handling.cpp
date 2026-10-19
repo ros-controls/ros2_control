@@ -1134,8 +1134,8 @@ TEST_P(TestControllerManagerWithTestableCM, no_mode_switch_error_on_hardware_rea
   EXPECT_THAT(
     LogCapture::messages(),
     ::testing::Not(::testing::Contains(::testing::HasSubstr(MODE_SWITCH_ERROR_MESSAGE))));
-  // The switch is still requested: the resource manager reports the rejected interfaces, so the
-  // call is not skipped and the hardware would be asked if it were still reachable.
+  // The switch is still requested: the resource manager reports the rejected interfaces before
+  // dispatching the request to any component.
   EXPECT_THAT(
     LogCapture::messages(),
     ::testing::Contains(::testing::HasSubstr(MODE_SWITCH_REJECTED_MESSAGE)));
