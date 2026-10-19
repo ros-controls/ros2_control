@@ -20,16 +20,27 @@
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/helpers.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
@@ -221,6 +232,18 @@ TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_
   // missing command keys
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_state_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_state_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_command_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_command_keys_urdf);
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)

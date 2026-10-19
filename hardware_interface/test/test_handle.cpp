@@ -13,7 +13,16 @@
 // limitations under the License.
 
 #include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <stdexcept>
+#include <string>
 #include <thread>
+#include <tuple>
+#include <variant>
 #include <vector>
 
 #include "gmock/gmock.h"
