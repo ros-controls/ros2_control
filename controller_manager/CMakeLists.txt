@@ -38,6 +38,7 @@ generate_parameter_library(controller_manager_parameters
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
+  src/control_loop_time.cpp
 )
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

@@ -234,6 +234,54 @@ TEST_F(SleepingPoliciesTest, sim_time_jump_handler_detects_backward_jump)
   ASSERT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(clock->get_clock_handle()));
 }
 
+TEST_F(SleepingPoliciesTest, control_loop_period_stays_non_negative_during_concurrent_jumps)
+{
+  const auto clock = cm_->get_clock();
+  controller_manager::SimTimeJumpHandler jump_handler(clock);
+
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock->get_clock_handle()));
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock->get_clock_handle(), 10'000'000'000));
+  ASSERT_TRUE(clock->ros_time_is_active());
+
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::milliseconds(10);
+  state.previous_time = clock->now();
+
+  std::atomic<bool> start{false};
+  std::atomic<bool> stopped{false};
+  std::thread jumper(
+    [&]()
+    {
+      while (!start.load())
+      {
+        std::this_thread::yield();
+      }
+      for (int i = 0; i < 2000 && !stopped.load(); ++i)
+      {
+        rcl_set_ros_time_override(clock->get_clock_handle(), 10'000'000'000);
+        rcl_set_ros_time_override(clock->get_clock_handle(), 1'000'000'000);
+      }
+    });
+
+  start.store(true);
+  std::size_t resets = 0;
+  for (int i = 0; i < 2000; ++i)
+  {
+    const auto measured_period =
+      sample_control_loop_period(state, clock, &jump_handler);
+    EXPECT_GE(measured_period.nanoseconds(), 0);
+    if (measured_period == rclcpp::Duration(state.period))
+    {
+      ++resets;
+    }
+  }
+  stopped.store(true);
+  jumper.join();
+
+  EXPECT_GT(resets, 0u);
+  ASSERT_EQ(RCL_RET_OK, rcl_disable_ros_time_override(clock->get_clock_handle()));
+}
+
 // Reproduces ros-controls/ros2_control#3697: with simulation time, a sleep waiting for a deadline
 // of the previous timeline must end when the simulator resets its clock backwards, instead of
 // blocking until simulation time catches up with the old deadline again.

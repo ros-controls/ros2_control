@@ -158,11 +158,8 @@ int main(int argc, char ** argv)
       while (rclcpp::ok())
       {
         // calculate measured period
-        auto const current_time = cm->get_trigger_clock()->now();
-        const bool time_base_reset =
-          jump_handler != nullptr && jump_handler->consume_backward_jump();
         auto const measured_period =
-          update_time_base_and_get_period(state, current_time, time_base_reset);
+          sample_control_loop_period(state, cm->get_trigger_clock(), jump_handler.get());
 
         // execute update loop
         cm->read(cm->get_trigger_clock()->now(), measured_period);

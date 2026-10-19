@@ -66,6 +66,9 @@ public:
   /// Only the post-jump invocation is registered, so a single jump is reported exactly once.
   bool consume_backward_jump();
 
+  /// Samples the clock and consumes a pending backward jump.
+  rclcpp::Time sample_time(bool & backward_jump);
+
 private:
   rclcpp::Clock::SharedPtr clock_;
   rclcpp::JumpHandler::SharedPtr jump_handler_;
@@ -83,6 +86,16 @@ private:
 rclcpp::Duration update_time_base_and_get_period(
   controller_manager::ControlLoopState & state, const rclcpp::Time & current_time,
   bool time_base_reset);
+
+/// Samples the control loop clock and reconciles it with a possible backward jump.
+///
+/// The time sample and the jump flag are read from the same handler so the period is derived from
+/// the same timeline that produced the reset decision. A jump that arrives after the sample is
+/// handled by the next loop iteration.
+rclcpp::Duration sample_control_loop_period(
+  controller_manager::ControlLoopState & state,
+  const rclcpp::Clock::SharedPtr & clock,
+  controller_manager::SimTimeJumpHandler * jump_handler);
 
 bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
