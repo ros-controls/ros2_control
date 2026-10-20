@@ -15,6 +15,7 @@
 
 import argparse
 import errno
+import functools
 import os
 import signal
 import sys
@@ -74,6 +75,13 @@ def get_loaded_controller_state(
     ).controller
     match = first_match(controllers, lambda c: c.name == controller_name)
     return match.state if match else None
+
+
+def _on_shutdown_signal(signum, frame, *, unload_on_kill):
+    if unload_on_kill:
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    raise KeyboardInterrupt()
 
 
 def parse_args_advanced(args):
@@ -378,11 +386,11 @@ def main(args=None):
     node = None
     lock = None
 
-    def _on_shutdown_signal(signum, frame):
-        raise KeyboardInterrupt()
-
-    signal.signal(signal.SIGINT, _on_shutdown_signal)
-    signal.signal(signal.SIGTERM, _on_shutdown_signal)
+    shutdown_signal_handler = functools.partial(
+        _on_shutdown_signal, unload_on_kill=unload_on_kill
+    )
+    signal.signal(signal.SIGINT, shutdown_signal_handler)
+    signal.signal(signal.SIGTERM, shutdown_signal_handler)
 
     if spawner_ros_params_files:
         for controller in controllers:
