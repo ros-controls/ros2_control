@@ -15,6 +15,7 @@
 
 import argparse
 import errno
+import functools
 import os
 import signal
 import sys
@@ -74,6 +75,20 @@ def get_loaded_controller_state(
     ).controller
     match = first_match(controllers, lambda c: c.name == controller_name)
     return match.state if match else None
+
+
+def _on_shutdown_signal(signum, frame, *, unload_on_kill, shutdown_state):
+    if unload_on_kill:
+        if shutdown_state["started"]:
+            return
+        shutdown_state["started"] = True
+        try:
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        except (KeyboardInterrupt, Exception):
+            # Still enter cleanup if tracing or signal registration interrupts this handler.
+            pass
+    raise KeyboardInterrupt()
 
 
 def parse_args_advanced(args):
@@ -377,12 +392,15 @@ def main(args=None):
     unload_on_kill = global_args.unload_on_kill
     node = None
     lock = None
+    shutdown_state = {"started": False}
 
-    def _on_shutdown_signal(signum, frame):
-        raise KeyboardInterrupt()
-
-    signal.signal(signal.SIGINT, _on_shutdown_signal)
-    signal.signal(signal.SIGTERM, _on_shutdown_signal)
+    shutdown_signal_handler = functools.partial(
+        _on_shutdown_signal,
+        unload_on_kill=unload_on_kill,
+        shutdown_state=shutdown_state,
+    )
+    signal.signal(signal.SIGINT, shutdown_signal_handler)
+    signal.signal(signal.SIGTERM, shutdown_signal_handler)
 
     if spawner_ros_params_files:
         for controller in controllers:
