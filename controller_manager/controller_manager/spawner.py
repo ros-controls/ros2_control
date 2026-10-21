@@ -82,8 +82,12 @@ def _on_shutdown_signal(signum, frame, *, unload_on_kill, shutdown_state):
         if shutdown_state["started"]:
             return
         shutdown_state["started"] = True
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        try:
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        except (KeyboardInterrupt, Exception):
+            # Still enter cleanup if tracing or signal registration interrupts this handler.
+            pass
     raise KeyboardInterrupt()
 
 

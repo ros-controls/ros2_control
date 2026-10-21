@@ -57,6 +57,18 @@ def test_unload_on_kill_ignores_signals_before_raising(monkeypatch):
     ]
 
 
+def test_unload_on_kill_still_raises_if_signal_registration_fails(monkeypatch):
+    shutdown_state = {'started': False}
+    monkeypatch.setattr(signal, 'signal', lambda *_: (_ for _ in ()).throw(ValueError()))
+
+    with pytest.raises(KeyboardInterrupt):
+        _on_shutdown_signal(
+            signal.SIGINT, None, unload_on_kill=True, shutdown_state=shutdown_state
+        )
+
+    _on_shutdown_signal(signal.SIGTERM, None, unload_on_kill=True, shutdown_state=shutdown_state)
+
+
 def test_regular_spawner_does_not_ignore_signals_in_handler(monkeypatch):
     monkeypatch.setattr(
         signal,
