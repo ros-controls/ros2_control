@@ -20,15 +20,37 @@ import pytest
 
 def test_unload_on_kill_ignores_signals_before_raising(monkeypatch):
     registered_signals = []
-    monkeypatch.setattr(
-        signal,
-        'signal',
-        lambda signum, handler: registered_signals.append((signum, handler)),
-    )
+    shutdown_state = {'started': False}
+
+    def shutdown_signal_handler(signum, frame):
+        _on_shutdown_signal(
+            signum, frame, unload_on_kill=True, shutdown_state=shutdown_state
+        )
+
+    current_handlers = {
+        signal.SIGINT: shutdown_signal_handler,
+        signal.SIGTERM: shutdown_signal_handler,
+    }
+
+    def register_signal(signum, handler):
+        registered_signals.append((signum, handler))
+        if handler is signal.SIG_IGN and current_handlers[signum] is shutdown_signal_handler:
+            current_handlers[signum](signum, None)
+        current_handlers[signum] = handler
+
+    monkeypatch.setattr(signal, 'signal', register_signal)
 
     with pytest.raises(KeyboardInterrupt):
-        _on_shutdown_signal(signal.SIGINT, None, unload_on_kill=True)
+        _on_shutdown_signal(
+            signal.SIGINT, None, unload_on_kill=True, shutdown_state=shutdown_state
+        )
 
+    assert registered_signals == [
+        (signal.SIGINT, signal.SIG_IGN),
+        (signal.SIGTERM, signal.SIG_IGN),
+    ]
+
+    _on_shutdown_signal(signal.SIGTERM, None, unload_on_kill=True, shutdown_state=shutdown_state)
     assert registered_signals == [
         (signal.SIGINT, signal.SIG_IGN),
         (signal.SIGTERM, signal.SIG_IGN),
@@ -43,4 +65,9 @@ def test_regular_spawner_does_not_ignore_signals_in_handler(monkeypatch):
     )
 
     with pytest.raises(KeyboardInterrupt):
-        _on_shutdown_signal(signal.SIGINT, None, unload_on_kill=False)
+        _on_shutdown_signal(
+            signal.SIGINT,
+            None,
+            unload_on_kill=False,
+            shutdown_state={'started': False},
+        )

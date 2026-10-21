@@ -77,8 +77,11 @@ def get_loaded_controller_state(
     return match.state if match else None
 
 
-def _on_shutdown_signal(signum, frame, *, unload_on_kill):
+def _on_shutdown_signal(signum, frame, *, unload_on_kill, shutdown_state):
     if unload_on_kill:
+        if shutdown_state["started"]:
+            return
+        shutdown_state["started"] = True
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
     raise KeyboardInterrupt()
@@ -385,9 +388,12 @@ def main(args=None):
     unload_on_kill = global_args.unload_on_kill
     node = None
     lock = None
+    shutdown_state = {"started": False}
 
     shutdown_signal_handler = functools.partial(
-        _on_shutdown_signal, unload_on_kill=unload_on_kill
+        _on_shutdown_signal,
+        unload_on_kill=unload_on_kill,
+        shutdown_state=shutdown_state,
     )
     signal.signal(signal.SIGINT, shutdown_signal_handler)
     signal.signal(signal.SIGTERM, shutdown_signal_handler)
