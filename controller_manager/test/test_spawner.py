@@ -20,12 +20,10 @@ import pytest
 
 def test_unload_on_kill_ignores_signals_before_raising(monkeypatch):
     registered_signals = []
-    shutdown_state = {'started': False}
+    shutdown_state = {"started": False}
 
     def shutdown_signal_handler(signum, frame):
-        _on_shutdown_signal(
-            signum, frame, unload_on_kill=True, shutdown_state=shutdown_state
-        )
+        _on_shutdown_signal(signum, frame, unload_on_kill=True, shutdown_state=shutdown_state)
 
     current_handlers = {
         signal.SIGINT: shutdown_signal_handler,
@@ -38,7 +36,7 @@ def test_unload_on_kill_ignores_signals_before_raising(monkeypatch):
             current_handlers[signum](signum, None)
         current_handlers[signum] = handler
 
-    monkeypatch.setattr(signal, 'signal', register_signal)
+    monkeypatch.setattr(signal, "signal", register_signal)
 
     with pytest.raises(KeyboardInterrupt):
         _on_shutdown_signal(
@@ -58,8 +56,8 @@ def test_unload_on_kill_ignores_signals_before_raising(monkeypatch):
 
 
 def test_unload_on_kill_still_raises_if_signal_registration_fails(monkeypatch):
-    shutdown_state = {'started': False}
-    monkeypatch.setattr(signal, 'signal', lambda *_: (_ for _ in ()).throw(ValueError()))
+    shutdown_state = {"started": False}
+    monkeypatch.setattr(signal, "signal", lambda *_: (_ for _ in ()).throw(ValueError()))
 
     with pytest.raises(KeyboardInterrupt):
         _on_shutdown_signal(
@@ -72,8 +70,8 @@ def test_unload_on_kill_still_raises_if_signal_registration_fails(monkeypatch):
 def test_regular_spawner_does_not_ignore_signals_in_handler(monkeypatch):
     monkeypatch.setattr(
         signal,
-        'signal',
-        lambda signum, handler: pytest.fail('handler must not ignore signals'),
+        "signal",
+        lambda signum, handler: pytest.fail("handler must not ignore signals"),
     )
 
     with pytest.raises(KeyboardInterrupt):
@@ -81,5 +79,5 @@ def test_regular_spawner_does_not_ignore_signals_in_handler(monkeypatch):
             signal.SIGINT,
             None,
             unload_on_kill=False,
-            shutdown_state={'started': False},
+            shutdown_state={"started": False},
         )
