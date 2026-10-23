@@ -18,8 +18,11 @@
 #define HARDWARE_INTERFACE__TYPES__STATISTICS_TYPES_HPP_
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <limits>
 #include <memory>
+#include <mutex>
 
 #include "hardware_interface/introspection.hpp"
 #include "libstatistics_collector/moving_average_statistics/moving_average.hpp"

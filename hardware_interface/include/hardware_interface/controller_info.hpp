@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 #define HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 
-#include <optional>
 #include <string>
 #include <vector>
 

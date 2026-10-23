@@ -16,9 +16,14 @@
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>

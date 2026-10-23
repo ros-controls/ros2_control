@@ -18,7 +18,6 @@
 #define RANDOM_GENERATOR_UTILS_HPP_
 
 #include <cstdlib>
-#include <ctime>
 #include <vector>
 
 using std::vector;

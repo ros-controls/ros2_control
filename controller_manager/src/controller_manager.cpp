@@ -16,19 +16,34 @@
 
 #include <fmt/compile.h>
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <cstdint>
+#include <exception>
+#include <iomanip>
+#include <iterator>
 #include <memory>
+#include <numeric>
+#include <regex>
 #include <set>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "diagnostic_msgs/msg/diagnostic_status.hpp"
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 

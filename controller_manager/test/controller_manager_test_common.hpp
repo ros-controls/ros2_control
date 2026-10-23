@@ -15,7 +15,10 @@
 #ifndef CONTROLLER_MANAGER_TEST_COMMON_HPP_
 #define CONTROLLER_MANAGER_TEST_COMMON_HPP_
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <future>
 #include <memory>
 #include <string>
 #include <thread>
@@ -25,7 +28,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "gmock/gmock.h"
-#include "rclcpp/executors.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/utilities.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -46,6 +49,63 @@ struct Strictness
 };
 Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
 Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
+
+namespace controller_manager
+{
+namespace test
+{
+
+template <typename ControllerManagerT>
+bool wait_for_loaded_controller_count(
+  const std::shared_ptr<ControllerManagerT> & cm, size_t expected_count,
+  std::chrono::milliseconds timeout = std::chrono::seconds(2))
+{
+  const auto start = std::chrono::steady_clock::now();
+  while ((std::chrono::steady_clock::now() - start) < timeout)
+  {
+    if (cm->get_loaded_controllers().size() == expected_count)
+    {
+      return true;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+
+  return cm->get_loaded_controllers().size() == expected_count;
+}
+
+template <typename LoadedControllersT>
+auto find_loaded_controller_by_name(
+  const LoadedControllersT & loaded_controllers, const std::string & controller_name)
+{
+  return std::find_if(
+    loaded_controllers.begin(), loaded_controllers.end(),
+    [&controller_name](const auto & controller)
+    { return controller.info.name == controller_name; });
+}
+
+template <typename ControllerManagerT>
+bool wait_for_loaded_controller(
+  const std::shared_ptr<ControllerManagerT> & cm, const std::string & controller_name,
+  std::chrono::milliseconds timeout = std::chrono::seconds(2))
+{
+  const auto start = std::chrono::steady_clock::now();
+  while ((std::chrono::steady_clock::now() - start) < timeout)
+  {
+    const auto loaded_controllers = cm->get_loaded_controllers();
+    if (
+      find_loaded_controller_by_name(loaded_controllers, controller_name) !=
+      loaded_controllers.end())
+    {
+      return true;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+
+  return false;
+}
+
+}  // namespace test
+}  // namespace controller_manager
 
 // Forward definition to avid compile error - defined at the end of the file
 template <typename CtrlMgr>

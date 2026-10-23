@@ -16,9 +16,9 @@
 #define HARDWARE_INTERFACE__HELPERS_HPP_
 
 #include <algorithm>
-#include <functional>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 

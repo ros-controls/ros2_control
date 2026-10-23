@@ -15,6 +15,8 @@
 #ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 #define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_COMMAND_INTERFACE_HPP_
 
+#include <cassert>
+#include <functional>
 #include <string>
 #include <vector>
 

@@ -15,10 +15,7 @@
 #ifndef TEST_CONTROLLER_FAILED_ACTIVATE__TEST_CONTROLLER_FAILED_ACTIVATE_HPP_
 #define TEST_CONTROLLER_FAILED_ACTIVATE__TEST_CONTROLLER_FAILED_ACTIVATE_HPP_
 
-#include <memory>
-#include <string>
-
-#include "controller_manager/controller_manager.hpp"
+#include "controller_interface/controller_interface.hpp"
 
 namespace test_controller_failed_activate
 {

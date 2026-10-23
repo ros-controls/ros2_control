@@ -109,8 +109,6 @@ namespace transmission_interface
  * \ingroup transmission_types
  */
 
-constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
-
 class DifferentialTransmission : public Transmission
 {
 public:
