@@ -707,7 +707,12 @@ public:
    */
   CommandInterface(const CommandInterface & other) = delete;
 
-  CommandInterface(CommandInterface && other) = default;
+  CommandInterface(CommandInterface && other) noexcept
+  : Handle(std::move(other)),
+    is_command_limited_(other.is_command_limited_.load()),
+    on_set_command_limiter_(std::move(other.on_set_command_limiter_))
+  {
+  }
 
   void set_on_set_command_limiter(std::function<double(double, bool &)> on_set_command_limiter)
   {
@@ -724,7 +729,12 @@ public:
   {
     if constexpr (std::is_same_v<T, double>)
     {
-      return set_value(on_set_command_limiter_(value, is_command_limited_));
+      // The limiter writes to a local flag that is then published atomically, as the flag is
+      // read concurrently by the introspection sampler and is_limited() outside handle_mutex_
+      bool is_limited = false;
+      const double limited_value = on_set_command_limiter_(value, is_limited);
+      is_command_limited_.store(is_limited, std::memory_order_relaxed);
+      return set_value(limited_value);
     }
     else
     {
@@ -732,7 +742,11 @@ public:
     }
   }
 
-  const bool & is_limited() const { return is_command_limited_; }
+  /// Returns whether the last value set through set_limited_value() was limited.
+  /**
+   * @note The method is thread-safe and non-blocking.
+   */
+  bool is_limited() const { return is_command_limited_.load(std::memory_order_relaxed); }
 
   void registerIntrospection() const
   {
@@ -759,8 +773,9 @@ public:
         }
       };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION("command_interface." + get_name(), f);
+      std::function<bool()> is_limited_fn = [this]() { return is_limited(); };
       DEFAULT_REGISTER_ROS2_CONTROL_INTROSPECTION(
-        "command_interface." + get_name() + ".is_limited", &is_command_limited_);
+        "command_interface." + get_name() + ".is_limited", is_limited_fn);
     }
   }
 
@@ -779,7 +794,7 @@ public:
   using SharedPtr = std::shared_ptr<CommandInterface>;
 
 private:
-  bool is_command_limited_ = false;
+  std::atomic<bool> is_command_limited_ = false;
   std::function<double(double, bool &)> on_set_command_limiter_ =
     [](double value, bool & is_limited)
   {
