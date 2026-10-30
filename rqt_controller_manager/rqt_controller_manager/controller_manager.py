@@ -656,7 +656,7 @@ def _get_controller_type(node, node_name, ctrl_name, timeout):
     """
     # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
     request = GetParameters.Request()
-    request.names = [ctrl_name]
+    request.names = [f"{ctrl_name}.type"]
     try:
         response = service_caller(
             node,
