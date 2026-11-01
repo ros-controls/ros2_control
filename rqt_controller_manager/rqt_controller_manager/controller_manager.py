@@ -629,7 +629,25 @@ def _get_controller_type(node, node_name, ctrl_name):
     @return Controller type
     @rtype str
     """
+<<<<<<< HEAD
     response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
+=======
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    request = GetParameters.Request()
+    request.names = [f"{ctrl_name}.type"]
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/get_parameters",
+            GetParameters,
+            request,
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return ""
+>>>>>>> a0de412 (Fix controller type lookup in rqt_controller_manager (#3723))
     return response.values[0].string_value if response.values else ""
 
 
