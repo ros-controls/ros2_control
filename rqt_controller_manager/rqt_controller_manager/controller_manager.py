@@ -48,6 +48,11 @@ class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
     _cm_update_freq = 1  # Hz
+    # Timeout (in seconds) for finding a service and for its response, used by the periodic
+    # queries of controllers, hardware components and parameters
+    _service_timeout = 2.0 / _cm_update_freq
+    # Timeout (in seconds) for the controller manager to perform a controller switch
+    _switch_timeout = 0.3
 
     def __init__(self, context):
         super().__init__(context)
@@ -213,15 +218,18 @@ class ControllerManager(Plugin):
         # Add loaded controllers first
         try:
             controllers = list_controllers(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
+                self._node, self._cm_name, self._service_timeout
             ).controller
 
             # Append potential controller configs found in the node's parameters
-            timeout = 2.0 / self._cm_update_freq
-            for name in _get_parameter_controller_names(self._node, self._cm_name, timeout):
+            for name in _get_parameter_controller_names(
+                self._node, self._cm_name, self._service_timeout
+            ):
                 add_ctrl = all(name != ctrl.name for ctrl in controllers)
                 if add_ctrl:
-                    type_str = _get_controller_type(self._node, self._cm_name, name, timeout)
+                    type_str = _get_controller_type(
+                        self._node, self._cm_name, name, self._service_timeout
+                    )
                     uninit_ctrl = ControllerState(name=name, type=type_str)
                     controllers.append(uninit_ctrl)
             return controllers
@@ -362,7 +370,7 @@ class ControllerManager(Plugin):
         # Add loaded hw_components first
         try:
             hw_components = list_hardware_components(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
+                self._node, self._cm_name, self._service_timeout
             ).component
             return hw_components
         except RuntimeError as e:
@@ -476,7 +484,7 @@ class ControllerManager(Plugin):
                 deactivate_controllers=deactivate,
                 strictness=SwitchController.Request.STRICT,
                 activate_asap=False,
-                timeout=0.3,
+                timeout=self._switch_timeout,
             )
         except Exception as e:
             print(e)
