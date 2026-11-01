@@ -15,13 +15,22 @@
 #include "hardware_interface/resource_manager.hpp"
 
 #include <fmt/compile.h>
+#include <fmt/format.h>
 
+#include <algorithm>
+#include <cmath>
+#include <exception>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <shared_mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -36,7 +45,8 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
-#include "joint_limits/joint_limits_helpers.hpp"
+#include "joint_limits/data_structures.hpp"
+#include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
 #include "joint_limits/joint_soft_limiter.hpp"
 #include "lifecycle_msgs/msg/state.hpp"

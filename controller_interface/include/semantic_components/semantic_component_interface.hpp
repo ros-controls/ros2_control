@@ -15,6 +15,7 @@
 #ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP_
 #define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP_
 
+#include <functional>
 #include <string>
 #include <vector>
 

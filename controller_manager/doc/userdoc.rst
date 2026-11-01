@@ -78,10 +78,8 @@ Afterwards, add the following limits to the realtime group in ``/etc/security/li
 .. code-block:: console
 
     @realtime soft rtprio 99
-    @realtime soft priority 99
     @realtime soft memlock unlimited
     @realtime hard rtprio 99
-    @realtime hard priority 99
     @realtime hard memlock unlimited
 
 The limits will be applied after you log out and in again.
@@ -622,7 +620,9 @@ Returns a ``LaunchDescription`` containing:
 
 - Launch argument for ``controller_manager_name`` (default: "controller_manager") - allows overriding the controller manager node name
 - Launch argument for ``unload_on_kill`` (default: "false") - waits for interrupt signal to unload controllers
-- Spawner node that loads and activates the specified controllers
+- An action that creates the spawner node once launch arguments have been resolved.
+  The ``--unload-on-kill`` flag is omitted when ``unload_on_kill`` is false; no empty
+  placeholder argument is passed.
 
 **Complete Launch File Example:**
 

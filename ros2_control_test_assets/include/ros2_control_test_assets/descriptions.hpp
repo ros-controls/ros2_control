@@ -1467,6 +1467,46 @@ const auto hardware_resources_missing_command_keys =
   </ros2_control>
 )";
 
+const auto hardware_resources_missing_gpio_state_keys =
+  R"(
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="max_acceleration"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+      <state_interface name="does_not_exist"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_missing_gpio_command_keys =
+  R"(
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="max_acceleration"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
 const auto hardware_resources_with_exclusive_interface =
   R"(
   <ros2_control name="TestActuatorHardware1" type="actuator">
@@ -2381,6 +2421,14 @@ const auto minimal_robot_missing_state_keys_urdf =
 
 const auto minimal_robot_missing_command_keys_urdf =
   std::string(urdf_head) + std::string(hardware_resources_missing_command_keys) +
+  std::string(urdf_tail);
+
+const auto minimal_robot_missing_gpio_state_keys_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_missing_gpio_state_keys) +
+  std::string(urdf_tail);
+
+const auto minimal_robot_missing_gpio_command_keys_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_missing_gpio_command_keys) +
   std::string(urdf_tail);
 
 [[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_NAME = "TestActuatorHardware";

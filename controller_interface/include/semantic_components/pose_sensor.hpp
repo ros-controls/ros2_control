@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <string>
 
 #include "geometry_msgs/msg/pose.hpp"

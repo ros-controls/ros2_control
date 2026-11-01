@@ -357,7 +357,6 @@ def main(args=None):
 
     spawner_ros_params_files = get_ros_params_files(sys.argv[1:])
 
-    # Remove ROS args
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
 
     # Check if we are in advanced mode

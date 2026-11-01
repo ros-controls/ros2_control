@@ -15,13 +15,13 @@
 #ifndef TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 #define TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 
-#include <memory>
-#include <string>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 #include "example_interfaces/srv/set_bool.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace test_controller

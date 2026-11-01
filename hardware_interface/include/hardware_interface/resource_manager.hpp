@@ -15,25 +15,34 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/actuator.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/sensor.hpp"
+#include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/resource_manager_params.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
 {

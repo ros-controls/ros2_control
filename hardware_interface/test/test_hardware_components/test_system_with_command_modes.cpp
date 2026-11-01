@@ -15,6 +15,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "hardware_interface/system_interface.hpp"

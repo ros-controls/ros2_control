@@ -16,8 +16,14 @@
 
 #include "joint_limits/joint_limits_rosparam.hpp"
 
+#include <cmath>
+#include <string>
+#include <vector>
+
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 class JointLimitsRosParamTest : public ::testing::Test
@@ -455,6 +461,189 @@ TEST_F(
     EXPECT_EQ(20.0, soft_limits.k_velocity);
     EXPECT_EQ(0.1, soft_limits.min_position);
     EXPECT_EQ(0.9, soft_limits.max_position);
+  }
+}
+
+TEST_F(JointLimitsRosParamTest, position_limits_flag_reports_only_real_updates)
+{
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -1.0;
+  limits.max_position = 1.0;
+
+  const std::vector<rclcpp::Parameter> parameters{
+    rclcpp::Parameter("joint_limits.foo_joint.has_position_limits", false)};
+
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_FALSE(limits.has_position_limits);
+
+  // Reapplying the same value must not report a change.
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_FALSE(limits.has_position_limits);
+
+  const std::vector<rclcpp::Parameter> enable_parameters{
+    rclcpp::Parameter("joint_limits.foo_joint.has_position_limits", true)};
+
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", enable_parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_TRUE(limits.has_position_limits);
+
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", enable_parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_TRUE(limits.has_position_limits);
+}
+
+TEST_F(JointLimitsRosParamTest, other_limit_flags_report_only_effective_updates)
+{
+  using JointLimits = joint_limits::JointLimits;
+  struct FlagCase
+  {
+    const char * name;
+    bool JointLimits::* enabled;
+    double JointLimits::* maximum;
+  };
+
+  const FlagCase flags[] = {
+    {"has_velocity_limits", &JointLimits::has_velocity_limits, &JointLimits::max_velocity},
+    {"has_acceleration_limits", &JointLimits::has_acceleration_limits,
+     &JointLimits::max_acceleration},
+    {"has_deceleration_limits", &JointLimits::has_deceleration_limits,
+     &JointLimits::max_deceleration},
+    {"has_jerk_limits", &JointLimits::has_jerk_limits, &JointLimits::max_jerk},
+    {"has_effort_limits", &JointLimits::has_effort_limits, &JointLimits::max_effort},
+  };
+
+  for (const auto & flag : flags)
+  {
+    SCOPED_TRACE(flag.name);
+    JointLimits limits;
+    const std::string parameter_name = "joint_limits.foo_joint." + std::string(flag.name);
+    const auto set_flag = [&](bool value)
+    {
+      return joint_limits::check_for_limits_update(
+        "foo_joint", {rclcpp::Parameter(parameter_name, value)},
+        node_->get_node_logging_interface(), limits);
+    };
+
+    EXPECT_FALSE(set_flag(false));
+    EXPECT_FALSE(set_flag(true));  // No valid maximum: rejected without a change.
+    EXPECT_FALSE(limits.*flag.enabled);
+
+    limits.*flag.maximum = 2.0;
+    EXPECT_TRUE(set_flag(true));
+    EXPECT_TRUE(limits.*flag.enabled);
+    EXPECT_FALSE(set_flag(true));
+    EXPECT_TRUE(set_flag(false));
+    EXPECT_FALSE(limits.*flag.enabled);
+    EXPECT_FALSE(set_flag(false));
+
+    // A rejected parameter type must not change the stored flag.
+    EXPECT_FALSE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", {rclcpp::Parameter(parameter_name, 1)}, node_->get_node_logging_interface(),
+        limits));
+    EXPECT_FALSE(limits.*flag.enabled);
+  }
+}
+
+TEST_F(JointLimitsRosParamTest, angle_wraparound_reports_only_effective_updates)
+{
+  joint_limits::JointLimits limits;
+  const auto set_wraparound = [&](bool value)
+  {
+    return joint_limits::check_for_limits_update(
+      "foo_joint", {rclcpp::Parameter("joint_limits.foo_joint.angle_wraparound", value)},
+      node_->get_node_logging_interface(), limits);
+  };
+
+  EXPECT_FALSE(set_wraparound(false));
+  limits.has_position_limits = true;
+  EXPECT_FALSE(set_wraparound(true));  // Mutually exclusive with position limits.
+  EXPECT_FALSE(limits.angle_wraparound);
+
+  limits.has_position_limits = false;
+  EXPECT_TRUE(set_wraparound(true));
+  EXPECT_TRUE(limits.angle_wraparound);
+  EXPECT_FALSE(set_wraparound(true));
+  EXPECT_TRUE(set_wraparound(false));
+  EXPECT_FALSE(limits.angle_wraparound);
+  EXPECT_FALSE(set_wraparound(false));
+}
+
+TEST_F(JointLimitsRosParamTest, unchanged_flag_does_not_clear_other_batch_updates)
+{
+  joint_limits::JointLimits limits;
+  limits.max_velocity = 2.0;
+  limits.max_effort = 3.0;
+
+  const std::vector<rclcpp::Parameter> parameters{
+    rclcpp::Parameter("joint_limits.foo_joint.max_velocity", 4.0),
+    rclcpp::Parameter("joint_limits.foo_joint.has_velocity_limits", false),
+    rclcpp::Parameter("joint_limits.foo_joint.has_effort_limits", false)};
+
+  EXPECT_TRUE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+  EXPECT_DOUBLE_EQ(limits.max_velocity, 4.0);
+  EXPECT_FALSE(limits.has_velocity_limits);
+  EXPECT_FALSE(limits.has_effort_limits);
+
+  EXPECT_FALSE(
+    joint_limits::check_for_limits_update(
+      "foo_joint", parameters, node_->get_node_logging_interface(), limits));
+}
+
+TEST_F(JointLimitsRosParamTest, check_for_limits_update_accumulates_over_the_whole_batch)
+{
+  // A parameter event delivers the whole set at once. A change to any one of them has to
+  // be reported, no matter what follows it in the batch.
+  {
+    joint_limits::JointLimits limits;
+    limits.min_position = -1.0;
+    limits.max_position = 1.0;
+    limits.max_velocity = 2.0;
+
+    const std::vector<rclcpp::Parameter> parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.min_position", -5.0),  // changed
+      rclcpp::Parameter("joint_limits.foo_joint.max_velocity", 2.0)};  // unchanged
+
+    joint_limits::JointLimits updated_limits = limits;
+    EXPECT_TRUE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", parameters, node_->get_node_logging_interface(), updated_limits));
+    EXPECT_EQ(-5.0, updated_limits.min_position);
+
+    // ... and a batch that changes nothing still has to report no change
+    const std::vector<rclcpp::Parameter> unchanged_parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.min_position", -5.0),
+      rclcpp::Parameter("joint_limits.foo_joint.max_velocity", 2.0)};
+    EXPECT_FALSE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", unchanged_parameters, node_->get_node_logging_interface(), updated_limits));
+  }
+
+  {
+    joint_limits::SoftJointLimits soft_limits;
+    soft_limits.k_position = 10.0;
+    soft_limits.k_velocity = 20.0;
+    soft_limits.min_position = 0.1;
+    soft_limits.max_position = 0.9;
+
+    const std::vector<rclcpp::Parameter> parameters{
+      rclcpp::Parameter("joint_limits.foo_joint.k_position", 30.0),   // changed
+      rclcpp::Parameter("joint_limits.foo_joint.k_velocity", 20.0)};  // unchanged
+
+    joint_limits::SoftJointLimits updated_limits = soft_limits;
+    EXPECT_TRUE(
+      joint_limits::check_for_limits_update(
+        "foo_joint", parameters, node_->get_node_logging_interface(), updated_limits));
+    EXPECT_EQ(30.0, updated_limits.k_position);
   }
 }
 

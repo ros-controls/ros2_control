@@ -14,6 +14,15 @@
 
 #include "controller_manager/sleeping_policies.hpp"
 
+#include <chrono>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <thread>
+
+#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/logging.hpp"
+
 bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
   controller_manager::ControlLoopState & state)

@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+#include <future>
 #include <memory>
 #include <regex>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
