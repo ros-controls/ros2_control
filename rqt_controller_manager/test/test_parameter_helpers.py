@@ -89,8 +89,12 @@ def unresponsive_controller_manager(node):
     server.destroy_node()
 
 
-def test_get_controller_names_from_parameters(node, controller_manager):
+def test_get_controller_from_parameters(node, controller_manager):
     assert _get_parameter_controller_names(node, controller_manager, TIMEOUT) == ["my_controller"]
+    assert (
+        _get_controller_type(node, controller_manager, "my_controller", TIMEOUT)
+        == "pkg/MyController"
+    )
 
 
 @pytest.mark.parametrize("cm_name", ["/does_not_exist", "unresponsive"])
