@@ -15,8 +15,11 @@
 """Unit tests for launch_utils.py functions."""
 
 import unittest
-from launch import LaunchDescription
-from launch_ros.actions import Node
+from unittest.mock import patch
+
+from launch import LaunchContext, LaunchDescription
+from launch.actions import OpaqueFunction
+from launch.utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 from controller_manager.launch_utils import (
     generate_controllers_spawner_launch_description,
@@ -81,7 +84,7 @@ class TestLaunchUtils(unittest.TestCase):
         actions = self._extract_actions(result)
         self.assertIsInstance(result, LaunchDescription)
         self.assertEqual(len(actions), 3)
-        self.assertIsInstance(actions[-1], Node)
+        self.assertIsInstance(actions[-1], OpaqueFunction)
 
     def test_generate_load_controller_launch_description(self):
         """Test load controller description with valid single string params."""
@@ -90,7 +93,36 @@ class TestLaunchUtils(unittest.TestCase):
         actions = self._extract_actions(result)
         self.assertIsInstance(result, LaunchDescription)
         self.assertEqual(len(actions), 3)
-        self.assertIsInstance(actions[-1], Node)
+        self.assertIsInstance(actions[-1], OpaqueFunction)
+
+    def test_spawner_arguments_omit_disabled_flag_and_preserve_empty_values(self):
+        for unload_on_kill in ("false", "true"):
+            with self.subTest(unload_on_kill=unload_on_kill):
+                context = LaunchContext()
+                context.launch_configurations["unload_on_kill"] = unload_on_kill
+                extra_args = [
+                    "--controller-ros-args",
+                    "",
+                    "--controller-ros-args",
+                    "-r foo:=bar",
+                ]
+                result = generate_controllers_spawner_launch_description(
+                    ["ctrl_1"], extra_spawner_args=extra_args
+                )
+                actions = self._extract_actions(result)
+                actions[0].execute(context)
+                actions[1].execute(context)
+                with patch("controller_manager.launch_utils.Node") as node:
+                    self.assertEqual(actions[-1].execute(context), [node.return_value])
+                    node.assert_called_once()
+                    arguments = [
+                        perform_substitutions(context, normalize_to_list_of_substitutions(arg))
+                        for arg in node.call_args.kwargs["arguments"]
+                    ]
+                expected = ["ctrl_1", "--controller-manager", "controller_manager"]
+                if unload_on_kill == "true":
+                    expected.append("--unload-on-kill")
+                self.assertEqual(arguments, expected + extra_args)
 
 
 if __name__ == "__main__":
