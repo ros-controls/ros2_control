@@ -24,6 +24,8 @@ from controller_manager.controller_manager_services import (
     list_hardware_components,
     set_hardware_component_state,
     load_controller,
+    service_caller,
+    ServiceNotFoundError,
     switch_controllers,
     unload_controller,
 )
@@ -38,7 +40,6 @@ from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate,
 from qt_gui.plugin import Plugin
 from rcl_interfaces.srv import GetParameters, ListParameters
 from ros2service.api import get_service_names_and_types
-import rclpy
 
 from .update_combo import update_combo
 
@@ -47,6 +48,11 @@ class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
     _cm_update_freq = 1  # Hz
+    # Timeout (in seconds) for finding a service and for its response, used by the periodic
+    # queries of controllers, hardware components and parameters
+    _service_timeout = 2.0 / _cm_update_freq
+    # Timeout (in seconds) for the controller manager to perform a controller switch
+    _switch_timeout = 0.3
 
     def __init__(self, context):
         super().__init__(context)
@@ -212,14 +218,18 @@ class ControllerManager(Plugin):
         # Add loaded controllers first
         try:
             controllers = list_controllers(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
+                self._node, self._cm_name, self._service_timeout
             ).controller
 
             # Append potential controller configs found in the node's parameters
-            for name in _get_parameter_controller_names(self._node, self._cm_name):
+            for name in _get_parameter_controller_names(
+                self._node, self._cm_name, self._service_timeout
+            ):
                 add_ctrl = all(name != ctrl.name for ctrl in controllers)
                 if add_ctrl:
-                    type_str = _get_controller_type(self._node, self._cm_name, name)
+                    type_str = _get_controller_type(
+                        self._node, self._cm_name, name, self._service_timeout
+                    )
                     uninit_ctrl = ControllerState(name=name, type=type_str)
                     controllers.append(uninit_ctrl)
             return controllers
@@ -360,7 +370,7 @@ class ControllerManager(Plugin):
         # Add loaded hw_components first
         try:
             hw_components = list_hardware_components(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
+                self._node, self._cm_name, self._service_timeout
             ).component
             return hw_components
         except RuntimeError as e:
@@ -474,7 +484,7 @@ class ControllerManager(Plugin):
                 deactivate_controllers=deactivate,
                 strictness=SwitchController.Request.STRICT,
                 activate_asap=False,
-                timeout=0.3,
+                timeout=self._switch_timeout,
             )
         except Exception as e:
             print(e)
@@ -631,7 +641,7 @@ class FontDelegate(QStyledItemDelegate):
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
-def _get_controller_type(node, node_name, ctrl_name):
+def _get_controller_type(node, node_name, ctrl_name, timeout):
     """
     Get the controller's type from the controller manager node with the call_get_parameter service.
 
@@ -639,19 +649,27 @@ def _get_controller_type(node, node_name, ctrl_name):
     @type node_name str
     @param ctrl_name Controller name
     @type ctrl_name str
-    @return Controller type
+    @param timeout Timeout (in seconds) for finding the service and for the response
+    @type timeout float
+    @return Controller type, empty if the service call failed
     @rtype str
     """
-    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
-    client = node.create_client(GetParameters, f"{node_name}/get_parameters")
-    if not client.wait_for_service(timeout_sec=5.0):
-        return ""
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
     request = GetParameters.Request()
     request.names = [ctrl_name]
-    future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
-    response = future.result()
-    return response.values[0].string_value if response and response.values else ""
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/get_parameters",
+            GetParameters,
+            request,
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return ""
+    return response.values[0].string_value if response.values else ""
 
 
 def _list_controller_managers(node):
@@ -675,17 +693,22 @@ def _list_controller_managers(node):
         raise
 
 
-def _get_parameter_controller_names(node, node_name):
+def _get_parameter_controller_names(node, node_name, timeout):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
-    # TODO(someone): Port to AsyncParameterClient and remove raw client once Humble support is dropped.
-    client = node.create_client(ListParameters, f"{node_name}/list_parameters")
-    if not client.wait_for_service(timeout_sec=5.0):
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/list_parameters",
+            ListParameters,
+            ListParameters.Request(),
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
         return []
-    request = ListParameters.Request()
-    future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
-    response = future.result()
-    names = response.result.names if response else []
+    names = response.result.names
 
     suffix = ".type"
     return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
