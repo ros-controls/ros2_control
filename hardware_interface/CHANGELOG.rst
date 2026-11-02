@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.13.0 (2026-11-02)
+-------------------
 * Fix data race on is_command_limited\_ between limiter and introspection sampler (`#3720 <https://github.com/ros-controls/ros2_control/issues/3720>`_)
 * Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
 * Use the pointers instead of reference in loaned interfaces (`#2634 <https://github.com/ros-controls/ros2_control/issues/2634>`_)

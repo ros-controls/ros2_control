@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.13.0 (2026-11-02)
+-------------------
 * Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
 * Contributors: Sai Kishor Kothakota
 

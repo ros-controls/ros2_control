@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.13.0 (2026-11-02)
+-------------------
 * fix(spawner): Allow empty arguments and add regression tests (`#3710 <https://github.com/ros-controls/ros2_control/issues/3710>`_)
 * Improve robustness of spawner tests (`#3541 <https://github.com/ros-controls/ros2_control/issues/3541>`_)
 * Fix SIGINT propagation to spawner by dropping shell=True in launch_utils (`#3682 <https://github.com/ros-controls/ros2_control/issues/3682>`_)

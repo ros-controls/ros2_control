@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.13.0 (2026-11-02)
+-------------------
 * Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
 * Fix conflicting declarations of HW_IF_ABSOLUTE_POSITION (Fixes `#3649 <https://github.com/ros-controls/ros2_control/issues/3649>`_) (`#3667 <https://github.com/ros-controls/ros2_control/issues/3667>`_)
 * Contributors: GG, Sai Kishor Kothakota

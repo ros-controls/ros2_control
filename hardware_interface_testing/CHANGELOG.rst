@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.13.0 (2026-11-02)
+-------------------
 * Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
 * Add GPIO interface validation tests (`#3553 <https://github.com/ros-controls/ros2_control/issues/3553>`_)
 * Contributors: Sai Kishor Kothakota, ktyang
