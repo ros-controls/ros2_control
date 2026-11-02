@@ -27,10 +27,12 @@ bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
   controller_manager::ControlLoopState & state)
 {
-  // Implement sleep logic for simulated time
+  // Sleep a relative period instead of waiting for `previous_time + period`: after a backward
+  // clock jump (e.g. a simulation reset) `previous_time` belongs to the old timeline, so that
+  // absolute deadline would block until the new timeline catches up.
   try
   {
-    cm->get_clock()->sleep_until(state.previous_time + state.period);
+    cm->get_clock()->sleep_for(rclcpp::Duration(state.period));
   }
   catch (const std::runtime_error & e)
   {

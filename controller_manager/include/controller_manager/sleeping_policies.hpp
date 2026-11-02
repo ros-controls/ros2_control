@@ -40,6 +40,16 @@ struct ControlLoopState
 };
 }  // namespace controller_manager
 
+/**
+ * Sleep for one control period on the controller manager's (simulated) ROS clock.
+ *
+ * The wait is relative to the current clock reading, so a backward clock jump (e.g. a simulation
+ * reset) does not block the control loop.
+ *
+ * \param cm Controller manager providing the clock.
+ * \param state Control loop state; only `period` is used.
+ * \return false if the sleep failed (e.g. the clock was shut down) and the loop should exit.
+ */
 bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
   controller_manager::ControlLoopState & state);
