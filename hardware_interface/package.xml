@@ -32,6 +32,8 @@
   <exec_depend>sdformat_urdf</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_index_cpp</test_depend>
+  <test_depend>libxml2</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
 
   <export>
