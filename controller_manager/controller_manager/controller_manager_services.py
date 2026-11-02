@@ -339,6 +339,31 @@ def cleanup_controller(
     )
 
 
+def _yaml_node_names(node, prefix: str = "") -> list:
+    """
+    Return every node name a parameter file defines, in YAML order.
+
+    A namespace can be written either as part of the node name or as a section that
+    encloses it:
+
+        /ns/controller:            /ns:
+          ros__parameters:           controller:
+            ...                        ros__parameters:
+                                         ...
+
+    Both describe the same node, so a lookup that only inspects the top level keys
+    misses the second form.
+    """
+    names = []
+    for key, value in (node or {}).items():
+        name = f"{prefix}/{key}" if prefix else key
+        names.append(name)
+        # A section is a level that holds node names, not parameters.
+        if isinstance(value, dict) and "ros__parameters" not in value:
+            names.extend(_yaml_node_names(value, name))
+    return names
+
+
 def get_params_files_with_controller_parameters(
     node, controller_name: str, namespace: str, parameter_files: list
 ):
@@ -352,7 +377,8 @@ def get_params_files_with_controller_parameters(
             )
             WILDCARD_KEY = "/**"
             ROS_PARAMS_KEY = "ros__parameters"
-            parameters = yaml.safe_load(f)
+            parameters = yaml.safe_load(f) or {}
+            declared_nodes = _yaml_node_names(parameters)
             # check for the parameter in 'controller_name' or 'namespaced_controller' or '/**/namespaced_controller' or '/**/controller_name'
             for key in [
                 controller_name,
@@ -362,7 +388,7 @@ def get_params_files_with_controller_parameters(
             ]:
                 if parameter_file in controller_parameter_files:
                     break
-                if key in parameters:
+                if key in declared_nodes:
                     if key == controller_name and namespace != "/":
                         node.get_logger().fatal(
                             f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
