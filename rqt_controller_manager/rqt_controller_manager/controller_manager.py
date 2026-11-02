@@ -186,6 +186,18 @@ class ControllerManager(Plugin):
         if cm_name:
             self._update_controllers()
             self._update_hw_components()
+        else:
+            self._controllers = []
+            self._show_controllers()
+            self._hw_components = []
+            self._show_hw_components()
+
+    def _deselect_cm(self, error):
+        """Deselect the controller manager, e.g., because it is not reachable anymore."""
+        self._node.get_logger().warning(
+            f"Deselecting controller manager '{self._cm_name}': {error}"
+        )
+        self._widget.cm_combo.setCurrentIndex(-1)
 
     def _update_controllers(self):
         if not self._cm_name:
@@ -197,6 +209,9 @@ class ControllerManager(Plugin):
         except Exception as e:
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_ctrl_list_timer.stop()
+                return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
                 return
             raise
 
@@ -216,26 +231,17 @@ class ControllerManager(Plugin):
         @rtype [str]
         """
         # Add loaded controllers first
-        try:
-            controllers = list_controllers(
-                self._node, self._cm_name, self._service_timeout
-            ).controller
+        timeout = self._service_timeout
+        controllers = list_controllers(self._node, self._cm_name, timeout, timeout).controller
 
-            # Append potential controller configs found in the node's parameters
-            for name in _get_parameter_controller_names(
-                self._node, self._cm_name, self._service_timeout
-            ):
-                add_ctrl = all(name != ctrl.name for ctrl in controllers)
-                if add_ctrl:
-                    type_str = _get_controller_type(
-                        self._node, self._cm_name, name, self._service_timeout
-                    )
-                    uninit_ctrl = ControllerState(name=name, type=type_str)
-                    controllers.append(uninit_ctrl)
-            return controllers
-        except RuntimeError as e:
-            print(e)
-            return []
+        # Append potential controller configs found in the node's parameters
+        for name in _get_parameter_controller_names(self._node, self._cm_name, timeout):
+            add_ctrl = all(name != ctrl.name for ctrl in controllers)
+            if add_ctrl:
+                type_str = _get_controller_type(self._node, self._cm_name, name, timeout)
+                uninit_ctrl = ControllerState(name=name, type=type_str)
+                controllers.append(uninit_ctrl)
+        return controllers
 
     def _show_controllers(self):
         ctrl_table_view = self._widget.ctrl_table_view
@@ -351,6 +357,9 @@ class ControllerManager(Plugin):
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_hw_components_list_timer.stop()
                 return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
+                return
             raise
 
         # Update controller display, if necessary
@@ -367,15 +376,8 @@ class ControllerManager(Plugin):
         the C{list_hardware_components} service
         @rtype [str]
         """
-        # Add loaded hw_components first
-        try:
-            hw_components = list_hardware_components(
-                self._node, self._cm_name, self._service_timeout
-            ).component
-            return hw_components
-        except RuntimeError as e:
-            print(e)
-            return []
+        timeout = self._service_timeout
+        return list_hardware_components(self._node, self._cm_name, timeout, timeout).component
 
     def _show_hw_components(self):
         hw_table_view = self._widget.hw_table_view
@@ -656,7 +658,7 @@ def _get_controller_type(node, node_name, ctrl_name, timeout):
     """
     # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
     request = GetParameters.Request()
-    request.names = [ctrl_name]
+    request.names = [f"{ctrl_name}.type"]
     try:
         response = service_caller(
             node,
