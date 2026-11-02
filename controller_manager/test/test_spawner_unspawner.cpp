@@ -812,6 +812,14 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
   //
   // "Parked" means the process is in state S and has consumed no CPU between two samples. A
   // fixed sleep would only move the race.
+  //
+  // The probe reads /proc and uses pgrep, so it is POSIX only. On Windows the spawner is a
+  // different process tree and this test is not meaningful there; the wait becomes a no-op and
+  // the previous behaviour is preserved.
+#ifdef _WIN32
+  const auto sample_state_and_ticks = [](std::string &) { return false; };
+  constexpr bool proc_available = false;
+#else
   const auto sample_state_and_ticks = [](std::string & out)
   {
     const char * cmd =
@@ -832,8 +840,10 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
     }
     return read_ok && !out.empty();
   };
+  constexpr bool proc_available = true;
+#endif
 
-  bool parked = false;
+  bool parked = !proc_available;
   for (int attempt = 0; attempt < 100 && !parked; ++attempt)
   {
     std::string first, second;
