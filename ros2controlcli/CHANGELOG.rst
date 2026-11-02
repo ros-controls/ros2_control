@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_) (`#3743 <https://github.com/ros-controls/ros2_control/issues/3743>`_)
+* Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3705 <https://github.com/ros-controls/ros2_control/issues/3705>`_)
+* Contributors: mergify[bot]
+
 5.19.0 (2026-10-05)
 -------------------
 

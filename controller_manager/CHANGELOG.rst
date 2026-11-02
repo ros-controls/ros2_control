@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_) (`#3743 <https://github.com/ros-controls/ros2_control/issues/3743>`_)
+* fix(spawner): Allow empty arguments and add regression tests (`#3710 <https://github.com/ros-controls/ros2_control/issues/3710>`_) (`#3731 <https://github.com/ros-controls/ros2_control/issues/3731>`_)
+* Improve robustness of spawner tests (`#3541 <https://github.com/ros-controls/ros2_control/issues/3541>`_) (`#3713 <https://github.com/ros-controls/ros2_control/issues/3713>`_)
+* Fix SIGINT propagation to spawner by dropping shell=True in launch_utils (`#3682 <https://github.com/ros-controls/ros2_control/issues/3682>`_) (`#3709 <https://github.com/ros-controls/ros2_control/issues/3709>`_)
+* Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3705 <https://github.com/ros-controls/ros2_control/issues/3705>`_)
+* Add <numeric> for std::accumulate (`#3677 <https://github.com/ros-controls/ros2_control/issues/3677>`_) (`#3681 <https://github.com/ros-controls/ros2_control/issues/3681>`_)
+* Contributors: mergify[bot]
+
 5.19.0 (2026-10-05)
 -------------------
 * Replace RT buffer with realtime thread safe box (`#3633 <https://github.com/ros-controls/ros2_control/issues/3633>`_) (`#3653 <https://github.com/ros-controls/ros2_control/issues/3653>`_)
