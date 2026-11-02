@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.50.0 (2026-11-02)
+-------------------
 * Add GPIO interface validation tests (`#3553 <https://github.com/ros-controls/ros2_control/issues/3553>`_) (`#3694 <https://github.com/ros-controls/ros2_control/issues/3694>`_)
 * Contributors: mergify[bot]
 

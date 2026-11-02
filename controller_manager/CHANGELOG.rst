@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.50.0 (2026-11-02)
+-------------------
 * refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_) (`#3742 <https://github.com/ros-controls/ros2_control/issues/3742>`_)
 * fix(spawner): Allow empty arguments and add regression tests (`#3710 <https://github.com/ros-controls/ros2_control/issues/3710>`_) (`#3730 <https://github.com/ros-controls/ros2_control/issues/3730>`_)
 * Improve robustness of spawner tests (`#3541 <https://github.com/ros-controls/ros2_control/issues/3541>`_) (`#3712 <https://github.com/ros-controls/ros2_control/issues/3712>`_)

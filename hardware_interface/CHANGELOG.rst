@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.50.0 (2026-11-02)
+-------------------
 * Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3704 <https://github.com/ros-controls/ros2_control/issues/3704>`_)
 * Fix missing libstatistics_collector library (`#3669 <https://github.com/ros-controls/ros2_control/issues/3669>`_) (`#3671 <https://github.com/ros-controls/ros2_control/issues/3671>`_)
 * Contributors: mergify[bot]

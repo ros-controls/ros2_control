@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.50.0 (2026-11-02)
+-------------------
 * Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3704 <https://github.com/ros-controls/ros2_control/issues/3704>`_)
 * Fix joint limit update reporting via ros parameter updates (`#3664 <https://github.com/ros-controls/ros2_control/issues/3664>`_) (`#3686 <https://github.com/ros-controls/ros2_control/issues/3686>`_)
 * Contributors: mergify[bot]
