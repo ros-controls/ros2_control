@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <future>
 #include <memory>
@@ -803,6 +804,50 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
     ASSERT_LT(std::chrono::steady_clock::now() - wait_start, std::chrono::seconds(10))
       << "Timed out waiting for ctrl_3 to become active";
   }
+
+  // Wait until the spawner is actually parked in its "Waiting until interrupt" loop before
+  // signalling. A SIGINT that lands while it is still finishing activation reaches a region the
+  // try/except does not cover yet, and the KeyboardInterrupt then escapes without cleanup: the
+  // spawner exits with the interrupt but never unloads, which is not what this test is about.
+  //
+  // "Parked" means the process is in state S and has consumed no CPU between two samples. A
+  // fixed sleep would only move the race.
+  const auto sample_state_and_ticks = [](std::string & out)
+  {
+    const char * cmd =
+      "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
+      "awk '{print $3, $14+$15}' /proc/$pid/stat 2>/dev/null";
+    FILE * pipe = popen(cmd, "r");
+    if (!pipe)
+    {
+      return false;
+    }
+    char buffer[64] = {0};
+    const bool read_ok = fgets(buffer, sizeof(buffer), pipe) != nullptr;
+    pclose(pipe);
+    out = buffer;
+    while (!out.empty() && (out.back() == '\n' || out.back() == ' '))
+    {
+      out.pop_back();
+    }
+    return read_ok && !out.empty();
+  };
+
+  bool parked = false;
+  for (int attempt = 0; attempt < 100 && !parked; ++attempt)
+  {
+    std::string first, second;
+    if (sample_state_and_ticks(first))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(150));
+      parked = sample_state_and_ticks(second) && first == second && second.rfind("S ", 0) == 0;
+    }
+    if (!parked)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
+  ASSERT_TRUE(parked) << "The spawner never parked in its wait-for-interrupt loop";
 
   // The pattern is anchored at the start so only the python process is signalled, not the
   // wrapping shell or timeout. The builtin kill loop keeps the signals microseconds apart.
