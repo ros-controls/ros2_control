@@ -2,6 +2,13 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix GPS status values when state-interface reads fail (backport `#3660 <https://github.com/ros-controls/ros2_control/issues/3660>`_) (`#3706 <https://github.com/ros-controls/ros2_control/issues/3706>`_)
+* Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3704 <https://github.com/ros-controls/ros2_control/issues/3704>`_)
+* fix(FTS): shutdown race with interfaces (`#3492 <https://github.com/ros-controls/ros2_control/issues/3492>`_) (`#3678 <https://github.com/ros-controls/ros2_control/issues/3678>`_)
+* Contributors: mergify[bot]
+
 4.49.0 (2026-10-05)
 -------------------
 

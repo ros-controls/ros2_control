@@ -2,6 +2,12 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3704 <https://github.com/ros-controls/ros2_control/issues/3704>`_)
+* Fix conflicting declarations of HW_IF_ABSOLUTE_POSITION (Fixes `#3649 <https://github.com/ros-controls/ros2_control/issues/3649>`_) (`#3667 <https://github.com/ros-controls/ros2_control/issues/3667>`_) (`#3688 <https://github.com/ros-controls/ros2_control/issues/3688>`_)
+* Contributors: mergify[bot]
+
 4.49.0 (2026-10-05)
 -------------------
 
