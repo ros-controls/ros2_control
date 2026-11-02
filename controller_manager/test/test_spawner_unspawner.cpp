@@ -806,12 +806,20 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
 
   // The pattern is anchored at the start so only the python process is signalled, not the
   // wrapping shell or timeout. The builtin kill loop keeps the signals microseconds apart.
+  //
+  // Only the lookup is asserted. The loop itself is expected to fail partway through: the
+  // spawner may finish its cleanup and be reaped while the signals are still being sent, and
+  // `kill` on a reaped pid returns non-zero. The exit status of a `for` loop is the status of
+  // its last command, so asserting it would make this test depend on the spawner outliving all
+  // 200 signals -- a timing assumption the test is not trying to make. What matters is that
+  // the signals were delivered and that the cleanup below still ran.
   EXPECT_EQ(
     std::system(
       "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
-      "for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done"),
+      "test -n \"$pid\" && "
+      "for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done; true"),
     0)
-    << "Failed to interrupt the spawner";
+    << "Failed to find the spawner process to interrupt";
 
   spawner_future.get();
 

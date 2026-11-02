@@ -378,15 +378,25 @@ def main(args=None):
     node = None
     lock = None
 
+    shutdown_requested = False
+
     def _on_shutdown_signal(signum, frame):
-        # Ignore further signals before raising, so a repeated SIGINT/SIGTERM cannot interrupt the
-        # cleanup below and leave controllers loaded.
+        # Disarm before touching the handlers. A nested signal can land between the two
+        # signal.signal() calls, or before the first one completes, and each of those would
+        # otherwise re-enter this function and raise a second KeyboardInterrupt out of the
+        # cleanup block, leaving the controllers loaded. The flag is set first so that any
+        # re-entry returns without raising, whichever of the two registrations got done.
+        nonlocal shutdown_requested
+        if shutdown_requested:
+            return
+        shutdown_requested = True
         try:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
         except (KeyboardInterrupt, Exception):
-            # A nested signal (or coverage's trace function) can interrupt the registration; the
-            # nested handler ignores the signals itself, so just carry on raising.
+            # A nested signal (or coverage's trace function) can interrupt the registration.
+            # The flag is already set, so the nested call returned without raising; carry on
+            # and raise the one KeyboardInterrupt this run is allowed.
             pass
         raise KeyboardInterrupt()
 
