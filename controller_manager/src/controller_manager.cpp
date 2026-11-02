@@ -683,6 +683,7 @@ void ControllerManager::init_controller_manager()
   periodicity_stats_.reset();
   recent_periodicity_stats_.set_window_size(
     static_cast<std::size_t>(params_->diagnostics.controller_manager.periodicity.window_size));
+  recent_periodicity_enabled_ = recent_periodicity_stats_.get_window_size() > 0;
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -3292,7 +3293,10 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 {
   const double periodicity = 1.0 / period.seconds();
   periodicity_stats_.add_measurement(periodicity);
-  recent_periodicity_stats_.add_measurement(periodicity);
+  if (recent_periodicity_enabled_)
+  {
+    recent_periodicity_stats_.add_measurement(periodicity);
+  }
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -4789,7 +4793,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   stat.add(periodicity_stat_name + ".max", std::to_string(cm_stats.max));
 
   auto judged_stats = cm_stats;
-  if (recent_periodicity_stats_.get_window_size() > 0)
+  if (recent_periodicity_enabled_)
   {
     const auto recent_stats = recent_periodicity_stats_.get_statistics();
     const std::string recent_stat_name = periodicity_stat_name + ".recent";

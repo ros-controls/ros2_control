@@ -220,11 +220,11 @@ private:
  * statistics once `window_size` newer samples have arrived, so they describe the recent behaviour
  * rather than the whole history.
  *
- *  The samples live in a ring buffer allocated by set_window_size(), so add_measurement() never
- * allocates. It keeps a running sum and sum of squares for the average and standard deviation, and
- * rescans the window (O(window_size)) only when the evicted sample was the current minimum or
- * maximum, or when the ring wraps. The wrap rescan stops rounding error from accumulating in the
- * running sums over a long run, and keeps add_measurement() amortized O(1).
+ *  All storage is allocated by set_window_size(), so add_measurement() never allocates.
+ * Minimum and maximum come from monotonic queues of sample indices, so add_measurement() is
+ * amortized O(1) for any input, including constant or monotonic signals. The average and standard
+ * deviation use a running sum and sum of squares, which are recomputed from the window once per
+ * `window_size` samples (O(window_size), amortized O(1)) to stop rounding error from accumulating.
  *
  *  A window size of 0 disables the collector: add_measurement() is a no-op and the statistics stay
  * NaN. When statistics are not available, e.g. no observations have been made, NaNs are returned.
@@ -248,6 +248,8 @@ public:
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     samples_.assign(window_size, 0.0);
+    min_queue_.resize(window_size);
+    max_queue_.resize(window_size);
     reset_locked();
   }
 
@@ -281,33 +283,32 @@ public:
       return;
     }
 
-    bool rescan = false;
+    const uint64_t index = total_;
+    const std::size_t slot = static_cast<std::size_t>(index % capacity);
     if (count_ == capacity)
     {
-      const double evicted = samples_[next_];
+      const double evicted = samples_[slot];
       sum_ -= evicted;
       sum_of_squares_ -= evicted * evicted;
-      rescan = evicted <= min_ || evicted >= max_;
     }
     else
     {
       ++count_;
     }
+    samples_[slot] = item;
+    ++total_;
 
-    samples_[next_] = item;
-    next_ = (next_ + 1) % capacity;
-    rescan = rescan || next_ == 0;
+    min_queue_.push(index, samples_, capacity, total_, [](double a, double b) { return a >= b; });
+    max_queue_.push(index, samples_, capacity, total_, [](double a, double b) { return a <= b; });
 
-    if (rescan)
+    if (slot == capacity - 1)
     {
-      recompute();
+      recompute_sums();
     }
     else
     {
       sum_ += item;
       sum_of_squares_ += item * item;
-      min_ = std::min(min_, item);
-      max_ = std::max(max_, item);
     }
   }
 
@@ -329,10 +330,11 @@ public:
       data.standard_deviation = std::numeric_limits<double>::quiet_NaN();
       return data;
     }
+    const std::size_t capacity = samples_.size();
     const double n = static_cast<double>(count_);
     data.average = sum_ / n;
-    data.min = min_;
-    data.max = max_;
+    data.min = samples_[static_cast<std::size_t>(min_queue_.front() % capacity)];
+    data.max = samples_[static_cast<std::size_t>(max_queue_.front() % capacity)];
     // Floating-point cancellation can leave a tiny negative variance for a near-constant signal.
     data.standard_deviation =
       std::sqrt(std::max(0.0, sum_of_squares_ / n - data.average * data.average));
@@ -346,41 +348,86 @@ public:
   }
 
 private:
+  /**
+   *  Indices of the window's samples whose values are monotonic from front to back, held in a ring
+   * of `window_size` slots. The front is the window's extreme. Each index is pushed and popped at
+   * most once, so pushes are amortized O(1).
+   */
+  class MonotonicIndexQueue
+  {
+  public:
+    void resize(std::size_t capacity) { indices_.assign(capacity, 0); }
+
+    void clear()
+    {
+      head_ = 0;
+      size_ = 0;
+    }
+
+    uint64_t front() const { return indices_[head_]; }
+
+    /// `dominates(a, b)` is true when a newer sample `b` makes an older sample `a` irrelevant.
+    template <typename Dominates>
+    void push(
+      uint64_t index, const std::vector<double> & samples, std::size_t capacity, uint64_t total,
+      Dominates dominates)
+    {
+      const uint64_t oldest_in_window = total > capacity ? total - capacity : 0;
+      while (size_ > 0 && indices_[head_] < oldest_in_window)
+      {
+        head_ = (head_ + 1) % capacity;
+        --size_;
+      }
+      const double value = samples[static_cast<std::size_t>(index % capacity)];
+      while (size_ > 0)
+      {
+        const uint64_t back = indices_[(head_ + size_ - 1) % capacity];
+        if (!dominates(samples[static_cast<std::size_t>(back % capacity)], value))
+        {
+          break;
+        }
+        --size_;
+      }
+      indices_[(head_ + size_) % capacity] = index;
+      ++size_;
+    }
+
+  private:
+    std::vector<uint64_t> indices_;
+    std::size_t head_ = 0;
+    std::size_t size_ = 0;
+  };
+
   void reset_locked()
   {
     count_ = 0;
-    next_ = 0;
+    total_ = 0;
     sum_ = 0.0;
     sum_of_squares_ = 0.0;
-    min_ = std::numeric_limits<double>::max();
-    max_ = std::numeric_limits<double>::lowest();
+    min_queue_.clear();
+    max_queue_.clear();
   }
 
-  // The filled slots are always [0, count_): the ring only starts overwriting once it is full.
-  void recompute()
+  // Called when the ring is full, so every slot holds a sample of the current window.
+  void recompute_sums()
   {
     sum_ = 0.0;
     sum_of_squares_ = 0.0;
-    min_ = std::numeric_limits<double>::max();
-    max_ = std::numeric_limits<double>::lowest();
-    for (std::size_t i = 0; i < count_; ++i)
+    for (const double sample : samples_)
     {
-      const double sample = samples_[i];
       sum_ += sample;
       sum_of_squares_ += sample * sample;
-      min_ = std::min(min_, sample);
-      max_ = std::max(max_, sample);
     }
   }
 
   mutable DEFAULT_MUTEX mutex_;
   std::vector<double> samples_;
+  MonotonicIndexQueue min_queue_;
+  MonotonicIndexQueue max_queue_;
   std::size_t count_ = 0;
-  std::size_t next_ = 0;
+  uint64_t total_ = 0;
   double sum_ = 0.0;
   double sum_of_squares_ = 0.0;
-  double min_ = std::numeric_limits<double>::max();
-  double max_ = std::numeric_limits<double>::lowest();
 };
 
 /**

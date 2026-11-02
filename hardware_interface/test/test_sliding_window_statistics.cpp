@@ -14,7 +14,9 @@
 
 #include <gmock/gmock.h>
 
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <random>
 #include <vector>
@@ -158,6 +160,54 @@ TEST(TestSlidingWindowStatistics, matches_reference_over_a_long_random_run)
       EXPECT_NEAR(data.standard_deviation, expected.standard_deviation, 1e-6);
     }
   }
+}
+
+TEST(TestSlidingWindowStatistics, matches_reference_for_degenerate_inputs)
+{
+  constexpr std::size_t window = 16;
+  const std::vector<std::function<double(int)>> signals = {
+    [](int) { return 500.0; },
+    [](int i) { return static_cast<double>(i); },
+    [](int i) { return -static_cast<double>(i); },
+    [](int i) { return static_cast<double>(i % 7); },
+  };
+  for (const auto & signal : signals)
+  {
+    SlidingWindowStatistics stats(window);
+    std::vector<double> all;
+    for (int i = 0; i < 200; ++i)
+    {
+      all.push_back(signal(i));
+      stats.add_measurement(all.back());
+      const std::size_t n = std::min(all.size(), window);
+      const auto expected = reference(std::vector<double>(all.end() - n, all.end()));
+      const auto data = stats.get_statistics();
+      ASSERT_EQ(data.sample_count, n);
+      ASSERT_DOUBLE_EQ(data.min, expected.min) << "sample " << i;
+      ASSERT_DOUBLE_EQ(data.max, expected.max) << "sample " << i;
+      ASSERT_NEAR(data.average, expected.average, 1e-9) << "sample " << i;
+    }
+  }
+}
+
+TEST(TestSlidingWindowStatistics, constant_input_does_not_rescan_the_window)
+{
+  // With a rescan on every eviction of an extreme, constant input would cost O(window) per sample.
+  const auto time_per_sample = [](std::size_t window)
+  {
+    SlidingWindowStatistics stats(window);
+    constexpr int samples = 200000;
+    const auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < samples; ++i)
+    {
+      stats.add_measurement(500.0);
+    }
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() /
+           samples;
+  };
+  const double small = time_per_sample(16);
+  const double large = time_per_sample(16384);
+  EXPECT_LT(large, 20.0 * small) << "per-sample cost grows with the window size";
 }
 
 TEST(TestSlidingWindowStatistics, non_finite_samples_are_ignored)
