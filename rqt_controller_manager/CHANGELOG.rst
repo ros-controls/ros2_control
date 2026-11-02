@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.20.0 (2026-11-02)
+-------------------
 * Deselect unreachable controller manager in rqt_controller_manager (`#3725 <https://github.com/ros-controls/ros2_control/issues/3725>`_) (`#3741 <https://github.com/ros-controls/ros2_control/issues/3741>`_)
 * Fix controller type lookup in rqt_controller_manager (`#3723 <https://github.com/ros-controls/ros2_control/issues/3723>`_) (`#3738 <https://github.com/ros-controls/ros2_control/issues/3738>`_)
 * Fix hang and client leak in rqt_controller_manager parameter calls (`#3722 <https://github.com/ros-controls/ros2_control/issues/3722>`_) (`#3735 <https://github.com/ros-controls/ros2_control/issues/3735>`_)

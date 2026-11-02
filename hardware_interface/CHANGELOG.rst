@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.20.0 (2026-11-02)
+-------------------
 * Use the pointers instead of reference in loaned interfaces (`#2634 <https://github.com/ros-controls/ros2_control/issues/2634>`_) (`#3703 <https://github.com/ros-controls/ros2_control/issues/3703>`_)
 * Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3705 <https://github.com/ros-controls/ros2_control/issues/3705>`_)
 * Fix missing libstatistics_collector library (`#3669 <https://github.com/ros-controls/ros2_control/issues/3669>`_) (`#3672 <https://github.com/ros-controls/ros2_control/issues/3672>`_)
