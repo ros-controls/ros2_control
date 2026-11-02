@@ -19,10 +19,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #include "hardware_interface/introspection.hpp"
 #include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
@@ -210,6 +212,175 @@ private:
   StatisticData statistics_data_;
   double current_measurement_ = std::numeric_limits<double>::quiet_NaN();
   double sum_of_square_diff_from_mean_ = 0.0;
+};
+
+/**
+ *  Statistics over the most recent `window_size` finite samples: average, minimum, maximum and
+ * standard deviation (population). Unlike MovingAverageStatistics, an old outlier leaves the
+ * statistics once `window_size` newer samples have arrived, so they describe the recent behaviour
+ * rather than the whole history.
+ *
+ *  The samples live in a ring buffer allocated by set_window_size(), so add_measurement() never
+ * allocates. It keeps a running sum and sum of squares for the average and standard deviation, and
+ * rescans the window (O(window_size)) only when the evicted sample was the current minimum or
+ * maximum, or when the ring wraps. The wrap rescan stops rounding error from accumulating in the
+ * running sums over a long run, and keeps add_measurement() amortized O(1).
+ *
+ *  A window size of 0 disables the collector: add_measurement() is a no-op and the statistics stay
+ * NaN. When statistics are not available, e.g. no observations have been made, NaNs are returned.
+ */
+class SlidingWindowStatistics
+{
+public:
+  using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+
+  SlidingWindowStatistics() { reset_locked(); }
+
+  explicit SlidingWindowStatistics(std::size_t window_size) { set_window_size(window_size); }
+
+  /**
+   *  Set the number of samples the statistics are computed over, and clear the window. Allocates;
+   * call it outside the real-time loop.
+   *
+   *  @param window_size Number of most recent samples to keep. 0 disables the collector.
+   */
+  void set_window_size(std::size_t window_size)
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    samples_.assign(window_size, 0.0);
+    reset_locked();
+  }
+
+  std::size_t get_window_size() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    return samples_.size();
+  }
+
+  /**
+   *  Clear the window, keeping its size.
+   */
+  void reset()
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    reset_locked();
+  }
+
+  /**
+   *  Observe a sample. Once the window is full, the oldest sample is evicted.
+   *  Note: any input values of NaN or infinity will be discarded and not added as a measurement.
+   *
+   *  @param item The item that was observed
+   */
+  void add_measurement(const double item)
+  {
+    std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
+    const std::size_t capacity = samples_.size();
+    if (capacity == 0 || !std::isfinite(item))
+    {
+      return;
+    }
+
+    bool rescan = false;
+    if (count_ == capacity)
+    {
+      const double evicted = samples_[next_];
+      sum_ -= evicted;
+      sum_of_squares_ -= evicted * evicted;
+      rescan = evicted <= min_ || evicted >= max_;
+    }
+    else
+    {
+      ++count_;
+    }
+
+    samples_[next_] = item;
+    next_ = (next_ + 1) % capacity;
+    rescan = rescan || next_ == 0;
+
+    if (rescan)
+    {
+      recompute();
+    }
+    else
+    {
+      sum_ += item;
+      sum_of_squares_ += item * item;
+      min_ = std::min(min_, item);
+      max_ = std::max(max_, item);
+    }
+  }
+
+  /**
+   *  Return a StatisticData object, containing average, minimum, maximum, standard deviation
+   * (population) and sample count over the current window. For an empty window, the average, min,
+   * max and standard deviation are NaN.
+   */
+  StatisticData get_statistics() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    StatisticData data;
+    data.sample_count = count_;
+    if (count_ == 0)
+    {
+      data.average = std::numeric_limits<double>::quiet_NaN();
+      data.min = std::numeric_limits<double>::quiet_NaN();
+      data.max = std::numeric_limits<double>::quiet_NaN();
+      data.standard_deviation = std::numeric_limits<double>::quiet_NaN();
+      return data;
+    }
+    const double n = static_cast<double>(count_);
+    data.average = sum_ / n;
+    data.min = min_;
+    data.max = max_;
+    // Floating-point cancellation can leave a tiny negative variance for a near-constant signal.
+    data.standard_deviation =
+      std::sqrt(std::max(0.0, sum_of_squares_ / n - data.average * data.average));
+    return data;
+  }
+
+  uint64_t get_count() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    return count_;
+  }
+
+private:
+  void reset_locked()
+  {
+    count_ = 0;
+    next_ = 0;
+    sum_ = 0.0;
+    sum_of_squares_ = 0.0;
+    min_ = std::numeric_limits<double>::max();
+    max_ = std::numeric_limits<double>::lowest();
+  }
+
+  // The filled slots are always [0, count_): the ring only starts overwriting once it is full.
+  void recompute()
+  {
+    sum_ = 0.0;
+    sum_of_squares_ = 0.0;
+    min_ = std::numeric_limits<double>::max();
+    max_ = std::numeric_limits<double>::lowest();
+    for (std::size_t i = 0; i < count_; ++i)
+    {
+      const double sample = samples_[i];
+      sum_ += sample;
+      sum_of_squares_ += sample * sample;
+      min_ = std::min(min_, sample);
+      max_ = std::max(max_, sample);
+    }
+  }
+
+  mutable DEFAULT_MUTEX mutex_;
+  std::vector<double> samples_;
+  std::size_t count_ = 0;
+  std::size_t next_ = 0;
+  double sum_ = 0.0;
+  double sum_of_squares_ = 0.0;
+  double min_ = std::numeric_limits<double>::max();
+  double max_ = std::numeric_limits<double>::lowest();
 };
 
 /**

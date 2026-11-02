@@ -731,6 +731,7 @@ private:
   ControllerManagerExecutionTime execution_time_;
 
   controller_manager::MovingAverageStatistics periodicity_stats_;
+  ros2_control::SlidingWindowStatistics recent_periodicity_stats_;
 
   struct SwitchParams
   {
