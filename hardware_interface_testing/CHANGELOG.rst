@@ -2,6 +2,12 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Add GPIO interface validation tests (`#3553 <https://github.com/ros-controls/ros2_control/issues/3553>`_)
+* Contributors: Sai Kishor Kothakota, ktyang
+
 6.12.0 (2026-10-07)
 -------------------
 * Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)

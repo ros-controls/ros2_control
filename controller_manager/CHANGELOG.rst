@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix(spawner): Allow empty arguments and add regression tests (`#3710 <https://github.com/ros-controls/ros2_control/issues/3710>`_)
+* Improve robustness of spawner tests (`#3541 <https://github.com/ros-controls/ros2_control/issues/3541>`_)
+* Fix SIGINT propagation to spawner by dropping shell=True in launch_utils (`#3682 <https://github.com/ros-controls/ros2_control/issues/3682>`_)
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Add <numeric> for std::accumulate (`#3677 <https://github.com/ros-controls/ros2_control/issues/3677>`_)
+* Update migration notes and docs wrt removed export apis (`#3674 <https://github.com/ros-controls/ros2_control/issues/3674>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota
+
 6.12.0 (2026-10-07)
 -------------------
 

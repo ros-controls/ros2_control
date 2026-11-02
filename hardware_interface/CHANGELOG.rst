@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix data race on is_command_limited\_ between limiter and introspection sampler (`#3720 <https://github.com/ros-controls/ros2_control/issues/3720>`_)
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Use the pointers instead of reference in loaned interfaces (`#2634 <https://github.com/ros-controls/ros2_control/issues/2634>`_)
+* Update migration notes and docs wrt removed export apis (`#3674 <https://github.com/ros-controls/ros2_control/issues/3674>`_)
+* Fix missing libstatistics_collector library (`#3669 <https://github.com/ros-controls/ros2_control/issues/3669>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota, mosfet80
+
 6.12.0 (2026-10-07)
 -------------------
 * Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
