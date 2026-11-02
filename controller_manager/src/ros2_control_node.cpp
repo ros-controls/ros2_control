@@ -145,7 +145,7 @@ int main(int argc, char ** argv)
       state.previous_time = cm->get_trigger_clock()->now();
       std::this_thread::sleep_for(state.period);
       state.next_iteration_time = std::chrono::steady_clock::now();
-      while (rclcpp::ok())
+      while (rclcpp::ok() && !cm->is_shutting_down())
       {
         // calculate measured period
         auto const current_time = cm->get_trigger_clock()->now();
