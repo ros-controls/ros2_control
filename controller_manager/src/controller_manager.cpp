@@ -2526,6 +2526,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   controller_chained_reference_interfaces_cache_[controller.info.name] = {};
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
+  controller.recent_periodicity_statistics->set_window_duration(
+    params_->diagnostics.controllers.periodicity.window_duration);
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -2764,6 +2766,7 @@ void ControllerManager::activate_controllers(
     try
     {
       found_it->periodicity_statistics->reset();
+      found_it->recent_periodicity_statistics->reset();
       found_it->execution_time_statistics->reset();
       new_state = controller->get_node()->activate();
     }
@@ -3495,8 +3498,10 @@ controller_interface::return_type ControllerManager::update(
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
-            loaded_controller.periodicity_statistics->add_measurement(
-              1.0 / trigger_result.period.value().seconds());
+            const double periodicity = 1.0 / trigger_result.period.value().seconds();
+            loaded_controller.periodicity_statistics->add_measurement(periodicity);
+            loaded_controller.recent_periodicity_statistics->add_measurement(
+              periodicity, current_time.seconds());
           }
         }
         catch (const std::exception & e)
@@ -4502,12 +4507,28 @@ void ControllerManager::controller_activity_diagnostic_callback(
           controllers[i].info.name + periodicity_suffix,
           make_stats_string(periodicity_stats, "Hz") +
             " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
+        // With a window, judge the recent periodicity so that an old outlier doesn't hold the level
+        auto judged_periodicity_stats = periodicity_stats;
+        const auto & recent_statistics = controllers[i].recent_periodicity_statistics;
+        if (recent_statistics->is_enabled())
+        {
+          const auto recent_stats = recent_statistics->get_statistics();
+          stat.add(
+            controllers[i].info.name + periodicity_suffix + ".recent",
+            make_stats_string(recent_stats, "Hz") +
+              fmt::format(" over the last {} s", recent_statistics->get_window_duration()));
+          if (recent_stats.sample_count > 0)
+          {
+            judged_periodicity_stats = recent_stats;
+          }
+        }
         const double periodicity_error = std::abs(
-          periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
+          judged_periodicity_stats.average -
+          static_cast<double>(controllers[i].c->get_update_rate()));
         if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.error ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -4516,7 +4537,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
         else if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.warn ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.warn)
         {
           if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)

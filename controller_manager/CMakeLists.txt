@@ -196,6 +196,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_controller_manager_periodicity_diagnostics
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
