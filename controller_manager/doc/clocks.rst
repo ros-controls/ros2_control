@@ -18,5 +18,6 @@ The reason behind using different clocks is to avoid the issues related to the e
 Simulation time resets
 ----------------------
 
-When ``use_sim_time`` is true and the simulation clock jumps backwards (e.g. a simulation reset), the ``ros2_control_node`` does not stall: it sleeps for a relative period instead of waiting for a deadline on the old timeline. The ``period`` passed to ``read``, ``update`` and ``write`` and to each controller's ``update`` on the transition cycle is replaced by the nominal period, so it is never negative.
-The jump itself is not otherwise handled: stateful controllers should still be deactivated and re-activated after a simulation reset.
+When ``use_sim_time`` is true and the simulation clock jumps backwards (e.g. a simulation reset), the ``ros2_control_node`` does not stall: it sleeps for a relative period instead of waiting for a deadline on the old timeline.
+The ``period`` passed to ``read``, ``update`` and ``write`` on the transition cycle is replaced by the nominal period, so it is never negative.
+Controllers running at the update rate of the controller manager receive that nominal period on the transition cycle as well. Controllers with a lower update rate are not updated on that cycle and their period restarts on the new timeline, as the nominal period would not be a measurement for them.

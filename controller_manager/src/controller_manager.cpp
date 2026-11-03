@@ -3453,14 +3453,22 @@ controller_interface::return_type ControllerManager::update(
         (*loaded_controller.last_update_cycle_time ==
          rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
       const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
-      // A negative difference means the clock jumped backwards (e.g. a simulation reset). Fall back
-      // to the nominal period so controllers never integrate over a negative dt.
+      // A negative difference means the clock jumped backwards (e.g. a simulation reset), so the
+      // real period is unknown. A controller running at the manager rate gets the (nominal) manager
+      // period, which is close to what it would have measured. For slower controllers the nominal
+      // period is not a measurement, so the cycle is skipped and their timeline restarted here.
       const bool clock_jumped_back =
         !first_update_cycle && current_time < *loaded_controller.last_update_cycle_time;
       RCLCPP_WARN_EXPRESSION(
-        get_logger(), clock_jumped_back,
-        "The clock jumped backwards for controller '%s'. Using the nominal period for this cycle.",
-        loaded_controller.info.name.c_str());
+        get_logger(), clock_jumped_back, "The clock jumped backwards for controller '%s'. %s",
+        loaded_controller.info.name.c_str(),
+        run_controller_at_cm_rate ? "Using the nominal period for this cycle."
+                                  : "Skipping this cycle and restarting its period.");
+      if (clock_jumped_back && !run_controller_at_cm_rate)
+      {
+        *loaded_controller.last_update_cycle_time = current_time;
+        continue;
+      }
       const auto controller_actual_period =
         (first_update_cycle || clock_jumped_back)
           ? controller_period
