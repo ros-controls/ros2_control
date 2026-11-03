@@ -320,8 +320,10 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
     // overruns
     if (trigger_result.cycle_period.has_value())
     {
-      read_statistics_.periodicity->add_measurement(
-        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count()));
+      const double periodicity =
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count());
+      read_statistics_.periodicity->add_measurement(periodicity);
+      read_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
     }
     if (trigger_result.successful)
     {
@@ -361,8 +363,10 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     // overruns
     if (trigger_result.cycle_period.has_value())
     {
-      write_statistics_.periodicity->add_measurement(
-        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count()));
+      const double periodicity =
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count());
+      write_statistics_.periodicity->add_measurement(periodicity);
+      write_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
     }
     if (trigger_result.successful)
     {
