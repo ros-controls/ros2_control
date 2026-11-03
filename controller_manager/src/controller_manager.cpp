@@ -526,6 +526,40 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/sample_count");
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
+
+using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+
+std::string make_stats_string(
+  const StatisticData & statistics_data, const std::string & measurement_unit)
+{
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);
+  oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+      << statistics_data.max << "] " << measurement_unit
+      << ", StdDev: " << statistics_data.standard_deviation;
+  return oss.str();
+}
+
+/**
+ * Report the periodicity over the recent window under @p key, if the window is enabled, and return
+ * the statistics the periodicity diagnostic level is judged on: the recent ones when the window has
+ * samples, so that an old outlier (e.g. a slow cycle at bring-up) doesn't hold the level in
+ * WARN/ERROR, otherwise @p since_start.
+ */
+StatisticData report_and_select_periodicity(
+  diagnostic_updater::DiagnosticStatusWrapper & stat, const std::string & key,
+  const StatisticData & since_start, const ros2_control::TimeWindowStatistics * recent)
+{
+  if (!recent || !recent->is_enabled())
+  {
+    return since_start;
+  }
+  const auto recent_stats = recent->get_statistics();
+  stat.add(
+    key, make_stats_string(recent_stats, "Hz") +
+           fmt::format(" over the last {} s", recent->get_window_duration()));
+  return recent_stats.sample_count > 0 ? recent_stats : since_start;
+}
 }  // namespace
 
 namespace controller_manager
@@ -4470,17 +4504,6 @@ void ControllerManager::controller_activity_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4509,21 +4532,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
           controllers[i].info.name + periodicity_suffix,
           make_stats_string(periodicity_stats, "Hz") +
             " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
-        // With a window, judge the recent periodicity so that an old outlier doesn't hold the level
-        auto judged_periodicity_stats = periodicity_stats;
-        const auto & recent_statistics = controllers[i].recent_periodicity_statistics;
-        if (recent_statistics->is_enabled())
-        {
-          const auto recent_stats = recent_statistics->get_statistics();
-          stat.add(
-            controllers[i].info.name + periodicity_suffix + ".recent",
-            make_stats_string(recent_stats, "Hz") +
-              fmt::format(" over the last {} s", recent_statistics->get_window_duration()));
-          if (recent_stats.sample_count > 0)
-          {
-            judged_periodicity_stats = recent_stats;
-          }
-        }
+        const auto judged_periodicity_stats = report_and_select_periodicity(
+          stat, controllers[i].info.name + periodicity_suffix + ".recent", periodicity_stats,
+          controllers[i].recent_periodicity_statistics.get());
         const double periodicity_error = std::abs(
           judged_periodicity_stats.average -
           static_cast<double>(controllers[i].c->get_update_rate()));
@@ -4666,17 +4677,6 @@ void ControllerManager::hardware_components_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4688,11 +4688,10 @@ void ControllerManager::hardware_components_diagnostic_callback(
     stat.add(component_name + state_suffix, component_info.state.label());
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
-      auto update_stats =
-        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string, this](
-          const std::string & comp_name, const auto & statistics,
-          const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
-          const auto & params)
+      auto update_stats = [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, this](
+                            const std::string & comp_name, const auto & statistics,
+                            const std::string & statistics_type_suffix, auto & diag_level,
+                            const auto & comp_info, const auto & params)
       {
         if (!statistics)
         {
@@ -4714,22 +4713,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
             comp_name + statistics_type_suffix + periodicity_suffix,
             make_stats_string(periodicity_stats, "Hz") +
               " -> Desired : " + std::to_string(comp_info.rw_rate) + " Hz");
-          // With a window, judge the recent periodicity so that an old outlier doesn't hold the
-          // level
-          auto judged_periodicity_stats = periodicity_stats;
-          const auto & recent_statistics = statistics->recent_periodicity;
-          if (recent_statistics && recent_statistics->is_enabled())
-          {
-            const auto recent_stats = recent_statistics->get_statistics();
-            stat.add(
-              comp_name + statistics_type_suffix + periodicity_suffix + ".recent",
-              make_stats_string(recent_stats, "Hz") +
-                fmt::format(" over the last {} s", recent_statistics->get_window_duration()));
-            if (recent_stats.sample_count > 0)
-            {
-              judged_periodicity_stats = recent_stats;
-            }
-          }
+          const auto judged_periodicity_stats = report_and_select_periodicity(
+            stat, comp_name + statistics_type_suffix + periodicity_suffix + ".recent",
+            periodicity_stats, statistics->recent_periodicity.get());
           const double periodicity_error =
             std::abs(judged_periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
           if (
