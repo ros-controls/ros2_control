@@ -35,12 +35,32 @@ constexpr double WINDOW_DURATION = 1.0;
 const char CM_ACTIVITY[] = "Controller Manager Activity";
 const char CONTROLLERS_ACTIVITY[] = "Controllers Activity";
 const char HARDWARE_ACTIVITY[] = "Hardware Components Activity";
-// From hardware_resources_with_different_rw_rates
+// Two actuators at half the CM rate, so that their periodicity is diagnosed and loading the second
+// one moves the first one within its container
 const char HARDWARE_NAME[] = "TestActuatorHardware";
+const char SECOND_HARDWARE_NAME[] = "TestActuatorHardware2";
 constexpr int HARDWARE_RW_RATE = 50;
-const auto HARDWARE_URDF = std::string(ros2_control_test_assets::urdf_head) +
-                           ros2_control_test_assets::hardware_resources_with_different_rw_rates +
-                           ros2_control_test_assets::urdf_tail;
+std::string actuator(const std::string & name, const std::string & joint)
+{
+  return R"(
+  <ros2_control name=")" +
+         name + R"(" type="actuator" rw_rate="50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name=")" +
+         joint + R"(">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+}
+const auto HARDWARE_URDF =
+  std::string(ros2_control_test_assets::urdf_head) + actuator(HARDWARE_NAME, "joint1") +
+  actuator(SECOND_HARDWARE_NAME, "joint2") + ros2_control_test_assets::urdf_tail;
 constexpr int CONTROLLER_UPDATE_RATE = UPDATE_RATE / 2;
 
 std::map<std::string, std::string> values(const diagnostic_msgs::msg::DiagnosticStatus & status)
@@ -355,14 +375,6 @@ TEST_F(
 TEST_F(
   TestHardwarePeriodicityDiagnosticsWithWindow, hardware_read_and_write_feed_the_recent_periodicity)
 {
-  const auto & info = cm_->get_hardware_info(HARDWARE_NAME);
-  ASSERT_TRUE(info.read_statistics->recent_periodicity);
-  ASSERT_TRUE(info.write_statistics->recent_periodicity);
-  EXPECT_DOUBLE_EQ(
-    info.read_statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION);
-  EXPECT_DOUBLE_EQ(
-    info.write_statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION);
-
   // The resource manager runs the hardware cycles on its own clock, so let real time pass
   const auto period = rclcpp::Duration::from_seconds(1.0 / UPDATE_RATE);
   for (int i = 0; i < UPDATE_RATE / 4; ++i)
@@ -373,11 +385,18 @@ TEST_F(
     cm_->write(time_, period);
   }
   // A quarter of a second of cycles, all within the window
-  for (const auto & statistics : {info.read_statistics, info.write_statistics})
+  for (const std::string name : {HARDWARE_NAME, SECOND_HARDWARE_NAME})
   {
-    const auto recent = statistics->recent_periodicity->get_statistics();
-    EXPECT_GT(recent.sample_count, 0u);
-    EXPECT_EQ(recent.sample_count, statistics->periodicity.get_statistics().sample_count);
+    const auto & info = cm_->get_hardware_info(name);
+    for (const auto & statistics : {info.read_statistics, info.write_statistics})
+    {
+      ASSERT_TRUE(statistics->recent_periodicity) << name;
+      EXPECT_DOUBLE_EQ(statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION)
+        << name;
+      const auto recent = statistics->recent_periodicity->get_statistics();
+      EXPECT_GT(recent.sample_count, 0u) << name;
+      EXPECT_EQ(recent.sample_count, statistics->periodicity.get_statistics().sample_count) << name;
+    }
   }
 }
 

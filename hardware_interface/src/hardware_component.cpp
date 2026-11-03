@@ -44,6 +44,11 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.component_mutex_);
   impl_ = std::move(other.impl_);
+  // Keep the same collectors: the resource manager shares them with the component's info (e.g.
+  // recent_periodicity) when loading, before the component may be moved by a vector reallocation.
+  // They are copied rather than moved so that the moved-from object keeps valid collectors.
+  read_statistics_ = other.read_statistics_;
+  write_statistics_ = other.write_statistics_;
   last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
