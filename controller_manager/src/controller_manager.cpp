@@ -838,6 +838,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
+  params.hardware_components_periodicity_window_duration =
+    params_->diagnostics.hardware_components.periodicity.window_duration;
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
@@ -4712,13 +4714,30 @@ void ControllerManager::hardware_components_diagnostic_callback(
             comp_name + statistics_type_suffix + periodicity_suffix,
             make_stats_string(periodicity_stats, "Hz") +
               " -> Desired : " + std::to_string(comp_info.rw_rate) + " Hz");
+          // With a window, judge the recent periodicity so that an old outlier doesn't hold the
+          // level
+          auto judged_periodicity_stats = periodicity_stats;
+          const auto & recent_statistics = statistics->recent_periodicity;
+          if (recent_statistics && recent_statistics->is_enabled())
+          {
+            const auto recent_stats = recent_statistics->get_statistics();
+            stat.add(
+              comp_name + statistics_type_suffix + periodicity_suffix + ".recent",
+              make_stats_string(recent_stats, "Hz") +
+                fmt::format(" over the last {} s", recent_statistics->get_window_duration()));
+            if (recent_stats.sample_count > 0)
+            {
+              judged_periodicity_stats = recent_stats;
+            }
+          }
           const double periodicity_error =
-            std::abs(periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
+            std::abs(judged_periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
           if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.error ||
-            periodicity_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                     .periodicity.standard_deviation.error)
+            judged_periodicity_stats.standard_deviation >
+              params->diagnostics.threshold.hardware_components.periodicity.standard_deviation
+                .error)
           {
             diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
             ros2_control::add_item(bad_periodicity_async_hw, comp_name);
@@ -4726,7 +4745,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
           else if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.warn ||
-            periodicity_stats.standard_deviation >
+            judged_periodicity_stats.standard_deviation >
               params->diagnostics.threshold.hardware_components.periodicity.standard_deviation.warn)
           {
             if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)

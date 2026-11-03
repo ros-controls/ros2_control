@@ -33,6 +33,9 @@ struct HardwareComponentStatisticsData
 {
   ros2_control::MovingAverageStatisticsData execution_time;
   ros2_control::MovingAverageStatisticsData periodicity;
+  /// Shared with the component's collector, which updates it in the component's own (possibly
+  /// async) read/write cycle. Disabled when no window duration is configured.
+  std::shared_ptr<ros2_control::TimeWindowStatistics> recent_periodicity = nullptr;
 };
 /// Hardware Component Information
 /**

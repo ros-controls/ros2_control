@@ -502,6 +502,7 @@ struct HardwareComponentStatisticsCollector
   {
     execution_time = std::make_shared<ros2_control::MovingAverageStatistics>();
     periodicity = std::make_shared<ros2_control::MovingAverageStatistics>();
+    recent_periodicity = std::make_shared<ros2_control::TimeWindowStatistics>();
   }
 
   /**
@@ -512,12 +513,16 @@ struct HardwareComponentStatisticsCollector
   {
     execution_time->reset();
     periodicity->reset();
+    recent_periodicity->reset();
   }
 
   /// Execution time statistics collector
   std::shared_ptr<ros2_control::MovingAverageStatistics> execution_time = nullptr;
   /// Periodicity statistics collector
   std::shared_ptr<ros2_control::MovingAverageStatistics> periodicity = nullptr;
+  /// Periodicity statistics collector over a recent time window, disabled until its duration is
+  /// set (see ResourceManagerParams::hardware_components_periodicity_window_duration)
+  std::shared_ptr<ros2_control::TimeWindowStatistics> recent_periodicity = nullptr;
 };
 }  // namespace hardware_interface
 

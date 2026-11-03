@@ -103,6 +103,13 @@ struct ResourceManagerParams
    * and will cause the ResourceManager to crash.
    */
   bool handle_exceptions = true;
+
+  /**
+   * @brief Duration in seconds of the recent window over which the read/write periodicity of the
+   * hardware components is additionally collected (see
+   * HardwareComponentStatisticsData::recent_periodicity). Zero or negative disables it.
+   */
+  double hardware_components_periodicity_window_duration = -1.0;
 };
 
 }  // namespace hardware_interface

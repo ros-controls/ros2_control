@@ -34,6 +34,13 @@ constexpr int UPDATE_RATE = 100;
 constexpr double WINDOW_DURATION = 1.0;
 const char CM_ACTIVITY[] = "Controller Manager Activity";
 const char CONTROLLERS_ACTIVITY[] = "Controllers Activity";
+const char HARDWARE_ACTIVITY[] = "Hardware Components Activity";
+// From hardware_resources_with_different_rw_rates
+const char HARDWARE_NAME[] = "TestActuatorHardware";
+constexpr int HARDWARE_RW_RATE = 50;
+const auto HARDWARE_URDF = std::string(ros2_control_test_assets::urdf_head) +
+                           ros2_control_test_assets::hardware_resources_with_different_rw_rates +
+                           ros2_control_test_assets::urdf_tail;
 constexpr int CONTROLLER_UPDATE_RATE = UPDATE_RATE / 2;
 
 std::map<std::string, std::string> values(const diagnostic_msgs::msg::DiagnosticStatus & status)
@@ -45,19 +52,34 @@ std::map<std::string, std::string> values(const diagnostic_msgs::msg::Diagnostic
   }
   return out;
 }
-}  // namespace
 
-class TestPeriodicityDiagnostics
-: public ControllerManagerFixture<controller_manager::ControllerManager>
+/// Gives the tests access to the hardware components statistics
+class PeriodicityTestControllerManager : public controller_manager::ControllerManager
 {
 public:
-  explicit TestPeriodicityDiagnostics(double window_duration = -1.0)
-  : ControllerManagerFixture<controller_manager::ControllerManager>(
-      ros2_control_test_assets::minimal_robot_urdf, "",
+  using controller_manager::ControllerManager::ControllerManager;
+
+  const hardware_interface::HardwareComponentInfo & get_hardware_info(const std::string & name)
+  {
+    return resource_manager_->get_components_status().at(name);
+  }
+};
+}  // namespace
+
+class TestPeriodicityDiagnostics : public ControllerManagerFixture<PeriodicityTestControllerManager>
+{
+public:
+  explicit TestPeriodicityDiagnostics(
+    double window_duration = -1.0,
+    const std::string & urdf = ros2_control_test_assets::minimal_robot_urdf)
+  : ControllerManagerFixture<PeriodicityTestControllerManager>(
+      urdf, "",
       {rclcpp::Parameter("update_rate", UPDATE_RATE),
        rclcpp::Parameter(
          "diagnostics.controller_manager.periodicity.window_duration", window_duration),
        rclcpp::Parameter("diagnostics.controllers.periodicity.window_duration", window_duration),
+       rclcpp::Parameter(
+         "diagnostics.hardware_components.periodicity.window_duration", window_duration),
        rclcpp::Parameter("diagnostic_updater.period", 0.05)})
   {
   }
@@ -139,6 +161,24 @@ public:
       });
   }
 
+  /// The read cycle periodicity of the hardware goes through a stall at bring-up and is steady
+  /// since
+  void hardware_read_stall_then_steady()
+  {
+    const auto & statistics = cm_->get_hardware_info(HARDWARE_NAME).read_statistics;
+    auto since_startup = std::make_shared<ros2_control::MovingAverageStatistics>();
+    since_startup->reset();
+    statistics->recent_periodicity->reset();
+    stall_then_steady(
+      HARDWARE_RW_RATE,
+      [&](double value, double t)
+      {
+        since_startup->add_measurement(value);
+        statistics->recent_periodicity->add_measurement(value, t);
+      });
+    statistics->periodicity.update_statistics(since_startup);
+  }
+
   std::optional<diagnostic_msgs::msg::DiagnosticStatus> next_status(const std::string & name)
   {
     auto listener = std::make_shared<rclcpp::Node>("periodicity_diagnostics_listener");
@@ -172,6 +212,21 @@ class TestPeriodicityDiagnosticsWithWindow : public TestPeriodicityDiagnostics
 {
 public:
   TestPeriodicityDiagnosticsWithWindow() : TestPeriodicityDiagnostics(WINDOW_DURATION) {}
+};
+
+class TestHardwarePeriodicityDiagnostics : public TestPeriodicityDiagnostics
+{
+public:
+  TestHardwarePeriodicityDiagnostics() : TestPeriodicityDiagnostics(-1.0, HARDWARE_URDF) {}
+};
+
+class TestHardwarePeriodicityDiagnosticsWithWindow : public TestPeriodicityDiagnostics
+{
+public:
+  TestHardwarePeriodicityDiagnosticsWithWindow()
+  : TestPeriodicityDiagnostics(WINDOW_DURATION, HARDWARE_URDF)
+  {
+  }
 };
 
 TEST_F(TestPeriodicityDiagnostics, cm_without_window_a_startup_stall_keeps_the_diagnostic_in_error)
@@ -277,4 +332,68 @@ TEST_F(
   EXPECT_THAT(v.at(name + ".periodicity.recent"), testing::HasSubstr("Avg: 50.00 [50.00 - 50.00]"));
   // The since-startup statistics still show the stall
   EXPECT_THAT(v.at(name + ".periodicity"), testing::HasSubstr("[8.00 - 10000.00]"));
+}
+
+TEST_F(
+  TestHardwarePeriodicityDiagnostics,
+  hardware_without_window_a_startup_stall_keeps_the_diagnostic_in_error)
+{
+  const auto & info = cm_->get_hardware_info(HARDWARE_NAME);
+  ASSERT_EQ(info.rw_rate, static_cast<unsigned int>(HARDWARE_RW_RATE));
+  ASSERT_TRUE(info.read_statistics->recent_periodicity);
+  EXPECT_FALSE(info.read_statistics->recent_periodicity->is_enabled());
+  hardware_read_stall_then_steady();
+
+  const auto status = next_status(HARDWARE_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::ERROR) << status->message;
+  EXPECT_EQ(
+    values(*status).count(std::string(HARDWARE_NAME) + ".read_cycle.periodicity.recent"), 0u)
+    << "no recent statistics are reported when the window is disabled";
+}
+
+TEST_F(
+  TestHardwarePeriodicityDiagnosticsWithWindow, hardware_read_and_write_feed_the_recent_periodicity)
+{
+  const auto & info = cm_->get_hardware_info(HARDWARE_NAME);
+  ASSERT_TRUE(info.read_statistics->recent_periodicity);
+  ASSERT_TRUE(info.write_statistics->recent_periodicity);
+  EXPECT_DOUBLE_EQ(
+    info.read_statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION);
+  EXPECT_DOUBLE_EQ(
+    info.write_statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION);
+
+  // The resource manager runs the hardware cycles on its own clock, so let real time pass
+  const auto period = rclcpp::Duration::from_seconds(1.0 / UPDATE_RATE);
+  for (int i = 0; i < UPDATE_RATE / 4; ++i)
+  {
+    std::this_thread::sleep_for(period.to_chrono<std::chrono::nanoseconds>());
+    time_ += period;
+    cm_->read(time_, period);
+    cm_->write(time_, period);
+  }
+  // A quarter of a second of cycles, all within the window
+  for (const auto & statistics : {info.read_statistics, info.write_statistics})
+  {
+    const auto recent = statistics->recent_periodicity->get_statistics();
+    EXPECT_GT(recent.sample_count, 0u);
+    EXPECT_EQ(recent.sample_count, statistics->periodicity.get_statistics().sample_count);
+  }
+}
+
+TEST_F(
+  TestHardwarePeriodicityDiagnosticsWithWindow,
+  hardware_with_window_the_level_recovers_after_a_startup_stall)
+{
+  hardware_read_stall_then_steady();
+
+  const auto status = next_status(HARDWARE_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::OK) << status->message;
+  const auto v = values(*status);
+  const std::string key = std::string(HARDWARE_NAME) + ".read_cycle.periodicity";
+  ASSERT_EQ(v.count(key + ".recent"), 1u);
+  EXPECT_THAT(v.at(key + ".recent"), testing::HasSubstr("Avg: 50.00 [50.00 - 50.00]"));
+  // The since-activation statistics still show the stall
+  EXPECT_THAT(v.at(key), testing::HasSubstr("[8.00 - 10000.00]"));
 }

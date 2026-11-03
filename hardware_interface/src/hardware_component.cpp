@@ -324,8 +324,9 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
       }
       if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
-        read_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_read_cycle_time_).seconds());
+        const double periodicity = 1.0 / (time - last_read_cycle_time_).seconds();
+        read_statistics_.periodicity->add_measurement(periodicity);
+        read_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
       }
       last_read_cycle_time_ = time;
     }
@@ -363,8 +364,9 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
       }
       if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
-        write_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_write_cycle_time_).seconds());
+        const double periodicity = 1.0 / (time - last_write_cycle_time_).seconds();
+        write_statistics_.periodicity->add_measurement(periodicity);
+        write_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
       }
       last_write_cycle_time_ = time;
     }

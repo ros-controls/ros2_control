@@ -184,6 +184,7 @@ public:
     robot_description_ = rm_param.robot_description;
     cm_update_rate_ = rm_param.update_rate;
     handle_exception_ = rm_param.handle_exceptions;
+    periodicity_window_duration_ = rm_param.hardware_components_periodicity_window_duration;
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -205,6 +206,10 @@ public:
           hardware_info.hardware_plugin_name.c_str());
         HardwareT hardware(std::move(interface));
         container.emplace_back(std::move(hardware));
+        const auto & read_statistics = container.back().get_read_statistics();
+        const auto & write_statistics = container.back().get_write_statistics();
+        read_statistics.recent_periodicity->set_window_duration(periodicity_window_duration_);
+        write_statistics.recent_periodicity->set_window_duration(periodicity_window_duration_);
         // initialize static data about hardware component to reduce later calls
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
@@ -214,11 +219,13 @@ public:
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
         component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
+        component_info.read_statistics->recent_periodicity = read_statistics.recent_periodicity;
 
         // if the type of the hardware is sensor then don't initialize the write statistics
         if (hardware_info.type != "sensor")
         {
           component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
+          component_info.write_statistics->recent_periodicity = write_statistics.recent_periodicity;
         }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
@@ -1448,6 +1455,9 @@ public:
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
+
+  // Duration of the recent periodicity window of the hardware components, disabled if not positive
+  double periodicity_window_duration_ = -1.0;
 };
 
 ResourceManager::ResourceManager(
@@ -1545,6 +1555,10 @@ bool ResourceManager::load_and_initialize_components(
   params_.update_rate = params.update_rate;
   params_.handle_exceptions = params.handle_exceptions;
   resource_storage_->handle_exception_ = params.handle_exceptions;
+  params_.hardware_components_periodicity_window_duration =
+    params.hardware_components_periodicity_window_duration;
+  resource_storage_->periodicity_window_duration_ =
+    params.hardware_components_periodicity_window_duration;
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
