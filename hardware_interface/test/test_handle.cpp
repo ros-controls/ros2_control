@@ -16,8 +16,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstdarg>
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -58,10 +58,7 @@ public:
     messages() = previous_messages_;
   }
 
-  static std::size_t warning_count()
-  {
-    return static_cast<std::size_t>(messages().size());
-  }
+  static std::size_t warning_count() { return static_cast<std::size_t>(messages().size()); }
 
 private:
   static std::vector<std::string> & messages()
@@ -1008,5 +1005,4 @@ TEST(TestHandle, bool_to_double_warning_state_is_preserved_on_copy_and_move)
   StateInterface handle_moved{std::move(handle_copy)};
   EXPECT_DOUBLE_EQ(handle_moved.get_optional().value(), 1.0);
   EXPECT_EQ(LogCapture::warning_count(), 1u);
-
 }
