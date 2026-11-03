@@ -18,7 +18,9 @@
 #define HARDWARE_INTERFACE__TYPES__STATISTICS_TYPES_HPP_
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -210,6 +212,197 @@ private:
   StatisticData statistics_data_;
   double current_measurement_ = std::numeric_limits<double>::quiet_NaN();
   double sum_of_square_diff_from_mean_ = 0.0;
+};
+
+/**
+ *  Statistics (average, minimum, maximum, standard deviation (population) and sample count) over
+ * the samples observed within the most recent `window_duration` seconds. Unlike
+ * MovingAverageStatistics, an old outlier leaves the statistics once the window has moved past it,
+ * so they describe the recent behaviour rather than the whole history.
+ *
+ *  The window is split into NUM_BUCKETS time buckets, each holding the running statistics of its
+ * samples, so the memory is constant and independent of the sample rate, and add_measurement() is
+ * O(1) and never allocates. The price is the resolution of the window's trailing edge: it advances
+ * one bucket at a time, so the statistics cover between (NUM_BUCKETS - 1) / NUM_BUCKETS of the
+ * duration and the full duration.
+ *
+ *  The time of a sample is given by the caller, so the window follows whichever clock drives the
+ * measurements (e.g. simulation time). If the time goes back past the current bucket (e.g. a reset
+ * simulation), the window is restarted.
+ *
+ *  A non-positive (or non-finite) duration disables the collector: add_measurement() is a no-op.
+ * When statistics are not available, e.g. no observations have been made, NaNs are returned.
+ */
+class TimeWindowStatistics
+{
+public:
+  using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+
+  /// Number of time buckets the window is split into.
+  static constexpr std::size_t NUM_BUCKETS = 10;
+
+  /// Construct a disabled collector.
+  TimeWindowStatistics() = default;
+
+  /**
+   *  @param window_duration Duration of the window in seconds. Non-positive disables the collector.
+   */
+  explicit TimeWindowStatistics(double window_duration) { set_window_duration(window_duration); }
+
+  /**
+   *  Set the duration of the window and clear it.
+   *
+   *  @param window_duration Duration of the window in seconds. Non-positive disables the collector.
+   */
+  void set_window_duration(double window_duration)
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    window_duration_ = window_duration;
+    enabled_ = std::isfinite(window_duration) && window_duration > 0.0;
+    bucket_width_ = enabled_ ? window_duration / static_cast<double>(NUM_BUCKETS) : 0.0;
+    reset_locked();
+  }
+
+  /// @return The duration of the window in seconds, as set by set_window_duration().
+  double get_window_duration() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    return window_duration_;
+  }
+
+  /// @return true if the window duration is positive, i.e. measurements are collected.
+  bool is_enabled() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    return enabled_;
+  }
+
+  /// Clear the window, keeping its duration.
+  void reset()
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    reset_locked();
+  }
+
+  /**
+   *  Observe a sample. Samples older than the window are dropped.
+   *  Note: samples whose value or time is NaN or infinity are discarded.
+   *
+   *  @param item The item that was observed
+   *  @param time_seconds The time at which the item was observed, in seconds
+   */
+  void add_measurement(const double item, const double time_seconds)
+  {
+    std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
+    if (!enabled_ || !std::isfinite(item) || !std::isfinite(time_seconds))
+    {
+      return;
+    }
+    const auto id = static_cast<int64_t>(std::floor(time_seconds / bucket_width_));
+    if (has_data_ && id < latest_id_)
+    {
+      reset_locked();
+    }
+    has_data_ = true;
+    latest_id_ = std::max(latest_id_, id);
+
+    // A slot holding another id belongs to a bucket that has already left the window
+    Bucket & bucket = buckets_[slot(id)];
+    if (bucket.id != id)
+    {
+      bucket = Bucket{};
+      bucket.id = id;
+    }
+    // Welford's online algorithm, as in MovingAverageStatistics
+    ++bucket.count;
+    const double delta = item - bucket.mean;
+    bucket.mean += delta / static_cast<double>(bucket.count);
+    bucket.m2 += delta * (item - bucket.mean);
+    bucket.min = std::min(bucket.min, item);
+    bucket.max = std::max(bucket.max, item);
+  }
+
+  /**
+   *  Return a StatisticData object, containing average, minimum, maximum, standard deviation
+   * (population) and sample count over the current window. For an empty window, the average, min,
+   * max and standard deviation are NaN.
+   */
+  StatisticData get_statistics() const
+  {
+    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+    StatisticData data;
+    data.average = std::numeric_limits<double>::quiet_NaN();
+    data.min = std::numeric_limits<double>::quiet_NaN();
+    data.max = std::numeric_limits<double>::quiet_NaN();
+    data.standard_deviation = std::numeric_limits<double>::quiet_NaN();
+    data.sample_count = 0;
+
+    uint64_t count = 0;
+    double mean = 0.0;
+    double m2 = 0.0;
+    double min = std::numeric_limits<double>::max();
+    double max = std::numeric_limits<double>::lowest();
+    for (const auto & bucket : buckets_)
+    {
+      const bool in_window = bucket.count > 0 && bucket.id <= latest_id_ &&
+                             bucket.id > latest_id_ - static_cast<int64_t>(NUM_BUCKETS);
+      if (!in_window)
+      {
+        continue;
+      }
+      // Merge of two populations (Chan et al.), numerically stable unlike a sum of squares
+      const uint64_t merged_count = count + bucket.count;
+      const double delta = bucket.mean - mean;
+      const double weight = static_cast<double>(bucket.count) / static_cast<double>(merged_count);
+      mean += delta * weight;
+      m2 += bucket.m2 + delta * delta * static_cast<double>(count) * weight;
+      count = merged_count;
+      min = std::min(min, bucket.min);
+      max = std::max(max, bucket.max);
+    }
+    if (count == 0)
+    {
+      return data;
+    }
+    data.average = mean;
+    data.min = min;
+    data.max = max;
+    data.standard_deviation = std::sqrt(m2 / static_cast<double>(count));
+    data.sample_count = count;
+    return data;
+  }
+
+private:
+  struct Bucket
+  {
+    int64_t id = std::numeric_limits<int64_t>::min();
+    uint64_t count = 0;
+    double mean = 0.0;
+    double m2 = 0.0;
+    double min = std::numeric_limits<double>::max();
+    double max = std::numeric_limits<double>::lowest();
+  };
+
+  static std::size_t slot(int64_t id)
+  {
+    const auto n = static_cast<int64_t>(NUM_BUCKETS);
+    return static_cast<std::size_t>(((id % n) + n) % n);
+  }
+
+  void reset_locked()
+  {
+    buckets_.fill(Bucket{});
+    has_data_ = false;
+    latest_id_ = std::numeric_limits<int64_t>::min();
+  }
+
+  mutable DEFAULT_MUTEX mutex_;
+  std::array<Bucket, NUM_BUCKETS> buckets_{};
+  double window_duration_ = -1.0;
+  double bucket_width_ = 0.0;
+  bool enabled_ = false;
+  bool has_data_ = false;
+  int64_t latest_id_ = std::numeric_limits<int64_t>::min();
 };
 
 /**
