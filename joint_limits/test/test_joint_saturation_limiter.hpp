@@ -59,9 +59,9 @@ public:
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_));
   }
 
-  void Init(const std::string & joint_name = "foo_joint")
+  void Init(const std::vector<std::string> & joint_names = {"foo_joint"})
   {
-    joint_names_ = {joint_name};
+    joint_names_ = joint_names;
     joint_limiter_->init(joint_names_, node_);
     num_joints_ = joint_names_.size();
     last_commanded_state_.positions.resize(num_joints_, 0.0);
