@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -258,9 +259,10 @@ public:
   {
     std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
     window_duration_ = window_duration;
-    enabled_ = std::isfinite(window_duration) && window_duration > 0.0;
-    bucket_width_ = enabled_ ? window_duration / static_cast<double>(NUM_BUCKETS) : 0.0;
+    const bool enabled = std::isfinite(window_duration) && window_duration > 0.0;
+    bucket_width_ = enabled ? window_duration / static_cast<double>(NUM_BUCKETS) : 0.0;
     reset_locked();
+    enabled_.store(enabled, std::memory_order_release);
   }
 
   /// @return The duration of the window in seconds, as set by set_window_duration().
@@ -271,11 +273,7 @@ public:
   }
 
   /// @return true if the window duration is positive, i.e. measurements are collected.
-  bool is_enabled() const
-  {
-    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
-    return enabled_;
-  }
+  bool is_enabled() const { return enabled_.load(std::memory_order_acquire); }
 
   /// Clear the window, keeping its duration.
   void reset()
@@ -293,17 +291,21 @@ public:
    */
   void add_measurement(const double item, const double time_seconds)
   {
-    std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
-    if (!enabled_ || !std::isfinite(item) || !std::isfinite(time_seconds))
+    // Disabled by default: don't take the lock in the real-time loop for nothing
+    if (!is_enabled() || !std::isfinite(item) || !std::isfinite(time_seconds))
     {
       return;
     }
+    std::lock_guard<DEFAULT_MUTEX> guard{mutex_};
+    if (bucket_width_ <= 0.0)
+    {
+      return;  // disabled concurrently
+    }
     const auto id = static_cast<int64_t>(std::floor(time_seconds / bucket_width_));
-    if (has_data_ && id < latest_id_)
+    if (id < latest_id_)
     {
       reset_locked();
     }
-    has_data_ = true;
     latest_id_ = std::max(latest_id_, id);
 
     // A slot holding another id belongs to a bucket that has already left the window
@@ -329,23 +331,24 @@ public:
    */
   StatisticData get_statistics() const
   {
-    std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
-    StatisticData data;
-    data.average = std::numeric_limits<double>::quiet_NaN();
-    data.min = std::numeric_limits<double>::quiet_NaN();
-    data.max = std::numeric_limits<double>::quiet_NaN();
-    data.standard_deviation = std::numeric_limits<double>::quiet_NaN();
-    data.sample_count = 0;
+    // Copy under the lock and merge outside of it, to keep the real-time writer's wait short
+    std::array<Bucket, NUM_BUCKETS> buckets;
+    int64_t latest_id;
+    {
+      std::lock_guard<DEFAULT_MUTEX> lock(mutex_);
+      buckets = buckets_;
+      latest_id = latest_id_;
+    }
 
     uint64_t count = 0;
     double mean = 0.0;
     double m2 = 0.0;
     double min = std::numeric_limits<double>::max();
     double max = std::numeric_limits<double>::lowest();
-    for (const auto & bucket : buckets_)
+    for (const auto & bucket : buckets)
     {
-      const bool in_window = bucket.count > 0 && bucket.id <= latest_id_ &&
-                             bucket.id > latest_id_ - static_cast<int64_t>(NUM_BUCKETS);
+      const bool in_window = bucket.count > 0 && bucket.id <= latest_id &&
+                             bucket.id > latest_id - static_cast<int64_t>(NUM_BUCKETS);
       if (!in_window)
       {
         continue;
@@ -360,8 +363,14 @@ public:
       min = std::min(min, bucket.min);
       max = std::max(max, bucket.max);
     }
+    StatisticData data;
     if (count == 0)
     {
+      data.average = std::numeric_limits<double>::quiet_NaN();
+      data.min = std::numeric_limits<double>::quiet_NaN();
+      data.max = std::numeric_limits<double>::quiet_NaN();
+      data.standard_deviation = std::numeric_limits<double>::quiet_NaN();
+      data.sample_count = 0;
       return data;
     }
     data.average = mean;
@@ -392,7 +401,6 @@ private:
   void reset_locked()
   {
     buckets_.fill(Bucket{});
-    has_data_ = false;
     latest_id_ = std::numeric_limits<int64_t>::min();
   }
 
@@ -400,8 +408,8 @@ private:
   std::array<Bucket, NUM_BUCKETS> buckets_{};
   double window_duration_ = -1.0;
   double bucket_width_ = 0.0;
-  bool enabled_ = false;
-  bool has_data_ = false;
+  // Atomic so that the disabled (default) case is checked without locking
+  std::atomic<bool> enabled_{false};
   int64_t latest_id_ = std::numeric_limits<int64_t>::min();
 };
 
