@@ -32,16 +32,23 @@ bool sleep_for_sim_time(
   // absolute deadline would block until the new timeline catches up.
   try
   {
-    cm->get_clock()->sleep_for(rclcpp::Duration(state.period));
+    // sleep_for() returns false instead of throwing when the sleep was interrupted, e.g. by the
+    // shutdown of the context or a change of the time source
+    if (!cm->get_clock()->sleep_for(rclcpp::Duration(state.period)))
+    {
+      RCLCPP_ERROR(
+        cm->get_logger(), "sleep_for was interrupted. Exiting control loop and aborting....");
+      return false;
+    }
   }
   catch (const std::runtime_error & e)
   {
     RCLCPP_ERROR(
-      cm->get_logger(), "sleep_until failed with error: %s. Exiting control loop and aborting....",
+      cm->get_logger(), "sleep_for failed with error: %s. Exiting control loop and aborting....",
       e.what());
     return false;
   }
-  return true;  // Placeholder return value
+  return true;
 }
 
 void sleep_for_blocking_read_write(
