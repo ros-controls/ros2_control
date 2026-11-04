@@ -284,7 +284,8 @@ public:
 
   /**
    *  Observe a sample. Samples older than the window are dropped.
-   *  Note: samples whose value or time is NaN or infinity are discarded.
+   *  Note: samples whose value or time is NaN or infinity are discarded, as well as samples whose
+   * time divided by the bucket width (window_duration / NUM_BUCKETS) exceeds 1e18 in magnitude.
    *
    *  @param item The item that was observed
    *  @param time_seconds The time at which the item was observed, in seconds
@@ -301,7 +302,14 @@ public:
     {
       return;  // disabled concurrently
     }
-    const auto id = static_cast<int64_t>(std::floor(time_seconds / bucket_width_));
+    const double index = std::floor(time_seconds / bucket_width_);
+    // Out of int64 range (e.g. a tiny window_duration), the cast below and the window bounds
+    // computed from the index would overflow; such a sample can't be placed in time
+    if (std::abs(index) > 1e18)
+    {
+      return;
+    }
+    const auto id = static_cast<int64_t>(index);
     if (id < latest_id_)
     {
       reset_locked();

@@ -182,6 +182,16 @@ TEST(TestTimeWindowStatistics, non_finite_samples_are_ignored)
   EXPECT_DOUBLE_EQ(data.average, 2.0);
 }
 
+TEST(TestTimeWindowStatistics, samples_whose_bucket_index_overflows_are_ignored)
+{
+  // time / bucket width doesn't fit in the bucket index: the samples can't be placed in time
+  TimeWindowStatistics stats(1e-300);
+  EXPECT_TRUE(stats.is_enabled());
+  stats.add_measurement(1.0, 1e9);
+  stats.add_measurement(2.0, 2e9);
+  expect_nan_statistics(stats.get_statistics());
+}
+
 TEST(TestTimeWindowStatistics, reset_and_set_duration_clear_the_window)
 {
   TimeWindowStatistics stats(1.0);
