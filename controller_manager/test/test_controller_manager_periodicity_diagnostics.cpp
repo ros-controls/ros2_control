@@ -95,11 +95,9 @@ public:
   : ControllerManagerFixture<PeriodicityTestControllerManager>(
       urdf, "",
       {rclcpp::Parameter("update_rate", UPDATE_RATE),
-       rclcpp::Parameter(
-         "diagnostics.controller_manager.periodicity.window_duration", window_duration),
-       rclcpp::Parameter("diagnostics.controllers.periodicity.window_duration", window_duration),
-       rclcpp::Parameter(
-         "diagnostics.hardware_components.periodicity.window_duration", window_duration),
+       rclcpp::Parameter("diagnostics.controller_manager.window_duration", window_duration),
+       rclcpp::Parameter("diagnostics.controllers.window_duration", window_duration),
+       rclcpp::Parameter("diagnostics.hardware_components.window_duration", window_duration),
        rclcpp::Parameter("diagnostic_updater.period", 0.05)})
   {
   }

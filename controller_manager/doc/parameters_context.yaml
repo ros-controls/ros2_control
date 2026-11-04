@@ -14,7 +14,7 @@ hardware_components_initial_state: |
           inactive:
             - "base3"
 
-diagnostics.controller_manager.periodicity.window_duration: |
+diagnostics.controller_manager.window_duration: |
   The ``periodicity`` statistics of the diagnostics accumulate since startup (or since activation, for controllers and hardware components) and are never reset, so a single slow cycle, for example while the system is still bringing up other processes, can keep the standard deviation above its threshold, and the diagnostic in ``WARN`` or ``ERROR``, for the rest of the run even though the loop has been steady since.
   With a positive ``window_duration`` (in seconds), the periodicity over the most recent ``window_duration`` seconds is additionally reported as ``periodicity.recent.*`` and compared against the ``diagnostics.threshold.controller_manager.periodicity`` thresholds instead. The since-startup values are still reported unchanged, so the worst case remains visible.
   The window advances in steps of a tenth of its duration, so it covers between 90 % and 100 % of ``window_duration``. A zero or negative value (default ``-1.0``) keeps judging the since-startup statistics.
@@ -32,11 +32,11 @@ diagnostics.controller_manager.periodicity.window_duration: |
           periodicity:
             window_duration: 5.0
 
-diagnostics.controllers.periodicity.window_duration: |
-  Same as ``diagnostics.controller_manager.periodicity.window_duration``, for the ``periodicity`` diagnostics of the controllers (see ``diagnostics.threshold.controllers.periodicity``). The recent statistics are reported as ``<controller>.periodicity.recent``.
+diagnostics.controllers.window_duration: |
+  Same as ``diagnostics.controller_manager.window_duration``, for the ``periodicity`` diagnostics of the controllers (see ``diagnostics.threshold.controllers.periodicity``). The recent statistics are reported as ``<controller>.periodicity.recent``.
 
-diagnostics.hardware_components.periodicity.window_duration: |
-  Same as ``diagnostics.controller_manager.periodicity.window_duration``, for the read and write ``periodicity`` diagnostics of the hardware components (see ``diagnostics.threshold.hardware_components.periodicity``). The recent statistics are reported as ``<component>.read_cycle.periodicity.recent`` and ``<component>.write_cycle.periodicity.recent``.
+diagnostics.hardware_components.window_duration: |
+  Same as ``diagnostics.controller_manager.window_duration``, for the read and write ``periodicity`` diagnostics of the hardware components (see ``diagnostics.threshold.hardware_components.periodicity``). The recent statistics are reported as ``<component>.read_cycle.periodicity.recent`` and ``<component>.write_cycle.periodicity.recent``.
 
 diagnostics.threshold.controllers.periodicity: |
   The ``periodicity`` diagnostics will be published for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity. It is also published for the synchronous controllers that have a different update rate than the controller manager update rate.
