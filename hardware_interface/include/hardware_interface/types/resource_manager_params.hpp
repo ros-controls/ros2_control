@@ -105,9 +105,10 @@ struct ResourceManagerParams
   bool handle_exceptions = true;
 
   /**
-   * @brief Duration in seconds of the recent window over which the read/write periodicity of the
-   * hardware components is additionally collected (see
-   * HardwareComponentStatisticsData::recent_periodicity). Zero or negative disables it.
+   * @brief Duration in seconds of the recent window over which the read/write periodicity and
+   * execution time of the hardware components are additionally collected (see
+   * HardwareComponentStatisticsData::recent_periodicity and
+   * HardwareComponentStatisticsData::recent_execution_time). Zero or negative disables it.
    */
   double hardware_components_statistics_window_duration = -1.0;
 };

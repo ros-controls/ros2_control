@@ -208,8 +208,11 @@ public:
         container.emplace_back(std::move(hardware));
         const auto & read_statistics = container.back().get_read_statistics();
         const auto & write_statistics = container.back().get_write_statistics();
-        read_statistics.recent_periodicity->set_window_duration(statistics_window_duration_);
-        write_statistics.recent_periodicity->set_window_duration(statistics_window_duration_);
+        for (const auto & statistics : {read_statistics, write_statistics})
+        {
+          statistics.recent_periodicity->set_window_duration(statistics_window_duration_);
+          statistics.recent_execution_time->set_window_duration(statistics_window_duration_);
+        }
         // initialize static data about hardware component to reduce later calls
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
@@ -220,12 +223,16 @@ public:
         component_info.is_async = hardware_info.is_async;
         component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
         component_info.read_statistics->recent_periodicity = read_statistics.recent_periodicity;
+        component_info.read_statistics->recent_execution_time =
+          read_statistics.recent_execution_time;
 
         // if the type of the hardware is sensor then don't initialize the write statistics
         if (hardware_info.type != "sensor")
         {
           component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
           component_info.write_statistics->recent_periodicity = write_statistics.recent_periodicity;
+          component_info.write_statistics->recent_execution_time =
+            write_statistics.recent_execution_time;
         }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
@@ -1456,7 +1463,8 @@ public:
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
 
-  // Duration of the recent periodicity window of the hardware components, disabled if not positive
+  // Duration of the recent periodicity and execution time windows of the hardware components,
+  // disabled if not positive
   double statistics_window_duration_ = -1.0;
 };
 

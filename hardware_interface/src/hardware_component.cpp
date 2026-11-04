@@ -324,8 +324,10 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
     {
       if (trigger_result.execution_time.has_value())
       {
-        read_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        read_statistics_.execution_time->add_measurement(execution_time);
+        read_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
@@ -364,8 +366,10 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     {
       if (trigger_result.execution_time.has_value())
       {
-        write_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        write_statistics_.execution_time->add_measurement(execution_time);
+        write_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {

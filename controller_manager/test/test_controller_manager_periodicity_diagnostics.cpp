@@ -230,6 +230,31 @@ public:
     statistics->periodicity.update_statistics(since_startup);
   }
 
+  /// The read cycle execution time of the hardware goes through a slow first read and is steady
+  /// since
+  void hardware_slow_first_read()
+  {
+    const auto & statistics = cm_->get_hardware_info(HARDWARE_NAME).read_statistics;
+    auto exec_time_since_startup = std::make_shared<ros2_control::MovingAverageStatistics>();
+    auto periodicity_since_startup = std::make_shared<ros2_control::MovingAverageStatistics>();
+    exec_time_since_startup->reset();
+    periodicity_since_startup->reset();
+    statistics->recent_execution_time->reset();
+    statistics->recent_periodicity->reset();
+    slow_first_cycle_then_steady(
+      HARDWARE_RW_RATE,
+      [&](double value, double t)
+      {
+        exec_time_since_startup->add_measurement(value);
+        statistics->recent_execution_time->add_measurement(value, t);
+        // A steady periodicity, so that only the execution time can raise the level
+        periodicity_since_startup->add_measurement(HARDWARE_RW_RATE);
+        statistics->recent_periodicity->add_measurement(HARDWARE_RW_RATE, t);
+      });
+    statistics->execution_time.update_statistics(exec_time_since_startup);
+    statistics->periodicity.update_statistics(periodicity_since_startup);
+  }
+
   std::optional<diagnostic_msgs::msg::DiagnosticStatus> next_status(const std::string & name)
   {
     auto listener = std::make_shared<rclcpp::Node>("periodicity_diagnostics_listener");
@@ -449,7 +474,41 @@ TEST_F(
 }
 
 TEST_F(
-  TestHardwarePeriodicityDiagnosticsWithWindow, hardware_read_and_write_feed_the_recent_periodicity)
+  TestHardwarePeriodicityDiagnostics,
+  hardware_without_window_a_slow_first_read_keeps_the_execution_time_in_error)
+{
+  const auto & info = cm_->get_hardware_info(HARDWARE_NAME);
+  ASSERT_TRUE(info.read_statistics->recent_execution_time);
+  EXPECT_FALSE(info.read_statistics->recent_execution_time->is_enabled());
+  hardware_slow_first_read();
+
+  const auto status = next_status(HARDWARE_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::ERROR) << status->message;
+  EXPECT_EQ(
+    values(*status).count(std::string(HARDWARE_NAME) + ".read_cycle.execution_time.recent"), 0u)
+    << "no recent statistics are reported when the window is disabled";
+}
+
+TEST_F(
+  TestHardwarePeriodicityDiagnosticsWithWindow,
+  hardware_with_window_the_execution_time_level_recovers_after_a_slow_first_read)
+{
+  hardware_slow_first_read();
+
+  const auto status = next_status(HARDWARE_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::OK) << status->message;
+  const auto v = values(*status);
+  const std::string key = std::string(HARDWARE_NAME) + ".read_cycle.execution_time";
+  ASSERT_EQ(v.count(key + ".recent"), 1u);
+  EXPECT_THAT(v.at(key + ".recent"), testing::HasSubstr("Avg: 100.00 [100.00 - 100.00] us"));
+  // The since-activation statistics still show the slow first read
+  EXPECT_THAT(v.at(key), testing::HasSubstr("[100.00 - 50000.00]"));
+}
+
+TEST_F(
+  TestHardwarePeriodicityDiagnosticsWithWindow, hardware_read_and_write_feed_the_recent_statistics)
 {
   // The resource manager runs the hardware cycles on its own clock, so let real time pass
   const auto period = rclcpp::Duration::from_seconds(1.0 / UPDATE_RATE);
@@ -472,6 +531,15 @@ TEST_F(
       const auto recent = statistics->recent_periodicity->get_statistics();
       EXPECT_GT(recent.sample_count, 0u) << name;
       EXPECT_EQ(recent.sample_count, statistics->periodicity.get_statistics().sample_count) << name;
+
+      ASSERT_TRUE(statistics->recent_execution_time) << name;
+      EXPECT_DOUBLE_EQ(statistics->recent_execution_time->get_window_duration(), WINDOW_DURATION)
+        << name;
+      const auto recent_exec_time = statistics->recent_execution_time->get_statistics();
+      EXPECT_GT(recent_exec_time.sample_count, 0u) << name;
+      EXPECT_EQ(
+        recent_exec_time.sample_count, statistics->execution_time.get_statistics().sample_count)
+        << name;
     }
   }
 }

@@ -4715,6 +4715,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
         stat.add(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
+        const auto judged_exec_time_stats = report_and_select_recent(
+          stat, comp_name + statistics_type_suffix + exec_time_suffix + ".recent", exec_time_stats,
+          statistics->recent_execution_time.get(), "us");
         const bool publish_periodicity_stats =
           is_async || (comp_info.rw_rate != this->get_update_rate());
         if (publish_periodicity_stats)
@@ -4754,19 +4757,21 @@ void ControllerManager::hardware_components_diagnostic_callback(
         const double max_exp_exec_time =
           is_async ? 1.e6 / static_cast<double>(comp_info.rw_rate) : 0.0;
         if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.error ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.error)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .error)
         {
           diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
           high_exec_time_hw.push_back(comp_name);
         }
         else if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.warn ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.warn)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .warn)
         {
           if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
           {
