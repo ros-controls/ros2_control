@@ -233,13 +233,6 @@ public:
     return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
-  /// Check if the controller manager is shutting down.
-  /**
-   * Checks if shutdown has been requested or initiated.
-   * \returns true if shutting down, false otherwise.
-   */
-  bool is_shutting_down() const { return is_shutting_down_.load(std::memory_order_acquire); }
-
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
@@ -682,9 +675,11 @@ private:
   bool use_sim_time_;
   rclcpp::Clock::SharedPtr trigger_clock_ = nullptr;
   std::unique_ptr<rclcpp::PreShutdownCallbackHandle> preshutdown_cb_handle_{nullptr};
-  /// Set once shutdown starts; read(), write(), and update() then skip execution.
+  /// Set once shutdown starts; read(), write(), and update() then skip execution. This keeps any
+  /// control loop (not only ros2_control_node's) safe to keep calling them during/after shutdown.
   std::atomic<bool> is_shutting_down_{false};
-  /// True while an RT update() cycle is actively running.
+  /// True while an RT update() cycle is running. Together with is_shutting_down_ it forms a
+  /// store-then-load handshake with shutdown_controllers(), hence both use seq_cst accesses.
   std::atomic<bool> rt_update_active_{false};
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
