@@ -179,6 +179,39 @@ public:
       });
   }
 
+  /// Feed execution time statistics (in us) with a slow first cycle followed by 3 s of steady
+  /// cycles, as when the first cycle warms up caches or initializes things lazily
+  template <typename AddMeasurement>
+  static void slow_first_cycle_then_steady(int rate, AddMeasurement add_measurement)
+  {
+    double t = 0.0;
+    add_measurement(50000.0, t);
+    for (int i = 0; i < 3 * rate; ++i)
+    {
+      t += 1.0 / rate;
+      add_measurement(100.0, t);
+    }
+  }
+
+  /// The execution time of the controller goes through a slow first update and is steady since
+  static void controller_slow_first_update(const controller_manager::ControllerSpec & spec)
+  {
+    spec.periodicity_statistics->reset();
+    spec.recent_periodicity_statistics->reset();
+    spec.execution_time_statistics->reset();
+    spec.recent_execution_time_statistics->reset();
+    slow_first_cycle_then_steady(
+      CONTROLLER_UPDATE_RATE,
+      [&spec](double value, double t)
+      {
+        spec.execution_time_statistics->add_measurement(value);
+        spec.recent_execution_time_statistics->add_measurement(value, t);
+        // A steady periodicity, so that only the execution time can raise the level
+        spec.periodicity_statistics->add_measurement(CONTROLLER_UPDATE_RATE);
+        spec.recent_periodicity_statistics->add_measurement(CONTROLLER_UPDATE_RATE, t);
+      });
+  }
+
   /// The read cycle periodicity of the hardware goes through a stall at bring-up and is steady
   /// since
   void hardware_read_stall_then_steady()
@@ -312,13 +345,54 @@ TEST_F(
     << "no recent statistics are reported when the window is disabled";
 }
 
-TEST_F(TestPeriodicityDiagnosticsWithWindow, controller_update_feeds_the_recent_periodicity)
+TEST_F(
+  TestPeriodicityDiagnostics,
+  controller_without_window_a_slow_first_update_keeps_the_execution_time_in_error)
+{
+  const auto spec = add_active_controller();
+  EXPECT_FALSE(spec.recent_execution_time_statistics->is_enabled());
+  controller_slow_first_update(spec);
+
+  const auto status = next_status(CONTROLLERS_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::ERROR) << status->message;
+  EXPECT_EQ(
+    values(*status).count(
+      std::string(test_controller::TEST_CONTROLLER_NAME) + ".execution_time.recent"),
+    0u)
+    << "no recent statistics are reported when the window is disabled";
+}
+
+TEST_F(
+  TestPeriodicityDiagnosticsWithWindow,
+  controller_with_window_the_execution_time_level_recovers_after_a_slow_first_update)
+{
+  const auto spec = add_active_controller();
+  controller_slow_first_update(spec);
+
+  const auto status = next_status(CONTROLLERS_ACTIVITY);
+  ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
+  EXPECT_EQ(status->level, diagnostic_msgs::msg::DiagnosticStatus::OK) << status->message;
+  const auto v = values(*status);
+  const std::string name = test_controller::TEST_CONTROLLER_NAME;
+  ASSERT_EQ(v.count(name + ".execution_time.recent"), 1u);
+  EXPECT_THAT(
+    v.at(name + ".execution_time.recent"), testing::HasSubstr("Avg: 100.00 [100.00 - 100.00] us"));
+  // The since-activation statistics still show the slow first update
+  EXPECT_THAT(v.at(name + ".execution_time"), testing::HasSubstr("[100.00 - 50000.00]"));
+}
+
+TEST_F(TestPeriodicityDiagnosticsWithWindow, controller_update_feeds_the_recent_statistics)
 {
   const auto spec = add_active_controller();
   ASSERT_TRUE(spec.recent_periodicity_statistics->is_enabled());
   EXPECT_DOUBLE_EQ(spec.recent_periodicity_statistics->get_window_duration(), WINDOW_DURATION);
+  ASSERT_TRUE(spec.recent_execution_time_statistics->is_enabled());
+  EXPECT_DOUBLE_EQ(spec.recent_execution_time_statistics->get_window_duration(), WINDOW_DURATION);
   spec.periodicity_statistics->reset();
   spec.recent_periodicity_statistics->reset();
+  spec.execution_time_statistics->reset();
+  spec.recent_execution_time_statistics->reset();
 
   // The controller periodicity is measured on the trigger clock, so let real time pass
   for (int i = 0; i < 10; ++i)
@@ -332,6 +406,10 @@ TEST_F(TestPeriodicityDiagnosticsWithWindow, controller_update_feeds_the_recent_
   EXPECT_EQ(
     spec.recent_periodicity_statistics->get_statistics().sample_count,
     spec.periodicity_statistics->get_count());
+  EXPECT_GT(spec.execution_time_statistics->get_count(), 0u);
+  EXPECT_EQ(
+    spec.recent_execution_time_statistics->get_statistics().sample_count,
+    spec.execution_time_statistics->get_count());
 }
 
 TEST_F(
