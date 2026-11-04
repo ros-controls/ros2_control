@@ -53,7 +53,7 @@ struct ControllerSpec
   std::vector<std::string> controllers_chain_group = {};
   std::shared_ptr<MovingAverageStatistics> execution_time_statistics;
   std::shared_ptr<MovingAverageStatistics> periodicity_statistics;
-  /// Periodicity over the last diagnostics.controllers.periodicity.window_duration seconds,
+  /// Periodicity over the last diagnostics.controllers.window_duration seconds,
   /// disabled when that duration is not positive
   std::shared_ptr<ros2_control::TimeWindowStatistics> recent_periodicity_statistics;
 };

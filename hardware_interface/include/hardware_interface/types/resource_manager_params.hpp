@@ -109,7 +109,7 @@ struct ResourceManagerParams
    * hardware components is additionally collected (see
    * HardwareComponentStatisticsData::recent_periodicity). Zero or negative disables it.
    */
-  double hardware_components_periodicity_window_duration = -1.0;
+  double hardware_components_statistics_window_duration = -1.0;
 };
 
 }  // namespace hardware_interface

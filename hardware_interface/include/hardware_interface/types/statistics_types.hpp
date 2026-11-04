@@ -537,7 +537,7 @@ struct HardwareComponentStatisticsCollector
   /// Periodicity statistics collector
   std::shared_ptr<ros2_control::MovingAverageStatistics> periodicity = nullptr;
   /// Periodicity statistics collector over a recent time window, disabled until its duration is
-  /// set (see ResourceManagerParams::hardware_components_periodicity_window_duration)
+  /// set (see ResourceManagerParams::hardware_components_statistics_window_duration)
   std::shared_ptr<ros2_control::TimeWindowStatistics> recent_periodicity = nullptr;
 };
 }  // namespace hardware_interface

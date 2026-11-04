@@ -716,7 +716,7 @@ void ControllerManager::init_controller_manager()
   // Setup diagnostics
   periodicity_stats_.reset();
   recent_periodicity_stats_.set_window_duration(
-    params_->diagnostics.controller_manager.periodicity.window_duration);
+    params_->diagnostics.controller_manager.window_duration);
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -872,8 +872,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
-  params.hardware_components_periodicity_window_duration =
-    params_->diagnostics.hardware_components.periodicity.window_duration;
+  params.hardware_components_statistics_window_duration =
+    params_->diagnostics.hardware_components.window_duration;
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
@@ -2563,7 +2563,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   controller.recent_periodicity_statistics->set_window_duration(
-    params_->diagnostics.controllers.periodicity.window_duration);
+    params_->diagnostics.controllers.window_duration);
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
