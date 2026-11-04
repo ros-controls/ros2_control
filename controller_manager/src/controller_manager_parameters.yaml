@@ -94,14 +94,14 @@ controller_manager:
         type: double,
         default_value: -1.0,
         read_only: true,
-        description: "Duration in seconds of the most recent window over which the periodicity diagnostic level of each controller is judged. When positive, the diagnostic also reports <controller>.periodicity.recent over that window and compares it, rather than the statistics accumulated since the controller's activation, against the periodicity thresholds. The since-activation statistics are still reported unchanged. A zero or negative value (default) keeps judging the since-activation statistics.",
+        description: "Duration in seconds of the most recent window over which the periodicity and execution time diagnostic levels of each controller are judged. When positive, the diagnostic also reports <controller>.periodicity.recent and <controller>.execution_time.recent over that window and compares those, rather than the statistics accumulated since the controller's activation, against the periodicity and execution time thresholds. The since-activation statistics are still reported unchanged. A zero or negative value (default) keeps judging the since-activation statistics.",
       }
     hardware_components:
       window_duration: {
         type: double,
         default_value: -1.0,
         read_only: true,
-        description: "Duration in seconds of the most recent window over which the read/write periodicity diagnostic level of each hardware component is judged. When positive, the diagnostic also reports <component>.read_cycle.periodicity.recent and <component>.write_cycle.periodicity.recent over that window and compares those, rather than the statistics accumulated since the component's activation, against the periodicity thresholds. The since-activation statistics are still reported unchanged. A zero or negative value (default) keeps judging the since-activation statistics.",
+        description: "Duration in seconds of the most recent window over which the read/write periodicity and execution time diagnostic levels of each hardware component are judged. When positive, the diagnostic also reports <component>.<read|write>_cycle.periodicity.recent and <component>.<read|write>_cycle.execution_time.recent over that window and compares those, rather than the statistics accumulated since the component's activation, against the periodicity and execution time thresholds. The since-activation statistics are still reported unchanged. A zero or negative value (default) keeps judging the since-activation statistics.",
       }
     threshold:
       controller_manager:
