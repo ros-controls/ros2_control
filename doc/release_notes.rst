@@ -39,6 +39,7 @@ hardware_interface
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
 * The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
 
+* Interface availability checks are now constant time, which removes a quadratic cost when activating controllers that claim many interfaces. (`#3757 <https://github.com/ros-controls/ros2_control/pull/3757>`__)
 ros2controlcli
 **************
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
