@@ -1419,10 +1419,7 @@ public:
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
   std::vector<std::string> available_command_interfaces_;
-  /// Membership index of the vectors above (true if the interface is in the vector), so that
-  /// availability checks are O(1) instead of a linear search. Entries are created when the
-  /// interfaces are added to the storage, so toggling availability in the real-time loop only
-  /// flips a flag and doesn't allocate.
+  /// Membership index of the vectors above (true if the interface is in the vector)
   std::unordered_map<std::string, bool> available_state_interfaces_lookup_;
   std::unordered_map<std::string, bool> available_command_interfaces_lookup_;
 
