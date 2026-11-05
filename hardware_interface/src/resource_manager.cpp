@@ -1592,7 +1592,10 @@ ResourceManager::ResourceManager(
 
 bool ResourceManager::shutdown_components()
 {
-  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  // Same order as elsewhere (resources_lock_ before resource_interfaces_lock_):
+  // set_component_state() takes resources_lock_, and read()/write() take resource_interfaces_lock_
+  // while holding resources_lock_
+  std::scoped_lock guard(resources_lock_, resource_interfaces_lock_);
   bool shutdown_status = true;
   for (auto const & hw_info : resource_storage_->hardware_info_map_)
   {
@@ -2574,7 +2577,11 @@ HardwareReadWriteStatus ResourceManager::read(
         component.error();
         read_write_status.result = return_type::ERROR;
         read_write_status.failed_hardware_names.push_back(component_name);
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        {
+          // The available lists are also read and changed from other threads under this lock
+          std::lock_guard<std::recursive_mutex> interfaces_guard(resource_interfaces_lock_);
+          resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        }
       }
     }
   };
@@ -2673,7 +2680,11 @@ HardwareReadWriteStatus ResourceManager::write(
         component.error();
         read_write_status.result = ret_val;
         read_write_status.failed_hardware_names.push_back(component_name);
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        {
+          // The available lists are also read and changed from other threads under this lock
+          std::lock_guard<std::recursive_mutex> interfaces_guard(resource_interfaces_lock_);
+          resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        }
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
