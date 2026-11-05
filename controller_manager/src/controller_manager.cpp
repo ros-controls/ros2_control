@@ -2113,9 +2113,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
-        // TODO(destogl): automatic manipulation of the chain:
-        // || strictness ==
-        //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN);
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         switch_params_.activate_request.erase(ctrl_it);
@@ -2305,10 +2302,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
 
     // cache mapping between hardware and controllers for stopping when read/write error happens
-    // TODO(destogl): This caching approach is suboptimal because the cache can fast become
-    // outdated. Keeping it up to date is not easy because of stopping controllers from multiple
-    // threads maybe we should not at all cache this but always search for the related controllers
-    // to a hardware when error in hardware happens
     if (in_activate_list)
     {
       std::vector<std::string> interface_names =
@@ -3172,20 +3165,6 @@ void ControllerManager::list_hardware_components_srv_cb(
       hwi.data_type = resource_manager_->get_command_interface_data_type(interface);
       hwi.is_available = resource_manager_->command_interface_is_available(interface);
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
-      // TODO(destogl): Add here mapping to controller that has claimed or
-      // can be claiming this interface
-      // Those should be two variables
-      // if (hwi.is_claimed)
-      // {
-      //   for (const auto & controller : controllers_that_use_interface(interface))
-      //   {
-      //     if (is_controller_active(controller))
-      //     {
-      //       hwi.is_claimed_by = controller;
-      //     }
-      //   }
-      // }
-      // hwi.is_used_by = controllers_that_use_interface(interface);
       component.command_interfaces.push_back(hwi);
     }
 
@@ -3316,7 +3295,6 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    // TODO(destogl): do auto-start of broadcasters
   }
   execution_time_.read_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3640,7 +3618,6 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    // TODO(destogl): do auto-start of broadcasters
   }
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
@@ -3926,11 +3903,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       continue;
     }
-    // TODO(destogl): performance of this code could be optimized by adding additional lists with
-    // controllers that cache if the check has failed and has succeeded. Then the following would be
-    // done only once per controller, otherwise in complex scenarios the same controller is checked
-    // multiple times
-
     // check that all following controllers exits, are either: activated, will be activated, or
     // will not be deactivated
     RCLCPP_DEBUG(
@@ -4003,14 +3975,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
       return controller_interface::return_type::ERROR;
     }
 
-    // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
-    // else if (strictness ==
-    //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
-    // {
-    // // insert to the begin of activate request list to be activated before preceding controller
-    //   switch_params_.activate_request.insert(switch_params_.activate_request.begin(),
-    //   following_ctrl_name);
-    // }
     if (!following_ctrl_it->c->is_in_chained_mode())
     {
       auto found_it = std::find(
@@ -4117,17 +4081,6 @@ controller_interface::return_type ControllerManager::check_preceding_controllers
       }
     }
   }
-
-  // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
-  // else if (
-  //  strictness ==
-  //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
-  // {
-  // // insert to the begin of activate request list to be activated before preceding
-  // controller
-  //   switch_params_.activate_request.insert(switch_params_.activate_request.begin(),
-  //   preceding_ctrl_name);
-  // }
 
   return controller_interface::return_type::OK;
 }
