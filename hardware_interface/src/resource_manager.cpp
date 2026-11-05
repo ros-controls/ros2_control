@@ -1437,8 +1437,10 @@ public:
     {
       return false;
     }
-    is_available = true;
+    // Insert first: copying the name can throw even with reserved capacity, and the flag must not
+    // claim an interface that is missing from the list
     available_list.push_back(interface);
+    is_available = true;
     return true;
   }
 
@@ -1456,7 +1458,11 @@ public:
       return false;
     }
     it->second = false;
-    available_list.erase(std::find(available_list.begin(), available_list.end(), interface));
+    const auto list_it = std::find(available_list.begin(), available_list.end(), interface);
+    if (list_it != available_list.end())
+    {
+      available_list.erase(list_it);
+    }
     return true;
   }
 

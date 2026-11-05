@@ -55,6 +55,11 @@ if(BUILD_TESTING)
     test_resource_manager
     PRIVATE ROS2_CONTROL_STRICT_TIMING_TESTS=$<BOOL:${ROS2_CONTROL_STRICT_TIMING_TESTS}>)
 
+  ament_add_gmock(test_resource_manager_alloc_failure test/test_resource_manager_alloc_failure.cpp)
+  target_link_libraries(test_resource_manager_alloc_failure
+                        hardware_interface::hardware_interface
+                        rclcpp::rclcpp)
+
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
   target_link_libraries(test_resource_manager_prepare_perform_switch
                         hardware_interface::hardware_interface
