@@ -1880,13 +1880,17 @@ std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
 // CM API: Called in "update"-thread
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
-  if (!command_interface_is_available(key))
+  // Check the claimed map first: it is a hash lookup, while the availability check is a linear
+  // search over all available interfaces and is only needed for the interfaces that are claimed.
   {
-    return false;
+    std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+    const auto it = resource_storage_->claimed_command_interface_map_.find(key);
+    if (it == resource_storage_->claimed_command_interface_map_.end() || !it->second)
+    {
+      return false;
+    }
   }
-
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  return resource_storage_->claimed_command_interface_map_.at(key);
+  return command_interface_is_available(key);
 }
 
 // CM API: Called in "update"-thread
