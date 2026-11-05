@@ -27,6 +27,7 @@ controller_manager
 * ``configure_controller`` no longer implicitly cleans up an ``inactive`` controller before configuring; it now strictly requires the ``unconfigured`` state and returns an error otherwise. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
 * The ``spawner`` skips configuring an already configured controller. Use the new ``--reconfigure`` argument to cleanup and configure it again. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
 * The ``spawner`` and ``ros2 control load_controller`` now accept parameter files with the controller namespace split across nested keys (e.g. ``/ns: {controller: {ros__parameters: ...}}``), with or without the leading slash, and match entries (including ``/*`` and ``/**`` wildcards anywhere in the name) and their precedence the same way as ``rclcpp``. (`#3719 <https://github.com/ros-controls/ros2_control/pull/3719>`__)
+* The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 
 hardware_interface
 ******************
