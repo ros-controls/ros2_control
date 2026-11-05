@@ -314,18 +314,25 @@ void get_active_controllers_using_command_interfaces_of_controller(
     return;
   }
   const auto cmd_itfs = get_command_interfaces_names(it->c, resource_manager);
+  // Resolve the command interfaces of the active controllers once, instead of once per command
+  // interface of the given controller
+  std::vector<std::pair<const std::string *, std::vector<std::string>>> active_ctrls_cmd_itfs;
+  for (const auto & controller : controllers)
+  {
+    if (is_controller_active(controller.c))
+    {
+      active_ctrls_cmd_itfs.emplace_back(
+        &controller.info.name, get_command_interfaces_names(controller.c, resource_manager));
+    }
+  }
   for (const auto & cmd_itf : cmd_itfs)
   {
-    for (const auto & controller : controllers)
+    for (const auto & [ctrl_name, ctrl_cmd_itfs] : active_ctrls_cmd_itfs)
     {
-      const auto ctrl_cmd_itfs = get_command_interfaces_names(controller.c, resource_manager);
-      // check if the controller is active and has the command interface and make sure that it
-      // doesn't exist in the list already
-      if (
-        is_controller_active(controller.c) &&
-        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
+      // make sure that it doesn't exist in the list already
+      if (ros2_control::has_item(ctrl_cmd_itfs, cmd_itf))
       {
-        ros2_control::add_item(controllers_using_command_interfaces, controller.info.name);
+        ros2_control::add_item(controllers_using_command_interfaces, *ctrl_name);
       }
     }
   }
