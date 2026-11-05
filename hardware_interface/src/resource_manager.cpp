@@ -1419,14 +1419,14 @@ public:
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
   std::vector<std::string> available_command_interfaces_;
-  /// Membership index of the vectors above (true if the interface is in the vector)
+  /// Membership index of the vectors above (true if the interface is in the vector).
+  /// Entries are created on import, so the real-time loop only flips flags and never allocates.
   std::unordered_map<std::string, bool> available_state_interfaces_lookup_;
   std::unordered_map<std::string, bool> available_command_interfaces_lookup_;
 
   /// Adds the interface to the available list unless it is already in it.
   /**
-   *
-eturns true if the interface was added, false if it was already available.
+   * \returns true if the interface was added, false if it was already available.
    */
   static bool make_available(
     std::vector<std::string> & available_list, std::unordered_map<std::string, bool> & lookup,
@@ -1444,8 +1444,7 @@ eturns true if the interface was added, false if it was already available.
 
   /// Removes the interface from the available list if it is in it.
   /**
-   *
-eturns true if the interface was removed, false if it was not available.
+   * \returns true if the interface was removed, false if it was not available.
    */
   static bool make_unavailable(
     std::vector<std::string> & available_list, std::unordered_map<std::string, bool> & lookup,
