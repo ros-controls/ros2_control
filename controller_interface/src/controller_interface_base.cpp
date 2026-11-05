@@ -201,14 +201,6 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
   auto & params = impl_->ctrl_itf_params_;
-  // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
-  // overrides correctly in combination with std::bind. The goal is to have the following calls:
-  // 1. CM: controller.get_node()->configure()
-  // 2. LifecycleNode: ControllerInterfaceBase::on_configure()
-  // 3. ControllerInterfaceBase: <controller>::on_configure()
-  // Then we don't need to do state-machine related checks.
-  //
-  // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     const auto update_rate = get_node()->get_parameter("update_rate").as_int();
