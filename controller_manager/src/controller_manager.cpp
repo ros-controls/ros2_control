@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -92,6 +93,11 @@ inline bool is_controller_inactive(
   const controller_interface::ControllerInterfaceBaseSharedPtr & controller)
 {
   return is_controller_inactive(*controller);
+}
+
+std::unordered_set<std::string> make_lookup_set(std::vector<std::string> && names)
+{
+  return {std::make_move_iterator(names.begin()), std::make_move_iterator(names.end())};
 }
 
 inline bool is_controller_active(const controller_interface::ControllerInterfaceBase & controller)
@@ -3157,6 +3163,12 @@ void ControllerManager::list_hardware_components_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list hardware components service locked");
 
   auto hw_components_info = resource_manager_->get_components_status();
+  // The *_interface_is_available() calls are a linear search over all available interfaces, which
+  // makes listing every interface quadratic, so build the lookup sets once per request.
+  const auto available_state_interfaces =
+    make_lookup_set(resource_manager_->available_state_interfaces());
+  const auto available_command_interfaces =
+    make_lookup_set(resource_manager_->available_command_interfaces());
 
   response->component.reserve(hw_components_info.size());
 
@@ -3177,7 +3189,7 @@ void ControllerManager::list_hardware_components_srv_cb(
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
       hwi.data_type = resource_manager_->get_command_interface_data_type(interface);
-      hwi.is_available = resource_manager_->command_interface_is_available(interface);
+      hwi.is_available = available_command_interfaces.count(interface) > 0;
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
       // TODO(destogl): Add here mapping to controller that has claimed or
       // can be claiming this interface
@@ -3202,7 +3214,7 @@ void ControllerManager::list_hardware_components_srv_cb(
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
       hwi.data_type = resource_manager_->get_state_interface_data_type(interface);
-      hwi.is_available = resource_manager_->state_interface_is_available(interface);
+      hwi.is_available = available_state_interfaces.count(interface) > 0;
       hwi.is_claimed = false;
       component.state_interfaces.push_back(hwi);
     }
@@ -3221,12 +3233,18 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service locked");
 
+  // See list_hardware_components_srv_cb: avoids a linear search per listed interface
+  const auto available_state_interfaces =
+    make_lookup_set(resource_manager_->available_state_interfaces());
+  const auto available_command_interfaces =
+    make_lookup_set(resource_manager_->available_command_interfaces());
+
   auto state_interface_names = resource_manager_->state_interface_keys();
   for (const auto & state_interface_name : state_interface_names)
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
-    hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
+    hwi.is_available = available_state_interfaces.count(state_interface_name) > 0;
     hwi.data_type = resource_manager_->get_state_interface_data_type(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
@@ -3236,7 +3254,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
-    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
+    hwi.is_available = available_command_interfaces.count(command_interface_name) > 0;
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     hwi.data_type = resource_manager_->get_command_interface_data_type(command_interface_name);
     response->command_interfaces.push_back(hwi);
