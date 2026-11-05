@@ -2,6 +2,21 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.13.0 (2026-11-02)
+-------------------
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Fix joint limit update reporting via ros parameter updates (`#3664 <https://github.com/ros-controls/ros2_control/issues/3664>`_)
+* Contributors: Sai Kishor Kothakota, huxiaoyi-ovo
+
+6.12.0 (2026-10-07)
+-------------------
+
+6.11.0 (2026-10-05)
+-------------------
+* [joint_limits] Fix the changed flag over the whole parameter batch (`#3576 <https://github.com/ros-controls/ros2_control/issues/3576>`_)
+* Replace RT buffer with realtime thread safe box (`#3633 <https://github.com/ros-controls/ros2_control/issues/3633>`_)
+* Contributors: Christoph Fröhlich, Dylan Pulver
+
 6.10.1 (2026-09-08)
 -------------------
 

@@ -12,17 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
+#include <iterator>
 #include <memory>
 #include <random>
 #include <regex>
 #include <string>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "controller_manager_msgs/srv/cleanup_controller.hpp"
+#include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
+#include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
+#include "controller_manager_msgs/srv/unload_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"

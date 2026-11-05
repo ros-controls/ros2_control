@@ -2,6 +2,21 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.13.0 (2026-11-02)
+-------------------
+* Fix GPS status values when state-interface reads fail (`#3660 <https://github.com/ros-controls/ros2_control/issues/3660>`_)
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* fix(FTS): shutdown race with interfaces (`#3492 <https://github.com/ros-controls/ros2_control/issues/3492>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, _Rimas_
+
+6.12.0 (2026-10-07)
+-------------------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.11.0 (2026-10-05)
+-------------------
+
 6.10.1 (2026-09-08)
 -------------------
 

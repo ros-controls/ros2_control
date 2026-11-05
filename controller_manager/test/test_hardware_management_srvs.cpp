@@ -11,12 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "controller_manager_msgs/msg/hardware_interface.hpp"
+#include "controller_manager_msgs/srv/list_hardware_components.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"

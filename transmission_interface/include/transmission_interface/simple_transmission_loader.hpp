@@ -17,8 +17,8 @@
 
 #include <memory>
 
-#include <transmission_interface/transmission.hpp>
-#include <transmission_interface/transmission_loader.hpp>
+#include "transmission_interface/transmission.hpp"
+#include "transmission_interface/transmission_loader.hpp"
 
 namespace transmission_interface
 {

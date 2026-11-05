@@ -14,14 +14,17 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "pluginlib/class_loader.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "pluginlib/exceptions.hpp"
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 using hardware_interface::ResourceManager;

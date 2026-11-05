@@ -2,6 +2,22 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.13.0 (2026-11-02)
+-------------------
+* Deselect unreachable controller manager in rqt_controller_manager (`#3725 <https://github.com/ros-controls/ros2_control/issues/3725>`_)
+* Fix controller type lookup in rqt_controller_manager (`#3723 <https://github.com/ros-controls/ros2_control/issues/3723>`_)
+* Fix hang and client leak in rqt_controller_manager parameter calls (`#3722 <https://github.com/ros-controls/ros2_control/issues/3722>`_)
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.12.0 (2026-10-07)
+-------------------
+
+6.11.0 (2026-10-05)
+-------------------
+* Wait for the rqt node instead of sleeping a fixed 2s (`#3592 <https://github.com/ros-controls/ros2_control/issues/3592>`_)
+* Contributors: Puja Chaudhury
+
 6.10.1 (2026-09-08)
 -------------------
 

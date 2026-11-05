@@ -24,6 +24,8 @@
 
 namespace transmission_interface
 {
+constexpr auto HW_IF_ABSOLUTE_POSITION = "absolute_position";
+
 /// Abstract base class for representing mechanical transmissions.
 /**
  * Mechanical transmissions transform effort/flow variables such that their product (power) remains

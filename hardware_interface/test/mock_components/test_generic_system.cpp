@@ -16,7 +16,10 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <future>
+#include <limits>
+#include <memory>
 #include <string>
 #include <thread>
 #include <unordered_map>

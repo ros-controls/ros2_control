@@ -17,6 +17,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "rcpputils/pointer_traits.hpp"
 

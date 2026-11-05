@@ -13,12 +13,12 @@
 // limitations under the License.
 
 #include <memory>
-#include <string>
-#include <vector>
+#include <utility>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
+#include "hardware_interface/resource_manager.hpp"
 #include "test_controller/test_controller.hpp"
 
 using ::testing::_;

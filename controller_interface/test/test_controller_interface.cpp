@@ -14,8 +14,12 @@
 
 #include "test_controller_interface.hpp"
 
+#include <chrono>
+#include <future>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "gmock/gmock.h"

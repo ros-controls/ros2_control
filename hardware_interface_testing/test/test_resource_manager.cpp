@@ -20,16 +20,27 @@
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/helpers.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
@@ -221,6 +232,18 @@ TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_
   // missing command keys
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_state_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_state_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_command_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_command_keys_urdf);
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
@@ -1274,13 +1297,14 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     CONTROLLER_NAME + "/" + REFERENCE_INTERFACE_NAMES[2]};
 
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
-  std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
+  const std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
 
   for (size_t i = 0; i < REFERENCE_INTERFACE_NAMES.size(); ++i)
   {
-    reference_interfaces.push_back(
-      std::make_shared<hardware_interface::CommandInterface>(
-        CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
+    auto itf = std::make_shared<hardware_interface::CommandInterface>(
+      CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i]);
+    std::ignore = itf->set_value(reference_interface_values[i]);
+    reference_interfaces.push_back(itf);
   }
 
   rm.import_controller_reference_interfaces(CONTROLLER_NAME, reference_interfaces);
@@ -1333,9 +1357,9 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     EXPECT_EQ(claimed_itf1.get_optional().value(), 11.1);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 33.3);
 
-    EXPECT_EQ(reference_interface_values[0], 11.1);
-    EXPECT_EQ(reference_interface_values[1], 2.0);
-    EXPECT_EQ(reference_interface_values[2], 33.3);
+    EXPECT_EQ(reference_interfaces[0]->get_optional().value(), 11.1);
+    EXPECT_EQ(reference_interfaces[1]->get_optional().value(), 2.0);
+    EXPECT_EQ(reference_interfaces[2]->get_optional().value(), 33.3);
   }
 
   // interfaces should be released now, but still managed by resource manager
@@ -1360,9 +1384,9 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 
   // Last written values should stay
-  EXPECT_EQ(reference_interface_values[0], 11.1);
-  EXPECT_EQ(reference_interface_values[1], 2.0);
-  EXPECT_EQ(reference_interface_values[2], 33.3);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), 11.1);
+  EXPECT_EQ(reference_interfaces[1]->get_optional().value(), 2.0);
+  EXPECT_EQ(reference_interfaces[2]->get_optional().value(), 33.3);
 
   // DUPLICATE PREVENTION TEST
 
@@ -1424,13 +1448,14 @@ TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
     CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[2]};
 
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
-  std::vector<double> state_interface_values = {1.0, 2.0, 3.0};
+  const std::vector<double> state_interface_values = {1.0, 2.0, 3.0};
 
   for (size_t i = 0; i < STATE_INTERFACE_NAMES.size(); ++i)
   {
-    state_interfaces.push_back(
-      std::make_shared<hardware_interface::StateInterface>(
-        CONTROLLER_NAME, STATE_INTERFACE_NAMES[i], &state_interface_values[i]));
+    auto itf = std::make_shared<hardware_interface::StateInterface>(
+      CONTROLLER_NAME, STATE_INTERFACE_NAMES[i]);
+    std::ignore = itf->set_value(state_interface_values[i]);
+    state_interfaces.push_back(itf);
   }
 
   rm.import_controller_exported_state_interfaces(CONTROLLER_NAME, state_interfaces);
