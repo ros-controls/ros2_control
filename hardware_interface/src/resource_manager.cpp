@@ -934,26 +934,24 @@ public:
   /// enforce the command limits for a specific joint
   /**
    * @param joint_name name of the joint to enforce the command limits
+   * @param limiter limiter of the joint, passed in by the caller that already iterates over
+   * joint_limiters_interface_ so that the hardware map is not scanned again for every joint
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
    * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
-  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  bool enforce_command_limits(
+    const std::string & joint_name,
+    joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData> & limiter,
+    const rclcpp::Duration & period)
   {
-    bool enforce_result = false;
-    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+    update_joint_limiters_data(data);
+    const bool enforce_result = limiter.enforce(data.actual, data.limited, period);
+    if (enforce_result)
     {
-      if (limiters.find(joint_name) != limiters.end())
-      {
-        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
-        update_joint_limiters_data(data);
-        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
-        if (enforce_result)
-        {
-          update_joint_limiters_commands(data.limited, command_interface_map_);
-        }
-      }
+      update_joint_limiters_commands(data.limited, command_interface_map_);
     }
     return enforce_result;
   }
@@ -2403,7 +2401,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
-      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, *limiter, period);
     }
   }
   return enforce_result;
