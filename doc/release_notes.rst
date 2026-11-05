@@ -28,6 +28,8 @@ controller_manager
 * The ``spawner`` skips configuring an already configured controller. Use the new ``--reconfigure`` argument to cleanup and configure it again. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
 * The ``spawner`` and ``ros2 control load_controller`` now accept parameter files with the controller namespace split across nested keys (e.g. ``/ns: {controller: {ros__parameters: ...}}``), with or without the leading slash, and match entries (including ``/*`` and ``/**`` wildcards anywhere in the name) and their precedence the same way as ``rclcpp``. (`#3719 <https://github.com/ros-controls/ros2_control/pull/3719>`__)
 * The controller manager now resolves its clocks once per cycle instead of once per controller in the real-time update loop, reducing the per-controller overhead. (`#3754 <https://github.com/ros-controls/ros2_control/pull/3754>`__)
+* The ``list_hardware_interfaces`` and ``list_hardware_components`` services now scale linearly with the number of interfaces, making them significantly faster on robots with many interfaces. (`#3755 <https://github.com/ros-controls/ros2_control/pull/3755>`__)
+* The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 
 hardware_interface
 ******************
