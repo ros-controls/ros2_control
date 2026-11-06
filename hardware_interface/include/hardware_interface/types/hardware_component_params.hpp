@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include "hardware_interface/hardware_info.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -62,6 +63,15 @@ struct HardwareComponentParams
    * to the ControllerManager's executor.
    */
   rclcpp::Executor::WeakPtr executor;
+
+  /**
+   * @brief Extra arguments for the hardware component's internal node, e.g. remappings or
+   * parameters (`-r ~/topic:=/other_topic`, `-p param:=value`). They are appended after the
+   * arguments from define_custom_node_options() and a `--ros-args` flag is prepended if missing.
+   * Typically populated by the ControllerManager with its own forwarded node arguments.
+   * Global arguments are not used.
+   */
+  std::vector<std::string> node_options_args;
 };
 
 }  // namespace hardware_interface
