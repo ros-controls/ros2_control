@@ -263,6 +263,17 @@ protected:
 
   void manage_switch();
 
+  /// Report a switch that only completed after its deadline as a timeout.
+  /**
+   * The response of a switch must not claim success when the caller's finite timeout expired while
+   * it was running. A controller callback that is already executing cannot be interrupted, so the
+   * switch can finish late; this keeps that outcome from being reported as OK.
+   *
+   * \param[out] message filled with the timeout message when the deadline had passed.
+   * \return ERROR if the deadline had passed, otherwise the unchanged OK.
+   */
+  controller_interface::return_type report_late_switch_as_timeout(std::string & message);
+
   /// Deactivate chosen controllers from real-time controller list.
   /**
    * Deactivate controllers with names \p controllers_to_deactivate from list \p rt_controller_list.
@@ -749,7 +760,6 @@ private:
     int strictness;
     std::atomic_bool activate_asap{false};
     std::chrono::nanoseconds timeout;
-
     // conditional variable and mutex to wait for the switch to complete
     std::condition_variable cv;
     std::mutex mutex;
