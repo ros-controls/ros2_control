@@ -539,6 +539,41 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/sample_count");
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
+
+using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+
+std::string make_stats_string(
+  const StatisticData & statistics_data, const std::string & measurement_unit)
+{
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);
+  oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+      << statistics_data.max << "] " << measurement_unit
+      << ", StdDev: " << statistics_data.standard_deviation;
+  return oss.str();
+}
+
+/**
+ * Report the statistics over the recent window under @p key, in @p measurement_unit, if the window
+ * is enabled, and return the statistics the diagnostic level is judged on: the recent ones when the
+ * window has samples, so that an old outlier (e.g. a slow cycle at bring-up) doesn't hold the level
+ * in WARN/ERROR, otherwise @p since_start.
+ */
+StatisticData report_and_select_recent(
+  diagnostic_updater::DiagnosticStatusWrapper & stat, const std::string & key,
+  const StatisticData & since_start, const ros2_control::TimeWindowStatistics * recent,
+  const std::string & measurement_unit)
+{
+  if (!recent || !recent->is_enabled())
+  {
+    return since_start;
+  }
+  const auto recent_stats = recent->get_statistics();
+  stat.add(
+    key, make_stats_string(recent_stats, measurement_unit) +
+           fmt::format(" over the last {} s", recent->get_window_duration()));
+  return recent_stats.sample_count > 0 ? recent_stats : since_start;
+}
 }  // namespace
 
 namespace controller_manager
@@ -694,6 +729,8 @@ void ControllerManager::init_controller_manager()
 
   // Setup diagnostics
   periodicity_stats_.reset();
+  recent_periodicity_stats_.set_window_duration(
+    params_->diagnostics.controller_manager.window_duration);
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -849,6 +886,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
+  params.hardware_components_statistics_window_duration =
+    params_->diagnostics.hardware_components.window_duration;
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
@@ -2537,6 +2576,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   controller_chained_reference_interfaces_cache_[controller.info.name] = {};
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
+  controller.recent_periodicity_statistics->set_window_duration(
+    params_->diagnostics.controllers.window_duration);
+  controller.recent_execution_time_statistics->set_window_duration(
+    params_->diagnostics.controllers.window_duration);
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -2775,7 +2818,9 @@ void ControllerManager::activate_controllers(
     try
     {
       found_it->periodicity_statistics->reset();
+      found_it->recent_periodicity_statistics->reset();
       found_it->execution_time_statistics->reset();
+      found_it->recent_execution_time_statistics->reset();
       new_state = controller->get_node()->activate();
     }
     catch (const std::exception & e)
@@ -3313,7 +3358,9 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  periodicity_stats_.add_measurement(1.0 / period.seconds());
+  const double periodicity = 1.0 / period.seconds();
+  periodicity_stats_.add_measurement(periodicity);
+  recent_periodicity_stats_.add_measurement(periodicity, time.seconds());
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -3511,13 +3558,18 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {
-            loaded_controller.execution_time_statistics->add_measurement(
-              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+            const double execution_time =
+              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+            loaded_controller.execution_time_statistics->add_measurement(execution_time);
+            loaded_controller.recent_execution_time_statistics->add_measurement(
+              execution_time, current_time.seconds());
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
-            loaded_controller.periodicity_statistics->add_measurement(
-              1.0 / trigger_result.period.value().seconds());
+            const double periodicity = 1.0 / trigger_result.period.value().seconds();
+            loaded_controller.periodicity_statistics->add_measurement(periodicity);
+            loaded_controller.recent_periodicity_statistics->add_measurement(
+              periodicity, current_time.seconds());
           }
         }
         catch (const std::exception & e)
@@ -4484,17 +4536,6 @@ void ControllerManager::controller_activity_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4515,6 +4556,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
       const auto exec_time_stats = controllers[i].execution_time_statistics->get_statistics();
       stat.add(
         controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
+      const auto judged_exec_time_stats = report_and_select_recent(
+        stat, controllers[i].info.name + exec_time_suffix + ".recent", exec_time_stats,
+        controllers[i].recent_execution_time_statistics.get(), "us");
       const bool publish_periodicity_stats =
         is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
       if (publish_periodicity_stats)
@@ -4523,12 +4567,16 @@ void ControllerManager::controller_activity_diagnostic_callback(
           controllers[i].info.name + periodicity_suffix,
           make_stats_string(periodicity_stats, "Hz") +
             " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
+        const auto judged_periodicity_stats = report_and_select_recent(
+          stat, controllers[i].info.name + periodicity_suffix + ".recent", periodicity_stats,
+          controllers[i].recent_periodicity_statistics.get(), "Hz");
         const double periodicity_error = std::abs(
-          periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
+          judged_periodicity_stats.average -
+          static_cast<double>(controllers[i].c->get_update_rate()));
         if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.error ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -4537,7 +4585,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
         else if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.warn ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.warn)
         {
           if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4549,18 +4597,18 @@ void ControllerManager::controller_activity_diagnostic_callback(
       }
       const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
       if (
-        (exec_time_stats.average - max_exp_exec_time) >
+        (judged_exec_time_stats.average - max_exp_exec_time) >
           params_->diagnostics.threshold.controllers.execution_time.mean_error.error ||
-        exec_time_stats.standard_deviation >
+        judged_exec_time_stats.standard_deviation >
           params_->diagnostics.threshold.controllers.execution_time.standard_deviation.error)
       {
         level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
         high_exec_time_controllers.push_back(controllers[i].info.name);
       }
       else if (
-        (exec_time_stats.average - max_exp_exec_time) >
+        (judged_exec_time_stats.average - max_exp_exec_time) >
           params_->diagnostics.threshold.controllers.execution_time.mean_error.warn ||
-        exec_time_stats.standard_deviation >
+        judged_exec_time_stats.standard_deviation >
           params_->diagnostics.threshold.controllers.execution_time.standard_deviation.warn)
       {
         if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4664,17 +4712,6 @@ void ControllerManager::hardware_components_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4686,11 +4723,10 @@ void ControllerManager::hardware_components_diagnostic_callback(
     stat.add(component_name + state_suffix, component_info.state.label());
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
-      auto update_stats =
-        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string, this](
-          const std::string & comp_name, const auto & statistics,
-          const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
-          const auto & params)
+      auto update_stats = [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, this](
+                            const std::string & comp_name, const auto & statistics,
+                            const std::string & statistics_type_suffix, auto & diag_level,
+                            const auto & comp_info, const auto & params)
       {
         if (!statistics)
         {
@@ -4704,6 +4740,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
         stat.add(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
+        const auto judged_exec_time_stats = report_and_select_recent(
+          stat, comp_name + statistics_type_suffix + exec_time_suffix + ".recent", exec_time_stats,
+          statistics->recent_execution_time.get(), "us");
         const bool publish_periodicity_stats =
           is_async || (comp_info.rw_rate != this->get_update_rate());
         if (publish_periodicity_stats)
@@ -4712,13 +4751,17 @@ void ControllerManager::hardware_components_diagnostic_callback(
             comp_name + statistics_type_suffix + periodicity_suffix,
             make_stats_string(periodicity_stats, "Hz") +
               " -> Desired : " + std::to_string(comp_info.rw_rate) + " Hz");
+          const auto judged_periodicity_stats = report_and_select_recent(
+            stat, comp_name + statistics_type_suffix + periodicity_suffix + ".recent",
+            periodicity_stats, statistics->recent_periodicity.get(), "Hz");
           const double periodicity_error =
-            std::abs(periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
+            std::abs(judged_periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
           if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.error ||
-            periodicity_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                     .periodicity.standard_deviation.error)
+            judged_periodicity_stats.standard_deviation >
+              params->diagnostics.threshold.hardware_components.periodicity.standard_deviation
+                .error)
           {
             diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
             ros2_control::add_item(bad_periodicity_async_hw, comp_name);
@@ -4726,7 +4769,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
           else if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.warn ||
-            periodicity_stats.standard_deviation >
+            judged_periodicity_stats.standard_deviation >
               params->diagnostics.threshold.hardware_components.periodicity.standard_deviation.warn)
           {
             if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4739,19 +4782,21 @@ void ControllerManager::hardware_components_diagnostic_callback(
         const double max_exp_exec_time =
           is_async ? 1.e6 / static_cast<double>(comp_info.rw_rate) : 0.0;
         if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.error ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.error)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .error)
         {
           diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
           high_exec_time_hw.push_back(comp_name);
         }
         else if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.warn ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.warn)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .warn)
         {
           if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
           {
@@ -4808,6 +4853,29 @@ void ControllerManager::controller_manager_diagnostic_callback(
     periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));
   stat.add(periodicity_stat_name + ".min", std::to_string(cm_stats.min));
   stat.add(periodicity_stat_name + ".max", std::to_string(cm_stats.max));
+
+  // With a window, the level is judged on the recent statistics, so that an old outlier (e.g. a
+  // slow cycle at bring-up) doesn't hold the diagnostic in WARN/ERROR for the rest of the run
+  auto judged_stats = cm_stats;
+  if (recent_periodicity_stats_.is_enabled())
+  {
+    const auto recent_stats = recent_periodicity_stats_.get_statistics();
+    const std::string recent_stat_name = periodicity_stat_name + ".recent";
+    stat.add(
+      recent_stat_name + ".window_duration",
+      std::to_string(recent_periodicity_stats_.get_window_duration()));
+    stat.add(recent_stat_name + ".sample_count", std::to_string(recent_stats.sample_count));
+    stat.add(recent_stat_name + ".average", std::to_string(recent_stats.average));
+    stat.add(
+      recent_stat_name + ".standard_deviation", std::to_string(recent_stats.standard_deviation));
+    stat.add(recent_stat_name + ".min", std::to_string(recent_stats.min));
+    stat.add(recent_stat_name + ".max", std::to_string(recent_stats.max));
+    if (recent_stats.sample_count > 0)
+    {
+      judged_stats = recent_stats;
+    }
+  }
+
   if (is_resource_manager_initialized())
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
@@ -4827,14 +4895,14 @@ void ControllerManager::controller_manager_diagnostic_callback(
     }
   }
 
-  const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
+  const double periodicity_error = std::abs(judged_stats.average - get_update_rate());
   const std::string diag_summary = fmt::format(
     FMT_COMPILE("Controller Manager has bad periodicity : {} Hz. Expected consistent {} Hz"),
-    cm_stats.average, get_update_rate());
+    judged_stats.average, get_update_rate());
   if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||
-    cm_stats.standard_deviation >
+    judged_stats.standard_deviation >
       params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.error)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
@@ -4842,7 +4910,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   else if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.warn ||
-    cm_stats.standard_deviation >
+    judged_stats.standard_deviation >
       params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);

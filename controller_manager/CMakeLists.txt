@@ -191,6 +191,15 @@ if(BUILD_TESTING)
   )
   set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
 
+  ament_add_gmock(test_controller_manager_periodicity_diagnostics
+    test/test_controller_manager_periodicity_diagnostics.cpp
+  )
+  target_link_libraries(test_controller_manager_periodicity_diagnostics
+    controller_manager
+    test_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )

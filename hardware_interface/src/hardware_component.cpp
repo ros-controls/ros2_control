@@ -44,6 +44,11 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.component_mutex_);
   impl_ = std::move(other.impl_);
+  // Keep the same collectors: the resource manager shares them with the component's info (e.g.
+  // recent_periodicity) when loading, before the component may be moved by a vector reallocation.
+  // They are copied rather than moved so that the moved-from object keeps valid collectors.
+  read_statistics_ = other.read_statistics_;
+  write_statistics_ = other.write_statistics_;
   last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
@@ -319,13 +324,16 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
     {
       if (trigger_result.execution_time.has_value())
       {
-        read_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        read_statistics_.execution_time->add_measurement(execution_time);
+        read_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
-        read_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_read_cycle_time_).seconds());
+        const double periodicity = 1.0 / (time - last_read_cycle_time_).seconds();
+        read_statistics_.periodicity->add_measurement(periodicity);
+        read_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
       }
       last_read_cycle_time_ = time;
     }
@@ -358,13 +366,16 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     {
       if (trigger_result.execution_time.has_value())
       {
-        write_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        write_statistics_.execution_time->add_measurement(execution_time);
+        write_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
       {
-        write_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_write_cycle_time_).seconds());
+        const double periodicity = 1.0 / (time - last_write_cycle_time_).seconds();
+        write_statistics_.periodicity->add_measurement(periodicity);
+        write_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
       }
       last_write_cycle_time_ = time;
     }

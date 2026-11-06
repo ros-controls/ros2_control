@@ -18,6 +18,7 @@ controller_manager
 ******************
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
+* New parameters ``diagnostics.controller_manager.window_duration``, ``diagnostics.controllers.window_duration`` and ``diagnostics.hardware_components.window_duration`` make the periodicity diagnostics (and the execution time diagnostics of the controllers and hardware components) judge the last ``window_duration`` seconds instead of all cycles since startup, so a single slow cycle at bring-up no longer holds the diagnostic in ``WARN`` or ``ERROR`` for the rest of the run. The since-startup statistics are still reported, and the recent ones are added as ``periodicity.recent`` and ``execution_time.recent``. The default ``-1.0`` keeps the previous behavior. (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
 * A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 * The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. (`#2895 <https://github.com/ros-controls/ros2_control/pull/2895>`__)
@@ -35,6 +36,7 @@ hardware_interface
 * The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
 * Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
+* A ``TimeWindowStatistics`` type is added next to ``MovingAverageStatistics``: average, minimum, maximum and standard deviation over the samples of the last ``window_duration`` seconds, in constant memory independent of the sample rate. The hardware components collect their read/write periodicity and execution time in it too, exposed as ``HardwareComponentStatisticsData::recent_periodicity`` and ``HardwareComponentStatisticsData::recent_execution_time`` and enabled through ``ResourceManagerParams::hardware_components_statistics_window_duration``. (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
 
 ros2controlcli
 **************
