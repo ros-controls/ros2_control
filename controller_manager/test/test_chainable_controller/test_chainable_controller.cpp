@@ -14,8 +14,11 @@
 
 #include "test_chainable_controller.hpp"
 
+#include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"

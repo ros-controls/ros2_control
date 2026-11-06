@@ -16,9 +16,9 @@
 #include <cctype>
 #include <charconv>
 #include <cmath>
-#include <cstdint>
 #include <locale>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>

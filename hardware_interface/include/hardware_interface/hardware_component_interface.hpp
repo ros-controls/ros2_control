@@ -15,13 +15,14 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 
-#include <fmt/compile.h>
+#include <fmt/format.h>
 
-#include <limits>
+#include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "hardware_interface/component_parser.hpp"
@@ -35,10 +36,13 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "hardware_interface/types/trigger_type.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"

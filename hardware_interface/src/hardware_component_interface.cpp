@@ -15,11 +15,20 @@
 #include "hardware_interface/hardware_component_interface.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <exception>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "hardware_interface/lexical_casts.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/qos.hpp"
 
 namespace hardware_interface
 {

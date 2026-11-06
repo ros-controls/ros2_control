@@ -24,6 +24,8 @@ from controller_manager.controller_manager_services import (
     list_hardware_components,
     set_hardware_component_state,
     load_controller,
+    service_caller,
+    ServiceNotFoundError,
     switch_controllers,
     unload_controller,
 )
@@ -36,7 +38,7 @@ from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
 from qt_gui.plugin import Plugin
-from ros2param.api import call_get_parameters, call_list_parameters
+from rcl_interfaces.srv import GetParameters, ListParameters
 from ros2service.api import get_service_names_and_types
 
 from .update_combo import update_combo
@@ -46,6 +48,11 @@ class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
     _cm_update_freq = 1  # Hz
+    # Timeout (in seconds) for finding a service and for its response, used by the periodic
+    # queries of controllers, hardware components and parameters
+    _service_timeout = 2.0 / _cm_update_freq
+    # Timeout (in seconds) for the controller manager to perform a controller switch
+    _switch_timeout = 0.3
 
     def __init__(self, context):
         super().__init__(context)
@@ -179,6 +186,18 @@ class ControllerManager(Plugin):
         if cm_name:
             self._update_controllers()
             self._update_hw_components()
+        else:
+            self._controllers = []
+            self._show_controllers()
+            self._hw_components = []
+            self._show_hw_components()
+
+    def _deselect_cm(self, error):
+        """Deselect the controller manager, e.g., because it is not reachable anymore."""
+        self._node.get_logger().warning(
+            f"Deselecting controller manager '{self._cm_name}': {error}"
+        )
+        self._widget.cm_combo.setCurrentIndex(-1)
 
     def _update_controllers(self):
         if not self._cm_name:
@@ -190,6 +209,9 @@ class ControllerManager(Plugin):
         except Exception as e:
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_ctrl_list_timer.stop()
+                return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
                 return
             raise
 
@@ -209,22 +231,17 @@ class ControllerManager(Plugin):
         @rtype [str]
         """
         # Add loaded controllers first
-        try:
-            controllers = list_controllers(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
-            ).controller
+        timeout = self._service_timeout
+        controllers = list_controllers(self._node, self._cm_name, timeout, timeout).controller
 
-            # Append potential controller configs found in the node's parameters
-            for name in _get_parameter_controller_names(self._node, self._cm_name):
-                add_ctrl = all(name != ctrl.name for ctrl in controllers)
-                if add_ctrl:
-                    type_str = _get_controller_type(self._node, self._cm_name, name)
-                    uninit_ctrl = ControllerState(name=name, type=type_str)
-                    controllers.append(uninit_ctrl)
-            return controllers
-        except RuntimeError as e:
-            print(e)
-            return []
+        # Append potential controller configs found in the node's parameters
+        for name in _get_parameter_controller_names(self._node, self._cm_name, timeout):
+            add_ctrl = all(name != ctrl.name for ctrl in controllers)
+            if add_ctrl:
+                type_str = _get_controller_type(self._node, self._cm_name, name, timeout)
+                uninit_ctrl = ControllerState(name=name, type=type_str)
+                controllers.append(uninit_ctrl)
+        return controllers
 
     def _show_controllers(self):
         ctrl_table_view = self._widget.ctrl_table_view
@@ -340,6 +357,9 @@ class ControllerManager(Plugin):
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_hw_components_list_timer.stop()
                 return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
+                return
             raise
 
         # Update controller display, if necessary
@@ -356,15 +376,8 @@ class ControllerManager(Plugin):
         the C{list_hardware_components} service
         @rtype [str]
         """
-        # Add loaded hw_components first
-        try:
-            hw_components = list_hardware_components(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
-            ).component
-            return hw_components
-        except RuntimeError as e:
-            print(e)
-            return []
+        timeout = self._service_timeout
+        return list_hardware_components(self._node, self._cm_name, timeout, timeout).component
 
     def _show_hw_components(self):
         hw_table_view = self._widget.hw_table_view
@@ -473,7 +486,7 @@ class ControllerManager(Plugin):
                 deactivate_controllers=deactivate,
                 strictness=SwitchController.Request.STRICT,
                 activate_asap=False,
-                timeout=0.3,
+                timeout=self._switch_timeout,
             )
         except Exception as e:
             print(e)
@@ -630,7 +643,7 @@ class FontDelegate(QStyledItemDelegate):
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
-def _get_controller_type(node, node_name, ctrl_name):
+def _get_controller_type(node, node_name, ctrl_name, timeout):
     """
     Get the controller's type from the controller manager node with the call_get_parameter service.
 
@@ -638,10 +651,26 @@ def _get_controller_type(node, node_name, ctrl_name):
     @type node_name str
     @param ctrl_name Controller name
     @type ctrl_name str
-    @return Controller type
+    @param timeout Timeout (in seconds) for finding the service and for the response
+    @type timeout float
+    @return Controller type, empty if the service call failed
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    request = GetParameters.Request()
+    request.names = [f"{ctrl_name}.type"]
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/get_parameters",
+            GetParameters,
+            request,
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return ""
     return response.values[0].string_value if response.values else ""
 
 
@@ -666,15 +695,22 @@ def _list_controller_managers(node):
         raise
 
 
-def _get_parameter_controller_names(node, node_name):
+def _get_parameter_controller_names(node, node_name, timeout):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
-    parameter_names = call_list_parameters(node=node, node_name=node_name)
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/list_parameters",
+            ListParameters,
+            ListParameters.Request(),
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return []
+    names = response.result.names
+
     suffix = ".type"
-    # @note: The versions conditioning is added here to support the source-compatibility with Humble
-    if os.environ.get("ROS_DISTRO") == "humble":
-        # for humble, ros2param < 0.20.0
-        return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
-    else:
-        return [
-            n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)
-        ]
+    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]

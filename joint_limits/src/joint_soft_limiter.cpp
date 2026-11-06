@@ -17,7 +17,12 @@
 #define _USE_MATH_DEFINES
 #endif
 #include "joint_limits/joint_soft_limiter.hpp"
+#include <algorithm>
 #include <cmath>
+#include <limits>
+#include <mutex>
+
+#include "joint_limits/joint_limits_helpers.hpp"
 
 namespace joint_limits
 {

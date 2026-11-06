@@ -14,8 +14,10 @@
 
 #include "test_magnetic_field_sensor.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 #include "sensor_msgs/msg/magnetic_field.hpp"
 

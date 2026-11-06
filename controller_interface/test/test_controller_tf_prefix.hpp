@@ -15,7 +15,6 @@
 #ifndef TEST_CONTROLLER_TF_PREFIX_HPP_
 #define TEST_CONTROLLER_TF_PREFIX_HPP_
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 class TestControllerTFPrefix : public ::testing::Test

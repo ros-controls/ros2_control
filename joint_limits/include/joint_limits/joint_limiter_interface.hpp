@@ -17,15 +17,19 @@
 #ifndef JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 #define JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "realtime_tools/realtime_thread_safe_box.hpp"
-#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 namespace joint_limits
 {

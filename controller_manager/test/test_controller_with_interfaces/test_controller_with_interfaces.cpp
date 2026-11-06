@@ -14,6 +14,8 @@
 
 #include "test_controller_with_interfaces.hpp"
 
+#include <stdexcept>
+
 namespace test_controller_with_interfaces
 {
 TestControllerWithInterfaces::TestControllerWithInterfaces()

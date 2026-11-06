@@ -2,6 +2,15 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.50.0 (2026-11-02)
+-------------------
+* Deselect unreachable controller manager in rqt_controller_manager (`#3725 <https://github.com/ros-controls/ros2_control/issues/3725>`_) (`#3740 <https://github.com/ros-controls/ros2_control/issues/3740>`_)
+* Fix controller type lookup in rqt_controller_manager (`#3723 <https://github.com/ros-controls/ros2_control/issues/3723>`_) (`#3737 <https://github.com/ros-controls/ros2_control/issues/3737>`_)
+* Fix hang and client leak in rqt_controller_manager parameter calls (`#3722 <https://github.com/ros-controls/ros2_control/issues/3722>`_) (`#3734 <https://github.com/ros-controls/ros2_control/issues/3734>`_)
+* refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_) (`#3742 <https://github.com/ros-controls/ros2_control/issues/3742>`_)
+* Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3704 <https://github.com/ros-controls/ros2_control/issues/3704>`_)
+* Contributors: mergify[bot]
+
 4.49.0 (2026-10-05)
 -------------------
 * Wait for the rqt node instead of sleeping a fixed 2s (`#3592 <https://github.com/ros-controls/ros2_control/issues/3592>`_) (`#3607 <https://github.com/ros-controls/ros2_control/issues/3607>`_)

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <vector>
+
 #include "gmock/gmock.h"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/accessor.hpp"

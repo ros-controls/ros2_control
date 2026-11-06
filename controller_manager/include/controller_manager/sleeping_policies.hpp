@@ -14,14 +14,15 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
 
-#include <rclcpp/logging.hpp>
-
-#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/time.hpp"
 
 namespace controller_manager
 {
+class ControllerManager;
+
 struct ControlLoopTimingConfig
 {
   bool use_sim_time{false};

@@ -18,9 +18,11 @@
 
 #include "test_force_torque_sensor.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 void ForceTorqueSensorTest::TearDown() { force_torque_sensor_.reset(nullptr); }

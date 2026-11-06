@@ -12,7 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <stdexcept>
+#include <string>
 #include <thread>
+#include <tuple>
+#include <variant>
 
 #include "gmock/gmock.h"
 #pragma GCC diagnostic push

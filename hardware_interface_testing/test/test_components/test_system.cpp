@@ -13,10 +13,18 @@
 // limitations under the License.
 
 #include <array>
+#include <chrono>
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <tuple>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/logging.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 

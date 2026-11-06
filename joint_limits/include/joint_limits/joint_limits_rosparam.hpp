@@ -19,12 +19,18 @@
 
 #include <fmt/compile.h>
 
+#include <cmath>
+#include <exception>
 #include <limits>
 #include <string>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_value.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace  // utilities
