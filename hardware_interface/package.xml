@@ -25,6 +25,7 @@
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
   <depend>realtime_tools</depend>
+  <depend>std_srvs</depend>
   <depend>tinyxml2</depend>
   <depend>urdf</depend>
   <depend>fmt</depend>
