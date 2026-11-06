@@ -934,26 +934,24 @@ public:
   /// enforce the command limits for a specific joint
   /**
    * @param joint_name name of the joint to enforce the command limits
+   * @param limiter limiter of the joint, passed in by the caller that already iterates over
+   * joint_limiters_interface_ so that the hardware map is not scanned again for every joint
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
    * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
-  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  bool enforce_command_limits(
+    const std::string & joint_name,
+    joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData> & limiter,
+    const rclcpp::Duration & period)
   {
-    bool enforce_result = false;
-    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+    update_joint_limiters_data(data);
+    const bool enforce_result = limiter.enforce(data.actual, data.limited, period);
+    if (enforce_result)
     {
-      if (limiters.find(joint_name) != limiters.end())
-      {
-        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
-        update_joint_limiters_data(data);
-        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
-        if (enforce_result)
-        {
-          update_joint_limiters_commands(data.limited, command_interface_map_);
-        }
-      }
+      update_joint_limiters_commands(data.limited, command_interface_map_);
     }
     return enforce_result;
   }
@@ -1879,13 +1877,17 @@ std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
 // CM API: Called in "update"-thread
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
-  if (!command_interface_is_available(key))
+  // Check the claimed map first: it is a hash lookup, while the availability check is a linear
+  // search over all available interfaces and is only needed for the interfaces that are claimed.
   {
-    return false;
+    std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+    const auto it = resource_storage_->claimed_command_interface_map_.find(key);
+    if (it == resource_storage_->claimed_command_interface_map_.end() || !it->second)
+    {
+      return false;
+    }
   }
-
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  return resource_storage_->claimed_command_interface_map_.at(key);
+  return command_interface_is_available(key);
 }
 
 // CM API: Called in "update"-thread
@@ -2399,7 +2401,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
-      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, *limiter, period);
     }
   }
   return enforce_result;

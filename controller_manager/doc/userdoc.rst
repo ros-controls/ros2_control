@@ -458,6 +458,18 @@ The parsed controller config file can follow the same conventions as the typical
           - position
           .....
 
+The namespace can also be split across nested keys, with or without the leading slash (``/rrbot_1:`` or ``rrbot_1:``):
+
+ .. code-block:: yaml
+
+    /rrbot_1:
+      position_trajectory_controller:
+        ros__parameters:
+          type: joint_trajectory_controller/JointTrajectoryController
+          .....
+
+Entries are matched against the controller's fully qualified name with the same rules as ``rclcpp``: ``/*`` matches one namespace token and ``/**`` any number of them, anywhere in the name (e.g. ``/*/position_trajectory_controller`` or ``/rrbot_1/**/position_trajectory_controller``). When several entries match, they are applied in file order and later files override earlier ones, so the last match wins, as at runtime.
+
 ``unspawner``
 ^^^^^^^^^^^^^
 
@@ -623,7 +635,9 @@ Returns a ``LaunchDescription`` containing:
 
 - Launch argument for ``controller_manager_name`` (default: "controller_manager") - allows overriding the controller manager node name
 - Launch argument for ``unload_on_kill`` (default: "false") - waits for interrupt signal to unload controllers
-- Spawner node that loads and activates the specified controllers
+- An action that creates the spawner node once launch arguments have been resolved.
+  The ``--unload-on-kill`` flag is omitted when ``unload_on_kill`` is false; no empty
+  placeholder argument is passed.
 
 **Complete Launch File Example:**
 

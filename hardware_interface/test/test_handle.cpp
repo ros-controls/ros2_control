@@ -143,6 +143,49 @@ TEST(TestHandle, test_command_interface_limiter_on_set_different_threads)
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 100.0);
 }
 
+// Regression test for https://github.com/ros-controls/ros2_control/issues/3618
+// The limiter writes the is_limited flag outside the handle mutex, so concurrent readers (the
+// introspection sampler, is_limited()) race with it. Only detectable when built with
+// ThreadSanitizer.
+TEST(TestHandle, test_command_interface_is_limited_read_while_limiting_different_threads)
+{
+  InterfaceInfo info;
+  info.name = "position";
+  CommandInterface handle{InterfaceDescription("joint1", info)};
+  handle.set_on_set_command_limiter(
+    [](double value, bool & is_limited) -> double
+    {
+      is_limited = std::abs(value) > 100.0;
+      return is_limited ? std::copysign(100.0, value) : value;
+    });
+
+  std::atomic_bool done(false);
+  std::atomic_size_t limited_reads(0);
+  std::thread checking_thread(
+    [&handle, &done, &limited_reads]()
+    {
+      while (!done)
+      {
+        if (handle.is_limited())
+        {
+          ++limited_reads;
+        }
+      }
+    });
+  for (int i = 0; i < 10000; i++)
+  {
+    std::ignore = handle.set_limited_value(i % 2 == 0 ? 50.0 : 150.0);
+  }
+  done = true;
+  checking_thread.join();
+  EXPECT_LE(limited_reads.load(), std::numeric_limits<size_t>::max());
+
+  ASSERT_TRUE(handle.set_limited_value(150.0));
+  EXPECT_TRUE(handle.is_limited());
+  ASSERT_TRUE(handle.set_limited_value(50.0));
+  EXPECT_FALSE(handle.is_limited());
+}
+
 TEST(TestHandle, interface_description_state_interface_name_getters_work)
 {
   const std::string POSITION_INTERFACE = "position";
