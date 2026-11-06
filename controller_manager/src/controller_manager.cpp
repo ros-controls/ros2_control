@@ -3478,9 +3478,18 @@ controller_interface::return_type ControllerManager::update(
         (*loaded_controller.last_update_cycle_time ==
          rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
       const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      // A negative difference means the clock jumped backwards (e.g. a simulation reset). Fall back
+      // to the nominal period so controllers never integrate over a negative dt.
+      const bool clock_jumped_back =
+        !first_update_cycle && current_time < *loaded_controller.last_update_cycle_time;
+      RCLCPP_WARN_EXPRESSION(
+        get_logger(), clock_jumped_back,
+        "The clock jumped backwards for controller '%s'. Using the nominal period for this cycle.",
+        loaded_controller.info.name.c_str());
       const auto controller_actual_period =
-        first_update_cycle ? controller_period
-                           : (current_time - *loaded_controller.last_update_cycle_time);
+        (first_update_cycle || clock_jumped_back)
+          ? controller_period
+          : (current_time - *loaded_controller.last_update_cycle_time);
 
       const double error_now =
         std::abs((controller_actual_period.seconds() * controller_update_rate) - 1.0);

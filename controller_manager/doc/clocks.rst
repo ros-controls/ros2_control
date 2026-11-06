@@ -14,3 +14,9 @@ The ``time`` argument in the ``read`` and ``write`` methods of the hardware comp
 The ``period`` argument in the ``read``, ``update`` and ``write`` methods is calculated using the trigger clock of type ``RCL_STEADY_TIME`` so it is always monotonic.
 
 The reason behind using different clocks is to avoid the issues related to the effect of system time changes in the realtime loops. The ``ros2_control_node`` now also detects the overruns caused by the system time changes and longer execution times of the controllers and hardware components. The controller manager will print a warning message if the controller or hardware component misses the update cycle due to the system time changes or longer execution times.
+
+Simulation time resets
+----------------------
+
+When ``use_sim_time`` is true and the simulation clock jumps backwards (e.g. a simulation reset), the ``ros2_control_node`` does not stall: it sleeps for a relative period instead of waiting for a deadline on the old timeline. The ``period`` passed to ``read``, ``update`` and ``write`` and to each controller's ``update`` on the transition cycle is replaced by the nominal period, so it is never negative.
+The jump itself is not otherwise handled: stateful controllers should still be deactivated and re-activated after a simulation reset.

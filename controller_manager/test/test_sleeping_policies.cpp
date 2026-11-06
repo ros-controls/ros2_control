@@ -169,11 +169,18 @@ TEST_F(SleepingPoliciesTest, sleep_for_sim_time_returns_true_and_sleeps_for_peri
   EXPECT_GE(elapsed, state.period - kTimingTolerance);
 }
 
-TEST_F(SleepingPoliciesTest, sleep_for_sim_time_returns_false_when_clock_types_mismatch)
+// A backward clock jump (e.g. a simulation reset) leaves previous_time in the "future" of the new
+// timeline. The sleep must still last only one period instead of waiting for that deadline.
+// https://github.com/ros-controls/ros2_control/issues/3697
+TEST_F(SleepingPoliciesTest, sleep_for_sim_time_does_not_block_when_clock_jumped_backwards)
 {
   controller_manager::ControlLoopState state;
   state.period = std::chrono::milliseconds(20);
-  state.previous_time = cm_->get_trigger_clock()->now();
+  state.previous_time = cm_->get_clock()->now() + rclcpp::Duration::from_seconds(2.0);
 
-  EXPECT_FALSE(sleep_for_sim_time(cm_, state));
+  bool sleep_result = false;
+  const auto elapsed = measure_execution([&]() { sleep_result = sleep_for_sim_time(cm_, state); });
+
+  EXPECT_TRUE(sleep_result);
+  EXPECT_LE(elapsed, state.period + 10ms);
 }
