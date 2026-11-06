@@ -38,7 +38,8 @@ public:
 
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
     const StateInterface & state_interface, Deleter && deleter)
-  : state_interface_(state_interface),
+  : state_interface_(
+      StateInterface::ConstSharedPtr(&state_interface, [](const StateInterface *) {})),
     deleter_(std::forward<Deleter>(deleter)),
     interface_name_(state_interface.get_name())
   {
@@ -86,18 +87,14 @@ public:
 
   const std::string & get_interface_name() const { return state_interface_->get_interface_name(); }
 
-<<<<<<< HEAD
   [[deprecated(
     "Replaced by get_name method, which is semantically more correct")]] const std::string
   get_full_name() const
   {
-    return state_interface_.get_name();
+    return state_interface_->get_name();
   }
 
-  const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
-=======
   const std::string & get_prefix_name() const { return state_interface_->get_prefix_name(); }
->>>>>>> 000f5a7 (Use the pointers instead of reference in loaned interfaces (#2634))
 
   [[deprecated(
     "Use std::optional<T> get_optional() instead to retrieve the value. This method will be "
@@ -186,20 +183,8 @@ public:
    */
   HandleDataType get_data_type() const { return state_interface_->get_data_type(); }
 
-<<<<<<< HEAD
-protected:
-  const StateInterface & state_interface_;
-=======
-  /**
-   * @brief Check if the state interface can be casted to double.
-   * @return True if the state interface can be casted to double, false otherwise.
-   */
-  bool is_castable_to_double() const { return state_interface_->is_castable_to_double(); }
-
 protected:
   StateInterface::ConstSharedPtr state_interface_;
-  std::string interface_name_;
->>>>>>> 000f5a7 (Use the pointers instead of reference in loaned interfaces (#2634))
   Deleter deleter_;
   std::string interface_name_;
 
