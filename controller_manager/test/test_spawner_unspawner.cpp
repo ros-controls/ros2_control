@@ -779,8 +779,7 @@ TEST_F(TestLoadController, unload_on_kill_with_sigterm)
 
 TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
 {
-  // A burst of SIGINTs (e.g. Ctrl-C pressed repeatedly) must not interrupt the cleanup and leave
-  // controllers loaded: the follow-up signals have to be ignored once shutdown has started.
+  // Ctrl-C pressed repeatedly must not interrupt the cleanup and leave controllers loaded.
   ControllerManagerRunner cm_runner(this);
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   // timeout is only a safety net in case the spawner never exits
@@ -811,17 +810,10 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
       << "Timed out waiting for ctrl_3 to become active";
   }
 
-  // Wait until the spawner is actually parked in its "Waiting until interrupt" loop before
-  // signalling. A SIGINT that lands while it is still finishing activation reaches a region the
-  // try/except does not cover yet, and the KeyboardInterrupt then escapes without cleanup: the
-  // spawner exits with the interrupt but never unloads, which is not what this test is about.
-  //
-  // "Parked" means the process is in state S and has consumed no CPU between two samples. A
-  // fixed sleep would only move the race.
-  //
-  // The probe reads /proc and uses pgrep, so it is POSIX only. On Windows the spawner is a
-  // different process tree and this test is not meaningful there; the wait becomes a no-op and
-  // the previous behaviour is preserved.
+  // Signal only once the spawner is parked in its "Waiting until interrupt" loop: a SIGINT that
+  // lands while it is still finishing activation escapes the try/except that owns the cleanup.
+  // Parked means state S and no CPU consumed between two samples; a fixed sleep only moves the
+  // race. The probe needs /proc and pgrep, so on Windows the wait is a no-op.
 #ifdef _WIN32
   const auto sample_state_and_ticks = [](std::string &) { return false; };
   constexpr bool proc_available = false;
@@ -865,15 +857,8 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
   }
   ASSERT_TRUE(parked) << "The spawner never parked in its wait-for-interrupt loop";
 
-  // The pattern is anchored at the start so only the python process is signalled, not the
-  // wrapping shell or timeout. The builtin kill loop keeps the signals microseconds apart.
-  //
-  // Only the lookup is asserted. The loop itself is expected to fail partway through: the
-  // spawner may finish its cleanup and be reaped while the signals are still being sent, and
-  // `kill` on a reaped pid returns non-zero. The exit status of a `for` loop is the status of
-  // its last command, so asserting it would make this test depend on the spawner outliving all
-  // 200 signals -- a timing assumption the test is not trying to make. What matters is that
-  // the signals were delivered and that the cleanup below still ran.
+  // Anchored so only the python process is signalled, not the wrapping shell or timeout. Only the
+  // lookup is asserted: kill on an already reaped pid returns non-zero, so the loop may end early.
   EXPECT_EQ(
     std::system(
       "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
