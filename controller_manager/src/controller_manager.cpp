@@ -650,10 +650,30 @@ ControllerManager::~ControllerManager()
 bool ControllerManager::shutdown_controllers()
 {
   RCLCPP_INFO(get_logger(), "Shutting down all controllers in the controller manager.");
+  is_shutting_down_.store(true, std::memory_order_seq_cst);
+
+  // Wait for any active RT update cycle to finish before taking controllers_lock_ and
+  // deactivating controllers. Done outside controllers_lock_ to prevent deadlock if an
+  // in-flight update calls publish_activity(), and independent of rclcpp::ok() to ensure
+  // in-flight execution completes before interface release.
+  while (rt_update_active_.load(std::memory_order_seq_cst))
+  {
+    std::this_thread::yield();
+  }
+
   // Shutdown all controllers
   std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
     rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> controllers_list = rt_controllers_wrapper_.get_updated_list(guard);
+
+  // Drain any asynchronous controller updates before deactivating controllers
+  for (auto & controller : controllers_list)
+  {
+    if (is_controller_active(controller.c))
+    {
+      controller.c->prepare_for_deactivation();
+    }
+  }
   bool ctrls_shutdown_status = true;
   for (auto & controller : controllers_list)
   {
@@ -680,6 +700,9 @@ bool ControllerManager::shutdown_controllers()
 
 void ControllerManager::init_controller_manager()
 {
+  is_shutting_down_.store(false, std::memory_order_seq_cst);
+  rt_update_active_.store(false, std::memory_order_seq_cst);
+
   // Initialized activity publisher and diagnostics
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
@@ -719,6 +742,7 @@ void ControllerManager::init_controller_manager()
       [this]()
       {
         RCLCPP_INFO(get_logger(), "Shutdown request received....");
+        is_shutting_down_.store(true, std::memory_order_seq_cst);
         if (this->get_node_base_interface()->get_associated_with_executor_atomic().load())
         {
           executor_->remove_node(this->get_node_base_interface());
@@ -3313,6 +3337,10 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (is_shutting_down_.load(std::memory_order_seq_cst))
+  {
+    return;
+  }
   periodicity_stats_.add_measurement(1.0 / period.seconds());
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
@@ -3411,6 +3439,26 @@ void ControllerManager::manage_switch()
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (is_shutting_down_.load(std::memory_order_seq_cst))
+  {
+    return controller_interface::return_type::OK;
+  }
+
+  struct RTUpdateGuard
+  {
+    std::atomic<bool> & flag;
+    explicit RTUpdateGuard(std::atomic<bool> & f) : flag(f)
+    {
+      flag.store(true, std::memory_order_seq_cst);
+    }
+    ~RTUpdateGuard() { flag.store(false, std::memory_order_seq_cst); }
+  } guard(rt_update_active_);
+
+  if (is_shutting_down_.load(std::memory_order_seq_cst))
+  {
+    return controller_interface::return_type::OK;
+  }
+
   const auto start_time = std::chrono::steady_clock::now();
   execution_time_.switch_time = 0.0;
   execution_time_.switch_chained_mode_time = 0.0;
@@ -3636,6 +3684,10 @@ controller_interface::return_type ControllerManager::update(
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  if (is_shutting_down_.load(std::memory_order_seq_cst))
+  {
+    return;
+  }
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->write(time, period);
 
