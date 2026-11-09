@@ -16,7 +16,6 @@
   <depend>backward_ros</depend>
   <depend>control_msgs</depend>
   <depend>joint_limits</depend>
-  <depend>libstatistics_collector</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pal_statistics</depend>
   <depend>pluginlib</depend>

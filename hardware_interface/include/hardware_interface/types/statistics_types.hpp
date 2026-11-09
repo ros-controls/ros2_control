@@ -25,8 +25,7 @@
 #include <mutex>
 
 #include "hardware_interface/introspection.hpp"
-#include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
+#include "hardware_interface/types/statistic_data.hpp"
 #if !defined(_WIN32) && !defined(__APPLE__)
 #include "realtime_tools/mutex.hpp"
 #define DEFAULT_MUTEX realtime_tools::prio_inherit_mutex
@@ -51,7 +50,7 @@ namespace ros2_control
 class MovingAverageStatistics
 {
 public:
-  using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+  using StatisticData = ros2_control::StatisticData;
   MovingAverageStatistics() = default;
 
   ~MovingAverageStatistics() = default;
@@ -218,7 +217,7 @@ private:
  */
 class MovingAverageStatisticsData
 {
-  using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+  using StatisticData = ros2_control::StatisticData;
 
 public:
   MovingAverageStatisticsData()
