@@ -523,8 +523,7 @@ void build_controller_full_chain_map_cache(
 }
 
 void register_controller_manager_statistics(
-  const std::string & name,
-  const ros2_control::StatisticData * variable)
+  const std::string & name, const ros2_control::StatisticData * variable)
 {
   REGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name, variable);
 }
