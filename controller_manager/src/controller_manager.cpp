@@ -3443,7 +3443,7 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
-// Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
+  // Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
   rclcpp::Clock & trigger_clock = *trigger_clock_;
   rclcpp::Clock & node_clock = *get_clock();
   const bool node_clock_started = node_clock.started();
