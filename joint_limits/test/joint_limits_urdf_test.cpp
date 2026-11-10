@@ -16,6 +16,8 @@
 
 #include "joint_limits/joint_limits_urdf.hpp"
 
+#include <string>
+
 #include "gmock/gmock.h"
 
 using std::string;

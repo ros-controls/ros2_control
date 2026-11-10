@@ -17,7 +17,7 @@
 
 #include "test_semantic_component_command_interface.hpp"
 
-#include <limits>
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>

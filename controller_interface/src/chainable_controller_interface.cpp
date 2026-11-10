@@ -16,11 +16,13 @@
 
 #include <fmt/compile.h>
 
+#include <stdexcept>
 #include <vector>
 
-#include "controller_interface/helpers.hpp"
+#include "hardware_interface/helpers.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace controller_interface
 {

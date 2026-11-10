@@ -16,7 +16,6 @@
 #define SEMANTIC_COMPONENTS__LED_RGB_DEVICE_HPP_
 
 #include <string>
-#include <vector>
 
 #include "semantic_components/semantic_component_command_interface.hpp"
 #include "std_msgs/msg/color_rgba.hpp"

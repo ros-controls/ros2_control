@@ -23,6 +23,8 @@
 #include <cmath>
 #include <memory>
 #include <random>
+#include <string>
+#include <tuple>
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"
