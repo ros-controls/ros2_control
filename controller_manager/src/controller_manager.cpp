@@ -3443,8 +3443,7 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
-  // Resolved once per cycle: get_trigger_clock() and get_clock() return shared_ptrs by value, so
-  // calling them for every controller costs several atomic refcount updates per controller.
+// Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
   rclcpp::Clock & trigger_clock = *trigger_clock_;
   rclcpp::Clock & node_clock = *get_clock();
   const bool node_clock_started = node_clock.started();
