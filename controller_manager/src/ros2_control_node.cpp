@@ -149,7 +149,12 @@ int main(int argc, char ** argv)
       {
         // calculate measured period
         auto const current_time = cm->get_trigger_clock()->now();
-        auto const measured_period = current_time - state.previous_time;
+        auto measured_period = current_time - state.previous_time;
+        // a backward clock jump (e.g. simulation reset) would give a negative period
+        if (measured_period.nanoseconds() < 0)
+        {
+          measured_period = rclcpp::Duration(state.period);
+        }
         state.previous_time = current_time;
 
         // execute update loop

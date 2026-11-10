@@ -1039,6 +1039,64 @@ INSTANTIATE_TEST_SUITE_P(
   per_controller_equal_and_higher_update_rate, TestControllerManagerWithUpdateRates,
   testing::Values(100, 232, 400));
 
+class TestControllerClockJump
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+// A backward clock jump (e.g. a simulation reset) must never hand a negative period to a
+// controller, see https://github.com/ros-controls/ros2_control/issues/3715
+TEST_F(TestControllerClockJump, controller_never_receives_negative_period_after_backward_jump)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    std::vector<std::string>{test_controller::TEST_CONTROLLER_NAME}, std::vector<std::string>{},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)));
+  time_ = cm_->get_trigger_clock()->now();
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  {
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  // two regular cycles so the controller has a valid last update time
+  for (int i = 0; i < 2; ++i)
+  {
+    cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+    time_ = cm_->get_trigger_clock()->now();
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  }
+  ASSERT_GT(test_controller->update_period_.nanoseconds(), 0);
+
+  // emulate the clock jumping backwards: the controller's last update lies in the "future"
+  *cm_->get_loaded_controllers().front().last_update_cycle_time =
+    cm_->get_trigger_clock()->now() + rclcpp::Duration::from_seconds(10.0);
+
+  cm_->get_trigger_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_trigger_clock()->now();
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_GT(test_controller->update_period_.nanoseconds(), 0)
+    << "Controller received a negative period after a backward clock jump";
+}
+
 class TestControllerUpdateRates
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
   public testing::WithParamInterface<unsigned int>
