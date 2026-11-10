@@ -538,7 +538,7 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
 
-/// Get the CM's node arguments that are forwarded to the nodes of the hardware components. 
+/// Get the CM's node arguments that are forwarded to the nodes of the hardware components.
 /// The CM's own node name/namespace remaps (not targeted to a specific node) are dropped.
 std::vector<std::string> get_forwarded_node_arguments(const std::vector<std::string> & cm_args)
 {
