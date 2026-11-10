@@ -3441,6 +3441,12 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
+  // Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
+  rclcpp::Clock & trigger_clock = *trigger_clock_;
+  rclcpp::Clock & node_clock = *get_clock();
+  const bool node_clock_started = node_clock.started();
+  const rclcpp::Time zero_time(0, 0, trigger_clock.get_clock_type());
+
   rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
   {
@@ -3472,10 +3478,8 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const bool first_update_cycle =
-        (*loaded_controller.last_update_cycle_time ==
-         rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
-      const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      const bool first_update_cycle = (*loaded_controller.last_update_cycle_time == zero_time);
+      const rclcpp::Time current_time = node_clock_started ? trigger_clock.now() : time;
       const auto controller_actual_period =
         first_update_cycle ? controller_period
                            : (current_time - *loaded_controller.last_update_cycle_time);
@@ -3486,10 +3490,8 @@ controller_interface::return_type ControllerManager::update(
         ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
          controller_update_rate) -
         1.0);
-      const bool controller_go =
-        run_controller_at_cm_rate ||
-        (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (error_now <= error_if_skipped) || first_update_cycle;
+      const bool controller_go = run_controller_at_cm_rate || (time == zero_time) ||
+                                 (error_now <= error_if_skipped) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -3504,7 +3506,7 @@ controller_interface::return_type ControllerManager::update(
         try
         {
           const auto trigger_result =
-            loaded_controller.c->trigger_update(this->now(), controller_actual_period);
+            loaded_controller.c->trigger_update(node_clock.now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
