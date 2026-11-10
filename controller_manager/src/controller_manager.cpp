@@ -41,7 +41,6 @@
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -524,8 +523,7 @@ void build_controller_full_chain_map_cache(
 }
 
 void register_controller_manager_statistics(
-  const std::string & name,
-  const libstatistics_collector::moving_average_statistics::StatisticData * variable)
+  const std::string & name, const ros2_control::StatisticData * variable)
 {
   REGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name, variable);
 }
