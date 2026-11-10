@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hardware_interface</name>
-  <version>6.12.0</version>
+  <version>6.13.0</version>
   <description>Base classes for hardware abstraction and tooling for them</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -16,7 +16,6 @@
   <depend>backward_ros</depend>
   <depend>control_msgs</depend>
   <depend>joint_limits</depend>
-  <depend>libstatistics_collector</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pal_statistics</depend>
   <depend>pluginlib</depend>

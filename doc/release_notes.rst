@@ -27,6 +27,10 @@ controller_manager
 * The ``spawner`` now forwards all the parameter files parsed to the spawner node to the spawned controllers. This would support ``allow_substs`` approach. (`#3136 <https://github.com/ros-controls/ros2_control/pull/3136>`__)
 * ``configure_controller`` no longer implicitly cleans up an ``inactive`` controller before configuring; it now strictly requires the ``unconfigured`` state and returns an error otherwise. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
 * The ``spawner`` skips configuring an already configured controller. Use the new ``--reconfigure`` argument to cleanup and configure it again. (`#3196 <https://github.com/ros-controls/ros2_control/pull/3196>`__)
+* The ``spawner`` and ``ros2 control load_controller`` now accept parameter files with the controller namespace split across nested keys (e.g. ``/ns: {controller: {ros__parameters: ...}}``), with or without the leading slash, and match entries (including ``/*`` and ``/**`` wildcards anywhere in the name) and their precedence the same way as ``rclcpp``. (`#3719 <https://github.com/ros-controls/ros2_control/pull/3719>`__)
+* The controller manager now resolves its clocks once per cycle instead of once per controller in the real-time update loop, reducing the per-controller overhead. (`#3754 <https://github.com/ros-controls/ros2_control/pull/3754>`__)
+* The ``list_hardware_interfaces`` and ``list_hardware_components`` services now scale linearly with the number of interfaces, making them significantly faster on robots with many interfaces. (`#3755 <https://github.com/ros-controls/ros2_control/pull/3755>`__)
+* The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 
 hardware_interface
 ******************
@@ -34,6 +38,7 @@ hardware_interface
 * Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
 * Hardware components' nodes now receive the ROS arguments parsed to the controller manager, similar to controllers. Global arguments are no longer used by the hardware components' nodes and arguments set in ``define_custom_node_options()`` are no longer overwritten.
+* The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
 
 ros2controlcli
 **************

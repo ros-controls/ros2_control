@@ -13,7 +13,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   fmt
   generate_parameter_library
   hardware_interface
-  libstatistics_collector
   lifecycle_msgs
   pluginlib
   rcl
@@ -53,7 +52,6 @@ target_link_libraries(controller_manager PUBLIC
                       rclcpp::rclcpp
                       rclcpp_lifecycle::rclcpp_lifecycle
                       realtime_tools::realtime_tools
-                      libstatistics_collector::libstatistics_collector
                       fmt::fmt
                       ${std_msgs_TARGETS}
                       ${controller_manager_msgs_TARGETS}
@@ -310,6 +308,7 @@ if(BUILD_TESTING)
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+  ament_add_pytest_test(test_param_file_parsing test/test_param_file_parsing.py)
 
   # Now include the launch_utils subfolder
   add_subdirectory(test/test_launch_utils)
