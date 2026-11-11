@@ -14,7 +14,9 @@
 
 #include "test_controller_with_interfaces.hpp"
 
+#include <chrono>
 #include <stdexcept>
+#include <thread>
 
 namespace test_controller_with_interfaces
 {
@@ -36,6 +38,12 @@ controller_interface::return_type TestControllerWithInterfaces::update(
   {
     throw std::runtime_error("ROS Time is required for the controller to operate.");
   }
+  in_update = true;
+  if (update_duration_ms > 0)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(update_duration_ms));
+  }
+  in_update = false;
   return controller_interface::return_type::OK;
 }
 
@@ -48,6 +56,16 @@ TestControllerWithInterfaces::on_configure(const rclcpp_lifecycle::State & /*pre
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerWithInterfaces::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestControllerWithInterfaces::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  if (in_update)
+  {
+    deactivated_during_update = true;
+  }
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 

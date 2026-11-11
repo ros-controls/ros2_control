@@ -426,3 +426,87 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
       abstract_test_controller2.c->get_lifecycle_state().id());
   }
 }
+
+TEST_F(TestReleaseInterfaces, shutdown_controllers_waits_for_in_flight_update)
+{
+  const std::string controller_name = "test_controller1";
+  ASSERT_NO_THROW(cm_->load_controller(
+    controller_name, test_controller_with_interfaces::TEST_CONTROLLER_WITH_INTERFACES_CLASS_NAME));
+  auto controller = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(controller_interface::return_type::OK, cm_->configure_controller(controller_name));
+
+  {
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      std::vector<std::string>{controller_name}, std::vector<std::string>{}, STRICT, true,
+      rclcpp::Duration(0, 0));
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller.c->get_lifecycle_state().id());
+
+  // An update() that takes longer than any reasonable shutdown wait
+  auto * test_controller =
+    static_cast<test_controller_with_interfaces::TestControllerWithInterfaces *>(
+      controller.c.get());
+  test_controller->update_duration_ms = 400;
+
+  // Single RT thread, like the real control loop
+  std::atomic<bool> run_loop{true};
+  std::thread rt_thread(
+    [&]()
+    {
+      while (run_loop)
+      {
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    });
+
+  while (!test_controller->in_update)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Shutdown must not deactivate/release the controller while update() is still running
+  EXPECT_TRUE(cm_->shutdown_controllers());
+  EXPECT_FALSE(test_controller->deactivated_during_update);
+
+  run_loop = false;
+  rt_thread.join();
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller.c->get_lifecycle_state().id());
+}
+
+TEST_F(TestReleaseInterfaces, shutdown_controllers_when_rt_loop_stopped)
+{
+  const std::string controller_name = "test_controller1";
+  ASSERT_NO_THROW(cm_->load_controller(
+    controller_name, test_controller_with_interfaces::TEST_CONTROLLER_WITH_INTERFACES_CLASS_NAME));
+  auto controller = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(controller_interface::return_type::OK, cm_->configure_controller(controller_name));
+
+  {
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      std::vector<std::string>{controller_name}, std::vector<std::string>{}, STRICT, true,
+      rclcpp::Duration(0, 0));
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller.c->get_lifecycle_state().id());
+
+  // RT loop is NOT running (e.g., stopped or never started)
+  // Shutdown must succeed immediately without hanging
+  const auto start = std::chrono::steady_clock::now();
+  EXPECT_TRUE(cm_->shutdown_controllers());
+  const auto elapsed = std::chrono::steady_clock::now() - start;
+  EXPECT_LT(elapsed, std::chrono::milliseconds(500));
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller.c->get_lifecycle_state().id());
+}
