@@ -82,6 +82,17 @@ controller_manager:
     }
 
   diagnostics:
+    controller_manager:
+      periodicity:
+        window_size: {
+          type: int,
+          default_value: 0,
+          read_only: true,
+          description: "Number of most recent update cycles over which the controller manager's periodicity diagnostic level is judged. When greater than 0, the diagnostic also reports periodicity.recent.average, periodicity.recent.standard_deviation, periodicity.recent.min and periodicity.recent.max over that window, and compares those, rather than the statistics accumulated since startup, against the periodicity thresholds. The since-startup statistics are still reported unchanged, so the worst case remains visible. A single slow cycle, e.g. during bring-up, then stops affecting the diagnostic level once window_size newer cycles have run. 0 (default) keeps judging the since-startup statistics. A few seconds of cycles at update_rate is a reasonable choice.",
+          validation: {
+            gt_eq<>: 0,
+          }
+        }
     threshold:
       controller_manager:
         periodicity:
