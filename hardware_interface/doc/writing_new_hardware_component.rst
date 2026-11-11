@@ -64,6 +64,12 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
             #. **Access and using the Default Node**: You can get a ``shared_ptr`` to the node by calling the ``get_node()`` method and use it just like any other ``rclcpp::Node::SharedPtr`` to create publishers, timers, etc.
 
+               ROS arguments passed to ``ros2_control_node`` are also propagated to this framework-managed node.
+               This allows topic and service remapping rules to reach hardware component nodes without creating a
+               separate node inside the plugin. The framework keeps the generated hardware component node name even
+               when the inherited arguments contain a node-name remapping. Arguments returned by
+               ``define_custom_node_options()`` are preserved as well.
+
                .. code-block:: cpp
 
                   // Continuing inside on_configure()
