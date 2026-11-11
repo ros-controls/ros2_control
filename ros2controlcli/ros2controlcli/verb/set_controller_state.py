@@ -18,12 +18,14 @@ from controller_manager import (
     list_controllers,
     switch_controllers,
 )
+from controller_manager_msgs.srv import SwitchController
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
 from ros2cli.verb import VerbExtension
 
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
+from ros2controlcli.state_transitions import plan_state_transitions
 
 
 class SetControllerStateVerb(VerbExtension):
@@ -49,57 +51,64 @@ class SetControllerStateVerb(VerbExtension):
             except IndexError:
                 return f"controller {args.controller_name} does not seem to be loaded"
 
-            if args.state == "unconfigured":
-                if matched_controller.state != "inactive":
-                    return (
-                        f"cannot cleanup {matched_controller.name} "
-                        f"from its current state {matched_controller.state}"
-                    )
-                response = cleanup_controller(node, args.controller_manager, args.controller_name)
-                if not response.ok:
-                    return "Error cleaning up controller, check controller_manager logs"
+            try:
+                transitions = plan_state_transitions(matched_controller.state, args.state)
+            except ValueError as error:
+                return str(error)
 
-                print(f"successfully cleaned up {args.controller_name}")
+            if not transitions:
+                print(f"{args.controller_name} is already in state {args.state}")
                 return 0
 
-            if args.state == "inactive":
-                if matched_controller.state == "unconfigured":
+            current_state = matched_controller.state
+            for transition in transitions:
+                if transition == "configure":
                     response = configure_controller(
                         node, args.controller_manager, args.controller_name
                     )
-                    if not response.ok:
-                        return "Error configuring controller, check controller_manager logs"
-
-                    print(f"Successfully configured {args.controller_name}")
-                    return 0
-
-                elif matched_controller.state == "active":
+                elif transition == "activate":
                     response = switch_controllers(
-                        node, args.controller_manager, [args.controller_name], [], True, True, 5.0
+                        node,
+                        args.controller_manager,
+                        [],
+                        [args.controller_name],
+                        SwitchController.Request.STRICT,
+                        True,
+                        5.0,
                     )
-                    if not response.ok:
-                        return "Error stopping controller, check controller_manager logs"
-
-                    print(f"Successfully deactivated {args.controller_name}")
-                    return 0
-
+                elif transition == "deactivate":
+                    response = switch_controllers(
+                        node,
+                        args.controller_manager,
+                        [args.controller_name],
+                        [],
+                        SwitchController.Request.STRICT,
+                        True,
+                        5.0,
+                    )
                 else:
-                    return (
-                        f"cannot put {matched_controller.name} in 'inactive' state "
-                        f"from its current state {matched_controller.state}"
+                    response = cleanup_controller(
+                        node, args.controller_manager, args.controller_name
                     )
 
-            if args.state == "active":
-                if matched_controller.state != "inactive":
-                    return (
-                        f"cannot activate {matched_controller.name} "
-                        f"from its current state {matched_controller.state}"
-                    )
-                response = switch_controllers(
-                    node, args.controller_manager, [], [args.controller_name], True, True, 5.0
-                )
                 if not response.ok:
-                    return "Error activating controller, check controller_manager logs"
+                    transition_verb = {
+                        "configure": "configuring",
+                        "activate": "activating",
+                        "deactivate": "deactivating",
+                        "cleanup": "cleaning up",
+                    }[transition]
+                    return (
+                        f"Error {transition_verb} {args.controller_name}; its last successfully "
+                        f"reached state was {current_state}. Check controller_manager logs"
+                    )
 
-                print(f"Successfully activated {args.controller_name}")
-                return 0
+                current_state = {
+                    "configure": "inactive",
+                    "activate": "active",
+                    "deactivate": "inactive",
+                    "cleanup": "unconfigured",
+                }[transition]
+
+            print(f"Successfully set {args.controller_name} to state {args.state}")
+            return 0
