@@ -137,6 +137,25 @@ The controller_manager can be launched with the ros2_control_node executable. Th
         output="both",
     )
 
+Forwarding ROS arguments
+  The ROS arguments parsed to the ``controller_manager`` node (e.g., ``remappings`` and ``parameters`` of the launch ``Node``) are forwarded to the nodes of the hardware components, but not to the controllers (use the spawner's ``--controller-ros-args`` for those).
+  The ``controller_manager``'s own node name and namespace remaps (``__node:=``, ``__ns:=``) are not forwarded.
+  Node specific remaps can be used to target a single hardware component, which is named after the lower case ``name`` of its ``<ros2_control>`` tag.
+  Global arguments of the process are not used by the hardware components.
+
+  .. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        remappings=[
+            ("/diffbot_base_controller/cmd_vel", "/cmd_vel"),
+            ("my_robot_system:__ns", "/hardware"),
+        ],
+        output="both",
+    )
+
 The ros2_control_node executable uses the following parameters from the ``controller_manager`` node:
 
 lock_memory (optional; bool; default: false for a non-realtime kernel, true for a realtime kernel)

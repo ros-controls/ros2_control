@@ -537,6 +537,32 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/sample_count");
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
+
+/// Get the CM's node arguments that are forwarded to the nodes of the hardware components.
+/// The CM's own node name/namespace remaps (not targeted to a specific node) are dropped.
+std::vector<std::string> get_forwarded_node_arguments(const std::vector<std::string> & cm_args)
+{
+  auto starts_with = [](const std::string & str, const std::string & prefix)
+  { return str.rfind(prefix, 0) == 0; };
+  std::vector<std::string> forwarded_args;
+  for (const auto & arg : cm_args)
+  {
+    if (starts_with(arg, "__ns:=") || starts_with(arg, "__node:=") || starts_with(arg, "__name:="))
+    {
+      // drop the flag preceding the skipped argument as well
+      if (
+        !forwarded_args.empty() &&
+        (forwarded_args.back() == RCL_REMAP_FLAG || forwarded_args.back() == RCL_SHORT_REMAP_FLAG ||
+         forwarded_args.back() == RCL_PARAM_FLAG || forwarded_args.back() == RCL_SHORT_PARAM_FLAG))
+      {
+        forwarded_args.pop_back();
+      }
+      continue;
+    }
+    forwarded_args.push_back(arg);
+  }
+  return forwarded_args;
+}
 }  // namespace
 
 namespace controller_manager
@@ -847,6 +873,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
+  // the arguments parsed to the controller manager are forwarded (not to the controllers)
+  params.hardware_components_node_options_args =
+    get_forwarded_node_arguments(get_node_options().arguments());
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
