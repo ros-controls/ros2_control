@@ -15,30 +15,29 @@
 # limitations under the License.
 
 import os
+import time
 
 from ament_index_python.packages import get_package_share_directory
-from controller_manager.controller_manager_services import (
-    cleanup_controller,
-    configure_controller,
-    list_controllers,
-    list_hardware_components,
-    set_hardware_component_state,
-    load_controller,
-    service_caller,
-    ServiceNotFoundError,
-    switch_controllers,
-    unload_controller,
-)
-
+from controller_manager.controller_manager_services import ServiceNotFoundError
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import SwitchController
+from controller_manager_msgs.srv import (
+    CleanupController,
+    ConfigureController,
+    ListControllers,
+    ListHardwareComponents,
+    LoadController,
+    SetHardwareComponentState,
+    SwitchController,
+    UnloadController,
+)
 from lifecycle_msgs.msg import State
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
+from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer, Signal
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
 from qt_gui.plugin import Plugin
 from rcl_interfaces.srv import GetParameters, ListParameters
+from rclpy.duration import Duration
 from ros2service.api import get_service_names_and_types
 
 from .update_combo import update_combo
@@ -47,10 +46,16 @@ from .update_combo import update_combo
 class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
+    # Emitted from the executor thread when a service call is done
+    _service_done = Signal(object, object)  # future, callback
+
     _cm_update_freq = 1  # Hz
-    # Timeout (in seconds) for finding a service and for its response, used by the periodic
-    # queries of controllers, hardware components and parameters
+    # Timeout (in seconds) for the response of the periodic queries of controllers, hardware
+    # components and parameters. The selected controller manager is deselected if it did not
+    # respond for this long.
     _service_timeout = 2.0 / _cm_update_freq
+    # Timeout (in seconds) for the response of user actions like loading or switching controllers
+    _action_timeout = 10.0
     # Timeout (in seconds) for the controller manager to perform a controller switch
     _switch_timeout = 0.3
 
@@ -93,6 +98,11 @@ class ControllerManager(Plugin):
         self._hw_components = []  # State of each hw component
         self._ctrl_table_model = None
         self._hw_table_model = None
+        self._clients = {}  # service name -> client, for the selected controller manager
+        self._ctrl_update_pending = False  # waiting for responses of a controllers update
+        self._hw_update_pending = False  # waiting for the response of a hw components update
+        self._cm_last_seen = 0.0  # time of the last response of the selected controller manager
+        self._service_done.connect(self._on_service_done, Qt.ConnectionType.QueuedConnection)
 
         # Store reference to node
         self._node = context.node
@@ -154,6 +164,7 @@ class ControllerManager(Plugin):
         self._update_cm_list_timer.stop()
         self._update_ctrl_list_timer.stop()
         self._update_hw_components_list_timer.stop()
+        self._destroy_clients()
         self._popup_widget.hide()
 
     def save_settings(self, plugin_settings, instance_settings):
@@ -183,6 +194,13 @@ class ControllerManager(Plugin):
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
 
+        # Pending calls to the previously selected controller manager are dropped
+        self._destroy_clients()
+        self._ctrl_update_pending = False
+        self._hw_update_pending = False
+        # Give the service discovery time to find the newly selected controller manager
+        self._cm_last_seen = time.monotonic()
+
         if cm_name:
             self._update_controllers()
             self._update_hw_components()
@@ -199,49 +217,160 @@ class ControllerManager(Plugin):
         )
         self._widget.cm_combo.setCurrentIndex(-1)
 
-    def _update_controllers(self):
-        if not self._cm_name:
+    def _on_cm_error(self, error):
+        """Deselect the controller manager if it did not respond for too long."""
+        if time.monotonic() - self._cm_last_seen >= self._service_timeout:
+            self._deselect_cm(error)
+
+    def _get_client(self, srv_type, srv_name):
+        client = self._clients.get(srv_name)
+        if client is None:
+            client = self._node.create_client(srv_type, srv_name)
+            self._clients[srv_name] = client
+        return client
+
+    def _is_alive(self, client):
+        return self._clients.get(client.srv_name) is client
+
+    def _destroy_clients(self):
+        for client in self._clients.values():
+            self._node.destroy_client(client)
+        self._clients = {}
+
+    def _call_service(self, srv_type, srv_name, request, on_done, timeout=None):
+        """
+        Call a service without blocking the GUI thread.
+
+        Calls on_done(response, error) in the GUI thread, with error being None on success. Fails
+        right away if the service is not available. on_done is not called if the client was
+        destroyed in the meantime, e.g., because another controller manager was selected.
+        """
+        if timeout is None:
+            timeout = self._service_timeout
+        client = self._get_client(srv_type, srv_name)
+        if not client.service_is_ready():
+            on_done(None, ServiceNotFoundError(f"Could not contact service {srv_name}"))
             return
 
-        # Find controllers associated to the selected controller manager
+        # The rqt executor spins the node, the response is handled in the GUI thread
+        future = client.call_async(request)
+        future.add_done_callback(lambda f: self._service_done.emit(f, on_done))
+        self._start_single_shot(
+            int(1000.0 * timeout), lambda: self._on_service_timeout(client, future, on_done)
+        )
+
+    def _on_service_timeout(self, client, future, on_done):
+        if future.done() or not self._is_alive(client):
+            return
+        future.cancel()
+        if not future.cancelled():
+            return  # the response arrived in the meantime
+        on_done(None, TimeoutError(f"Timed out waiting for a response of {client.srv_name}"))
+
+    def _on_service_done(self, future, on_done):
+        if future.cancelled():
+            return  # timed out or dropped
+        error = future.exception()
+        on_done(None if error else future.result(), error)
+
+    def _start_single_shot(self, msec, callback):
+        # Parented to the plugin, so it does not fire after the plugin is deleted
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.timeout.connect(callback)
+        timer.timeout.connect(timer.deleteLater)
+        timer.start(msec)
+
+    def _update_controllers(self):
+        """
+        Request the controllers associated to the selected controller manager.
+
+        Contains both stopped/running controllers, as returned by the C{list_controllers}
+        service, plus uninitialized controllers configured in the controller manager's parameters.
+        """
+        if not self._cm_name or self._ctrl_update_pending:
+            return
+
+        cm_name = self._cm_name
+        self._ctrl_update_pending = True
         try:
-            controllers = self._list_controllers()
+            self._call_service(
+                ListControllers,
+                f"{cm_name}/list_controllers",
+                ListControllers.Request(),
+                lambda response, error: self._on_list_controllers(cm_name, response, error),
+            )
         except Exception as e:
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_ctrl_list_timer.stop()
                 return
-            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
-                self._deselect_cm(e)
-                return
             raise
+
+    def _on_list_controllers(self, cm_name, response, error):
+        if cm_name != self._cm_name:
+            return  # response for a previously selected controller manager
+        if error is not None:
+            self._ctrl_update_pending = False
+            self._on_cm_error(error)
+            return
+        self._cm_last_seen = time.monotonic()
+
+        # Append potential controller configs found in the node's parameters
+        controllers = list(response.controller)
+        self._call_service(
+            ListParameters,
+            f"{cm_name}/list_parameters",
+            ListParameters.Request(),
+            lambda response, error: self._on_list_parameters(
+                cm_name, controllers, response, error
+            ),
+        )
+
+    def _on_list_parameters(self, cm_name, controllers, response, error):
+        if cm_name != self._cm_name:
+            return
+
+        suffix = ".type"
+        loaded = {ctrl.name for ctrl in controllers}
+        type_params = (
+            []
+            if error is not None
+            else [
+                n
+                for n in response.result.names
+                if n.endswith(suffix) and n[: -len(suffix)] not in loaded
+            ]
+        )
+        if not type_params:
+            self._set_controllers(controllers)
+            return
+
+        self._call_service(
+            GetParameters,
+            f"{cm_name}/get_parameters",
+            GetParameters.Request(names=type_params),
+            lambda response, error: self._on_get_controller_types(
+                cm_name, controllers, type_params, response, error
+            ),
+        )
+
+    def _on_get_controller_types(self, cm_name, controllers, type_params, response, error):
+        if cm_name != self._cm_name:
+            return
+
+        types = [""] * len(type_params) if error is not None else response.values
+        for param, type_value in zip(type_params, types):
+            type_str = type_value if error is not None else type_value.string_value
+            controllers.append(ControllerState(name=param[: -len(".type")], type=type_str))
+        self._set_controllers(controllers)
+
+    def _set_controllers(self, controllers):
+        self._ctrl_update_pending = False
 
         # Update controller display, if necessary
         if self._controllers != controllers:
             self._controllers = controllers
             self._show_controllers()  # NOTE: Model is recomputed from scratch
-
-    def _list_controllers(self):
-        """
-        List the controllers associated to a controller manager node.
-
-        @return List of controllers associated to a controller manager
-        node. Contains both stopped/running controllers, as returned by
-        the C{list_controllers} service, plus uninitialized controllers with
-        returned by the C{list_parameters} service..
-        @rtype [str]
-        """
-        # Add loaded controllers first
-        timeout = self._service_timeout
-        controllers = list_controllers(self._node, self._cm_name, timeout, timeout).controller
-
-        # Append potential controller configs found in the node's parameters
-        for name in _get_parameter_controller_names(self._node, self._cm_name, timeout):
-            add_ctrl = all(name != ctrl.name for ctrl in controllers)
-            if add_ctrl:
-                type_str = _get_controller_type(self._node, self._cm_name, name, timeout)
-                uninit_ctrl = ControllerState(name=name, type=type_str)
-                controllers.append(uninit_ctrl)
-        return controllers
 
     def _show_controllers(self):
         ctrl_table_view = self._widget.ctrl_table_view
@@ -278,31 +407,35 @@ class ControllerManager(Plugin):
         action = menu.exec(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
+        load = _name_step(LoadController, "load_controller", ctrl.name)
+        configure = _name_step(ConfigureController, "configure_controller", ctrl.name)
+        cleanup = _name_step(CleanupController, "cleanup_controller", ctrl.name)
+        unload = _name_step(UnloadController, "unload_controller", ctrl.name)
+        activate = self._switch_step(activate=[ctrl.name])
+        deactivate = self._switch_step(deactivate=[ctrl.name])
         if ctrl.state == "active":
             if action is action_deactivate:
-                self._deactivate_controller(ctrl.name)
+                self._call_steps([deactivate])
             elif action is action_kill:
-                self._deactivate_controller(ctrl.name)
-                unload_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([deactivate, unload])
         elif ctrl.state == "inactive":
             if action is action_activate:
-                self._activate_controller(ctrl.name)
+                self._call_steps([activate])
             elif action is action_cleanup:
-                cleanup_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([cleanup])
             elif action is action_unload:
-                unload_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([unload])
         elif ctrl.state == "unconfigured":
             if action is action_configure:
-                configure_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([configure])
             elif action is action_spawn:
-                configure_controller(self._node, self._cm_name, ctrl.name)
-                self._activate_controller(ctrl.name)
+                self._call_steps([configure, activate])
             elif action is action_unload:
-                unload_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([unload])
         else:
             # Assume controller isn't loaded
             if action is action_load:
-                load_controller(self._node, self._cm_name, ctrl.name)
+                self._call_steps([load])
 
     def _on_ctrl_info(self, index):
         popup = self._popup_widget
@@ -347,37 +480,39 @@ class ControllerManager(Plugin):
                 ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _update_hw_components(self):
-        if not self._cm_name:
+        """Request the hw_components associated to the selected controller manager."""
+        if not self._cm_name or self._hw_update_pending:
             return
 
-        # Find hw_components associated to the selected controller manager
+        cm_name = self._cm_name
+        self._hw_update_pending = True
         try:
-            hw_components = self._list_hw_components()
+            self._call_service(
+                ListHardwareComponents,
+                f"{cm_name}/list_hardware_components",
+                ListHardwareComponents.Request(),
+                lambda response, error: self._on_list_hw_components(cm_name, response, error),
+            )
         except Exception as e:
             if "destruction was requested" in str(e) or "context is not valid" in str(e):
                 self._update_hw_components_list_timer.stop()
                 return
-            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
-                self._deselect_cm(e)
-                return
             raise
 
-        # Update controller display, if necessary
+    def _on_list_hw_components(self, cm_name, response, error):
+        if cm_name != self._cm_name:
+            return  # response for a previously selected controller manager
+        self._hw_update_pending = False
+        if error is not None:
+            self._on_cm_error(error)
+            return
+        self._cm_last_seen = time.monotonic()
+
+        # Update hw components display, if necessary
+        hw_components = list(response.component)
         if self._hw_components != hw_components:
             self._hw_components = hw_components
             self._show_hw_components()  # NOTE: Model is recomputed from scratch
-
-    def _list_hw_components(self):
-        """
-        List the hw_components associated to a controller manager node.
-
-        @return List of hw_components associated to a controller manager
-        node. Contains both stopped/running hw_components, as returned by
-        the C{list_hardware_components} service
-        @rtype [str]
-        """
-        timeout = self._service_timeout
-        return list_hardware_components(self._node, self._cm_name, timeout, timeout).component
 
     def _show_hw_components(self):
         hw_table_view = self._widget.hw_table_view
@@ -471,25 +606,50 @@ class ControllerManager(Plugin):
             else:
                 hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
-    def _activate_controller(self, name):
-        self._switch_controllers([name], [])
+    def _switch_step(self, activate=(), deactivate=()):
+        request = SwitchController.Request(
+            activate_controllers=list(activate),
+            deactivate_controllers=list(deactivate),
+            strictness=SwitchController.Request.STRICT,
+            activate_asap=False,
+            timeout=Duration(seconds=self._switch_timeout).to_msg(),
+        )
+        return SwitchController, "switch_controller", request
 
-    def _deactivate_controller(self, name):
-        self._switch_controllers([], [name])
+    def _call_steps(self, steps):
+        """
+        Call the controller manager services of the steps in order, stopping at the first failure.
 
-    def _switch_controllers(self, activate, deactivate):
-        try:
-            switch_controllers(
-                node=self._node,
-                controller_manager_name=self._cm_name,
-                activate_controllers=activate,
-                deactivate_controllers=deactivate,
-                strictness=SwitchController.Request.STRICT,
-                activate_asap=False,
-                timeout=self._switch_timeout,
-            )
-        except Exception as e:
-            print(e)
+        @param steps List of (service type, service name relative to the controller manager,
+        request)
+        """
+        if not steps:
+            # Show the outcome right away instead of waiting for the next periodic update
+            self._update_controllers()
+            self._update_hw_components()
+            return
+
+        cm_name = self._cm_name
+        srv_type, service, request = steps[0]
+        self._call_service(
+            srv_type,
+            f"{cm_name}/{service}",
+            request,
+            lambda response, error: self._on_step_done(
+                cm_name, service, steps[1:], response, error
+            ),
+            self._action_timeout,
+        )
+
+    def _on_step_done(self, cm_name, service, steps, response, error):
+        if cm_name != self._cm_name:
+            return
+        if error is None and not response.ok:
+            error = RuntimeError("the controller manager reported a failure")
+        if error is not None:
+            self._node.get_logger().error(f"Calling {cm_name}/{service} failed: {error}")
+            return
+        self._call_steps(steps)
 
     def _set_active_hw_component(self, name):
         active_state = State()
@@ -510,15 +670,8 @@ class ControllerManager(Plugin):
         self._set_state_hw_component(name, unconfigure_state)
 
     def _set_state_hw_component(self, name, state):
-        try:
-            set_hardware_component_state(
-                node=self._node,
-                controller_manager_name=self._cm_name,
-                component_name=name,
-                lifecyle_state=state,
-            )
-        except Exception as e:
-            print(e)
+        request = SetHardwareComponentState.Request(name=name, target_state=state)
+        self._call_steps([(SetHardwareComponentState, "set_hardware_component_state", request)])
 
 
 class ControllerTable(QAbstractTableModel):
@@ -643,37 +796,6 @@ class FontDelegate(QStyledItemDelegate):
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
-def _get_controller_type(node, node_name, ctrl_name, timeout):
-    """
-    Get the controller's type from the controller manager node with the call_get_parameter service.
-
-    @param node_name Controller manager node's name
-    @type node_name str
-    @param ctrl_name Controller name
-    @type ctrl_name str
-    @param timeout Timeout (in seconds) for finding the service and for the response
-    @type timeout float
-    @return Controller type, empty if the service call failed
-    @rtype str
-    """
-    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
-    request = GetParameters.Request()
-    request.names = [f"{ctrl_name}.type"]
-    try:
-        response = service_caller(
-            node,
-            f"{node_name}/get_parameters",
-            GetParameters,
-            request,
-            service_timeout=timeout,
-            call_timeout=timeout,
-            max_attempts=1,
-        )
-    except (ServiceNotFoundError, RuntimeError):
-        return ""
-    return response.values[0].string_value if response.values else ""
-
-
 def _list_controller_managers(node):
     """
     List controller manager nodes that are active.
@@ -695,22 +817,6 @@ def _list_controller_managers(node):
         raise
 
 
-def _get_parameter_controller_names(node, node_name, timeout):
-    """Get list of ROS parameter names that potentially represent a controller configuration."""
-    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
-    try:
-        response = service_caller(
-            node,
-            f"{node_name}/list_parameters",
-            ListParameters,
-            ListParameters.Request(),
-            service_timeout=timeout,
-            call_timeout=timeout,
-            max_attempts=1,
-        )
-    except (ServiceNotFoundError, RuntimeError):
-        return []
-    names = response.result.names
-
-    suffix = ".type"
-    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]
+def _name_step(srv_type, service, name):
+    """Step for ControllerManager._call_steps with a request that only takes a name."""
+    return srv_type, service, srv_type.Request(name=name)
