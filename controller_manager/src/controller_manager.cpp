@@ -41,7 +41,6 @@
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -524,8 +523,7 @@ void build_controller_full_chain_map_cache(
 }
 
 void register_controller_manager_statistics(
-  const std::string & name,
-  const libstatistics_collector::moving_average_statistics::StatisticData * variable)
+  const std::string & name, const ros2_control::StatisticData * variable)
 {
   REGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name, variable);
 }
@@ -2107,8 +2105,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status =
-        check_following_controllers_for_activate(controllers, strictness, controller_it, message);
+      std::vector<std::string> visited_controllers;
+      status = check_following_controllers_for_activate(
+        controllers, strictness, controller_it, visited_controllers, message);
     }
 
     if (status == controller_interface::return_type::OK)
@@ -3443,6 +3442,12 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
+  // Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
+  rclcpp::Clock & trigger_clock = *trigger_clock_;
+  rclcpp::Clock & node_clock = *get_clock();
+  const bool node_clock_started = node_clock.started();
+  const rclcpp::Time zero_time(0, 0, trigger_clock.get_clock_type());
+
   rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
   {
@@ -3474,10 +3479,8 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const bool first_update_cycle =
-        (*loaded_controller.last_update_cycle_time ==
-         rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
-      const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      const bool first_update_cycle = (*loaded_controller.last_update_cycle_time == zero_time);
+      const rclcpp::Time current_time = node_clock_started ? trigger_clock.now() : time;
       const auto controller_actual_period =
         first_update_cycle ? controller_period
                            : (current_time - *loaded_controller.last_update_cycle_time);
@@ -3488,10 +3491,8 @@ controller_interface::return_type ControllerManager::update(
         ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
          controller_update_rate) -
         1.0);
-      const bool controller_go =
-        run_controller_at_cm_rate ||
-        (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (error_now <= error_if_skipped) || first_update_cycle;
+      const bool controller_go = run_controller_at_cm_rate || (time == zero_time) ||
+                                 (error_now <= error_if_skipped) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -3506,7 +3507,7 @@ controller_interface::return_type ControllerManager::update(
         try
         {
           const auto trigger_result =
-            loaded_controller.c->trigger_update(this->now(), controller_actual_period);
+            loaded_controller.c->trigger_update(node_clock.now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
@@ -3924,12 +3925,14 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
 
 controller_interface::return_type ControllerManager::check_following_controllers_for_activate(
   const std::vector<ControllerSpec> & controllers, int strictness,
-  const ControllersListIterator controller_it, std::string & message)
+  const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+  std::string & message)
 {
   // we assume that the controller exists is checked in advance
   RCLCPP_DEBUG(
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
+  visited_controllers.push_back(controller_it->info.name);
 
   const auto controller_cmd_interfaces =
     get_command_interfaces_names(controller_it->c, resource_manager_);
@@ -3951,10 +3954,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       continue;
     }
-    // TODO(destogl): performance of this code could be optimized by adding additional lists with
-    // controllers that cache if the check has failed and has succeeded. Then the following would be
-    // done only once per controller, otherwise in complex scenarios the same controller is checked
-    // multiple times
 
     // check that all following controllers exits, are either: activated, will be activated, or
     // will not be deactivated
@@ -4019,11 +4018,13 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
 
     // Trigger recursion to check all the following controllers only if they are OK, add this
-    // controller update chained mode requests
+    // controller update chained mode requests. A visited controller is not checked again, because
+    // the claimed interfaces can lead back to a controller that is still being checked.
     if (
+      !ros2_control::has_item(visited_controllers, following_ctrl_it->info.name) &&
       check_following_controllers_for_activate(
-        controllers, strictness, following_ctrl_it, message) ==
-      controller_interface::return_type::ERROR)
+        controllers, strictness, following_ctrl_it, visited_controllers, message) ==
+        controller_interface::return_type::ERROR)
     {
       return controller_interface::return_type::ERROR;
     }
