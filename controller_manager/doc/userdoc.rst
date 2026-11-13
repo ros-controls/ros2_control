@@ -507,6 +507,10 @@ Entries are matched against the controller's fully qualified name with the same 
       --activate            Activates the given components. Note: Components are by default configured before activated.
       --configure           Configures the given components.
 
+The spawner exits with code 0 only if all requested components reach the requested state.
+Missing components and failed transitions produce a nonzero exit code, including when the service
+reports success but returns a different state. The remaining components are still attempted.
+
 
 Color Output Handling
 ^^^^^^^^^^^^^^^^^^^^^

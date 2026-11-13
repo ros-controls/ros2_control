@@ -309,6 +309,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
   ament_add_pytest_test(test_param_file_parsing test/test_param_file_parsing.py)
+  ament_add_pytest_test(test_hardware_spawner_exit_status test/test_hardware_spawner_exit_status.py)
 
   # Now include the launch_utils subfolder
   add_subdirectory(test/test_launch_utils)
