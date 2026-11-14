@@ -1798,8 +1798,11 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   // clear the list before reordering it again
   ordered_controllers_names_.clear();
-  for (const auto & [ctrl_name, chain_spec] : controller_chain_spec_)
+  // Iterate in load order (not over the unordered controller_chain_spec_) so that controllers
+  // without chain relationships keep a deterministic update order matching their load order
+  for (const auto & ctrl : to)
   {
+    const auto & ctrl_name = ctrl.info.name;
     auto it =
       std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
     if (it == ordered_controllers_names_.end())
