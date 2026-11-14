@@ -2542,6 +2542,8 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
       rclcpp::Duration(0, 0));
     ASSERT_EQ(res, controller_interface::return_type::OK);
   }
+  // let the in-progress RT update finish before reading the counters
+  std::this_thread::sleep_for(std::chrono::milliseconds(2));
   unsigned int old_counter_1 = test_controller_1->internal_counter;
   unsigned int old_counter_2 = test_controller_2->internal_counter;
 
