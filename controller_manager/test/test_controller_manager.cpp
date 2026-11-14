@@ -237,9 +237,9 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
   ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(
@@ -273,10 +273,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -307,10 +307,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -331,10 +331,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -359,10 +359,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto unload_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
