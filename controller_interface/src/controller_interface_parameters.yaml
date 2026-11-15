@@ -1,0 +1,16 @@
+controller_interface_base:
+  update_rate: {
+    type: int,
+    default_value: 0,
+    description: "The rate in Hz at which the controller's ``update()`` is triggered. If not set, it is initialized to the update rate of the controller manager; ``0`` has the same effect. A rate higher than the controller manager's rate is capped to it, and a rate that does not divide the controller manager's rate is rounded to the closest achievable one. Negative values make the configure transition fail. Read during the configure transition.",
+  }
+  is_async: {
+    type: bool,
+    default_value: false,
+    description: "If set to ``true``, the controller runs its ``update()`` method asynchronously in its own thread, configured via the ``async_parameters`` namespace. Read during the configure transition.",
+  }
+  thread_priority: {
+    type: int,
+    default_value: -100,
+    description: "Deprecated, use ``async_parameters.thread_priority`` instead. Priority (0-99) of the async thread; values outside this range are ignored.",
+  }

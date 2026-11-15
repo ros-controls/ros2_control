@@ -16,6 +16,7 @@
   <build_depend>ros2_control_cmake</build_depend>
 
   <depend>fmt</depend>
+  <depend>generate_parameter_library</depend>
   <depend>hardware_interface</depend>
   <depend>joint_limits</depend>
   <depend>lifecycle_msgs</depend>
