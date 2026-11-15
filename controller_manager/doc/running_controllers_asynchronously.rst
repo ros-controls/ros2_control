@@ -24,14 +24,11 @@ blocking the main control loop.
 Parameters
 -----------
 
-The following parameters can be set in the controller's configuration to run it
-asynchronously:
+The following parameters are declared by ``controller_interface`` for every controller
+and can be set in the controller's configuration, e.g., to run it asynchronously:
 
-* ``is_async``: (optional) If set to ``true``, the controller will run its ``update()``
-  method asynchronously. Default is ``false``.
-* ``update_rate``: (optional) The rate in Hz at which the controller's ``update()`` is
-  triggered. If not set or set to ``0``, the controller runs at the same rate as the
-  controller manager.
+.. generate_parameter_library_details::
+  ../../controller_interface/src/controller_interface_parameters.yaml
 
 Additional thread parameters can be set under the ``async_parameters`` namespace:
 
