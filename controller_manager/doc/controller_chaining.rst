@@ -18,6 +18,9 @@ The concept of `controller groups <https://github.com/ros-controls/roadmap/blob/
 This doesn't mean that the controller groups as described `in the controller chaining document <https://github.com/ros-controls/roadmap/blob/master/design_drafts/controller_chaining.md#controller-group>`__ will not be introduced and used in the future.
 Nevertheless, the author is convinced that this would add only unnecessary complexity at this stage, although in the long term they *could* provide clearer structure and interfaces.
 
+The controller manager updates preceding controllers before their following controllers.
+Controllers without chain relationships keep the order in which they were loaded.
+
 Motivation, Purpose and Use
 ---------------------------------
 
