@@ -442,7 +442,7 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
 
-  auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[0];
+  auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[2];
   ASSERT_EQ(wildcard_ctrl_3.info.name, "wildcard_ctrl_3");
   ASSERT_EQ(wildcard_ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
@@ -458,7 +458,7 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_2.c->get_node(), false);
 
-  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[2];
+  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(wildcard_ctrl_1.info.name, "wildcard_ctrl_1");
   ASSERT_EQ(wildcard_ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
@@ -1042,8 +1042,8 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
   ASSERT_FALSE(ctrl_2_set_bool_service->service_is_ready());
 
   // Check the parameter run_cycle to have the right value
-  ASSERT_EQ("ctrl_2", cm_->get_loaded_controllers()[0].info.name);
-  auto ctrl_2 = cm_->get_loaded_controllers()[0].c->get_node();
+  ASSERT_EQ("ctrl_2", cm_->get_loaded_controllers()[1].info.name);
+  auto ctrl_2 = cm_->get_loaded_controllers()[1].c->get_node();
   if (!ctrl_2->has_parameter("run_cycle"))
   {
     ctrl_2->declare_parameter("run_cycle", -200);
