@@ -14,6 +14,7 @@
 //
 // Author: Denis Stogl
 
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -27,6 +28,7 @@
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "mock_components/generic_system.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
@@ -2837,6 +2839,44 @@ TEST_F(TestGenericSystem, perform_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_perform_command_mode_switch(
     hw_sys_3dof_calc_dyn_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_perform_command_mode_switch(disabled_commands_));
+}
+
+namespace
+{
+/// Return the duration of 10 read() calls of a GenericSystem with the given async parameters.
+std::chrono::nanoseconds measure_ten_reads(bool is_async, const std::string & scheduling_policy)
+{
+  hardware_interface::HardwareComponentInterfaceParams params;
+  params.hardware_info.name = "MockHardwareSystem";
+  params.hardware_info.type = "system";
+  params.hardware_info.rw_rate = 100;
+  params.hardware_info.is_async = is_async;
+  params.hardware_info.async_params.scheduling_policy = scheduling_policy;
+
+  mock_components::GenericSystem system;
+  EXPECT_EQ(system.on_init(params), hardware_interface::CallbackReturn::SUCCESS);
+
+  const auto period = rclcpp::Duration::from_seconds(0.01);
+  const auto start = std::chrono::steady_clock::now();
+  for (int i = 0; i < 10; ++i)
+  {
+    EXPECT_EQ(system.read(rclcpp::Time(0), period), hardware_interface::return_type::OK);
+  }
+  return std::chrono::steady_clock::now() - start;
+}
+}  // namespace
+
+TEST(TestGenericSystemSelfPaced, self_paced_read_waits_one_period)
+{
+  // The first read() returns at once, the next nine wait one period (10 ms) each
+  EXPECT_GE(measure_ten_reads(true, "self_paced"), std::chrono::milliseconds(85));
+}
+
+TEST(TestGenericSystemSelfPaced, read_does_not_wait_without_self_paced_policy)
+{
+  EXPECT_LT(measure_ten_reads(false, "self_paced"), std::chrono::milliseconds(50));
+  EXPECT_LT(measure_ten_reads(true, "detached"), std::chrono::milliseconds(50));
+  EXPECT_LT(measure_ten_reads(true, "synchronized"), std::chrono::milliseconds(50));
 }
 
 int main(int argc, char ** argv)

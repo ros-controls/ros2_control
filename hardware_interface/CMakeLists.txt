@@ -116,7 +116,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
-  target_link_libraries(test_generic_system hardware_interface ros2_control_test_assets::ros2_control_test_assets)
+  target_link_libraries(test_generic_system hardware_interface mock_components ros2_control_test_assets::ros2_control_test_assets)
 endif()
 
 install(
