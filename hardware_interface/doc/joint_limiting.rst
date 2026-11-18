@@ -58,9 +58,30 @@ There are two different ways the ``joint_limits`` package is used, and they are 
 Limits Enforced by the controller_manager
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**1. Via URDF (Hardware Configuration)**
+**1. Hard Limits from the URDF**
 
-Hard limits are defined in the standard URDF ``<limit>`` tag:
+Hard limits are read from the standard ``<limit>`` tag of the URDF ``<joint>`` element (not from the ``<ros2_control>`` tag):
+
+.. code-block:: xml
+
+   <joint name="joint1" type="revolute">
+     <parent link="base_link"/>
+     <child link="link1"/>
+     <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
+   </joint>
+   <joint name="joint2" type="continuous">
+     <parent link="link1"/>
+     <child link="link2"/>
+     <limit velocity="2.0" effort="50.0"/>
+   </joint>
+
+Position limits are used for ``revolute`` and ``prismatic`` joints; ``continuous`` joints get ``angle_wraparound`` enabled instead.
+Velocity and effort limits are always enabled if a ``<limit>`` tag exists.
+The URDF has no acceleration, deceleration, or jerk limits.
+
+**2. Additional Limits from the ros2_control Tag**
+
+The ``min`` and ``max`` parameters of a command interface in the ``<ros2_control>`` tag further restrict the limits:
 
 .. code-block:: xml
 
@@ -68,30 +89,37 @@ Hard limits are defined in the standard URDF ``<limit>`` tag:
      <hardware>
        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
      </hardware>
-     <joint name="joint1" type="revolute">
-       <command_interface name="position"/>
+     <joint name="joint1">
+       <command_interface name="position">
+         <param name="min">-1.0</param>
+         <param name="max">1.0</param>
+       </command_interface>
+       <command_interface name="acceleration">
+         <param name="min">-3.0</param>  <!-- max. deceleration -->
+         <param name="max">2.0</param>   <!-- max. acceleration -->
+       </command_interface>
        <state_interface name="position"/>
        <state_interface name="velocity"/>
-       <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
-     </joint>
-     <joint name="joint2" type="continuous">
-       <command_interface name="velocity"/>
-       <state_interface name="position"/>
-       <state_interface name="velocity"/>
-       <limit velocity="2.0" effort="50.0"/>
      </joint>
    </ros2_control>
 
-**2. Soft Limits via URDF**
+* ``position``, ``velocity``, ``effort``: the more restrictive of the URDF and the ``<ros2_control>`` values is used.
+* ``acceleration``: ``max`` sets the acceleration limit, ``|min|`` the deceleration limit. If only ``max`` is given, it is also used for deceleration.
+* ``jerk``: ``|max|`` sets the jerk limit; ``min`` is not supported.
 
-Soft limits are specified using the ``<safety_controller>`` tag within the ``<joint>`` element:
+Acceleration and jerk limits can only be set this way, i.e., the joint must declare the corresponding command interface.
+
+With the example above, ``joint1`` is limited to ``[-1.0, 1.0]`` rad.
+
+**3. Soft Limits from the URDF**
+
+Soft limits are read from the ``<safety_controller>`` tag of the URDF ``<joint>`` element. If they are present, the controller_manager uses the soft limiter instead of the saturation limiter for this joint.
 
 .. code-block:: xml
 
    <joint name="joint1" type="revolute">
-     <command_interface name="position"/>
-     <state_interface name="position"/>
-     <state_interface name="velocity"/>
+     <parent link="base_link"/>
+     <child link="link1"/>
      <!-- Hard limits -->
      <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
      <!-- Soft limits (optional) -->
@@ -102,20 +130,9 @@ Soft limits are specified using the ``<safety_controller>`` tag within the ``<jo
        soft_upper_limit="1.40"/>
    </joint>
 
-**3. Disabling Limits for Specific Interfaces**
+If the joint has position limits, the soft position limits are clamped to lie within them.
 
-You can selectively disable limits for specific command interfaces:
-
-.. code-block:: xml
-
-   <joint name="joint1" type="revolute">
-     <command_interface name="position">
-       <limits enable="false"/>  <!-- Position commands not limited -->
-     </command_interface>
-     <command_interface name="velocity"/>  <!-- Velocity commands are limited -->
-     <state_interface name="position"/>
-     <state_interface name="velocity"/>
-   </joint>
+Limits can be disabled per joint or per command interface with ``<limits enable="false"/>``, see `Enable Joint Limits`_.
 
 Using the joint_limits Library Directly
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
