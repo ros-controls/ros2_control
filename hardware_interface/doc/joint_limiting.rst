@@ -196,7 +196,9 @@ The parameters belong to the node that initializes the limiter, e.g., for a cont
            angle_wraparound: true
 
 The hard limits are updated whenever the parameters change at runtime (e.g., via ``ros2 param set``).
-The soft limit parameters are declared, but not read by ``init()``. Read them yourself with ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, soft_limits)``, see ``joint_limits/joint_limits_rosparam.hpp``.
+The soft limit parameters are declared, but not used by a limiter initialized this way.
+To use soft limits, declare the parameters with ``joint_limits::declare_parameters(joint_name, param_itf, logging_itf)``, read the hard and soft limits yourself with ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, limits)`` and ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, soft_limits)`` (see ``joint_limits/joint_limits_rosparam.hpp``), and pass them to ``init(joint_names, limits, soft_limits, param_itf, logging_itf)``.
+This overload does not declare parameters or register the callback, so the limits are not updated at runtime.
 To read limits from a URDF instead, use ``joint_limits::getJointLimits`` and ``joint_limits::getSoftJointLimits`` from ``joint_limits/joint_limits_urdf.hpp``.
 
 Description of the Limiter Algorithms
