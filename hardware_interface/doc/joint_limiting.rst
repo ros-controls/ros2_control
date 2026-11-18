@@ -322,25 +322,15 @@ The limiters of the controller_manager are initialized once from the robot descr
 Best Practices
 ~~~~~~~~~~~~~~
 
-1. **Set Conservative Soft Limits**: Place soft limits 5-10% before hard limits to give the controller time to react
-   Example: Hard limits [-1.57, 1.57] → Soft limits [-1.40, 1.40]
+1. **Set velocity limits**: Without velocity limits, position commands are not rate-limited and the spring of the soft limiter is inactive.
 
-2. **Match Acceleration to System Capabilities**: Set ``max_acceleration`` and ``max_deceleration`` to achievable values
-   - Too low: Sluggish motion, excessive limiting
-   - Too high: Risk of not meeting hard limits in emergency
+2. **Choose k_position for the soft limits**: The velocity towards a soft limit is bounded by ``k_position * distance``.
+   A higher ``k_position`` allows faster motion closer to the soft limit, i.e., the joint slows down later.
+   A lower value makes the joint slow down earlier.
 
-3. **Use Soft Limits for User Safety**: Apply soft limits in applications where sudden stops could be problematic
-   - Collaborative robots (cobots)
-   - Force-feedback systems
-   - Sensitive machinery
+3. **Account for the braking distance**: The limiters do not plan a deceleration towards the position limits.
+   Place the soft limits far enough from the hard limits, or limit the velocity, so that the hardware can stop in time.
 
-4. **Enable Velocity Limits**: Always enable velocity limits for safety, especially for high-mass robots
+4. **Check the startup log**: The controller_manager prints the limits and the limiter type for every joint, see `Enable Joint Limits`_.
 
-5. **Tune Spring Constant (k_position)**: Higher values = earlier and stronger braking
-   - Conservative: k_position = 5-10
-   - Balanced: k_position = 10-20
-   - Aggressive: k_position = 20+
-
-6. **Monitor Logged Output**: Watch controller_manager startup messages to confirm limits are loaded correctly
-
-7. **Test Before Deployment**: Verify joint behavior with configured limits using simulation before real hardware
+5. **Test before deployment**: Verify the behavior of the joints with the configured limits in simulation before using real hardware.
