@@ -258,67 +258,53 @@ It does not consider the braking distance, so a joint can reach the position lim
 Soft Limiter
 ~~~~~~~~~~~~
 
-The Soft Limiter implements a **spring-damper model** for gradual limiting instead of hard clamping. This provides smoother behavior and can prevent abrupt changes in joint behavior, especially useful for safety-critical applications.
+The Soft Limiter is used if soft limits are defined for the joint (``<safety_controller>`` in the URDF).
+In addition to the hard limits enforced as in the `Saturation Limiter (Default)`_, it slows the joint down when approaching the soft position limits, like a virtual spring.
+The spring is only active if the joint has both position and velocity limits, and ``k_position`` is not zero.
 
-**Spring-Damper Model:**
+**Velocity bounds:**
 
-The soft limits create a "virtual spring" that gradually increases resistance as the joint approaches the hard limit. The velocity is reduced proportionally to the distance from the soft limit boundary:
+The allowed velocity depends on the distance of the previous position command (or the current position, if there is none) to the soft limits:
 
 .. code-block:: text
 
-   For lower soft limit:
-   v_limit_min = -k_position * (current_position - soft_lower_limit)
-   For upper soft limit:
-   v_limit_max = -k_position * (current_position - soft_upper_limit)
-   Where:
-   - k_position: Spring constant (higher = stronger braking force)
-   - current_position: Current joint position
-   - soft_limit_position: The soft limit boundary
+   v_min = clamp(-k_position * (previous_position - soft_lower_limit), -max_velocity, max_velocity)
+   v_max = clamp(-k_position * (previous_position - soft_upper_limit), -max_velocity, max_velocity)
 
-**Sign Convention:**
+* **Between the soft limits**: the velocity towards a soft limit decreases linearly with the distance to it and reaches zero at the soft limit. This applies everywhere between the soft limits, not only close to them.
+* **Beyond a soft limit, but within the hard limits**: the magnitude of the velocity bounds is set to 1°/s (≈0.017 rad/s), i.e., the joint creeps back towards the soft limits.
+* **Beyond the hard limits** (plus a small tolerance): the velocity bounds are set to zero.
 
-- When position exceeds upper soft limit (position > soft_upper): negative velocity limit applied (must move downward)
-- When position falls below lower soft limit (position < soft_lower): positive velocity limit applied (must move upward)
-- Uses previous command position for stability (reduces feedback lag)
+**Applying the bounds to the commands:**
 
-**Algorithm Phases:**
+1. **Position**: Clamped to ``[soft_lower_limit, soft_upper_limit]`` and to ``[previous_position + v_min * dt, previous_position + v_max * dt]``, and additionally to the position limits of the saturation limiter.
+2. **Velocity**: Clamped to ``[v_min, v_max]``. If acceleration limits are set, also to ``current_velocity ± max_acceleration * dt``. Additionally, the velocity limits of the saturation limiter apply.
+3. **Effort**: If effort limits are set, the effort is clamped like a damper on the velocity bounds, additionally to the effort limits of the saturation limiter:
 
-1. **Normal Operation Zone** (between soft limits):
-   - Joint moves freely within hard velocity limits
-   - No soft limit effects applied
+   .. code-block:: text
 
-2. **Soft Limit Zone** (between soft and hard limits):
-   - Virtual spring activates and applies proportional braking
-   - Velocity is gradually reduced based on distance from soft limit
-   - Damping term ``k_velocity`` prevents oscillation and provides smooth deceleration
-   - Minimum velocity (≈0.017 rad/s or 1°/s) maintained for controlled approach to hard limit
+      effort_min = clamp(-k_velocity * (current_velocity - v_min), -max_effort, max_effort)
+      effort_max = clamp(-k_velocity * (current_velocity - v_max), -max_effort, max_effort)
 
-3. **Hard Limit Zone** (beyond hard limits or at boundary):
-   - Velocity is restricted to prevent exceeding hard limits
-   - Joint can only move back toward soft limits
-   - Effort limits prevent pushing further out of bounds
+4. **Acceleration** and **Jerk**: Same as in the saturation limiter.
+
+``k_velocity`` is only used for effort commands.
 
 **Example:**
 
 .. code-block:: text
 
-   Hard limits: [-1.57, 1.57]
-   Soft limits: [-1.40, 1.40]
-   k_position: 10.0
-   k_velocity: 20.0
-   Position = 1.45 (in soft zone, approaching upper limit)
-   Calculation:
-   v_limit_max = -10.0 * (1.45 - 1.40)
-   v_limit_max = -10.0 * 0.05 = -0.5 rad/s
-   Result: Joint velocity is limited to -0.5 rad/s (moving downward/backward)
-   This gives the joint time to decelerate before reaching hard limit at 1.57
+   Hard limits: [-1.57, 1.57] rad, velocity limit: 1.0 rad/s
+   Soft limits: [-1.40, 1.40] rad, k_position: 10.0 1/s
+   Previous position command = current position = 1.35 rad, dt = 0.01 s
 
-**Soft Limits vs Hard Limits:**
+   v_max = -10.0 * (1.35 - 1.40) = 0.5 rad/s
+   v_min = clamp(-10.0 * (1.35 + 1.40), -1.0, 1.0) = -1.0 rad/s
+   → velocity commands are clamped to [-1.0, 0.5] rad/s
+   → position commands are clamped to [1.34, 1.355] rad
 
-- **Soft Limits**: Gradual, spring-like braking that feels smooth to operators
-- **Hard Limits**: Immediate clamping that can feel abrupt but guarantees hard bounds
-
-Use soft limits for human-robot interaction and smooth motion profiles.
+   If the previous command and the current position are 1.45 rad (beyond the soft limit), both bounds are negative and set to -1°/s:
+   the joint is moved back towards the soft limit at ≈0.017 rad/s.
 
 Dual Enforcement Strategy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
