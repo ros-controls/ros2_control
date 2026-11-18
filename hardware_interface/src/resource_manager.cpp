@@ -391,9 +391,7 @@ public:
     // remove all command interfaces from available list
     for (const auto & interface : hardware_info_map_[hardware_name].command_interfaces)
     {
-      if (
-        make_unavailable(
-          available_command_interfaces_, available_command_interfaces_lookup_, interface))
+      if (make_unavailable(available_command_interfaces_lookup_, interface))
       {
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' command interface removed from available list",
@@ -408,12 +406,12 @@ public:
           hardware_name.c_str(), interface.c_str());
       }
     }
+    remove_unavailable_from_list(
+      available_command_interfaces_, available_command_interfaces_lookup_);
     // remove all state interfaces from available list
     for (const auto & interface : hardware_info_map_[hardware_name].state_interfaces)
     {
-      if (
-        make_unavailable(
-          available_state_interfaces_, available_state_interfaces_lookup_, interface))
+      if (make_unavailable(available_state_interfaces_lookup_, interface))
       {
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' state interface removed from available list",
@@ -428,6 +426,7 @@ public:
           hardware_name.c_str(), interface.c_str());
       }
     }
+    remove_unavailable_from_list(available_state_interfaces_, available_state_interfaces_lookup_);
   }
 
   template <class HardwareT>
@@ -1419,13 +1418,14 @@ public:
     return true;
   }
 
-  /// Removes the interface from the available list if it is in it.
+  /// Marks the interface as unavailable.
   /**
-   * \returns true if the interface was removed, false if it was not available.
+   * Only flips the flag: call remove_unavailable_from_list() after the last call, so removing k
+   * interfaces costs one O(N) pass over the list instead of k.
+   * \returns true if the interface was available, false otherwise.
    */
   static bool make_unavailable(
-    std::vector<std::string> & available_list, std::unordered_map<std::string, bool> & lookup,
-    const std::string & interface)
+    std::unordered_map<std::string, bool> & lookup, const std::string & interface)
   {
     auto it = lookup.find(interface);
     if (it == lookup.end() || !it->second)
@@ -1433,12 +1433,18 @@ public:
       return false;
     }
     it->second = false;
-    const auto list_it = std::find(available_list.begin(), available_list.end(), interface);
-    if (list_it != available_list.end())
-    {
-      available_list.erase(list_it);
-    }
     return true;
+  }
+
+  /// Removes the interfaces marked unavailable from the list, keeping the order of the rest.
+  static void remove_unavailable_from_list(
+    std::vector<std::string> & available_list, const std::unordered_map<std::string, bool> & lookup)
+  {
+    available_list.erase(
+      std::remove_if(
+        available_list.begin(), available_list.end(),
+        [&lookup](const std::string & interface) { return !is_available(lookup, interface); }),
+      available_list.end());
   }
 
   static void reserve_lookup_entries(
@@ -1789,13 +1795,15 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
   {
     if (
       ResourceStorage::make_unavailable(
-        resource_storage_->available_state_interfaces_,
         resource_storage_->available_state_interfaces_lookup_, interface))
     {
       RCUTILS_LOG_DEBUG_NAMED(
         "resource_manager", "'%s' state interface removed from available list", interface.c_str());
     }
   }
+  ResourceStorage::remove_unavailable_from_list(
+    resource_storage_->available_state_interfaces_,
+    resource_storage_->available_state_interfaces_lookup_);
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -1860,13 +1868,15 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
   {
     if (
       ResourceStorage::make_unavailable(
-        resource_storage_->available_command_interfaces_,
         resource_storage_->available_command_interfaces_lookup_, interface))
     {
       RCLCPP_DEBUG(
         get_logger(), "'%s' command interface removed from available list", interface.c_str());
     }
   }
+  ResourceStorage::remove_unavailable_from_list(
+    resource_storage_->available_command_interfaces_,
+    resource_storage_->available_command_interfaces_lookup_);
 }
 
 // CM API: Called in "callback/slow"-thread
