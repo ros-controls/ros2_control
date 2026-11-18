@@ -237,6 +237,7 @@ The Saturation Limiter clamps each command to an interval computed from the hard
 5. **Jerk**: Clamped to ``[-max_jerk, max_jerk]``. This is only relevant when using the library directly, as the controller_manager does not pass jerk commands to the limiter.
 
 If the current position is outside the position limits (plus a small tolerance), the limiter throws an exception when limiting a position command.
+If this happens while a controller writes the command and the ``handle_exceptions`` parameter of the controller_manager is ``true`` (default), the controller is deactivated and its fallback controllers are activated.
 
 **Example:**
 
