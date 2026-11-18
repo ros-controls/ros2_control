@@ -225,8 +225,11 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
   impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
-    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED &&
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
+    // FINALIZED is skipped as well, as read()/write() and the ResourceManager both call error()
+    // after a failed cycle, so on_error() must not run again on an already finalized component.
     impl_->pause_async_operations();
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
