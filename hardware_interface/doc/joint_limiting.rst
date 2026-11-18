@@ -85,9 +85,9 @@ The ``min`` and ``max`` parameters of a command interface in the ``<ros2_control
 
 .. code-block:: xml
 
-   <ros2_control name="RRBot" type="system">
+   <ros2_control name="MyRobot" type="system">
      <hardware>
-       <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+       <plugin>my_package/MyHardware</plugin>
      </hardware>
      <joint name="joint1">
        <command_interface name="position">
