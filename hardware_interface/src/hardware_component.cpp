@@ -246,7 +246,8 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
   impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
-    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED &&
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
     impl_->pause_async_operations();
     switch (impl_->on_error(impl_->get_lifecycle_state()))
