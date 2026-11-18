@@ -1406,6 +1406,8 @@ public:
     std::vector<std::string> & available_list, std::unordered_map<std::string, bool> & lookup,
     const std::string & interface)
   {
+    // operator[] allocates only for a name without an entry. Every import path creates the entry
+    // (reserve_lookup_entries), so calls from the real-time loop only find an existing one.
     bool & is_available = lookup[interface];
     if (is_available)
     {
