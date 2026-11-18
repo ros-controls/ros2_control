@@ -207,66 +207,53 @@ To read limits from a URDF instead, use ``joint_limits::getJointLimits`` and ``j
 Description of the Limiter Algorithms
 ######################################
 
-The ros2_control framework implements two primary joint limiting strategies: **Saturation Limiting** (default) and **Soft Limiting** (optional).
+The controller_manager uses one of two limiters per joint:
+
+* ``joint_limits::JointSaturationLimiter<JointControlInterfacesData>`` (default), if no soft limits are defined for the joint.
+* ``joint_limits::JointSoftLimiter``, if soft limits are defined for the joint.
+
+Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``, ``jerk``) and clamp each command independently.
+They use the current state of the joint and the previous (limited) command.
+
+.. note::
+
+   The ``joint_limits`` package also provides ``joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>``, which works on ``trajectory_msgs/JointTrajectoryPoint`` messages.
+   It is not used by the controller_manager and behaves differently, e.g., it recomputes position and velocity commands from each other and checks stopping distances.
 
 Saturation Limiter (Default)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Saturation Limiter uses clamping to enforce hard limits on joint commands. It considers the interdependencies between position, velocity, and acceleration to ensure physically feasible commands.
+The Saturation Limiter clamps each command to an interval computed from the hard limits, the current state, and the previous command (``dt`` is the update period of the controller_manager):
 
-**Algorithm Overview:**
+1. **Position**: Clamped to ``[min_position, max_position]``. If velocity limits are set, it is also clamped to ``previous_command ± max_velocity * dt``.
+   If acceleration limits are set too, ``max_velocity`` is replaced by ``min(max_velocity, |current_velocity| + max_acceleration * dt)``.
 
-1. **Position Limiting**: Clamps desired position to hard limits ``[min_position, max_position]``
+2. **Velocity**: Clamped to ``[-max_velocity, max_velocity]`` and to the velocity that reaches a position limit within one update, ``[(min_position - current_position) / dt, (max_position - current_position) / dt]``.
+   If acceleration limits are set, it is also clamped to ``previous_command ± max_acceleration * dt``.
+   If the joint is outside its position limits, velocity commands pointing further outside are set to zero.
 
-2. **Velocity Limiting**: Limits velocity based on:
-   - Hard velocity limits: ``max_velocity``
-   - Position proximity: As the joint approaches its position limits, the maximum allowed velocity decreases
-   - Acceleration capabilities: ``velocity_limit = min(max_velocity, current_velocity + max_acceleration * dt)``
+3. **Effort**: Clamped to ``[-max_effort, max_effort]``.
+   At (or beyond) a position limit while moving towards it, effort pushing further outside is set to zero.
+   The same applies if the current velocity exceeds the velocity limit.
 
-3. **Acceleration Limiting**: Constrains acceleration/deceleration:
-   - Detects if the joint is accelerating (velocity increasing) or decelerating (velocity approaching zero)
-   - Applies ``max_acceleration`` or ``max_deceleration`` accordingly
-   - Recomputes position and velocity to maintain consistency
+4. **Acceleration**: Clamped to ``±max_deceleration`` if the command opposes the current velocity (i.e., decelerates) and deceleration limits are set, otherwise to ``±max_acceleration``.
 
-4. **Effort Limiting**: Clamps effort commands while respecting boundary conditions:
-   - At lower position limit with downward velocity: only positive (upward) effort allowed
-   - At upper position limit with upward velocity: only negative (downward) effort allowed
-   - Prevents effort that would push joint further out of bounds
+5. **Jerk**: Clamped to ``[-max_jerk, max_jerk]``.
 
-5. **Jerk Limiting**: Clamps jerk (rate of change of acceleration) to ``[-max_jerk, max_jerk]``
+If the current position is outside the position limits (plus a small tolerance), the limiter throws an exception when limiting a position command.
 
-**Enforcement Priority:**
-
-The limiter processes constraints in order, with later stages recomputing values based on earlier constraints:
+**Example:**
 
 .. code-block:: text
 
-   Position Limits
-        ↓
-   Velocity Limits (adjusted by position proximity)
-        ↓
-   Acceleration/Deceleration Limits
-        ↓
-   Effort Limits (respecting boundary conditions)
-        ↓
-   Jerk Limits
+   Position limits: [-1.0, 1.0] rad, velocity limit: 1.0 rad/s, acceleration limit: 2.0 rad/s²
+   Current position: 0.95 rad, previous velocity command: 0.5 rad/s, dt = 0.01 s
 
-**Example Scenario:**
+   Velocity reaching the limit in one update: (1.0 - 0.95) / 0.01 = 5.0 rad/s → velocity limit 1.0 rad/s applies
+   Acceleration limit: 0.5 ± 2.0 * 0.01 → velocity command is clamped to [0.48, 0.52] rad/s
 
-A joint approaching its upper position limit will have its velocity limit progressively reduced to ensure it can decelerate safely:
-
-.. code-block:: text
-
-   Position: -1.0 to 1.0 (rad)
-   Velocity limit: 1.0 (rad/s)
-   Acceleration limit: 2.0 (rad/s²)
-   Current position: 0.95 (approaching limit at 1.0)
-   Current velocity: 0.5 (rad/s)
-   Available distance to limit: 1.0 - 0.95 = 0.05 rad
-   Maximum safe velocity: 0.05 rad / dt
-   If dt = 0.01s, max_safe_velocity = 5.0 rad/s (no adjustment needed)
-   If dt = 0.1s, max_safe_velocity = 0.5 rad/s (velocity already OK)
-   If dt = 1.0s, max_safe_velocity = 0.05 rad/s (limit velocity!)
+The velocity bound from the position limits only prevents overshooting within the next update.
+It does not consider the braking distance, so a joint can reach the position limit at high velocity.
 
 Soft Limiter
 ~~~~~~~~~~~~
