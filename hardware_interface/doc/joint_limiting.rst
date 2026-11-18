@@ -278,6 +278,7 @@ The allowed velocity depends on the distance of the previous position command (o
 **Applying the bounds to the commands:**
 
 1. **Position**: Clamped to ``[soft_lower_limit, soft_upper_limit]`` and to ``[previous_position + v_min * dt, previous_position + v_max * dt]``, and additionally to the position limits of the saturation limiter.
+   If the first two intervals do not overlap with the one of the saturation limiter (e.g., when the previous command is beyond a soft limit), the saturation limiter's interval is ignored.
 2. **Velocity**: Clamped to ``[v_min, v_max]``. If acceleration limits are set, also to ``current_velocity ± max_acceleration * dt``. Additionally, the velocity limits of the saturation limiter apply.
 3. **Effort**: If effort limits are set, the effort is clamped like a damper on the velocity bounds, additionally to the effort limits of the saturation limiter:
 
@@ -302,7 +303,9 @@ The allowed velocity depends on the distance of the previous position command (o
    → position commands are clamped to [1.34, 1.355] rad
 
    If the previous command and the current position are 1.45 rad (beyond the soft limit), both bounds are negative and set to -1°/s:
-   the joint is moved back towards the soft limit at ≈0.017 rad/s.
+   → velocity commands move the joint back towards the soft limit at ≈0.017 rad/s
+   → position commands are clamped to the soft limit, i.e., they jump from 1.45 to 1.40 rad in one update
+     (the saturation limiter's interval [1.44, 1.46] does not overlap and is ignored)
 
 Enforcement in the controller_manager
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
