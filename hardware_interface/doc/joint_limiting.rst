@@ -105,9 +105,9 @@ The ``min`` and ``max`` parameters of a command interface in the ``<ros2_control
 
 * ``position``, ``velocity``, ``effort``: the more restrictive of the URDF and the ``<ros2_control>`` values is used.
 * ``acceleration``: ``max`` sets the acceleration limit, ``|min|`` the deceleration limit. If only ``max`` is given, it is also used for deceleration.
-* ``jerk``: ``|max|`` sets the jerk limit; ``min`` is not supported.
+* ``jerk``: ``|max|`` sets the jerk limit; ``min`` is not supported. Jerk limits are parsed, but not enforced by the controller_manager (jerk commands are not passed to the limiter).
 
-Acceleration and jerk limits can only be set this way, i.e., the joint must declare the corresponding command interface.
+Acceleration limits can only be set this way, i.e., the joint must declare an ``acceleration`` command interface.
 
 With the example above, ``joint1`` is limited to ``[-1.0, 1.0]`` rad.
 
@@ -212,7 +212,7 @@ The controller_manager uses one of two limiters per joint:
 * ``joint_limits::JointSaturationLimiter<JointControlInterfacesData>`` (default), if no soft limits are defined for the joint.
 * ``joint_limits::JointSoftLimiter``, if soft limits are defined for the joint.
 
-Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``, ``jerk``) and clamp each command independently.
+Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``) and clamp each command independently.
 They use the current state of the joint and the previous (limited) command.
 
 .. note::
@@ -238,7 +238,7 @@ The Saturation Limiter clamps each command to an interval computed from the hard
 
 4. **Acceleration**: Clamped to ``±max_deceleration`` if the command opposes the current velocity (i.e., decelerates) and deceleration limits are set, otherwise to ``±max_acceleration``.
 
-5. **Jerk**: Clamped to ``[-max_jerk, max_jerk]``.
+5. **Jerk**: Clamped to ``[-max_jerk, max_jerk]``. This is only relevant when using the library directly, as the controller_manager does not pass jerk commands to the limiter.
 
 If the current position is outside the position limits (plus a small tolerance), the limiter throws an exception when limiting a position command.
 
@@ -286,7 +286,7 @@ The allowed velocity depends on the distance of the previous position command (o
       effort_min = clamp(-k_velocity * (current_velocity - v_min), -max_effort, max_effort)
       effort_max = clamp(-k_velocity * (current_velocity - v_max), -max_effort, max_effort)
 
-4. **Acceleration** and **Jerk**: Same as in the saturation limiter.
+4. **Acceleration** and **Jerk**: Same as in the saturation limiter (jerk only when using the library directly).
 
 ``k_velocity`` is only used for effort commands.
 
