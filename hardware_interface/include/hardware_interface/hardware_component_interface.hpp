@@ -15,13 +15,14 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INTERFACE_HPP_
 
-#include <fmt/compile.h>
+#include <fmt/format.h>
 
-#include <limits>
+#include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "control_msgs/msg/hardware_status.hpp"
@@ -36,10 +37,13 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "hardware_interface/types/trigger_type.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
@@ -135,23 +139,6 @@ public:
    */
   virtual rclcpp::NodeOptions define_custom_node_options() const;
 
-  /// Exports all state interfaces for this hardware interface.
-  /**
-   * Old way of exporting the StateInterfaces. If a empty vector is returned then
-   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
-   * then the exporting of the StateInterfaces is only done with this function and the ownership is
-   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
-   * be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
-  [[deprecated(
-    "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]] virtual std::vector<StateInterface>
-  export_state_interfaces();
-
   /**
    * Override this method to export custom StateInterfaces which are not defined in the URDF file.
    * Those interfaces will be added to the unlisted_state_interfaces_ map.
@@ -169,23 +156,6 @@ public:
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
   virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces();
-
-  /// Exports all command interfaces for this hardware interface.
-  /**
-   * Old way of exporting the CommandInterfaces. If a empty vector is returned then
-   * the on_export_command_interfaces() method is called. If a vector with CommandInterfaces is
-   * returned then the exporting of the CommandInterfaces is only done with this function and the
-   * ownership is transferred to the resource manager. The set_command(...), get_command(...), ...,
-   * can then not be used.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
-   */
-  [[deprecated(
-    "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
-    "Exporting is handled by the Framework.")]] virtual std::vector<CommandInterface>
-  export_command_interfaces();
 
   /**
    * Override this method to export custom CommandInterfaces which are not defined in the URDF file.

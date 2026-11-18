@@ -17,6 +17,7 @@
 #ifndef TEST_RESOURCE_MANAGER_HPP_
 #define TEST_RESOURCE_MANAGER_HPP_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,7 @@
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 class ResourceManagerTest : public ::testing::Test
 {
@@ -34,12 +36,6 @@ public:
 
   rclcpp::Node node_{"ResourceManagerTest"};
 };
-
-// Forward declaration
-namespace hardware_interface
-{
-class ResourceStorage;
-}
 
 class TestableResourceManager : public hardware_interface::ResourceManager
 {
@@ -72,7 +68,7 @@ public:
   }
 };
 
-std::vector<hardware_interface::return_type> set_components_state(
+inline std::vector<hardware_interface::return_type> set_components_state(
   TestableResourceManager & rm, const std::vector<std::string> & components, const uint8_t state_id,
   const std::string & state_name)
 {

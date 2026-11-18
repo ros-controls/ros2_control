@@ -15,13 +15,16 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_HPP_
 
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_component_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/statistics_types.hpp"
 #include "rclcpp/duration.hpp"

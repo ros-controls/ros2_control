@@ -14,6 +14,14 @@
 
 #include "test_controller_manager_with_resource_manager.hpp"
 
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+#include "rclcpp/utilities.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
+#include "std_msgs/msg/string.hpp"
+
 std::shared_ptr<rclcpp::Node> ControllerManagerTest::node_ = nullptr;
 std::unique_ptr<hardware_interface::ResourceManager> ControllerManagerTest::test_resource_manager_ =
   nullptr;

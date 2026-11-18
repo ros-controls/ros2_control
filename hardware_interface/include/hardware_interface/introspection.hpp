@@ -17,9 +17,10 @@
 #ifndef HARDWARE_INTERFACE__INTROSPECTION_HPP_
 #define HARDWARE_INTERFACE__INTROSPECTION_HPP_
 
+#include <functional>
 #include <string>
 
-#include "hardware_interface/types/statistics_types.hpp"
+#include "hardware_interface/types/statistic_data.hpp"
 #include "pal_statistics/pal_statistics_macros.hpp"
 #include "pal_statistics/pal_statistics_utils.hpp"
 
@@ -28,8 +29,7 @@ namespace pal_statistics
 template <>
 inline IdType customRegister(
   StatisticsRegistry & registry, const std::string & name,
-  const libstatistics_collector::moving_average_statistics::StatisticData * variable,
-  RegistrationsRAII * bookkeeping, bool enabled)
+  const ros2_control::StatisticData * variable, RegistrationsRAII * bookkeeping, bool enabled)
 {
   registry.registerVariable(name + "/max", &variable->max, bookkeeping, enabled);
   registry.registerVariable(name + "/min", &variable->min, bookkeeping, enabled);

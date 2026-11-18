@@ -15,9 +15,15 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -439,15 +445,18 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controller_it iterator to the controller for which the following controllers are
-   * \param[out] message describing the result of the check.
    * checked.
+   * \param[in,out] visited_controllers names of the controllers already checked, which are not
+   * checked again.
+   * \param[out] message describing the result of the check.
    *
    * \returns return_type::OK if all following controllers pass the checks, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it, std::string & message);
+    const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+    std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
@@ -561,6 +570,8 @@ private:
 
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
+  /// Lock-free snapshot of the overrun warning setting used by the real-time loop.
+  std::atomic_bool overruns_print_warnings_{true};
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;

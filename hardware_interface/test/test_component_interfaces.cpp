@@ -14,11 +14,12 @@
 
 #include <array>
 #include <chrono>
-#include <limits>
+#include <cmath>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -711,6 +712,31 @@ private:
   unsigned int read_calls_ = 0;
   unsigned int write_calls_ = 0;
   bool recoverable_error_happened_ = false;
+};
+
+class DummySystemCountingOnError : public hardware_interface::SystemInterface
+{
+public:
+  hardware_interface::return_type read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::ERROR;
+  }
+
+  hardware_interface::return_type write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::ERROR;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    ++on_error_calls;
+    return CallbackReturn::FAILURE;
+  }
+
+  // Shared with the test, as the component is owned by hardware_interface::System
+  static inline int on_error_calls = 0;
 };
 
 class DummySystemPreparePerform : public hardware_interface::SystemInterface
@@ -2145,6 +2171,49 @@ TEST_F(TestComponentInterfaces, dummy_system_default_read_error_behavior)
   state = system_hw.configure();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST_F(TestComponentInterfaces, dummy_system_on_error_called_once_when_it_fails)
+{
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_system_robot +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = control_resources[0];
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+
+  for (const bool fail_on_read : {true, false})
+  {
+    test_components::DummySystemCountingOnError::on_error_calls = 0;
+    hardware_interface::System system_hw(
+      std::make_unique<test_components::DummySystemCountingOnError>());
+    system_hw.initialize(params);
+    system_hw.export_state_interfaces();
+    system_hw.export_command_interfaces();
+    system_hw.configure();
+    system_hw.activate();
+
+    if (fail_on_read)
+    {
+      ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read(TIME, PERIOD));
+    }
+    else
+    {
+      ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write(TIME, PERIOD));
+    }
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, system_hw.get_lifecycle_state().id());
+
+    // The ResourceManager calls error() again after a failed read()/write()
+    system_hw.error();
+    EXPECT_EQ(1, test_components::DummySystemCountingOnError::on_error_calls);
+  }
 }
 
 // BEGIN (Handle export change): for backward compatibility

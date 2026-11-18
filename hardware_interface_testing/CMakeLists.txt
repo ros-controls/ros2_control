@@ -9,9 +9,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   lifecycle_msgs
   pluginlib
+  rclcpp
   rclcpp_lifecycle
   ros2_control_test_assets
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -30,7 +30,7 @@ target_link_libraries(test_components
                       rclcpp_lifecycle::rclcpp_lifecycle
                       ros2_control_test_assets::ros2_control_test_assets
                       pluginlib::pluginlib
-                      fmt::fmt)
+                      rclcpp::rclcpp)
 install(TARGETS test_components
 DESTINATION lib
 )

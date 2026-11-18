@@ -12,14 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
+#include <future>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_controller/test_controller.hpp"
 

@@ -12,17 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
+#include <iterator>
 #include <memory>
 #include <random>
 #include <regex>
 #include <string>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "controller_manager_msgs/srv/cleanup_controller.hpp"
+#include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
+#include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
+#include "controller_manager_msgs/srv/unload_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -696,10 +707,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -710,10 +721,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -733,10 +744,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_chainable_controller->get_lifecycle_state().id());
@@ -751,10 +762,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_chainable_controller->get_lifecycle_state().id());
@@ -766,10 +777,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -2506,10 +2517,10 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(3u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[2].name, test_ctrl_1_name);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, test_ctrl_1_name);
   ASSERT_EQ(result->controller[1].name, test_ctrl_2_name);
-  ASSERT_EQ(result->controller[0].name, test_ctrl_3_name);
+  ASSERT_EQ(result->controller[2].name, test_ctrl_3_name);
 
   ASSERT_EQ(0u, test_controller_1->internal_counter);
   ASSERT_EQ(0u, test_controller_2->internal_counter);
@@ -2531,6 +2542,8 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
       rclcpp::Duration(0, 0));
     ASSERT_EQ(res, controller_interface::return_type::OK);
   }
+  // let the in-progress RT update finish before reading the counters
+  std::this_thread::sleep_for(std::chrono::milliseconds(2));
   unsigned int old_counter_1 = test_controller_1->internal_counter;
   unsigned int old_counter_2 = test_controller_2->internal_counter;
 
@@ -2694,9 +2707,9 @@ TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_s
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation and they should work fine
   auto res = cm_->switch_controller(
@@ -2819,9 +2832,9 @@ TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_a
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation and they should work fine
   auto res = cm_->switch_controller(
@@ -3011,9 +3024,9 @@ TEST_F(
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation
   auto res = cm_->switch_controller(

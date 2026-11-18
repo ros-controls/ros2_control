@@ -14,6 +14,7 @@
 
 #include "test_controller_with_options.hpp"
 
+#include <iostream>
 #include <string>
 
 #include "gmock/gmock.h"

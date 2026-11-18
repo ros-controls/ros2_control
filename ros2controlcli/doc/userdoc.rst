@@ -389,20 +389,31 @@ view_controller_chains
 .. code-block:: console
 
     $ ros2 control view_controller_chains -h
-    usage: ros2 control view_controller_chains [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
+    usage: ros2 control view_controller_chains [-h] [--spin-time SPIN_TIME] [-s] [--save] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...]
 
-    Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf
+    Generates a diagram of the loaded chained controllers
 
     options:
       -h, --help            show this help message and exit
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
+      --save                Save the diagram as controller_diagram.pdf in the current directory instead of opening it in a viewer
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
+
+The diagram is opened in the default PDF viewer. If no viewer is available, for example when
+working over SSH, it is saved as ``controller_diagram.pdf`` in the current directory instead, which
+can also be requested explicitly with ``--save``. The path of the generated file is printed in
+either case.
+
+Interfaces exchanged between controllers are shown with the name of the exporting controller as
+prefix: an interface labeled ``(exp ref)`` is a reference interface a chainable controller exports
+for the preceding controller to write, and one labeled ``(exp state)`` is a state interface it
+exports for other controllers to read.
 
 
 view_hardware_status

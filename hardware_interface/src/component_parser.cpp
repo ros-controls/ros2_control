@@ -15,11 +15,17 @@
 #include <fmt/compile.h>
 #include <tinyxml2.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <iostream>
+#include <iterator>
+#include <limits>
 #include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/version.h"

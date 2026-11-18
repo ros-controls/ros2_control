@@ -17,7 +17,6 @@
 
 #include <limits>
 #include <string>
-#include <vector>
 
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/range.hpp"

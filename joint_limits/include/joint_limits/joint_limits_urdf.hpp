@@ -17,6 +17,8 @@
 #ifndef JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 
+#include <cmath>
+
 #include "joint_limits/joint_limits.hpp"
 #include "urdf_model/joint.h"
 

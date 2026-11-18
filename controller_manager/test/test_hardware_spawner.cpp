@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <chrono>
 #include <cstdlib>
+#include <future>
+#include <iterator>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/list_hardware_components.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "test_chainable_controller/test_chainable_controller.hpp"
-#include "test_controller/test_controller.hpp"
 
 using ::testing::_;
 using ::testing::Return;
