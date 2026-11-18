@@ -75,7 +75,7 @@ Hard limits are read from the standard ``<limit>`` tag of the URDF ``<joint>`` e
      <limit velocity="2.0" effort="50.0"/>
    </joint>
 
-Position limits are used for ``revolute`` and ``prismatic`` joints; ``continuous`` joints get ``angle_wraparound`` enabled instead.
+Position limits are used for ``revolute`` and ``prismatic`` joints; for ``continuous`` joints, the ``angle_wraparound`` flag is set instead. This flag is only stored, the provided limiters do not wrap angles.
 Velocity and effort limits are always enabled if a ``<limit>`` tag exists.
 The URDF has no acceleration, deceleration, or jerk limits.
 
@@ -164,7 +164,7 @@ The parameters for each joint are organized under the ``joint_limits.<joint_name
        has_effort_limits: bool           # Enable/disable effort/force limits
        max_effort: double                # Maximum effort/force [N·m or N]
        # Angle Wraparound (for continuous joints)
-       angle_wraparound: bool            # Enable angle wrapping for continuous joints [default: false]
+       angle_wraparound: bool            # Flag for continuous joints, not used by the provided limiters [default: false]
        # Soft Limits (optional, for gradual limiting)
        has_soft_limits: bool             # Enable/disable soft limits [default: false]
        k_position: double                # Spring constant, velocity per position error [1/s]
