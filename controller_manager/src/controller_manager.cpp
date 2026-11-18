@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -41,7 +42,6 @@
 #include "hardware_interface/helpers.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -93,6 +93,11 @@ inline bool is_controller_inactive(
   const controller_interface::ControllerInterfaceBaseSharedPtr & controller)
 {
   return is_controller_inactive(*controller);
+}
+
+std::unordered_set<std::string> make_lookup_set(std::vector<std::string> && names)
+{
+  return {std::make_move_iterator(names.begin()), std::make_move_iterator(names.end())};
 }
 
 inline bool is_controller_active(const controller_interface::ControllerInterfaceBase & controller)
@@ -315,18 +320,25 @@ void get_active_controllers_using_command_interfaces_of_controller(
     return;
   }
   const auto cmd_itfs = get_command_interfaces_names(it->c, resource_manager);
+  // Resolve the command interfaces of the active controllers once, instead of once per command
+  // interface of the given controller
+  std::vector<std::pair<const std::string *, std::vector<std::string>>> active_ctrls_cmd_itfs;
+  for (const auto & controller : controllers)
+  {
+    if (is_controller_active(controller.c))
+    {
+      active_ctrls_cmd_itfs.emplace_back(
+        &controller.info.name, get_command_interfaces_names(controller.c, resource_manager));
+    }
+  }
   for (const auto & cmd_itf : cmd_itfs)
   {
-    for (const auto & controller : controllers)
+    for (const auto & [ctrl_name, ctrl_cmd_itfs] : active_ctrls_cmd_itfs)
     {
-      const auto ctrl_cmd_itfs = get_command_interfaces_names(controller.c, resource_manager);
-      // check if the controller is active and has the command interface and make sure that it
-      // doesn't exist in the list already
-      if (
-        is_controller_active(controller.c) &&
-        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
+      // make sure that it doesn't exist in the list already
+      if (ros2_control::has_item(ctrl_cmd_itfs, cmd_itf))
       {
-        ros2_control::add_item(controllers_using_command_interfaces, controller.info.name);
+        ros2_control::add_item(controllers_using_command_interfaces, *ctrl_name);
       }
     }
   }
@@ -512,8 +524,7 @@ void build_controller_full_chain_map_cache(
 }
 
 void register_controller_manager_statistics(
-  const std::string & name,
-  const libstatistics_collector::moving_average_statistics::StatisticData * variable)
+  const std::string & name, const ros2_control::StatisticData * variable)
 {
   REGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name, variable);
 }
@@ -1815,8 +1826,11 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   // clear the list before reordering it again
   ordered_controllers_names_.clear();
-  for (const auto & [ctrl_name, chain_spec] : controller_chain_spec_)
+  // Iterate in load order (not over the unordered controller_chain_spec_) so that controllers
+  // without chain relationships keep a deterministic update order matching their load order
+  for (const auto & ctrl : to)
   {
+    const auto & ctrl_name = ctrl.info.name;
     auto it =
       std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
     if (it == ordered_controllers_names_.end())
@@ -2125,8 +2139,9 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
     else
     {
-      status =
-        check_following_controllers_for_activate(controllers, strictness, controller_it, message);
+      std::vector<std::string> visited_controllers;
+      status = check_following_controllers_for_activate(
+        controllers, strictness, controller_it, visited_controllers, message);
     }
 
     if (status == controller_interface::return_type::OK)
@@ -2144,9 +2159,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
-        // TODO(destogl): automatic manipulation of the chain:
-        // || strictness ==
-        //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN);
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         switch_params_.activate_request.erase(ctrl_it);
@@ -2336,10 +2348,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
 
     // cache mapping between hardware and controllers for stopping when read/write error happens
-    // TODO(destogl): This caching approach is suboptimal because the cache can fast become
-    // outdated. Keeping it up to date is not easy because of stopping controllers from multiple
-    // threads maybe we should not at all cache this but always search for the related controllers
-    // to a hardware when error in hardware happens
     if (in_activate_list)
     {
       std::vector<std::string> interface_names =
@@ -3238,6 +3246,12 @@ void ControllerManager::list_hardware_components_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list hardware components service locked");
 
   auto hw_components_info = resource_manager_->get_components_status();
+  // The *_interface_is_available() calls are a linear search over all available interfaces, which
+  // makes listing every interface quadratic, so build the lookup sets once per request.
+  const auto available_state_interfaces =
+    make_lookup_set(resource_manager_->available_state_interfaces());
+  const auto available_command_interfaces =
+    make_lookup_set(resource_manager_->available_command_interfaces());
 
   response->component.reserve(hw_components_info.size());
 
@@ -3258,22 +3272,8 @@ void ControllerManager::list_hardware_components_srv_cb(
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
       hwi.data_type = resource_manager_->get_command_interface_data_type(interface);
-      hwi.is_available = resource_manager_->command_interface_is_available(interface);
+      hwi.is_available = available_command_interfaces.count(interface) > 0;
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
-      // TODO(destogl): Add here mapping to controller that has claimed or
-      // can be claiming this interface
-      // Those should be two variables
-      // if (hwi.is_claimed)
-      // {
-      //   for (const auto & controller : controllers_that_use_interface(interface))
-      //   {
-      //     if (is_controller_active(controller))
-      //     {
-      //       hwi.is_claimed_by = controller;
-      //     }
-      //   }
-      // }
-      // hwi.is_used_by = controllers_that_use_interface(interface);
       component.command_interfaces.push_back(hwi);
     }
 
@@ -3283,7 +3283,7 @@ void ControllerManager::list_hardware_components_srv_cb(
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
       hwi.data_type = resource_manager_->get_state_interface_data_type(interface);
-      hwi.is_available = resource_manager_->state_interface_is_available(interface);
+      hwi.is_available = available_state_interfaces.count(interface) > 0;
       hwi.is_claimed = false;
       component.state_interfaces.push_back(hwi);
     }
@@ -3302,12 +3302,18 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service locked");
 
+  // See list_hardware_components_srv_cb: avoids a linear search per listed interface
+  const auto available_state_interfaces =
+    make_lookup_set(resource_manager_->available_state_interfaces());
+  const auto available_command_interfaces =
+    make_lookup_set(resource_manager_->available_command_interfaces());
+
   auto state_interface_names = resource_manager_->state_interface_keys();
   for (const auto & state_interface_name : state_interface_names)
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
-    hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
+    hwi.is_available = available_state_interfaces.count(state_interface_name) > 0;
     hwi.data_type = resource_manager_->get_state_interface_data_type(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
@@ -3317,7 +3323,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
-    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
+    hwi.is_available = available_command_interfaces.count(command_interface_name) > 0;
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     hwi.data_type = resource_manager_->get_command_interface_data_type(command_interface_name);
     response->command_interfaces.push_back(hwi);
@@ -3404,7 +3410,6 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    // TODO(destogl): do auto-start of broadcasters
   }
   execution_time_.read_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3506,6 +3511,12 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
+  // Cached per cycle to avoid per-controller shared_ptr refcount churn from getters
+  rclcpp::Clock & trigger_clock = *trigger_clock_;
+  rclcpp::Clock & node_clock = *get_clock();
+  const bool node_clock_started = node_clock.started();
+  const rclcpp::Time zero_time(0, 0, trigger_clock.get_clock_type());
+
   rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
   {
@@ -3537,10 +3548,8 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const bool first_update_cycle =
-        (*loaded_controller.last_update_cycle_time ==
-         rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()));
-      const rclcpp::Time current_time = get_clock()->started() ? get_trigger_clock()->now() : time;
+      const bool first_update_cycle = (*loaded_controller.last_update_cycle_time == zero_time);
+      const rclcpp::Time current_time = node_clock_started ? trigger_clock.now() : time;
       const auto controller_actual_period =
         first_update_cycle ? controller_period
                            : (current_time - *loaded_controller.last_update_cycle_time);
@@ -3551,10 +3560,8 @@ controller_interface::return_type ControllerManager::update(
         ((controller_actual_period.seconds() + (1.0 / static_cast<double>(update_rate_))) *
          controller_update_rate) -
         1.0);
-      const bool controller_go =
-        run_controller_at_cm_rate ||
-        (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type())) ||
-        (error_now <= error_if_skipped) || first_update_cycle;
+      const bool controller_go = run_controller_at_cm_rate || (time == zero_time) ||
+                                 (error_now <= error_if_skipped) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -3569,7 +3576,7 @@ controller_interface::return_type ControllerManager::update(
         try
         {
           const auto trigger_result =
-            loaded_controller.c->trigger_update(this->now(), controller_actual_period);
+            loaded_controller.c->trigger_update(node_clock.now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
@@ -3728,7 +3735,6 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    // TODO(destogl): do auto-start of broadcasters
   }
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
@@ -3987,12 +3993,14 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
 
 controller_interface::return_type ControllerManager::check_following_controllers_for_activate(
   const std::vector<ControllerSpec> & controllers, int strictness,
-  const ControllersListIterator controller_it, std::string & message)
+  const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+  std::string & message)
 {
   // we assume that the controller exists is checked in advance
   RCLCPP_DEBUG(
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
+  visited_controllers.push_back(controller_it->info.name);
 
   const auto controller_cmd_interfaces =
     get_command_interfaces_names(controller_it->c, resource_manager_);
@@ -4014,10 +4022,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       continue;
     }
-    // TODO(destogl): performance of this code could be optimized by adding additional lists with
-    // controllers that cache if the check has failed and has succeeded. Then the following would be
-    // done only once per controller, otherwise in complex scenarios the same controller is checked
-    // multiple times
 
     // check that all following controllers exits, are either: activated, will be activated, or
     // will not be deactivated
@@ -4082,23 +4086,17 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
 
     // Trigger recursion to check all the following controllers only if they are OK, add this
-    // controller update chained mode requests
+    // controller update chained mode requests. A visited controller is not checked again, because
+    // the claimed interfaces can lead back to a controller that is still being checked.
     if (
+      !ros2_control::has_item(visited_controllers, following_ctrl_it->info.name) &&
       check_following_controllers_for_activate(
-        controllers, strictness, following_ctrl_it, message) ==
-      controller_interface::return_type::ERROR)
+        controllers, strictness, following_ctrl_it, visited_controllers, message) ==
+        controller_interface::return_type::ERROR)
     {
       return controller_interface::return_type::ERROR;
     }
 
-    // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
-    // else if (strictness ==
-    //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
-    // {
-    // // insert to the begin of activate request list to be activated before preceding controller
-    //   switch_params_.activate_request.insert(switch_params_.activate_request.begin(),
-    //   following_ctrl_name);
-    // }
     if (!following_ctrl_it->c->is_in_chained_mode())
     {
       auto found_it = std::find(
@@ -4205,17 +4203,6 @@ controller_interface::return_type ControllerManager::check_preceding_controllers
       }
     }
   }
-
-  // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
-  // else if (
-  //  strictness ==
-  //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
-  // {
-  // // insert to the begin of activate request list to be activated before preceding
-  // controller
-  //   switch_params_.activate_request.insert(switch_params_.activate_request.begin(),
-  //   preceding_ctrl_name);
-  // }
 
   return controller_interface::return_type::OK;
 }
