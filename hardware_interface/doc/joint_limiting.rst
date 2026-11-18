@@ -172,8 +172,8 @@ The parameters for each joint are organized under the ``joint_limits.<joint_name
        angle_wraparound: bool            # Enable angle wrapping for continuous joints [default: false]
        # Soft Limits (optional, for gradual limiting)
        has_soft_limits: bool             # Enable/disable soft limits [default: false]
-       k_position: double                # Spring constant for position [dimensionless]
-       k_velocity: double                # Damping coefficient for velocity [dimensionless]
+       k_position: double                # Spring constant, velocity per position error [1/s]
+       k_velocity: double                # Damping, effort per velocity error [N·m·s/rad or N·s/m]
        soft_lower_limit: double          # Soft limit lower boundary [rad or m]
        soft_upper_limit: double          # Soft limit upper boundary [rad or m]
 
