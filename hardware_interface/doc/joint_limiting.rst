@@ -209,7 +209,8 @@ The controller_manager uses one of two limiters per joint:
 * ``joint_limits::JointSaturationLimiter<JointControlInterfacesData>`` (default), if no soft limits are defined for the joint.
 * ``joint_limits::JointSoftLimiter``, if soft limits are defined for the joint.
 
-Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``) and clamp each command independently.
+Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``) and clamp each command separately.
+The saturation limiter treats the commands independently; in the soft limiter, the velocity bounds narrowed for a velocity command are also used to limit an effort command in the same update.
 They use the current state of the joint and the previous (limited) command.
 
 .. note::
@@ -231,7 +232,8 @@ The Saturation Limiter clamps each command to an interval computed from the hard
    If the joint is outside its position limits, velocity commands pointing further outside are set to zero.
    If the joint is further outside than a small tolerance, all velocity commands are set to zero.
 
-3. **Effort**: Clamped to ``[-max_effort, max_effort]``.
+3. **Effort**: Only limited if effort limits are set; otherwise, effort commands are not constrained at all, also not by position or velocity limits.
+   Clamped to ``[-max_effort, max_effort]``.
    At (or beyond) a position limit while moving towards it, effort pushing further outside is set to zero.
    The same applies if the current velocity exceeds the velocity limit.
 
