@@ -275,8 +275,8 @@ The allowed velocity depends on the distance of the previous position command (o
    v_min = clamp(-k_position * (previous_position - soft_lower_limit), -max_velocity, max_velocity)
    v_max = clamp(-k_position * (previous_position - soft_upper_limit), -max_velocity, max_velocity)
 
-* **Between the soft limits**: the velocity towards a soft limit decreases linearly with the distance to it and reaches zero at the soft limit. This applies everywhere between the soft limits, not only close to them.
-* **Beyond a soft limit, but within the hard limits**: the velocity is limited to ±1°/s (≈0.017 rad/s). Once the previous position command is beyond the soft limit as well, only motion back towards the soft limit is allowed.
+* **Between the soft limits**: the velocity towards a soft limit is ``max_velocity`` until the distance to it drops below ``max_velocity / k_position``. Closer to the soft limit, it decreases linearly with the distance and reaches zero at the soft limit.
+* **Beyond a soft limit, but within the hard limits**: the velocity is limited to ±0.01745 (π/180), i.e., 1°/s for revolute joints and 17.45 mm/s for prismatic joints. Once the previous position command is beyond the soft limit as well, only motion back towards the soft limit is allowed.
 * **Beyond the hard limits** (plus a small tolerance): the velocity bounds are set to zero.
 
 **Applying the bounds to the commands:**
@@ -301,7 +301,7 @@ The allowed velocity depends on the distance of the previous position command (o
    Soft limits: [-1.40, 1.40] rad, k_position: 10.0 1/s
    Previous position command = current position = 1.35 rad, dt = 0.01 s
 
-   v_max = -10.0 * (1.35 - 1.40) = 0.5 rad/s
+   v_max = -10.0 * (1.35 - 1.40) = 0.5 rad/s  (slowing starts within 1.0 / 10.0 = 0.1 rad of the soft limit)
    v_min = clamp(-10.0 * (1.35 + 1.40), -1.0, 1.0) = -1.0 rad/s
    → velocity commands are clamped to [-1.0, 0.5] rad/s
    → position commands are clamped to [1.34, 1.355] rad
@@ -329,7 +329,7 @@ Best Practices
 
 1. **Set velocity limits**: Without velocity limits, position commands are not rate-limited and the spring of the soft limiter is inactive.
 
-2. **Choose k_position for the soft limits**: The velocity towards a soft limit is bounded by ``k_position * distance``.
+2. **Choose k_position for the soft limits**: Within ``max_velocity / k_position`` of a soft limit, the velocity towards it is bounded by ``k_position * distance``.
    A higher ``k_position`` allows faster motion closer to the soft limit, i.e., the joint slows down later.
    A lower value makes the joint slow down earlier.
 
