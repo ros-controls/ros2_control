@@ -1774,9 +1774,9 @@ std::vector<std::string> ResourceManager::get_controller_exported_state_interfac
 void ResourceManager::make_controller_exported_state_interfaces_available(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   for (const auto & interface : interface_names)
   {
     std::ignore = ResourceStorage::make_available(
@@ -1789,10 +1789,9 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
 void ResourceManager::make_controller_exported_state_interfaces_unavailable(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
-
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   for (const auto & interface : interface_names)
   {
     if (
@@ -1812,6 +1811,7 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
 void ResourceManager::remove_controller_exported_state_interfaces(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   if (
     resource_storage_->controllers_exported_state_interfaces_map_.find(controller_name) ==
     resource_storage_->controllers_exported_state_interfaces_map_.end())
@@ -1822,7 +1822,6 @@ void ResourceManager::remove_controller_exported_state_interfaces(
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   resource_storage_->controllers_exported_state_interfaces_map_.erase(controller_name);
 
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   resource_storage_->remove_state_interfaces(interface_names);
 }
 
@@ -1847,9 +1846,9 @@ std::vector<std::string> ResourceManager::get_controller_reference_interface_nam
 void ResourceManager::make_controller_reference_interfaces_available(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   for (const auto & interface : interface_names)
   {
     std::ignore = ResourceStorage::make_available(
@@ -1862,10 +1861,9 @@ void ResourceManager::make_controller_reference_interfaces_available(
 void ResourceManager::make_controller_reference_interfaces_unavailable(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
-
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   for (const auto & interface : interface_names)
   {
     if (
@@ -1884,6 +1882,7 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::remove_controller_reference_interfaces(const std::string & controller_name)
 {
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   if (
     resource_storage_->controllers_reference_interfaces_map_.find(controller_name) ==
     resource_storage_->controllers_reference_interfaces_map_.end())
@@ -1894,7 +1893,6 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
 
-  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
 }
 
