@@ -1,7 +1,7 @@
 # Instructions for AI coding agents
 
 This file guides AI coding assistants working on this repository.
-Humans should read the 
+Humans should read the
 [contributing guidelines](https://github.com/ros-controls/.github/blob/master/CONTRIBUTING.md)
 instead; everything below follows from them.
 
