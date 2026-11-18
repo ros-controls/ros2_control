@@ -8,7 +8,6 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
-  libstatistics_collector
   pluginlib
   rclcpp
   rclcpp_lifecycle
@@ -54,7 +53,6 @@ target_link_libraries(hardware_interface PUBLIC
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}
-                      ${libstatistics_collector_TARGETS}
                       fmt::fmt)
 
 add_library(mock_components SHARED

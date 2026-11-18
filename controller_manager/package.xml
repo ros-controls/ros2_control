@@ -23,7 +23,6 @@
   <depend>fmt</depend>
   <depend>generate_parameter_library</depend>
   <depend>hardware_interface</depend>
-  <depend>libstatistics_collector</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
   <depend>rcl</depend>
