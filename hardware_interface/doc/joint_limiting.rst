@@ -50,12 +50,83 @@ If joint limits are active for a specific interface, the controller_manger will 
 Configuration of Limits
 ########################
 
-Joint limits can be configured through parameters on the ROS 2 node. The limit parameters follow a standard naming convention and structure.
+There are two different ways the ``joint_limits`` package is used, and they are configured differently:
 
-Basic Parameter Structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* **Limits enforced by the controller_manager** (see `Enable Joint Limits`_): the limits are read **only from the robot description**. ROS parameters are not used, and the limits cannot be changed at runtime.
+* **Using the joint_limits library directly**, e.g., from within a controller: the limiter can read its limits from ROS parameters of that node, see `Using the joint_limits Library Directly`_.
 
-For each joint, limits are organized under the ``joint_limits.<joint_name>`` namespace with the following structure:
+Limits Enforced by the controller_manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**1. Via URDF (Hardware Configuration)**
+
+Hard limits are defined in the standard URDF ``<limit>`` tag:
+
+.. code-block:: xml
+
+   <ros2_control name="RRBot" type="system">
+     <hardware>
+       <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+     </hardware>
+     <joint name="joint1" type="revolute">
+       <command_interface name="position"/>
+       <state_interface name="position"/>
+       <state_interface name="velocity"/>
+       <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
+     </joint>
+     <joint name="joint2" type="continuous">
+       <command_interface name="velocity"/>
+       <state_interface name="position"/>
+       <state_interface name="velocity"/>
+       <limit velocity="2.0" effort="50.0"/>
+     </joint>
+   </ros2_control>
+
+**2. Soft Limits via URDF**
+
+Soft limits are specified using the ``<safety_controller>`` tag within the ``<joint>`` element:
+
+.. code-block:: xml
+
+   <joint name="joint1" type="revolute">
+     <command_interface name="position"/>
+     <state_interface name="position"/>
+     <state_interface name="velocity"/>
+     <!-- Hard limits -->
+     <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
+     <!-- Soft limits (optional) -->
+     <safety_controller
+       k_position="10.0"
+       k_velocity="20.0"
+       soft_lower_limit="-1.40"
+       soft_upper_limit="1.40"/>
+   </joint>
+
+**3. Disabling Limits for Specific Interfaces**
+
+You can selectively disable limits for specific command interfaces:
+
+.. code-block:: xml
+
+   <joint name="joint1" type="revolute">
+     <command_interface name="position">
+       <limits enable="false"/>  <!-- Position commands not limited -->
+     </command_interface>
+     <command_interface name="velocity"/>  <!-- Velocity commands are limited -->
+     <state_interface name="position"/>
+     <state_interface name="velocity"/>
+   </joint>
+
+Using the joint_limits Library Directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   This section applies only if you instantiate a limiter yourself, e.g., inside a controller.
+   The limiters of the controller_manager do not read these parameters.
+
+When a limiter is initialized with a node, e.g., ``limiter.init(joint_names, node)``, it declares and reads the parameters below from that node.
+The parameters for each joint are organized under the ``joint_limits.<joint_name>`` namespace:
 
 .. code-block:: yaml
 
@@ -89,112 +160,32 @@ For each joint, limits are organized under the ``joint_limits.<joint_name>`` nam
        soft_lower_limit: double          # Soft limit lower boundary [rad or m]
        soft_upper_limit: double          # Soft limit upper boundary [rad or m]
 
-Configuration Methods
-~~~~~~~~~~~~~~~~~~~~~~~
-
-**1. Via Parameter File (YAML)**
-
-Create a parameter file (e.g., ``joint_limits.yaml``) and pass it to the ``ros2_control_node``:
+The parameters belong to the node that initializes the limiter, e.g., for a controller named ``my_controller``:
 
 .. code-block:: yaml
 
-   ros2_control_node:
+   my_controller:
      ros__parameters:
-       enforce_command_limits: true
-   joint_limits:
-     joint1:
-       has_position_limits: true
-       min_position: -1.57
-       max_position: 1.57
-       has_velocity_limits: true
-       max_velocity: 1.0
-       has_acceleration_limits: true
-       max_acceleration: 2.0
-       has_effort_limits: true
-       max_effort: 100.0
-     joint2:
-       has_position_limits: false
-       has_velocity_limits: true
-       max_velocity: 2.0
-       angle_wraparound: true
+       joint_limits:
+         joint1:
+           has_position_limits: true
+           min_position: -1.57
+           max_position: 1.57
+           has_velocity_limits: true
+           max_velocity: 1.0
+           has_acceleration_limits: true
+           max_acceleration: 2.0
+           has_effort_limits: true
+           max_effort: 100.0
+         joint2:
+           has_position_limits: false
+           has_velocity_limits: true
+           max_velocity: 2.0
+           angle_wraparound: true
 
-**2. Via URDF (Hardware Configuration)**
-
-Hard limits are defined in the standard URDF ``<limit>`` tag:
-
-.. code-block:: xml
-
-   <ros2_control name="RRBot" type="system">
-     <hardware>
-       <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
-     </hardware>
-     <joint name="joint1" type="revolute">
-       <command_interface name="position"/>
-       <state_interface name="position"/>
-       <state_interface name="velocity"/>
-       <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
-     </joint>
-     <joint name="joint2" type="continuous">
-       <command_interface name="velocity"/>
-       <state_interface name="position"/>
-       <state_interface name="velocity"/>
-       <limit velocity="2.0" effort="50.0"/>
-     </joint>
-   </ros2_control>
-
-**3. Soft Limits via URDF**
-
-Soft limits are specified using the ``<safety_controller>`` tag within the ``<joint>`` element:
-
-.. code-block:: xml
-
-   <joint name="joint1" type="revolute">
-     <command_interface name="position"/>
-     <state_interface name="position"/>
-     <state_interface name="velocity"/>
-     <!-- Hard limits -->
-     <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
-     <!-- Soft limits (optional) -->
-     <safety_controller
-       k_position="10.0"
-       k_velocity="20.0"
-       soft_lower_limit="-1.40"
-       soft_upper_limit="1.40"/>
-   </joint>
-
-**4. Soft Limits via Parameters**
-
-Alternatively, configure soft limits via YAML:
-
-.. code-block:: yaml
-
-   joint_limits:
-     joint1:
-       has_position_limits: true
-       min_position: -1.57
-       max_position: 1.57
-       # Soft limits trigger before hard limits
-       has_soft_limits: true
-       soft_lower_limit: -1.40
-       soft_upper_limit: 1.40
-       # Spring-damper parameters
-       k_position: 10.0      # Position spring constant (higher = stiffer spring)
-       k_velocity: 20.0      # Velocity damping coefficient
-
-**5. Disabling Limits for Specific Interfaces**
-
-You can selectively disable limits for specific command interfaces:
-
-.. code-block:: xml
-
-   <joint name="joint1" type="revolute">
-     <command_interface name="position">
-       <limits enable="false"/>  <!-- Position commands not limited -->
-     </command_interface>
-     <command_interface name="velocity"/>  <!-- Velocity commands are limited -->
-     <state_interface name="position"/>
-     <state_interface name="velocity"/>
-   </joint>
+The hard limits are updated whenever the parameters change at runtime (e.g., via ``ros2 param set``).
+The soft limit parameters are declared, but not read by ``init()``. Read them yourself with ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, soft_limits)``, see ``joint_limits/joint_limits_rosparam.hpp``.
+To read limits from a URDF instead, use ``joint_limits::getJointLimits`` and ``joint_limits::getSoftJointLimits`` from ``joint_limits/joint_limits_urdf.hpp``.
 
 Description of the Limiter Algorithms
 ######################################
