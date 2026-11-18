@@ -306,34 +306,18 @@ The allowed velocity depends on the distance of the previous position command (o
    If the previous command and the current position are 1.45 rad (beyond the soft limit), both bounds are negative and set to -1°/s:
    the joint is moved back towards the soft limit at ≈0.017 rad/s.
 
-Dual Enforcement Strategy
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Enforcement in the controller_manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Joint limits are enforced at **two points** in the control loop:
+The controller_manager applies the limiter of a joint at two points:
 
-1. **Command Interface Level**: When a controller sets a command value via ``set_value()``:
-   - The limiter immediately constrains the command
-   - ``is_limited()`` flag indicates if limiting was applied
-   - Command Interface reflects the limited value
-   - Happens before the control loop update
+1. **When a controller writes a command**: ``LoanedCommandInterface::set_value()`` passes the value through the limiter of the joint, using the nominal period ``1 / update_rate``.
+   This applies to ``position``, ``velocity``, ``effort``, and ``acceleration`` command interfaces.
+   The command interface stores the limited value, and ``is_limited()`` reports whether the last value was limited.
 
-2. **Controller Manager Update Level**: At the end of the update cycle:
-   - Final enforcement ensures coherence across multiple interfaces
-   - Example: If both position and velocity commands exist, limits ensure consistency
-   - Prevents race conditions between different control interfaces
-   - Applies additional limiting if needed
+2. **After all controllers were updated**: the limiters are applied to the current values of all claimed command interfaces of the joint, using the actual period of the update cycle, before the commands are written to the hardware.
 
-This dual approach guarantees limits are never violated, even with complex multi-interface scenarios involving feedback delays.
-
-Thread Safety
-~~~~~~~~~~~~~
-
-Joint limits are thread-safe and support **dynamic reconfiguration**:
-
-- Limits can be changed at runtime via parameter server updates
-- Real-time safe: Uses ``RealtimeBuffer`` for zero-copy parameter access (lock-free reading in control loop)
-- Safe parameter updates from the parameter server using callback mechanism
-- No blocking operations in the control loop
+The limiters of the controller_manager are initialized once from the robot description; their limits cannot be changed at runtime.
 
 Best Practices
 ~~~~~~~~~~~~~~
