@@ -231,6 +231,7 @@ The Saturation Limiter clamps each command to an interval computed from the hard
 2. **Velocity**: Clamped to ``[-max_velocity, max_velocity]`` and to the velocity that reaches a position limit within one update, ``[(min_position - current_position) / dt, (max_position - current_position) / dt]``.
    If acceleration limits are set, it is also clamped to ``previous_command ± max_acceleration * dt``.
    If the joint is outside its position limits, velocity commands pointing further outside are set to zero.
+   If the joint is further outside than a small tolerance, all velocity commands are set to zero.
 
 3. **Effort**: Clamped to ``[-max_effort, max_effort]``.
    At (or beyond) a position limit while moving towards it, effort pushing further outside is set to zero.
@@ -272,7 +273,7 @@ The allowed velocity depends on the distance of the previous position command (o
    v_max = clamp(-k_position * (previous_position - soft_upper_limit), -max_velocity, max_velocity)
 
 * **Between the soft limits**: the velocity towards a soft limit decreases linearly with the distance to it and reaches zero at the soft limit. This applies everywhere between the soft limits, not only close to them.
-* **Beyond a soft limit, but within the hard limits**: the magnitude of the velocity bounds is set to 1°/s (≈0.017 rad/s), i.e., the joint creeps back towards the soft limits.
+* **Beyond a soft limit, but within the hard limits**: the velocity is limited to ±1°/s (≈0.017 rad/s). Once the previous position command is beyond the soft limit as well, only motion back towards the soft limit is allowed.
 * **Beyond the hard limits** (plus a small tolerance): the velocity bounds are set to zero.
 
 **Applying the bounds to the commands:**
