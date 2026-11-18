@@ -314,7 +314,7 @@ The controller_manager applies the limiter of a joint at two points:
 
 1. **When a controller writes a command**: ``LoanedCommandInterface::set_value()`` passes the value through the limiter of the joint, using the nominal period ``1 / update_rate``.
    This applies to ``position``, ``velocity``, ``effort``, and ``acceleration`` command interfaces.
-   The command interface stores the limited value, and ``is_limited()`` reports whether the last value was limited.
+   The command interface stores the limited value. Whether the last value was limited is published via introspection as ``command_interface.<joint>/<interface>.is_limited``.
 
 2. **After all controllers were updated**: the limiters are applied to the current values of all claimed command interfaces of the joint, using the actual period of the update cycle, before the commands are written to the hardware.
 
