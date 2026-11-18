@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include "rclcpp/rclcpp.hpp"
 
 namespace hardware_interface
@@ -103,6 +104,13 @@ struct ResourceManagerParams
    * and will cause the ResourceManager to crash.
    */
   bool handle_exceptions = true;
+
+  /**
+   * @brief Names of the hardware components that are skipped, i.e., not loaded.
+   * These components are skipped in load_and_initialize_components() and in the validation of
+   * the interfaces against the URDF.
+   */
+  std::vector<std::string> skipped_components = {};
 };
 
 }  // namespace hardware_interface

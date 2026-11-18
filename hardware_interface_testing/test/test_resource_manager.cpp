@@ -328,6 +328,23 @@ TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_async_urdf_
   ASSERT_TRUE(rm.are_components_initialized());
 }
 
+TEST_F(ResourceManagerTest, if_component_skipped_expect_that_component_not_loaded_and_initialized)
+{
+  const std::string component_to_skip = "TestSystemHardware";
+
+  TestableResourceManager rm(node_);
+  hardware_interface::ResourceManagerParams rm_params;
+  rm_params.robot_description = ros2_control_test_assets::minimal_robot_urdf;
+  rm_params.update_rate = 100;
+  rm_params.skipped_components = {component_to_skip};
+  rm.load_and_initialize_components(rm_params);
+  ASSERT_TRUE(rm.are_components_initialized());
+
+  const auto components = rm.get_components_status();
+  EXPECT_EQ(components.size(), 2);  // Sensor and Actuator are loaded
+  EXPECT_TRUE(components.find(component_to_skip) == components.end());  // not found
+}
+
 TEST_F(ResourceManagerTest, resource_claiming)
 {
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
