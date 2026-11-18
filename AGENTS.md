@@ -1,7 +1,7 @@
 # Instructions for AI coding agents
 
-This file guides AI coding assistants (Codex, Copilot, Cursor, Claude Code, Gemini CLI, ...)
-working on this repository. Humans should read the
+This file guides AI coding assistants working on this repository.
+Humans should read the 
 [contributing guidelines](https://github.com/ros-controls/.github/blob/master/CONTRIBUTING.md)
 instead; everything below follows from them.
 
@@ -32,15 +32,10 @@ A change is not done until the affected packages build and their tests pass.
 
 ## Pre-commit
 
-Run from the repository root and fix everything it reports:
+Run from the repository root and fix everything it reports. Never bypass it with `--no-verify`.
 
 ```bash
 pre-commit run -a
-```
-
-It enforces formatting (clang-format, black), linters (cpplint, cppcheck, flake8),
-copyright headers, rst style, and spelling. Never bypass it with `--no-verify`.
-
 ## Documentation
 
 - Document new or changed public APIs with doc comments.
