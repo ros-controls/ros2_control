@@ -780,11 +780,15 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      cm_msg.hardware_components[2].state.id,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
@@ -881,11 +885,16 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      cm_msg.hardware_components[0].state.id,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
     EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      cm_msg.hardware_components[2].state.id,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
@@ -1032,11 +1041,14 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
@@ -1132,11 +1144,14 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     EXPECT_EQ(cm_msg.controllers[3].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(cm_msg.hardware_components[0].name, TEST_SYSTEM_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[1].name, TEST_SENSOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     EXPECT_EQ(cm_msg.hardware_components[2].name, TEST_ACTUATOR_HARDWARE_NAME);
-    EXPECT_EQ(cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      cm_msg.hardware_components[2].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
