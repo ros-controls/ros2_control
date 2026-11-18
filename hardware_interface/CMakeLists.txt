@@ -9,6 +9,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
   pluginlib
+  rclcpp
   rclcpp_lifecycle
   rcpputils
   rcutils
@@ -34,7 +35,6 @@ add_library(hardware_interface SHARED
   src/hardware_component_interface.cpp
   src/lexical_casts.cpp
 )
-target_compile_features(hardware_interface PUBLIC cxx_std_17)
 target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
@@ -58,7 +58,6 @@ target_link_libraries(hardware_interface PUBLIC
 add_library(mock_components SHARED
   src/mock_components/generic_system.cpp
 )
-target_compile_features(mock_components PUBLIC cxx_std_17)
 target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
@@ -78,17 +77,17 @@ if(BUILD_TESTING)
   target_link_libraries(test_macros rcpputils::rcpputils)
 
   ament_add_gmock(test_inst_hardwares test/test_inst_hardwares.cpp)
-  target_link_libraries(test_inst_hardwares hardware_interface rcpputils::rcpputils)
+  target_link_libraries(test_inst_hardwares hardware_interface)
 
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
-  target_link_libraries(test_joint_handle hardware_interface rcpputils::rcpputils)
+  target_link_libraries(test_joint_handle hardware_interface)
 
   # Test helper methods
   ament_add_gmock(test_helpers test/test_helpers.cpp)
   target_link_libraries(test_helpers hardware_interface)
 
   # Test lexical casts methods
-  ament_add_gtest(test_lexical_casts test/test_lexical_casts.cpp)
+  ament_add_gmock(test_lexical_casts test/test_lexical_casts.cpp)
   target_link_libraries(test_lexical_casts hardware_interface)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)

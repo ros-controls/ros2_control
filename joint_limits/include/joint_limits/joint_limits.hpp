@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adolfo Rodriguez Tsouroukdissian
+/// @author Adolfo Rodriguez Tsouroukdissian
 
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HPP_
@@ -24,7 +24,8 @@
 namespace joint_limits
 {
 /**
- * JointLimits structure stores values from from yaml definition or `<limits>` tag in URDF.
+ * @brief Store joint limits values from YAML definition or URDF `<limits>` tag.
+ *
  * The mapping from URDF attributes to members is the following:
  *   lower --> min_position
  *   upper --> max_position
@@ -107,8 +108,7 @@ struct JointLimits
 };
 
 /**
- * SoftJointLimits stores values from the `<safety_controller>` tag of URDF.
- * The meaning of the fields are:
+ * @brief Store soft joint limits values from the URDF `<safety_controller>` tag.
  *
  * An element can contain the following attributes:
  *

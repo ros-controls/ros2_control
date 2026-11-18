@@ -2,6 +2,63 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.13.0 (2026-11-02)
+-------------------
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Add GPIO interface validation tests (`#3553 <https://github.com/ros-controls/ros2_control/issues/3553>`_)
+* Contributors: Sai Kishor Kothakota, ktyang
+
+6.12.0 (2026-10-07)
+-------------------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.11.0 (2026-10-05)
+-------------------
+
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+* Relax assertions w.r.t. timing on CI runners (`#3535 <https://github.com/ros-controls/ros2_control/issues/3535>`_)
+* Contributors: Christoph Fröhlich
+
+6.9.0 (2026-08-10)
+------------------
+
+6.8.0 (2026-07-01)
+------------------
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (`#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_)
+* Contributors: Sai Kishor Kothakota, Shlok Mehndiratta
+
+6.7.1 (2026-05-12)
+------------------
+* Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_)
+* Add tests for duplicate prevention (fixes `#2952 <https://github.com/ros-controls/ros2_control/issues/2952>`_) (`#3189 <https://github.com/ros-controls/ros2_control/issues/3189>`_)
+* Contributors: Sai Kishor Kothakota, kamal2730
+
+6.7.0 (2026-04-23)
+------------------
+
+6.6.0 (2026-04-17)
+------------------
+* Fix RCLCPP_VERSION_GTE for add_node (`#3198 <https://github.com/ros-controls/ros2_control/issues/3198>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.1 (2026-04-05)
+------------------
+* Fix API breaking change of Executor::add_node (`#3080 <https://github.com/ros-controls/ros2_control/issues/3080>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota, github-actions[bot]
+
 6.4.0 (2026-02-03)
 ------------------
 

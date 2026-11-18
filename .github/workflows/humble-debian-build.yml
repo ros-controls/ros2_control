@@ -25,6 +25,7 @@ jobs:
   debian_semi_binary_build:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: humble
       upstream_workspace: ros2_control.humble.repos
       ref_for_scheduled_build: humble

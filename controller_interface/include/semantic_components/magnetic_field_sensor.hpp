@@ -15,6 +15,8 @@
 #ifndef SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 #define SEMANTIC_COMPONENTS__MAGNETIC_FIELD_SENSOR_HPP_
 
+#include <array>
+#include <limits>
 #include <string>
 
 #include "semantic_components/semantic_component_interface.hpp"
@@ -30,11 +32,14 @@ public:
       name, {name + "/" + "magnetic_field.x", name + "/" + "magnetic_field.y",
              name + "/" + "magnetic_field.z"})
   {
+    data_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
-  /// Returns values as sensor_msgs::msg::MagneticField
   /**
-   * \return MagneticField message from values
+   * @brief Returns values as sensor_msgs::msg::MagneticField
+   *
+   * @param[out] message MagneticField message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::MagneticField & message)
   {
@@ -49,8 +54,7 @@ private:
   /**
    * @brief Update the data array from the state interfaces.
    * @note This method is thread-safe and non-blocking.
-   * @note This method might return stale data if the data is not updated. This is to ensure that
-   * the data from the sensor is not discontinuous.
+   * @note Each axis keeps its last successful reading, or NaN until its first successful read.
    */
   void update_data_from_interfaces()
   {
@@ -64,8 +68,10 @@ private:
     }
   }
 
-  // Array to store the data of the magnetic field sensor
-  std::array<double, 3> data_{{0.0, 0.0, 0.0}};
+  /**
+   * @brief Array to store the data of the magnetic field sensor
+   */
+  std::array<double, 3> data_{};
 };
 
 }  // namespace semantic_components

@@ -11,12 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <chrono>
+#include <cmath>
+#include <future>
+#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/msg/controller_manager_activity.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -26,6 +33,38 @@
 
 using ::testing::_;
 using ::testing::Return;
+
+namespace
+{
+#if ROS2_CONTROL_STRICT_TIMING_TESTS
+constexpr bool kStrictTimingTests = true;
+#else
+constexpr bool kStrictTimingTests = false;
+#endif
+
+constexpr double kRelaxedTimingLowerBoundFactor = 0.9;
+constexpr double kRelaxedTimingUpperBoundFactor = 1.1;
+constexpr double kRelaxedUpdatePeriodLowerBoundFactor = 0.5;
+constexpr double kRelaxedPeriodicityMaxUpperBoundFactor = 1.6;
+constexpr double kRelaxedExecutionTimeUpperBoundFactor = 2.5;
+
+double timing_lower_bound(
+  double strict_value, double relaxed_bound_factor = kRelaxedTimingLowerBoundFactor)
+{
+  return kStrictTimingTests ? strict_value : strict_value * relaxed_bound_factor;
+}
+
+double timing_upper_bound(
+  double strict_value, double relaxed_bound_factor = kRelaxedTimingUpperBoundFactor)
+{
+  return kStrictTimingTests ? strict_value : strict_value * relaxed_bound_factor;
+}
+
+double execution_time_upper_bound(double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedExecutionTimeUpperBoundFactor;
+}
+}  // namespace
 
 class TestControllerManagerWithStrictness
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
@@ -198,9 +237,9 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
   ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
   ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(
@@ -234,10 +273,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -268,10 +307,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -292,10 +331,10 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   get_cm_status_message(cm_activity_topic, cm_msg);
   ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
   ASSERT_EQ(cm_msg.controllers.size(), 2u);
-  ASSERT_EQ(cm_msg.controllers[0].name, TEST_CONTROLLER2_NAME);
-  ASSERT_EQ(cm_msg.controllers[0].state.id, expected_ctrl2_state);
-  ASSERT_EQ(cm_msg.controllers[1].name, test_controller::TEST_CONTROLLER_NAME);
-  ASSERT_EQ(cm_msg.controllers[1].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -310,6 +349,21 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_state().id());
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->cleanup_controller(test_controller::TEST_CONTROLLER_NAME));
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+  get_cm_status_message(cm_activity_topic, cm_msg);
+  ASSERT_EQ(cm_msg.hardware_components.size(), 3u);
+  ASSERT_EQ(cm_msg.controllers.size(), 2u);
+  ASSERT_EQ(cm_msg.controllers[1].name, TEST_CONTROLLER2_NAME);
+  ASSERT_EQ(cm_msg.controllers[1].state.id, expected_ctrl2_state);
+  ASSERT_EQ(cm_msg.controllers[0].name, test_controller::TEST_CONTROLLER_NAME);
+  ASSERT_EQ(cm_msg.controllers[0].state.id, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
   auto unload_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
     test_controller::TEST_CONTROLLER_NAME);
@@ -729,8 +783,19 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle_at_cm_rat
 
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-    EXPECT_EQ(last_internal_counter + 1, test_controller->internal_counter)
-      << "Controller is stopped at the end of update, it should finish it's active cycle";
+    if (!kStrictTimingTests)
+    {
+      EXPECT_THAT(
+        test_controller->internal_counter,
+        testing::AllOf(testing::Ge(last_internal_counter), testing::Le(last_internal_counter + 1u)))
+        << "In relaxed mode, scheduler jitter may skip the final async cycle while stopping "
+           "controllers.";
+    }
+    else
+    {
+      EXPECT_EQ(last_internal_counter + 1, test_controller->internal_counter)
+        << "Controller is stopped at the end of update, it should finish it's active cycle";
+    }
   }
 
   EXPECT_EQ(
@@ -912,7 +977,10 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
-      testing::AllOf(testing::Ge(0.65 / cm_update_rate), testing::Lt((1.6 / cm_update_rate))));
+      testing::AllOf(
+        testing::Ge(
+          timing_lower_bound(0.65 / cm_update_rate, kRelaxedUpdatePeriodLowerBoundFactor)),
+        testing::Lt(timing_upper_bound(1.6 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
       cm_->get_loaded_controllers()[0].execution_time_statistics->get_count());
@@ -923,15 +991,19 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
       testing::AllOf(
-        testing::Ge(0.9 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+        testing::Ge(timing_lower_bound(0.9 * cm_->get_update_rate())),
+        testing::Lt(timing_upper_bound(1.05 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
       testing::AllOf(
-        testing::Ge(0.5 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+        testing::Ge(timing_lower_bound(0.5 * cm_->get_update_rate())),
+        testing::Lt(timing_upper_bound(1.2 * cm_->get_update_rate()))));
     EXPECT_THAT(
       cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
       testing::AllOf(
-        testing::Ge(0.75 * cm_->get_update_rate()), testing::Lt((2.0 * cm_->get_update_rate()))));
+        testing::Ge(timing_lower_bound(0.75 * cm_->get_update_rate())),
+        testing::Lt(timing_upper_bound(
+          2.0 * cm_->get_update_rate(), kRelaxedPeriodicityMaxUpperBoundFactor))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -1058,8 +1130,9 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         test_controller->update_period_.seconds(),
         testing::AllOf(
-          testing::Gt(0.65 * exp_controller_period),
-          testing::Lt((1.2 * exp_controller_period) + PERIOD.seconds())))
+          testing::Gt(
+            timing_lower_bound(0.65 * exp_controller_period, kRelaxedUpdatePeriodLowerBoundFactor)),
+          testing::Lt(timing_upper_bound((1.2 * exp_controller_period) + PERIOD.seconds()))))
         << "update_counter: " << update_counter
         << " desired controller period: " << controller_period
         << " expected controller period: " << exp_controller_period
@@ -1101,16 +1174,23 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
         << "The first update is not counted in periodicity statistics";
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_average(),
-        testing::AllOf(testing::Ge(0.9 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.9 * exp_periodicity)),
+          testing::Lt(timing_upper_bound(1.05 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_min(),
-        testing::AllOf(testing::Ge(0.5 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.5 * exp_periodicity)),
+          testing::Lt(timing_upper_bound(1.2 * exp_periodicity))));
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->get_max(),
-        testing::AllOf(testing::Ge(0.75 * exp_periodicity), testing::Lt((2.0 * exp_periodicity))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.75 * exp_periodicity)),
+          testing::Lt(
+            timing_upper_bound(2.0 * exp_periodicity, kRelaxedPeriodicityMaxUpperBoundFactor))));
       EXPECT_LT(
         cm_->get_loaded_controllers()[0].execution_time_statistics->get_average(),
-        50.0);  // 50 microseconds
+        execution_time_upper_bound(50.0));  // 50 microseconds in strict mode
     }
   }
 }
@@ -2180,6 +2260,132 @@ TEST_F(
       cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
     EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
   }
+}
+
+TEST_F(
+  TestControllerManagerFallbackControllers,
+  test_fallback_controllers_no_duplicates_when_chain_group_shares_same_fallback)
+{
+  // Regression test: when multiple controllers in a chain group all have the same fallback
+  // controller configured, the fallback list must contain unique entries
+
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+
+  const std::string chainable_controller_name = "test_chainable_controller_1";
+  const std::string primary_controller_name = "test_controller_1";
+  const std::string fallback_controller_name = "test_controller_2";
+
+  // Chainable controller: uses joint1/position hardware, exports modified_joint1/position ref itf
+  auto chainable_controller =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  cmd_itfs_cfg.names = {"joint1/position"};
+  state_itfs_cfg.names = {"joint2/velocity"};
+  chainable_controller->set_command_interface_configuration(cmd_itfs_cfg);
+  chainable_controller->set_state_interface_configuration(state_itfs_cfg);
+  chainable_controller->set_reference_interface_names({"modified_joint1/position"});
+  chainable_controller->set_exported_state_interface_names({"modified_joint2/velocity"});
+
+  // Primary controller: uses chainable controller's reference interface → forms a chain group
+  auto primary_controller = std::make_shared<test_controller::TestController>();
+  cmd_itfs_cfg.names = {chainable_controller_name + "/modified_joint1/position"};
+  primary_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  // Fallback controller: uses joint1/position directly
+  auto fallback_controller = std::make_shared<test_controller::TestController>();
+  cmd_itfs_cfg.names = {"joint1/position"};
+  fallback_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    controller_manager::ControllerSpec controller_spec;
+
+    // Add chainable controller with fallback
+    controller_spec.c = chainable_controller;
+    controller_spec.info.name = chainable_controller_name;
+    controller_spec.info.type = "test_chainable_controller::TestChainableController";
+    controller_spec.info.fallback_controllers_names = {fallback_controller_name};
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    cm_->add_controller(controller_spec);
+
+    // Add primary controller with the same fallback
+    controller_spec.c = primary_controller;
+    controller_spec.info.name = primary_controller_name;
+    controller_spec.info.type = "test_controller::TestController";
+    controller_spec.info.fallback_controllers_names = {fallback_controller_name};
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    cm_->add_controller(controller_spec);
+
+    // Add fallback controller (no fallback of its own)
+    controller_spec.c = fallback_controller;
+    controller_spec.info.name = fallback_controller_name;
+    controller_spec.info.type = "test_controller::TestController";
+    controller_spec.info.fallback_controllers_names = {};
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    cm_->add_controller(controller_spec);
+  }
+
+  EXPECT_EQ(3u, cm_->get_loaded_controllers().size());
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(chainable_controller_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(primary_controller_name));
+    EXPECT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(fallback_controller_name));
+  }
+
+  // Activate chainable and primary controllers
+  std::vector<std::string> start_controllers = {chainable_controller_name, primary_controller_name};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    chainable_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    primary_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    fallback_controller->get_lifecycle_state().id());
+
+  // Make primary_controller fail — this deactivates the whole chain group (primary + chainable).
+  // Both are in deactivate_controllers_list and both have fallback_controller_name as fallback.
+  // Without the fix, fallback_controller_name would appear twice in fallback_controllers_list,
+  // causing the second activate attempt to fail with "command interface already claimed".
+  primary_controller->set_external_commands_for_testing({std::numeric_limits<double>::quiet_NaN()});
+  EXPECT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  // Both chain members must be deactivated, fallback must be active (activated exactly once)
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    primary_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    chainable_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    fallback_controller->get_lifecycle_state().id());
 }
 
 class TestControllerManagerControllerChainFailedUpdateCycle

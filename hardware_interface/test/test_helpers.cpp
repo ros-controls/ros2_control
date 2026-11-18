@@ -13,6 +13,12 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
+
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "hardware_interface/helpers.hpp"
 
 TEST(TestHelper, test_helper_methods)

@@ -15,11 +15,20 @@
 #include "hardware_interface/hardware_component_interface.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <exception>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "hardware_interface/lexical_casts.hpp"
 #include "rclcpp/node_options.hpp"
+#include "rclcpp/qos.hpp"
 
 namespace hardware_interface
 {
@@ -157,13 +166,7 @@ CallbackReturn HardwareComponentInterface::init(
     }
   }
 
-  if (publish_rate == 0.0)
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "`status_publish_rate` is set to 0.0, hardware status publisher will not be created.");
-  }
-  else
+  if (publish_rate > 0.0)
   {
     control_msgs::msg::HardwareStatus status_msg_template;
     if (init_hardware_status_message(status_msg_template) != CallbackReturn::SUCCESS)
@@ -286,14 +289,6 @@ rclcpp::NodeOptions HardwareComponentInterface::define_custom_node_options() con
   return node_options;
 }
 
-std::vector<StateInterface> HardwareComponentInterface::export_state_interfaces()
-{
-  // return empty vector by default. For backward compatibility we try calling
-  // export_state_interfaces() and only when empty vector is returned call
-  // on_export_state_interfaces()
-  return {};
-}
-
 std::vector<hardware_interface::InterfaceDescription>
 HardwareComponentInterface::export_unlisted_state_interface_descriptions()
 {
@@ -346,14 +341,6 @@ std::vector<StateInterface::ConstSharedPtr> HardwareComponentInterface::on_expor
     state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
   }
   return state_interfaces;
-}
-
-std::vector<CommandInterface> HardwareComponentInterface::export_command_interfaces()
-{
-  // return empty vector by default. For backward compatibility we try calling
-  // export_command_interfaces() and only when empty vector is returned call
-  // on_export_command_interfaces()
-  return {};
 }
 
 std::vector<hardware_interface::InterfaceDescription>
@@ -557,11 +544,19 @@ rclcpp::Node::SharedPtr HardwareComponentInterface::get_node() const
 const HardwareInfo & HardwareComponentInterface::get_hardware_info() const { return info_; }
 
 void HardwareComponentInterface::pause_async_operations()
-
 {
   if (async_handler_)
   {
     async_handler_->pause_execution();
+  }
+}
+
+void HardwareComponentInterface::stop_async_handler()
+{
+  if (async_handler_)
+  {
+    async_handler_->stop_thread();
+    async_handler_.reset();
   }
 }
 

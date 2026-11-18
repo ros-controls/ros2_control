@@ -13,8 +13,10 @@
 // limitations under the License.
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "hardware_interface/lexical_casts.hpp"
 

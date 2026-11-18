@@ -3,7 +3,10 @@ controller_manager:
     type: int,
     default_value: 100,
     read_only: true,
-    description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controllers and writes commands to hardware."
+    description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controllers and writes commands to hardware.",
+    validation: {
+      gt<>: 0,
+    }
   }
 
   enforce_command_limits: {

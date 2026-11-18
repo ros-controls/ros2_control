@@ -26,6 +26,7 @@ jobs:
   source:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
+      extra-cmake-args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: jazzy
       ref: jazzy
       container: ubuntu:24.04

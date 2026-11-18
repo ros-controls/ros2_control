@@ -2,6 +2,82 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.13.0 (2026-11-02)
+-------------------
+* Fix data race on is_command_limited\_ between limiter and introspection sampler (`#3720 <https://github.com/ros-controls/ros2_control/issues/3720>`_)
+* Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)
+* Use the pointers instead of reference in loaned interfaces (`#2634 <https://github.com/ros-controls/ros2_control/issues/2634>`_)
+* Update migration notes and docs wrt removed export apis (`#3674 <https://github.com/ros-controls/ros2_control/issues/3674>`_)
+* Fix missing libstatistics_collector library (`#3669 <https://github.com/ros-controls/ros2_control/issues/3669>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota, mosfet80
+
+6.12.0 (2026-10-07)
+-------------------
+* Breaking: Remove deprecated methods from Rolling and Lyrical (`#3610 <https://github.com/ros-controls/ros2_control/issues/3610>`_)
+* Contributors: Sai Kishor Kothakota
+
+6.11.0 (2026-10-05)
+-------------------
+* Match complete command interfaces in GenericSystem mode switches (`#3596 <https://github.com/ros-controls/ros2_control/issues/3596>`_)
+* Contributors: vpfkfl753
+
+6.10.1 (2026-09-08)
+-------------------
+
+6.10.0 (2026-09-02)
+-------------------
+
+6.9.0 (2026-08-10)
+------------------
+* Avoid Windows TRUE/FALSE macro collisions in hardware_interface (`#3486 <https://github.com/ros-controls/ros2_control/issues/3486>`_)
+* doc: reorder ros2_control TOC (`#3478 <https://github.com/ros-controls/ros2_control/issues/3478>`_)
+* Remove deprecated HardwareInfo::thread_priority member (`#3484 <https://github.com/ros-controls/ros2_control/issues/3484>`_)
+* Use stream parsing for hardware_interface floats on Apple (`#3485 <https://github.com/ros-controls/ros2_control/issues/3485>`_)
+* Contributors: Aniruddh Yelluri, Ismet Vahidezade, Tobias Fischer
+
+6.8.0 (2026-07-01)
+------------------
+* hardware_interface: add missing <unordered_set> include in resource_manager (`#3431 <https://github.com/ros-controls/ros2_control/issues/3431>`_)
+* Add read_only attribute to JointInfo and ActuatorInfo (`#3426 <https://github.com/ros-controls/ros2_control/issues/3426>`_)
+* fix typo in 'synchronized' documentation (`#3388 <https://github.com/ros-controls/ros2_control/issues/3388>`_)
+* Fix pure virtual error in the hardware component with async mode (`#3321 <https://github.com/ros-controls/ros2_control/issues/3321>`_)
+* Fix the initialization of the parsed resource managers (`#3346 <https://github.com/ros-controls/ros2_control/issues/3346>`_)
+* [hardware_interface_testing] Add tests for hardware components exception handling (`#3228 <https://github.com/ros-controls/ros2_control/issues/3228>`_)
+* Controller Manager recovery from invalid URDF errors (`#2775 <https://github.com/ros-controls/ros2_control/issues/2775>`_)
+* Fixing Hardware components logging spam in tests (`#2692 <https://github.com/ros-controls/ros2_control/issues/2692>`_)
+* Contributors: Bence Magyar, Christian Rauch, Sai Kishor Kothakota, Shlok Mehndiratta, Soham Patil, VitezGabriela
+
+6.7.1 (2026-05-12)
+------------------
+* fix(generic_system): Fix loop bound of states (`#3282 <https://github.com/ros-controls/ros2_control/issues/3282>`_)
+* Fix pre-commit of ament_cppcheck on rolling Resolute Raccoon (`#3276 <https://github.com/ros-controls/ros2_control/issues/3276>`_)
+* Bump C++ version to C++20 (`#3253 <https://github.com/ros-controls/ros2_control/issues/3253>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+6.7.0 (2026-04-23)
+------------------
+* Fix C++20 behavior changes of `std::from_chars` (`#3244 <https://github.com/ros-controls/ros2_control/issues/3244>`_)
+* Add missing `charconv` header (`#3234 <https://github.com/ros-controls/ros2_control/issues/3234>`_)
+* Contributors: Christoph Fröhlich
+
+6.6.0 (2026-04-17)
+------------------
+* lexical_casts: use gMock instead of gTest (`#3204 <https://github.com/ros-controls/ros2_control/issues/3204>`_)
+* Contributors: Christoph Fröhlich
+
+6.5.1 (2026-04-05)
+------------------
+
+6.5.0 (2026-04-02)
+------------------
+* Migrate hardware components to new handle API (`#2987 <https://github.com/ros-controls/ros2_control/issues/2987>`_)
+* hardware_interface: Fix build error with GCC 15 (`#3174 <https://github.com/ros-controls/ros2_control/issues/3174>`_)
+* fix(hardware_interface): include component name in parsing error messages (`#3144 <https://github.com/ros-controls/ros2_control/issues/3144>`_)
+* Fix forwarding handle_exceptions parameter to resource manager (`#3107 <https://github.com/ros-controls/ros2_control/issues/3107>`_)
+* Consistently add <cmath> include with define for windows (`#3061 <https://github.com/ros-controls/ros2_control/issues/3061>`_)
+* Cache interface name to avoid failing at the destruction time (`#3043 <https://github.com/ros-controls/ros2_control/issues/3043>`_)
+* Contributors: Christoph Fröhlich, Michal Sojka, Sai Kishor Kothakota, Shlok Mehndiratta
+
 6.4.0 (2026-02-03)
 ------------------
 * Fix the node name overlapping in the Hardware Components (`#3006 <https://github.com/ros-controls/ros2_control/issues/3006>`_)

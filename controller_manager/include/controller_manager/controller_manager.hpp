@@ -15,9 +15,15 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -49,6 +55,10 @@
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
 #include "std_msgs/msg/string.hpp"
+
+#if !defined(_WIN32)
+#include "realtime_tools/mutex.hpp"
+#endif
 
 namespace controller_manager
 {
@@ -338,15 +348,37 @@ protected:
   unsigned int update_rate_;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_ = nullptr;
 
 private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+
+  /// Initialize controller manager publishers, diagnostics, introspection, and shutdown handling.
   void init_controller_manager();
 
+  /// Initialize controller manager parameters.
+  /**
+   * Declares controller manager parameters, reads them from the generated parameter listener, and
+   * caches values used by the real-time update loop.
+   */
   void initialize_parameters();
+
+  /// Initialize the robot description subscription and wait notification timer.
+  /**
+   * Used when the controller manager starts without a valid robot description, or when a robot
+   * description failed to initialize hardware and the manager should keep waiting for a
+   * replacement.
+   */
+  void init_robot_description_callback();
+
+  /// Set the initial lifecycle state of hardware components.
+  /**
+   * Applies the hardware_components_initial_state parameters after the resource manager has loaded
+   * and initialized components from a valid robot description.
+   */
+  void set_initial_hardware_components_state();
 
   /**
    * Call cleanup to change the given controller lifecycle node to the unconfigured state.
@@ -413,15 +445,18 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controller_it iterator to the controller for which the following controllers are
-   * \param[out] message describing the result of the check.
    * checked.
+   * \param[in,out] visited_controllers names of the controllers already checked, which are not
+   * checked again.
+   * \param[out] message describing the result of the check.
    *
    * \returns return_type::OK if all following controllers pass the checks, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it, std::string & message);
+    const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+    std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
@@ -535,6 +570,8 @@ private:
 
   std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   std::shared_ptr<controller_manager::Params> params_;
+  /// Lock-free snapshot of the overrun warning setting used by the real-time loop.
+  std::atomic_bool overruns_print_warnings_{true};
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
@@ -566,6 +603,11 @@ private:
     // *INDENT-OFF*
   public:
     // *INDENT-ON*
+#if !defined(_WIN32)
+    using controllers_lock_type = realtime_tools::prio_inherit_recursive_mutex;
+#else
+    using controllers_lock_type = std::recursive_mutex;
+#endif
     /// update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
     /**
      * \warning Should only be called by the RT thread, no one should modify the
@@ -583,7 +625,7 @@ private:
      * rt list
      */
     std::vector<ControllerSpec> & get_unused_list(
-      const std::lock_guard<std::recursive_mutex> & guard);
+      const std::lock_guard<controllers_lock_type> & guard);
 
     /// get_updated_list Returns a const reference to the most updated list.
     /**
@@ -592,7 +634,7 @@ private:
      * rt list
      */
     const std::vector<ControllerSpec> & get_updated_list(
-      const std::lock_guard<std::recursive_mutex> & guard) const;
+      const std::lock_guard<controllers_lock_type> & guard) const;
 
     /**
      * switch_updated_list Switches the "updated" and "outdated" lists, and waits
@@ -600,7 +642,7 @@ private:
      * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
      * rt list
      */
-    void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
+    void switch_updated_list(const std::lock_guard<controllers_lock_type> & guard);
 
     /// A method to register a callback to be called when the list is switched
     /**
@@ -610,7 +652,7 @@ private:
 
     // Mutex protecting the controllers list
     // must be acquired before using any list other than the "used by rt"
-    mutable std::recursive_mutex controllers_lock_;
+    mutable controllers_lock_type controllers_lock_;
 
     // *INDENT-OFF*
   private:
@@ -673,6 +715,8 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  bool activate_all_hw_components_ = false;
 
   struct ControllerManagerExecutionTime
   {

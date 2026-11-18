@@ -24,6 +24,8 @@ from controller_manager.controller_manager_services import (
     list_hardware_components,
     set_hardware_component_state,
     load_controller,
+    service_caller,
+    ServiceNotFoundError,
     switch_controllers,
     unload_controller,
 )
@@ -36,7 +38,7 @@ from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
 from qt_gui.plugin import Plugin
-from ros2param.api import call_get_parameters, call_list_parameters
+from rcl_interfaces.srv import GetParameters, ListParameters
 from ros2service.api import get_service_names_and_types
 
 from .update_combo import update_combo
@@ -46,6 +48,11 @@ class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
     _cm_update_freq = 1  # Hz
+    # Timeout (in seconds) for finding a service and for its response, used by the periodic
+    # queries of controllers, hardware components and parameters
+    _service_timeout = 2.0 / _cm_update_freq
+    # Timeout (in seconds) for the controller manager to perform a controller switch
+    _switch_timeout = 0.3
 
     def __init__(self, context):
         super().__init__(context)
@@ -101,24 +108,24 @@ class ControllerManager(Plugin):
 
         # Controllers display
         ctrl_table_view = self._widget.ctrl_table_view
-        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
         ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
         ctrl_header = ctrl_table_view.horizontalHeader()
-        ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        ctrl_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ctrl_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         ctrl_header.customContextMenuRequested.connect(self._on_ctrl_header_menu)
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
-        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
         hw_table_view.doubleClicked.connect(self._on_hw_info)
 
         hw_header = hw_table_view.horizontalHeader()
-        hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        hw_header.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        hw_header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         hw_header.customContextMenuRequested.connect(self._on_hw_header_menu)
 
         # Timer for controller manager updates
@@ -141,11 +148,12 @@ class ControllerManager(Plugin):
 
         # Signal connections
         w = self._widget
-        w.cm_combo.currentIndexChanged[str].connect(self._on_cm_change)
+        w.cm_combo.currentTextChanged.connect(self._on_cm_change)
 
     def shutdown_plugin(self):
         self._update_cm_list_timer.stop()
         self._update_ctrl_list_timer.stop()
+        self._update_hw_components_list_timer.stop()
         self._popup_widget.hide()
 
     def save_settings(self, plugin_settings, instance_settings):
@@ -164,7 +172,13 @@ class ControllerManager(Plugin):
             pass
 
     def _update_cm_list(self):
-        update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
+        try:
+            update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_cm_list_timer.stop()
+                return
+            raise
 
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
@@ -172,13 +186,34 @@ class ControllerManager(Plugin):
         if cm_name:
             self._update_controllers()
             self._update_hw_components()
+        else:
+            self._controllers = []
+            self._show_controllers()
+            self._hw_components = []
+            self._show_hw_components()
+
+    def _deselect_cm(self, error):
+        """Deselect the controller manager, e.g., because it is not reachable anymore."""
+        self._node.get_logger().warning(
+            f"Deselecting controller manager '{self._cm_name}': {error}"
+        )
+        self._widget.cm_combo.setCurrentIndex(-1)
 
     def _update_controllers(self):
         if not self._cm_name:
             return
 
         # Find controllers associated to the selected controller manager
-        controllers = self._list_controllers()
+        try:
+            controllers = self._list_controllers()
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_ctrl_list_timer.stop()
+                return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
+                return
+            raise
 
         # Update controller display, if necessary
         if self._controllers != controllers:
@@ -196,22 +231,17 @@ class ControllerManager(Plugin):
         @rtype [str]
         """
         # Add loaded controllers first
-        try:
-            controllers = list_controllers(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
-            ).controller
+        timeout = self._service_timeout
+        controllers = list_controllers(self._node, self._cm_name, timeout, timeout).controller
 
-            # Append potential controller configs found in the node's parameters
-            for name in _get_parameter_controller_names(self._node, self._cm_name):
-                add_ctrl = all(name != ctrl.name for ctrl in controllers)
-                if add_ctrl:
-                    type_str = _get_controller_type(self._node, self._cm_name, name)
-                    uninit_ctrl = ControllerState(name=name, type=type_str)
-                    controllers.append(uninit_ctrl)
-            return controllers
-        except RuntimeError as e:
-            print(e)
-            return []
+        # Append potential controller configs found in the node's parameters
+        for name in _get_parameter_controller_names(self._node, self._cm_name, timeout):
+            add_ctrl = all(name != ctrl.name for ctrl in controllers)
+            if add_ctrl:
+                type_str = _get_controller_type(self._node, self._cm_name, name, timeout)
+                uninit_ctrl = ControllerState(name=name, type=type_str)
+                controllers.append(uninit_ctrl)
+        return controllers
 
     def _show_controllers(self):
         ctrl_table_view = self._widget.ctrl_table_view
@@ -245,7 +275,7 @@ class ControllerManager(Plugin):
             # Controller isn't loaded
             action_load = menu.addAction(self._icons["unconfigured"], "Load (unconfigured)")
 
-        action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if ctrl.state == "active":
@@ -307,21 +337,30 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.ctrl_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(ctrl_header.mapToGlobal(pos))
+        action = menu.exec(ctrl_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if ctrl_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                ctrl_header.setSectionResizeMode(QHeaderView.Interactive)
+            if ctrl_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                ctrl_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                ctrl_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _update_hw_components(self):
         if not self._cm_name:
             return
 
         # Find hw_components associated to the selected controller manager
-        hw_components = self._list_hw_components()
+        try:
+            hw_components = self._list_hw_components()
+        except Exception as e:
+            if "destruction was requested" in str(e) or "context is not valid" in str(e):
+                self._update_hw_components_list_timer.stop()
+                return
+            if isinstance(e, (ServiceNotFoundError, RuntimeError)):
+                self._deselect_cm(e)
+                return
+            raise
 
         # Update controller display, if necessary
         if self._hw_components != hw_components:
@@ -337,15 +376,8 @@ class ControllerManager(Plugin):
         the C{list_hardware_components} service
         @rtype [str]
         """
-        # Add loaded hw_components first
-        try:
-            hw_components = list_hardware_components(
-                self._node, self._cm_name, 2.0 / self._cm_update_freq
-            ).component
-            return hw_components
-        except RuntimeError as e:
-            print(e)
-            return []
+        timeout = self._service_timeout
+        return list_hardware_components(self._node, self._cm_name, timeout, timeout).component
 
     def _show_hw_components(self):
         hw_table_view = self._widget.hw_table_view
@@ -372,7 +404,7 @@ class ControllerManager(Plugin):
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
 
-        action = menu.exec_(self._widget.hw_table_view.mapToGlobal(pos))
+        action = menu.exec(self._widget.hw_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if hw_component.state.label == "active":
@@ -430,14 +462,14 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.hw_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
-        action = menu.exec_(hw_header.mapToGlobal(pos))
+        action = menu.exec(hw_header.mapToGlobal(pos))
 
         # Evaluate user action
         if action is action_toggle_auto_resize:
-            if hw_header.resizeMode(0) == QHeaderView.ResizeToContents:
-                hw_header.setSectionResizeMode(QHeaderView.Interactive)
+            if hw_header.sectionResizeMode(0) == QHeaderView.ResizeMode.ResizeToContents:
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             else:
-                hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+                hw_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _activate_controller(self, name):
         self._switch_controllers([name], [])
@@ -454,7 +486,7 @@ class ControllerManager(Plugin):
                 deactivate_controllers=deactivate,
                 strictness=SwitchController.Request.STRICT,
                 activate_asap=False,
-                timeout=0.3,
+                timeout=self._switch_timeout,
             )
         except Exception as e:
             print(e)
@@ -509,7 +541,7 @@ class ControllerTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "controller"
@@ -522,23 +554,23 @@ class ControllerTable(QAbstractTableModel):
 
         ctrl = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
                 return ctrl.state or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             state_key = ctrl.state if ctrl.state else "unloaded"
             return self._icons.get(state_key)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class HwComponentTable(QAbstractTableModel):
@@ -561,7 +593,7 @@ class HwComponentTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
+        if orientation != Qt.Orientation.Horizontal or role != Qt.ItemDataRole.DisplayRole:
             return None
         if col == 0:
             return "component"
@@ -574,22 +606,22 @@ class HwComponentTable(QAbstractTableModel):
 
         hw_component = self._data[index.row()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return hw_component.name
             elif index.column() == 1:
                 return hw_component.state.label or "unloaded"
 
-        if role == Qt.DecorationRole and index.column() == 0:
+        if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
             return self._icons.get(hw_component.state.label)
 
-        if role == Qt.FontRole and index.column() == 0:
+        if role == Qt.ItemDataRole.FontRole and index.column() == 0:
             bf = QFont()
             bf.setBold(True)
             return bf
 
-        if role == Qt.TextAlignmentRole and index.column() == 1:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class FontDelegate(QStyledItemDelegate):
@@ -603,15 +635,15 @@ class FontDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         if not index.parent().isValid():
             # Root level
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         if index.parent().isValid() and not index.parent().parent().isValid():
             # Hardware interface level
             option.font.setItalic(True)
-            option.font.setWeight(QFont.Bold)
+            option.font.setWeight(QFont.Weight.Bold)
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
-def _get_controller_type(node, node_name, ctrl_name):
+def _get_controller_type(node, node_name, ctrl_name, timeout):
     """
     Get the controller's type from the controller manager node with the call_get_parameter service.
 
@@ -619,10 +651,26 @@ def _get_controller_type(node, node_name, ctrl_name):
     @type node_name str
     @param ctrl_name Controller name
     @type ctrl_name str
-    @return Controller type
+    @param timeout Timeout (in seconds) for finding the service and for the response
+    @type timeout float
+    @return Controller type, empty if the service call failed
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    request = GetParameters.Request()
+    request.names = [f"{ctrl_name}.type"]
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/get_parameters",
+            GetParameters,
+            request,
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return ""
     return response.values[0].string_value if response.values else ""
 
 
@@ -635,22 +683,34 @@ def _list_controller_managers(node):
     @return List of controller manager node names
     @rtype list of str
     """
-    return [
-        name.rstrip("list_controllers").rstrip("/")
-        for name, _ in get_service_names_and_types(node=node)
-        if name.endswith("list_controllers")
-    ]
-
-
-def _get_parameter_controller_names(node, node_name):
-    """Get list of ROS parameter names that potentially represent a controller configuration."""
-    parameter_names = call_list_parameters(node=node, node_name=node_name)
-    suffix = ".type"
-    # @note: The versions conditioning is added here to support the source-compatibility with Humble
-    if os.environ.get("ROS_DISTRO") == "humble":
-        # for humble, ros2param < 0.20.0
-        return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
-    else:
+    try:
         return [
-            n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)
+            name.rstrip("list_controllers").rstrip("/")
+            for name, _ in get_service_names_and_types(node=node)
+            if name.endswith("list_controllers")
         ]
+    except Exception as e:
+        if "destruction was requested" in str(e) or "context is not valid" in str(e):
+            return []
+        raise
+
+
+def _get_parameter_controller_names(node, node_name, timeout):
+    """Get list of ROS parameter names that potentially represent a controller configuration."""
+    # TODO(someone): Port to AsyncParameterClient once Humble support is dropped.
+    try:
+        response = service_caller(
+            node,
+            f"{node_name}/list_parameters",
+            ListParameters,
+            ListParameters.Request(),
+            service_timeout=timeout,
+            call_timeout=timeout,
+            max_attempts=1,
+        )
+    except (ServiceNotFoundError, RuntimeError):
+        return []
+    names = response.result.names
+
+    suffix = ".type"
+    return [n[: -len(suffix)] for n in names if n.endswith(suffix)]

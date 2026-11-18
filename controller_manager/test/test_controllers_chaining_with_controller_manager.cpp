@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cstdint>
+#include <future>
+#include <iterator>
 #include <memory>
 #include <regex>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -98,6 +105,15 @@ public:
       std::move(resource_manager), executor, manager_node_name, node_namespace, node_options)
   {
   }
+  TestableControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = controller_manager::get_cm_node_options())
+  : ControllerManager(
+      executor, urdf, activate_all_hw_components, manager_node_name, node_namespace, options)
+  {
+  }
 };
 
 class TestControllerChainingWithControllerManager
@@ -112,11 +128,11 @@ public:
     const std::string velocity_replacement = R"(velocity="10000.0")";
     const std::string diffbot_urdf_large_limits = std::regex_replace(
       ros2_control_test_assets::diffbot_urdf, velocity_pattern, velocity_replacement);
+
+    rclcpp::NodeOptions node_options{};
     cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        diffbot_urdf_large_limits, rm_node_->get_node_clock_interface(),
-        rm_node_->get_node_logging_interface(), true),
-      executor_, TEST_CM_NAME);
+      executor_, diffbot_urdf_large_limits, true, TEST_CM_NAME, "", node_options);
+
     run_updater_ = false;
   }
 
@@ -2132,6 +2148,140 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
 
   reference = {1024.0, 4096.0};
   UpdateAllControllerAndCheck(reference, 3u);
+}
+
+TEST_P(
+  TestControllerChainingWithControllerManager,
+  test_chained_controllers_activation_with_mutually_claimed_interfaces)
+{
+  static constexpr char CONTROLLER_A[] = "chainable_controller_a";
+  static constexpr char CONTROLLER_B[] = "chainable_controller_b";
+  auto controller_a = std::make_shared<TestableTestChainableController>();
+  auto controller_b = std::make_shared<TestableTestChainableController>();
+
+  // A writes B's reference interface and B reads A's exported state interface, so both claims
+  // order A before B and the activation check must not follow them in a circle
+  controller_a->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(CONTROLLER_B) + "/reference"}});
+  controller_a->set_exported_state_interface_names({"estimate"});
+  controller_b->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(CONTROLLER_A) + "/estimate"}});
+  controller_b->set_reference_interface_names({"reference"});
+
+  // add the controllers against their execution order to test the sorting
+  cm_->add_controller(
+    controller_b, CONTROLLER_B, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    controller_a, CONTROLLER_A, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(CONTROLLER_A));
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(CONTROLLER_B));
+
+  switch_test_controllers({CONTROLLER_A, CONTROLLER_B}, {}, GetParam().strictness);
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_a->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_b->get_lifecycle_state().id());
+  EXPECT_TRUE(controller_b->is_in_chained_mode());
+
+  const auto controllers = cm_->get_loaded_controllers();
+  ASSERT_EQ(controllers.size(), 2u);
+  EXPECT_EQ(controllers[0].info.name, CONTROLLER_A);
+  EXPECT_EQ(controllers[1].info.name, CONTROLLER_B);
+}
+
+TEST_P(
+  TestControllerChainingWithControllerManager,
+  test_independent_controllers_keep_load_order_after_configure)
+{
+  // Enough names that an unordered (hash-based) iteration is very unlikely to match load order
+  const std::vector<std::string> load_order = {"zeta_ctrl",  "alpha_ctrl", "omega_ctrl",
+                                               "beta_ctrl",  "kappa_ctrl", "delta_ctrl",
+                                               "sigma_ctrl", "gamma_ctrl"};
+  std::vector<std::shared_ptr<test_controller::TestController>> controllers;
+  for (const auto & name : load_order)
+  {
+    controllers.push_back(std::make_shared<test_controller::TestController>());
+    cm_->add_controller(controllers.back(), name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
+  for (const auto & name : load_order)
+  {
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(name));
+  }
+
+  std::vector<std::string> update_order;
+  for (const auto & ctrl : cm_->get_loaded_controllers())
+  {
+    update_order.push_back(ctrl.info.name);
+  }
+  EXPECT_EQ(update_order, load_order);
+}
+
+TEST_P(
+  TestControllerChainingWithControllerManager,
+  test_only_chained_controllers_are_reordered_independent_keep_load_order)
+{
+  static constexpr char PRECEDING[] = "chain_preceding_ctrl";
+  static constexpr char FOLLOWING[] = "chain_following_ctrl";
+  auto preceding = std::make_shared<test_controller::TestController>();
+  auto following = std::make_shared<TestableTestChainableController>();
+  // PRECEDING writes FOLLOWING's reference, so it must be updated before FOLLOWING
+  preceding->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(FOLLOWING) + "/reference"}});
+  following->set_reference_interface_names({"reference"});
+
+  // Load the chain against its execution order, interleaved with independent controllers
+  const std::vector<std::string> independent = {"zeta_ctrl", "alpha_ctrl", "omega_ctrl",
+                                                "beta_ctrl", "kappa_ctrl", "delta_ctrl"};
+  std::vector<std::shared_ptr<test_controller::TestController>> independent_ctrls;
+  auto add_independent = [&](const std::string & name)
+  {
+    independent_ctrls.push_back(std::make_shared<test_controller::TestController>());
+    cm_->add_controller(
+      independent_ctrls.back(), name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  };
+  add_independent(independent[0]);
+  add_independent(independent[1]);
+  cm_->add_controller(following, FOLLOWING, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  add_independent(independent[2]);
+  add_independent(independent[3]);
+  cm_->add_controller(preceding, PRECEDING, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  add_independent(independent[4]);
+  add_independent(independent[5]);
+
+  // configure in load order (the reference interface is exported before it is claimed)
+  for (const auto & name :
+       {independent[0], independent[1], std::string(FOLLOWING), independent[2], independent[3],
+        std::string(PRECEDING), independent[4], independent[5]})
+  {
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(name));
+  }
+
+  std::vector<std::string> update_order;
+  for (const auto & ctrl : cm_->get_loaded_controllers())
+  {
+    update_order.push_back(ctrl.info.name);
+  }
+  ASSERT_EQ(update_order.size(), independent.size() + 2u);
+
+  // chain constraint is applied
+  const auto pos = [&](const std::string & name)
+  {
+    return std::distance(
+      update_order.begin(), std::find(update_order.begin(), update_order.end(), name));
+  };
+  EXPECT_LT(pos(PRECEDING), pos(FOLLOWING));
+
+  // independent controllers are not reordered relative to each other
+  std::vector<std::string> independent_order;
+  std::copy_if(
+    update_order.begin(), update_order.end(), std::back_inserter(independent_order),
+    [&](const std::string & name)
+    { return std::find(independent.begin(), independent.end(), name) != independent.end(); });
+  EXPECT_EQ(independent_order, independent);
 }
 
 INSTANTIATE_TEST_SUITE_P(

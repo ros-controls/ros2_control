@@ -9,9 +9,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   lifecycle_msgs
   pluginlib
+  rclcpp
   rclcpp_lifecycle
   ros2_control_test_assets
-  fmt
 )
 
 find_package(ament_cmake REQUIRED)
@@ -30,7 +30,7 @@ target_link_libraries(test_components
                       rclcpp_lifecycle::rclcpp_lifecycle
                       ros2_control_test_assets::ros2_control_test_assets
                       pluginlib::pluginlib
-                      fmt::fmt)
+                      rclcpp::rclcpp)
 install(TARGETS test_components
 DESTINATION lib
 )
@@ -41,16 +41,32 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
 
+  option(ROS2_CONTROL_STRICT_TIMING_TESTS
+    "Use strict timing-sensitive assertions in ros2_control tests. Turn ON for RT-capable local validation."
+    ON)
+
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
   target_link_libraries(test_resource_manager
                         hardware_interface::hardware_interface
                         rclcpp_lifecycle::rclcpp_lifecycle
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})
+  target_compile_definitions(
+    test_resource_manager
+    PRIVATE ROS2_CONTROL_STRICT_TIMING_TESTS=$<BOOL:${ROS2_CONTROL_STRICT_TIMING_TESTS}>)
 
   ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
   target_link_libraries(test_resource_manager_prepare_perform_switch
                         hardware_interface::hardware_interface
+                        rclcpp_lifecycle::rclcpp_lifecycle
+                        ros2_control_test_assets::ros2_control_test_assets
+                        ${lifecycle_msgs_TARGETS})
+
+  ament_add_gmock(test_rm_exception_handling test/test_rm_exception_handling.cpp)
+  target_link_libraries(test_rm_exception_handling
+                        hardware_interface::hardware_interface
+                        pluginlib::pluginlib
+                        rclcpp::rclcpp
                         rclcpp_lifecycle::rclcpp_lifecycle
                         ros2_control_test_assets::ros2_control_test_assets
                         ${lifecycle_msgs_TARGETS})

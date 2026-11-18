@@ -14,6 +14,7 @@
 
 #include "transmission_interface/four_bar_linkage_transmission_loader.hpp"
 
+#include <exception>
 #include <memory>
 
 #include "hardware_interface/hardware_info.hpp"

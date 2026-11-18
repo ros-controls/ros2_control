@@ -12,20 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Denis Stogl
+/// @author Denis Stogl
 
 #ifndef JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 #define JOINT_LIMITS__JOINT_LIMITER_INTERFACE_HPP_
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "realtime_tools/realtime_buffer.hpp"
-#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 
 namespace joint_limits
 {
@@ -38,18 +42,19 @@ public:
 
   virtual ~JointLimiterInterface() = default;
 
-  /// Initialization of every JointLimiter.
   /**
+   * @brief Initialize every JointLimiter.
+   *
    * Initialization of JointLimiter for defined joints with their names.
    * Robot description topic provides a topic name where URDF of the robot can be found.
    * This is needed to use joint limits from URDF (not implemented yet!).
    * Override this method only if initialization and reading joint limits should be adapted.
-   * Otherwise, initialize your custom limiter in `on_limit` method.
+   * Otherwise, initialize your custom limiter in `on_init` method.
    *
-   * \param[in] joint_names names of joints where limits should be applied.
-   * \param[in] param_itf node parameters interface object to access parameters.
-   * \param[in] logging_itf node logging interface to log if error happens.
-   * \param[in] robot_description_topic string of a topic where robot description is accessible.
+   * @param[in] joint_names names of joints where limits should be applied.
+   * @param[in] param_itf node parameters interface object to access parameters.
+   * @param[in] logging_itf node logging interface to log if error happens.
+   * @param[in] robot_description_topic string of a topic where robot description is accessible.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -92,7 +97,7 @@ public:
           node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
           joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
       }
-      updated_limits_.writeFromNonRT(joint_limits_);
+      updated_limits_.set(joint_limits_);
 
       auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
       {
@@ -110,7 +115,7 @@ public:
 
         if (changed)
         {
-          updated_limits_.writeFromNonRT(updated_joint_limits);
+          updated_limits_.set(updated_joint_limits);
           RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
         }
 
@@ -132,7 +137,7 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts the joint names and their limits directly
+   * @brief Initialize joints from directly provided names and limits.
    */
   virtual bool init(
     const std::vector<std::string> & joint_names,
@@ -147,7 +152,7 @@ public:
     soft_joint_limits_ = soft_joint_limits;
     node_param_itf_ = param_itf;
     node_logging_itf_ = logging_itf;
-    updated_limits_.writeFromNonRT(joint_limits_);
+    updated_limits_.set(joint_limits_);
 
     if ((number_of_joints_ != joint_limits_.size()) && has_logging_interface())
     {
@@ -160,7 +165,8 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts pointer to the Node.
+   * @brief Initialize joints using a Node pointer.
+   *
    * For details see other init method.
    */
   virtual bool init(
@@ -173,7 +179,8 @@ public:
   }
 
   /**
-   * Wrapper init method that accepts pointer to the LifecycleNode.
+   * @brief Initialize joints using a LifecycleNode pointer.
+   *
    * For details see other init method.
    */
   virtual bool init(
@@ -191,66 +198,82 @@ public:
     return on_configure(current_joint_states);
   }
 
-  /** \brief Enforce joint limits to desired joint state for multiple physical quantities.
+  /**
+   * @brief Enforce joint limits to desired joint state for multiple physical quantities.
    *
    * Generic enforce method that calls implementation-specific `on_enforce` method.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
-    joint_limits_ = *(updated_limits_.readFromRT());
-    return on_enforce(current_joint_states, desired_joint_states, dt);
+    auto joint_limits_op = updated_limits_.try_get();
+    if (joint_limits_op.has_value())
+    {
+      joint_limits_ = joint_limits_op.value();
+      return on_enforce(current_joint_states, desired_joint_states, dt);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   virtual void reset_internals() = 0;
 
 protected:
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Initialize the limiter's internal states and libraries.
    *
    * Implementation-specific initialization of limiter's internal states and libraries.
-   * \returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_init() = 0;
 
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Configure the limiter's internal states and libraries.
    *
    * Implementation-specific configuration of limiter's internal states and libraries.
-   * \returns true if initialization was successful, otherwise false.
+   * @return true if initialization was successful, otherwise false.
    */
   virtual bool on_configure(const JointLimitsStateDataType & current_joint_states) = 0;
 
-  /** \brief Method is realized by an implementation.
+  /**
+   * @brief Enforce joint limits for multiple dependent physical quantities.
    *
    * Filter-specific implementation of the joint limits enforce algorithm for multiple dependent
    * physical quantities.
    *
-   * \param[in] current_joint_states current joint states a robot is in.
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
-   * \returns true if limits are enforced, otherwise false.
+   * @param[in] current_joint_states current joint states a robot is in.
+   * @param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * @param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * @return true if limits are enforced, otherwise false.
    */
   virtual bool on_enforce(
     const JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
 
-  /** \brief Checks if the logging interface is set.
-   * \returns true if the logging interface is available, otherwise false.
+  /**
+   * @brief Checks if the logging interface is set.
    *
-   * \note this way of interfacing would be useful for instances where the logging interface is not
+   * @return true if the logging interface is available, otherwise false.
+   *
+   * @note this way of interfacing would be useful for instances where the logging interface is not
    * available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
-  /** \brief Checks if the parameter interface is set.
-   * \returns true if the parameter interface is available, otherwise false.
+  /**
+   * @brief Checks if the parameter interface is set.
    *
-   * * \note this way of interfacing would be useful for instances where the logging interface is
+   * @return true if the parameter interface is available, otherwise false.
+   *
+   * @note this way of interfacing would be useful for instances where the logging interface is
    * not available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
@@ -264,7 +287,7 @@ protected:
 
 private:
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_;
-  realtime_tools::RealtimeBuffer<std::vector<joint_limits::JointLimits>> updated_limits_;
+  realtime_tools::RealtimeThreadSafeBox<std::vector<joint_limits::JointLimits>> updated_limits_;
 };
 
 }  // namespace joint_limits

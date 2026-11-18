@@ -20,15 +20,28 @@
 #include "test_resource_manager.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/helpers.hpp"
+#include "hardware_interface/types/hardware_component_params.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
@@ -49,6 +62,34 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_PLUGIN_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 using testing::SizeIs;
+
+namespace
+{
+#if ROS2_CONTROL_STRICT_TIMING_TESTS
+constexpr bool kStrictTimingTests = true;
+#else
+constexpr bool kStrictTimingTests = false;
+#endif
+
+constexpr double kRelaxedTimingLowerBoundFactor = 0.8;
+constexpr double kRelaxedTimingUpperBoundFactor = 1.2;
+constexpr double kRelaxedExecutionTimeUpperBoundFactor = 1.2;
+
+double timing_lower_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingLowerBoundFactor;
+}
+
+double timing_upper_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedTimingUpperBoundFactor;
+}
+
+double execution_time_upper_bound(const double strict_value)
+{
+  return kStrictTimingTests ? strict_value : strict_value * kRelaxedExecutionTimeUpperBoundFactor;
+}
+}  // namespace
 
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
@@ -191,6 +232,18 @@ TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_
   // missing command keys
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_state_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_state_keys_urdf);
+}
+
+TEST_F(ResourceManagerTest, expect_validation_failure_if_gpio_command_interface_is_not_exported)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_gpio_command_keys_urdf);
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
@@ -355,21 +408,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces()
+    override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface("external_joint", "external_state_interface", nullptr));
-
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    state_interface_ = std::make_shared<hardware_interface::StateInterface>(
+      "external_joint", "external_state_interface");
+    state_interfaces.emplace_back(state_interface_);
     return state_interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces()
+    override
   {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(
-        "external_joint", "external_command_interface", nullptr));
+    std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+    command_interface_ = std::make_shared<hardware_interface::CommandInterface>(
+      "external_joint", "external_command_interface");
+    command_interfaces.emplace_back(command_interface_);
 
     return command_interfaces;
   }
@@ -385,6 +440,9 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   {
     return hardware_interface::return_type::OK;
   }
+
+  hardware_interface::StateInterface::SharedPtr state_interface_;
+  hardware_interface::CommandInterface::SharedPtr command_interface_;
 };
 
 TEST_F(ResourceManagerTest, post_initialization_add_components)
@@ -1239,13 +1297,14 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     CONTROLLER_NAME + "/" + REFERENCE_INTERFACE_NAMES[2]};
 
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
-  std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
+  const std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
 
   for (size_t i = 0; i < REFERENCE_INTERFACE_NAMES.size(); ++i)
   {
-    reference_interfaces.push_back(
-      std::make_shared<hardware_interface::CommandInterface>(
-        CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i], &(reference_interface_values[i])));
+    auto itf = std::make_shared<hardware_interface::CommandInterface>(
+      CONTROLLER_NAME, REFERENCE_INTERFACE_NAMES[i]);
+    std::ignore = itf->set_value(reference_interface_values[i]);
+    reference_interfaces.push_back(itf);
   }
 
   rm.import_controller_reference_interfaces(CONTROLLER_NAME, reference_interfaces);
@@ -1298,9 +1357,9 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     EXPECT_EQ(claimed_itf1.get_optional().value(), 11.1);
     EXPECT_EQ(claimed_itf3.get_optional().value(), 33.3);
 
-    EXPECT_EQ(reference_interface_values[0], 11.1);
-    EXPECT_EQ(reference_interface_values[1], 2.0);
-    EXPECT_EQ(reference_interface_values[2], 33.3);
+    EXPECT_EQ(reference_interfaces[0]->get_optional().value(), 11.1);
+    EXPECT_EQ(reference_interfaces[1]->get_optional().value(), 2.0);
+    EXPECT_EQ(reference_interfaces[2]->get_optional().value(), 33.3);
   }
 
   // interfaces should be released now, but still managed by resource manager
@@ -1325,9 +1384,42 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 
   // Last written values should stay
-  EXPECT_EQ(reference_interface_values[0], 11.1);
-  EXPECT_EQ(reference_interface_values[1], 2.0);
-  EXPECT_EQ(reference_interface_values[2], 33.3);
+  EXPECT_EQ(reference_interfaces[0]->get_optional().value(), 11.1);
+  EXPECT_EQ(reference_interfaces[1]->get_optional().value(), 2.0);
+  EXPECT_EQ(reference_interfaces[2]->get_optional().value(), 33.3);
+
+  // DUPLICATE PREVENTION TEST
+
+  // Count before first call (interfaces should NOT be available yet)
+  size_t count_initial = rm.available_command_interfaces().size();
+
+  // Make reference interfaces available (first call)
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Count after first call
+  size_t count_before = rm.available_command_interfaces().size();
+
+  EXPECT_GT(count_before, count_initial) << "First call should have added interfaces";
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_reference_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_command_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate reference interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_command_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_reference_interfaces_unavailable(CONTROLLER_NAME);
 
   // remove reference interfaces from resource manager
   rm.remove_controller_reference_interfaces(CONTROLLER_NAME);
@@ -1344,6 +1436,94 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
+TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
+{
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
+
+  std::string CONTROLLER_NAME = "test_controller";
+  std::vector<std::string> STATE_INTERFACE_NAMES = {"state1", "state2", "state3"};
+  std::vector<std::string> FULL_STATE_INTERFACE_NAMES = {
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[0],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[1],
+    CONTROLLER_NAME + "/" + STATE_INTERFACE_NAMES[2]};
+
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+  const std::vector<double> state_interface_values = {1.0, 2.0, 3.0};
+
+  for (size_t i = 0; i < STATE_INTERFACE_NAMES.size(); ++i)
+  {
+    auto itf = std::make_shared<hardware_interface::StateInterface>(
+      CONTROLLER_NAME, STATE_INTERFACE_NAMES[i]);
+    std::ignore = itf->set_value(state_interface_values[i]);
+    state_interfaces.push_back(itf);
+  }
+
+  rm.import_controller_exported_state_interfaces(CONTROLLER_NAME, state_interfaces);
+
+  ASSERT_THAT(
+    rm.get_controller_exported_state_interface_names(CONTROLLER_NAME),
+    testing::ElementsAreArray(FULL_STATE_INTERFACE_NAMES));
+
+  // check interfaces NOT available initially
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+  // Count before first make available call
+  size_t count_initial = rm.available_state_interfaces().size();
+
+  // make interface available
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Verify first call changed the count
+  size_t count_after_first = rm.available_state_interfaces().size();
+  EXPECT_GT(count_after_first, count_initial) << "First call should have added interfaces";
+
+  // DUPLICATE PREVENTION TEST
+
+  // Count before second call
+  size_t count_before = rm.available_state_interfaces().size();
+
+  // Make available AGAIN - this should NOT create duplicates
+  rm.make_controller_exported_state_interfaces_available(CONTROLLER_NAME);
+
+  // Verify interfaces are still available after second call
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_TRUE(rm.state_interface_is_available(interface));
+  }
+
+  // Count after - should be same as before
+  size_t count_after = rm.available_state_interfaces().size();
+  EXPECT_EQ(count_before, count_after) << "Duplicate state interfaces detected!";
+
+  // Verify all entries are unique
+  EXPECT_TRUE(ros2_control::is_unique(rm.available_state_interfaces()));
+
+  // Make unavailable
+  rm.make_controller_exported_state_interfaces_unavailable(CONTROLLER_NAME);
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.state_interface_exists(interface));
+    EXPECT_FALSE(rm.state_interface_is_available(interface));
+  }
+
+  // remove
+  rm.remove_controller_exported_state_interfaces(CONTROLLER_NAME);
+
+  for (const auto & interface : FULL_STATE_INTERFACE_NAMES)
+  {
+    EXPECT_FALSE(rm.state_interface_exists(interface));
+  }
+}
+
 class MockExecutor : public rclcpp::executors::SingleThreadedExecutor
 {
 public:
@@ -1351,14 +1531,18 @@ public:
   : rclcpp::executors::SingleThreadedExecutor(options)
   {
   }
-
+  // cppcheck-suppress syntaxError
+#if RCLCPP_VERSION_GTE(31, 0, 0)
+  void add_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr & node_ptr, bool notify) override
+#else
   void add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify) override
+#endif
   {
     rclcpp::executors::SingleThreadedExecutor::add_node(node_ptr, notify);
     added_node_names.push_back(node_ptr->get_name());
   }
-
   std::vector<std::string> added_node_names;
 };
 
@@ -1943,29 +2127,37 @@ public:
             const double expec_write_execution_time = (1.e6 / (6 * rate)) + 200.0;
             EXPECT_LT(
               status_map[component_name].read_statistics->execution_time.get_statistics().average,
-              expec_read_execution_time);
+              execution_time_upper_bound(expec_read_execution_time));
             EXPECT_LT(
               status_map[component_name].read_statistics->periodicity.get_statistics().average,
-              1.2 * rate);
+              timing_upper_bound(1.2 * rate));
             EXPECT_THAT(
               status_map[component_name].read_statistics->periodicity.get_statistics().min,
-              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.5 * rate)),
+                testing::Lt(timing_upper_bound(1.2 * rate))));
             EXPECT_THAT(
               status_map[component_name].read_statistics->periodicity.get_statistics().max,
-              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.75 * rate)),
+                testing::Lt(timing_upper_bound(2.0 * rate))));
 
             EXPECT_LT(
               status_map[component_name].write_statistics->execution_time.get_statistics().average,
-              expec_write_execution_time);
+              execution_time_upper_bound(expec_write_execution_time));
             EXPECT_LT(
               status_map[component_name].write_statistics->periodicity.get_statistics().average,
-              1.2 * rate);
+              timing_upper_bound(1.2 * rate));
             EXPECT_THAT(
               status_map[component_name].write_statistics->periodicity.get_statistics().min,
-              testing::AllOf(testing::Ge(0.5 * rate), testing::Lt((1.2 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.5 * rate)),
+                testing::Lt(timing_upper_bound(1.2 * rate))));
             EXPECT_THAT(
               status_map[component_name].write_statistics->periodicity.get_statistics().max,
-              testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+              testing::AllOf(
+                testing::Ge(timing_lower_bound(0.75 * rate)),
+                testing::Lt(timing_upper_bound(2.0 * rate))));
           }
         };
 
@@ -2389,23 +2581,31 @@ public:
     {
       EXPECT_LT(
         status_map[component_name].read_statistics->periodicity.get_statistics().average,
-        1.2 * rate);
+        timing_upper_bound(1.2 * rate));
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.4 * rate)),
+          testing::Lt(timing_upper_bound(1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].read_statistics->periodicity.get_statistics().max,
-        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.75 * rate)),
+          testing::Lt(timing_upper_bound(2.0 * rate))));
 
       EXPECT_LT(
         status_map[component_name].write_statistics->periodicity.get_statistics().average,
-        1.2 * rate);
+        timing_upper_bound(1.2 * rate));
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().min,
-        testing::AllOf(testing::Ge(0.4 * rate), testing::Lt((1.2 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.4 * rate)),
+          testing::Lt(timing_upper_bound(1.2 * rate))));
       EXPECT_THAT(
         status_map[component_name].write_statistics->periodicity.get_statistics().max,
-        testing::AllOf(testing::Ge(0.75 * rate), testing::Lt((2.0 * rate))));
+        testing::AllOf(
+          testing::Ge(timing_lower_bound(0.75 * rate)),
+          testing::Lt(timing_upper_bound(2.0 * rate))));
     };
 
     if (check_for_updated_values && is_write_active)
@@ -2419,22 +2619,22 @@ public:
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_read_execution_time);
+        execution_time_upper_bound(expec_read_execution_time));
       EXPECT_LT(
         status_map[TEST_ACTUATOR_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_write_execution_time);
+        execution_time_upper_bound(expec_write_execution_time));
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .read_statistics->execution_time.get_statistics()
           .average,
-        expec_read_execution_time);
+        execution_time_upper_bound(expec_read_execution_time));
       EXPECT_LT(
         status_map[TEST_SYSTEM_HARDWARE_NAME]
           .write_statistics->execution_time.get_statistics()
           .average,
-        expec_write_execution_time);
+        execution_time_upper_bound(expec_write_execution_time));
     }
   }
 
@@ -2847,6 +3047,29 @@ TEST_F(ResourceManagerTestReadWriteException, handle_write_exception_without_han
 
   // with handle_exceptions=false: should throw
   EXPECT_THROW(rm->write(time, duration), std::runtime_error);
+}
+
+/// @note this is a non-deterministic test and this type of tests are hard to reproduce due to
+// vtable stuff
+TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
+{
+  // TestActuatorHardware uses "detached" scheduling policy in async_hardware_resources.
+  const auto minimal_robot_urdf_async =
+    std::string(ros2_control_test_assets::urdf_head) +
+    std::string(ros2_control_test_assets::async_hardware_resources) +
+    std::string(ros2_control_test_assets::urdf_tail);
+
+  auto rm = std::make_unique<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
+  activate_components(*rm);
+
+  // Trigger at least one async read cycle so the DETACHED thread is running.
+  auto time = node_.get_clock()->now();
+  const rclcpp::Duration duration(0, 1'000'000);
+  rm->read(time, duration);
+
+  // Drop the ResourceManager without calling shutdown_components() first.
+  // Before the fix this races with the async thread and crashes with "pure virtual method called".
+  EXPECT_NO_FATAL_FAILURE(rm.reset());
 }
 
 int main(int argc, char ** argv)

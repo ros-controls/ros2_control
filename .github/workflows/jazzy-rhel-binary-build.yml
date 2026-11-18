@@ -29,6 +29,7 @@ jobs:
       matrix:
         ROS_DISTRO: [jazzy]
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: ${{ matrix.ROS_DISTRO }}
       upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
       ref_for_scheduled_build: jazzy

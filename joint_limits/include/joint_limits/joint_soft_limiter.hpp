@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Adrià Roig Moreno
+/// @author Adrià Roig Moreno
 
 #ifndef JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 #define JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 
 #include <cmath>
 #include "joint_limits/data_structures.hpp"
-#include "joint_limits/joint_limits_helpers.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
+#include "rclcpp/logging.hpp"
 
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 

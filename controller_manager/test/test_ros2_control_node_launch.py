@@ -30,13 +30,14 @@
 
 import pytest
 import unittest
-import os
 
-from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
+from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import FileContent
 from launch_testing.actions import ReadyToTest
 import launch_testing.markers
 import launch_ros.actions
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 
 import rclpy
 from controller_manager.test_utils import (
@@ -50,8 +51,8 @@ from controller_manager.launch_utils import generate_controllers_spawner_launch_
 @pytest.mark.launch_test
 def generate_test_description():
 
-    robot_controllers = os.path.join(
-        get_package_prefix("controller_manager"), "test", "test_ros2_control_node.yaml"
+    robot_controllers = PathJoinSubstitution(
+        [FindPackagePrefix("controller_manager"), "test", "test_ros2_control_node.yaml"]
     )
 
     control_node = launch_ros.actions.Node(
@@ -60,21 +61,24 @@ def generate_test_description():
         parameters=[robot_controllers],
         output="both",
     )
-    # Get URDF, without involving xacro
-    urdf = os.path.join(
-        get_package_share_directory("ros2_control_test_assets"),
-        "urdf",
-        "test_hardware_components.urdf",
-    )
-    with open(urdf) as infp:
-        robot_description_content = infp.read()
-    robot_description = {"robot_description": robot_description_content}
 
     robot_state_pub_node = launch_ros.actions.Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[
+            {
+                "robot_description": FileContent(
+                    PathJoinSubstitution(
+                        [
+                            FindPackageShare("ros2_control_test_assets"),
+                            "urdf",
+                            "test_hardware_components.urdf",
+                        ]
+                    )
+                )
+            }
+        ],
     )
     ctrl_spawner = generate_controllers_spawner_launch_description(
         [
@@ -105,9 +109,17 @@ class TestFixture(unittest.TestCase):
     def test_node_start(self):
         check_node_running(self.node, "controller_manager")
 
-    def test_controllers_start(self):
+    def test_controllers_start(self, proc_info):
         cnames = ["ctrl_with_parameters_and_type"]
-        check_controllers_running(self.node, cnames, state="active")
+
+        check_controllers_running(self.node, cnames)
+
+        # Wait for controller_spawner to finish and verify successful exit.
+        proc_info.assertWaitForShutdown(process="spawner", timeout=30)
+        launch_testing.asserts.assertExitCodes(proc_info, process="spawner")
+
+        # Re-check controllers after spawner has exited.
+        check_controllers_running(self.node, cnames)
 
 
 @launch_testing.post_shutdown_test()

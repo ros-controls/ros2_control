@@ -8,34 +8,15 @@ ros2_control
 
 This is the documentation of the ros2_control framework core.
 
-`GitHub Repository <https://github.com/ros-controls/ros2_control>`_
-
-=================
-API Documentation
-=================
-
-API documentation is parsed by doxygen and can be found `here <../../api/index.html>`_
-
-========
-Concepts
-========
-
 .. toctree::
    :titlesonly:
 
-   Controller Manager <../controller_manager/doc/userdoc.rst>
-   Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
-   Joint Kinematics <../hardware_interface/doc/joints_userdoc.rst>
-   Joint Limiting <../hardware_interface/doc/joint_limiting.rst>
-   Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
-   Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
+   Controller manager <../controller_manager/doc/userdoc>
+   Concepts <concepts>
+   Hardware Components <../hardware_interface/doc/hardware_components_userdoc>
+   Guidelines and Best Practices <guidelines_and_best_practices>
 
-=====================================
-Guidelines and Best Practices
-=====================================
+See also:
 
-.. toctree::
-   :titlesonly:
-
-   Debugging the Controller Manager and Plugins <debugging.rst>
-   Introspecting Controllers and Hardware Components <introspection.rst>
+- `GitHub Repository <https://github.com/ros-controls/ros2_control>`_
+- `API Documentation <../../api/index.html>`_

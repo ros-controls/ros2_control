@@ -16,9 +16,9 @@
 #define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <string>
-#include <vector>
 
 #include "geometry_msgs/msg/wrench.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
@@ -29,7 +29,9 @@ namespace semantic_components
 class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
 public:
-  /// Constructor for "standard" 6D FTS
+  /**
+   * @brief Constructor for "standard" 6D FTS
+   */
   explicit ForceTorqueSensor(const std::string & name)
   : SemanticComponentInterface(
       name,
@@ -45,9 +47,10 @@ public:
     data_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
-  /// Constructor for 6D FTS with custom interface names.
   /**
-   * Constructor for 6D FTS with custom interface names or FTS with less then six measurement axes,
+   * @brief Constructor for 6D FTS with custom interface names.
+   *
+   * Constructor for 6D FTS with custom interface names or FTS with less than six measurement axes,
    * e.g., 1D and 2D force load cells.
    * For non existing axes interface is empty string, i.e., ("");
    *
@@ -83,11 +86,12 @@ public:
     check_and_add_interface(interface_torque_z, 5);
   }
 
-  /// Return forces.
   /**
+   * @brief Return forces.
+   *
    * Return forces of a FTS.
    *
-   * \return array of size 3 with force values (x, y, z).
+   * @return array of size 3 with force values (x, y, z).
    */
   std::array<double, 3> get_forces() const
   {
@@ -97,11 +101,12 @@ public:
     return forces;
   }
 
-  /// Return torque.
   /**
+   * @brief Return torque.
+   *
    * Return torques of a FTS.
    *
-   * \return array of size 3 with torque values (x, y, z).
+   * @return array of size 3 with torque values (x, y, z).
    */
   std::array<double, 3> get_torques() const
   {
@@ -111,17 +116,22 @@ public:
     return torques;
   }
 
-  /// Return Wrench message with forces and torques.
   /**
-   * Constructs and return a wrench message from the current values.
+   * @brief Return Wrench message with forces and torques.
+   *
+   * Updates internal storage from the state interfaces and updates the Wrench message
+   * If no state interfaces are available, the message will be filled with old data
    * The method assumes that the interface names on the construction are in the following order:
    *   force X, force Y, force Z, torque X, torque Y, torque Z.
    *
-   * \return wrench message from values;
+   * @param[out] message Wrench message from values, updated from internal storage
+   * @return true when interfaces are available, false otherwise
    */
   bool get_values_as_message(geometry_msgs::msg::Wrench & message) const
   {
+    // data_ won't be updated if no state interfaces are available
     update_data_from_interfaces();
+
     message.force.x = data_[0];
     message.force.y = data_[1];
     message.force.z = data_[2];
@@ -129,7 +139,7 @@ public:
     message.torque.y = data_[4];
     message.torque.z = data_[5];
 
-    return true;
+    return !state_interfaces_.empty();
   }
 
 protected:
@@ -144,7 +154,7 @@ protected:
     std::size_t interface_counter{0};
     for (auto i = 0u; i < data_.size(); ++i)
     {
-      if (existing_axes_[i])
+      if (existing_axes_[i] && interface_counter < state_interfaces_.size())
       {
         const auto data = state_interfaces_[interface_counter].get().get_optional();
         if (data.has_value())
@@ -156,9 +166,13 @@ protected:
     }
   }
 
-  /// Array to store the data of the FT sensors
+  /**
+   * @brief Array to store the data of the FT sensors
+   */
   mutable std::array<double, 6> data_;
-  /// Vector with existing axes for sensors with less then 6D axes.
+  /**
+   * @brief Array with existing axes for sensors with less than 6D axes.
+   */
   std::array<bool, 6> existing_axes_;
 };
 

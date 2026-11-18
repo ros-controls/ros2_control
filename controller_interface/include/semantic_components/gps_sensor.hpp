@@ -16,9 +16,12 @@
 #define SEMANTIC_COMPONENTS__GPS_SENSOR_HPP_
 
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <string>
+#include <type_traits>
 
+#include "rclcpp/version.h"
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 
@@ -35,6 +38,14 @@ template <GPSSensorOption sensor_option>
 class GPSSensor : public SemanticComponentInterface<sensor_msgs::msg::NavSatFix>
 {
 public:
+#if RCLCPP_VERSION_MAJOR >= 28
+  static constexpr int8_t STATUS_UNKNOWN = sensor_msgs::msg::NavSatStatus::STATUS_UNKNOWN;
+  static constexpr uint16_t SERVICE_UNKNOWN = sensor_msgs::msg::NavSatStatus::SERVICE_UNKNOWN;
+#else
+  static constexpr int8_t STATUS_UNKNOWN = -2;
+  static constexpr uint16_t SERVICE_UNKNOWN = 0;
+#endif
+
   static_assert(
     sensor_option == GPSSensorOption::WithCovariance ||
       sensor_option == GPSSensorOption::WithoutCovariance,
@@ -57,9 +68,9 @@ public:
   }
 
   /**
-   * Return GPS's status e.g. fix/no_fix
+   * @brief Return GPS's status e.g. fix/no_fix
    *
-   * \return Status
+   * @return Status
    */
   int8_t get_status() const
   {
@@ -68,13 +79,13 @@ public:
     {
       return static_cast<int8_t>(data.value());
     }
-    return std::numeric_limits<int8_t>::max();
+    return STATUS_UNKNOWN;
   }
 
   /**
-   * Return service used by GPS e.g. fix/no_fix
+   * @brief Return service used by GPS e.g. fix/no_fix
    *
-   * \return Service
+   * @return Service
    */
   uint16_t get_service() const
   {
@@ -83,13 +94,13 @@ public:
     {
       return static_cast<uint16_t>(data.value());
     }
-    return std::numeric_limits<uint16_t>::max();
+    return SERVICE_UNKNOWN;
   }
 
   /**
-   * Return latitude reported by a GPS
+   * @brief Return latitude reported by a GPS
    *
-   * \return Latitude.
+   * @return Latitude.
    */
   double get_latitude() const
   {
@@ -102,9 +113,9 @@ public:
   }
 
   /**
-   * Return longitude reported by a GPS
+   * @brief Return longitude reported by a GPS
    *
-   * \return Longitude.
+   * @return Longitude.
    */
   double get_longitude() const
   {
@@ -117,9 +128,9 @@ public:
   }
 
   /**
-   * Return altitude reported by a GPS
+   * @brief Return altitude reported by a GPS
    *
-   * \return Altitude.
+   * @return Altitude.
    */
   double get_altitude() const
   {
@@ -132,9 +143,9 @@ public:
   }
 
   /**
-   * Return covariance reported by a GPS.
+   * @brief Return covariance reported by a GPS.
    *
-   * \return Covariance array.
+   * @return Covariance array.
    */
   template <
     typename U = void,
@@ -160,7 +171,10 @@ public:
   }
 
   /**
-   * Fills a NavSatFix message from the current values.
+   * @brief Fills a NavSatFix message from the current values.
+   *
+   * @param[out] message NavSatFix message from values
+   * @return always returns true
    */
   bool get_values_as_message(sensor_msgs::msg::NavSatFix & message)
   {

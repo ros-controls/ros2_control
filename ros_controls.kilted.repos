@@ -2,7 +2,7 @@ repositories:
   gz_ros2_control:
     type: git
     url: https://github.com/ros-controls/gz_ros2_control.git
-    version: rolling
+    version: kilted
   ros2_control_demos:
     type: git
     url: https://github.com/ros-controls/ros2_control_demos.git

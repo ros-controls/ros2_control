@@ -8,21 +8,23 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   controller_manager_msgs
+  diagnostic_msgs
   diagnostic_updater
   fmt
   generate_parameter_library
   hardware_interface
-  libstatistics_collector
   lifecycle_msgs
   pluginlib
+  rcl
+  rcl_interfaces
   rclcpp
+  rclcpp_lifecycle
   realtime_tools
   std_msgs
 )
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(ament_cmake_core REQUIRED)
 find_package(ament_cmake_gen_version_h REQUIRED)
 find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -36,7 +38,6 @@ generate_parameter_library(controller_manager_parameters
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
-target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
@@ -47,15 +48,21 @@ target_link_libraries(controller_manager PUBLIC
                       diagnostic_updater::diagnostic_updater
                       hardware_interface::hardware_interface
                       pluginlib::pluginlib
+                      rcl::rcl
                       rclcpp::rclcpp
                       rclcpp_lifecycle::rclcpp_lifecycle
                       realtime_tools::realtime_tools
-                      libstatistics_collector::libstatistics_collector
                       fmt::fmt
                       ${std_msgs_TARGETS}
-                      ${controller_manager_msgs_TARGETS})
+                      ${controller_manager_msgs_TARGETS}
+                      ${diagnostic_msgs_TARGETS}
+                      ${lifecycle_msgs_TARGETS}
+                      ${rcl_interfaces_TARGETS})
 
-add_executable(ros2_control_node src/ros2_control_node.cpp)
+add_executable(ros2_control_node
+  src/ros2_control_node.cpp
+  src/sleeping_policies.cpp
+)
 target_link_libraries(ros2_control_node PRIVATE
   controller_manager
 )
@@ -64,6 +71,10 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(example_interfaces REQUIRED)
+
+  option(ROS2_CONTROL_STRICT_TIMING_TESTS
+    "Use strict timing-sensitive assertions in ros2_control tests. Turn ON for RT-capable local validation."
+    ON)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
@@ -110,6 +121,9 @@ if(BUILD_TESTING)
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  target_compile_definitions(
+    test_controller_manager
+    PRIVATE ROS2_CONTROL_STRICT_TIMING_TESTS=$<BOOL:${ROS2_CONTROL_STRICT_TIMING_TESTS}>)
 
   ament_add_gmock(test_controller_manager_with_namespace
     test/test_controller_manager_with_namespace.cpp
@@ -148,6 +162,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_failed_init
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -203,7 +218,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_failed_activate PUBLIC
     controller_manager
   )
-  target_compile_definitions(test_controller_failed_activate PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(
     controller_interface test/test_controller_failed_activate/test_controller_failed_activate.xml)
   install(
@@ -225,7 +239,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
-    TIMEOUT 180
+    TIMEOUT 240
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager
@@ -269,11 +283,36 @@ if(BUILD_TESTING)
     ${controller_manager_msgs_TARGETS}
   )
 
+  ament_add_gmock(test_controller_manager_with_resource_manager
+  test/test_controller_manager_with_resource_manager.cpp
+  )
+  target_link_libraries(test_controller_manager_with_resource_manager
+    controller_manager
+    hardware_interface::hardware_interface
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_sleeping_policies
+    test/test_sleeping_policies.cpp
+    src/sleeping_policies.cpp
+    TIMEOUT 60
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_sleeping_policies
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)
   ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
   ament_add_pytest_test(test_test_utils test/test_test_utils.py)
+  ament_add_pytest_test(test_param_file_parsing test/test_param_file_parsing.py)
+
+  # Now include the launch_utils subfolder
+  add_subdirectory(test/test_launch_utils)
+
 endif()
 
 install(

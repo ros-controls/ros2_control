@@ -25,6 +25,7 @@
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
 #include "hardware_interface/types/statistics_types.hpp"
+#include "rclcpp/time.hpp"
 
 namespace controller_manager
 {

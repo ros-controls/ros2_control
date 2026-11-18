@@ -16,6 +16,7 @@
 #define TEST_COMPONENTS_HPP_
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>

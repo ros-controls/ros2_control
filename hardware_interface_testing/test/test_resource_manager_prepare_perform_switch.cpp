@@ -14,14 +14,20 @@
 
 // Authors: Dr. Denis
 
-#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 #include "test_resource_manager.hpp"
 
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/utilities.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 const auto hardware_resources_command_modes =
   R"(

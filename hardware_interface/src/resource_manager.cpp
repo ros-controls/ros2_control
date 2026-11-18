@@ -15,14 +15,24 @@
 #include "hardware_interface/resource_manager.hpp"
 
 #include <fmt/compile.h>
+#include <fmt/format.h>
 
+#include <algorithm>
+#include <cmath>
+#include <exception>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <shared_mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -35,7 +45,8 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
-#include "joint_limits/joint_limits_helpers.hpp"
+#include "joint_limits/data_structures.hpp"
+#include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
 #include "joint_limits/joint_soft_limiter.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -169,6 +180,9 @@ public:
   explicit ResourceStorage(const hardware_interface::ResourceManagerParams & rm_param)
   : ResourceStorage(rm_param.clock, rm_param.logger)
   {
+    handle_exception_ = rm_param.handle_exceptions;
+    robot_description_ = rm_param.robot_description;
+    cm_update_rate_ = rm_param.update_rate;
     handle_exception_ = rm_param.handle_exceptions;
   }
 
@@ -323,11 +337,6 @@ public:
 
     if (result)
     {
-      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
-      // checking if each state already exists? Or we should somehow know that transition has
-      // happened and only then trigger this part of the code?
-      // On the other side this part of the code should never be executed in real-time critical
-      // thread, so it could be also OK as it is...
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list
@@ -343,8 +352,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' state interface already in available list."
@@ -356,7 +363,6 @@ public:
       // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // TODO(destogl): check if interface should be available on configure
         auto found_it = std::find(
           available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
@@ -369,8 +375,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' command interface already in available list."
@@ -403,8 +407,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' command interface not in available list. "
@@ -427,8 +429,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' state interface not in available list. "
@@ -502,10 +502,6 @@ public:
     if (result)
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      // TODO(destogl): change this - deimport all things if there is there are interfaces there
-      // deimport_non_movement_command_interfaces(hardware);
-      // deimport_state_interfaces(hardware);
-      // use remove_command_interfaces(hardware);
       if (!hardware.get_group_name().empty())
       {
         hw_group_state_[hardware.get_group_name()] = return_type::OK;
@@ -566,11 +562,6 @@ public:
       handle_exception_ ? void() : throw;
     }
 
-    if (result)
-    {
-      // TODO(destogl): make all command interfaces unavailable that should be present only
-      // when active (currently are all available) also at inactive
-    }
     return result;
   }
 
@@ -680,17 +671,34 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_state_interfaces();
-    const auto interface_names = add_state_interfaces(interfaces);
-    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
+    try
+    {
+      auto interfaces = hardware.export_state_interfaces();
+      const auto interface_names = add_state_interfaces(interfaces);
+      hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
 
-    RCLCPP_WARN_EXPRESSION(
-      get_logger(), interface_names.empty(),
-      "Importing state interfaces for the hardware '%s' returned no state interfaces.",
-      hardware.get_name().c_str());
-    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
-    available_state_interfaces_.reserve(
-      available_state_interfaces_.capacity() + interface_names.size());
+      RCLCPP_WARN_EXPRESSION(
+        get_logger(), interface_names.empty(),
+        "Importing state interfaces for the hardware '%s' returned no state interfaces.",
+        hardware.get_name().c_str());
+    }
+    catch (const std::exception & ex)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Exception of type : %s occurred while importing state interfaces for the hardware '%s' "
+        ": %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
+      handle_exception_ ? void() : throw;
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Unknown exception occurred while importing state interfaces for the hardware '%s'",
+        hardware.get_name().c_str());
+      handle_exception_ ? void() : throw;
+    }
   }
 
   void insert_command_interface(const CommandInterface::SharedPtr command_interface)
@@ -903,26 +911,24 @@ public:
   /// enforce the command limits for a specific joint
   /**
    * @param joint_name name of the joint to enforce the command limits
+   * @param limiter limiter of the joint, passed in by the caller that already iterates over
+   * joint_limiters_interface_ so that the hardware map is not scanned again for every joint
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
    * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
-  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  bool enforce_command_limits(
+    const std::string & joint_name,
+    joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData> & limiter,
+    const rclcpp::Duration & period)
   {
-    bool enforce_result = false;
-    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+    update_joint_limiters_data(data);
+    const bool enforce_result = limiter.enforce(data.actual, data.limited, period);
+    if (enforce_result)
     {
-      if (limiters.find(joint_name) != limiters.end())
-      {
-        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
-        update_joint_limiters_data(data);
-        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
-        if (enforce_result)
-        {
-          update_joint_limiters_commands(data.limited, command_interface_map_);
-        }
-      }
+      update_joint_limiters_commands(data.limited, command_interface_map_);
     }
     return enforce_result;
   }
@@ -1455,7 +1461,7 @@ ResourceManager::ResourceManager(
 
 ResourceManager::ResourceManager(
   const hardware_interface::ResourceManagerParams & params, bool load)
-: resource_storage_(std::make_unique<ResourceStorage>(params.clock, params.logger)), params_(params)
+: resource_storage_(std::make_unique<ResourceStorage>(params)), params_(params)
 {
   RCLCPP_WARN_EXPRESSION(
     params.logger, params.allow_controller_activation_with_inactive_hardware,
@@ -1508,13 +1514,12 @@ bool ResourceManager::shutdown_components()
 bool ResourceManager::load_and_initialize_components(
   const hardware_interface::ResourceManagerParams & params)
 {
-  components_are_loaded_and_initialized_ = true;
-
   resource_storage_->robot_description_ = params.robot_description;
   resource_storage_->cm_update_rate_ = params.update_rate;
   params_.robot_description = params.robot_description;
   params_.update_rate = params.update_rate;
   params_.handle_exceptions = params.handle_exceptions;
+  resource_storage_->handle_exception_ = params.handle_exceptions;
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
@@ -1529,6 +1534,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  components_are_loaded_and_initialized_ = true;
   std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
@@ -1848,13 +1854,17 @@ std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
 // CM API: Called in "update"-thread
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
-  if (!command_interface_is_available(key))
+  // Check the claimed map first: it is a hash lookup, while the availability check is a linear
+  // search over all available interfaces and is only needed for the interfaces that are claimed.
   {
-    return false;
+    std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+    const auto it = resource_storage_->claimed_command_interface_map_.find(key);
+    if (it == resource_storage_->claimed_command_interface_map_.end() || !it->second)
+    {
+      return false;
+    }
   }
-
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  return resource_storage_->claimed_command_interface_map_.at(key);
+  return command_interface_is_available(key);
 }
 
 // CM API: Called in "update"-thread
@@ -2368,7 +2378,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
-      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, *limiter, period);
     }
   }
   return enforce_result;

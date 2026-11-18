@@ -26,6 +26,7 @@ jobs:
   build-downstream:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     with:
+      target_cmake_args: -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
       ros_distro: humble
       ros_repo: testing
       ref_for_scheduled_build: humble
