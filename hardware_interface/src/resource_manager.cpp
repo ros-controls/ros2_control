@@ -337,11 +337,6 @@ public:
 
     if (result)
     {
-      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
-      // checking if each state already exists? Or we should somehow know that transition has
-      // happened and only then trigger this part of the code?
-      // On the other side this part of the code should never be executed in real-time critical
-      // thread, so it could be also OK as it is...
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list
@@ -357,8 +352,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' state interface already in available list."
@@ -370,7 +363,6 @@ public:
       // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // TODO(destogl): check if interface should be available on configure
         auto found_it = std::find(
           available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
@@ -383,8 +375,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' command interface already in available list."
@@ -417,8 +407,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' command interface not in available list. "
@@ -441,8 +429,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' state interface not in available list. "
@@ -516,10 +502,6 @@ public:
     if (result)
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      // TODO(destogl): change this - deimport all things if there is there are interfaces there
-      // deimport_non_movement_command_interfaces(hardware);
-      // deimport_state_interfaces(hardware);
-      // use remove_command_interfaces(hardware);
       if (!hardware.get_group_name().empty())
       {
         hw_group_state_[hardware.get_group_name()] = return_type::OK;
@@ -580,11 +562,6 @@ public:
       handle_exception_ ? void() : throw;
     }
 
-    if (result)
-    {
-      // TODO(destogl): make all command interfaces unavailable that should be present only
-      // when active (currently are all available) also at inactive
-    }
     return result;
   }
 
