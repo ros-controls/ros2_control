@@ -2134,7 +2134,7 @@ TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
 }
 
-TEST_F(TestComponentInterfaces, dummy_system_on_error_called_once_when_it_fails)
+TEST(TestComponentInterfaces, dummy_system_on_error_called_once_when_it_fails)
 {
   const std::string urdf_to_test =
     std::string(ros2_control_test_assets::urdf_head) +
@@ -2147,7 +2147,6 @@ TEST_F(TestComponentInterfaces, dummy_system_on_error_called_once_when_it_fails)
   params.hardware_info = control_resources[0];
   params.clock = node->get_clock();
   params.logger = node->get_logger();
-  params.executor = executor_;
 
   for (const bool fail_on_read : {true, false})
   {
