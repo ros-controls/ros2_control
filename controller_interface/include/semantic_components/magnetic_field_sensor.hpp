@@ -32,6 +32,7 @@ public:
       name, {name + "/" + "magnetic_field.x", name + "/" + "magnetic_field.y",
              name + "/" + "magnetic_field.z"})
   {
+    data_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
   /**
@@ -53,21 +54,24 @@ private:
   /**
    * @brief Update the data array from the state interfaces.
    * @note This method is thread-safe and non-blocking.
-   * @note An unavailable axis is reported as NaN instead of reusing a previous measurement.
+   * @note Each axis keeps its last successful reading, or NaN until its first successful read.
    */
   void update_data_from_interfaces()
   {
     for (auto i = 0u; i < data_.size(); ++i)
     {
       const auto data = state_interfaces_[i].get().get_optional();
-      data_[i] = data.value_or(std::numeric_limits<double>::quiet_NaN());
+      if (data.has_value())
+      {
+        data_[i] = data.value();
+      }
     }
   }
 
   /**
    * @brief Array to store the data of the magnetic field sensor
    */
-  std::array<double, 3> data_{{0.0, 0.0, 0.0}};
+  std::array<double, 3> data_{};
 };
 
 }  // namespace semantic_components

@@ -91,7 +91,7 @@ TEST_F(MagneticFieldSensorTest, validate_all)
   ASSERT_EQ(magnetic_field_sensor_->state_interfaces_.size(), 0u);
 }
 
-TEST_F(MagneticFieldSensorTest, unavailable_axes_are_nan_and_recover)
+TEST_F(MagneticFieldSensorTest, axes_start_as_nan_and_keep_the_last_reading)
 {
   semantic_components::MagneticFieldSensor sensor(sensor_name_);
   std::array<hardware_interface::StateInterface::SharedPtr, 3> states;
@@ -120,6 +120,7 @@ TEST_F(MagneticFieldSensorTest, unavailable_axes_are_nan_and_recover)
   EXPECT_DOUBLE_EQ(message.magnetic_field.y, magnetic_field_values_[1]);
   EXPECT_DOUBLE_EQ(message.magnetic_field.z, magnetic_field_values_[2]);
 
+  auto last_readings = magnetic_field_values_;
   for (auto unavailable_axis = 0u; unavailable_axis < states.size(); ++unavailable_axis)
   {
     SCOPED_TRACE(unavailable_axis);
@@ -139,14 +140,8 @@ TEST_F(MagneticFieldSensorTest, unavailable_axes_are_nan_and_recover)
         {message.magnetic_field.x, message.magnetic_field.y, message.magnetic_field.z}};
       for (auto i = 0u; i < states.size(); ++i)
       {
-        if (i == unavailable_axis)
-        {
-          EXPECT_TRUE(std::isnan(observed[i]));
-        }
-        else
-        {
-          EXPECT_DOUBLE_EQ(observed[i], values[i]);
-        }
+        const double expected = i == unavailable_axis ? last_readings[i] : values[i];
+        EXPECT_DOUBLE_EQ(observed[i], expected);
       }
     }
 
@@ -154,5 +149,6 @@ TEST_F(MagneticFieldSensorTest, unavailable_axes_are_nan_and_recover)
     EXPECT_DOUBLE_EQ(message.magnetic_field.x, values[0]);
     EXPECT_DOUBLE_EQ(message.magnetic_field.y, values[1]);
     EXPECT_DOUBLE_EQ(message.magnetic_field.z, values[2]);
+    last_readings = values;
   }
 }
