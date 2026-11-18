@@ -39,6 +39,7 @@ hardware_interface
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
 * The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
 * Mock hardware (``mock_components/GenericSystem``) supports the ``self_paced`` scheduling policy of async components. Its ``read()`` waits one period of ``rw_rate``, the same as a real hardware with a blocking ``read()``.
+* ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
 
 ros2controlcli
 **************
