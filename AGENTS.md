@@ -53,7 +53,7 @@ Only open a PR when the user asks for it. When you do:
 - Fill in the body using the
   [ros-controls PR template](https://github.com/ros-controls/.github/blob/master/.github/pull_request_template.md)
   and keep all of its sections:
-  - **Description**: what changed and why, plus `Fixes #<issue>` if there is one.
+  - **Description**: what changed and why, plus `Fixes #<issue>` if there is one. Keep it short and to the point.
   - **Is this user-facing behavior change?**: explain it, or leave it empty if not.
   - **Did you use Generative AI?**: always fill this in. Name the tool and model you are
     (e.g. "Claude Code, Claude Opus 5.5") and which parts you generated.
