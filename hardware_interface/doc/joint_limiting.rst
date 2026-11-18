@@ -250,8 +250,10 @@ If this happens while a controller writes the command and the ``handle_exception
    Velocity reaching the limit in one update: (1.0 - 0.95) / 0.01 = 5.0 rad/s → velocity limit 1.0 rad/s applies
    Acceleration limit: 0.5 ± 2.0 * 0.01 → velocity command is clamped to [0.48, 0.52] rad/s
 
-The velocity bound from the position limits only prevents overshooting within the next update.
-It does not consider the braking distance, so a joint can reach the position limit at high velocity.
+The velocity bound from the position limits is meant to prevent overshooting within the next update, but it does not guarantee it:
+if it conflicts with the acceleration bound, the limiter swaps the inverted interval instead of rejecting it.
+E.g., with the limits above, at 0.999 rad and a previous velocity command of 0.5 rad/s, the interval becomes ``[0.1, 0.48]`` and a velocity command of 0.5 rad/s is limited to 0.48 rad/s, reaching ≈1.0038 rad after one update.
+The limiter does not consider the braking distance either, so a joint can reach the position limit at high velocity.
 
 Soft Limiter
 ~~~~~~~~~~~~
