@@ -43,6 +43,7 @@ ros2controlcli
 **************
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
 * Add option ``--all-inactive`` to ``unload_controller`` verb. (`#3466 <https://github.com/ros-controls/ros2_control/pull/3466>`__)
+* Add ``reload_controller`` verb. It reloads a controller with its parameter file and restores its previous state.
 
 transmission_interface
 **********************
