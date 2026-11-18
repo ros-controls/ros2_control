@@ -223,7 +223,8 @@ The Saturation Limiter clamps each command to an interval computed from the hard
 1. **Position**: Clamped to ``[min_position, max_position]``. If velocity limits are set, it is also clamped to ``previous_command ± max_velocity * dt``.
    If acceleration limits are set too, ``max_velocity`` is replaced by ``min(max_velocity, |current_velocity| + max_acceleration * dt)``.
 
-2. **Velocity**: Clamped to ``[-max_velocity, max_velocity]`` and to the velocity that reaches a position limit within one update, ``[(min_position - current_position) / dt, (max_position - current_position) / dt]``.
+2. **Velocity**: Only limited if velocity limits are set; otherwise, velocity commands are not constrained at all, also not by position or acceleration limits.
+   Clamped to ``[-max_velocity, max_velocity]`` and to the velocity that reaches a position limit within one update, ``[(min_position - current_position) / dt, (max_position - current_position) / dt]``.
    If acceleration limits are set, it is also clamped to ``previous_command ± max_acceleration * dt``.
    If the joint is outside its position limits, velocity commands pointing further outside are set to zero.
    If the joint is further outside than a small tolerance, all velocity commands are set to zero.
