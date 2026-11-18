@@ -137,11 +137,6 @@ Limits can be disabled per joint or per command interface with ``<limits enable=
 Using the joint_limits Library Directly
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   This section applies only if you instantiate a limiter yourself, e.g., inside a controller.
-   The limiters of the controller_manager do not read these parameters.
-
 When a limiter is initialized with a node, e.g., ``limiter.init(joint_names, node)``, it declares and reads the parameters below from that node.
 The parameters for each joint are organized under the ``joint_limits.<joint_name>`` namespace:
 
@@ -288,8 +283,6 @@ The allowed velocity depends on the distance of the previous position command (o
       effort_max = clamp(-k_velocity * (current_velocity - v_max), -max_effort, max_effort)
 
 4. **Acceleration** and **Jerk**: Same as in the saturation limiter (jerk only when using the library directly).
-
-``k_velocity`` is only used for effort commands.
 
 **Example:**
 
