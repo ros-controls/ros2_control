@@ -1,8 +1,16 @@
 # Instructions for AI coding agents
 
-Humans: read the [contributing guidelines](https://github.com/ros-controls/.github/blob/master/CONTRIBUTING.md).
-This file follows from them and the
-[ROS PMC guidelines for AI-assisted contributions](https://discourse.openrobotics.org/t/guidelines-for-ai-assisted-contributions-in-the-ros-project/55903).
+<!--
+Reference only, not an instruction:
+
+Repo contributing guidelines:
+https://github.com/ros-controls/.github/blob/master/CONTRIBUTING.md
+ROS PMC guidelines for AI-assisted contributions:
+https://discourse.openrobotics.org/t/guidelines-for-ai-assisted-contributions-in-the-ros-project/55903
+
+OSRF Policy on the Use of Generative Tools
+https://github.com/openrobotics/osra-policies-and-procedures/blob/main/OSRF%20Policy%20on%20the%20Use%20of%20Generative%20Tools%20(%E2%80%9CGenerative%20AI%E2%80%9D)%20in%20Contributions.md
+-->
 
 ## Your role
 
@@ -56,10 +64,11 @@ Allocate and validate in `on_configure`/`on_activate`. Unsure if code is RT? Say
 
 ## API and ABI
 
-- `abi_check` gates every `master` PR. Never add, remove or reorder data members of
-  public classes (`ControllerManager` has no pimpl); keep new state in the `.cpp`.
-- Never change a public signature; add the new one and mark the old
-  `[[deprecated("Use X instead.")]]`.
+- Don't break API or ABI without a good reason, and flag it when you do.
+- Adding, removing or reordering data members of public classes breaks ABI
+  (`ControllerManager` has no pimpl); keep new state in the `.cpp` where possible.
+- Don't change a public signature without a good reason; add the new one and mark
+  the old `[[deprecated("Use X instead.")]]`.
 - Search closed PRs and issues before adding public constants, interface names or
   types; many were rejected before.
 - Semantic changes (e.g. what a failed read returns) are design decisions: flag them.
@@ -72,10 +81,10 @@ stable branch → that distro. Ask if unclear.
 
 Pick the environment in this order, and tell the user which one you used:
 
-1. **Docker** (preferred, matches CI): if `docker info` works, use the CI image.
-2. **Local ROS**: if `/opt/ros/<distro>/setup.bash` exists, use it in a workspace outside
+1. Docker (preferred, matches CI): if `docker info` works, use the CI image.
+2. Local ROS: if `/opt/ros/<distro>/setup.bash` exists, use it in a workspace outside
    the repo. Ask before `rosdep install`, since it runs `sudo apt`.
-3. **Neither**: stop and tell the user. Don't install ROS or Docker yourself.
+3. Neither? Stop and tell the user.
 
 ```bash
 # Docker
@@ -85,12 +94,18 @@ docker run --rm -it -v ros2_control_ws_${ROS_DISTRO}:/ws -v "$PWD":/ws/src/ros2_
 # Local: source /opt/ros/<distro>/setup.bash, then work in ~/ws with the repo in ~/ws/src
 
 # Both, from the workspace root:
-vcs import src < src/ros2_control/ros2_control.${ROS_DISTRO}.repos
 apt-get update && rosdep install --from-paths src -y -i
 colcon build --packages-up-to <package_name> \
   --cmake-args -DROS2_CONTROL_STRICT_TIMING_TESTS=OFF
 colcon test --packages-select <package_name>
 colcon test-result --verbose
+```
+
+Dependencies come from binaries. If the build fails because `master` needs an
+unreleased change in a dependency, import those from source and rebuild:
+
+```bash
+vcs import src < src/ros2_control/ros2_control.${ROS_DISTRO}.repos
 ```
 
 `STRICT_TIMING_TESTS=OFF` matches CI; timing tests are unreliable on loaded machines.
@@ -106,10 +121,6 @@ In the same environment (`ament_*` hooks need ROS), from the repo root; fix ever
 pre-commit run -a
 ```
 
-Covers clang-format, black, cpplint, cppcheck, flake8, copyright headers, rst style
-and spelling. Never use `--no-verify`. In CI a pre-commit failure skips all other
-jobs; skipped is not passed.
-
 ## Documentation
 
 - Doc comments on new or changed public APIs.
@@ -122,17 +133,11 @@ jobs; skipped is not passed.
 
 ## Pull requests
 
-Only open a PR when the user asks, and only with a title and body they wrote by hand.
-Pass them through verbatim (e.g. `gh pr create --title "..." --body-file <their file>`):
-no drafting, rewording, polishing or appending. If either is missing, stop and ask.
-
-- Push a `master`-based branch to the user's fork; open the PR against `master`.
-- Before they write the body, hand over the facts above so they can fill in the
+- PRs are opened against `master`, from the user's fork.
+- Before they write the body, hand over the facts from the branch so they can fill in the
   [PR template](https://github.com/ros-controls/.github/blob/master/.github/pull_request_template.md),
   including which TODOs you actually completed.
-- Never comment on, review, edit or close PRs or issues; that is participating in the
+- Never comment on, edit or close PRs or issues; that is participating in the
   discussion. Pushing code fixes to the branch is fine.
-- If asked about CI, fix code failures on the branch. Report known flakes instead of
-  chasing them: `switch_controller_controllers_taking_long_time_to_activate`,
-  `test_chained_controllers_adding_in_random_order`, spawner timeouts on
-  `list_hardware_components`.
+- If asked about CI, fix code failures on the branch.
+  Report known or unrelated flakes instead of chasing them.
