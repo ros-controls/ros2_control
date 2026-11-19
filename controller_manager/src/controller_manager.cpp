@@ -220,7 +220,6 @@ std::vector<std::string> get_command_interfaces_names(
     auto available_interfaces = resource_manager->available_command_interfaces();
     for (const auto & name : command_interface_config.names)
     {
-      // Check if the requested interface exists in the available interfaces
       auto it = std::find(available_interfaces.begin(), available_interfaces.end(), name);
       if (it != available_interfaces.end())
       {
@@ -274,7 +273,6 @@ std::vector<std::string> get_state_interfaces_names(
     auto available_interfaces = resource_manager->available_state_interfaces();
     for (const auto & name : state_interface_config.names)
     {
-      // Check if the requested interface exists in the available interfaces
       auto it = std::find(available_interfaces.begin(), available_interfaces.end(), name);
       if (it != available_interfaces.end())
       {
@@ -710,7 +708,6 @@ void ControllerManager::init_controller_manager()
     this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
   START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
 
-  // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
   preshutdown_cb_handle_ =
     std::make_unique<rclcpp::PreShutdownCallbackHandle>(context->add_pre_shutdown_callback(
@@ -738,7 +735,6 @@ void ControllerManager::init_controller_manager()
 
 void ControllerManager::initialize_parameters()
 {
-  // Initialize parameters
   try
   {
     use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
@@ -908,7 +904,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
 void ControllerManager::set_initial_hardware_components_state()
 {
-  // Get all components and if they are not defined in parameters activate them automatically
+  // Components not listed in parameters are activated
   auto components_to_activate = resource_manager_->get_components_status();
 
   using lifecycle_msgs::msg::State;
@@ -1030,7 +1026,6 @@ void ControllerManager::set_initial_hardware_components_state()
       get_logger(), "Processing hardware component group '%s' with %zu components.",
       group_name.c_str(), group_components.size());
 
-    // First, configure all components in the group (transition to inactive state)
     std::vector<std::string> successfully_configured;
     bool configuration_failed = false;
     for (const auto & component_name : group_components)
@@ -1065,7 +1060,6 @@ void ControllerManager::set_initial_hardware_components_state()
       continue;  // Skip to next group
     }
 
-    // Then, activate all successfully configured components in the group
     std::vector<std::string> successfully_activated;
     bool activation_failed = false;
     for (const auto & component_name : successfully_configured)
@@ -1350,7 +1344,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
-  // Now check if the parameters_file parameter exist
   const std::string param_name = fmt::format(FMT_COMPILE("{}.params_file"), controller_name);
   controller_spec.info.parameters_files.clear();
 
@@ -1423,7 +1416,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // So when we're told to load a controller by name, we need to declare the parameter if
   // we haven't done so, and then read it.
 
-  // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
     declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
@@ -1751,7 +1743,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   const auto cmd_itfs = get_command_interfaces_names(controller, resource_manager_);
   const auto state_itfs = get_state_interfaces_names(controller, resource_manager_);
 
-  // Check if the cmd_itfs and the state_itfs are unique
   if (!ros2_control::is_unique(cmd_itfs))
   {
     std::string cmd_itfs_str = std::accumulate(
@@ -1785,8 +1776,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   std::unordered_map<std::string, std::vector<std::string>> controller_full_chain_info_cache;
   build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache);
 
-  // Now let's reorder the controllers
-  // lock controllers
   std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
     rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
@@ -1822,7 +1811,6 @@ controller_interface::return_type ControllerManager::configure_controller(
     }
   }
 
-  // Update the controllers chain groups in the ControllerSpec
   for (const auto & [ctrl_name, full_chain_info] : controller_full_chain_info_cache)
   {
     RCLCPP_DEBUG(
@@ -2194,7 +2182,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
   }
 
-  // Check after the check if the activate and deactivate list is empty or not
   if (switch_params_.activate_request.empty() && switch_params_.deactivate_request.empty())
   {
     message = "After checking the controllers, no controllers need to be activated or deactivated.";
@@ -2837,8 +2824,7 @@ void ControllerManager::activate_controllers(
         "failed.");
     }
   }
-  // Now prepare and perform the stop interface switching as this is needed for exclusive
-  // interfaces
+  // Stop interface switching, needed for exclusive interfaces
   else if (
     !failed_controllers_command_interfaces.empty() &&
     (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
@@ -2887,7 +2873,6 @@ void ControllerManager::list_controllers_srv_cb(
     controller_state.is_chainable = controllers[i].c->is_chainable();
     controller_state.is_chained = controllers[i].c->is_in_chained_mode();
 
-    // Get information about interfaces if controller are in 'inactive' or 'active' state
     if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
     {
       controller_state.required_command_interfaces =
@@ -3404,7 +3389,6 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
-  // Check for valid time
   if (!get_clock()->started())
   {
     if (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
@@ -3746,10 +3730,8 @@ std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_un
     throw std::runtime_error("controllers_lock_ not owned by thread");
   }
   controllers_lock_.unlock();
-  // Get the index to the outdated controller list
   int free_controllers_list = get_other_list(updated_controllers_index_);
 
-  // Wait until the outdated controller list is not being used by the realtime thread
   wait_until_rt_not_using(free_controllers_list);
   return controllers_lists_[free_controllers_list];
 }
@@ -3929,7 +3911,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
       get_logger(), "Checking interface '%s' of controller '%s'.", ctrl_itf_name.c_str(),
       controller_it->info.name.c_str());
     ControllersListIterator following_ctrl_it;
-    // Check if interface if reference interface and following controller exist.
     if (!is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
     {
       continue;
@@ -4037,7 +4018,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
     else
     {
-      // Check if following controller is in 'from' chained mode list and remove it, if so
       auto found_it = std::find(
         switch_params_.from_chained_mode_request.begin(),
         switch_params_.from_chained_mode_request.end(), following_ctrl_it->info.name);
@@ -4988,7 +4968,6 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back("use_sim_time:=true");
   }
 
-  // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
     !ros2_control::has_item(controller.info.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))
