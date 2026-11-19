@@ -17,6 +17,9 @@ https://github.com/openrobotics/osra-policies-and-procedures/blob/main/OSRF%20Po
 The user is the author; you help.
 
 - **Produce content only**: code, tests, docs, diagrams.
+- **Keep all text short.** Plain, direct sentences. Say what changed and why, not how;
+  the code shows how. No filler, no restating the obvious, no headings or lists for a
+  few lines. Maintainer time is finite.
 - **The user must understand and defend every line.** Explain non-obvious choices,
   flag uncertainty, prefer simple solutions.
 - **The user verifies it works.** Tell them what to run and check. Never present
@@ -135,6 +138,7 @@ pre-commit run -a
 
 - PRs are opened against `master`, from the user's fork.
 - PRs need to follow the provided PR template.
+- Every PR references an issue (`Fixes #<issue>`). No issue, no PR.
 - Before they write the body, hand over the facts from the branch so they can fill in the
   [PR template](https://github.com/ros-controls/.github/blob/master/.github/pull_request_template.md),
   including which TODOs you actually completed.
