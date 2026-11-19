@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
+#include <future>
 #include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/msg/controller_manager_activity.hpp"
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -40,6 +44,23 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 
 class TestControllerManagerWithTestableCM;
+
+/// Test controller whose on_cleanup() blocks until released, so that unload_controller() keeps
+/// holding the controllers lock for as long as the test needs.
+class BlockingCleanupController : public test_controller::TestController
+{
+public:
+  test_controller::CallbackReturn on_cleanup(
+    const rclcpp_lifecycle::State & previous_state) override
+  {
+    cleanup_entered.set_value();
+    release_cleanup.wait();
+    return test_controller::TestController::on_cleanup(previous_state);
+  }
+
+  std::promise<void> cleanup_entered;
+  std::shared_future<void> release_cleanup;
+};
 
 class TestableControllerManager : public controller_manager::ControllerManager
 {
@@ -183,6 +204,56 @@ public:
       {}, strictness);
   }
 
+  /// Waits for an ~/activity message that matches the current lifecycle state of every loaded
+  /// controller and hardware component (ignoring order), and fails if none arrives in time.
+  void expect_activity_matches_current_state()
+  {
+    using controller_manager_msgs::msg::ControllerManagerActivity;
+    using StateMap = std::map<std::string, uint8_t>;
+
+    StateMap expected_controllers, expected_hardware;
+    for (const auto & spec : cm_->get_loaded_controllers())
+    {
+      expected_controllers[spec.info.name] = spec.c->get_lifecycle_state().id();
+    }
+    for (const auto & [name, info] : cm_->resource_manager_->get_components_status())
+    {
+      expected_hardware[name] = info.state.id();
+    }
+
+    // A late-joining subscriber may first be handed older samples, so keep the latest one
+    StateMap received_controllers, received_hardware;
+    size_t received_count = 0;
+    rclcpp::Node test_node("activity_test_node");
+    auto subscription = test_node.create_subscription<ControllerManagerActivity>(
+      std::string(cm_->get_fully_qualified_name()) + "/activity",
+      rclcpp::QoS(1).reliable().transient_local(),
+      [&](const ControllerManagerActivity::SharedPtr msg)
+      {
+        ++received_count;
+        received_controllers.clear();
+        received_hardware.clear();
+        for (const auto & ctrl : msg->controllers)
+        {
+          received_controllers[ctrl.name] = ctrl.state.id;
+        }
+        for (const auto & hw : msg->hardware_components)
+        {
+          received_hardware[hw.name] = hw.state.id;
+        }
+      });
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(test_node.get_node_base_interface());
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (std::chrono::steady_clock::now() < until &&
+           (received_controllers != expected_controllers || received_hardware != expected_hardware))
+    {
+      executor.spin_some(std::chrono::milliseconds(10));
+    }
+    EXPECT_EQ(expected_controllers, received_controllers) << received_count << " msgs received";
+    EXPECT_EQ(expected_hardware, received_hardware) << received_count << " msgs received";
+  }
+
   static constexpr char TEST_CONTROLLER_ACTUATOR_NAME[] = "test_controller_actuator";
   static constexpr char TEST_CONTROLLER_SYSTEM_NAME[] = "test_controller_system";
   static constexpr char TEST_BROADCASTER_ALL_NAME[] = "test_broadcaster_all";
@@ -307,6 +378,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     // here happens error in hardware and
     // "actuator controller" and "broadcaster all" are deactivated
     EXPECT_NO_THROW(cm_->read(time_, PERIOD));
+    expect_activity_matches_current_state();
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_lifecycle_state().id());
@@ -583,6 +655,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_controller_error
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
     EXPECT_EQ(controller_interface::return_type::ERROR, cm_->update(time_, PERIOD));
+    expect_activity_matches_current_state();
     EXPECT_EQ(test_controller_actuator->internal_counter, new_counter)
       << "Executes the current cycle and returns ERROR";
     EXPECT_EQ(
@@ -709,6 +782,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     // here happens error in hardware and
     // "actuator controller" and "broadcaster all" are deactivated
     EXPECT_NO_THROW(cm_->write(time_, PERIOD));
+    expect_activity_matches_current_state();
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_lifecycle_state().id());
@@ -914,6 +988,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     // here happens deactivate in hardware and
     // "actuator controller" is deactivated but "broadcaster all" should stay active
     EXPECT_NO_THROW(cm_->write(time_, PERIOD));
+    expect_activity_matches_current_state();
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_lifecycle_state().id());
@@ -1047,6 +1122,64 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
     EXPECT_GT(test_broadcaster_all->internal_counter, previous_counter_higher);
     EXPECT_GT(test_broadcaster_sensor->internal_counter, previous_counter_higher);
   }
+}
+
+TEST_P(
+  TestControllerManagerWithTestableCM, hardware_write_error_does_not_block_on_busy_controllers_lock)
+{
+  using namespace std::chrono_literals;
+  auto strictness = GetParam().strictness;
+
+  // Added and configured before the realtime loop runs, as both wait for an update() cycle
+  constexpr char BLOCKING_CONTROLLER_NAME[] = "blocking_cleanup_controller";
+  auto blocking_controller = std::make_shared<BlockingCleanupController>();
+  std::promise<void> release_cleanup;
+  blocking_controller->release_cleanup = release_cleanup.get_future().share();
+  auto cleanup_entered = blocking_controller->cleanup_entered.get_future();
+  cm_->add_controller(
+    blocking_controller, BLOCKING_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  blocking_controller->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::NONE, {}});
+  blocking_controller->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::NONE, {}});
+  ASSERT_EQ(
+    controller_interface::return_type::OK, cm_->configure_controller(BLOCKING_CONTROLLER_NAME));
+
+  SetupAndConfigureControllers(strictness);
+
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller_actuator->get_lifecycle_state().id());
+
+  // The next write() of TEST_ACTUATOR_HARDWARE_NAME fails
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+
+  // Unloading holds the controllers lock while the blocking controller is being cleaned up
+  auto unload_result = std::async(
+    std::launch::async, [&]() { return cm_->unload_controller(BLOCKING_CONTROLLER_NAME); });
+  ASSERT_EQ(std::future_status::ready, cleanup_entered.wait_for(2s));
+
+  // The realtime write() must handle the hardware error without waiting for the lock
+  auto write_result = std::async(std::launch::async, [&]() { cm_->write(time_, PERIOD); });
+  const bool write_finished = write_result.wait_for(2s) == std::future_status::ready;
+  EXPECT_TRUE(write_finished) << "write() blocked on the controllers lock held by unload";
+
+  // Let the unload finish; it waits for the realtime loop to pick up the new controllers list
+  release_cleanup.set_value();
+  while (unload_result.wait_for(10ms) != std::future_status::ready)
+  {
+    cm_->update(time_, PERIOD);
+  }
+  write_result.wait();
+  EXPECT_EQ(controller_interface::return_type::OK, unload_result.get());
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller_actuator->get_lifecycle_state().id());
+  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+  expect_activity_matches_current_state();
 }
 
 INSTANTIATE_TEST_SUITE_P(
