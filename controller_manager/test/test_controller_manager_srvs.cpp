@@ -585,6 +585,90 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
+TEST_F(TestControllerManagerSrvs, load_unload_controller_srv)
+{
+  using Request = controller_manager_msgs::srv::LoadUnloadController::Request;
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::LoadUnloadController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::LoadUnloadController>(
+      "test_controller_manager/load_unload_controller");
+
+  auto request = std::make_shared<Request>();
+  request->name = test_controller::TEST_CONTROLLER_NAME;
+  ASSERT_EQ(Request::LOAD, request->action) << "LOAD is the default action";
+
+  // invalid action
+  request->action = 0;
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok);
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+
+  // reload and unload of a controller that is not loaded
+  request->action = Request::RELOAD;
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok);
+  request->action = Request::UNLOAD;
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_FALSE(result->ok);
+
+  // load
+  cm_->set_parameter(
+    rclcpp::Parameter(
+      std::string(test_controller::TEST_CONTROLLER_NAME) + ".type",
+      test_controller::TEST_CONTROLLER_CLASS_NAME));
+  request->action = Request::LOAD;
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok) << result->message;
+  ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+
+  // reload restores the previous state and creates a new controller instance
+  request->action = Request::RELOAD;
+  for (const auto state :
+       {lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE})
+  {
+    if (state == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+    {
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+    }
+    if (state == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      cm_->switch_controller(
+        {test_controller::TEST_CONTROLLER_NAME}, {},
+        controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+        rclcpp::Duration(0, 0));
+    }
+    const auto previous_instance = cm_->get_loaded_controllers()[0].c.get();
+    ASSERT_EQ(state, cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+
+    result = call_service_and_wait(*client, request, srv_executor, true);
+    ASSERT_TRUE(result->ok) << result->message;
+    ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
+    EXPECT_NE(previous_instance, cm_->get_loaded_controllers()[0].c.get());
+    EXPECT_EQ(state, cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+  }
+
+  // unload of an active controller fails
+  request->action = Request::UNLOAD;
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // unload of an inactive controller
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_TRUE(result->ok) << result->message;
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+}
+
 TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controller)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;

@@ -19,6 +19,7 @@ from controller_manager_msgs.srv import (
     ListHardwareComponents,
     ListHardwareInterfaces,
     LoadController,
+    LoadUnloadController,
     ReloadControllerLibraries,
     SetHardwareComponentState,
     SwitchController,
@@ -244,6 +245,27 @@ def load_controller(
         node,
         f"{controller_manager_name}/load_controller",
         LoadController,
+        request,
+        service_timeout,
+        call_timeout,
+    )
+
+
+def load_unload_controller(
+    node,
+    controller_manager_name,
+    controller_name,
+    action=LoadUnloadController.Request.LOAD,
+    service_timeout=0.0,
+    call_timeout=10.0,
+):
+    request = LoadUnloadController.Request()
+    request.name = controller_name
+    request.action = action
+    return service_caller(
+        node,
+        f"{controller_manager_name}/load_unload_controller",
+        LoadUnloadController,
         request,
         service_timeout,
         call_timeout,
