@@ -389,10 +389,12 @@ public:
   void remove_all_hardware_interfaces_from_available_list(const std::string & hardware_name)
   {
     // remove all command interfaces from available list
+    bool command_flags_changed = false;
     for (const auto & interface : hardware_info_map_[hardware_name].command_interfaces)
     {
       if (make_unavailable(available_command_interfaces_lookup_, interface))
       {
+        command_flags_changed = true;
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' command interface removed from available list",
           hardware_name.c_str(), interface.c_str());
@@ -406,13 +408,19 @@ public:
           hardware_name.c_str(), interface.c_str());
       }
     }
-    remove_unavailable_from_list(
-      available_command_interfaces_, available_command_interfaces_lookup_);
+    // Skip the O(N) pass over the list when no flag changed (e.g. repeated cleanup calls)
+    if (command_flags_changed)
+    {
+      remove_unavailable_from_list(
+        available_command_interfaces_, available_command_interfaces_lookup_);
+    }
     // remove all state interfaces from available list
+    bool state_flags_changed = false;
     for (const auto & interface : hardware_info_map_[hardware_name].state_interfaces)
     {
       if (make_unavailable(available_state_interfaces_lookup_, interface))
       {
+        state_flags_changed = true;
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' state interface removed from available list",
           hardware_name.c_str(), interface.c_str());
@@ -426,7 +434,10 @@ public:
           hardware_name.c_str(), interface.c_str());
       }
     }
-    remove_unavailable_from_list(available_state_interfaces_, available_state_interfaces_lookup_);
+    if (state_flags_changed)
+    {
+      remove_unavailable_from_list(available_state_interfaces_, available_state_interfaces_lookup_);
+    }
   }
 
   template <class HardwareT>
@@ -1792,19 +1803,25 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  bool flags_changed = false;
   for (const auto & interface : interface_names)
   {
     if (
       ResourceStorage::make_unavailable(
         resource_storage_->available_state_interfaces_lookup_, interface))
     {
+      flags_changed = true;
       RCUTILS_LOG_DEBUG_NAMED(
         "resource_manager", "'%s' state interface removed from available list", interface.c_str());
     }
   }
-  ResourceStorage::remove_unavailable_from_list(
-    resource_storage_->available_state_interfaces_,
-    resource_storage_->available_state_interfaces_lookup_);
+  // A controller without exported interfaces must not pay for a pass over all N interfaces
+  if (flags_changed)
+  {
+    ResourceStorage::remove_unavailable_from_list(
+      resource_storage_->available_state_interfaces_,
+      resource_storage_->available_state_interfaces_lookup_);
+  }
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -1864,19 +1881,24 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   const auto & interface_names =
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+  bool flags_changed = false;
   for (const auto & interface : interface_names)
   {
     if (
       ResourceStorage::make_unavailable(
         resource_storage_->available_command_interfaces_lookup_, interface))
     {
+      flags_changed = true;
       RCLCPP_DEBUG(
         get_logger(), "'%s' command interface removed from available list", interface.c_str());
     }
   }
-  ResourceStorage::remove_unavailable_from_list(
-    resource_storage_->available_command_interfaces_,
-    resource_storage_->available_command_interfaces_lookup_);
+  if (flags_changed)
+  {
+    ResourceStorage::remove_unavailable_from_list(
+      resource_storage_->available_command_interfaces_,
+      resource_storage_->available_command_interfaces_lookup_);
+  }
 }
 
 // CM API: Called in "callback/slow"-thread
