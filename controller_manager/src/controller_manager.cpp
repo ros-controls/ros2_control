@@ -834,6 +834,12 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+    overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
+  }
+
   hardware_interface::ResourceManagerParams params;
   params.robot_description = robot_description;
   params.clock = trigger_clock_;
@@ -847,6 +853,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
+  params.skipped_components = params_->skipped_hardware_components;
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
@@ -955,12 +962,6 @@ void ControllerManager::set_initial_hardware_components_state()
       }
     }
   };
-
-  if (cm_param_listener_->is_old(*params_))
-  {
-    *params_ = cm_param_listener_->get_params();
-    overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
-  }
 
   // unconfigured (loaded only)
   set_components_to_state(

@@ -587,7 +587,16 @@ protected:
   mutable std::recursive_mutex joint_limiters_lock_;
 
 private:
-  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  /// Validates if all interfaces are exported as defined in URDF.
+  /**
+   * \param[in] hardware_info vector of hardware parsed from URDF that storage is validated against.
+   * \param[in] skipped_components names of the components that are not loaded and therefore
+   * skipped in the validation.
+   * \return true if storage is consistent with URDF, false otherwise.
+   */
+  bool validate_storage(
+    const std::vector<hardware_interface::HardwareInfo> & hardware_info,
+    const std::vector<std::string> & skipped_components) const;
 
   void release_command_interface(const std::string & key);
 

@@ -23,6 +23,15 @@ controller_manager:
     description: "If true, the controller manager will catch exceptions thrown during the different operations of controllers and hardware components. If false, exceptions will propagate up and will cause the controller manager to crash.",
   }
 
+  skipped_hardware_components: {
+    type: string_array,
+    default_value: [],
+    description: "Names of the hardware components from the robot description that the controller manager does not load at start. To use these hardware components later, load, configure and activate them manually or with a hardware spawner.",
+    validation: {
+      unique<>: null,
+    }
+  }
+
   hardware_components_initial_state:
     unconfigured: {
       type: string_array,

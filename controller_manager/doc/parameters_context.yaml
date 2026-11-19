@@ -14,6 +14,18 @@ hardware_components_initial_state: |
           inactive:
             - "base3"
 
+skipped_hardware_components: |
+    List of hardware components that the controller manager does not load at start.
+    The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
+    The skipped components are also not checked against the interfaces in ``robot_description``.
+    Use this parameter, e.g., for hardware that is not always connected.
+    To use a skipped component later, load, configure and activate it manually or with a hardware spawner.
+
+    .. code-block:: yaml
+
+        skipped_hardware_components:
+          - "gripper"
+
 diagnostics.threshold.controllers.periodicity: |
   The ``periodicity`` diagnostics will be published for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity. It is also published for the synchronous controllers that have a different update rate than the controller manager update rate.
 
