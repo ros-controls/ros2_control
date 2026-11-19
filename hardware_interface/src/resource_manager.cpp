@@ -1523,7 +1523,6 @@ bool ResourceManager::load_and_initialize_components(
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
-  // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
     hw.rw_rate =
@@ -1539,7 +1538,6 @@ bool ResourceManager::load_and_initialize_components(
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
-    // Check for identical names
     if (
       resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
       resource_storage_->hardware_info_map_.end())
@@ -2011,7 +2009,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return true;
   }
 
-  // Check if interface exists
   std::stringstream ss_not_existing;
   ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
   auto check_exist = [&](const std::vector<std::string> & list_to_check)
@@ -2037,7 +2034,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  // Check if interfaces are available
   std::stringstream ss_not_available;
   ss_not_available << "Not available: " << std::endl << "[" << std::endl;
   auto check_available = [&](const std::vector<std::string> & list_to_check)
