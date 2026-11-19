@@ -3307,6 +3307,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    activity_publish_pending_ = true;
+    try_publish_pending_activity();
   }
   execution_time_.read_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3384,6 +3386,7 @@ controller_interface::return_type ControllerManager::update(
   execution_time_.switch_perform_mode_time = 0.0;
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+  try_publish_pending_activity();
 
   auto ret = controller_interface::return_type::OK;
   ++update_loop_counter_;
@@ -3574,7 +3577,8 @@ controller_interface::return_type ControllerManager::update(
         controller_manager_msgs::srv::SwitchController::Request::STRICT);
     }
     // To publish the activity of the failing controllers and the fallback controllers
-    publish_activity();
+    activity_publish_pending_ = true;
+    try_publish_pending_activity();
   }
   resource_manager_->enforce_command_limits(period);
 
@@ -3631,6 +3635,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    activity_publish_pending_ = true;
+    try_publish_pending_activity();
   }
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
@@ -3676,6 +3682,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    activity_publish_pending_ = true;
+    try_publish_pending_activity();
   }
   execution_time_.write_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -4268,6 +4276,8 @@ void ControllerManager::publish_activity()
     // lock controllers
     std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
       rt_controllers_wrapper_.controllers_lock_);
+    // Cleared under the lock, as the snapshot below also covers any pending realtime request
+    activity_publish_pending_ = false;
     const std::vector<ControllerSpec> & controllers =
       rt_controllers_wrapper_.get_updated_list(guard);
     for (const auto & controller : controllers)
@@ -4291,6 +4301,25 @@ void ControllerManager::publish_activity()
     }
   }
   controller_manager_activity_publisher_->publish(status_msg);
+}
+
+void ControllerManager::try_publish_pending_activity()
+{
+  if (!activity_publish_pending_)
+  {
+    return;
+  }
+  // A non-realtime thread may hold this lock while waiting in switch_updated_list() for the
+  // realtime loop to move on, so waiting for it here can deadlock. Keep the request pending
+  // and retry in the next cycle instead.
+  if (!rt_controllers_wrapper_.controllers_lock_.try_lock())
+  {
+    return;
+  }
+  std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
+    rt_controllers_wrapper_.controllers_lock_, std::adopt_lock);
+  // The lock is recursive, so this takes it again without waiting
+  publish_activity();
 }
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(

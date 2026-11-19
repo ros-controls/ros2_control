@@ -542,9 +542,19 @@ private:
   /**
    * @brief Method to publish the state of the controller manager.
    * The state includes the list of controllers and the list of hardware interfaces along with
-   * their states.
+   * their states. It also clears any pending request from try_publish_pending_activity().
+   * \warning Blocks on the controllers lock, so it must not be called from the realtime loop;
+   * use try_publish_pending_activity() there instead.
    */
   void publish_activity();
+
+  /**
+   * @brief Non-blocking counterpart of publish_activity(), to be used from the realtime loop.
+   * Publishes the activity only if a publish is pending (see activity_publish_pending_) and the
+   * controllers lock can be taken without waiting. If the lock is busy, the request stays
+   * pending and is retried on the next call, which happens at the beginning of every update().
+   */
+  void try_publish_pending_activity();
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
@@ -686,6 +696,8 @@ private:
   std::mutex services_lock_;
   rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerActivity>::SharedPtr
     controller_manager_activity_publisher_;
+  /// Set by the realtime loop when the activity changed, cleared once it has been published
+  std::atomic_bool activity_publish_pending_{false};
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
