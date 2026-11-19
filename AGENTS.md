@@ -134,6 +134,7 @@ pre-commit run -a
 ## Pull requests
 
 - PRs are opened against `master`, from the user's fork.
+- PRs need to follow the provided PR template.
 - Before they write the body, hand over the facts from the branch so they can fill in the
   [PR template](https://github.com/ros-controls/.github/blob/master/.github/pull_request_template.md),
   including which TODOs you actually completed.
