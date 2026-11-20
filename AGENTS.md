@@ -39,19 +39,8 @@ The user is the author; you help.
 
 ## Contributing guidelines
 
-Rules agents most often break:
-
-- **Limited scope.** One PR, one thing. No unrelated fixes, renames or reformatting;
-  report other problems to the user.
-- **Small PRs.** Aim for under 500 lines changed (additions plus deletions, tests
-  included); avoid over 1000. If it grows past that, stop and propose a split.
-- **New code = new tests.**
-- **Target `master`**, never `humble`, `jazzy` or `kilted`; maintainers backport.
-- **Check first** that the issue is open, the approach is agreed there, and no PR
-  already addresses it.
-- **Fix the siblings.** Fixing position limits? Check velocity, effort, ... too, or
-  say why not.
-- **No force pushes** after review.
+Follow the ros-controls
+[CONTRIBUTING.md](https://github.com/ros-controls/.github/blob/master/CONTRIBUTING.md).
 
 ## Real-time code
 
