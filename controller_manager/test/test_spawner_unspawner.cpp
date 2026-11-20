@@ -863,7 +863,7 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
     std::system(
       "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
       "test -n \"$pid\" && "
-      "for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done; true"),
+      "{ for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done; true; }"),
     0)
     << "Failed to find the spawner process to interrupt";
 
