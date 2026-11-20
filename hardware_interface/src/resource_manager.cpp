@@ -337,11 +337,6 @@ public:
 
     if (result)
     {
-      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
-      // checking if each state already exists? Or we should somehow know that transition has
-      // happened and only then trigger this part of the code?
-      // On the other side this part of the code should never be executed in real-time critical
-      // thread, so it could be also OK as it is...
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list
@@ -357,8 +352,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' state interface already in available list."
@@ -370,7 +363,6 @@ public:
       // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // TODO(destogl): check if interface should be available on configure
         auto found_it = std::find(
           available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
@@ -383,8 +375,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' command interface already in available list."
@@ -417,8 +407,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' command interface not in available list. "
@@ -441,8 +429,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' state interface not in available list. "
@@ -516,10 +502,6 @@ public:
     if (result)
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      // TODO(destogl): change this - deimport all things if there is there are interfaces there
-      // deimport_non_movement_command_interfaces(hardware);
-      // deimport_state_interfaces(hardware);
-      // use remove_command_interfaces(hardware);
       if (!hardware.get_group_name().empty())
       {
         hw_group_state_[hardware.get_group_name()] = return_type::OK;
@@ -580,11 +562,6 @@ public:
       handle_exception_ ? void() : throw;
     }
 
-    if (result)
-    {
-      // TODO(destogl): make all command interfaces unavailable that should be present only
-      // when active (currently are all available) also at inactive
-    }
     return result;
   }
 
@@ -1546,7 +1523,6 @@ bool ResourceManager::load_and_initialize_components(
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
-  // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
     hw.rw_rate =
@@ -1562,7 +1538,6 @@ bool ResourceManager::load_and_initialize_components(
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
-    // Check for identical names
     if (
       resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
       resource_storage_->hardware_info_map_.end())
@@ -2034,7 +2009,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return true;
   }
 
-  // Check if interface exists
   std::stringstream ss_not_existing;
   ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
   auto check_exist = [&](const std::vector<std::string> & list_to_check)
@@ -2060,7 +2034,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  // Check if interfaces are available
   std::stringstream ss_not_available;
   ss_not_available << "Not available: " << std::endl << "[" << std::endl;
   auto check_available = [&](const std::vector<std::string> & list_to_check)
