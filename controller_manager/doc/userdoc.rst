@@ -295,6 +295,9 @@ There are two scripts to interact with controller manager from launch files:
     the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
     with any explicit ``--param-file`` arguments passed to the spawner command.
 
+    With ``--unload-on-kill``, the first SIGINT or SIGTERM starts the deactivate/unload sequence and any further
+    SIGINT/SIGTERM is ignored until it finishes, so pressing Ctrl-C repeatedly cannot leave controllers loaded.
+
 .. note::
   If a single parameter file is used for multiple controllers, the spawner will automatically forward the resolved path(s) to each controller. The following methods are recommended:
 
