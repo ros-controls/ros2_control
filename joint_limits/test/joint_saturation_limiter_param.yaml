@@ -55,3 +55,20 @@ joint_saturation_limiter_nodeclimit:
         max_velocity: 2.0
         has_acceleration_limits: true
         max_acceleration: 5.0
+
+joint_saturation_limiter_pos_vel:
+  ros__parameters:
+    joint_limits:
+      foo_joint:
+        has_position_limits: true
+        min_position: -1.0
+        max_position: 1.0
+        has_velocity_limits: true
+        max_velocity: 2.0
+
+      foo_joint2:
+        has_position_limits: true
+        min_position: -2.0
+        max_position: 2.0
+        has_velocity_limits: true
+        max_velocity: 5.0

@@ -50,6 +50,7 @@ public:
   bool on_configure(const JointLimitsStateDataType & current_joint_states) override
   {
     prev_command_ = current_joint_states;
+    impl_vel_check_ = false;
     return true;
   }
 
@@ -85,12 +86,17 @@ public:
   {
     std::lock_guard<std::mutex> lock(mutex_);
     prev_command_ = JointLimitsStateDataType();
+    impl_vel_check_ = false;
   }
 
 protected:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
   std::mutex mutex_;
+
+private:
+  bool impl_vel_check_;  // this flag is used to check if implicit vel exceeds max vel, then update
+                         // max acc/dec to effective acc and dec
 };
 
 template <typename JointLimitsStateDataType>
