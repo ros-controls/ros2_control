@@ -245,13 +245,14 @@ set_controller_state
 .. code-block:: console
 
     $ ros2 control set_controller_state -h
-    usage: ros2 control set_controller_state [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name {unconfigured,inactive,active}
+    usage: ros2 control set_controller_state [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name {unconfigured,inactive,active,configure,cleanup,activate,deactivate}
 
     Adjust the state of the controller
 
     positional arguments:
       controller_name       Name of the controller to be changed
-      {unconfigured,inactive,active}     State in which the controller should be changed to
+      {unconfigured,inactive,active,configure,cleanup,activate,deactivate}
+                            State in which the controller should be changed to, or lifecycle transition to trigger. Note: the 'finalized' state is reached via the 'unload_controller' command.
 
     options:
       -h, --help            show this help message and exit
@@ -263,6 +264,19 @@ set_controller_state
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
+
+For the states ``unconfigured``, ``inactive`` and ``active``, the command checks the current state
+of the controller and calls the service for the single transition that leads there; several
+transitions are not chained. The lifecycle transitions ``configure``, ``cleanup``,
+``activate`` and ``deactivate`` are named as in ``ros2 lifecycle set`` and are sent to the
+controller manager without checking the current state first. The controller manager decides
+whether the transition is valid, and the command returns an error if it rejects the transition.
+
+Example activating an inactive controller:
+
+.. code-block:: console
+
+    $ ros2 control set_controller_state test_controller_name activate
 
 set_hardware_component_state
 ----------------------------
