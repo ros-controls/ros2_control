@@ -263,6 +263,8 @@ protected:
 
   void manage_switch();
 
+  controller_interface::return_type report_late_switch_as_timeout(std::string & message);
+
   /// Deactivate chosen controllers from real-time controller list.
   /**
    * Deactivate controllers with names \p controllers_to_deactivate from list \p rt_controller_list.
@@ -752,7 +754,6 @@ private:
     int strictness;
     std::atomic_bool activate_asap{false};
     std::chrono::nanoseconds timeout;
-
     // conditional variable and mutex to wait for the switch to complete
     std::condition_variable cv;
     std::mutex mutex;
