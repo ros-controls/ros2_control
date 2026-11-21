@@ -1,0 +1,23 @@
+# The LoadUnloadController service loads, unloads, or reloads a single controller
+# in the controller_manager. It replaces the LoadController and UnloadController services.
+
+# Specify the "name" of the controller and the "action":
+#  * LOAD loads the controller. The controller is in the "unconfigured" state after the load.
+#  * UNLOAD unloads the controller. The controller must not be "active".
+#  * RELOAD unloads and loads the controller, and then restores its previous state
+#    ("unconfigured", "inactive" or "active"). The controller reads its parameter file again.
+#    RELOAD fails if other active controllers use the reference interfaces of the controller.
+# The value 0 is not a valid action.
+
+# The return value "ok" indicates if the action was successful.
+# The return value "message" provides some human-readable information.
+
+uint8 LOAD=1
+uint8 UNLOAD=2
+uint8 RELOAD=3
+
+string name
+uint8 action 1
+---
+bool ok
+string message

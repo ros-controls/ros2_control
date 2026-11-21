@@ -41,6 +41,7 @@
 #include "controller_manager_msgs/srv/list_hardware_components.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/load_unload_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
@@ -118,6 +119,12 @@ public:
     const std::string & controller_name);
 
   controller_interface::return_type unload_controller(const std::string & controller_name);
+
+  /// Unload and load a controller, and restore its previous state.
+  /**
+   * \see Documentation in controller_manager_msgs/LoadUnloadController.srv
+   */
+  controller_interface::return_type reload_controller(const std::string & controller_name);
 
   controller_interface::return_type cleanup_controller(const std::string & controller_name);
 
@@ -330,6 +337,10 @@ protected:
   void cleanup_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response);
+
+  void load_unload_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadUnloadController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadUnloadController::Response> response);
 
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
@@ -701,6 +712,8 @@ private:
     unload_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::CleanupController>::SharedPtr
     cleanup_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadUnloadController>::SharedPtr
+    load_unload_controller_service_;
 
   rclcpp::Service<controller_manager_msgs::srv::ListHardwareComponents>::SharedPtr
     list_hardware_components_service_;

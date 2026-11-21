@@ -162,6 +162,10 @@ controller_manager
   reconfigure an ``inactive`` controller, call ``cleanup_controller`` first and
   then ``configure_controller``.
 
+* The ``load_controller`` and ``unload_controller`` services are deprecated.
+  Use the ``load_unload_controller`` service with the action ``LOAD`` or ``UNLOAD``.
+  The deprecated services still work.
+
 * The controller manager's ros arguments are no longer forwarded to the controllers via NodeOptions. (`#3016 <https://github.com/ros-controls/ros2_control/pull/3016>`__)
   So, any remapping done at the controller manager level will not be visible to the controllers anymore.
   It is recommended to use the ``--controller-ros-args`` option of the spawner to pass ros arguments to controllers.
