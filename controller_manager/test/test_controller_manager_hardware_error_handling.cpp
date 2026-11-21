@@ -45,17 +45,17 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 
 class TestControllerManagerWithTestableCM;
 
-/// Test controller whose on_cleanup() blocks until released, so that unload_controller() keeps
-/// holding the controllers lock for as long as the test needs.
-class BlockingCleanupController : public test_controller::TestController
+/// Test controller whose on_cleanup() blocks until released and then fails. unload_controller()
+/// holds the controllers lock meanwhile, and on failure it returns without publishing the activity
+/// or switching the controllers list, so nothing else publishes on its behalf.
+class BlockingFailingCleanupController : public test_controller::TestController
 {
 public:
-  test_controller::CallbackReturn on_cleanup(
-    const rclcpp_lifecycle::State & previous_state) override
+  test_controller::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &) override
   {
     cleanup_entered.set_value();
     release_cleanup.wait();
-    return test_controller::TestController::on_cleanup(previous_state);
+    return test_controller::CallbackReturn::FAILURE;
   }
 
   std::promise<void> cleanup_entered;
@@ -204,9 +204,9 @@ public:
       {}, strictness);
   }
 
-  /// Waits for an ~/activity message that matches the current lifecycle state of every loaded
-  /// controller and hardware component (ignoring order), and fails if none arrives in time.
-  void expect_activity_matches_current_state()
+  /// Waits up to \p timeout for an ~/activity message that matches the current lifecycle state of
+  /// every loaded controller and hardware component (ignoring order).
+  testing::AssertionResult activity_matches_current_state(std::chrono::milliseconds timeout)
   {
     using controller_manager_msgs::msg::ControllerManagerActivity;
     using StateMap = std::map<std::string, uint8_t>;
@@ -223,14 +223,12 @@ public:
 
     // A late-joining subscriber may first be handed older samples, so keep the latest one
     StateMap received_controllers, received_hardware;
-    size_t received_count = 0;
     rclcpp::Node test_node("activity_test_node");
     auto subscription = test_node.create_subscription<ControllerManagerActivity>(
       std::string(cm_->get_fully_qualified_name()) + "/activity",
       rclcpp::QoS(1).reliable().transient_local(),
       [&](const ControllerManagerActivity::SharedPtr msg)
       {
-        ++received_count;
         received_controllers.clear();
         received_hardware.clear();
         for (const auto & ctrl : msg->controllers)
@@ -244,14 +242,81 @@ public:
       });
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(test_node.get_node_base_interface());
-    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    const auto until = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < until &&
            (received_controllers != expected_controllers || received_hardware != expected_hardware))
     {
       executor.spin_some(std::chrono::milliseconds(10));
     }
-    EXPECT_EQ(expected_controllers, received_controllers) << received_count << " msgs received";
-    EXPECT_EQ(expected_hardware, received_hardware) << received_count << " msgs received";
+    if (received_controllers == expected_controllers && received_hardware == expected_hardware)
+    {
+      return testing::AssertionSuccess() << "activity matches the current state";
+    }
+    return testing::AssertionFailure()
+           << "activity controllers " << testing::PrintToString(received_controllers)
+           << " expected " << testing::PrintToString(expected_controllers) << ", activity hardware "
+           << testing::PrintToString(received_hardware) << " expected "
+           << testing::PrintToString(expected_hardware);
+  }
+
+  void expect_activity_matches_current_state()
+  {
+    EXPECT_TRUE(activity_matches_current_state(std::chrono::seconds(2)));
+  }
+
+  /// Makes write() fail with \p write_failure_value while unload_controller() holds the
+  /// controllers lock, and checks that write() does not wait for the lock and that the activity
+  /// is published by the next update() once the lock is free.
+  void check_write_failure_with_busy_controllers_lock(double write_failure_value)
+  {
+    using namespace std::chrono_literals;
+
+    // Added and configured before the realtime loop runs, as both wait for an update() cycle
+    constexpr char BLOCKING_CONTROLLER_NAME[] = "blocking_failing_cleanup_controller";
+    auto blocking_controller = std::make_shared<BlockingFailingCleanupController>();
+    std::promise<void> release_cleanup;
+    blocking_controller->release_cleanup = release_cleanup.get_future().share();
+    auto cleanup_entered = blocking_controller->cleanup_entered.get_future();
+    cm_->add_controller(
+      blocking_controller, BLOCKING_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    blocking_controller->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::NONE, {}});
+    blocking_controller->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::NONE, {}});
+    ASSERT_EQ(
+      controller_interface::return_type::OK, cm_->configure_controller(BLOCKING_CONTROLLER_NAME));
+
+    SetupAndConfigureControllers(GetParam().strictness);
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      test_controller_actuator->get_lifecycle_state().id());
+
+    // The next write() of TEST_ACTUATOR_HARDWARE_NAME returns the requested failure
+    test_controller_actuator->set_first_command_interface_value_to = write_failure_value;
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+
+    // Unloading holds the controllers lock while the blocking controller is being cleaned up.
+    // Checks are non-fatal from here on, so the release below always lets the threads finish.
+    auto unload_result = std::async(
+      std::launch::async, [&]() { return cm_->unload_controller(BLOCKING_CONTROLLER_NAME); });
+    EXPECT_EQ(std::future_status::ready, cleanup_entered.wait_for(2s));
+
+    auto write_result = std::async(std::launch::async, [&]() { cm_->write(time_, PERIOD); });
+    EXPECT_EQ(std::future_status::ready, write_result.wait_for(2s))
+      << "write() blocked on the controllers lock held by unload";
+
+    release_cleanup.set_value();
+    write_result.wait();
+    EXPECT_EQ(controller_interface::return_type::ERROR, unload_result.get());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      test_controller_actuator->get_lifecycle_state().id());
+
+    // Nothing has published the deactivation yet; the pending request is retried in update()
+    EXPECT_FALSE(activity_matches_current_state(300ms));
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+    expect_activity_matches_current_state();
   }
 
   static constexpr char TEST_CONTROLLER_ACTUATOR_NAME[] = "test_controller_actuator";
@@ -1124,62 +1189,14 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_d
   }
 }
 
-TEST_P(
-  TestControllerManagerWithTestableCM, hardware_write_error_does_not_block_on_busy_controllers_lock)
+TEST_P(TestControllerManagerWithTestableCM, write_error_with_busy_controllers_lock)
 {
-  using namespace std::chrono_literals;
-  auto strictness = GetParam().strictness;
+  check_write_failure_with_busy_controllers_lock(test_constants::WRITE_FAIL_VALUE);
+}
 
-  // Added and configured before the realtime loop runs, as both wait for an update() cycle
-  constexpr char BLOCKING_CONTROLLER_NAME[] = "blocking_cleanup_controller";
-  auto blocking_controller = std::make_shared<BlockingCleanupController>();
-  std::promise<void> release_cleanup;
-  blocking_controller->release_cleanup = release_cleanup.get_future().share();
-  auto cleanup_entered = blocking_controller->cleanup_entered.get_future();
-  cm_->add_controller(
-    blocking_controller, BLOCKING_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  blocking_controller->set_command_interface_configuration(
-    {controller_interface::interface_configuration_type::NONE, {}});
-  blocking_controller->set_state_interface_configuration(
-    {controller_interface::interface_configuration_type::NONE, {}});
-  ASSERT_EQ(
-    controller_interface::return_type::OK, cm_->configure_controller(BLOCKING_CONTROLLER_NAME));
-
-  SetupAndConfigureControllers(strictness);
-
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    test_controller_actuator->get_lifecycle_state().id());
-
-  // The next write() of TEST_ACTUATOR_HARDWARE_NAME fails
-  test_controller_actuator->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
-
-  // Unloading holds the controllers lock while the blocking controller is being cleaned up
-  auto unload_result = std::async(
-    std::launch::async, [&]() { return cm_->unload_controller(BLOCKING_CONTROLLER_NAME); });
-  ASSERT_EQ(std::future_status::ready, cleanup_entered.wait_for(2s));
-
-  // The realtime write() must handle the hardware error without waiting for the lock
-  auto write_result = std::async(std::launch::async, [&]() { cm_->write(time_, PERIOD); });
-  const bool write_finished = write_result.wait_for(2s) == std::future_status::ready;
-  EXPECT_TRUE(write_finished) << "write() blocked on the controllers lock held by unload";
-
-  // Let the unload finish; it waits for the realtime loop to pick up the new controllers list
-  release_cleanup.set_value();
-  while (unload_result.wait_for(10ms) != std::future_status::ready)
-  {
-    cm_->update(time_, PERIOD);
-  }
-  write_result.wait();
-  EXPECT_EQ(controller_interface::return_type::OK, unload_result.get());
-
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    test_controller_actuator->get_lifecycle_state().id());
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
-  expect_activity_matches_current_state();
+TEST_P(TestControllerManagerWithTestableCM, write_deactivate_with_busy_controllers_lock)
+{
+  check_write_failure_with_busy_controllers_lock(test_constants::WRITE_DEACTIVATE_VALUE);
 }
 
 INSTANTIATE_TEST_SUITE_P(
