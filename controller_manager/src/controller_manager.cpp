@@ -238,7 +238,7 @@ std::vector<std::string> get_command_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          command_interface_names.push_back(interface_name);
+          ros2_control::add_item(command_interface_names, interface_name);
         }
       }
     }
@@ -290,7 +290,7 @@ std::vector<std::string> get_state_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          state_interface_names.push_back(interface_name);
+          ros2_control::add_item(state_interface_names, interface_name);
         }
       }
     }
