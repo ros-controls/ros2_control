@@ -14,6 +14,7 @@ controller_interface
 * Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
   ``REGEX`` entries may mix plain interface names with patterns, and an interface matched by several entries is claimed only once. (`#3810 <https://github.com/ros-controls/ros2_control/pull/3810>`__)
 * Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
+* The controller parameters ``update_rate``, ``is_async`` and ``thread_priority`` are now declared via ``generate_parameter_library``, so they come with a description and are documented in the :ref:`controller_manager user doc <doc/ros2_control/controller_manager/doc/userdoc:controller parameters>`. (`#3782 <https://github.com/ros-controls/ros2_control/pull/3782>`__)
 
 controller_manager
 ******************

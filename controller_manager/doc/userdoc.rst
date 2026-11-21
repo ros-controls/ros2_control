@@ -55,6 +55,16 @@ Parameters
 .. generate_parameter_library_default::
   ../src/controller_manager_parameters.yaml
 
+Controller Parameters
+^^^^^^^^^^^^^^^^^^^^^
+
+The following parameters are declared by ``controller_interface`` on the node of every controller,
+independent of whether it runs synchronously or :ref:`asynchronously <running_controllers_asynchronously>`.
+They are read during the configure transition.
+
+.. generate_parameter_library_details::
+  ../../controller_interface/src/controller_interface_parameters.yaml
+
 
 Determinism
 -----------
