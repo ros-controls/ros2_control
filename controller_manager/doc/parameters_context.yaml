@@ -14,6 +14,11 @@ hardware_components_initial_state: |
           inactive:
             - "base3"
 
+diagnostics.controller_manager.periodicity.window_size: |
+  The ``periodicity.average``, ``periodicity.standard_deviation``, ``periodicity.min`` and ``periodicity.max`` values of the ``Controller Manager Activity`` diagnostic accumulate from startup and are never reset, so a single slow cycle (for example while the system is still bringing up other processes) keeps the standard deviation above ``diagnostics.threshold.controller_manager.periodicity.standard_deviation`` for the rest of the run, even when the loop has been steady since.
+  With ``window_size`` greater than 0, the diagnostic additionally reports ``periodicity.recent.*`` over the last ``window_size`` cycles and compares those against the thresholds instead. The since-startup values are still reported unchanged, so the worst case remains visible.
+  For example, ``window_size: 2500`` at ``update_rate: 500`` judges the last 5 seconds.
+
 diagnostics.threshold.controllers.periodicity: |
   The ``periodicity`` diagnostics will be published for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity. It is also published for the synchronous controllers that have a different update rate than the controller manager update rate.
 
