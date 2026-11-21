@@ -3303,8 +3303,6 @@ INSTANTIATE_TEST_SUITE_P(
 class TestControllersWithRegexInterfaces : public TestControllerManagerSrvs
 {
 protected:
-  /// Loads and configures a test controller with the given REGEX entries, then returns the
-  /// controller as reported by the list_controllers service.
   controller_manager_msgs::msg::ControllerState configure_regex_controller(
     const std::vector<std::string> & cmd_entries, const std::vector<std::string> & state_entries)
   {
@@ -3346,8 +3344,6 @@ protected:
 
 TEST_F(TestControllersWithRegexInterfaces, plain_names_and_patterns_can_be_mixed)
 {
-  // Plain interface names are valid regular expressions matching only themselves, so they can be
-  // listed alongside patterns. Names that do not exist are skipped, like INDIVIDUAL_BEST_EFFORT.
   const auto ctrl = configure_regex_controller(
     {"joint1/position", "joint2/(velocity|max_acceleration)", "joint123/does_not_exist"},
     {"joint1/position", "joint[23]/acceleration", "sensor1/velocity", "joint456/does_not_exist"});
@@ -3369,7 +3365,6 @@ TEST_F(TestControllersWithRegexInterfaces, plain_names_and_patterns_can_be_mixed
 
 TEST_F(TestControllersWithRegexInterfaces, interfaces_matched_by_several_entries_are_not_duplicated)
 {
-  // "joint1/position" is matched by the plain name and by both patterns. It must be resolved once.
   const auto ctrl = configure_regex_controller(
     {"joint1/position", "joint1/.*", "joint[12]/(position|velocity)"},
     {"joint1/position", "joint1/(position|velocity)", "joint1/.*"});

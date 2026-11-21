@@ -238,8 +238,6 @@ std::vector<std::string> get_command_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          // An interface can be matched by several entries (e.g. a plain name and a pattern), but
-          // it must be listed only once, as duplicated interfaces fail the controller's configure
           ros2_control::add_item(command_interface_names, interface_name);
         }
       }
@@ -292,8 +290,6 @@ std::vector<std::string> get_state_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          // An interface can be matched by several entries (e.g. a plain name and a pattern), but
-          // it must be listed only once, as duplicated interfaces fail the controller's configure
           ros2_control::add_item(state_interface_names, interface_name);
         }
       }
