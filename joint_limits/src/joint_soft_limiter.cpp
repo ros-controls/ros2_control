@@ -191,11 +191,12 @@ bool JointSoftLimiter::on_enforce(
       pos_low = std::clamp(prev_command_position + soft_min_vel * dt_seconds, pos_low, pos_high);
       pos_high = std::clamp(prev_command_position + soft_max_vel * dt_seconds, pos_low, pos_high);
     }
-    // If the soft interval and the hard (velocity-reachable) interval don't overlap, e.g., when
-    // the previous command is beyond a soft limit, the hard limits take precedence: use the
-    // bound of the hard interval closest to the soft interval, so the joint moves back towards
-    // the soft limit without exceeding the velocity limit. This also keeps lo <= hi for
-    // std::clamp, which asserts otherwise with GCC 15 libstdc++.
+    // If the soft interval and the saturation interval (hard position, velocity and acceleration
+    // limits) don't overlap, e.g., when the previous command is beyond a soft limit, the hard
+    // limits take precedence: use the bound of the saturation interval closest to the soft
+    // interval, so the joint moves back towards the soft limit without exceeding the velocity
+    // limit. This also keeps lo <= hi for std::clamp, which asserts otherwise with GCC 15
+    // libstdc++.
     const double soft_pos_high = pos_high;
     pos_low = std::max(pos_low, position_limits.lower_limit);
     pos_high = std::min(pos_high, position_limits.upper_limit);
