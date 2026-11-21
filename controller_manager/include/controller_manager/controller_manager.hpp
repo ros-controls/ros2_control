@@ -263,15 +263,6 @@ protected:
 
   void manage_switch();
 
-  /// Report a switch that only completed after its deadline as a timeout.
-  /**
-   * The response of a switch must not claim success when the caller's finite timeout expired while
-   * it was running. A controller callback that is already executing cannot be interrupted, so the
-   * switch can finish late; this keeps that outcome from being reported as OK.
-   *
-   * \param[out] message filled with the timeout message when the deadline had passed.
-   * \return ERROR if the deadline had passed, otherwise the unchanged OK.
-   */
   controller_interface::return_type report_late_switch_as_timeout(std::string & message);
 
   /// Deactivate chosen controllers from real-time controller list.
