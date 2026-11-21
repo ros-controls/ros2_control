@@ -68,6 +68,7 @@ def handle_set_component_state_service_call(
         node.get_logger().info(
             f"{bcolors.OKGREEN}{action} component '{component}'. Hardware now in state: {response.state}.{bcolors.ENDC}"
         )
+        return True
     elif response.ok and not response.state == target_state:
         node.get_logger().warning(
             f"{bcolors.WARNING}Could not {action} component '{component}'. Service call returned ok=True, but state: {response.state} is not equal to target state '{target_state}'.{bcolors.ENDC}"
@@ -76,13 +77,14 @@ def handle_set_component_state_service_call(
         node.get_logger().warning(
             f"{bcolors.WARNING}Could not {action} component '{component}'. Service call failed. Wrong component name?{bcolors.ENDC}"
         )
+    return False
 
 
 def activate_component(node, controller_manager_name, component_to_activate):
     active_state = State()
     active_state.id = State.PRIMARY_STATE_ACTIVE
     active_state.label = "active"
-    handle_set_component_state_service_call(
+    return handle_set_component_state_service_call(
         node, controller_manager_name, component_to_activate, active_state, "activated"
     )
 
@@ -91,7 +93,7 @@ def configure_component(node, controller_manager_name, component_to_configure):
     inactive_state = State()
     inactive_state.id = State.PRIMARY_STATE_INACTIVE
     inactive_state.label = "inactive"
-    handle_set_component_state_service_call(
+    return handle_set_component_state_service_call(
         node,
         controller_manager_name,
         component_to_configure,
@@ -154,6 +156,7 @@ def main(args=None):
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
+    success = True
     try:
         for hardware_component in hardware_components:
             if not is_hardware_component_loaded(
@@ -165,16 +168,20 @@ def main(args=None):
                 node.get_logger().warning(
                     f"{bcolors.WARNING}Hardware Component is not loaded - state can not be changed.{bcolors.ENDC}"
                 )
+                success = False
             elif activate:
-                activate_component(node, controller_manager_name, hardware_component)
+                if not activate_component(node, controller_manager_name, hardware_component):
+                    success = False
             elif configure:
-                configure_component(node, controller_manager_name, hardware_component)
+                if not configure_component(node, controller_manager_name, hardware_component):
+                    success = False
             else:
                 node.get_logger().error(
                     f'{bcolors.FAIL}You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag{bcolors.ENDC}'
                 )
                 parser.print_help()
                 return 0
+        return 0 if success else 1
     except KeyboardInterrupt:
         pass
     except ServiceNotFoundError as err:
