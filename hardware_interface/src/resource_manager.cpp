@@ -340,12 +340,10 @@ public:
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list
-        auto found_it = std::find(
-          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
-
-        if (found_it == available_state_interfaces_.end())
+        if (
+          make_available(
+            available_state_interfaces_, available_state_interfaces_lookup_, interface))
         {
-          available_state_interfaces_.emplace_back(interface);
           RCLCPP_DEBUG(
             get_logger(), "(hardware '%s'): '%s' state interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
@@ -363,12 +361,10 @@ public:
       // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        auto found_it = std::find(
-          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-        if (found_it == available_command_interfaces_.end())
+        if (
+          make_available(
+            available_command_interfaces_, available_command_interfaces_lookup_, interface))
         {
-          available_command_interfaces_.emplace_back(interface);
           RCLCPP_DEBUG(
             get_logger(), "(hardware '%s'): '%s' command interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
@@ -393,14 +389,12 @@ public:
   void remove_all_hardware_interfaces_from_available_list(const std::string & hardware_name)
   {
     // remove all command interfaces from available list
+    bool command_flags_changed = false;
     for (const auto & interface : hardware_info_map_[hardware_name].command_interfaces)
     {
-      auto found_it = std::find(
-        available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-      if (found_it != available_command_interfaces_.end())
+      if (make_unavailable(available_command_interfaces_lookup_, interface))
       {
-        available_command_interfaces_.erase(found_it);
+        command_flags_changed = true;
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' command interface removed from available list",
           hardware_name.c_str(), interface.c_str());
@@ -414,15 +408,19 @@ public:
           hardware_name.c_str(), interface.c_str());
       }
     }
+    // Skip the O(N) pass over the list when no flag changed (e.g. repeated cleanup calls)
+    if (command_flags_changed)
+    {
+      remove_unavailable_from_list(
+        available_command_interfaces_, available_command_interfaces_lookup_);
+    }
     // remove all state interfaces from available list
+    bool state_flags_changed = false;
     for (const auto & interface : hardware_info_map_[hardware_name].state_interfaces)
     {
-      auto found_it = std::find(
-        available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
-
-      if (found_it != available_state_interfaces_.end())
+      if (make_unavailable(available_state_interfaces_lookup_, interface))
       {
-        available_state_interfaces_.erase(found_it);
+        state_flags_changed = true;
         RCLCPP_DEBUG(
           get_logger(), "(hardware '%s'): '%s' state interface removed from available list",
           hardware_name.c_str(), interface.c_str());
@@ -435,6 +433,10 @@ public:
           "This should not happen (hint: multiple cleanup calls).",
           hardware_name.c_str(), interface.c_str());
       }
+    }
+    if (state_flags_changed)
+    {
+      remove_unavailable_from_list(available_state_interfaces_, available_state_interfaces_lookup_);
     }
   }
 
@@ -980,6 +982,7 @@ public:
     }
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
+    reserve_lookup_entries(available_state_interfaces_lookup_, interface_names);
 
     return interface_names;
   }
@@ -996,6 +999,7 @@ public:
     {
       state_interface_map_[interface]->unregisterIntrospection();
       state_interface_map_.erase(interface);
+      erase_lookup_entry_if_unavailable(available_state_interfaces_lookup_, interface);
     }
   }
 
@@ -1023,6 +1027,7 @@ public:
     }
     available_command_interfaces_.reserve(
       available_command_interfaces_.capacity() + interface_names.size());
+    reserve_lookup_entries(available_command_interfaces_lookup_, interface_names);
 
     return interface_names;
   }
@@ -1042,6 +1047,7 @@ public:
     }
     available_command_interfaces_.reserve(
       available_command_interfaces_.capacity() + interface_names.size());
+    reserve_lookup_entries(available_command_interfaces_lookup_, interface_names);
 
     return interface_names;
   }
@@ -1166,6 +1172,7 @@ public:
       command_interface_map_[interface]->unregisterIntrospection();
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
+      erase_lookup_entry_if_unavailable(available_command_interfaces_lookup_, interface);
     }
   }
 
@@ -1325,6 +1332,8 @@ public:
 
     available_state_interfaces_.clear();
     available_command_interfaces_.clear();
+    available_state_interfaces_lookup_.clear();
+    available_command_interfaces_lookup_.clear();
 
     claimed_command_interface_map_.clear();
   }
@@ -1395,6 +1404,87 @@ public:
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
   std::vector<std::string> available_command_interfaces_;
+  /// Membership index of the vectors above (true if the interface is in the vector).
+  /// Entries are created on import, so the real-time loop only flips flags and never allocates.
+  std::unordered_map<std::string, bool> available_state_interfaces_lookup_;
+  std::unordered_map<std::string, bool> available_command_interfaces_lookup_;
+
+  /// Adds the interface to the available list unless it is already in it.
+  /**
+   * \returns true if the interface was added, false if it was already available.
+   */
+  static bool make_available(
+    std::vector<std::string> & available_list, std::unordered_map<std::string, bool> & lookup,
+    const std::string & interface)
+  {
+    // operator[] allocates only for a name without an entry. Every import path creates the entry
+    // (reserve_lookup_entries), so calls from the real-time loop only find an existing one.
+    bool & is_available = lookup[interface];
+    if (is_available)
+    {
+      return false;
+    }
+    // Insert first: copying the name can throw even with reserved capacity, and the flag must not
+    // claim an interface that is missing from the list
+    available_list.push_back(interface);
+    is_available = true;
+    return true;
+  }
+
+  /// Marks the interface as unavailable.
+  /**
+   * Only flips the flag: call remove_unavailable_from_list() after the last call, so removing k
+   * interfaces costs one O(N) pass over the list instead of k.
+   * \returns true if the interface was available, false otherwise.
+   */
+  static bool make_unavailable(
+    std::unordered_map<std::string, bool> & lookup, const std::string & interface)
+  {
+    auto it = lookup.find(interface);
+    if (it == lookup.end() || !it->second)
+    {
+      return false;
+    }
+    it->second = false;
+    return true;
+  }
+
+  /// Removes the interfaces marked unavailable from the list, keeping the order of the rest.
+  static void remove_unavailable_from_list(
+    std::vector<std::string> & available_list, const std::unordered_map<std::string, bool> & lookup)
+  {
+    available_list.erase(
+      std::remove_if(
+        available_list.begin(), available_list.end(),
+        [&lookup](const std::string & interface) { return !is_available(lookup, interface); }),
+      available_list.end());
+  }
+
+  static void reserve_lookup_entries(
+    std::unordered_map<std::string, bool> & lookup, const std::vector<std::string> & interfaces)
+  {
+    for (const auto & interface : interfaces)
+    {
+      lookup.try_emplace(interface, false);
+    }
+  }
+
+  static void erase_lookup_entry_if_unavailable(
+    std::unordered_map<std::string, bool> & lookup, const std::string & interface)
+  {
+    auto it = lookup.find(interface);
+    if (it != lookup.end() && !it->second)
+    {
+      lookup.erase(it);
+    }
+  }
+
+  static bool is_available(
+    const std::unordered_map<std::string, bool> & lookup, const std::string & interface)
+  {
+    auto it = lookup.find(interface);
+    return it != lookup.end() && it->second;
+  }
 
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
@@ -1496,7 +1586,10 @@ ResourceManager::ResourceManager(
 
 bool ResourceManager::shutdown_components()
 {
-  std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
+  // Same order as elsewhere (resources_lock_ before resource_interfaces_lock_):
+  // set_component_state() takes resources_lock_, and read()/write() take resource_interfaces_lock_
+  // while holding resources_lock_
+  std::scoped_lock guard(resources_lock_, resource_interfaces_lock_);
   bool shutdown_status = true;
   for (auto const & hw_info : resource_storage_->hardware_info_map_)
   {
@@ -1652,7 +1745,7 @@ std::vector<std::string> ResourceManager::available_state_interfaces() const
 bool ResourceManager::state_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return ros2_control::has_item(resource_storage_->available_state_interfaces_, name);
+  return ResourceStorage::is_available(resource_storage_->available_state_interfaces_lookup_, name);
 }
 
 std::string ResourceManager::get_state_interface_data_type(const std::string & name) const
@@ -1690,31 +1783,42 @@ std::vector<std::string> ResourceManager::get_controller_exported_state_interfac
 void ResourceManager::make_controller_exported_state_interfaces_available(
   const std::string & controller_name)
 {
-  auto interface_names =
-    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  ros2_control::add_items(resource_storage_->available_state_interfaces_, interface_names);
+  const auto & interface_names =
+    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  for (const auto & interface : interface_names)
+  {
+    std::ignore = ResourceStorage::make_available(
+      resource_storage_->available_state_interfaces_,
+      resource_storage_->available_state_interfaces_lookup_, interface);
+  }
 }
 
 // CM API: Called in "update"-thread
 void ResourceManager::make_controller_exported_state_interfaces_unavailable(
   const std::string & controller_name)
 {
-  auto interface_names =
-    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
-
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  const auto & interface_names =
+    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  bool flags_changed = false;
   for (const auto & interface : interface_names)
   {
-    auto found_it = std::find(
-      resource_storage_->available_state_interfaces_.begin(),
-      resource_storage_->available_state_interfaces_.end(), interface);
-    if (found_it != resource_storage_->available_state_interfaces_.end())
+    if (
+      ResourceStorage::make_unavailable(
+        resource_storage_->available_state_interfaces_lookup_, interface))
     {
-      resource_storage_->available_state_interfaces_.erase(found_it);
+      flags_changed = true;
       RCUTILS_LOG_DEBUG_NAMED(
         "resource_manager", "'%s' state interface removed from available list", interface.c_str());
     }
+  }
+  // A controller without exported interfaces must not pay for a pass over all N interfaces
+  if (flags_changed)
+  {
+    ResourceStorage::remove_unavailable_from_list(
+      resource_storage_->available_state_interfaces_,
+      resource_storage_->available_state_interfaces_lookup_);
   }
 }
 
@@ -1722,6 +1826,7 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
 void ResourceManager::remove_controller_exported_state_interfaces(
   const std::string & controller_name)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   if (
     resource_storage_->controllers_exported_state_interfaces_map_.find(controller_name) ==
     resource_storage_->controllers_exported_state_interfaces_map_.end())
@@ -1732,7 +1837,6 @@ void ResourceManager::remove_controller_exported_state_interfaces(
     resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
   resource_storage_->controllers_exported_state_interfaces_map_.erase(controller_name);
 
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   resource_storage_->remove_state_interfaces(interface_names);
 }
 
@@ -1757,37 +1861,48 @@ std::vector<std::string> ResourceManager::get_controller_reference_interface_nam
 void ResourceManager::make_controller_reference_interfaces_available(
   const std::string & controller_name)
 {
-  auto interface_names =
-    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  ros2_control::add_items(resource_storage_->available_command_interfaces_, interface_names);
+  const auto & interface_names =
+    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+  for (const auto & interface : interface_names)
+  {
+    std::ignore = ResourceStorage::make_available(
+      resource_storage_->available_command_interfaces_,
+      resource_storage_->available_command_interfaces_lookup_, interface);
+  }
 }
 
 // CM API: Called in "update"-thread
 void ResourceManager::make_controller_reference_interfaces_unavailable(
   const std::string & controller_name)
 {
-  auto interface_names =
-    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
-
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  const auto & interface_names =
+    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+  bool flags_changed = false;
   for (const auto & interface : interface_names)
   {
-    auto found_it = std::find(
-      resource_storage_->available_command_interfaces_.begin(),
-      resource_storage_->available_command_interfaces_.end(), interface);
-    if (found_it != resource_storage_->available_command_interfaces_.end())
+    if (
+      ResourceStorage::make_unavailable(
+        resource_storage_->available_command_interfaces_lookup_, interface))
     {
-      resource_storage_->available_command_interfaces_.erase(found_it);
+      flags_changed = true;
       RCLCPP_DEBUG(
         get_logger(), "'%s' command interface removed from available list", interface.c_str());
     }
+  }
+  if (flags_changed)
+  {
+    ResourceStorage::remove_unavailable_from_list(
+      resource_storage_->available_command_interfaces_,
+      resource_storage_->available_command_interfaces_lookup_);
   }
 }
 
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::remove_controller_reference_interfaces(const std::string & controller_name)
 {
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   if (
     resource_storage_->controllers_reference_interfaces_map_.find(controller_name) ==
     resource_storage_->controllers_reference_interfaces_map_.end())
@@ -1798,7 +1913,6 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
 
-  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
 }
 
@@ -1918,7 +2032,8 @@ std::vector<std::string> ResourceManager::available_command_interfaces() const
 bool ResourceManager::command_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return ros2_control::has_item(resource_storage_->available_command_interfaces_, name);
+  return ResourceStorage::is_available(
+    resource_storage_->available_command_interfaces_lookup_, name);
 }
 
 std::string ResourceManager::get_command_interface_data_type(const std::string & name) const
@@ -2469,7 +2584,11 @@ HardwareReadWriteStatus ResourceManager::read(
         component.error();
         read_write_status.result = return_type::ERROR;
         read_write_status.failed_hardware_names.push_back(component_name);
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        {
+          // The available lists are also read and changed from other threads under this lock
+          std::lock_guard<std::recursive_mutex> interfaces_guard(resource_interfaces_lock_);
+          resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        }
       }
     }
   };
@@ -2568,7 +2687,11 @@ HardwareReadWriteStatus ResourceManager::write(
         component.error();
         read_write_status.result = ret_val;
         read_write_status.failed_hardware_names.push_back(component_name);
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        {
+          // The available lists are also read and changed from other threads under this lock
+          std::lock_guard<std::recursive_mutex> interfaces_guard(resource_interfaces_lock_);
+          resource_storage_->remove_all_hardware_interfaces_from_available_list(component_name);
+        }
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
