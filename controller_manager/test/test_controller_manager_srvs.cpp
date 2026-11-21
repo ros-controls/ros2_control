@@ -3366,3 +3366,24 @@ TEST_F(TestControllersWithRegexInterfaces, plain_names_and_patterns_can_be_mixed
     active_ctrl.claimed_interfaces,
     UnorderedElementsAre("joint1/position", "joint2/velocity", "joint2/max_acceleration"));
 }
+
+TEST_F(TestControllersWithRegexInterfaces, interfaces_matched_by_several_entries_are_not_duplicated)
+{
+  // "joint1/position" is matched by the plain name and by both patterns. It must be resolved once.
+  const auto ctrl = configure_regex_controller(
+    {"joint1/position", "joint1/.*", "joint[12]/(position|velocity)"},
+    {"joint1/position", "joint1/(position|velocity)", "joint1/.*"});
+  EXPECT_THAT(
+    ctrl.required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/max_velocity", "joint2/velocity"));
+  EXPECT_THAT(
+    ctrl.required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint1/some_unlisted_interface"));
+
+  ASSERT_EQ(controller_interface::return_type::OK, activate());
+  const auto active_ctrl = list_single_controller();
+  EXPECT_EQ("active", active_ctrl.state);
+  EXPECT_THAT(
+    active_ctrl.claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/max_velocity", "joint2/velocity"));
+}

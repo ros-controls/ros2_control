@@ -236,7 +236,13 @@ std::vector<std::string> get_command_interfaces_names(
       std::regex regex_pattern(pattern);
       for (const auto & interface_name : available_interfaces)
       {
-        if (std::regex_match(interface_name, regex_pattern))
+        // An interface can be matched by several entries (e.g. a plain name and a pattern), but
+        // it must be listed only once, as duplicated interfaces fail the controller's configure
+        if (
+          std::regex_match(interface_name, regex_pattern) &&
+          std::find(
+            command_interface_names.begin(), command_interface_names.end(), interface_name) ==
+            command_interface_names.end())
         {
           command_interface_names.push_back(interface_name);
         }
@@ -288,7 +294,12 @@ std::vector<std::string> get_state_interfaces_names(
       std::regex regex_pattern(pattern);
       for (const auto & interface_name : available_interfaces)
       {
-        if (std::regex_match(interface_name, regex_pattern))
+        // An interface can be matched by several entries (e.g. a plain name and a pattern), but
+        // it must be listed only once, as duplicated interfaces fail the controller's configure
+        if (
+          std::regex_match(interface_name, regex_pattern) &&
+          std::find(state_interface_names.begin(), state_interface_names.end(), interface_name) ==
+            state_interface_names.end())
         {
           state_interface_names.push_back(interface_name);
         }
