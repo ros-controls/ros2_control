@@ -556,6 +556,13 @@ private:
    */
   void try_publish_pending_activity();
 
+  /**
+   * @brief Marks an activity publish as pending and calls try_publish_pending_activity().
+   * Used wherever the activity changes from the realtime loop, including the hardware component
+   * state switch callback, which the resource manager also invokes from write().
+   */
+  void request_activity_publish();
+
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   void hardware_components_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);

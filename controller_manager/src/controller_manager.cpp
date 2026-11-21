@@ -685,7 +685,7 @@ void ControllerManager::init_controller_manager()
   if (resource_manager_)
   {
     resource_manager_->set_on_component_state_switch_callback(
-      std::bind(&ControllerManager::publish_activity, this));
+      std::bind(&ControllerManager::request_activity_publish, this));
   }
 
   // Setup diagnostics
@@ -848,8 +848,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
   }
 
+  // Also invoked from the realtime write() when a component returns DEACTIVATE
   resource_manager_->set_on_component_state_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
+    std::bind(&ControllerManager::request_activity_publish, this));
 
   if (robot_description.empty())
   {
@@ -3307,8 +3308,7 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    activity_publish_pending_ = true;
-    try_publish_pending_activity();
+    request_activity_publish();
   }
   execution_time_.read_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3577,8 +3577,7 @@ controller_interface::return_type ControllerManager::update(
         controller_manager_msgs::srv::SwitchController::Request::STRICT);
     }
     // To publish the activity of the failing controllers and the fallback controllers
-    activity_publish_pending_ = true;
-    try_publish_pending_activity();
+    request_activity_publish();
   }
   resource_manager_->enforce_command_limits(period);
 
@@ -3635,13 +3634,14 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    activity_publish_pending_ = true;
-    try_publish_pending_activity();
+    request_activity_publish();
   }
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
     rt_buffer_.deactivate_controllers_list.clear();
-    auto loaded_controllers = get_loaded_controllers();
+    // get_loaded_controllers() would wait for the controllers lock, use the realtime list instead
+    std::vector<ControllerSpec> & rt_controller_list =
+      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     // Only stop controllers with active command interfaces to the failed_hardware_names
     for (const auto & hardware_name : failed_hardware_names)
     {
@@ -3649,10 +3649,10 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       for (const auto & controller : controllers)
       {
         auto controller_spec = std::find_if(
-          loaded_controllers.begin(), loaded_controllers.end(),
+          rt_controller_list.begin(), rt_controller_list.end(),
           [&](const controller_manager::ControllerSpec & spec)
           { return spec.c->get_name() == controller; });
-        if (controller_spec == loaded_controllers.end())
+        if (controller_spec == rt_controller_list.end())
         {
           RCLCPP_WARN(
             get_logger(),
@@ -3676,14 +3676,11 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       "Deactivating controllers [%s] as their command interfaces are tied to DEACTIVATEing "
       "hardware components",
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
-    std::vector<ControllerSpec> & rt_controller_list =
-      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
-    activity_publish_pending_ = true;
-    try_publish_pending_activity();
+    request_activity_publish();
   }
   execution_time_.write_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -4301,6 +4298,12 @@ void ControllerManager::publish_activity()
     }
   }
   controller_manager_activity_publisher_->publish(status_msg);
+}
+
+void ControllerManager::request_activity_publish()
+{
+  activity_publish_pending_ = true;
+  try_publish_pending_activity();
 }
 
 void ControllerManager::try_publish_pending_activity()
