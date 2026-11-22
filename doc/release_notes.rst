@@ -42,6 +42,10 @@ hardware_interface
 * ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
 * Handles now also support ``uint64`` and ``int64`` data types. They are not castable to double and are therefore not included in the introspection. (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__)
 
+joint_limits
+************
+* When a position command is beyond a soft limit, the ``JointSoftLimiter`` now moves it back towards the soft limit at no more than ``max_velocity`` instead of jumping straight to the soft limit in one update, so the hard velocity limit is always respected. (`#3798 <https://github.com/ros-controls/ros2_control/pull/3798>`__)
+
 ros2controlcli
 **************
 * Added CLI support for invoking controller cleanup. (`#2414 <https://github.com/ros-controls/ros2_control/pull/2414>`__)
