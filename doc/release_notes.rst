@@ -46,6 +46,10 @@ hardware_interface
 * Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 * ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
 
+joint_limits
+************
+* When a position command is beyond a soft limit, the ``JointSoftLimiter`` now moves it back towards the soft limit at no more than ``max_velocity`` instead of jumping straight to the soft limit in one update, so the hard velocity limit is always respected. (`#3798 <https://github.com/ros-controls/ros2_control/pull/3798>`__)
+
 ros2controlcli
 **************
 * The CLI verbs ``list_hardware_components`` and ``list_hardware_interfaces`` will now show the data type used by the internal Command and State interfaces (`#2204 <https://github.com/ros-controls/ros2_control/pull/2204>`_).
