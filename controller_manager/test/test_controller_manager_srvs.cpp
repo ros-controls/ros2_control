@@ -31,6 +31,7 @@
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/load_unload_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
@@ -667,6 +668,107 @@ TEST_F(TestControllerManagerSrvs, load_unload_controller_srv)
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok) << result->message;
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+}
+
+TEST_F(TestControllerManagerSrvs, load_unload_controller_srv_reload_chained_controller)
+{
+  using Request = controller_manager_msgs::srv::LoadUnloadController::Request;
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::LoadUnloadController>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::LoadUnloadController>(
+      "test_controller_manager/load_unload_controller");
+
+  // chainable controller that exports reference interfaces
+  auto test_chained_controller = std::make_shared<TestChainableController>();
+  test_chained_controller->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}});
+  test_chained_controller->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {"joint1/position", "joint1/velocity"}});
+  test_chained_controller->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+  // controller that uses the reference interfaces of the chainable controller
+  auto test_controller = std::make_shared<TestController>();
+  test_controller->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
+      std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity"}});
+  test_controller->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {"joint1/position", "joint1/velocity"}});
+
+  cm_->add_controller(
+    test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->set_parameter(
+    rclcpp::Parameter(
+      std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + ".type",
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME));
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME));
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+  for (const auto & name :
+       {std::string(test_chainable_controller::TEST_CONTROLLER_NAME),
+        std::string(test_controller::TEST_CONTROLLER_NAME)})
+  {
+    ASSERT_EQ(
+      controller_interface::return_type::OK,
+      cm_->switch_controller(
+        {name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+        rclcpp::Duration(0, 0)));
+  }
+  ASSERT_TRUE(test_chained_controller->is_in_chained_mode());
+
+  auto request = std::make_shared<Request>();
+  request->name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  request->action = Request::RELOAD;
+
+  // reload is refused while an active controller uses the reference interfaces
+  auto result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok);
+  ASSERT_EQ(2u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_chained_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+  EXPECT_TRUE(test_chained_controller->is_in_chained_mode());
+  const auto loaded = cm_->get_loaded_controllers();
+  EXPECT_TRUE(
+    std::any_of(
+      loaded.begin(), loaded.end(),
+      [&](const auto & spec) { return spec.c.get() == test_chained_controller.get(); }))
+    << "the chainable controller must not be replaced";
+
+  // reload is not refused after the following controller is deactivated
+  ASSERT_EQ(
+    controller_interface::return_type::OK,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0)));
+  ASSERT_FALSE(test_chained_controller->is_in_chained_mode());
+  // The new instance from pluginlib has no reference interfaces, so its configure fails.
+  // The reload reports the failure and leaves the new instance loaded and unconfigured.
+  result = call_service_and_wait(*client, request, srv_executor, true);
+  ASSERT_FALSE(result->ok);
+  ASSERT_EQ(2u, cm_->get_loaded_controllers().size());
+  for (const auto & spec : cm_->get_loaded_controllers())
+  {
+    if (spec.info.name == test_chainable_controller::TEST_CONTROLLER_NAME)
+    {
+      EXPECT_NE(test_chained_controller.get(), spec.c.get());
+      EXPECT_EQ(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, spec.c->get_lifecycle_state().id());
+    }
+  }
 }
 
 TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controller)
