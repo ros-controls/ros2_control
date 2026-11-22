@@ -32,6 +32,7 @@ controller_manager
 * The ``list_hardware_interfaces`` and ``list_hardware_components`` services now scale linearly with the number of interfaces, making them significantly faster on robots with many interfaces. (`#3755 <https://github.com/ros-controls/ros2_control/pull/3755>`__)
 * The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 * Controllers without chain relationships are now updated in the order they were loaded, instead of an unspecified order. (`#3781 <https://github.com/ros-controls/ros2_control/pull/3781>`__)
+* The ``~/activity`` topic is now also published when controllers or hardware components are deactivated due to a hardware ``read()`` or ``write()`` failure. Publishing from the real-time loop no longer waits for the controllers lock, which could deadlock with a concurrent controller load, unload or configure. (`#3804 <https://github.com/ros-controls/ros2_control/pull/3804>`__)
 
 hardware_interface
 ******************
