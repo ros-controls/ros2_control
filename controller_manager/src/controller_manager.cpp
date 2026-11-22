@@ -1221,6 +1221,11 @@ void ControllerManager::init_services()
     "~/cleanup_controller",
     std::bind(&ControllerManager::cleanup_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
+  load_unload_controller_service_ =
+    create_service<controller_manager_msgs::srv::LoadUnloadController>(
+      "~/load_unload_controller",
+      std::bind(&ControllerManager::load_unload_controller_service_cb, this, _1, _2), qos_services,
+      best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -1498,6 +1503,90 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
 
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type ControllerManager::reload_controller(
+  const std::string & controller_name)
+{
+  RCLCPP_INFO(get_logger(), "Reloading controller: '%s'", controller_name.c_str());
+  uint8_t previous_state = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+  {
+    const auto controllers = get_loaded_controllers();
+    const auto found_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (found_it == controllers.end())
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Could not reload controller with name '%s' because no controller with this name exists",
+        controller_name.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    if (found_it->c->is_in_chained_mode())
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Could not reload controller with name '%s' because other active controllers use its "
+        "reference interfaces",
+        controller_name.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    previous_state = found_it->c->get_lifecycle_id();
+  }
+
+  const bool was_active = previous_state == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  const bool was_configured =
+    was_active || previous_state == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+  if (!was_configured && previous_state != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Could not reload controller with name '%s' from lifecycle state id %u",
+      controller_name.c_str(), static_cast<unsigned int>(previous_state));
+    return controller_interface::return_type::ERROR;
+  }
+
+  const int strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  if (
+    was_active &&
+    switch_controller({}, {controller_name}, strictness, false, rclcpp::Duration(0, 0)) !=
+      controller_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Could not reload controller with name '%s' because it can not be deactivated",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  if (unload_controller(controller_name) != controller_interface::return_type::OK)
+  {
+    return controller_interface::return_type::ERROR;
+  }
+  if (!load_controller(controller_name))
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Reload failed: controller '%s' is unloaded", controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  if (
+    was_configured &&
+    configure_controller(controller_name) != controller_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Reload failed: controller '%s' is unconfigured", controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  if (
+    was_active &&
+    switch_controller({controller_name}, {}, strictness, true, rclcpp::Duration(0, 0)) !=
+      controller_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Reload failed: controller '%s' is inactive", controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  RCLCPP_INFO(get_logger(), "Successfully reloaded controller '%s'", controller_name.c_str());
   return controller_interface::return_type::OK;
 }
 
@@ -3132,6 +3221,50 @@ void ControllerManager::cleanup_controller_service_cb(
 
   RCLCPP_DEBUG(
     get_logger(), "cleanup service finished for controller '%s' ", request->name.c_str());
+}
+
+void ControllerManager::load_unload_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::LoadUnloadController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::LoadUnloadController::Response> response)
+{
+  using Request = controller_manager_msgs::srv::LoadUnloadController::Request;
+  RCLCPP_DEBUG(
+    get_logger(), "load_unload service called for controller '%s' ", request->name.c_str());
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "load_unload service locked");
+
+  std::string action_name;
+  switch (request->action)
+  {
+    case Request::LOAD:
+      action_name = "load";
+      response->ok = load_controller(request->name) != nullptr;
+      break;
+    case Request::UNLOAD:
+      action_name = "unload";
+      response->ok = unload_controller(request->name) == controller_interface::return_type::OK;
+      break;
+    case Request::RELOAD:
+      action_name = "reload";
+      response->ok = reload_controller(request->name) == controller_interface::return_type::OK;
+      break;
+    default:
+      response->ok = false;
+      response->message = fmt::format(
+        FMT_COMPILE("Unknown action '{}' for controller '{}'"),
+        static_cast<unsigned int>(request->action), request->name);
+      RCLCPP_ERROR(get_logger(), "%s", response->message.c_str());
+      return;
+  }
+  response->message =
+    response->ok
+      ? fmt::format(FMT_COMPILE("Successful {} of controller '{}'"), action_name, request->name)
+      : fmt::format(
+          FMT_COMPILE("Failed {} of controller '{}', see the controller manager log"), action_name,
+          request->name);
+
+  RCLCPP_DEBUG(
+    get_logger(), "load_unload service finished for controller '%s' ", request->name.c_str());
 }
 
 void ControllerManager::list_hardware_components_srv_cb(

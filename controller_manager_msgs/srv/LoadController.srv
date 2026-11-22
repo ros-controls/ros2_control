@@ -1,3 +1,5 @@
+# Deprecated: use the LoadUnloadController service with the action LOAD.
+
 # The LoadController service allows you to load a single controller
 # inside controller_manager
 
