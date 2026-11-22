@@ -212,6 +212,7 @@ hardware_interface
 joint_limits
 ************
 * Add header to import limits from standard URDF definition (`#1298 <https://github.com/ros-controls/ros2_control/pull/1298>`_)
+* When a position command is beyond a soft limit, the ``JointSoftLimiter`` now moves it back towards the soft limit at no more than ``max_velocity`` instead of jumping straight to the soft limit in one update, so the hard velocity limit is always respected. (`#3798 <https://github.com/ros-controls/ros2_control/pull/3798>`__)
 
 ros2controlcli
 **************
