@@ -90,6 +90,11 @@ The following data types are supported, with their default initial value if not 
 * int16: 32767
 * uint32: 4294967295
 * int32: 2147483647
+* uint64: 18446744073709551615
+* int64: 9223372036854775807
+
+``uint64`` and ``int64`` cannot be cast to double, because a double cannot represent every 64-bit value exactly.
+Therefore, interfaces of these types are not published by the introspection.
 
 Examples
 *****************************

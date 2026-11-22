@@ -2038,6 +2038,62 @@ TEST_F(TestComponentParser, successfully_parse_valid_sdf)
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
 }
 
+TEST_F(TestComponentParser, successfully_parse_urdf_with_int64_and_uint64_data_types)
+{
+  const std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                                   R"(
+  <ros2_control name="RRBotWith64BitInterfaces" type="system">
+    <hardware>
+      <plugin>some_plugin</plugin>
+    </hardware>
+    <gpio name="flange_io">
+      <command_interface name="request_id" data_type="uint64">
+        <param name="initial_value">9007199254740993</param>
+      </command_interface>
+      <command_interface name="offset_ns" data_type="int64">
+        <param name="initial_value">-9223372036854775808</param>
+      </command_interface>
+      <state_interface name="applied_id" data_type="uint64"/>
+      <state_interface name="stamp_ns" data_type="int64"/>
+    </gpio>
+  </ros2_control>
+)" + ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  const auto & gpio = control_hardware.front().gpios;
+  ASSERT_THAT(gpio, SizeIs(1));
+  ASSERT_THAT(gpio[0].command_interfaces, SizeIs(2));
+  ASSERT_THAT(gpio[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(gpio[0].command_interfaces[0].data_type, "uint64");
+  EXPECT_EQ(gpio[0].command_interfaces[0].initial_value, "9007199254740993");
+  EXPECT_EQ(gpio[0].command_interfaces[1].data_type, "int64");
+  EXPECT_EQ(gpio[0].command_interfaces[1].initial_value, "-9223372036854775808");
+  EXPECT_EQ(gpio[0].state_interfaces[0].data_type, "uint64");
+  EXPECT_EQ(gpio[0].state_interfaces[1].data_type, "int64");
+
+  hardware_interface::CommandInterface uint64_cmd_itf(
+    hardware_interface::InterfaceDescription(gpio[0].name, gpio[0].command_interfaces[0]));
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT64, uint64_cmd_itf.get_data_type());
+  EXPECT_EQ(uint64_cmd_itf.get_optional<uint64_t>().value(), 9007199254740993ULL);
+
+  hardware_interface::CommandInterface int64_cmd_itf(
+    hardware_interface::InterfaceDescription(gpio[0].name, gpio[0].command_interfaces[1]));
+  ASSERT_EQ(hardware_interface::HandleDataType::INT64, int64_cmd_itf.get_data_type());
+  EXPECT_EQ(int64_cmd_itf.get_optional<int64_t>().value(), std::numeric_limits<int64_t>::min());
+
+  // An interface without initial_value starts at the maximum of its type.
+  hardware_interface::StateInterface uint64_state_itf(
+    hardware_interface::InterfaceDescription(gpio[0].name, gpio[0].state_interfaces[0]));
+  ASSERT_EQ(hardware_interface::HandleDataType::UINT64, uint64_state_itf.get_data_type());
+  EXPECT_EQ(
+    uint64_state_itf.get_optional<uint64_t>().value(), std::numeric_limits<uint64_t>::max());
+
+  hardware_interface::StateInterface int64_state_itf(
+    hardware_interface::InterfaceDescription(gpio[0].name, gpio[0].state_interfaces[1]));
+  ASSERT_EQ(hardware_interface::HandleDataType::INT64, int64_state_itf.get_data_type());
+  EXPECT_EQ(int64_state_itf.get_optional<int64_t>().value(), std::numeric_limits<int64_t>::max());
+}
+
 TEST_F(TestComponentParser, missing_hardware_plugin_tag_includes_component_name)
 {
   const std::string broken_urdf =
