@@ -236,7 +236,7 @@ private:
 class TimeWindowStatistics
 {
 public:
-  using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+  using StatisticData = ros2_control::StatisticData;
 
   /// Number of time buckets the window is split into.
   static constexpr std::size_t NUM_BUCKETS = 10;
