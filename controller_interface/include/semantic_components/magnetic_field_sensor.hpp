@@ -54,7 +54,8 @@ private:
   /**
    * @brief Update the data array from the state interfaces.
    * @note This method is thread-safe and non-blocking.
-   * @note Each axis keeps its last successful reading, or NaN until its first successful read.
+   * @note An axis whose state interface cannot be read is set to NaN, so an
+   * unavailable axis is never reported as a stale or fabricated measurement.
    */
   void update_data_from_interfaces()
   {
@@ -64,6 +65,10 @@ private:
       if (data.has_value())
       {
         data_[i] = data.value();
+      }
+      else
+      {
+        data_[i] = std::numeric_limits<double>::quiet_NaN();
       }
     }
   }
