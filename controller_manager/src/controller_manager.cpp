@@ -3475,6 +3475,12 @@ controller_interface::return_type ControllerManager::update(
             loaded_controller.c->trigger_update(node_clock.now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
+          if (controller_ret != controller_interface::return_type::OK)
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Controller '%s' update returned with ERROR.",
+              loaded_controller.info.name.c_str());
+          }
           if (trigger_status && trigger_result.execution_time.has_value())
           {
             loaded_controller.execution_time_statistics->add_measurement(
