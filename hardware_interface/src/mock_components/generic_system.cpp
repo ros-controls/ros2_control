@@ -83,9 +83,6 @@ CallbackReturn GenericSystem::on_init(
   {
     calculate_dynamics_ = false;
   }
-  // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 2 are position,
-  // velocity, and acceleration interface
-  // Create a subvector of standard_interfaces_ with the given indices
   for (size_t i = 0; i < (calculate_dynamics_ ? 3 : 1); ++i)
   {
     skip_interfaces_.push_back(standard_interfaces_[i]);
@@ -334,8 +331,7 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
       }
     }
   }
-  // Set position control mode per default
-  // This will be populated by perform_command_mode_switch
+  // perform_command_mode_switch overrides this default
   joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -541,7 +537,6 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
-  // Update mimic joints
   const auto & joints = get_hardware_info().joints;
   for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {

@@ -12,6 +12,7 @@ controller_interface
 * The update rate of the controller will now be approximated to a closer achievable frequency, when its frequency is not achievable with the current controller manager update rate. (`#2828 <https://github.com/ros-controls/ros2_control/pull/2828>`__)
 * The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
 * Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
+  ``REGEX`` entries may mix plain interface names with patterns, and an interface matched by several entries is claimed only once. (`#3810 <https://github.com/ros-controls/ros2_control/pull/3810>`__)
 * Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
 
 controller_manager
@@ -30,6 +31,7 @@ controller_manager
 * The controller manager now resolves its clocks once per cycle instead of once per controller in the real-time update loop, reducing the per-controller overhead. (`#3754 <https://github.com/ros-controls/ros2_control/pull/3754>`__)
 * The ``list_hardware_interfaces`` and ``list_hardware_components`` services now scale linearly with the number of interfaces, making them significantly faster on robots with many interfaces. (`#3755 <https://github.com/ros-controls/ros2_control/pull/3755>`__)
 * The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
+* Controllers without chain relationships are now updated in the order they were loaded, instead of an unspecified order. (`#3781 <https://github.com/ros-controls/ros2_control/pull/3781>`__)
 
 hardware_interface
 ******************
@@ -37,6 +39,12 @@ hardware_interface
 * Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
 * The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
+* ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
+* Handles now also support ``uint64`` and ``int64`` data types. They are not castable to double and are therefore not included in the introspection. (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__)
+
+joint_limits
+************
+* When a position command is beyond a soft limit, the ``JointSoftLimiter`` now moves it back towards the soft limit at no more than ``max_velocity`` instead of jumping straight to the soft limit in one update, so the hard velocity limit is always respected. (`#3798 <https://github.com/ros-controls/ros2_control/pull/3798>`__)
 
 ros2controlcli
 **************

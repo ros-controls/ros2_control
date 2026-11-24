@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <future>
 #include <memory>
@@ -442,7 +443,7 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
 
-  auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[0];
+  auto wildcard_ctrl_3 = cm_->get_loaded_controllers()[2];
   ASSERT_EQ(wildcard_ctrl_3.info.name, "wildcard_ctrl_3");
   ASSERT_EQ(wildcard_ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
@@ -458,7 +459,7 @@ TEST_F(TestLoadController, spawner_test_with_wildcard_entries_with_no_ctrl_name)
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   verify_ctrl_parameter(wildcard_ctrl_2.c->get_node(), false);
 
-  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[2];
+  auto wildcard_ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(wildcard_ctrl_1.info.name, "wildcard_ctrl_1");
   ASSERT_EQ(wildcard_ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
@@ -776,6 +777,101 @@ TEST_F(TestLoadController, unload_on_kill_with_sigterm)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
+{
+  // Ctrl-C pressed repeatedly must not interrupt the cleanup and leave controllers loaded.
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  // timeout is only a safety net in case the spawner never exits
+  const std::string spawner_cmd =
+    "timeout --signal=KILL 30 " + std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+    "ctrl_3 -c test_controller_manager --unload-on-kill";
+  auto spawner_future =
+    std::async(std::launch::async, [spawner_cmd]() { return std::system(spawner_cmd.c_str()); });
+
+  auto is_ctrl_3_active = [this]()
+  {
+    for (const auto & ctrl : cm_->get_loaded_controllers())
+    {
+      if (ctrl.info.name == "ctrl_3")
+      {
+        return ctrl.c->get_lifecycle_state().id() ==
+               lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+      }
+    }
+    return false;
+  };
+  const auto wait_start = std::chrono::steady_clock::now();
+  while (!is_ctrl_3_active())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ASSERT_LT(std::chrono::steady_clock::now() - wait_start, std::chrono::seconds(10))
+      << "Timed out waiting for ctrl_3 to become active";
+  }
+
+  // Signal only once the spawner is parked in its "Waiting until interrupt" loop: a SIGINT that
+  // lands while it is still finishing activation escapes the try/except that owns the cleanup.
+  // Parked means state S and no CPU consumed between two samples; a fixed sleep only moves the
+  // race. The probe needs /proc and pgrep, so on Windows the wait is a no-op.
+#ifdef _WIN32
+  const auto sample_state_and_ticks = [](std::string &) { return false; };
+  constexpr bool proc_available = false;
+#else
+  const auto sample_state_and_ticks = [](std::string & out)
+  {
+    const char * cmd =
+      "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
+      "awk '{print $3, $14+$15}' /proc/$pid/stat 2>/dev/null";
+    FILE * pipe = popen(cmd, "r");
+    if (!pipe)
+    {
+      return false;
+    }
+    char buffer[64] = {0};
+    const bool read_ok = fgets(buffer, sizeof(buffer), pipe) != nullptr;
+    pclose(pipe);
+    out = buffer;
+    while (!out.empty() && (out.back() == '\n' || out.back() == ' '))
+    {
+      out.pop_back();
+    }
+    return read_ok && !out.empty();
+  };
+  constexpr bool proc_available = true;
+#endif
+
+  bool parked = !proc_available;
+  for (int attempt = 0; attempt < 100 && !parked; ++attempt)
+  {
+    std::string first, second;
+    if (sample_state_and_ticks(first))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(150));
+      parked = sample_state_and_ticks(second) && first == second && second.rfind("S ", 0) == 0;
+    }
+    if (!parked)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
+  ASSERT_TRUE(parked) << "The spawner never parked in its wait-for-interrupt loop";
+
+  // Anchored so only the python process is signalled, not the wrapping shell or timeout. Only the
+  // lookup is asserted: kill on an already reaped pid returns non-zero, so the loop may end early.
+  EXPECT_EQ(
+    std::system(
+      "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
+      "test -n \"$pid\" && "
+      "{ for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done; true; }"),
+    0)
+    << "Failed to find the spawner process to interrupt";
+
+  spawner_future.get();
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
 {
   const std::string main_test_file_path =
@@ -1042,8 +1138,8 @@ TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
   ASSERT_FALSE(ctrl_2_set_bool_service->service_is_ready());
 
   // Check the parameter run_cycle to have the right value
-  ASSERT_EQ("ctrl_2", cm_->get_loaded_controllers()[0].info.name);
-  auto ctrl_2 = cm_->get_loaded_controllers()[0].c->get_node();
+  ASSERT_EQ("ctrl_2", cm_->get_loaded_controllers()[1].info.name);
+  auto ctrl_2 = cm_->get_loaded_controllers()[1].c->get_node();
   if (!ctrl_2->has_parameter("run_cycle"))
   {
     ctrl_2->declare_parameter("run_cycle", -200);

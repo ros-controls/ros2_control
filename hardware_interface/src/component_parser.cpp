@@ -980,7 +980,6 @@ void update_interface_limits(const ComponentInfo & joint, joint_limits::JointLim
 
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
 {
-  // Check if everything OK with URDF string
   if (urdf.empty())
   {
     throw std::runtime_error("empty URDF passed to robot");

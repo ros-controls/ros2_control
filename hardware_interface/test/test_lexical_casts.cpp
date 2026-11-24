@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -84,6 +86,11 @@ TEST(TestLexicalCasts, test_stoui8)
   ASSERT_EQ(stoui8("123"), 123u);
   ASSERT_EQ(stoui8("255"), 255u);  // UINT8_MAX
   ASSERT_EQ(stoui8("+123"), 123u);
+
+  // A negative value is rejected even if it wraps around to a value in range.
+  ASSERT_THROW(stoui8("-18446744073709551615"), std::out_of_range);
+  ASSERT_THROW(stoui8(" -1"), std::out_of_range);
+  ASSERT_EQ(stoui8("-0"), 0u);
 }
 
 TEST(TestLexicalCasts, test_stoi16)
@@ -164,6 +171,54 @@ TEST(TestLexicalCasts, test_stoui32)
   ASSERT_EQ(stoui32("123"), 123u);
   ASSERT_EQ(stoui32("4294967295"), 4294967295u);  // UINT32_MAX
   ASSERT_EQ(stoui32("+123"), 123u);
+}
+
+TEST(TestLexicalCasts, test_stoi64)
+{
+  using hardware_interface::stoi64;
+
+  ASSERT_THROW(stoi64(""), std::invalid_argument);
+  ASSERT_THROW(stoi64("abc"), std::invalid_argument);
+  ASSERT_THROW(stoi64("1.2"), std::invalid_argument);
+  ASSERT_THROW(stoi64("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stoi64("99999999999999999999"), std::out_of_range);
+  ASSERT_THROW(stoi64("-99999999999999999999"), std::out_of_range);
+  ASSERT_THROW(stoi64("9223372036854775808"), std::out_of_range);   // INT64_MAX + 1
+  ASSERT_THROW(stoi64("-9223372036854775809"), std::out_of_range);  // INT64_MIN - 1
+
+  ASSERT_EQ(stoi64("0"), 0);
+  ASSERT_EQ(stoi64("123"), 123);
+  ASSERT_EQ(stoi64("-123"), -123);
+  ASSERT_EQ(stoi64("4294967296"), 4294967296LL);              // UINT32_MAX + 1
+  ASSERT_EQ(stoi64("9007199254740993"), 9007199254740993LL);  // 2^53 + 1
+  ASSERT_EQ(stoi64("9223372036854775807"), std::numeric_limits<int64_t>::max());
+  ASSERT_EQ(stoi64("-9223372036854775808"), std::numeric_limits<int64_t>::min());
+  ASSERT_EQ(stoi64("+123"), 123);
+}
+
+TEST(TestLexicalCasts, test_stoui64)
+{
+  using hardware_interface::stoui64;
+
+  ASSERT_THROW(stoui64(""), std::invalid_argument);
+  ASSERT_THROW(stoui64("abc"), std::invalid_argument);
+  ASSERT_THROW(stoui64("1.2"), std::invalid_argument);
+  ASSERT_THROW(stoui64("1.2.3"), std::invalid_argument);
+  ASSERT_THROW(stoui64("-1"), std::out_of_range);                    // Negative values not allowed
+  ASSERT_THROW(stoui64("-123"), std::out_of_range);                  // Negative values not allowed
+  ASSERT_THROW(stoui64("18446744073709551616"), std::out_of_range);  // UINT64_MAX + 1
+  ASSERT_THROW(stoui64("99999999999999999999"), std::out_of_range);
+
+  ASSERT_EQ(stoui64("0"), 0u);
+  ASSERT_EQ(stoui64("123"), 123u);
+  ASSERT_EQ(stoui64("4294967296"), 4294967296ULL);              // UINT32_MAX + 1
+  ASSERT_EQ(stoui64("9007199254740993"), 9007199254740993ULL);  // 2^53 + 1
+  ASSERT_EQ(stoui64("18446744073709551615"), std::numeric_limits<uint64_t>::max());
+  ASSERT_EQ(stoui64("+123"), 123u);
+
+  ASSERT_THROW(stoui64(" -1"), std::out_of_range);
+  ASSERT_THROW(stoui64("\t-1"), std::out_of_range);
+  ASSERT_EQ(stoui64("-0"), 0u);
 }
 
 TEST(TestLexicalCasts, test_parse_bool)
