@@ -4335,12 +4335,9 @@ void ControllerManager::publish_activity()
 void ControllerManager::request_activity_publish()
 {
   activity_publish_requested_ = true;
-  // Taking the mutex orders the request against the publisher thread's check of it, so the
-  // wakeup is not lost. When the thread holds the mutex, try_lock fails instead of waiting and
-  // update() wakes it again in the next cycle.
-  {
-    std::unique_lock<std::mutex> lock(activity_publisher_mutex_, std::try_to_lock);
-  }
+  // Not taking the mutex, as the realtime loop must not wait for it. The wakeup is then lost if
+  // the publisher thread checked the request just before it was set, so update() repeats the
+  // notification while the request is pending.
   activity_publisher_cv_.notify_one();
 }
 
