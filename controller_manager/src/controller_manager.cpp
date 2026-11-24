@@ -684,20 +684,22 @@ void ControllerManager::init_controller_manager()
   if (!activity_publisher_thread_.joinable())
   {
     activity_publisher_thread_ = std::thread(
-      [this]()
+      [this, context = get_node_base_interface()->get_context()]()
       {
-        std::unique_lock<std::mutex> lock(activity_publisher_mutex_);
-        while (true)
+        while (rclcpp::ok(context))
         {
-          activity_publisher_cv_.wait(
-            lock, [this]() { return stop_activity_publisher_ || activity_publish_requested_; });
-          if (stop_activity_publisher_)
           {
-            return;
+            std::unique_lock<std::mutex> lock(activity_publisher_mutex_);
+            activity_publisher_cv_.wait(
+              lock, [this]() { return stop_activity_publisher_ || activity_publish_requested_; });
+            // The context stays valid when the controller manager is destroyed without a shutdown
+            if (stop_activity_publisher_)
+            {
+              return;
+            }
+            // Cleared before the snapshot, so a request arriving during it publishes again
+            activity_publish_requested_ = false;
           }
-          // Cleared before the snapshot, so a request arriving during it publishes again
-          activity_publish_requested_ = false;
-          lock.unlock();
           try
           {
             publish_activity();
@@ -706,7 +708,6 @@ void ControllerManager::init_controller_manager()
           {
             RCLCPP_WARN(get_logger(), "Failed to publish the activity: %s", e.what());
           }
-          lock.lock();
         }
       });
   }
@@ -4337,9 +4338,8 @@ void ControllerManager::request_activity_publish()
   // Taking the mutex orders the request against the publisher thread's check of it, so the
   // wakeup is not lost. When the thread holds the mutex, try_lock fails instead of waiting and
   // update() wakes it again in the next cycle.
-  if (activity_publisher_mutex_.try_lock())
   {
-    activity_publisher_mutex_.unlock();
+    std::unique_lock<std::mutex> lock(activity_publisher_mutex_, std::try_to_lock);
   }
   activity_publisher_cv_.notify_one();
 }
