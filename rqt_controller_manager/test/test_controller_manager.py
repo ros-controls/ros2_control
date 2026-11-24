@@ -276,3 +276,24 @@ def test_rows_are_cleared_when_switching_controller_managers(plugin, cm):
     assert plugin._hw_components == []
     assert plugin._ctrl_table_model.rowCount(None) == 0
     assert plugin._hw_table_model.rowCount(None) == 0
+
+
+def test_ignores_responses_of_destroyed_clients(plugin, cm):
+    select_and_wait(plugin, "/fake_controller_manager")
+    plugin._call_steps(
+        [
+            _name_step(LoadController, "load_controller", "unloaded_ctrl"),
+            _name_step(ConfigureController, "configure_controller", "unloaded_ctrl"),
+        ]
+    )
+    # Let the load response arrive without handling it in the GUI thread
+    deadline = time.monotonic() + 5.0
+    while not cm.calls and time.monotonic() < deadline:
+        time.sleep(0.01)
+    time.sleep(0.2)
+
+    # Switching away and back drops the pending action, although the name matches again
+    select(plugin, "/does_not_exist")
+    select(plugin, "/fake_controller_manager")
+
+    assert not wait_for(lambda: len(cm.calls) > 1, timeout=2 * TIMEOUT)

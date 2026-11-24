@@ -47,7 +47,7 @@ class ControllerManager(Plugin):
     """Graphical frontend for interacting with the controller manager."""
 
     # Emitted from the executor thread when a service call is done
-    _service_done = Signal(object, object)  # future, callback
+    _service_done = Signal(object, object, object)  # client, future, callback
 
     _cm_update_freq = 1  # Hz
     # Timeout (in seconds) for the response of the periodic queries of controllers, hardware
@@ -255,7 +255,7 @@ class ControllerManager(Plugin):
 
         # The rqt executor spins the node, the response is handled in the GUI thread
         future = client.call_async(request)
-        future.add_done_callback(lambda f: self._service_done.emit(f, on_done))
+        future.add_done_callback(lambda f: self._service_done.emit(client, f, on_done))
         self._start_single_shot(
             int(1000.0 * timeout), lambda: self._on_service_timeout(client, future, on_done)
         )
@@ -268,8 +268,9 @@ class ControllerManager(Plugin):
             return  # the response arrived in the meantime
         on_done(None, TimeoutError(f"Timed out waiting for a response of {client.srv_name}"))
 
-    def _on_service_done(self, future, on_done):
-        if future.cancelled():
+    def _on_service_done(self, client, future, on_done):
+        # The response may have been queued before the client was destroyed
+        if future.cancelled() or not self._is_alive(client):
             return  # timed out or dropped
         error = future.exception()
         on_done(None if error else future.result(), error)
