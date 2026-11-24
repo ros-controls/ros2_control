@@ -266,7 +266,7 @@ public:
 
   /// Makes write() fail with \p write_failure_value while unload_controller() holds the
   /// controllers lock, and checks that write() does not wait for the lock and that the activity
-  /// is published by the next update() once the lock is free.
+  /// is published once the lock is free.
   void check_write_failure_with_busy_controllers_lock(double write_failure_value)
   {
     using namespace std::chrono_literals;
@@ -313,9 +313,7 @@ public:
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_lifecycle_state().id());
 
-    // Nothing has published the deactivation yet; the pending request is retried in update()
-    EXPECT_FALSE(activity_matches_current_state(300ms));
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time_, PERIOD));
+    // The deactivation is published once the controllers lock is free, without another cycle
     expect_activity_matches_current_state();
   }
 
