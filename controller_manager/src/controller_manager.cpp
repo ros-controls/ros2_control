@@ -3338,6 +3338,7 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "read");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    request_activity_publish();
   }
   execution_time_.read_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
@@ -3667,6 +3668,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    request_activity_publish();
   }
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
@@ -3711,6 +3713,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
     deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    request_activity_publish();
   }
   execution_time_.write_time =
     std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start_time)
