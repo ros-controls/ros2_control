@@ -102,6 +102,7 @@ class ControllerManager(Plugin):
         self._ctrl_update_pending = False  # waiting for responses of a controllers update
         self._hw_update_pending = False  # waiting for the response of a hw components update
         self._cm_last_seen = 0.0  # time of the last response of the selected controller manager
+        self._actions_pending = 0  # number of user actions waiting for a response
         self._service_done.connect(self._on_service_done, Qt.ConnectionType.QueuedConnection)
 
         # Store reference to node
@@ -200,6 +201,7 @@ class ControllerManager(Plugin):
         self._hw_update_pending = False
         # Give the service discovery time to find the newly selected controller manager
         self._cm_last_seen = time.monotonic()
+        self._actions_pending = 0
 
         # Rows of the previous controller manager must not be actionable against the new one
         self._controllers = []
@@ -219,7 +221,14 @@ class ControllerManager(Plugin):
         self._widget.cm_combo.setCurrentIndex(-1)
 
     def _on_cm_error(self, error):
-        """Deselect the controller manager if it did not respond for too long."""
+        """
+        Deselect the controller manager if it did not respond for too long.
+
+        Not while a user action is pending: the controller manager serves one request at a time,
+        so the periodic updates time out while a slow action runs. The action has its own timeout.
+        """
+        if self._actions_pending:
+            return
         if time.monotonic() - self._cm_last_seen >= self._service_timeout:
             self._deselect_cm(error)
 
@@ -633,6 +642,7 @@ class ControllerManager(Plugin):
 
         cm_name = self._cm_name
         srv_type, service, request = steps[0]
+        self._actions_pending += 1
         self._call_service(
             srv_type,
             f"{cm_name}/{service}",
@@ -646,6 +656,9 @@ class ControllerManager(Plugin):
     def _on_step_done(self, cm_name, service, steps, response, error):
         if cm_name != self._cm_name:
             return
+        self._actions_pending -= 1
+        if error is None:
+            self._cm_last_seen = time.monotonic()  # it responded
         if error is None and not response.ok:
             error = RuntimeError("the controller manager reported a failure")
         if error is not None:

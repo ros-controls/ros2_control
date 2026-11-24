@@ -67,6 +67,7 @@ class FakeControllerManager:
         self.load_ok = load_ok
         self.list_requests = 0
         self.release = None  # if set, list services block until it is set
+        self.configure_release = None  # if set, configure_controller blocks until it is set
 
         self.node.create_service(ListControllers, "~/list_controllers", self._list_controllers)
         self.node.create_service(
@@ -96,6 +97,8 @@ class FakeControllerManager:
 
     def _configure(self, request, response):
         self.calls.append(("configure_controller", request.name))
+        if self.configure_release is not None:
+            self.configure_release.wait()
         response.ok = True
         return response
 
@@ -118,8 +121,9 @@ def cm(ros):
     fake = FakeControllerManager("fake_controller_manager")
     ros.add_node(fake.node)
     yield fake
-    if fake.release is not None:
-        fake.release.set()
+    for event in (fake.release, fake.configure_release):
+        if event is not None:
+            event.set()
     fake.node.destroy_node()
 
 
@@ -297,3 +301,21 @@ def test_ignores_responses_of_destroyed_clients(plugin, cm):
     select(plugin, "/fake_controller_manager")
 
     assert not wait_for(lambda: len(cm.calls) > 1, timeout=2 * TIMEOUT)
+
+
+def test_long_action_does_not_deselect_controller_manager(plugin, cm):
+    select_and_wait(plugin, "/fake_controller_manager")
+    # Like the real controller manager, the fake one serves one request at a time, so the
+    # periodic updates time out while the action is running
+    cm.configure_release = threading.Event()
+    plugin._call_steps(
+        [
+            _name_step(ConfigureController, "configure_controller", "unloaded_ctrl"),
+            _name_step(LoadController, "load_controller", "unloaded_ctrl"),
+        ]
+    )
+
+    assert not wait_for(lambda: deselected(plugin), timeout=4 * TIMEOUT)
+    cm.configure_release.set()
+    assert wait_for(lambda: ("load_controller", "unloaded_ctrl") in cm.calls)
+    assert not deselected(plugin)
