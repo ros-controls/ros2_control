@@ -263,3 +263,16 @@ def test_steps_stop_at_first_failure(plugin, cm):
 
     assert wait_for(lambda: len(cm.calls) == 1)
     assert not wait_for(lambda: len(cm.calls) > 1, timeout=2 * TIMEOUT)
+
+
+def test_rows_are_cleared_when_switching_controller_managers(plugin, cm):
+    select_and_wait(plugin, "/fake_controller_manager")
+    assert wait_for(lambda: len(plugin._hw_components) == 1)
+
+    # The rows of the previous controller manager must not be actionable against the new one
+    select(plugin, "/does_not_exist")
+    assert not deselected(plugin)
+    assert plugin._controllers == []
+    assert plugin._hw_components == []
+    assert plugin._ctrl_table_model.rowCount(None) == 0
+    assert plugin._hw_table_model.rowCount(None) == 0

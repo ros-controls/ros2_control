@@ -201,14 +201,15 @@ class ControllerManager(Plugin):
         # Give the service discovery time to find the newly selected controller manager
         self._cm_last_seen = time.monotonic()
 
+        # Rows of the previous controller manager must not be actionable against the new one
+        self._controllers = []
+        self._show_controllers()
+        self._hw_components = []
+        self._show_hw_components()
+
         if cm_name:
             self._update_controllers()
             self._update_hw_components()
-        else:
-            self._controllers = []
-            self._show_controllers()
-            self._hw_components = []
-            self._show_hw_components()
 
     def _deselect_cm(self, error):
         """Deselect the controller manager, e.g., because it is not reachable anymore."""
