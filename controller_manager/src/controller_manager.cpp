@@ -634,6 +634,7 @@ ControllerManager::ControllerManager(
 
 ControllerManager::~ControllerManager()
 {
+  stop_activity_publisher_thread();
   CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES();
   if (preshutdown_cb_handle_)
   {
@@ -680,12 +681,41 @@ void ControllerManager::init_controller_manager()
   controller_manager_activity_publisher_ =
     create_publisher<controller_manager_msgs::msg::ControllerManagerActivity>(
       "~/activity", rclcpp::QoS(1).reliable().transient_local());
+  if (!activity_publisher_thread_.joinable())
+  {
+    activity_publisher_thread_ = std::thread(
+      [this]()
+      {
+        std::unique_lock<std::mutex> lock(activity_publisher_mutex_);
+        while (true)
+        {
+          activity_publisher_cv_.wait(
+            lock, [this]() { return stop_activity_publisher_ || activity_publish_requested_; });
+          if (stop_activity_publisher_)
+          {
+            return;
+          }
+          // Cleared before the snapshot, so a request arriving during it publishes again
+          activity_publish_requested_ = false;
+          lock.unlock();
+          try
+          {
+            publish_activity();
+          }
+          catch (const std::exception & e)
+          {
+            RCLCPP_WARN(get_logger(), "Failed to publish the activity: %s", e.what());
+          }
+          lock.lock();
+        }
+      });
+  }
   rt_controllers_wrapper_.set_on_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
+    std::bind(&ControllerManager::request_activity_publish, this));
   if (resource_manager_)
   {
     resource_manager_->set_on_component_state_switch_callback(
-      std::bind(&ControllerManager::publish_activity, this));
+      std::bind(&ControllerManager::request_activity_publish, this));
   }
 
   // Setup diagnostics
@@ -727,6 +757,7 @@ void ControllerManager::init_controller_manager()
         {
           RCLCPP_ERROR(get_logger(), "Failed shutting down hardware components.");
         }
+        stop_activity_publisher_thread();
         RCLCPP_INFO(get_logger(), "Shutting down the controller manager.");
       }));
 
@@ -849,7 +880,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   }
 
   resource_manager_->set_on_component_state_switch_callback(
-    std::bind(&ControllerManager::publish_activity, this));
+    std::bind(&ControllerManager::request_activity_publish, this));
 
   if (robot_description.empty())
   {
@@ -1571,7 +1602,7 @@ controller_interface::return_type ControllerManager::cleanup_controller(
   if (result == controller_interface::return_type::OK)
   {
     RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
-    publish_activity();
+    request_activity_publish();
   }
 
   return result;
@@ -3384,6 +3415,11 @@ controller_interface::return_type ControllerManager::update(
   execution_time_.switch_perform_mode_time = 0.0;
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+  if (activity_publish_requested_)
+  {
+    // Wakes the publisher thread again, in case a request missed it
+    request_activity_publish();
+  }
 
   auto ret = controller_interface::return_type::OK;
   ++update_loop_counter_;
@@ -3574,7 +3610,7 @@ controller_interface::return_type ControllerManager::update(
         controller_manager_msgs::srv::SwitchController::Request::STRICT);
     }
     // To publish the activity of the failing controllers and the fallback controllers
-    publish_activity();
+    request_activity_publish();
   }
   resource_manager_->enforce_command_limits(period);
 
@@ -3635,7 +3671,8 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   else if (result == hardware_interface::return_type::DEACTIVATE)
   {
     rt_buffer_.deactivate_controllers_list.clear();
-    auto loaded_controllers = get_loaded_controllers();
+    std::vector<ControllerSpec> & rt_controller_list =
+      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     // Only stop controllers with active command interfaces to the failed_hardware_names
     for (const auto & hardware_name : failed_hardware_names)
     {
@@ -3643,10 +3680,10 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       for (const auto & controller : controllers)
       {
         auto controller_spec = std::find_if(
-          loaded_controllers.begin(), loaded_controllers.end(),
+          rt_controller_list.begin(), rt_controller_list.end(),
           [&](const controller_manager::ControllerSpec & spec)
           { return spec.c->get_name() == controller; });
-        if (controller_spec == loaded_controllers.end())
+        if (controller_spec == rt_controller_list.end())
         {
           RCLCPP_WARN(
             get_logger(),
@@ -3670,8 +3707,6 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
       "Deactivating controllers [%s] as their command interfaces are tied to DEACTIVATEing "
       "hardware components",
       rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
-    std::vector<ControllerSpec> & rt_controller_list =
-      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
     perform_hardware_command_mode_change(
       rt_controller_list, {}, rt_buffer_.deactivate_controllers_list, "write");
@@ -4291,6 +4326,32 @@ void ControllerManager::publish_activity()
     }
   }
   controller_manager_activity_publisher_->publish(status_msg);
+}
+
+void ControllerManager::request_activity_publish()
+{
+  activity_publish_requested_ = true;
+  // Taking the mutex orders the request against the publisher thread's check of it, so the
+  // wakeup is not lost. When the thread holds the mutex, try_lock fails instead of waiting and
+  // update() wakes it again in the next cycle.
+  if (activity_publisher_mutex_.try_lock())
+  {
+    activity_publisher_mutex_.unlock();
+  }
+  activity_publisher_cv_.notify_one();
+}
+
+void ControllerManager::stop_activity_publisher_thread()
+{
+  {
+    std::lock_guard<std::mutex> lock(activity_publisher_mutex_);
+    stop_activity_publisher_ = true;
+  }
+  activity_publisher_cv_.notify_one();
+  if (activity_publisher_thread_.joinable())
+  {
+    activity_publisher_thread_.join();
+  }
 }
 
 controller_interface::return_type ControllerManager::check_for_interfaces_availability_to_activate(
