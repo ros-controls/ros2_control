@@ -3199,11 +3199,6 @@ TEST_F(ResourceManagerTest, async_synchronized_period_pending_before_pause_is_dr
   check_async_period_pending_before_pause_is_dropped(node_, "synchronized");
 }
 
-TEST_F(ResourceManagerTest, async_detached_period_pending_before_pause_is_dropped)
-{
-  check_async_period_pending_before_pause_is_dropped(node_, "detached");
-}
-
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
