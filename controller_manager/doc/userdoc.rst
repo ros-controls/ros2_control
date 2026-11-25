@@ -166,6 +166,9 @@ hardware_synchronization.expect_blocking_read_write (optional; bool; default: fa
   If true, the controller manager will not sleep actively. Use this, when there is a hardware
   interface running that will block during its read or write operation until receiving new data
   from the hardware.
+  If a cycle didn't block while no hardware component is ``active`` (e.g., all failed to
+  configure, or are ``inactive`` and block only in ``write``, which isn't called then), the loop
+  falls back to sleeping periodically at ``update_rate`` without warning.
 
 hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
   The minimum sleep time in seconds for the control node's real-time loop. This is used to

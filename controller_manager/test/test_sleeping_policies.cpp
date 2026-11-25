@@ -14,7 +14,11 @@
 
 #include <chrono>
 #include <future>
+#include <memory>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "controller_manager/sleeping_policies.hpp"
 #include "controller_manager_test_common.hpp"
@@ -38,10 +42,10 @@ std::chrono::nanoseconds measure_execution(Func && func)
 class SleepingPoliciesTest : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
 public:
-  SleepingPoliciesTest()
+  explicit SleepingPoliciesTest(std::vector<rclcpp::Parameter> extra_parameters = {})
   : ControllerManagerFixture(
       ros2_control_test_assets::minimal_robot_urdf, "",
-      {rclcpp::Parameter("update_rate", kUpdateRateHz)})
+      with_update_rate(std::move(extra_parameters)))
   {
   }
 
@@ -67,7 +71,57 @@ protected:
   }
 
   std::future<void> executor_spin_future_;
+
+private:
+  static std::vector<rclcpp::Parameter> with_update_rate(std::vector<rclcpp::Parameter> parameters)
+  {
+    parameters.emplace_back("update_rate", kUpdateRateHz);
+    return parameters;
+  }
 };
+
+std::vector<rclcpp::Parameter> all_hardware_in(const std::string & state)
+{
+  return {rclcpp::Parameter(
+    "hardware_components_initial_state." + state,
+    std::vector<std::string>{"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})};
+}
+
+class SleepingPoliciesWithUnconfiguredHardwareTest : public SleepingPoliciesTest
+{
+public:
+  SleepingPoliciesWithUnconfiguredHardwareTest()
+  : SleepingPoliciesTest(all_hardware_in("unconfigured"))
+  {
+  }
+};
+
+class SleepingPoliciesWithInactiveHardwareTest : public SleepingPoliciesTest
+{
+public:
+  SleepingPoliciesWithInactiveHardwareTest() : SleepingPoliciesTest(all_hardware_in("inactive")) {}
+};
+
+/// A short cycle without active hardware must sleep for the period instead of minimum_cycle_time.
+void expect_periodic_sleep_on_short_cycle(
+  const std::shared_ptr<controller_manager::ControllerManager> & cm)
+{
+  ASSERT_FALSE(cm->has_active_hardware_components());
+  const controller_manager::ControlLoopTimingConfig config{
+    .expect_blocking_read_write = true, .minimum_cycle_time = kMinimumCycleTimeS};
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::nanoseconds(1'000'000'000 / kUpdateRateHz);
+  state.next_iteration_time = std::chrono::steady_clock::now();
+  state.previous_time = rclcpp::Time(1, 0);
+  state.cycle_end_time =
+    state.previous_time + rclcpp::Duration::from_seconds(kMinimumCycleTimeS / 2);
+
+  const auto elapsed =
+    measure_execution([&]() { sleep_for_blocking_read_write(cm, config, state); });
+
+  EXPECT_GE(elapsed, state.period - kTimingTolerance);
+  EXPECT_LE(elapsed, state.period + kTimingTolerance);
+}
 
 }  // namespace
 
@@ -76,6 +130,41 @@ TEST_F(SleepingPoliciesTest, sleep_for_blocking_read_write_does_not_sleep_when_c
   const controller_manager::ControlLoopTimingConfig config{
     .expect_blocking_read_write = true, .minimum_cycle_time = kMinimumCycleTimeS};
   controller_manager::ControlLoopState state;
+  state.previous_time = rclcpp::Time(1, 0);
+  state.cycle_end_time = state.previous_time + rclcpp::Duration::from_seconds(kMinimumCycleTimeS);
+
+  const auto elapsed =
+    measure_execution([&]() { sleep_for_blocking_read_write(cm_, config, state); });
+
+  EXPECT_LT(elapsed, kTimingTolerance);
+  // kept current so that falling back to the periodic sleep later doesn't report a huge overrun
+  EXPECT_GE(state.next_iteration_time, std::chrono::steady_clock::now() - kTimingTolerance);
+}
+
+TEST_F(
+  SleepingPoliciesWithUnconfiguredHardwareTest,
+  sleep_for_blocking_read_write_sleeps_for_period_when_no_hardware_is_active)
+{
+  expect_periodic_sleep_on_short_cycle(cm_);
+}
+
+// write() is only called while ACTIVE, so hardware blocking in write() can't pace the loop
+TEST_F(
+  SleepingPoliciesWithInactiveHardwareTest,
+  sleep_for_blocking_read_write_sleeps_for_period_when_inactive_hardware_does_not_block)
+{
+  expect_periodic_sleep_on_short_cycle(cm_);
+}
+
+// read() is called while INACTIVE, so hardware blocking in read() still paces the loop
+TEST_F(
+  SleepingPoliciesWithInactiveHardwareTest,
+  sleep_for_blocking_read_write_does_not_sleep_when_inactive_hardware_blocks)
+{
+  const controller_manager::ControlLoopTimingConfig config{
+    .expect_blocking_read_write = true, .minimum_cycle_time = kMinimumCycleTimeS};
+  controller_manager::ControlLoopState state;
+  state.period = std::chrono::nanoseconds(1'000'000'000 / kUpdateRateHz);
   state.previous_time = rclcpp::Time(1, 0);
   state.cycle_end_time = state.previous_time + rclcpp::Duration::from_seconds(kMinimumCycleTimeS);
 
