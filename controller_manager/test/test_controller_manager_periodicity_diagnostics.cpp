@@ -585,3 +585,33 @@ TEST_F(
   // The since-activation statistics still show the stall
   EXPECT_THAT(v.at(key), testing::HasSubstr("[8.00 - 10000.00]"));
 }
+
+TEST_F(
+  TestPeriodicityDiagnostics,
+  hardware_window_duration_is_applied_to_an_already_initialized_resource_manager)
+{
+  // The resource manager loads its components with its own (disabled) window duration
+  auto resource_manager = std::make_unique<hardware_interface::ResourceManager>(
+    HARDWARE_URDF, std::make_shared<rclcpp::Clock>(), rclcpp::get_logger("test_initialized_rm"),
+    true, UPDATE_RATE);
+  ASSERT_TRUE(resource_manager->are_components_initialized());
+  auto options = controller_manager::get_cm_node_options();
+  options.parameter_overrides(
+    {rclcpp::Parameter("diagnostics.hardware_components.window_duration", WINDOW_DURATION)});
+  PeriodicityTestControllerManager cm(
+    std::move(resource_manager), std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
+    "test_controller_manager_with_initialized_rm", "", options);
+
+  for (const std::string name : {HARDWARE_NAME, SECOND_HARDWARE_NAME})
+  {
+    const auto & info = cm.get_hardware_info(name);
+    for (const auto & statistics : {info.read_statistics, info.write_statistics})
+    {
+      ASSERT_TRUE(statistics) << name;
+      EXPECT_DOUBLE_EQ(statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION)
+        << name;
+      EXPECT_DOUBLE_EQ(statistics->recent_execution_time->get_window_duration(), WINDOW_DURATION)
+        << name;
+    }
+  }
+}

@@ -727,6 +727,25 @@ void ControllerManager::init_controller_manager()
   periodicity_stats_.reset();
   recent_periodicity_stats_.set_window_duration(
     params_->diagnostics.controller_manager.window_duration);
+  // A resource manager passed in already initialized loaded its components with its own window
+  // duration, as init_resource_manager() didn't run
+  if (is_resource_manager_initialized())
+  {
+    const double hw_window_duration = params_->diagnostics.hardware_components.window_duration;
+    for (const auto & [name, component_info] : resource_manager_->get_components_status())
+    {
+      for (const auto & statistics :
+           {component_info.read_statistics, component_info.write_statistics})
+      {
+        // Sensors have no write statistics
+        if (statistics && statistics->recent_periodicity && statistics->recent_execution_time)
+        {
+          statistics->recent_periodicity->set_window_duration(hw_window_duration);
+          statistics->recent_execution_time->set_window_duration(hw_window_duration);
+        }
+      }
+    }
+  }
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
