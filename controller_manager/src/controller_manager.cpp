@@ -536,7 +536,7 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
 
-using StatisticData = libstatistics_collector::moving_average_statistics::StatisticData;
+using StatisticData = ros2_control::StatisticData;
 
 std::string make_stats_string(
   const StatisticData & statistics_data, const std::string & measurement_unit)
