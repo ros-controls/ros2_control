@@ -3072,6 +3072,60 @@ TEST_F(ResourceManagerTest, async_hardware_no_pure_virtual_call_on_destroy)
   EXPECT_NO_FATAL_FAILURE(rm.reset());
 }
 
+// When the async cycle overruns every period, the hardware effectively runs at half its rw_rate.
+// The periodicity statistics must report that real rate, not the rate the RM triggers it at.
+void check_async_overrun_periodicity(rclcpp::Node & node, const std::string & scheduling_policy)
+{
+  const std::string urdf = std::string(ros2_control_test_assets::urdf_head) + R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="100" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+      <param name="async_read_sleep_us">15000</param>
+    </hardware>
+    <properties><async scheduling_policy=")" +
+                           scheduling_policy + R"("/></properties>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)" + std::string(ros2_control_test_assets::urdf_tail);
+
+  TestableResourceManager rm(node, urdf, false);
+  activate_components(rm);
+
+  const rclcpp::Duration period = rclcpp::Duration::from_seconds(0.01);  // RM runs at 100 Hz
+  auto time = node.get_clock()->now();
+  for (size_t i = 0; i < 100; i++)
+  {
+    rm.read(time, period);
+    rm.write(time, period);
+    node.get_clock()->sleep_until(time + period);
+    time = node.get_clock()->now();
+  }
+
+  auto status_map = rm.get_components_status();
+  const auto read_stats =
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].read_statistics->periodicity.get_statistics();
+  const auto write_stats =
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].write_statistics->periodicity.get_statistics();
+  // 15 ms read cycle at 100 Hz rw_rate -> the hardware really cycles at 50 Hz
+  EXPECT_NEAR(read_stats.average, 50.0, 10.0);
+  EXPECT_NEAR(write_stats.average, 50.0, 10.0);
+}
+
+TEST_F(ResourceManagerTest, async_synchronized_overrun_is_reflected_in_periodicity)
+{
+  check_async_overrun_periodicity(node_, "synchronized");
+}
+
+TEST_F(ResourceManagerTest, async_detached_overrun_is_reflected_in_periodicity)
+{
+  check_async_overrun_periodicity(node_, "detached");
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
