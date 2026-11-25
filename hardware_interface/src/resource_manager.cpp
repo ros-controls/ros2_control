@@ -1617,6 +1617,24 @@ bool ResourceManager::are_components_initialized() const
 }
 
 // CM API: Called in "update"-thread
+bool ResourceManager::has_active_components() const
+{
+  std::unique_lock<std::recursive_mutex> guard(resources_lock_, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    return true;
+  }
+  const auto is_active = [](const auto & component)
+  { return component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE; };
+  return std::any_of(
+           resource_storage_->actuators_.begin(), resource_storage_->actuators_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->sensors_.begin(), resource_storage_->sensors_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->systems_.begin(), resource_storage_->systems_.end(), is_active);
+}
+
+// CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
   if (!state_interface_is_available(key))

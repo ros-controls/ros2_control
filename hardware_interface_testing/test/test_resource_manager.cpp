@@ -936,6 +936,37 @@ TEST_F(ResourceManagerTest, lifecycle_individual_resources)
   }
 }
 
+TEST_F(ResourceManagerTest, has_active_components)
+{
+  TestableResourceManager empty_rm(node_);
+  EXPECT_FALSE(empty_rm.has_active_components());
+
+  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
+  // all components start UNCONFIGURED
+  EXPECT_FALSE(rm.has_active_components());
+
+  using lifecycle_msgs::msg::State;
+  namespace names = hardware_interface::lifecycle_state_names;
+  ASSERT_THAT(
+    set_components_state(
+      rm, {TEST_SENSOR_HARDWARE_NAME}, State::PRIMARY_STATE_INACTIVE, names::INACTIVE),
+    ::testing::Each(hardware_interface::return_type::OK));
+  // write() is not called while INACTIVE, so an INACTIVE component does not count
+  EXPECT_FALSE(rm.has_active_components());
+
+  ASSERT_THAT(
+    set_components_state(
+      rm, {TEST_SENSOR_HARDWARE_NAME}, State::PRIMARY_STATE_ACTIVE, names::ACTIVE),
+    ::testing::Each(hardware_interface::return_type::OK));
+  EXPECT_TRUE(rm.has_active_components());
+
+  ASSERT_THAT(
+    set_components_state(
+      rm, {TEST_SENSOR_HARDWARE_NAME}, State::PRIMARY_STATE_INACTIVE, names::INACTIVE),
+    ::testing::Each(hardware_interface::return_type::OK));
+  EXPECT_FALSE(rm.has_active_components());
+}
+
 TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
 {
   using std::placeholders::_1;

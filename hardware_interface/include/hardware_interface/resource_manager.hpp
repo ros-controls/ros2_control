@@ -159,6 +159,16 @@ public:
    */
   bool are_components_initialized() const;
 
+  /// Check if any hardware component is ACTIVE, i.e., gets both read() and write() called.
+  /**
+   * Real-time safe: does not block, and only reads the cached lifecycle states.
+   *
+   * \return true if at least one component is ACTIVE. Also true if the components are currently
+   * locked for loading or a lifecycle transition, to stay on the safe side.
+   * \return false otherwise, e.g. if no component is loaded or none is ACTIVE.
+   */
+  bool has_active_components() const;
+
   /// Claim a state interface given its key.
   /**
    * The resource is claimed as long as being in scope.
