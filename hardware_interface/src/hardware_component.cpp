@@ -316,17 +316,19 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
     {
       error();
     }
+    // periodicity of the cycles really executed; for async components the trigger rate would hide
+    // overruns
+    if (trigger_result.cycle_period.has_value())
+    {
+      read_statistics_.periodicity->add_measurement(
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count()));
+    }
     if (trigger_result.successful)
     {
       if (trigger_result.execution_time.has_value())
       {
         read_statistics_.execution_time->add_measurement(
           static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
-      }
-      if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
-      {
-        read_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_read_cycle_time_).seconds());
       }
       last_read_cycle_time_ = time;
     }
@@ -355,17 +357,19 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     {
       error();
     }
+    // periodicity of the cycles really executed; for async components the trigger rate would hide
+    // overruns
+    if (trigger_result.cycle_period.has_value())
+    {
+      write_statistics_.periodicity->add_measurement(
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count()));
+    }
     if (trigger_result.successful)
     {
       if (trigger_result.execution_time.has_value())
       {
         write_statistics_.execution_time->add_measurement(
           static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
-      }
-      if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
-      {
-        write_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_write_cycle_time_).seconds());
       }
       last_write_cycle_time_ = time;
     }
