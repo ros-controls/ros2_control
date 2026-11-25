@@ -97,6 +97,10 @@ public:
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
   CycleTracker read_cycle_;
   CycleTracker write_cycle_;
+  // Async writes completed by the async thread, and the count last reported by trigger_write(), so
+  // that the execution time of each completed write is reported once rather than on every call
+  std::atomic<uint64_t> async_write_count_ = 0;
+  uint64_t reported_async_write_count_ = 0;
 
   std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
   realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
@@ -171,6 +175,7 @@ CallbackReturn HardwareComponentInterface::init(
           impl_->write_execution_time_.store(
             std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
             std::memory_order_release);
+          impl_->async_write_count_.fetch_add(1, std::memory_order_release);
           return ret_write;
         }
         return return_type::OK;
@@ -503,8 +508,13 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
   if (info_.is_async)
   {
     status.successful = true;
+    // The write runs in the async read cycle: only report the execution time of a write completed
+    // since the last call, so a stalled async thread doesn't keep feeding the statistics with it
+    const auto async_write_count = impl_->async_write_count_.load(std::memory_order_acquire);
+    const bool new_write_completed = async_write_count != impl_->reported_async_write_count_;
+    impl_->reported_async_write_count_ = async_write_count;
     const auto write_exec_time = impl_->write_execution_time_.load(std::memory_order_acquire);
-    if (write_exec_time.count() > 0)
+    if (new_write_completed && write_exec_time.count() > 0)
     {
       status.execution_time = write_exec_time;
     }
