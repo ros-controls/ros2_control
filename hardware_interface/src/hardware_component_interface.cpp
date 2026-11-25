@@ -49,30 +49,33 @@ struct CycleTracker
     const int64_t prev_ns = last_time_ns.exchange(now_ns, std::memory_order_relaxed);
     if (prev_ns != UNSET && now_ns > prev_ns)
     {
-      period_ns.store(now_ns - prev_ns, std::memory_order_relaxed);
-      count.fetch_add(1, std::memory_order_release);
+      pending_period_ns.store(now_ns - prev_ns, std::memory_order_relaxed);
     }
   }
 
   /// Called from the RT thread; returns the latest period only once per completed cycle.
+  /// A single exchange hands the period over, so a concurrent record() can't make it report the
+  /// same period twice.
   std::optional<std::chrono::nanoseconds> consume()
   {
-    const auto current_count = count.load(std::memory_order_acquire);
-    if (current_count == reported_count)
+    const int64_t period = pending_period_ns.exchange(UNSET, std::memory_order_relaxed);
+    if (period == UNSET)
     {
       return std::nullopt;
     }
-    reported_count = current_count;
-    return std::chrono::nanoseconds(period_ns.load(std::memory_order_relaxed));
+    return std::chrono::nanoseconds(period);
   }
 
-  /// Forget the last cycle time, so a pause doesn't show up as one very long period.
-  void reset() { last_time_ns.store(UNSET, std::memory_order_relaxed); }
+  /// Forget the last cycle time and the pending period, so neither a pause nor a cycle executed
+  /// before it shows up in the statistics after the transition.
+  void reset()
+  {
+    last_time_ns.store(UNSET, std::memory_order_relaxed);
+    pending_period_ns.store(UNSET, std::memory_order_relaxed);
+  }
 
   std::atomic<int64_t> last_time_ns{UNSET};
-  std::atomic<int64_t> period_ns{0};
-  std::atomic<uint64_t> count{0};
-  uint64_t reported_count = 0;  // only accessed by the RT thread
+  std::atomic<int64_t> pending_period_ns{UNSET};
 };
 }  // namespace
 
