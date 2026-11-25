@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cstdint>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -32,6 +33,51 @@
 
 namespace hardware_interface
 {
+
+namespace
+{
+/// Measures the period of the read/write cycles actually executed. For async components this runs
+/// in the async thread, as the trigger time seen by the RT loop says nothing about overruns.
+struct CycleTracker
+{
+  static constexpr int64_t UNSET = std::numeric_limits<int64_t>::min();
+
+  /// Called with the time of the cycle being executed (from the async thread for async components).
+  void record(const rclcpp::Time & time)
+  {
+    const int64_t now_ns = time.nanoseconds();
+    const int64_t prev_ns = last_time_ns.exchange(now_ns, std::memory_order_relaxed);
+    if (prev_ns != UNSET && now_ns > prev_ns)
+    {
+      pending_period_ns.store(now_ns - prev_ns, std::memory_order_relaxed);
+    }
+  }
+
+  /// Called from the RT thread; returns the latest period only once per completed cycle.
+  /// A single exchange hands the period over, so a concurrent record() can't make it report the
+  /// same period twice.
+  std::optional<std::chrono::nanoseconds> consume()
+  {
+    const int64_t period = pending_period_ns.exchange(UNSET, std::memory_order_relaxed);
+    if (period == UNSET)
+    {
+      return std::nullopt;
+    }
+    return std::chrono::nanoseconds(period);
+  }
+
+  /// Forget the last cycle time and the pending period, so neither a pause nor a cycle executed
+  /// before it shows up in the statistics after the transition.
+  void reset()
+  {
+    last_time_ns.store(UNSET, std::memory_order_relaxed);
+    pending_period_ns.store(UNSET, std::memory_order_relaxed);
+  }
+
+  std::atomic<int64_t> last_time_ns{UNSET};
+  std::atomic<int64_t> pending_period_ns{UNSET};
+};
+}  // namespace
 
 class HardwareComponentInterface::HardwareComponentInterfaceImpl
 {
@@ -49,6 +95,16 @@ public:
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
+<<<<<<< HEAD
+=======
+  CycleTracker read_cycle_;
+  CycleTracker write_cycle_;
+
+  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
+  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
+    hardware_status_box_;
+  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
+>>>>>>> 084be7a (Fix periodicity statistics of async hardware components hiding overruns (#3823))
 };
 
 HardwareComponentInterface::HardwareComponentInterface()
@@ -94,6 +150,7 @@ CallbackReturn HardwareComponentInterface::init(
     async_handler_->init(
       [this, is_sensor_type](const rclcpp::Time & time, const rclcpp::Duration & period)
       {
+        impl_->read_cycle_.record(time);
         const auto read_start_time = std::chrono::steady_clock::now();
         const auto ret_read = read(time, period);
         const auto read_end_time = std::chrono::steady_clock::now();
@@ -109,6 +166,7 @@ CallbackReturn HardwareComponentInterface::init(
           !is_sensor_type && impl_->lifecycle_id_cache_.load(std::memory_order_acquire) ==
                                lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
+          impl_->write_cycle_.record(time);
           const auto write_start_time = std::chrono::steady_clock::now();
           const auto ret_write = write(time, period);
           const auto write_end_time = std::chrono::steady_clock::now();
@@ -341,6 +399,7 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
     {
       status.execution_time = read_exec_time;
     }
+    status.cycle_period = impl_->read_cycle_.consume();
     const auto result = async_handler_->trigger_async_callback(time, period);
     status.successful = result.first;
     if (!status.successful)
@@ -356,6 +415,8 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
   }
   else
   {
+    impl_->read_cycle_.record(time);
+    status.cycle_period = impl_->read_cycle_.consume();
     const auto start_time = std::chrono::steady_clock::now();
     status.successful = true;
     status.result = read(time, period);
@@ -378,10 +439,13 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
     {
       status.execution_time = write_exec_time;
     }
+    status.cycle_period = impl_->write_cycle_.consume();
     status.result = impl_->write_return_info_.load(std::memory_order_acquire);
   }
   else
   {
+    impl_->write_cycle_.record(time);
+    status.cycle_period = impl_->write_cycle_.consume();
     const auto start_time = std::chrono::steady_clock::now();
     status.successful = true;
     status.result = write(time, period);
@@ -472,6 +536,8 @@ void HardwareComponentInterface::pause_async_operations()
   {
     async_handler_->pause_execution();
   }
+  impl_->read_cycle_.reset();
+  impl_->write_cycle_.reset();
 }
 
 void HardwareComponentInterface::stop_async_handler()
