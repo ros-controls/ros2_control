@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.21.0 (2026-11-25)
+-------------------
 * Avoid duplicated interfaces in REGEX interface configuration (backport `#3810 <https://github.com/ros-controls/ros2_control/issues/3810>`_) (`#3813 <https://github.com/ros-controls/ros2_control/issues/3813>`_)
 * Make --unload-on-kill ignore a second SIGINT before cleanup (`#3714 <https://github.com/ros-controls/ros2_control/issues/3714>`_) (`#3808 <https://github.com/ros-controls/ros2_control/issues/3808>`_)
 * Preserve load order for controllers without chain relationships (`#3781 <https://github.com/ros-controls/ros2_control/issues/3781>`_) (`#3784 <https://github.com/ros-controls/ros2_control/issues/3784>`_)

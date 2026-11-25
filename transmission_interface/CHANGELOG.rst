@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.21.0 (2026-11-25)
+-------------------
 * chore: Remove unreferenced images (`#3764 <https://github.com/ros-controls/ros2_control/issues/3764>`_) (`#3768 <https://github.com/ros-controls/ros2_control/issues/3768>`_)
 * Contributors: mergify[bot]
 

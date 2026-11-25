@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.21.0 (2026-11-25)
+-------------------
 * Do not call on_error() again on an already finalized hardware component (backport `#3791 <https://github.com/ros-controls/ros2_control/issues/3791>`_) (`#3793 <https://github.com/ros-controls/ros2_control/issues/3793>`_)
 * Enforce joint limits in a single pass over the limiters (`#3753 <https://github.com/ros-controls/ros2_control/issues/3753>`_) (`#3763 <https://github.com/ros-controls/ros2_control/issues/3763>`_)
 * Make the list hardware services linear in the number of interfaces (backport `#3755 <https://github.com/ros-controls/ros2_control/issues/3755>`_) (`#3761 <https://github.com/ros-controls/ros2_control/issues/3761>`_)
