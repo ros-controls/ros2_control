@@ -32,6 +32,9 @@ namespace
 {
 constexpr int UPDATE_RATE = 100;
 constexpr double WINDOW_DURATION = 1.0;
+// For the tests that let real time pass: long enough that a stalled CI machine can't push the
+// first cycles out of the window
+constexpr double LONG_WINDOW_DURATION = 60.0;
 const char CM_ACTIVITY[] = "Controller Manager Activity";
 const char CONTROLLERS_ACTIVITY[] = "Controllers Activity";
 const char HARDWARE_ACTIVITY[] = "Hardware Components Activity";
@@ -149,6 +152,10 @@ public:
     return cm_->get_loaded_controllers().at(0);
   }
 
+  // The inject_* helpers below write samples directly into the collectors, so the tests using them
+  // check how the diagnostic level is judged, not that the update loop or the hardware read/write
+  // feed the collectors. That is covered by the *_feed_the_recent_statistics tests.
+
   /// Feed periodicity statistics with a stall at bring-up followed by 3 s of steady cycles
   template <typename AddMeasurement>
   static void stall_then_steady(int rate, AddMeasurement add_measurement)
@@ -166,7 +173,7 @@ public:
   }
 
   /// The periodicity of the controller goes through a stall at bring-up and is steady since
-  static void controller_stall_then_steady(const controller_manager::ControllerSpec & spec)
+  static void inject_controller_stall_then_steady(const controller_manager::ControllerSpec & spec)
   {
     spec.periodicity_statistics->reset();
     spec.recent_periodicity_statistics->reset();
@@ -194,7 +201,7 @@ public:
   }
 
   /// The execution time of the controller goes through a slow first update and is steady since
-  static void controller_slow_first_update(const controller_manager::ControllerSpec & spec)
+  static void inject_controller_slow_first_update(const controller_manager::ControllerSpec & spec)
   {
     spec.periodicity_statistics->reset();
     spec.recent_periodicity_statistics->reset();
@@ -214,7 +221,7 @@ public:
 
   /// The read cycle periodicity of the hardware goes through a stall at bring-up and is steady
   /// since
-  void hardware_read_stall_then_steady()
+  void inject_hardware_read_stall_then_steady()
   {
     const auto & statistics = cm_->get_hardware_info(HARDWARE_NAME).read_statistics;
     auto since_startup = std::make_shared<ros2_control::MovingAverageStatistics>();
@@ -232,7 +239,7 @@ public:
 
   /// The read cycle execution time of the hardware goes through a slow first read and is steady
   /// since
-  void hardware_slow_first_read()
+  void inject_hardware_slow_first_read()
   {
     const auto & statistics = cm_->get_hardware_info(HARDWARE_NAME).read_statistics;
     auto exec_time_since_startup = std::make_shared<ros2_control::MovingAverageStatistics>();
@@ -290,6 +297,12 @@ public:
   TestPeriodicityDiagnosticsWithWindow() : TestPeriodicityDiagnostics(WINDOW_DURATION) {}
 };
 
+class TestPeriodicityDiagnosticsWithLongWindow : public TestPeriodicityDiagnostics
+{
+public:
+  TestPeriodicityDiagnosticsWithLongWindow() : TestPeriodicityDiagnostics(LONG_WINDOW_DURATION) {}
+};
+
 class TestHardwarePeriodicityDiagnostics : public TestPeriodicityDiagnostics
 {
 public:
@@ -301,6 +314,15 @@ class TestHardwarePeriodicityDiagnosticsWithWindow : public TestPeriodicityDiagn
 public:
   TestHardwarePeriodicityDiagnosticsWithWindow()
   : TestPeriodicityDiagnostics(WINDOW_DURATION, HARDWARE_URDF)
+  {
+  }
+};
+
+class TestHardwarePeriodicityDiagnosticsWithLongWindow : public TestPeriodicityDiagnostics
+{
+public:
+  TestHardwarePeriodicityDiagnosticsWithLongWindow()
+  : TestPeriodicityDiagnostics(LONG_WINDOW_DURATION, HARDWARE_URDF)
   {
   }
 };
@@ -358,7 +380,7 @@ TEST_F(
 {
   const auto spec = add_active_controller();
   EXPECT_FALSE(spec.recent_periodicity_statistics->is_enabled());
-  controller_stall_then_steady(spec);
+  inject_controller_stall_then_steady(spec);
 
   const auto status = next_status(CONTROLLERS_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
@@ -376,7 +398,7 @@ TEST_F(
 {
   const auto spec = add_active_controller();
   EXPECT_FALSE(spec.recent_execution_time_statistics->is_enabled());
-  controller_slow_first_update(spec);
+  inject_controller_slow_first_update(spec);
 
   const auto status = next_status(CONTROLLERS_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
@@ -393,7 +415,7 @@ TEST_F(
   controller_with_window_the_execution_time_level_recovers_after_a_slow_first_update)
 {
   const auto spec = add_active_controller();
-  controller_slow_first_update(spec);
+  inject_controller_slow_first_update(spec);
 
   const auto status = next_status(CONTROLLERS_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
@@ -407,13 +429,14 @@ TEST_F(
   EXPECT_THAT(v.at(name + ".execution_time"), testing::HasSubstr("[100.00 - 50000.00]"));
 }
 
-TEST_F(TestPeriodicityDiagnosticsWithWindow, controller_update_feeds_the_recent_statistics)
+TEST_F(TestPeriodicityDiagnosticsWithLongWindow, controller_update_feeds_the_recent_statistics)
 {
   const auto spec = add_active_controller();
   ASSERT_TRUE(spec.recent_periodicity_statistics->is_enabled());
-  EXPECT_DOUBLE_EQ(spec.recent_periodicity_statistics->get_window_duration(), WINDOW_DURATION);
+  EXPECT_DOUBLE_EQ(spec.recent_periodicity_statistics->get_window_duration(), LONG_WINDOW_DURATION);
   ASSERT_TRUE(spec.recent_execution_time_statistics->is_enabled());
-  EXPECT_DOUBLE_EQ(spec.recent_execution_time_statistics->get_window_duration(), WINDOW_DURATION);
+  EXPECT_DOUBLE_EQ(
+    spec.recent_execution_time_statistics->get_window_duration(), LONG_WINDOW_DURATION);
   spec.periodicity_statistics->reset();
   spec.recent_periodicity_statistics->reset();
   spec.execution_time_statistics->reset();
@@ -442,7 +465,7 @@ TEST_F(
   controller_with_window_the_level_recovers_after_a_startup_stall)
 {
   const auto spec = add_active_controller();
-  controller_stall_then_steady(spec);
+  inject_controller_stall_then_steady(spec);
 
   const auto status = next_status(CONTROLLERS_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Controllers Activity diagnostic was published";
@@ -463,7 +486,7 @@ TEST_F(
   ASSERT_EQ(info.rw_rate, static_cast<unsigned int>(HARDWARE_RW_RATE));
   ASSERT_TRUE(info.read_statistics->recent_periodicity);
   EXPECT_FALSE(info.read_statistics->recent_periodicity->is_enabled());
-  hardware_read_stall_then_steady();
+  inject_hardware_read_stall_then_steady();
 
   const auto status = next_status(HARDWARE_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
@@ -480,7 +503,7 @@ TEST_F(
   const auto & info = cm_->get_hardware_info(HARDWARE_NAME);
   ASSERT_TRUE(info.read_statistics->recent_execution_time);
   EXPECT_FALSE(info.read_statistics->recent_execution_time->is_enabled());
-  hardware_slow_first_read();
+  inject_hardware_slow_first_read();
 
   const auto status = next_status(HARDWARE_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
@@ -494,7 +517,7 @@ TEST_F(
   TestHardwarePeriodicityDiagnosticsWithWindow,
   hardware_with_window_the_execution_time_level_recovers_after_a_slow_first_read)
 {
-  hardware_slow_first_read();
+  inject_hardware_slow_first_read();
 
   const auto status = next_status(HARDWARE_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
@@ -508,7 +531,8 @@ TEST_F(
 }
 
 TEST_F(
-  TestHardwarePeriodicityDiagnosticsWithWindow, hardware_read_and_write_feed_the_recent_statistics)
+  TestHardwarePeriodicityDiagnosticsWithLongWindow,
+  hardware_read_and_write_feed_the_recent_statistics)
 {
   // The resource manager runs the hardware cycles on its own clock, so let real time pass
   const auto period = rclcpp::Duration::from_seconds(1.0 / UPDATE_RATE);
@@ -526,14 +550,15 @@ TEST_F(
     for (const auto & statistics : {info.read_statistics, info.write_statistics})
     {
       ASSERT_TRUE(statistics->recent_periodicity) << name;
-      EXPECT_DOUBLE_EQ(statistics->recent_periodicity->get_window_duration(), WINDOW_DURATION)
+      EXPECT_DOUBLE_EQ(statistics->recent_periodicity->get_window_duration(), LONG_WINDOW_DURATION)
         << name;
       const auto recent = statistics->recent_periodicity->get_statistics();
       EXPECT_GT(recent.sample_count, 0u) << name;
       EXPECT_EQ(recent.sample_count, statistics->periodicity.get_statistics().sample_count) << name;
 
       ASSERT_TRUE(statistics->recent_execution_time) << name;
-      EXPECT_DOUBLE_EQ(statistics->recent_execution_time->get_window_duration(), WINDOW_DURATION)
+      EXPECT_DOUBLE_EQ(
+        statistics->recent_execution_time->get_window_duration(), LONG_WINDOW_DURATION)
         << name;
       const auto recent_exec_time = statistics->recent_execution_time->get_statistics();
       EXPECT_GT(recent_exec_time.sample_count, 0u) << name;
@@ -548,7 +573,7 @@ TEST_F(
   TestHardwarePeriodicityDiagnosticsWithWindow,
   hardware_with_window_the_level_recovers_after_a_startup_stall)
 {
-  hardware_read_stall_then_steady();
+  inject_hardware_read_stall_then_steady();
 
   const auto status = next_status(HARDWARE_ACTIVITY);
   ASSERT_TRUE(status.has_value()) << "no Hardware Components Activity diagnostic was published";
