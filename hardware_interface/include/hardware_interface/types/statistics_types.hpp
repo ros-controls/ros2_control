@@ -20,12 +20,14 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/statistic_data.hpp"
@@ -422,6 +424,77 @@ private:
   // Atomic so that the disabled (default) case is checked without locking
   std::atomic<bool> enabled_{false};
   int64_t latest_id_ = std::numeric_limits<int64_t>::min();
+};
+
+/**
+ * @brief Latest completed execution (e.g. an async read or write cycle) and its duration, published
+ * by one thread and consumed by another one without locking.
+ *
+ *  Each completed execution is consumed at most once, and a consumed duration always belongs to the
+ * execution it is reported for: the duration and its sequence number are published together through
+ * a sequence lock. Executions published between two consume_new() calls but the latest are skipped.
+ *
+ *  publish() may only be called from a single thread, and consume_new() and discard() from a single
+ * (possibly different) thread.
+ */
+class CompletedExecutionRecord
+{
+public:
+  /// A completed execution.
+  struct Execution
+  {
+    /// Number of executions published so far, this one included (starts at 1).
+    uint64_t sequence;
+    /// Duration of the execution.
+    std::chrono::nanoseconds duration;
+  };
+
+  /// Publish a completed execution that lasted @p duration.
+  void publish(std::chrono::nanoseconds duration)
+  {
+    const uint64_t version = version_.load(std::memory_order_relaxed);
+    // An odd version tells the consumer that the duration is being written
+    version_.store(version + 1, std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_release);
+    duration_ns_.store(duration.count(), std::memory_order_relaxed);
+    version_.store(version + 2, std::memory_order_release);
+  }
+
+  /**
+   *  Return the latest completed execution if it was not consumed yet, otherwise std::nullopt.
+   *  Also returns std::nullopt if an execution is being published concurrently; it is then returned
+   * by a later call.
+   */
+  std::optional<Execution> consume_new()
+  {
+    const uint64_t version = version_.load(std::memory_order_acquire);
+    if (version == consumed_version_ || (version & 1u) != 0u)
+    {
+      return std::nullopt;
+    }
+    const auto duration_ns = duration_ns_.load(std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_acquire);
+    if (version_.load(std::memory_order_relaxed) != version)
+    {
+      return std::nullopt;  // overwritten while reading it
+    }
+    consumed_version_ = version;
+    return Execution{version / 2, std::chrono::nanoseconds(duration_ns)};
+  }
+
+  /// Mark the latest completed execution as consumed, e.g. so it isn't reported after a restart.
+  void discard()
+  {
+    const uint64_t version = version_.load(std::memory_order_acquire);
+    // A publish in progress completes after this call, so that execution is still new
+    consumed_version_ = version - (version & 1u);
+  }
+
+private:
+  std::atomic<uint64_t> version_{0};
+  std::atomic<int64_t> duration_ns_{0};
+  // Only accessed by the consumer thread
+  uint64_t consumed_version_ = 0;
 };
 
 /**
