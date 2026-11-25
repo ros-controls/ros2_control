@@ -403,3 +403,32 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
+
+class TestControllerManagerInitialStateFailure : public ::testing::Test
+{
+public:
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void TearDownTestCase() { rclcpp::shutdown(); }
+};
+
+TEST_F(TestControllerManagerInitialStateFailure, constructor_throws_when_initial_state_fails)
+{
+  auto urdf = ros2_control_test_assets::minimal_robot_urdf;
+  const std::string actuator_plugin = "<plugin>test_actuator</plugin>";
+  urdf.replace(
+    urdf.find(actuator_plugin), actuator_plugin.size(),
+    actuator_plugin + "<param name=\"throw_on_on_configure\">true</param>");
+  rclcpp::NodeOptions options;
+  options.parameter_overrides(
+    {rclcpp::Parameter("hardware_components_initial_state.shutdown_on_initial_state_failure", true),
+     rclcpp::Parameter(
+       "hardware_components_initial_state.inactive",
+       std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME}))});
+
+  // The activity publisher thread is already running when the constructor throws
+  EXPECT_THROW(
+    std::make_shared<controller_manager::ControllerManager>(
+      std::make_shared<rclcpp::executors::SingleThreadedExecutor>(), urdf, false, TEST_CM_NAME, "",
+      options),
+    std::runtime_error);
+}

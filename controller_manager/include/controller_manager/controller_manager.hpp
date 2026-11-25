@@ -830,6 +830,14 @@ private:
     std::string concatenated_string;
   };
   RTBufferVariables rt_buffer_;
+
+  /// Removes the pre-shutdown callback and stops the activity publisher thread. Declared last, so
+  /// it runs before the members they use are destroyed, also when a constructor throws.
+  struct DestructionGuard
+  {
+    ControllerManager * cm;
+    ~DestructionGuard();
+  } destruction_guard_{this};
 };
 
 }  // namespace controller_manager

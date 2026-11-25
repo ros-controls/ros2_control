@@ -632,16 +632,17 @@ ControllerManager::ControllerManager(
   }
 }
 
-ControllerManager::~ControllerManager()
+ControllerManager::~ControllerManager() { CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES(); }
+
+ControllerManager::DestructionGuard::~DestructionGuard()
 {
-  stop_activity_publisher_thread();
-  CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES();
-  if (preshutdown_cb_handle_)
+  if (cm->preshutdown_cb_handle_)
   {
-    rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
-    context->remove_pre_shutdown_callback(*(preshutdown_cb_handle_.get()));
-    preshutdown_cb_handle_.reset();
+    rclcpp::Context::SharedPtr context = cm->get_node_base_interface()->get_context();
+    context->remove_pre_shutdown_callback(*(cm->preshutdown_cb_handle_.get()));
+    cm->preshutdown_cb_handle_.reset();
   }
+  cm->stop_activity_publisher_thread();
 }
 
 bool ControllerManager::shutdown_controllers()
