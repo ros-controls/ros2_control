@@ -691,15 +691,21 @@ void ControllerManager::init_controller_manager()
         {
           {
             std::unique_lock<std::mutex> lock(activity_publisher_mutex_);
-            activity_publisher_cv_.wait(
-              lock, [this]() { return stop_activity_publisher_ || activity_publish_requested_; });
+            // The realtime loop notifies without taking the mutex, so a notification can arrive
+            // between the check of the request and the wait. The timeout bounds that delay.
+            activity_publisher_cv_.wait_for(
+              lock, std::chrono::milliseconds(100),
+              [this]() { return stop_activity_publisher_ || activity_publish_requested_; });
             // The context stays valid when the controller manager is destroyed without a shutdown
             if (stop_activity_publisher_)
             {
               return;
             }
             // Cleared before the snapshot, so a request arriving during it publishes again
-            activity_publish_requested_ = false;
+            if (!activity_publish_requested_.exchange(false))
+            {
+              continue;
+            }
           }
           try
           {
@@ -3418,11 +3424,6 @@ controller_interface::return_type ControllerManager::update(
   execution_time_.switch_perform_mode_time = 0.0;
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-  if (activity_publish_requested_)
-  {
-    // Wakes the publisher thread again, in case a request missed it
-    request_activity_publish();
-  }
 
   auto ret = controller_interface::return_type::OK;
   ++update_loop_counter_;
@@ -4336,9 +4337,8 @@ void ControllerManager::publish_activity()
 void ControllerManager::request_activity_publish()
 {
   activity_publish_requested_ = true;
-  // Not taking the mutex, as the realtime loop must not wait for it. The wakeup is then lost if
-  // the publisher thread checked the request just before it was set, so update() repeats the
-  // notification while the request is pending.
+  // Not taking the mutex, as the realtime loop must not wait for it. A wakeup missed because of
+  // that is caught up by the timed wait of the publisher thread.
   activity_publisher_cv_.notify_one();
 }
 
