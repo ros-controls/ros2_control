@@ -15,6 +15,8 @@
 #ifndef TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 #define TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 
+#include <atomic>
+
 #include "controller_interface/controller_interface.hpp"
 
 namespace test_controller_with_interfaces
@@ -55,8 +57,19 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
 
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
+    const rclcpp_lifecycle::State & previous_state) override;
+
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
     const rclcpp_lifecycle::State & previous_state) override;
+
+  // Test hooks (inline so tests can use them without linking this plugin library)
+  /// Artificial duration of each update() call.
+  std::atomic<int> update_duration_ms{0};
+  /// True while update() is executing.
+  std::atomic<bool> in_update{false};
+  /// Set if on_deactivate() ran while an update() was still in flight.
+  std::atomic<bool> deactivated_during_update{false};
 };
 
 }  // namespace test_controller_with_interfaces
