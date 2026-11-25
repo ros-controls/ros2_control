@@ -95,16 +95,8 @@ public:
   std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
   std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
-<<<<<<< HEAD
-=======
   CycleTracker read_cycle_;
   CycleTracker write_cycle_;
-
-  std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
-  realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
-    hardware_status_box_;
-  rclcpp::TimerBase::SharedPtr hardware_status_timer_;
->>>>>>> 084be7a (Fix periodicity statistics of async hardware components hiding overruns (#3823))
 };
 
 HardwareComponentInterface::HardwareComponentInterface()
