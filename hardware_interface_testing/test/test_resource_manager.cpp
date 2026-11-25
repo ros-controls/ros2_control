@@ -3128,6 +3128,82 @@ TEST_F(ResourceManagerTest, async_detached_overrun_is_reflected_in_periodicity)
   check_async_overrun_periodicity(node_, "detached");
 }
 
+void check_async_period_pending_before_pause_is_dropped(
+  rclcpp::Node & node, const std::string & scheduling_policy)
+{
+  const std::string urdf = std::string(ros2_control_test_assets::urdf_head) + R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="100" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <properties><async scheduling_policy=")" +
+                           scheduling_policy + R"("/></properties>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)" + std::string(ros2_control_test_assets::urdf_tail);
+
+  TestableResourceManager rm(node, urdf, false);
+  activate_components(rm);
+
+  const rclcpp::Duration period = rclcpp::Duration::from_seconds(0.01);
+  const rclcpp::Duration wait_for_async_cycle = rclcpp::Duration::from_seconds(0.05);
+  // two cycles 200 ms apart leave a 5 Hz period pending, which is never consumed before the pause
+  auto time = node.get_clock()->now();
+  rm.read(time, period);
+  rm.write(time, period);
+  node.get_clock()->sleep_until(time + rclcpp::Duration::from_seconds(0.2));
+  time = node.get_clock()->now();
+  rm.read(time, period);
+  rm.write(time, period);
+  node.get_clock()->sleep_until(time + wait_for_async_cycle);
+
+  rclcpp_lifecycle::State state_inactive(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  rclcpp_lifecycle::State state_active(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    hardware_interface::lifecycle_state_names::ACTIVE);
+  ASSERT_EQ(
+    rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_inactive),
+    hardware_interface::return_type::OK);
+  ASSERT_EQ(
+    rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active),
+    hardware_interface::return_type::OK);
+
+  time = node.get_clock()->now();
+  for (size_t i = 0; i < 20; i++)
+  {
+    rm.read(time, period);
+    rm.write(time, period);
+    node.get_clock()->sleep_until(time + period);
+    time = node.get_clock()->now();
+  }
+
+  auto status_map = rm.get_components_status();
+  const auto read_stats =
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].read_statistics->periodicity.get_statistics();
+  const auto write_stats =
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].write_statistics->periodicity.get_statistics();
+  // only the ~100 Hz cycles executed after the activation may be part of the statistics
+  EXPECT_GT(read_stats.min, 50.0);
+  EXPECT_GT(write_stats.min, 50.0);
+}
+
+TEST_F(ResourceManagerTest, async_synchronized_period_pending_before_pause_is_dropped)
+{
+  check_async_period_pending_before_pause_is_dropped(node_, "synchronized");
+}
+
+TEST_F(ResourceManagerTest, async_detached_period_pending_before_pause_is_dropped)
+{
+  check_async_period_pending_before_pause_is_dropped(node_, "detached");
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
