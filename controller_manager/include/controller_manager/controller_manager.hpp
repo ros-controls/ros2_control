@@ -233,6 +233,18 @@ public:
     return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
+  /// Check if the cached lifecycle state of any hardware component is ACTIVE.
+  /**
+   * Real-time safe. Used by the control loop to decide whether a cycle that didn't block is
+   * worth a warning. A true result is no proof that any component paces the loop.
+   * \returns true if at least one hardware component is ACTIVE, or, conservatively, if the
+   * components are currently locked in the ResourceManager; false otherwise.
+   */
+  bool has_active_hardware_components() const
+  {
+    return resource_manager_ && resource_manager_->has_active_components();
+  }
+
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
