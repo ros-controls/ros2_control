@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Avoid duplicated interfaces in REGEX interface configuration (backport `#3810 <https://github.com/ros-controls/ros2_control/issues/3810>`_) (`#3813 <https://github.com/ros-controls/ros2_control/issues/3813>`_)
+  Co-authored-by: Sai Kishor Kothakota <sai.kishor@pal-robotics.com>
+* Contributors: mergify[bot]
+
 5.20.0 (2026-11-02)
 -------------------
 * Fix GPS status values when state-interface reads fail (`#3660 <https://github.com/ros-controls/ros2_control/issues/3660>`_) (`#3707 <https://github.com/ros-controls/ros2_control/issues/3707>`_)

@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Avoid duplicated interfaces in REGEX interface configuration (backport `#3810 <https://github.com/ros-controls/ros2_control/issues/3810>`_) (`#3813 <https://github.com/ros-controls/ros2_control/issues/3813>`_)
+* Make --unload-on-kill ignore a second SIGINT before cleanup (`#3714 <https://github.com/ros-controls/ros2_control/issues/3714>`_) (`#3808 <https://github.com/ros-controls/ros2_control/issues/3808>`_)
+* Preserve load order for controllers without chain relationships (`#3781 <https://github.com/ros-controls/ros2_control/issues/3781>`_) (`#3784 <https://github.com/ros-controls/ros2_control/issues/3784>`_)
+* Fix stack overflow when chained controllers claim each other's interfaces (`#3699 <https://github.com/ros-controls/ros2_control/issues/3699>`_) (`#3778 <https://github.com/ros-controls/ros2_control/issues/3778>`_)
+* Resolve the clocks once per cycle in the controller manager update loop (`#3754 <https://github.com/ros-controls/ros2_control/issues/3754>`_) (`#3774 <https://github.com/ros-controls/ros2_control/issues/3774>`_)
+* chore(test_utils): Improve context cleanup in tests (`#3765 <https://github.com/ros-controls/ros2_control/issues/3765>`_) (`#3771 <https://github.com/ros-controls/ros2_control/issues/3771>`_)
+* Support nested namespace keys in controller parameter files (backport `#3719 <https://github.com/ros-controls/ros2_control/issues/3719>`_) (`#3747 <https://github.com/ros-controls/ros2_control/issues/3747>`_)
+* Make the list hardware services linear in the number of interfaces (backport `#3755 <https://github.com/ros-controls/ros2_control/issues/3755>`_) (`#3761 <https://github.com/ros-controls/ros2_control/issues/3761>`_)
+* Resolve active controllers' command interfaces once in the fallback lookup (backport `#3756 <https://github.com/ros-controls/ros2_control/issues/3756>`_) (`#3759 <https://github.com/ros-controls/ros2_control/issues/3759>`_)
+* Contributors: mergify[bot]
+
 5.20.0 (2026-11-02)
 -------------------
 * refactor: replace deprecated ros2param API with native rclpy parameter clients (`#3210 <https://github.com/ros-controls/ros2_control/issues/3210>`_) (`#3743 <https://github.com/ros-controls/ros2_control/issues/3743>`_)

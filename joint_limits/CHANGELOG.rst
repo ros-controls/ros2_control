@@ -2,6 +2,11 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Respect the velocity limit beyond a soft limit in JointSoftLimiter (backport `#3798 <https://github.com/ros-controls/ros2_control/issues/3798>`_) (`#3817 <https://github.com/ros-controls/ros2_control/issues/3817>`_)
+* Contributors: mergify[bot]
+
 5.20.0 (2026-11-02)
 -------------------
 * Include what you use/review (backport `#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_) (`#3705 <https://github.com/ros-controls/ros2_control/issues/3705>`_)
