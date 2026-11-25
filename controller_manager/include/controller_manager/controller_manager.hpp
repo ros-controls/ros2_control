@@ -233,6 +233,17 @@ public:
     return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
+  /// Check if any hardware component is ACTIVE, i.e., gets both read() and write() called.
+  /**
+   * Real-time safe. Used by the control loop to tell a non-blocking active component, which is
+   * worth a warning, from hardware that simply isn't running.
+   * \returns true if at least one hardware component is ACTIVE, false otherwise.
+   */
+  bool has_active_hardware_components() const
+  {
+    return resource_manager_ && resource_manager_->has_active_components();
+  }
+
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
