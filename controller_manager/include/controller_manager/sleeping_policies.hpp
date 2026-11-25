@@ -23,13 +23,7 @@ namespace controller_manager
 {
 class ControllerManager;
 
-struct ControlLoopTimingConfig
-{
-  bool use_sim_time{false};
-  bool manage_overruns{true};
-  bool expect_blocking_read_write{false};
-  double minimum_cycle_time{0.0001};
-};
+class ControlLoopTimingConfig;
 
 struct ControlLoopState
 {
