@@ -159,12 +159,13 @@ public:
    */
   bool are_components_initialized() const;
 
-  /// Check if any hardware component is ACTIVE, i.e., gets both read() and write() called.
+  /// Check if the cached lifecycle state of any hardware component is ACTIVE.
   /**
-   * Real-time safe: does not block, and only reads the cached lifecycle states.
+   * Real-time safe: does not block, and only reads the cached lifecycle states. A true result is
+   * no proof that any component blocks in read() or write(), e.g., sensors are never written.
    *
-   * \return true if at least one component is ACTIVE. Also true if the components are currently
-   * locked for loading or a lifecycle transition, to stay on the safe side.
+   * \return true if at least one component is ACTIVE. Also true, conservatively, if the
+   * components are currently locked (e.g., while loading), even if none is ACTIVE.
    * \return false otherwise, e.g. if no component is loaded or none is ACTIVE.
    */
   bool has_active_components() const;
