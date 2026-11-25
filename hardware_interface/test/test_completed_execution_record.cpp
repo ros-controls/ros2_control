@@ -84,12 +84,22 @@ TEST(TestCompletedExecutionRecord, a_consumed_duration_always_belongs_to_its_exe
     });
   uint64_t consumed = 0;
   uint64_t last_sequence = 0;
+  // Non-fatal checks and a break, so that the publisher is always joined: a fatal one would return
+  // with the thread still joinable, and its destructor would abort the whole test executable
   while (!done || consumed == 0)
   {
     if (const auto execution = record.consume_new())
     {
-      ASSERT_EQ(static_cast<uint64_t>(execution->duration.count()), execution->sequence);
-      ASSERT_GT(execution->sequence, last_sequence);
+      const bool coherent =
+        static_cast<uint64_t>(execution->duration.count()) == execution->sequence &&
+        execution->sequence > last_sequence;
+      EXPECT_TRUE(coherent) << "execution " << execution->sequence << " reported with "
+                            << execution->duration.count() << " ns after execution "
+                            << last_sequence;
+      if (!coherent)
+      {
+        break;
+      }
       last_sequence = execution->sequence;
       ++consumed;
     }
