@@ -203,7 +203,14 @@ class TestActuator : public ActuatorInterface
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period) override
   {
     check_injected_failure("read");
-    if (get_hardware_info().is_async)
+    if (get_hardware_info().hardware_parameters.count("async_read_sleep_us"))
+    {
+      // lets tests force an overrun of the async cycle
+      std::this_thread::sleep_for(
+        std::chrono::microseconds(
+          std::stoi(get_hardware_info().hardware_parameters.at("async_read_sleep_us"))));
+    }
+    else if (get_hardware_info().is_async)
     {
       std::this_thread::sleep_for(
         std::chrono::milliseconds(1000 / (3 * get_hardware_info().rw_rate)));

@@ -36,12 +36,16 @@ enum class return_type : std::uint8_t
  * @var successful: true if it was triggered successfully, false if not.
  * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
  * @var execution_time: duration of the execution of the update method.
+ * @var cycle_period: measured period between the two latest cycles actually executed (by the
+ * async thread for async components). Set only when a new cycle was executed since the previous
+ * trigger, so overruns and skipped async cycles show up in the periodicity statistics.
  */
 struct HardwareComponentCycleStatus
 {
   bool successful = true;
   return_type result = return_type::OK;
   std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
+  std::optional<std::chrono::nanoseconds> cycle_period = std::nullopt;
 };
 
 }  // namespace hardware_interface
