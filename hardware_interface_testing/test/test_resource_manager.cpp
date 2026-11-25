@@ -2121,7 +2121,9 @@ public:
         auto status_map = rm->get_components_status();
         auto check_periodicity = [&](const std::string & component_name, unsigned int rate)
         {
-          if (i > (cm_update_rate_ / rate))
+          // async cycle periods are reported on the trigger after the cycle ran, so wait one more
+          // cycle before the first measurement is available
+          if (i > 2 * (cm_update_rate_ / rate))
           {
             const double expec_read_execution_time = (1.e6 / (3 * rate)) + 200.0;
             const double expec_write_execution_time = (1.e6 / (6 * rate)) + 200.0;
