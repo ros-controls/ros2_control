@@ -49,8 +49,293 @@ If joint limits are active for a specific interface, the controller_manger will 
 
 Configuration of Limits
 ########################
-tba
+
+There are two different ways the ``joint_limits`` package is used, and they are configured differently:
+
+* **Limits enforced by the controller_manager** (see `Enable Joint Limits`_): the limits are read **only from the robot description**. ROS parameters are not used, and the limits cannot be changed at runtime.
+* **Using the joint_limits library directly**, e.g., from within a controller: the limiter can read its limits from ROS parameters of that node, see `Using the joint_limits Library Directly`_.
+
+Limits Enforced by the controller_manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**1. Hard Limits from the URDF**
+
+Hard limits are read from the standard ``<limit>`` tag of the URDF ``<joint>`` element (not from the ``<ros2_control>`` tag):
+
+.. code-block:: xml
+
+   <joint name="joint1" type="revolute">
+     <parent link="base_link"/>
+     <child link="link1"/>
+     <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
+   </joint>
+   <joint name="joint2" type="continuous">
+     <parent link="link1"/>
+     <child link="link2"/>
+     <limit velocity="2.0" effort="50.0"/>
+   </joint>
+
+Position limits are used for ``revolute`` and ``prismatic`` joints; for ``continuous`` joints, the ``angle_wraparound`` flag is set instead. This flag is only stored, the provided limiters do not wrap angles.
+Velocity and effort limits are always enabled if a ``<limit>`` tag exists.
+The URDF has no acceleration, deceleration, or jerk limits.
+
+**2. Additional Limits from the ros2_control Tag**
+
+The ``min`` and ``max`` parameters of a command interface in the ``<ros2_control>`` tag further restrict the limits:
+
+.. code-block:: xml
+
+   <ros2_control name="MyRobot" type="system">
+     <hardware>
+       <plugin>my_package/MyHardware</plugin>
+     </hardware>
+     <joint name="joint1">
+       <command_interface name="position">
+         <param name="min">-1.0</param>
+         <param name="max">1.0</param>
+       </command_interface>
+       <command_interface name="acceleration">
+         <param name="min">-3.0</param>  <!-- max. deceleration -->
+         <param name="max">2.0</param>   <!-- max. acceleration -->
+       </command_interface>
+       <state_interface name="position"/>
+       <state_interface name="velocity"/>
+     </joint>
+   </ros2_control>
+
+* ``position``, ``velocity``, ``effort``: the more restrictive of the URDF and the ``<ros2_control>`` values is used.
+* ``acceleration``: ``max`` sets the acceleration limit, ``|min|`` the deceleration limit. If only ``max`` is given, it is also used for deceleration.
+* ``jerk``: ``|max|`` sets the jerk limit; ``min`` is not supported. Jerk limits are parsed, but not enforced by the controller_manager (jerk commands are not passed to the limiter).
+
+Acceleration limits can only be set this way, i.e., the joint must declare an ``acceleration`` command interface.
+
+With the example above, ``joint1`` is limited to ``[-1.0, 1.0]`` rad.
+
+**3. Soft Limits from the URDF**
+
+Soft limits are read from the ``<safety_controller>`` tag of the URDF ``<joint>`` element. If they are present, the controller_manager uses the soft limiter instead of the saturation limiter for this joint.
+
+.. code-block:: xml
+
+   <joint name="joint1" type="revolute">
+     <parent link="base_link"/>
+     <child link="link1"/>
+     <!-- Hard limits -->
+     <limit lower="-1.57" upper="1.57" velocity="1.0" effort="100.0"/>
+     <!-- Soft limits (optional) -->
+     <safety_controller
+       k_position="10.0"
+       k_velocity="20.0"
+       soft_lower_limit="-1.40"
+       soft_upper_limit="1.40"/>
+   </joint>
+
+If the joint has position limits, the soft position limits are clamped to lie within them.
+
+Limits can be disabled per joint or per command interface with ``<limits enable="false"/>``, see `Enable Joint Limits`_.
+
+Using the joint_limits Library Directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a limiter is initialized with a node, e.g., ``limiter.init(joint_names, node)``, it declares and reads the parameters below from that node.
+The parameters for each joint are organized under the ``joint_limits.<joint_name>`` namespace:
+
+.. code-block:: yaml
+
+   joint_limits:
+     <joint_name>:
+       # Position Limits
+       has_position_limits: bool         # Enable/disable position limits
+       min_position: double              # Minimum position [rad or m]
+       max_position: double              # Maximum position [rad or m]
+       # Velocity Limits
+       has_velocity_limits: bool         # Enable/disable velocity limits
+       max_velocity: double              # Maximum absolute velocity [rad/s or m/s]
+       # Acceleration Limits
+       has_acceleration_limits: bool     # Enable/disable acceleration limits
+       max_acceleration: double          # Maximum acceleration [rad/s² or m/s²]
+       # Deceleration Limits
+       has_deceleration_limits: bool     # Enable/disable deceleration limits
+       max_deceleration: double          # Maximum deceleration [rad/s² or m/s²]
+       # Jerk Limits (rate of change of acceleration)
+       has_jerk_limits: bool             # Enable/disable jerk limits
+       max_jerk: double                  # Maximum jerk [rad/s³ or m/s³]
+       # Effort Limits
+       has_effort_limits: bool           # Enable/disable effort/force limits
+       max_effort: double                # Maximum effort/force [N·m or N]
+       # Angle Wraparound (for continuous joints)
+       angle_wraparound: bool            # Flag for continuous joints, not used by the provided limiters [default: false]
+       # Soft Limits (optional, for gradual limiting)
+       has_soft_limits: bool             # Enable/disable soft limits [default: false]
+       k_position: double                # Spring constant, velocity per position error [1/s]
+       k_velocity: double                # Damping, effort per velocity error [N·m·s/rad or N·s/m]
+       soft_lower_limit: double          # Soft limit lower boundary [rad or m]
+       soft_upper_limit: double          # Soft limit upper boundary [rad or m]
+
+The parameters belong to the node that initializes the limiter, e.g., for a controller named ``my_controller``:
+
+.. code-block:: yaml
+
+   my_controller:
+     ros__parameters:
+       joint_limits:
+         joint1:
+           has_position_limits: true
+           min_position: -1.57
+           max_position: 1.57
+           has_velocity_limits: true
+           max_velocity: 1.0
+           has_acceleration_limits: true
+           max_acceleration: 2.0
+           has_effort_limits: true
+           max_effort: 100.0
+         joint2:
+           has_position_limits: false
+           has_velocity_limits: true
+           max_velocity: 2.0
+           angle_wraparound: true
+
+The hard limits are updated whenever the parameters change at runtime (e.g., via ``ros2 param set``).
+The soft limit parameters are declared, but not used by a limiter initialized this way.
+To use soft limits, declare the parameters with ``joint_limits::declare_parameters(joint_name, param_itf, logging_itf)``, read the hard and soft limits yourself with ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, limits)`` and ``joint_limits::get_joint_limits(joint_name, param_itf, logging_itf, soft_limits)`` (see ``joint_limits/joint_limits_rosparam.hpp``), and pass them to ``init(joint_names, limits, soft_limits, param_itf, logging_itf)``.
+This overload does not declare parameters or register the callback, so the limits are not updated at runtime.
+To read limits from a URDF instead, use ``joint_limits::getJointLimits`` and ``joint_limits::getSoftJointLimits`` from ``joint_limits/joint_limits_urdf.hpp``.
 
 Description of the Limiter Algorithms
 ######################################
-tba
+
+The controller_manager uses one of two limiters per joint:
+
+* ``joint_limits::JointSaturationLimiter<JointControlInterfacesData>`` (default), if no soft limits are defined for the joint.
+* ``joint_limits::JointSoftLimiter``, if soft limits are defined for the joint.
+
+Both limiters work on the command interfaces of a single joint (``position``, ``velocity``, ``effort``, ``acceleration``) and clamp each command separately.
+The saturation limiter treats the commands independently; in the soft limiter, the velocity bounds narrowed for a velocity command are also used to limit an effort command in the same update.
+They use the current state of the joint and the previous (limited) command.
+
+.. note::
+
+   The ``joint_limits`` package also provides ``joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>``, which works on ``trajectory_msgs/JointTrajectoryPoint`` messages.
+   It is not used by the controller_manager and behaves differently, e.g., it recomputes position and velocity commands from each other and checks stopping distances.
+
+Saturation Limiter (Default)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Saturation Limiter clamps each command to an interval computed from the hard limits, the current state, and the previous command (``dt`` is the update period of the controller_manager):
+
+1. **Position**: Clamped to ``[min_position, max_position]``. If velocity limits are set, it is also clamped to ``previous_command ± max_velocity * dt``.
+   If acceleration limits are set too, ``max_velocity`` is replaced by ``min(max_velocity, |current_velocity| + max_acceleration * dt)``.
+
+2. **Velocity**: Only limited if velocity limits are set; otherwise, velocity commands are not constrained at all, also not by position or acceleration limits.
+   Clamped to ``[-max_velocity, max_velocity]`` and to the velocity that reaches a position limit within one update, ``[(min_position - current_position) / dt, (max_position - current_position) / dt]``.
+   If acceleration limits are set, it is also clamped to ``previous_command ± max_acceleration * dt``.
+   If the joint is outside its position limits, velocity commands pointing further outside are set to zero.
+   If the joint is further outside than a small tolerance, all velocity commands are set to zero.
+
+3. **Effort**: Only limited if effort limits are set; otherwise, effort commands are not constrained at all, also not by position or velocity limits.
+   Clamped to ``[-max_effort, max_effort]``.
+   At (or beyond) a position limit while moving towards it, effort pushing further outside is set to zero.
+   The same applies if the current velocity exceeds the velocity limit.
+
+4. **Acceleration**: Clamped to ``±max_deceleration`` if the command opposes the current velocity (i.e., decelerates) and deceleration limits are set, otherwise to ``±max_acceleration``.
+
+5. **Jerk**: Clamped to ``[-max_jerk, max_jerk]``. This is only relevant when using the library directly, as the controller_manager does not pass jerk commands to the limiter.
+
+If the current position is outside the position limits (plus a small tolerance), the limiter throws an exception when limiting a position command.
+If this happens while a controller writes the command and the ``handle_exceptions`` parameter of the controller_manager is ``true`` (default), the controller is deactivated and its fallback controllers are activated.
+
+**Example:**
+
+.. code-block:: text
+
+   Position limits: [-1.0, 1.0] rad, velocity limit: 1.0 rad/s, acceleration limit: 2.0 rad/s²
+   Current position: 0.95 rad, previous velocity command: 0.5 rad/s, dt = 0.01 s
+
+   Velocity reaching the limit in one update: (1.0 - 0.95) / 0.01 = 5.0 rad/s → velocity limit 1.0 rad/s applies
+   Acceleration limit: 0.5 ± 2.0 * 0.01 → velocity command is clamped to [0.48, 0.52] rad/s
+
+The velocity bound from the position limits is meant to prevent overshooting within the next update, but it does not guarantee it:
+if it conflicts with the acceleration bound, the limiter swaps the inverted interval instead of rejecting it.
+E.g., with the limits above, at 0.999 rad and a previous velocity command of 0.5 rad/s, the interval becomes ``[0.1, 0.48]`` and a velocity command of 0.5 rad/s is limited to 0.48 rad/s, reaching ≈1.0038 rad after one update.
+The limiter does not consider the braking distance either, so a joint can reach the position limit at high velocity.
+
+Soft Limiter
+~~~~~~~~~~~~
+
+The Soft Limiter is used if soft limits are defined for the joint (``<safety_controller>`` in the URDF).
+In addition to the hard limits enforced as in the `Saturation Limiter (Default)`_, it slows the joint down when approaching the soft position limits, like a virtual spring.
+The spring is only active if the joint has both position and velocity limits, and ``k_position`` is not zero.
+
+**Velocity bounds:**
+
+The allowed velocity depends on the distance of the previous position command (or the current position, if there is none) to the soft limits:
+
+.. code-block:: text
+
+   v_min = clamp(-k_position * (previous_position - soft_lower_limit), -max_velocity, max_velocity)
+   v_max = clamp(-k_position * (previous_position - soft_upper_limit), -max_velocity, max_velocity)
+
+* **Between the soft limits**: the velocity towards a soft limit is ``max_velocity`` until the distance to it drops below ``max_velocity / k_position``. Closer to the soft limit, it decreases linearly with the distance and reaches zero at the soft limit.
+* **Beyond a soft limit, but within the hard limits**: the velocity is limited to ±0.01745 (π/180), i.e., 1°/s for revolute joints and 17.45 mm/s for prismatic joints. Once the previous position command is beyond the soft limit as well, only motion back towards the soft limit is allowed.
+* **Beyond the hard limits** (plus a small tolerance): the velocity bounds are set to zero.
+
+**Applying the bounds to the commands:**
+
+1. **Position**: Clamped to ``[soft_lower_limit, soft_upper_limit]`` and to ``[previous_position + v_min * dt, previous_position + v_max * dt]``, and additionally to the position limits of the saturation limiter.
+   If the first two intervals do not overlap with the one of the saturation limiter (e.g., when the previous command is beyond a soft limit), the saturation limiter's interval is ignored.
+2. **Velocity**: Clamped to ``[v_min, v_max]``. If acceleration limits are set, also to ``current_velocity ± max_acceleration * dt``. Additionally, the velocity limits of the saturation limiter apply.
+3. **Effort**: If effort limits are set, the effort is clamped like a damper on the velocity bounds, additionally to the effort limits of the saturation limiter:
+
+   .. code-block:: text
+
+      effort_min = clamp(-k_velocity * (current_velocity - v_min), -max_effort, max_effort)
+      effort_max = clamp(-k_velocity * (current_velocity - v_max), -max_effort, max_effort)
+
+4. **Acceleration** and **Jerk**: Same as in the saturation limiter (jerk only when using the library directly).
+
+**Example:**
+
+.. code-block:: text
+
+   Hard limits: [-1.57, 1.57] rad, velocity limit: 1.0 rad/s
+   Soft limits: [-1.40, 1.40] rad, k_position: 10.0 1/s
+   Previous position command = current position = 1.35 rad, dt = 0.01 s
+
+   v_max = -10.0 * (1.35 - 1.40) = 0.5 rad/s  (slowing starts within 1.0 / 10.0 = 0.1 rad of the soft limit)
+   v_min = clamp(-10.0 * (1.35 + 1.40), -1.0, 1.0) = -1.0 rad/s
+   → velocity commands are clamped to [-1.0, 0.5] rad/s
+   → position commands are clamped to [1.34, 1.355] rad
+
+   If the previous command and the current position are 1.45 rad (beyond the soft limit), both bounds are negative and set to -1°/s:
+   → velocity commands move the joint back towards the soft limit at ≈0.017 rad/s
+   → position commands are clamped to the soft limit, i.e., they jump from 1.45 to 1.40 rad in one update
+     (the saturation limiter's interval [1.44, 1.46] does not overlap and is ignored)
+
+Enforcement in the controller_manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The controller_manager applies the limiter of a joint at two points:
+
+1. **When a controller writes a command**: ``LoanedCommandInterface::set_value()`` passes the value through the limiter of the joint, using the nominal period ``1 / update_rate``.
+   This applies to ``position``, ``velocity``, ``effort``, and ``acceleration`` command interfaces.
+   The command interface stores the limited value. Whether the last value was limited is published via introspection as ``command_interface.<joint>/<interface>.is_limited``.
+
+2. **After all controllers were updated**: the limiters are applied to the current values of all claimed command interfaces of the joint, using the actual period of the update cycle, before the commands are written to the hardware.
+
+The limiters of the controller_manager are initialized once from the robot description; their limits cannot be changed at runtime.
+
+Best Practices
+~~~~~~~~~~~~~~
+
+1. **Set velocity limits**: Without velocity limits, position commands are not rate-limited and the spring of the soft limiter is inactive.
+
+2. **Choose k_position for the soft limits**: Within ``max_velocity / k_position`` of a soft limit, the velocity towards it is bounded by ``k_position * distance``.
+   A higher ``k_position`` allows faster motion closer to the soft limit, i.e., the joint slows down later.
+   A lower value makes the joint slow down earlier.
+
+3. **Account for the braking distance**: The limiters do not plan a deceleration towards the position limits.
+   Place the soft limits far enough from the hard limits, or limit the velocity, so that the hardware can stop in time.
+
+4. **Check the startup log**: The controller_manager prints the limits and the limiter type for every joint, see `Enable Joint Limits`_.
+
+5. **Test before deployment**: Verify the behavior of the joints with the configured limits in simulation before using real hardware.
