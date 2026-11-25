@@ -230,6 +230,10 @@ private:
  * measurements (e.g. simulation time). If the time goes back past the current bucket (e.g. a reset
  * simulation), the window is restarted.
  *
+ *  The window ends at the latest sample, not at the current time: if the samples stop arriving
+ * (e.g. a stalled asynchronous component), get_statistics() keeps returning the last window until a
+ * new sample comes in, like the since-startup statistics do.
+ *
  *  A non-positive (or non-finite) duration disables the collector: add_measurement() is a no-op.
  * When statistics are not available, e.g. no observations have been made, NaNs are returned.
  */
