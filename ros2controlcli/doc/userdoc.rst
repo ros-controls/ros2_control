@@ -271,6 +271,8 @@ transitions are not chained. The lifecycle transitions ``configure``, ``cleanup`
 ``activate`` and ``deactivate`` are named as in ``ros2 lifecycle set`` and are sent to the
 controller manager without checking the current state first. The controller manager decides
 whether the transition is valid, and the command returns an error if it rejects the transition.
+``cleanup`` on a controller that is already unconfigured returns success, because the controller
+manager treats it as nothing to do. The ``cleanup_controller`` verb behaves the same way.
 
 Example activating an inactive controller:
 
