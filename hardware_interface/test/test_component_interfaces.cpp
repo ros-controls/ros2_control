@@ -914,6 +914,90 @@ TEST_F(TestComponentInterfaces, dummy_actuator)
 }
 // END
 
+TEST_F(TestComponentInterfaces, async_actuator_write_statistics_count_each_completed_write_once)
+{
+  hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = true;
+  mock_hw_info.rw_rate = 100;
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_async_actuator_statistics");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = mock_hw_info;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  actuator_hw.initialize(params);
+  actuator_hw.export_state_interfaces();
+  actuator_hw.export_command_interfaces();
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, actuator_hw.configure().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, actuator_hw.activate().id());
+  const auto & write_statistics = actuator_hw.get_write_statistics();
+  write_statistics.recent_execution_time->set_window_duration(60.0);
+
+  // One async cycle (read then write) completes...
+  rclcpp::Time time(1, 0);
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(time, PERIOD));
+  std::this_thread::sleep_for(100ms);
+  // ...while the CM keeps calling write: the completed write's execution time must be counted once,
+  // not once per call, or a stalled async thread would keep feeding the statistics with its last
+  // value
+  for (int i = 0; i < 5; ++i)
+  {
+    time += PERIOD;
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(time, PERIOD));
+  }
+  EXPECT_EQ(write_statistics.execution_time->get_count(), 1u);
+  EXPECT_EQ(write_statistics.recent_execution_time->get_statistics().sample_count, 1u);
+
+  actuator_hw.shutdown();
+}
+
+TEST_F(
+  TestComponentInterfaces, detached_async_actuator_read_statistics_count_each_completed_read_once)
+{
+  hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
+
+  hardware_interface::HardwareInfo mock_hw_info;
+  mock_hw_info.name = "mock_hw";
+  mock_hw_info.is_async = true;
+  // The detached thread waits one period (1 s) after initialization, then runs a cycle every period
+  mock_hw_info.rw_rate = 1;
+  mock_hw_info.async_params.scheduling_policy = "detached";
+  rclcpp::Node::SharedPtr node =
+    std::make_shared<rclcpp::Node>("test_detached_async_actuator_statistics");
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = mock_hw_info;
+  params.clock = node->get_clock();
+  params.logger = node->get_logger();
+  params.executor = executor_;
+  actuator_hw.initialize(params);
+  actuator_hw.export_state_interfaces();
+  actuator_hw.export_command_interfaces();
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, actuator_hw.configure().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, actuator_hw.activate().id());
+  const auto & read_statistics = actuator_hw.get_read_statistics();
+  read_statistics.recent_execution_time->set_window_duration(60.0);
+
+  // The first trigger starts the detached thread, which completes one cycle about 1 s after the
+  // initialization, and the next one about 2 s after it...
+  rclcpp::Time time(1, 0);
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(time, PERIOD));
+  std::this_thread::sleep_for(1300ms);
+  // ...while the CM keeps calling read, which a detached handler reports as successful every time:
+  // the completed read's execution time must still be counted once
+  for (int i = 0; i < 5; ++i)
+  {
+    time += PERIOD;
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(time, PERIOD));
+  }
+  EXPECT_EQ(read_statistics.execution_time->get_count(), 1u);
+  EXPECT_EQ(read_statistics.recent_execution_time->get_statistics().sample_count, 1u);
+
+  actuator_hw.shutdown();
+}
+
 TEST_F(TestComponentInterfaces, dummy_actuator_default)
 {
   hardware_interface::Actuator actuator_hw(

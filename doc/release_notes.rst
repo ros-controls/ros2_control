@@ -19,6 +19,7 @@ controller_manager
 ******************
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
+* New parameters ``diagnostics.controller_manager.window_duration``, ``diagnostics.controllers.window_duration`` and ``diagnostics.hardware_components.window_duration`` make the periodicity diagnostics (and the execution time diagnostics of the controllers and hardware components) judge the last ``window_duration`` seconds instead of all cycles since startup, so a single slow cycle at bring-up no longer holds the diagnostic in ``WARN`` or ``ERROR`` for the rest of the run. The since-startup statistics are still reported, and the recent ones are added as ``periodicity.recent`` and ``execution_time.recent``. The default ``-1.0`` keeps the previous behavior. (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
 * A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 * The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. (`#2895 <https://github.com/ros-controls/ros2_control/pull/2895>`__)
@@ -43,6 +44,7 @@ hardware_interface
 * ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
 * Handles now also support ``uint64`` and ``int64`` data types. They are not castable to double and are therefore not included in the introspection. (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__)
 * The new real-time safe ``ResourceManager::has_active_components()`` tells whether any hardware component is ``active``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
+* A ``TimeWindowStatistics`` type is added next to ``MovingAverageStatistics``: average, minimum, maximum and standard deviation over the samples of the last ``window_duration`` seconds, in constant memory independent of the sample rate. The hardware components collect their read/write periodicity and execution time in it too, exposed as ``HardwareComponentStatisticsData::recent_periodicity`` and ``HardwareComponentStatisticsData::recent_execution_time`` and enabled through ``ResourceManagerParams::hardware_components_statistics_window_duration``. The read and write execution times of asynchronous components are now recorded once per completed read or write, instead of being repeated on every cycle while the async thread is busy or stalled (e.g. with the ``detached`` scheduling policy). (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
 
 joint_limits
 ************

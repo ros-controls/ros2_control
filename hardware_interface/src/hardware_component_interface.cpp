@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
+#include "hardware_interface/types/statistics_types.hpp"
 #include "rclcpp/node_options.hpp"
 #include "rclcpp/qos.hpp"
 
@@ -92,11 +93,13 @@ public:
   std::unordered_map<std::string, CommandInterface::SharedPtr> hardware_commands_;
   std::atomic<uint8_t> lifecycle_id_cache_ = lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   std::atomic<return_type> read_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> read_execution_time_ = std::chrono::nanoseconds::zero();
   std::atomic<return_type> write_return_info_ = return_type::OK;
-  std::atomic<std::chrono::nanoseconds> write_execution_time_ = std::chrono::nanoseconds::zero();
   CycleTracker read_cycle_;
   CycleTracker write_cycle_;
+  // Reads and writes completed by the async thread, so that trigger_read() and trigger_write()
+  // report the execution time of each one once, rather than the last one on every call
+  ros2_control::CompletedExecutionRecord read_execution_record_;
+  ros2_control::CompletedExecutionRecord write_execution_record_;
 
   std::shared_ptr<rclcpp::Publisher<control_msgs::msg::HardwareStatus>> hardware_status_publisher_;
   realtime_tools::RealtimeThreadSafeBox<std::optional<control_msgs::msg::HardwareStatus>>
@@ -152,9 +155,8 @@ CallbackReturn HardwareComponentInterface::init(
         const auto ret_read = read(time, period);
         const auto read_end_time = std::chrono::steady_clock::now();
         impl_->read_return_info_.store(ret_read, std::memory_order_release);
-        impl_->read_execution_time_.store(
-          std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time),
-          std::memory_order_release);
+        impl_->read_execution_record_.publish(
+          std::chrono::duration_cast<std::chrono::nanoseconds>(read_end_time - read_start_time));
         if (ret_read != return_type::OK)
         {
           return ret_read;
@@ -168,9 +170,9 @@ CallbackReturn HardwareComponentInterface::init(
           const auto ret_write = write(time, period);
           const auto write_end_time = std::chrono::steady_clock::now();
           impl_->write_return_info_.store(ret_write, std::memory_order_release);
-          impl_->write_execution_time_.store(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(write_end_time - write_start_time),
-            std::memory_order_release);
+          impl_->write_execution_record_.publish(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+              write_end_time - write_start_time));
           return ret_write;
         }
         return return_type::OK;
@@ -463,11 +465,6 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
   if (info_.is_async)
   {
     status.result = impl_->read_return_info_.load(std::memory_order_acquire);
-    const auto read_exec_time = impl_->read_execution_time_.load(std::memory_order_acquire);
-    if (read_exec_time.count() > 0)
-    {
-      status.execution_time = read_exec_time;
-    }
     status.cycle_period = impl_->read_cycle_.consume();
     const auto result = async_handler_->trigger_async_callback(time, period);
     status.successful = result.first;
@@ -480,6 +477,13 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_read(
         info_.name.c_str());
       status.result = return_type::OK;
       return status;
+    }
+    // A detached or self-paced handler reports success on every call: only report the execution
+    // time of a read completed since the last report, so a stalled async thread doesn't keep
+    // feeding the statistics with its last one
+    if (const auto completed_read = impl_->read_execution_record_.consume_new())
+    {
+      status.execution_time = completed_read->duration;
     }
   }
   else
@@ -503,10 +507,11 @@ HardwareComponentCycleStatus HardwareComponentInterface::trigger_write(
   if (info_.is_async)
   {
     status.successful = true;
-    const auto write_exec_time = impl_->write_execution_time_.load(std::memory_order_acquire);
-    if (write_exec_time.count() > 0)
+    // The write runs in the async read cycle: only report the execution time of a write completed
+    // since the last call, so a stalled async thread doesn't keep feeding the statistics with it
+    if (const auto completed_write = impl_->write_execution_record_.consume_new())
     {
-      status.execution_time = write_exec_time;
+      status.execution_time = completed_write->duration;
     }
     status.cycle_period = impl_->write_cycle_.consume();
     status.result = impl_->write_return_info_.load(std::memory_order_acquire);
@@ -621,9 +626,9 @@ void HardwareComponentInterface::stop_async_handler()
 void HardwareComponentInterface::prepare_for_activation()
 {
   impl_->read_return_info_.store(return_type::OK, std::memory_order_release);
-  impl_->read_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  impl_->read_execution_record_.discard();
   impl_->write_return_info_.store(return_type::OK, std::memory_order_release);
-  impl_->write_execution_time_.store(std::chrono::nanoseconds::zero(), std::memory_order_release);
+  impl_->write_execution_record_.discard();
 }
 
 void HardwareComponentInterface::enable_introspection(bool enable)
