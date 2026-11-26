@@ -357,9 +357,7 @@ def main(args=None):
 
     spawner_ros_params_files = get_ros_params_files(sys.argv[1:])
 
-    # Remove ROS args, and drop empty args: launch substitutions resolving to "" (e.g. the
-    # optional --unload-on-kill in launch_utils) arrive as literal empty args when shell=False
-    command_line_args = [a for a in rclpy.utilities.remove_ros_args(args=sys.argv)[1:] if a]
+    command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
 
     # Check if we are in advanced mode
     if "--controller" in command_line_args:
@@ -378,7 +376,20 @@ def main(args=None):
     node = None
     lock = None
 
+    shutdown_requested = False
+
     def _on_shutdown_signal(signum, frame):
+        # Set before touching the handlers: a signal arriving mid-registration re-enters here.
+        nonlocal shutdown_requested
+        if shutdown_requested:
+            return
+        shutdown_requested = True
+        try:
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        except (KeyboardInterrupt, Exception):
+            # The flag is already set, so a re-entry returned without raising.
+            pass
         raise KeyboardInterrupt()
 
     signal.signal(signal.SIGINT, _on_shutdown_signal)
@@ -614,17 +625,6 @@ def main(args=None):
             time.sleep(1)
 
     except KeyboardInterrupt:
-        # Ignore further SIGINTs so a second signal cannot interrupt cleanup.
-        # Without this, a signal delivered while rclpy's C extension returns to
-        # Python can raise a second KeyboardInterrupt inside the except block,
-        # skipping the deactivate/unload calls and leaving controllers loaded.
-        # The try/except guards against coverage's trace function raising a
-        # second KeyboardInterrupt during the signal.signal() call itself.
-        try:
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
-            signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        except (KeyboardInterrupt, Exception):
-            pass
         if unload_on_kill:
             logger.info("KeyboardInterrupt successfully captured!")
 

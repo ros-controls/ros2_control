@@ -47,19 +47,26 @@ void sleep_for_blocking_read_write(
   const controller_manager::ControlLoopTimingConfig & config,
   controller_manager::ControlLoopState & state)
 {
-  // Implement sleep logic for blocking read/write
-  if (
-    (state.cycle_end_time - state.previous_time).nanoseconds() <
-    static_cast<rcl_duration_value_t>(config.minimum_cycle_time * 1e9))
+  const bool cycle_too_short = (state.cycle_end_time - state.previous_time).nanoseconds() <
+                               static_cast<rcl_duration_value_t>(config.minimum_cycle_time * 1e9);
+  // Nothing blocked, but without ACTIVE hardware that is expected: write() is not called and an
+  // INACTIVE or UNCONFIGURED component can't pace the loop, so keep update_rate silently.
+  if (cycle_too_short && !cm->has_active_hardware_components())
+  {
+    sleep_for_periodic_cycle(cm, config, state);
+    return;
+  }
+  if (cycle_too_short)
   {
     RCLCPP_WARN_THROTTLE(
       cm->get_logger(), *cm->get_clock(), 1000,
       "Last control cycle was shorter than the minimum cycle time while blocking read or "
-      "write is configured. Is the hardware interface not blocking correctly? Note: This "
-      "might happen when the hardware component that should block is not active.");
+      "write is configured. Is the hardware interface not blocking correctly?");
     std::this_thread::sleep_for(
       std::chrono::microseconds(static_cast<int>(config.minimum_cycle_time * 1e6)));
   }
+  // Keep the periodic schedule current, so that a later fallback doesn't see a huge overrun
+  state.next_iteration_time = std::chrono::steady_clock::now();
 }
 
 void sleep_for_periodic_cycle(

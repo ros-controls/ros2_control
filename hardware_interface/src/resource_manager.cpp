@@ -184,6 +184,7 @@ public:
     robot_description_ = rm_param.robot_description;
     cm_update_rate_ = rm_param.update_rate;
     handle_exception_ = rm_param.handle_exceptions;
+    statistics_window_duration_ = rm_param.hardware_components_statistics_window_duration;
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -205,6 +206,13 @@ public:
           hardware_info.hardware_plugin_name.c_str());
         HardwareT hardware(std::move(interface));
         container.emplace_back(std::move(hardware));
+        const auto & read_statistics = container.back().get_read_statistics();
+        const auto & write_statistics = container.back().get_write_statistics();
+        for (const auto & statistics : {read_statistics, write_statistics})
+        {
+          statistics.recent_periodicity->set_window_duration(statistics_window_duration_);
+          statistics.recent_execution_time->set_window_duration(statistics_window_duration_);
+        }
         // initialize static data about hardware component to reduce later calls
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
@@ -214,11 +222,17 @@ public:
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
         component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
+        component_info.read_statistics->recent_periodicity = read_statistics.recent_periodicity;
+        component_info.read_statistics->recent_execution_time =
+          read_statistics.recent_execution_time;
 
         // if the type of the hardware is sensor then don't initialize the write statistics
         if (hardware_info.type != "sensor")
         {
           component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
+          component_info.write_statistics->recent_periodicity = write_statistics.recent_periodicity;
+          component_info.write_statistics->recent_execution_time =
+            write_statistics.recent_execution_time;
         }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
@@ -337,11 +351,6 @@ public:
 
     if (result)
     {
-      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
-      // checking if each state already exists? Or we should somehow know that transition has
-      // happened and only then trigger this part of the code?
-      // On the other side this part of the code should never be executed in real-time critical
-      // thread, so it could be also OK as it is...
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list
@@ -357,8 +366,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' state interface already in available list."
@@ -370,7 +377,6 @@ public:
       // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // TODO(destogl): check if interface should be available on configure
         auto found_it = std::find(
           available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
@@ -383,8 +389,6 @@ public:
         }
         else
         {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
           RCLCPP_WARN(
             get_logger(),
             "(hardware '%s'): '%s' command interface already in available list."
@@ -417,8 +421,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' command interface not in available list. "
@@ -441,8 +443,6 @@ public:
       }
       else
       {
-        // TODO(destogl): do here error management if interfaces are only partially added into
-        // "available" list - this should never be the case!
         RCLCPP_WARN(
           get_logger(),
           "(hardware '%s'): '%s' state interface not in available list. "
@@ -516,10 +516,6 @@ public:
     if (result)
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      // TODO(destogl): change this - deimport all things if there is there are interfaces there
-      // deimport_non_movement_command_interfaces(hardware);
-      // deimport_state_interfaces(hardware);
-      // use remove_command_interfaces(hardware);
       if (!hardware.get_group_name().empty())
       {
         hw_group_state_[hardware.get_group_name()] = return_type::OK;
@@ -580,11 +576,6 @@ public:
       handle_exception_ ? void() : throw;
     }
 
-    if (result)
-    {
-      // TODO(destogl): make all command interfaces unavailable that should be present only
-      // when active (currently are all available) also at inactive
-    }
     return result;
   }
 
@@ -934,26 +925,24 @@ public:
   /// enforce the command limits for a specific joint
   /**
    * @param joint_name name of the joint to enforce the command limits
+   * @param limiter limiter of the joint, passed in by the caller that already iterates over
+   * joint_limiters_interface_ so that the hardware map is not scanned again for every joint
    * @param period time period of the command
    * @return true if the command interfaces are out of limits and the limits are enforced
    * @return false if the command interfaces values are within limits
    * \throws std::runtime_error if the actual position is out of bounds if commanding position
    */
-  bool enforce_command_limits(const std::string & joint_name, const rclcpp::Duration & period)
+  bool enforce_command_limits(
+    const std::string & joint_name,
+    joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData> & limiter,
+    const rclcpp::Duration & period)
   {
-    bool enforce_result = false;
-    for (auto & [hw_name, limiters] : joint_limiters_interface_)
+    joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
+    update_joint_limiters_data(data);
+    const bool enforce_result = limiter.enforce(data.actual, data.limited, period);
+    if (enforce_result)
     {
-      if (limiters.find(joint_name) != limiters.end())
-      {
-        joint_limits::JointInterfacesCommandLimiterData & data = limiters_data_[joint_name];
-        update_joint_limiters_data(data);
-        enforce_result = limiters[joint_name]->enforce(data.actual, data.limited, period);
-        if (enforce_result)
-        {
-          update_joint_limiters_commands(data.limited, command_interface_map_);
-        }
-      }
+      update_joint_limiters_commands(data.limited, command_interface_map_);
     }
     return enforce_result;
   }
@@ -1448,6 +1437,10 @@ public:
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
+
+  // Duration of the recent periodicity and execution time windows of the hardware components,
+  // disabled if not positive
+  double statistics_window_duration_ = -1.0;
 };
 
 ResourceManager::ResourceManager(
@@ -1545,10 +1538,13 @@ bool ResourceManager::load_and_initialize_components(
   params_.update_rate = params.update_rate;
   params_.handle_exceptions = params.handle_exceptions;
   resource_storage_->handle_exception_ = params.handle_exceptions;
+  params_.hardware_components_statistics_window_duration =
+    params.hardware_components_statistics_window_duration;
+  resource_storage_->statistics_window_duration_ =
+    params.hardware_components_statistics_window_duration;
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
-  // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
     hw.rw_rate =
@@ -1564,7 +1560,6 @@ bool ResourceManager::load_and_initialize_components(
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
-    // Check for identical names
     if (
       resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
       resource_storage_->hardware_info_map_.end())
@@ -1641,6 +1636,24 @@ void ResourceManager::import_joint_limiters(const std::string & urdf)
 bool ResourceManager::are_components_initialized() const
 {
   return components_are_loaded_and_initialized_;
+}
+
+// CM API: Called in "update"-thread
+bool ResourceManager::has_active_components() const
+{
+  std::unique_lock<std::recursive_mutex> guard(resources_lock_, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    return true;
+  }
+  const auto is_active = [](const auto & component)
+  { return component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE; };
+  return std::any_of(
+           resource_storage_->actuators_.begin(), resource_storage_->actuators_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->sensors_.begin(), resource_storage_->sensors_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->systems_.begin(), resource_storage_->systems_.end(), is_active);
 }
 
 // CM API: Called in "update"-thread
@@ -1879,13 +1892,17 @@ std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
 // CM API: Called in "update"-thread
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
-  if (!command_interface_is_available(key))
+  // Check the claimed map first: it is a hash lookup, while the availability check is a linear
+  // search over all available interfaces and is only needed for the interfaces that are claimed.
   {
-    return false;
+    std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+    const auto it = resource_storage_->claimed_command_interface_map_.find(key);
+    if (it == resource_storage_->claimed_command_interface_map_.end() || !it->second)
+    {
+      return false;
+    }
   }
-
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  return resource_storage_->claimed_command_interface_map_.at(key);
+  return command_interface_is_available(key);
 }
 
 // CM API: Called in "update"-thread
@@ -2032,7 +2049,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return true;
   }
 
-  // Check if interface exists
   std::stringstream ss_not_existing;
   ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
   auto check_exist = [&](const std::vector<std::string> & list_to_check)
@@ -2058,7 +2074,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  // Check if interfaces are available
   std::stringstream ss_not_available;
   ss_not_available << "Not available: " << std::endl << "[" << std::endl;
   auto check_available = [&](const std::vector<std::string> & list_to_check)
@@ -2399,7 +2414,7 @@ bool ResourceManager::enforce_command_limits(const rclcpp::Duration & period)
   {
     for (const auto & [joint_name, limiter] : limiters)
     {
-      enforce_result |= resource_storage_->enforce_command_limits(joint_name, period);
+      enforce_result |= resource_storage_->enforce_command_limits(joint_name, *limiter, period);
     }
   }
   return enforce_result;

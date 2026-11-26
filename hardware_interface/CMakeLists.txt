@@ -8,7 +8,6 @@ export_windows_symbols()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   lifecycle_msgs
-  libstatistics_collector
   pluginlib
   rclcpp
   rclcpp_lifecycle
@@ -54,7 +53,6 @@ target_link_libraries(hardware_interface PUBLIC
                       ${pal_statistics_LIBRARIES}
                       ${control_msgs_TARGETS}
                       ${lifecycle_msgs_TARGETS}
-                      ${libstatistics_collector_TARGETS}
                       fmt::fmt)
 
 add_library(mock_components SHARED
@@ -94,6 +92,12 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_statistics_types test/test_statistics_types.cpp)
   target_link_libraries(test_statistics_types hardware_interface)
+
+  ament_add_gmock(test_time_window_statistics test/test_time_window_statistics.cpp)
+  target_link_libraries(test_time_window_statistics hardware_interface)
+
+  ament_add_gmock(test_completed_execution_record test/test_completed_execution_record.cpp)
+  target_link_libraries(test_completed_execution_record hardware_interface)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_link_libraries(test_component_interfaces hardware_interface ros2_control_test_assets::ros2_control_test_assets)

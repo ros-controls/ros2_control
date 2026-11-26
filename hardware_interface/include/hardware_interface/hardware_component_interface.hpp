@@ -216,7 +216,8 @@ public:
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   * \return The cycle status. For an asynchronous component, `execution_time` is only set if a read
+   * completed in the async thread since the last call, and is that read's execution time.
    */
   HardwareComponentCycleStatus trigger_read(
     const rclcpp::Time & time, const rclcpp::Duration & period);
@@ -241,7 +242,8 @@ public:
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
-   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   * \return The cycle status. For an asynchronous component, `execution_time` is only set if a
+   * write completed in the async thread since the last call, and is that write's execution time.
    */
   HardwareComponentCycleStatus trigger_write(
     const rclcpp::Time & time, const rclcpp::Duration & period);

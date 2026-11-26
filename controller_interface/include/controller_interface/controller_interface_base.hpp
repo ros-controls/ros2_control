@@ -60,7 +60,9 @@ enum class return_type : std::uint8_t
  * @enum NONE - Claim no interfaces.
  * @enum INDIVIDUAL_BEST_EFFORT - Claim the available interfaces from the specified individual
  * interfaces.
- * @enum REGEX - Claim interfaces matching the specified regular expressions.
+ * @enum REGEX - Claim interfaces matching the specified regular expressions. Each entry must fully
+ * match the interface name, so plain interface names can be mixed with patterns. Entries matching
+ * no available interface are skipped, and an interface matched by several entries is claimed once.
  */
 enum class interface_configuration_type : std::uint8_t
 {

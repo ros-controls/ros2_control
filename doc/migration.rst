@@ -315,3 +315,5 @@ hardware_interface
 * ``Handle::operator bool()`` has been removed (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). Use ``is_valid()`` instead.
 
 * ``set_value<T>()`` on a handle now throws a ``std::runtime_error`` if ``T`` does not match the handle's data type, including ``double`` (`#3610 <https://github.com/ros-controls/ros2_control/pull/3610>`__). This error is raised at runtime, not at compile time: ``set_value(0)`` on a double interface throws because ``0`` is an ``int``; use ``set_value(0.0)``. The same applies to ``set_state`` and ``set_command`` of hardware components.
+
+* ``HANDLE_DATATYPE`` has two new alternatives, ``uint64_t`` and ``int64_t``, appended after the existing ones (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__). This changes the ABI of every type and function that uses it, so hardware components and controllers have to be rebuilt against the new version. Code that visits the variant with an overload for each alternative needs overloads for the two new types.

@@ -166,6 +166,9 @@ hardware_synchronization.expect_blocking_read_write (optional; bool; default: fa
   If true, the controller manager will not sleep actively. Use this, when there is a hardware
   interface running that will block during its read or write operation until receiving new data
   from the hardware.
+  If a cycle didn't block while no hardware component is ``active`` (e.g., all failed to
+  configure, or are ``inactive`` and block only in ``write``, which isn't called then), the loop
+  falls back to sleeping periodically at ``update_rate`` without warning.
 
 hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
   The minimum sleep time in seconds for the control node's real-time loop. This is used to
@@ -294,6 +297,9 @@ There are two scripts to interact with controller manager from launch files:
     When launching ``spawner`` with ROS parameter files that use substitutions (for example, launch ``allow_substs=True``),
     the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
     with any explicit ``--param-file`` arguments passed to the spawner command.
+
+    With ``--unload-on-kill``, the first SIGINT or SIGTERM starts the deactivate/unload sequence and any further
+    SIGINT/SIGTERM is ignored until it finishes, so pressing Ctrl-C repeatedly cannot leave controllers loaded.
 
 .. note::
   If a single parameter file is used for multiple controllers, the spawner will automatically forward the resolved path(s) to each controller. The following methods are recommended:
@@ -454,6 +460,18 @@ The parsed controller config file can follow the same conventions as the typical
         command_interfaces:
           - position
           .....
+
+The namespace can also be split across nested keys, with or without the leading slash (``/rrbot_1:`` or ``rrbot_1:``):
+
+ .. code-block:: yaml
+
+    /rrbot_1:
+      position_trajectory_controller:
+        ros__parameters:
+          type: joint_trajectory_controller/JointTrajectoryController
+          .....
+
+Entries are matched against the controller's fully qualified name with the same rules as ``rclcpp``: ``/*`` matches one namespace token and ``/**`` any number of them, anywhere in the name (e.g. ``/*/position_trajectory_controller`` or ``/rrbot_1/**/position_trajectory_controller``). When several entries match, they are applied in file order and later files override earlier ones, so the last match wins, as at runtime.
 
 ``unspawner``
 ^^^^^^^^^^^^^
@@ -620,7 +638,9 @@ Returns a ``LaunchDescription`` containing:
 
 - Launch argument for ``controller_manager_name`` (default: "controller_manager") - allows overriding the controller manager node name
 - Launch argument for ``unload_on_kill`` (default: "false") - waits for interrupt signal to unload controllers
-- Spawner node that loads and activates the specified controllers
+- An action that creates the spawner node once launch arguments have been resolved.
+  The ``--unload-on-kill`` flag is omitted when ``unload_on_kill`` is false; no empty
+  placeholder argument is passed.
 
 **Complete Launch File Example:**
 

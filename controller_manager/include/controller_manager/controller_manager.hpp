@@ -233,6 +233,18 @@ public:
     return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
+  /// Check if the cached lifecycle state of any hardware component is ACTIVE.
+  /**
+   * Real-time safe. Used by the control loop to decide whether a cycle that didn't block is
+   * worth a warning. A true result is no proof that any component paces the loop.
+   * \returns true if at least one hardware component is ACTIVE, or, conservatively, if the
+   * components are currently locked in the ResourceManager; false otherwise.
+   */
+  bool has_active_hardware_components() const
+  {
+    return resource_manager_ && resource_manager_->has_active_components();
+  }
+
   /// Update rate of the main control loop in the controller manager.
   /**
    * Update rate of the main control loop in the controller manager.
@@ -445,15 +457,18 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controller_it iterator to the controller for which the following controllers are
-   * \param[out] message describing the result of the check.
    * checked.
+   * \param[in,out] visited_controllers names of the controllers already checked, which are not
+   * checked again.
+   * \param[out] message describing the result of the check.
    *
    * \returns return_type::OK if all following controllers pass the checks, otherwise
    * return_type::ERROR.
    */
   controller_interface::return_type check_following_controllers_for_activate(
     const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it, std::string & message);
+    const ControllersListIterator controller_it, std::vector<std::string> & visited_controllers,
+    std::string & message);
 
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
@@ -731,6 +746,8 @@ private:
   ControllerManagerExecutionTime execution_time_;
 
   controller_manager::MovingAverageStatistics periodicity_stats_;
+  /// Periodicity over the last diagnostics.controller_manager.window_duration seconds
+  ros2_control::TimeWindowStatistics recent_periodicity_stats_;
 
   struct SwitchParams
   {

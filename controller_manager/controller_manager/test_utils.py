@@ -128,14 +128,13 @@ def check_if_js_published(topic, joint_names):
       joint_names (list of str): The expected joint names in the JointState message.
 
     Raises:
-      AssertionError: If the topic is not found, the number of joints in the message is incorrect,
+      RuntimeError: If no message is received on the topic within the timeout.
+      AssertionError: If the number of joints in the message is incorrect,
               or the joint names do not match the expected names.
     """
-    wait_for_topics = WaitForTopics([(topic, JointState)], timeout=20.0)
-    assert wait_for_topics.wait(), f"Topic '{topic}' not found!"
-    msgs = wait_for_topics.received_messages(topic)
-    msg = msgs[0]
-    assert len(msg.name) == len(joint_names), "Wrong number of joints in message"
-    # use a set to compare the joint names, as the order might be different
-    assert set(msg.name) == set(joint_names), "Wrong joint names"
-    wait_for_topics.shutdown()
+    # context manager guarantees shutdown() (own context + non-daemon spin thread) on failure too
+    with WaitForTopics([(topic, JointState)], timeout=20.0) as wait_for_topics:
+        msg = wait_for_topics.received_messages(topic)[0]
+        assert len(msg.name) == len(joint_names), "Wrong number of joints in message"
+        # use a set to compare the joint names, as the order might be different
+        assert set(msg.name) == set(joint_names), "Wrong joint names"

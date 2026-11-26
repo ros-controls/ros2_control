@@ -707,10 +707,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -721,10 +721,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -744,10 +744,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_chainable_controller->get_lifecycle_state().id());
@@ -762,10 +762,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_FALSE(result->ok) << "Controller not configured: " << request->name;
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_chainable_controller->get_lifecycle_state().id());
@@ -777,10 +777,10 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    cm_->get_loaded_controllers()[0].c->get_name());
+    cm_->get_loaded_controllers()[1].c->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    cm_->get_loaded_controllers()[0].c->get_lifecycle_state().id());
+    cm_->get_loaded_controllers()[1].c->get_lifecycle_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_chainable_controller->get_lifecycle_state().id());
@@ -2517,10 +2517,10 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(3u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[2].name, test_ctrl_1_name);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, test_ctrl_1_name);
   ASSERT_EQ(result->controller[1].name, test_ctrl_2_name);
-  ASSERT_EQ(result->controller[0].name, test_ctrl_3_name);
+  ASSERT_EQ(result->controller[2].name, test_ctrl_3_name);
 
   ASSERT_EQ(0u, test_controller_1->internal_counter);
   ASSERT_EQ(0u, test_controller_2->internal_counter);
@@ -2542,6 +2542,8 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
       rclcpp::Duration(0, 0));
     ASSERT_EQ(res, controller_interface::return_type::OK);
   }
+  // let the in-progress RT update finish before reading the counters
+  std::this_thread::sleep_for(std::chrono::milliseconds(2));
   unsigned int old_counter_1 = test_controller_1->internal_counter;
   unsigned int old_counter_2 = test_controller_2->internal_counter;
 
@@ -2705,9 +2707,9 @@ TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_s
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation and they should work fine
   auto res = cm_->switch_controller(
@@ -2830,9 +2832,9 @@ TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_a
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation and they should work fine
   auto res = cm_->switch_controller(
@@ -3022,9 +3024,9 @@ TEST_F(
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
 
-  // reordered controllers
-  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_2);
-  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_1);
+  // controllers are kept in load order
+  ASSERT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  ASSERT_EQ(result->controller[1].name, TEST_CONTROLLER_2);
 
   // Check individual activation
   auto res = cm_->switch_controller(
@@ -3297,3 +3299,86 @@ INSTANTIATE_TEST_SUITE_P(
     controller_interface::interface_configuration_type::INDIVIDUAL,
     controller_interface::interface_configuration_type::INDIVIDUAL_BEST_EFFORT,
     controller_interface::interface_configuration_type::REGEX));
+
+class TestControllersWithRegexInterfaces : public TestControllerManagerSrvs
+{
+protected:
+  controller_manager_msgs::msg::ControllerState configure_regex_controller(
+    const std::vector<std::string> & cmd_entries, const std::vector<std::string> & state_entries)
+  {
+    auto test_controller = std::make_shared<TestController>();
+    test_controller->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::REGEX, cmd_entries});
+    test_controller->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::REGEX, state_entries});
+    cm_->add_controller(
+      test_controller, test_controller::TEST_CONTROLLER_NAME,
+      test_controller::TEST_CONTROLLER_CLASS_NAME);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME));
+    return list_single_controller();
+  }
+
+  controller_manager_msgs::msg::ControllerState list_single_controller()
+  {
+    rclcpp::executors::SingleThreadedExecutor srv_executor;
+    auto srv_node = std::make_shared<rclcpp::Node>("srv_client");
+    srv_executor.add_node(srv_node);
+    auto client =
+      srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+    auto result =
+      call_service_and_wait(*client, std::make_shared<ListControllers::Request>(), srv_executor);
+    EXPECT_EQ(1u, result->controller.size());
+    return result->controller.at(0);
+  }
+
+  controller_interface::return_type activate()
+  {
+    return cm_->switch_controller(
+      {test_controller::TEST_CONTROLLER_NAME}, {},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+  }
+};
+
+TEST_F(TestControllersWithRegexInterfaces, plain_names_and_patterns_can_be_mixed)
+{
+  const auto ctrl = configure_regex_controller(
+    {"joint1/position", "joint2/(velocity|max_acceleration)", "joint123/does_not_exist"},
+    {"joint1/position", "joint[23]/acceleration", "sensor1/velocity", "joint456/does_not_exist"});
+  EXPECT_THAT(
+    ctrl.required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity", "joint2/max_acceleration"));
+  EXPECT_THAT(
+    ctrl.required_state_interfaces,
+    UnorderedElementsAre(
+      "joint1/position", "joint2/acceleration", "joint3/acceleration", "sensor1/velocity"));
+
+  ASSERT_EQ(controller_interface::return_type::OK, activate());
+  const auto active_ctrl = list_single_controller();
+  EXPECT_EQ("active", active_ctrl.state);
+  EXPECT_THAT(
+    active_ctrl.claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint2/velocity", "joint2/max_acceleration"));
+}
+
+TEST_F(TestControllersWithRegexInterfaces, interfaces_matched_by_several_entries_are_not_duplicated)
+{
+  const auto ctrl = configure_regex_controller(
+    {"joint1/position", "joint1/.*", "joint[12]/(position|velocity)"},
+    {"joint1/position", "joint1/(position|velocity)", "joint1/.*"});
+  EXPECT_THAT(
+    ctrl.required_command_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/max_velocity", "joint2/velocity"));
+  EXPECT_THAT(
+    ctrl.required_state_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint1/some_unlisted_interface"));
+
+  ASSERT_EQ(controller_interface::return_type::OK, activate());
+  const auto active_ctrl = list_single_controller();
+  EXPECT_EQ("active", active_ctrl.state);
+  EXPECT_THAT(
+    active_ctrl.claimed_interfaces,
+    UnorderedElementsAre("joint1/position", "joint1/max_velocity", "joint2/velocity"));
+}
