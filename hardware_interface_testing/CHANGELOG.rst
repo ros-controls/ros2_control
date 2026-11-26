@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.14.0 (2026-11-26)
+-------------------
 * Fix periodicity statistics of async hardware components hiding overruns (`#3823 <https://github.com/ros-controls/ros2_control/issues/3823>`_)
 * Sleep periodically in blocking read/write mode when no hardware is active (`#3825 <https://github.com/ros-controls/ros2_control/issues/3825>`_)
 * Contributors: Christoph Fröhlich, Sai Kishor Kothakota
