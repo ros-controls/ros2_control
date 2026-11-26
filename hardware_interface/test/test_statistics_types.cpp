@@ -55,12 +55,17 @@ TEST(TestMovingAverageStatisticsData, concurrent_update_and_read)
   auto collector = std::make_shared<MovingAverageStatistics>();
   collector->reset();
   MovingAverageStatisticsData data;
+  std::atomic<bool> reader_started{false};
   std::atomic<bool> done{false};
   constexpr uint64_t kSamples = 20000;
 
   std::thread writer(
     [&]()
     {
+      while (!reader_started)
+      {
+        std::this_thread::yield();
+      }
       for (uint64_t i = 1; i <= kSamples; ++i)
       {
         collector->add_measurement(static_cast<double>(i));
@@ -70,7 +75,8 @@ TEST(TestMovingAverageStatisticsData, concurrent_update_and_read)
     });
 
   uint64_t reads = 0;
-  while (!done)
+  reader_started = true;
+  do
   {
     const auto stats = data.get_statistics();
     const double current = data.get_current_data();
@@ -82,7 +88,7 @@ TEST(TestMovingAverageStatisticsData, concurrent_update_and_read)
       EXPECT_FALSE(std::isnan(current));
     }
     ++reads;
-  }
+  } while (!done);
   writer.join();
 
   EXPECT_GT(reads, 0u);
