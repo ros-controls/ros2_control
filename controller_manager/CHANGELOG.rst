@@ -2,6 +2,24 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.14.0 (2026-11-26)
+-------------------
+* [Diagnostics] Judge periodicity and execution time over a recent time window (`#3749 <https://github.com/ros-controls/ros2_control/issues/3749>`_)
+* Sleep periodically in blocking read/write mode when no hardware is active (`#3825 <https://github.com/ros-controls/ros2_control/issues/3825>`_)
+* Avoid duplicated interfaces in REGEX interface configuration (`#3810 <https://github.com/ros-controls/ros2_control/issues/3810>`_)
+* Make --unload-on-kill ignore a second SIGINT before cleanup (`#3714 <https://github.com/ros-controls/ros2_control/issues/3714>`_)
+* remove comments that narrate the code (`#3800 <https://github.com/ros-controls/ros2_control/issues/3800>`_)
+* Remove stale TODO design notes (`#3752 <https://github.com/ros-controls/ros2_control/issues/3752>`_)
+* Preserve load order for controllers without chain relationships (`#3781 <https://github.com/ros-controls/ros2_control/issues/3781>`_)
+* Fix stack overflow when chained controllers claim each other's interfaces (`#3699 <https://github.com/ros-controls/ros2_control/issues/3699>`_)
+* Resolve the clocks once per cycle in the controller manager update loop (`#3754 <https://github.com/ros-controls/ros2_control/issues/3754>`_)
+* Remove libstatistics_collector dependency (`#3772 <https://github.com/ros-controls/ros2_control/issues/3772>`_)
+* chore(test_utils): Improve context cleanup in tests (`#3765 <https://github.com/ros-controls/ros2_control/issues/3765>`_)
+* Make the list hardware services linear in the number of interfaces (`#3755 <https://github.com/ros-controls/ros2_control/issues/3755>`_)
+* Resolve active controllers' command interfaces once in the fallback lookup (`#3756 <https://github.com/ros-controls/ros2_control/issues/3756>`_)
+* Support nested namespace keys in controller parameter files (`#3719 <https://github.com/ros-controls/ros2_control/issues/3719>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Mark Finean, Sai Kishor Kothakota, 渠超胜
+
 6.13.0 (2026-11-02)
 -------------------
 * fix(spawner): Allow empty arguments and add regression tests (`#3710 <https://github.com/ros-controls/ros2_control/issues/3710>`_)
