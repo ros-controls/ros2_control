@@ -34,6 +34,7 @@ controller_manager
 * Controllers without chain relationships are now updated in the order they were loaded, instead of an unspecified order. (`#3781 <https://github.com/ros-controls/ros2_control/pull/3781>`__)
 * ``hardware_spawner`` now exits with a nonzero status if any requested component is missing or fails to reach the requested state.
   It still attempts the remaining components. (`#3779 <https://github.com/ros-controls/ros2_control/pull/3779>`__)
+* With ``hardware_synchronization.expect_blocking_read_write``, the control loop now sleeps periodically at ``update_rate`` without warning when a cycle didn't block while no hardware component is ``active``, instead of spinning at ``minimum_cycle_time``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
 
 hardware_interface
 ******************
@@ -43,6 +44,7 @@ hardware_interface
 * The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
 * ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
 * Handles now also support ``uint64`` and ``int64`` data types. They are not castable to double and are therefore not included in the introspection. (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__)
+* The new real-time safe ``ResourceManager::has_active_components()`` tells whether any hardware component is ``active``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
 
 joint_limits
 ************
