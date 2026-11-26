@@ -2971,6 +2971,59 @@ TEST_F(
 class TestControllerManagerChainableControllerFailedActivation
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
+protected:
+  static controller_interface::InterfaceConfiguration individual(
+    const std::vector<std::string> & names)
+  {
+    return {controller_interface::interface_configuration_type::INDIVIDUAL, names};
+  }
+
+  // chainable controller commanding command_interface, exporting modified_joint<suffix>/position
+  std::shared_ptr<test_chainable_controller::TestChainableController> add_chainable_controller(
+    const std::string & name, const std::string & command_interface, const std::string & suffix)
+  {
+    auto controller = std::make_shared<test_chainable_controller::TestChainableController>();
+    controller->set_command_interface_configuration(individual({command_interface}));
+    controller->set_state_interface_configuration(individual({"joint2/velocity"}));
+    controller->set_reference_interface_names({"modified_joint" + suffix + "/position"});
+    cm_->add_controller(controller, name, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    return controller;
+  }
+
+  void configure_controllers(const std::vector<std::string> & names)
+  {
+    for (const auto & name : names)
+    {
+      EXPECT_EQ(controller_interface::return_type::OK, cm_->configure_controller(name));
+    }
+  }
+
+  controller_interface::return_type switch_strict(
+    const std::vector<std::string> & start_controllers,
+    const std::vector<std::string> & stop_controllers = {})
+  {
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers,
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+    // the updater thread handles the switch, a loaded machine can need more than a few cycles
+    EXPECT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::seconds(5)))
+      << "switch_controller should be blocking until next update cycle";
+    return switch_future.get();
+  }
+
+  std::vector<std::string> claimed_interfaces(const std::string & controller_name)
+  {
+    for (const auto & controller : cm_->get_loaded_controllers())
+    {
+      if (controller.info.name == controller_name)
+      {
+        return controller.info.claimed_interfaces;
+      }
+    }
+    return {};
+  }
 };
 
 TEST_F(
@@ -3241,6 +3294,169 @@ TEST_F(
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller->get_lifecycle_state().id());
+  }
+}
+
+TEST_F(
+  TestControllerManagerChainableControllerFailedActivation,
+  test_strict_failed_activation_keeps_restarted_chainable_controller_active)
+{
+  const std::string chainable_name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  const std::string failing_name = "failing_preceding_controller";
+  // chainable controller, active in non-chained mode before the failing switch
+  auto chainable = add_chainable_controller(chainable_name, "joint1/position", "1");
+  // controller claiming the reference interface of the chainable controller, fails on activation
+  auto failing =
+    add_chainable_controller(failing_name, chainable_name + "/modified_joint1/position", "3");
+  failing->fail_on_activate = true;
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    configure_controllers({chainable_name, failing_name});
+    EXPECT_EQ(controller_interface::return_type::OK, switch_strict({chainable_name}));
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+    EXPECT_FALSE(chainable->is_in_chained_mode());
+
+    // activating the failing controller restarts the chainable controller in chained mode, the
+    // STRICT rollback has to bring it back to the state it had before the switch
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_strict({failing_name}));
+    EXPECT_NE(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, failing->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+    EXPECT_FALSE(chainable->is_in_chained_mode());
+    EXPECT_EQ(std::vector<std::string>{"joint1/position"}, claimed_interfaces(chainable_name));
+    EXPECT_TRUE(claimed_interfaces(failing_name).empty());
+  }
+
+  // once the failing controller is fixed, it can chain into the chainable controller
+  failing->fail_on_activate = false;
+  {
+    ControllerManagerRunner cm_runner(this);
+    configure_controllers({failing_name});
+    EXPECT_EQ(controller_interface::return_type::OK, switch_strict({failing_name}));
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, failing->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+    EXPECT_TRUE(chainable->is_in_chained_mode());
+  }
+}
+
+TEST_F(
+  TestControllerManagerChainableControllerFailedActivation,
+  test_strict_failed_activation_does_not_restore_failed_restarted_chainable_controller)
+{
+  const std::string chainable_name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  const std::string preceding_name = "preceding_controller";
+  auto chainable = add_chainable_controller(chainable_name, "joint1/position", "1");
+  auto preceding =
+    add_chainable_controller(preceding_name, chainable_name + "/modified_joint1/position", "3");
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    configure_controllers({chainable_name, preceding_name});
+    EXPECT_EQ(controller_interface::return_type::OK, switch_strict({chainable_name}));
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+
+    // the chainable controller fails when it is restarted in chained mode, so the STRICT rollback
+    // must not try to activate it again
+    chainable->fail_on_activate = true;
+    controller_interface::return_type ret = controller_interface::return_type::OK;
+    EXPECT_NO_THROW(ret = switch_strict({preceding_name}));
+    EXPECT_EQ(controller_interface::return_type::ERROR, ret);
+    EXPECT_NE(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+    EXPECT_NE(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, preceding->get_lifecycle_state().id());
+  }
+}
+
+TEST_F(
+  TestControllerManagerChainableControllerFailedActivation,
+  test_strict_failed_activation_restores_explicitly_restarted_controller)
+{
+  const std::string restarted_name = "restarted_controller";
+  const std::string failing_name = "failing_controller";
+  auto restarted = std::make_shared<test_controller::TestController>();
+  restarted->set_command_interface_configuration(individual({"joint1/position"}));
+  restarted->set_state_interface_configuration(individual({"joint2/velocity"}));
+  cm_->add_controller(restarted, restarted_name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  auto failing = add_chainable_controller(failing_name, "joint2/velocity", "4");
+  failing->fail_on_activate = true;
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    configure_controllers({restarted_name, failing_name});
+    EXPECT_EQ(controller_interface::return_type::OK, switch_strict({restarted_name}));
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, restarted->get_lifecycle_state().id());
+
+    // restart the active controller in the same STRICT switch as the failing controller
+    EXPECT_EQ(
+      controller_interface::return_type::ERROR,
+      switch_strict({restarted_name, failing_name}, {restarted_name}));
+    EXPECT_NE(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, failing->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, restarted->get_lifecycle_state().id());
+    EXPECT_EQ(std::vector<std::string>{"joint1/position"}, claimed_interfaces(restarted_name));
+  }
+}
+
+TEST_F(
+  TestControllerManagerChainableControllerFailedActivation,
+  test_strict_failed_activation_restores_restarted_chain_in_chained_mode)
+{
+  const std::string chainable_name = test_chainable_controller::TEST_CONTROLLER_NAME;
+  const std::string preceding_name = "preceding_controller";
+  const std::string failing_name = "failing_controller";
+  const std::string chained_reference = chainable_name + "/modified_joint1/position";
+  auto chainable = add_chainable_controller(chainable_name, "joint1/position", "1");
+  auto preceding = add_chainable_controller(preceding_name, chained_reference, "3");
+  auto failing = add_chainable_controller(failing_name, "joint2/velocity", "4");
+  failing->fail_on_activate = true;
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+
+  {
+    ControllerManagerRunner cm_runner(this);
+    configure_controllers({chainable_name, preceding_name, failing_name});
+    EXPECT_EQ(
+      controller_interface::return_type::OK, switch_strict({chainable_name, preceding_name}));
+    EXPECT_TRUE(chainable->is_in_chained_mode());
+
+    // restart the whole chain in the same STRICT switch as the failing controller, the chain has
+    // to come back as it was, with the chainable controller in chained mode
+    EXPECT_EQ(
+      controller_interface::return_type::ERROR,
+      switch_strict(
+        {chainable_name, preceding_name, failing_name}, {chainable_name, preceding_name}));
+    EXPECT_NE(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, failing->get_lifecycle_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, chainable->get_lifecycle_state().id());
+    EXPECT_TRUE(chainable->is_in_chained_mode());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, preceding->get_lifecycle_state().id());
+    EXPECT_EQ(std::vector<std::string>{chained_reference}, claimed_interfaces(preceding_name));
+    EXPECT_EQ(std::vector<std::string>{"joint1/position"}, claimed_interfaces(chainable_name));
   }
 }
 
