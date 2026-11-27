@@ -23,6 +23,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -555,8 +556,18 @@ private:
    * @brief Method to publish the state of the controller manager.
    * The state includes the list of controllers and the list of hardware interfaces along with
    * their states.
+   * \warning Blocks on the controllers lock, so it must only run on the activity publisher thread.
    */
   void publish_activity();
+
+  /**
+   * @brief Requests the activity publisher thread to publish the state of the controller manager.
+   * It neither blocks nor allocates, so it can be called from the realtime loop.
+   */
+  void request_activity_publish();
+
+  /// Stops and joins the activity publisher thread, if it is running.
+  void stop_activity_publisher_thread();
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
@@ -698,6 +709,13 @@ private:
   std::mutex services_lock_;
   rclcpp::Publisher<controller_manager_msgs::msg::ControllerManagerActivity>::SharedPtr
     controller_manager_activity_publisher_;
+  /// Publishes ~/activity on request, so the realtime loop never builds or publishes the message
+  std::thread activity_publisher_thread_;
+  std::mutex activity_publisher_mutex_;
+  std::condition_variable activity_publisher_cv_;
+  std::atomic_bool activity_publish_requested_{false};
+  /// Protected by activity_publisher_mutex_
+  bool stop_activity_publisher_ = false;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
@@ -826,6 +844,14 @@ private:
     std::string concatenated_string;
   };
   RTBufferVariables rt_buffer_;
+
+  /// Removes the pre-shutdown callback and stops the activity publisher thread. Declared last, so
+  /// it runs before the members they use are destroyed, also when a constructor throws.
+  struct DestructionGuard
+  {
+    ControllerManager * cm;
+    ~DestructionGuard();
+  } destruction_guard_{this};
 };
 
 }  // namespace controller_manager
