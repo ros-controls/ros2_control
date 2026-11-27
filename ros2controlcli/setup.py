@@ -61,6 +61,7 @@ ROS2 Control command  interface.""",
             "list_controller_types = \
                 ros2controlcli.verb.list_controller_types:ListControllerTypesVerb",
             "load_controller = ros2controlcli.verb.load_controller:LoadControllerVerb",
+            "reload_controller = ros2controlcli.verb.reload_controller:ReloadControllerVerb",
             "reload_controller_libraries = \
                 ros2controlcli.verb.reload_controller_libraries:ReloadControllerLibrariesVerb",
             "set_controller_state = \

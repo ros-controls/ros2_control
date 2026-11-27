@@ -14,6 +14,7 @@ Currently supported commands are
     - ros2 control list_hardware_components
     - ros2 control list_hardware_interfaces
     - ros2 control load_controller
+    - ros2 control reload_controller
     - ros2 control reload_controller_libraries
     - ros2 control set_controller_state
     - ros2 control set_hardware_component_state
@@ -216,6 +217,41 @@ load_controller
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
+
+reload_controller
+-----------------
+
+.. code-block:: console
+
+    $ ros2 control reload_controller -h
+    usage: ros2 control reload_controller [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] [--ros-args ...] controller_name [param_file]
+
+    Reload a controller and its parameters, and restore its previous state
+
+    positional arguments:
+      controller_name       Name of the controller
+      param_file            The YAML file with the controller parameters. If not set, the controller manager uses the file set at the last load.
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node (default: controller_manager)
+      --include-hidden-nodes
+                            Consider hidden nodes as well
+      --ros-args ...        Pass arbitrary arguments to the executable
+
+The verb deactivates, unloads, loads, and configures the controller, and then sets it to its previous state.
+The controller node reads its parameter file again at load, so changes in the file apply.
+The verb does not reload a controller whose reference interfaces are used by other active controllers.
+
+Example reloading a controller after a change in its parameter file:
+
+.. code-block:: console
+
+    $ ros2 control reload_controller joint_state_broadcaster
 
 reload_controller_libraries
 ---------------------------
