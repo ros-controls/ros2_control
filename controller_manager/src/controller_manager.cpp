@@ -3478,6 +3478,10 @@ controller_interface::return_type ControllerManager::update(
   rclcpp::Clock & node_clock = *get_clock();
   const bool node_clock_started = node_clock.started();
   const rclcpp::Time zero_time(0, 0, trigger_clock.get_clock_type());
+  // With use_sim_time the trigger clock is the node's ROS clock, only as recent as the last /clock
+  // message the node received, while a simulator passes the time of the step it simulates.
+  const bool use_time_argument =
+    trigger_clock.get_clock_type() == RCL_ROS_TIME && time != zero_time;
 
   rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
@@ -3511,7 +3515,8 @@ controller_interface::return_type ControllerManager::update(
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
       const bool first_update_cycle = (*loaded_controller.last_update_cycle_time == zero_time);
-      const rclcpp::Time current_time = node_clock_started ? trigger_clock.now() : time;
+      const rclcpp::Time current_time =
+        (use_time_argument || !node_clock_started) ? time : trigger_clock.now();
       const auto controller_actual_period =
         first_update_cycle ? controller_period
                            : (current_time - *loaded_controller.last_update_cycle_time);
@@ -3537,8 +3542,8 @@ controller_interface::return_type ControllerManager::update(
         // Catch exceptions thrown by the controller update function
         try
         {
-          const auto trigger_result =
-            loaded_controller.c->trigger_update(node_clock.now(), controller_actual_period);
+          const auto trigger_result = loaded_controller.c->trigger_update(
+            use_time_argument ? time : node_clock.now(), controller_actual_period);
           trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())

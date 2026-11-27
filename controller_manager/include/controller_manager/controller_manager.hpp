@@ -198,7 +198,10 @@ public:
    * Call update of all controllers.
    * **The method called in the (real-time) control loop.**
    *
-   * \param[in]  time    The time at the start of this control loop iteration
+   * \param[in]  time    The time at the start of this control loop iteration. With
+   * `use_sim_time`, this is the simulator's time: it is forwarded to the controllers as their
+   * update time, and the period of controllers running slower than the controller manager is
+   * measured on it.
    * \param[in]  period  The measured period of the last control loop iteration
    */
   controller_interface::return_type update(

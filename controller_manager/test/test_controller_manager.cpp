@@ -27,6 +27,7 @@
 #include "controller_manager_test_common.hpp"
 #include "gmock/gmock.h"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rcl/time.h"
 #include "rclcpp/executor.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
@@ -1198,6 +1199,109 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
 INSTANTIATE_TEST_SUITE_P(
   per_controller_update_rate_check, TestControllerUpdateRates,
   testing::Values(10, 12, 16, 23, 37, 40, 50, 63, 71, 85, 90));
+
+class TestControllerManagerWithSimTime
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+public:
+  TestControllerManagerWithSimTime()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, "", {rclcpp::Parameter("use_sim_time", true)})
+  {
+  }
+};
+
+TEST_F(TestControllerManagerWithSimTime, controllers_are_updated_with_the_time_argument)
+{
+  // The node's clock holds the time of the last /clock message, here one that is not followed
+  // by another, as when they are delayed
+  const rclcpp::Time start_time(1, 0, RCL_ROS_TIME);
+  ASSERT_EQ(
+    RCL_RET_OK,
+    rcl_set_ros_time_override(cm_->get_clock()->get_clock_handle(), start_time.nanoseconds()));
+  ASSERT_TRUE(cm_->get_clock()->started());
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+  switch_test_controllers({test_controller::TEST_CONTROLLER_NAME}, {}, STRICT);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  // The simulation runs on
+  rclcpp::Time time = start_time;
+  for (size_t update_counter = 0; update_counter < 10; ++update_counter)
+  {
+    time += PERIOD;
+    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(time, PERIOD));
+    EXPECT_EQ(time.nanoseconds(), test_controller->update_time_.nanoseconds());
+    EXPECT_EQ(PERIOD.nanoseconds(), test_controller->update_period_.nanoseconds());
+  }
+  EXPECT_EQ(start_time.nanoseconds(), cm_->get_clock()->now().nanoseconds());
+}
+
+TEST_F(TestControllerManagerWithSimTime, slower_controllers_are_triggered_on_the_time_argument)
+{
+  // As above, the node's clock stays at the last /clock message while the simulation runs on
+  const rclcpp::Time start_time(1, 0, RCL_ROS_TIME);
+  ASSERT_EQ(
+    RCL_RET_OK,
+    rcl_set_ros_time_override(cm_->get_clock()->get_clock_handle(), start_time.nanoseconds()));
+  ASSERT_TRUE(cm_->get_clock()->started());
+
+  const unsigned int ctrl_update_rate = 25;
+  const unsigned int cycles_per_update = cm_->get_update_rate() / ctrl_update_rate;
+  ASSERT_EQ(4u, cycles_per_update);
+  const auto expected_period =
+    rclcpp::Duration::from_nanoseconds(PERIOD.nanoseconds() * cycles_per_update);
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  test_controller->get_node()->set_parameter({"update_rate", static_cast<int>(ctrl_update_rate)});
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+  switch_test_controllers({test_controller::TEST_CONTROLLER_NAME}, {}, STRICT);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+  ASSERT_EQ(ctrl_update_rate, test_controller->get_update_rate());
+
+  // The controller runs every cycles_per_update cycles, with the period measured on the time
+  // argument; on the node's clock no time would pass and it would never run again
+  rclcpp::Time time = start_time;
+  size_t triggers = 0;
+  size_t last_trigger_cycle = 0;
+  for (size_t cycle = 1; cycle <= 10 * cycles_per_update; ++cycle)
+  {
+    time += PERIOD;
+    const auto counter_before = test_controller->internal_counter;
+    ASSERT_EQ(controller_interface::return_type::OK, cm_->update(time, PERIOD));
+    if (test_controller->internal_counter == counter_before)
+    {
+      continue;
+    }
+    ASSERT_EQ(counter_before + 1, test_controller->internal_counter);
+    EXPECT_EQ(time.nanoseconds(), test_controller->update_time_.nanoseconds());
+    EXPECT_EQ(expected_period.nanoseconds(), test_controller->update_period_.nanoseconds())
+      << "at cycle " << cycle;
+    if (triggers > 0)
+    {
+      EXPECT_EQ(cycles_per_update, cycle - last_trigger_cycle) << "at cycle " << cycle;
+    }
+    last_trigger_cycle = cycle;
+    ++triggers;
+  }
+  EXPECT_GE(triggers, 10u - 1u);
+  EXPECT_EQ(start_time.nanoseconds(), cm_->get_clock()->now().nanoseconds());
+}
 
 class TestAsyncControllerUpdateRates
 : public ControllerManagerFixture<controller_manager::ControllerManager>
