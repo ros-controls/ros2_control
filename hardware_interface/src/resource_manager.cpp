@@ -1514,6 +1514,8 @@ ResourceManager::ResourceManager(
 
 bool ResourceManager::shutdown_components()
 {
+  std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
+  std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   std::unique_lock<std::recursive_mutex> guard(resource_interfaces_lock_);
   bool shutdown_status = true;
   for (auto const & hw_info : resource_storage_->hardware_info_map_)
