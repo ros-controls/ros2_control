@@ -170,18 +170,21 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
-  // If soft position limits are more restrictive consider soft position limits
+  // If soft position limits are more restrictive, the command is brought towards them, but no
+  // faster than the max velocity limit allows
   soft_limits.max_position = 0.75;
   soft_limits.min_position = -0.75;
   ASSERT_TRUE(Init(limits, soft_limits));
   desired_state_.position = 2.0;
   actual_state_ = {};
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
+  // The previous command is seeded from the desired position (2.0), beyond the soft limit:
+  // as per max velocity limit, it can only move back to 1.0 in 1 second
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
   desired_state_.position = -3.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  // As per max velocity limit, it can only reach -0.25 in 1 second
-  EXPECT_NEAR(desired_state_.position.value(), -0.25, COMMON_THRESHOLD);
+  // As per max velocity limit, it can only reach 0.0 in 1 second
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
 
   // Now let's check the case where the actual position is at 2.0 and the desired position is -M_PI
   // with max velocity limit of 1.0
@@ -345,18 +348,19 @@ TEST_F(JointSoftLimiterTest, position_soft_limits_no_overlap_with_velocity_reach
 
   // prev_command_ is empty → seeded from desired = 2.0.
   // Velocity-reachable range from 2.0: [1.0, 3.0].
-  // Soft limits: [-0.75, 0.75].  No overlap → pos_low > pos_high without the fix.
+  // Soft limits: [-0.75, 0.75].  No overlap → the velocity limit takes precedence and the
+  // command moves towards the soft limit by max_velocity * period.
   desired_state_ = {};
   actual_state_ = {};
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
 
-  // Second call: prev_command is now 0.75.  Velocity-reachable: [-0.25, 1.75].
+  // Second call: prev_command is now 1.0.  Velocity-reachable: [0.0, 2.0].
   // Soft limits [-0.75, 0.75] overlap → normal clamping, no inversion.
   desired_state_.position = -3.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), -0.25, COMMON_THRESHOLD);
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
 
   // Symmetric case: prev_command seeded from desired = -2.0 (below soft min).
   // Velocity-reachable from -2.0: [-3.0, -1.0].  No overlap with [-0.75, 0.75].
@@ -365,7 +369,111 @@ TEST_F(JointSoftLimiterTest, position_soft_limits_no_overlap_with_velocity_reach
   actual_state_ = {};
   desired_state_.position = -2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), soft_limits.min_position, COMMON_THRESHOLD);
+  EXPECT_NEAR(desired_state_.position.value(), -1.0, COMMON_THRESHOLD);
+}
+
+// Beyond a soft limit, the soft interval and the velocity-reachable interval of the saturation
+// limiter do not overlap. The position command must still respect the hard velocity limit.
+TEST_F(JointSoftLimiterTest, position_beyond_soft_limit_respects_velocity_limit)
+{
+  SetupNode("soft_joint_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -1.57;
+  limits.max_position = 1.57;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  joint_limits::SoftJointLimits soft_limits;
+  soft_limits.min_position = -1.40;
+  soft_limits.max_position = 1.40;
+  soft_limits.k_position = 10.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+
+  const rclcpp::Duration period = rclcpp::Duration::from_seconds(0.01);
+  const double max_step = limits.max_velocity * period.seconds();
+
+  // the previous command is seeded with the actual position, the joint is commanded to hold it
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 1.45;
+  desired_state_.position = 1.45;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  // moves back towards the soft limit, but by no more than max_velocity * period
+  EXPECT_NEAR(desired_state_.position.value(), 1.45 - max_step, COMMON_THRESHOLD);
+
+  // same beyond the lower soft limit
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = -1.45;
+  desired_state_.position = -1.45;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), -1.45 + max_step, COMMON_THRESHOLD);
+
+  // a desired position further beyond the soft limit is also brought back towards it
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 1.45;
+  desired_state_.position = 1.55;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.45 - max_step, COMMON_THRESHOLD);
+
+  // with acceleration limits, the step is bounded by the velocity reachable within the period
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 20.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 1.45;
+  actual_state_.velocity = -0.5;
+  desired_state_.position = 1.45;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  const double max_step_with_acc =
+    (0.5 + limits.max_acceleration * period.seconds()) * period.seconds();
+  EXPECT_NEAR(desired_state_.position.value(), 1.45 - max_step_with_acc, COMMON_THRESHOLD);
+}
+
+// Starting beyond a soft limit, the position command converges to the soft limit over several
+// updates, never moving more than max_velocity * period per update and never overshooting it.
+TEST_F(JointSoftLimiterTest, position_beyond_soft_limit_converges_to_soft_limit)
+{
+  SetupNode("soft_joint_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -1.57;
+  limits.max_position = 1.57;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  joint_limits::SoftJointLimits soft_limits;
+  soft_limits.min_position = -1.40;
+  soft_limits.max_position = 1.40;
+  soft_limits.k_position = 10.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+
+  const rclcpp::Duration period = rclcpp::Duration::from_seconds(0.01);
+  const double max_step = limits.max_velocity * period.seconds();
+
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 1.45;
+  double previous_command = 1.45;
+  for (int i = 0; i < 10; ++i)
+  {
+    // keep commanding the same position beyond the soft limit, the joint follows the command
+    desired_state_.position = 1.45;
+    joint_limiter_->enforce(actual_state_, desired_state_, period);
+    const double command = desired_state_.position.value();
+    EXPECT_LE(std::fabs(command - previous_command), max_step + COMMON_THRESHOLD);
+    EXPECT_GE(command, soft_limits.max_position - COMMON_THRESHOLD);
+    previous_command = command;
+    actual_state_.position = command;
+  }
+  EXPECT_NEAR(previous_command, soft_limits.max_position, COMMON_THRESHOLD);
 }
 
 TEST_F(JointSoftLimiterTest, check_desired_velocity_only_cases)

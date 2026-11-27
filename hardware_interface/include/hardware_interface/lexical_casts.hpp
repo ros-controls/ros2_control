@@ -39,8 +39,8 @@ double stod(const std::string & s);
  */
 float stof(const std::string & s);
 
-/** \brief Overflow-safe conversion from string to int32_t.
- * \throws std::out_of_range if the converted value would fall out of the range of int32_t
+/** \brief Overflow-safe conversion from string to the signed integral type T.
+ * \throws std::out_of_range if the converted value would fall out of the range of T
  * \throws std::invalid_argument if no conversion could be performed
  */
 template <typename T>
@@ -49,7 +49,8 @@ T stoi_generic(const std::string & s)
   static_assert(std::is_integral_v<T> && std::is_signed_v<T>, "T must be a signed integral type");
 
   size_t pos;
-  const auto v = std::stol(s, &pos);  // stol returns long
+  // stoll is used because long is only 32 bits wide on some platforms.
+  const auto v = std::stoll(s, &pos);
   if (pos != s.length())
   {
     throw std::invalid_argument("Invalid characters in string");
@@ -66,9 +67,10 @@ T stoi_generic(const std::string & s)
 inline int8_t stoi8(const std::string & s) { return stoi_generic<int8_t>(s); }
 inline int16_t stoi16(const std::string & s) { return stoi_generic<int16_t>(s); }
 inline int32_t stoi32(const std::string & s) { return stoi_generic<int32_t>(s); }
+inline int64_t stoi64(const std::string & s) { return stoi_generic<int64_t>(s); }
 
-/** \brief Overflow-safe conversion from string to uint32_t.
- * \throws std::out_of_range if the converted value would fall out of the range of int32_t
+/** \brief Overflow-safe conversion from string to the unsigned integral type T.
+ * \throws std::out_of_range if the converted value would fall out of the range of T, or is negative
  * \throws std::invalid_argument if no conversion could be performed
  */
 template <typename T>
@@ -78,10 +80,18 @@ T stoui_generic(const std::string & s)
     std::is_integral_v<T> && std::is_unsigned_v<T>, "T must be an unsigned integral type");
 
   size_t pos;
-  const auto v = std::stoul(s, &pos);  // stoul returns unsigned long
+  // stoull is used because unsigned long is only 32 bits wide on some platforms.
+  const auto v = std::stoull(s, &pos);
   if (pos != s.length())
   {
     throw std::invalid_argument("Invalid characters in string");
+  }
+  // stoull wraps a negative input around instead of rejecting it.
+  // A wrapped value can still fit in the target type, so the sign is checked explicitly.
+  const auto first_char = s.find_first_not_of(" \t\n\v\f\r");
+  if (first_char != std::string::npos && s[first_char] == '-' && v != 0)
+  {
+    throw std::out_of_range("value not in range of target type");
   }
   if (v > std::numeric_limits<T>::max())
   {
@@ -95,6 +105,7 @@ T stoui_generic(const std::string & s)
 inline uint8_t stoui8(const std::string & s) { return stoui_generic<uint8_t>(s); }
 inline uint16_t stoui16(const std::string & s) { return stoui_generic<uint16_t>(s); }
 inline uint32_t stoui32(const std::string & s) { return stoui_generic<uint32_t>(s); }
+inline uint64_t stoui64(const std::string & s) { return stoui_generic<uint64_t>(s); }
 
 /**
  * \brief Convert a string to lower case.

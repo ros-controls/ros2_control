@@ -166,6 +166,9 @@ hardware_synchronization.expect_blocking_read_write (optional; bool; default: fa
   If true, the controller manager will not sleep actively. Use this, when there is a hardware
   interface running that will block during its read or write operation until receiving new data
   from the hardware.
+  If a cycle didn't block while no hardware component is ``active`` (e.g., all failed to
+  configure, or are ``inactive`` and block only in ``write``, which isn't called then), the loop
+  falls back to sleeping periodically at ``update_rate`` without warning.
 
 hardware_synchronization.minimum_cycle_time (optional; double; default: 0.0001)
   The minimum sleep time in seconds for the control node's real-time loop. This is used to
@@ -294,6 +297,9 @@ There are two scripts to interact with controller manager from launch files:
     When launching ``spawner`` with ROS parameter files that use substitutions (for example, launch ``allow_substs=True``),
     the resolved ``--params-file`` path(s) used by the spawner node are automatically forwarded to each controller along
     with any explicit ``--param-file`` arguments passed to the spawner command.
+
+    With ``--unload-on-kill``, the first SIGINT or SIGTERM starts the deactivate/unload sequence and any further
+    SIGINT/SIGTERM is ignored until it finishes, so pressing Ctrl-C repeatedly cannot leave controllers loaded.
 
 .. note::
   If a single parameter file is used for multiple controllers, the spawner will automatically forward the resolved path(s) to each controller. The following methods are recommended:

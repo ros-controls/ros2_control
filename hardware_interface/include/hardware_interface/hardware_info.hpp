@@ -153,7 +153,8 @@ struct TransmissionInfo
  */
 
 using HANDLE_DATATYPE = std::variant<
-  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t>;
+  std::monostate, double, float, bool, uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t,
+  uint64_t, int64_t>;
 class HandleDataType
 {
 public:
@@ -169,6 +170,8 @@ public:
     INT16,
     UINT32,
     INT32,
+    UINT64,
+    INT64,
   };
 
   HandleDataType() = default;
@@ -211,6 +214,14 @@ public:
     {
       value_ = INT32;
     }
+    else if (data_type == "uint64")
+    {
+      value_ = UINT64;
+    }
+    else if (data_type == "int64")
+    {
+      value_ = INT64;
+    }
     else
     {
       value_ = UNKNOWN;
@@ -249,6 +260,10 @@ public:
         return "uint32";
       case INT32:
         return "int32";
+      case UINT64:
+        return "uint64";
+      case INT64:
+        return "int64";
       default:
         return "unknown";
     }
@@ -257,6 +272,7 @@ public:
   /**
    * @brief Check if the HandleDataType can be casted to double.
    * @return True if the HandleDataType can be casted to double, false otherwise.
+   * @note UINT64 and INT64 are not castable, as a double cannot represent all their values.
    * @note Once we add support for more data types, this function should be updated
    */
   bool is_castable_to_double() const
@@ -307,6 +323,7 @@ public:
         return static_cast<double>(std::get<uint32_t>(value));
       case INT32:
         return static_cast<double>(std::get<int32_t>(value));
+      // UINT64 and INT64 are not castable, see is_castable_to_double().
       default:
         throw std::runtime_error(
           fmt::format(FMT_COMPILE("Data type : '{}' cannot be casted to double."), to_string()));

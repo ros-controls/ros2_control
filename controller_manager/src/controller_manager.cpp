@@ -220,7 +220,6 @@ std::vector<std::string> get_command_interfaces_names(
     auto available_interfaces = resource_manager->available_command_interfaces();
     for (const auto & name : command_interface_config.names)
     {
-      // Check if the requested interface exists in the available interfaces
       auto it = std::find(available_interfaces.begin(), available_interfaces.end(), name);
       if (it != available_interfaces.end())
       {
@@ -239,7 +238,7 @@ std::vector<std::string> get_command_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          command_interface_names.push_back(interface_name);
+          ros2_control::add_item(command_interface_names, interface_name);
         }
       }
     }
@@ -274,7 +273,6 @@ std::vector<std::string> get_state_interfaces_names(
     auto available_interfaces = resource_manager->available_state_interfaces();
     for (const auto & name : state_interface_config.names)
     {
-      // Check if the requested interface exists in the available interfaces
       auto it = std::find(available_interfaces.begin(), available_interfaces.end(), name);
       if (it != available_interfaces.end())
       {
@@ -292,7 +290,7 @@ std::vector<std::string> get_state_interfaces_names(
       {
         if (std::regex_match(interface_name, regex_pattern))
         {
-          state_interface_names.push_back(interface_name);
+          ros2_control::add_item(state_interface_names, interface_name);
         }
       }
     }
@@ -537,6 +535,41 @@ void unregister_controller_manager_statistics(const std::string & name)
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/sample_count");
   UNREGISTER_ENTITY(hardware_interface::CM_STATISTICS_KEY, name + "/current_value");
 }
+
+using StatisticData = ros2_control::StatisticData;
+
+std::string make_stats_string(
+  const StatisticData & statistics_data, const std::string & measurement_unit)
+{
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);
+  oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+      << statistics_data.max << "] " << measurement_unit
+      << ", StdDev: " << statistics_data.standard_deviation;
+  return oss.str();
+}
+
+/**
+ * Report the statistics over the recent window under @p key, in @p measurement_unit, if the window
+ * is enabled, and return the statistics the diagnostic level is judged on: the recent ones when the
+ * window has samples, so that an old outlier (e.g. a slow cycle at bring-up) doesn't hold the level
+ * in WARN/ERROR, otherwise @p since_start.
+ */
+StatisticData report_and_select_recent(
+  diagnostic_updater::DiagnosticStatusWrapper & stat, const std::string & key,
+  const StatisticData & since_start, const ros2_control::TimeWindowStatistics * recent,
+  const std::string & measurement_unit)
+{
+  if (!recent || !recent->is_enabled())
+  {
+    return since_start;
+  }
+  const auto recent_stats = recent->get_statistics();
+  stat.add(
+    key, make_stats_string(recent_stats, measurement_unit) +
+           fmt::format(" over the last {} s", recent->get_window_duration()));
+  return recent_stats.sample_count > 0 ? recent_stats : since_start;
+}
 }  // namespace
 
 namespace controller_manager
@@ -692,6 +725,27 @@ void ControllerManager::init_controller_manager()
 
   // Setup diagnostics
   periodicity_stats_.reset();
+  recent_periodicity_stats_.set_window_duration(
+    params_->diagnostics.controller_manager.window_duration);
+  // A resource manager passed in already initialized loaded its components with its own window
+  // duration, as init_resource_manager() didn't run
+  if (is_resource_manager_initialized())
+  {
+    const double hw_window_duration = params_->diagnostics.hardware_components.window_duration;
+    for (const auto & [name, component_info] : resource_manager_->get_components_status())
+    {
+      for (const auto & statistics :
+           {component_info.read_statistics, component_info.write_statistics})
+      {
+        // Sensors have no write statistics
+        if (statistics && statistics->recent_periodicity && statistics->recent_execution_time)
+        {
+          statistics->recent_periodicity->set_window_duration(hw_window_duration);
+          statistics->recent_execution_time->set_window_duration(hw_window_duration);
+        }
+      }
+    }
+  }
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -710,7 +764,6 @@ void ControllerManager::init_controller_manager()
     this, hardware_interface::CM_STATISTICS_TOPIC, hardware_interface::CM_STATISTICS_KEY);
   START_ROS2_CONTROL_INTROSPECTION_PUBLISHER_THREAD(hardware_interface::CM_STATISTICS_KEY);
 
-  // Add on_shutdown callback to stop the controller manager
   rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
   preshutdown_cb_handle_ =
     std::make_unique<rclcpp::PreShutdownCallbackHandle>(context->add_pre_shutdown_callback(
@@ -738,7 +791,6 @@ void ControllerManager::init_controller_manager()
 
 void ControllerManager::initialize_parameters()
 {
-  // Initialize parameters
   try
   {
     use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
@@ -847,6 +899,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   params.return_failed_hardware_names_on_return_deactivate_write_cycle_ =
     params_->defaults.deactivate_controllers_on_hardware_self_deactivate;
   params.handle_exceptions = params_->handle_exceptions;
+  params.hardware_components_statistics_window_duration =
+    params_->diagnostics.hardware_components.window_duration;
   if (resource_manager_ == nullptr)
   {
     resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(params, false);
@@ -908,7 +962,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
 void ControllerManager::set_initial_hardware_components_state()
 {
-  // Get all components and if they are not defined in parameters activate them automatically
+  // Components not listed in parameters are activated
   auto components_to_activate = resource_manager_->get_components_status();
 
   using lifecycle_msgs::msg::State;
@@ -1030,7 +1084,6 @@ void ControllerManager::set_initial_hardware_components_state()
       get_logger(), "Processing hardware component group '%s' with %zu components.",
       group_name.c_str(), group_components.size());
 
-    // First, configure all components in the group (transition to inactive state)
     std::vector<std::string> successfully_configured;
     bool configuration_failed = false;
     for (const auto & component_name : group_components)
@@ -1065,7 +1118,6 @@ void ControllerManager::set_initial_hardware_components_state()
       continue;  // Skip to next group
     }
 
-    // Then, activate all successfully configured components in the group
     std::vector<std::string> successfully_activated;
     bool activation_failed = false;
     for (const auto & component_name : successfully_configured)
@@ -1350,7 +1402,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
-  // Now check if the parameters_file parameter exist
   const std::string param_name = fmt::format(FMT_COMPILE("{}.params_file"), controller_name);
   controller_spec.info.parameters_files.clear();
 
@@ -1423,7 +1474,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // So when we're told to load a controller by name, we need to declare the parameter if
   // we haven't done so, and then read it.
 
-  // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
     declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
@@ -1751,7 +1801,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   const auto cmd_itfs = get_command_interfaces_names(controller, resource_manager_);
   const auto state_itfs = get_state_interfaces_names(controller, resource_manager_);
 
-  // Check if the cmd_itfs and the state_itfs are unique
   if (!ros2_control::is_unique(cmd_itfs))
   {
     std::string cmd_itfs_str = std::accumulate(
@@ -1785,8 +1834,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   std::unordered_map<std::string, std::vector<std::string>> controller_full_chain_info_cache;
   build_controller_full_chain_map_cache(controller_chain_spec_, controller_full_chain_info_cache);
 
-  // Now let's reorder the controllers
-  // lock controllers
   std::lock_guard<RTControllerListWrapper::controllers_lock_type> guard(
     rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
@@ -1822,7 +1869,6 @@ controller_interface::return_type ControllerManager::configure_controller(
     }
   }
 
-  // Update the controllers chain groups in the ControllerSpec
   for (const auto & [ctrl_name, full_chain_info] : controller_full_chain_info_cache)
   {
     RCLCPP_DEBUG(
@@ -2194,7 +2240,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     }
   }
 
-  // Check after the check if the activate and deactivate list is empty or not
   if (switch_params_.activate_request.empty() && switch_params_.deactivate_request.empty())
   {
     message = "After checking the controllers, no controllers need to be activated or deactivated.";
@@ -2532,6 +2577,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   controller_chained_reference_interfaces_cache_[controller.info.name] = {};
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
+  controller.recent_periodicity_statistics->set_window_duration(
+    params_->diagnostics.controllers.window_duration);
+  controller.recent_execution_time_statistics->set_window_duration(
+    params_->diagnostics.controllers.window_duration);
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -2770,7 +2819,9 @@ void ControllerManager::activate_controllers(
     try
     {
       found_it->periodicity_statistics->reset();
+      found_it->recent_periodicity_statistics->reset();
       found_it->execution_time_statistics->reset();
+      found_it->recent_execution_time_statistics->reset();
       new_state = controller->get_node()->activate();
     }
     catch (const std::exception & e)
@@ -2837,8 +2888,7 @@ void ControllerManager::activate_controllers(
         "failed.");
     }
   }
-  // Now prepare and perform the stop interface switching as this is needed for exclusive
-  // interfaces
+  // Stop interface switching, needed for exclusive interfaces
   else if (
     !failed_controllers_command_interfaces.empty() &&
     (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
@@ -2887,7 +2937,6 @@ void ControllerManager::list_controllers_srv_cb(
     controller_state.is_chainable = controllers[i].c->is_chainable();
     controller_state.is_chained = controllers[i].c->is_in_chained_mode();
 
-    // Get information about interfaces if controller are in 'inactive' or 'active' state
     if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
     {
       controller_state.required_command_interfaces =
@@ -3294,7 +3343,9 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  periodicity_stats_.add_measurement(1.0 / period.seconds());
+  const double periodicity = 1.0 / period.seconds();
+  periodicity_stats_.add_measurement(periodicity);
+  recent_periodicity_stats_.add_measurement(periodicity, time.seconds());
   const auto start_time = std::chrono::steady_clock::now();
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
@@ -3404,7 +3455,6 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
-  // Check for valid time
   if (!get_clock()->started())
   {
     if (time == rclcpp::Time(0, 0, this->get_trigger_clock()->get_clock_type()))
@@ -3493,13 +3543,18 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {
-            loaded_controller.execution_time_statistics->add_measurement(
-              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+            const double execution_time =
+              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+            loaded_controller.execution_time_statistics->add_measurement(execution_time);
+            loaded_controller.recent_execution_time_statistics->add_measurement(
+              execution_time, current_time.seconds());
           }
           if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
-            loaded_controller.periodicity_statistics->add_measurement(
-              1.0 / trigger_result.period.value().seconds());
+            const double periodicity = 1.0 / trigger_result.period.value().seconds();
+            loaded_controller.periodicity_statistics->add_measurement(periodicity);
+            loaded_controller.recent_periodicity_statistics->add_measurement(
+              periodicity, current_time.seconds());
           }
         }
         catch (const std::exception & e)
@@ -3746,10 +3801,8 @@ std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_un
     throw std::runtime_error("controllers_lock_ not owned by thread");
   }
   controllers_lock_.unlock();
-  // Get the index to the outdated controller list
   int free_controllers_list = get_other_list(updated_controllers_index_);
 
-  // Wait until the outdated controller list is not being used by the realtime thread
   wait_until_rt_not_using(free_controllers_list);
   return controllers_lists_[free_controllers_list];
 }
@@ -3929,7 +3982,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
       get_logger(), "Checking interface '%s' of controller '%s'.", ctrl_itf_name.c_str(),
       controller_it->info.name.c_str());
     ControllersListIterator following_ctrl_it;
-    // Check if interface if reference interface and following controller exist.
     if (!is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
     {
       continue;
@@ -4037,7 +4089,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
     else
     {
-      // Check if following controller is in 'from' chained mode list and remove it, if so
       auto found_it = std::find(
         switch_params_.from_chained_mode_request.begin(),
         switch_params_.from_chained_mode_request.end(), following_ctrl_it->info.name);
@@ -4446,17 +4497,6 @@ void ControllerManager::controller_activity_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4477,6 +4517,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
       const auto exec_time_stats = controllers[i].execution_time_statistics->get_statistics();
       stat.add(
         controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
+      const auto judged_exec_time_stats = report_and_select_recent(
+        stat, controllers[i].info.name + exec_time_suffix + ".recent", exec_time_stats,
+        controllers[i].recent_execution_time_statistics.get(), "us");
       const bool publish_periodicity_stats =
         is_async || (controllers[i].c->get_update_rate() != this->get_update_rate());
       if (publish_periodicity_stats)
@@ -4485,12 +4528,16 @@ void ControllerManager::controller_activity_diagnostic_callback(
           controllers[i].info.name + periodicity_suffix,
           make_stats_string(periodicity_stats, "Hz") +
             " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
+        const auto judged_periodicity_stats = report_and_select_recent(
+          stat, controllers[i].info.name + periodicity_suffix + ".recent", periodicity_stats,
+          controllers[i].recent_periodicity_statistics.get(), "Hz");
         const double periodicity_error = std::abs(
-          periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
+          judged_periodicity_stats.average -
+          static_cast<double>(controllers[i].c->get_update_rate()));
         if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.error ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -4499,7 +4546,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
         else if (
           periodicity_error >
             params_->diagnostics.threshold.controllers.periodicity.mean_error.warn ||
-          periodicity_stats.standard_deviation >
+          judged_periodicity_stats.standard_deviation >
             params_->diagnostics.threshold.controllers.periodicity.standard_deviation.warn)
         {
           if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4511,18 +4558,18 @@ void ControllerManager::controller_activity_diagnostic_callback(
       }
       const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
       if (
-        (exec_time_stats.average - max_exp_exec_time) >
+        (judged_exec_time_stats.average - max_exp_exec_time) >
           params_->diagnostics.threshold.controllers.execution_time.mean_error.error ||
-        exec_time_stats.standard_deviation >
+        judged_exec_time_stats.standard_deviation >
           params_->diagnostics.threshold.controllers.execution_time.standard_deviation.error)
       {
         level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
         high_exec_time_controllers.push_back(controllers[i].info.name);
       }
       else if (
-        (exec_time_stats.average - max_exp_exec_time) >
+        (judged_exec_time_stats.average - max_exp_exec_time) >
           params_->diagnostics.threshold.controllers.execution_time.mean_error.warn ||
-        exec_time_stats.standard_deviation >
+        judged_exec_time_stats.standard_deviation >
           params_->diagnostics.threshold.controllers.execution_time.standard_deviation.warn)
       {
         if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4626,17 +4673,6 @@ void ControllerManager::hardware_components_diagnostic_callback(
     overruns_print_warnings_.store(params_->overruns.print_warnings, std::memory_order_relaxed);
   }
 
-  auto make_stats_string =
-    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
-  {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(2);
-    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "] " << measurement_unit
-        << ", StdDev: " << statistics_data.standard_deviation;
-    return oss.str();
-  };
-
   // Variable to define the overall status of the controller diagnostics
   auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
@@ -4648,11 +4684,10 @@ void ControllerManager::hardware_components_diagnostic_callback(
     stat.add(component_name + state_suffix, component_info.state.label());
     if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
-      auto update_stats =
-        [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, &make_stats_string, this](
-          const std::string & comp_name, const auto & statistics,
-          const std::string & statistics_type_suffix, auto & diag_level, const auto & comp_info,
-          const auto & params)
+      auto update_stats = [&bad_periodicity_async_hw, &high_exec_time_hw, &stat, this](
+                            const std::string & comp_name, const auto & statistics,
+                            const std::string & statistics_type_suffix, auto & diag_level,
+                            const auto & comp_info, const auto & params)
       {
         if (!statistics)
         {
@@ -4666,6 +4701,9 @@ void ControllerManager::hardware_components_diagnostic_callback(
         stat.add(
           comp_name + statistics_type_suffix + exec_time_suffix,
           make_stats_string(exec_time_stats, "us"));
+        const auto judged_exec_time_stats = report_and_select_recent(
+          stat, comp_name + statistics_type_suffix + exec_time_suffix + ".recent", exec_time_stats,
+          statistics->recent_execution_time.get(), "us");
         const bool publish_periodicity_stats =
           is_async || (comp_info.rw_rate != this->get_update_rate());
         if (publish_periodicity_stats)
@@ -4674,13 +4712,17 @@ void ControllerManager::hardware_components_diagnostic_callback(
             comp_name + statistics_type_suffix + periodicity_suffix,
             make_stats_string(periodicity_stats, "Hz") +
               " -> Desired : " + std::to_string(comp_info.rw_rate) + " Hz");
+          const auto judged_periodicity_stats = report_and_select_recent(
+            stat, comp_name + statistics_type_suffix + periodicity_suffix + ".recent",
+            periodicity_stats, statistics->recent_periodicity.get(), "Hz");
           const double periodicity_error =
-            std::abs(periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
+            std::abs(judged_periodicity_stats.average - static_cast<double>(comp_info.rw_rate));
           if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.error ||
-            periodicity_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                     .periodicity.standard_deviation.error)
+            judged_periodicity_stats.standard_deviation >
+              params->diagnostics.threshold.hardware_components.periodicity.standard_deviation
+                .error)
           {
             diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
             ros2_control::add_item(bad_periodicity_async_hw, comp_name);
@@ -4688,7 +4730,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
           else if (
             periodicity_error >
               params->diagnostics.threshold.hardware_components.periodicity.mean_error.warn ||
-            periodicity_stats.standard_deviation >
+            judged_periodicity_stats.standard_deviation >
               params->diagnostics.threshold.hardware_components.periodicity.standard_deviation.warn)
           {
             if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
@@ -4701,19 +4743,21 @@ void ControllerManager::hardware_components_diagnostic_callback(
         const double max_exp_exec_time =
           is_async ? 1.e6 / static_cast<double>(comp_info.rw_rate) : 0.0;
         if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.error ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.error)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .error)
         {
           diag_level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
           high_exec_time_hw.push_back(comp_name);
         }
         else if (
-          (exec_time_stats.average - max_exp_exec_time) >
+          (judged_exec_time_stats.average - max_exp_exec_time) >
             params->diagnostics.threshold.hardware_components.execution_time.mean_error.warn ||
-          exec_time_stats.standard_deviation > params->diagnostics.threshold.hardware_components
-                                                 .execution_time.standard_deviation.warn)
+          judged_exec_time_stats.standard_deviation >
+            params->diagnostics.threshold.hardware_components.execution_time.standard_deviation
+              .warn)
         {
           if (diag_level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
           {
@@ -4770,6 +4814,29 @@ void ControllerManager::controller_manager_diagnostic_callback(
     periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));
   stat.add(periodicity_stat_name + ".min", std::to_string(cm_stats.min));
   stat.add(periodicity_stat_name + ".max", std::to_string(cm_stats.max));
+
+  // With a window, the level is judged on the recent statistics, so that an old outlier (e.g. a
+  // slow cycle at bring-up) doesn't hold the diagnostic in WARN/ERROR for the rest of the run
+  auto judged_stats = cm_stats;
+  if (recent_periodicity_stats_.is_enabled())
+  {
+    const auto recent_stats = recent_periodicity_stats_.get_statistics();
+    const std::string recent_stat_name = periodicity_stat_name + ".recent";
+    stat.add(
+      recent_stat_name + ".window_duration",
+      std::to_string(recent_periodicity_stats_.get_window_duration()));
+    stat.add(recent_stat_name + ".sample_count", std::to_string(recent_stats.sample_count));
+    stat.add(recent_stat_name + ".average", std::to_string(recent_stats.average));
+    stat.add(
+      recent_stat_name + ".standard_deviation", std::to_string(recent_stats.standard_deviation));
+    stat.add(recent_stat_name + ".min", std::to_string(recent_stats.min));
+    stat.add(recent_stat_name + ".max", std::to_string(recent_stats.max));
+    if (recent_stats.sample_count > 0)
+    {
+      judged_stats = recent_stats;
+    }
+  }
+
   if (is_resource_manager_initialized())
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
@@ -4789,14 +4856,14 @@ void ControllerManager::controller_manager_diagnostic_callback(
     }
   }
 
-  const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
+  const double periodicity_error = std::abs(judged_stats.average - get_update_rate());
   const std::string diag_summary = fmt::format(
     FMT_COMPILE("Controller Manager has bad periodicity : {} Hz. Expected consistent {} Hz"),
-    cm_stats.average, get_update_rate());
+    judged_stats.average, get_update_rate());
   if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||
-    cm_stats.standard_deviation >
+    judged_stats.standard_deviation >
       params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.error)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
@@ -4804,7 +4871,7 @@ void ControllerManager::controller_manager_diagnostic_callback(
   else if (
     periodicity_error >
       params_->diagnostics.threshold.controller_manager.periodicity.mean_error.warn ||
-    cm_stats.standard_deviation >
+    judged_stats.standard_deviation >
       params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);
@@ -4988,7 +5055,6 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back("use_sim_time:=true");
   }
 
-  // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
     !ros2_control::has_item(controller.info.node_options_args, std::string(RCL_ROS_ARGS_FLAG)))

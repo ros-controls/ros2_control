@@ -2,6 +2,13 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.14.0 (2026-11-26)
+-------------------
+* Respect the velocity limit beyond a soft limit in JointSoftLimiter (`#3798 <https://github.com/ros-controls/ros2_control/issues/3798>`_)
+  Co-authored-by: Sai Kishor Kothakota <sai.kishor@pal-robotics.com>
+* remove comments that narrate the code (`#3800 <https://github.com/ros-controls/ros2_control/issues/3800>`_)
+* Contributors: Bence Magyar, Rahul Seervi
+
 6.13.0 (2026-11-02)
 -------------------
 * Review "Include what you use" (`#3696 <https://github.com/ros-controls/ros2_control/issues/3696>`_)

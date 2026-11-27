@@ -222,6 +222,38 @@ public:
             initial_value, handle_name_, data_type_.to_string()));
       }
     }
+    else if (data_type_ == hardware_interface::HandleDataType::UINT64)
+    {
+      try
+      {
+        value_ = initial_value.empty()
+                   ? static_cast<uint64_t>(std::numeric_limits<uint64_t>::max())
+                   : static_cast<uint64_t>(hardware_interface::stoui64(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
+    else if (data_type_ == hardware_interface::HandleDataType::INT64)
+    {
+      try
+      {
+        value_ = initial_value.empty()
+                   ? static_cast<int64_t>(std::numeric_limits<int64_t>::max())
+                   : static_cast<int64_t>(hardware_interface::stoi64(initial_value));
+      }
+      catch (const std::invalid_argument & err)
+      {
+        throw std::invalid_argument(
+          fmt::format(
+            FMT_COMPILE("Invalid initial value: '{}' parsed for interface: '{}' with type: '{}'"),
+            initial_value, handle_name_, data_type_.to_string()));
+      }
+    }
     else
     {
       throw std::runtime_error(
@@ -345,6 +377,8 @@ public:
         case HandleDataType::INT16:    // fallthrough
         case HandleDataType::UINT32:   // fallthrough
         case HandleDataType::INT32:    // fallthrough
+        case HandleDataType::UINT64:   // fallthrough
+        case HandleDataType::INT64:    // fallthrough
           throw std::runtime_error(
             fmt::format(
               FMT_COMPILE(
@@ -531,6 +565,8 @@ protected:
         case HandleDataType::INT16:    // fallthrough
         case HandleDataType::UINT32:   // fallthrough
         case HandleDataType::INT32:    // fallthrough
+        case HandleDataType::UINT64:   // fallthrough
+        case HandleDataType::INT64:    // fallthrough
           throw std::runtime_error(
             fmt::format(
               FMT_COMPILE(

@@ -44,6 +44,13 @@ bool sleep_for_sim_time(
   std::shared_ptr<controller_manager::ControllerManager> cm,
   controller_manager::ControlLoopState & state);
 
+/// Sleep policy for hardware whose read() or write() blocks to pace the control loop.
+/**
+ * Doesn't sleep if the last cycle took at least config.minimum_cycle_time, as read() or write()
+ * blocked. If it was shorter and a hardware component is ACTIVE, warns and sleeps for
+ * minimum_cycle_time. If it was shorter and no component is ACTIVE (write() is not called, and an
+ * UNCONFIGURED one isn't read either), falls back to sleep_for_periodic_cycle() without warning.
+ */
 void sleep_for_blocking_read_write(
   std::shared_ptr<controller_manager::ControllerManager> cm,
   const controller_manager::ControlLoopTimingConfig & config,

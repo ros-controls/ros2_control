@@ -184,6 +184,7 @@ public:
     robot_description_ = rm_param.robot_description;
     cm_update_rate_ = rm_param.update_rate;
     handle_exception_ = rm_param.handle_exceptions;
+    statistics_window_duration_ = rm_param.hardware_components_statistics_window_duration;
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -205,6 +206,13 @@ public:
           hardware_info.hardware_plugin_name.c_str());
         HardwareT hardware(std::move(interface));
         container.emplace_back(std::move(hardware));
+        const auto & read_statistics = container.back().get_read_statistics();
+        const auto & write_statistics = container.back().get_write_statistics();
+        for (const auto & statistics : {read_statistics, write_statistics})
+        {
+          statistics.recent_periodicity->set_window_duration(statistics_window_duration_);
+          statistics.recent_execution_time->set_window_duration(statistics_window_duration_);
+        }
         // initialize static data about hardware component to reduce later calls
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
@@ -214,11 +222,17 @@ public:
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
         component_info.read_statistics = std::make_shared<HardwareComponentStatisticsData>();
+        component_info.read_statistics->recent_periodicity = read_statistics.recent_periodicity;
+        component_info.read_statistics->recent_execution_time =
+          read_statistics.recent_execution_time;
 
         // if the type of the hardware is sensor then don't initialize the write statistics
         if (hardware_info.type != "sensor")
         {
           component_info.write_statistics = std::make_shared<HardwareComponentStatisticsData>();
+          component_info.write_statistics->recent_periodicity = write_statistics.recent_periodicity;
+          component_info.write_statistics->recent_execution_time =
+            write_statistics.recent_execution_time;
         }
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
@@ -1423,6 +1437,10 @@ public:
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
+
+  // Duration of the recent periodicity and execution time windows of the hardware components,
+  // disabled if not positive
+  double statistics_window_duration_ = -1.0;
 };
 
 ResourceManager::ResourceManager(
@@ -1520,10 +1538,13 @@ bool ResourceManager::load_and_initialize_components(
   params_.update_rate = params.update_rate;
   params_.handle_exceptions = params.handle_exceptions;
   resource_storage_->handle_exception_ = params.handle_exceptions;
+  params_.hardware_components_statistics_window_duration =
+    params.hardware_components_statistics_window_duration;
+  resource_storage_->statistics_window_duration_ =
+    params.hardware_components_statistics_window_duration;
 
   auto hardware_info =
     hardware_interface::parse_control_resources_from_urdf(params.robot_description);
-  // Set the update rate for all hardware components
   for (auto & hw : hardware_info)
   {
     hw.rw_rate =
@@ -1539,7 +1560,6 @@ bool ResourceManager::load_and_initialize_components(
   std::lock_guard<std::recursive_mutex> limiters_guard(joint_limiters_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
-    // Check for identical names
     if (
       resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
       resource_storage_->hardware_info_map_.end())
@@ -1616,6 +1636,24 @@ void ResourceManager::import_joint_limiters(const std::string & urdf)
 bool ResourceManager::are_components_initialized() const
 {
   return components_are_loaded_and_initialized_;
+}
+
+// CM API: Called in "update"-thread
+bool ResourceManager::has_active_components() const
+{
+  std::unique_lock<std::recursive_mutex> guard(resources_lock_, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    return true;
+  }
+  const auto is_active = [](const auto & component)
+  { return component.get_lifecycle_id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE; };
+  return std::any_of(
+           resource_storage_->actuators_.begin(), resource_storage_->actuators_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->sensors_.begin(), resource_storage_->sensors_.end(), is_active) ||
+         std::any_of(
+           resource_storage_->systems_.begin(), resource_storage_->systems_.end(), is_active);
 }
 
 // CM API: Called in "update"-thread
@@ -2011,7 +2049,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return true;
   }
 
-  // Check if interface exists
   std::stringstream ss_not_existing;
   ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
   auto check_exist = [&](const std::vector<std::string> & list_to_check)
@@ -2037,7 +2074,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  // Check if interfaces are available
   std::stringstream ss_not_available;
   ss_not_available << "Not available: " << std::endl << "[" << std::endl;
   auto check_available = [&](const std::vector<std::string> & list_to_check)
