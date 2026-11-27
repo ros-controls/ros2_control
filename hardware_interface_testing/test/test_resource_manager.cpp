@@ -1467,6 +1467,47 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
+TEST_F(ResourceManagerTest, making_interfaces_unavailable_preserves_available_list_order)
+{
+  TestableResourceManager rm(node_);
+
+  const auto import_reference_interfaces =
+    [&rm](const std::string & controller_name, const std::vector<std::string> & names)
+  {
+    std::vector<hardware_interface::CommandInterface::SharedPtr> interfaces;
+    for (const auto & name : names)
+    {
+      interfaces.push_back(
+        std::make_shared<hardware_interface::CommandInterface>(controller_name, name));
+    }
+    rm.import_controller_reference_interfaces(controller_name, interfaces);
+    rm.make_controller_reference_interfaces_available(controller_name);
+  };
+  import_reference_interfaces("ctrl_a", {"a1", "a2"});
+  import_reference_interfaces("ctrl_b", {"b1", "b2", "b3"});
+  import_reference_interfaces("ctrl_c", {"c1"});
+  ASSERT_THAT(
+    rm.available_command_interfaces(),
+    testing::ElementsAre(
+      "ctrl_a/a1", "ctrl_a/a2", "ctrl_b/b1", "ctrl_b/b2", "ctrl_b/b3", "ctrl_c/c1"));
+
+  // Removing a block from the middle must keep the remaining interfaces in their original order
+  rm.make_controller_reference_interfaces_unavailable("ctrl_b");
+  EXPECT_THAT(
+    rm.available_command_interfaces(), testing::ElementsAre("ctrl_a/a1", "ctrl_a/a2", "ctrl_c/c1"));
+  for (const auto & name : {"ctrl_b/b1", "ctrl_b/b2", "ctrl_b/b3"})
+  {
+    EXPECT_FALSE(rm.command_interface_is_available(name)) << name;
+  }
+
+  // Making them available again appends them at the end
+  rm.make_controller_reference_interfaces_available("ctrl_b");
+  EXPECT_THAT(
+    rm.available_command_interfaces(),
+    testing::ElementsAre(
+      "ctrl_a/a1", "ctrl_a/a2", "ctrl_c/c1", "ctrl_b/b1", "ctrl_b/b2", "ctrl_b/b3"));
+}
+
 TEST_F(ResourceManagerTest, managing_controllers_state_interfaces)
 {
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
