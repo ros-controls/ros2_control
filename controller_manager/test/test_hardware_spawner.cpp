@@ -118,7 +118,7 @@ TEST_F(TestHardwareSpawner, spawner_with_no_arguments_errors)
 
 TEST_F(TestHardwareSpawner, spawner_without_manager_errors_with_given_timeout)
 {
-  EXPECT_NE(call_spawner("TestSystemHardware --controller-manager-timeout 1.0"), 0)
+  EXPECT_NE(call_spawner("TestSystemHardware --activate --controller-manager-timeout 1.0"), 0)
     << "Wrong controller manager name";
 }
 
@@ -128,10 +128,20 @@ TEST_F(TestHardwareSpawner, spawner_without_component_name_argument)
     << "Missing component name argument parameter";
 }
 
-TEST_F(TestHardwareSpawner, spawner_non_exising_hardware_component)
+TEST_F(TestHardwareSpawner, spawner_non_existing_hardware_component)
 {
-  EXPECT_NE(call_spawner("TestSystemHardware1 -c test_controller_manager"), 0)
-    << "Missing component name argument parameter";
+  EXPECT_NE(call_spawner("TestSystemHardware1 --activate -c test_controller_manager"), 0)
+    << "A missing hardware component should cause the spawner to fail";
+}
+
+TEST_F(TestHardwareSpawner, spawner_processes_remaining_components_after_failure)
+{
+  EXPECT_NE(
+    call_spawner("TestSystemHardware1 TestSystemHardware --configure -c test_controller_manager"),
+    0);
+  EXPECT_EQ(
+    get_component_state("TestSystemHardware").id,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 }
 
 TEST_F(TestHardwareSpawner, set_component_to_configured_state_and_back_to_activated)
