@@ -2874,18 +2874,93 @@ void ControllerManager::activate_controllers(
       get_logger(),
       "At least one controller failed to be activated. Releasing all interfaces and stopping all "
       "activated controllers because the switch strictness is set to STRICT.");
+    // Controllers that are also in the deactivate request were active before this switch and are
+    // restarted in it (e.g. to change their chained mode). If they came back up, they keep their
+    // hardware interfaces and are activated again after the rollback. A restarted controller that
+    // failed itself is not retried. Reference interfaces of the controllers in this switch are not
+    // hardware interfaces and are unavailable once they are deactivated.
+    std::vector<std::string> controllers_to_restore;
+    std::vector<std::string> restored_command_interfaces;
+    std::vector<std::string> reference_interfaces;
+    for (const auto & controller_name : controllers_to_activate)
+    {
+      auto found_it = std::find_if(
+        rt_controller_list.begin(), rt_controller_list.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+      if (found_it == rt_controller_list.end())
+      {
+        continue;
+      }
+      if (
+        ros2_control::has_item(switch_params_.deactivate_request, controller_name) &&
+        is_controller_active(*found_it->c))
+      {
+        controllers_to_restore.push_back(controller_name);
+        ros2_control::add_items(
+          restored_command_interfaces,
+          get_command_interfaces_names(found_it->c, resource_manager_));
+      }
+      if (found_it->c->is_chainable())
+      {
+        ros2_control::add_items(
+          reference_interfaces,
+          resource_manager_->get_controller_reference_interface_names(controller_name));
+      }
+    }
+    std::vector<std::string> interfaces_to_switch_back;
+    for (const auto & interface : switch_params_.activate_command_interface_request)
+    {
+      if (
+        !ros2_control::has_item(restored_command_interfaces, interface) &&
+        !ros2_control::has_item(reference_interfaces, interface))
+      {
+        interfaces_to_switch_back.push_back(interface);
+      }
+    }
+
     // deactivate all controllers that were activated in this switch
     deactivate_controllers(rt_controller_list, controllers_to_activate);
     if (
-      !resource_manager_->prepare_command_mode_switch(
-        {}, switch_params_.activate_command_interface_request) ||
-      !resource_manager_->perform_command_mode_switch(
-        {}, switch_params_.activate_command_interface_request))
+      !resource_manager_->prepare_command_mode_switch({}, interfaces_to_switch_back) ||
+      !resource_manager_->perform_command_mode_switch({}, interfaces_to_switch_back))
     {
       RCLCPP_ERROR(
         get_logger(),
         "Error switching back the interfaces in the hardware when the controller activation "
         "failed.");
+    }
+    // deactivate_controllers turned off the chained mode of the restored chainable controllers.
+    // A restored controller goes back to chained mode if another restored controller claims one of
+    // its reference interfaces, so a restarted chain comes back as it was before the switch.
+    for (const auto & controller_name : controllers_to_restore)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Restoring controller '%s' that was active before the switch.",
+        controller_name.c_str());
+      auto found_it = std::find_if(
+        rt_controller_list.begin(), rt_controller_list.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+      if (!found_it->c->is_chainable())
+      {
+        continue;
+      }
+      const auto reference_names =
+        resource_manager_->get_controller_reference_interface_names(controller_name);
+      const bool is_chained = std::any_of(
+        reference_names.begin(), reference_names.end(), [&](const std::string & reference)
+        { return ros2_control::has_item(restored_command_interfaces, reference); });
+      if (is_chained && !found_it->c->set_chained_mode(true))
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Controller '%s' refused to turn chained mode back on after the rollback.",
+          controller_name.c_str());
+      }
+    }
+    if (!controllers_to_restore.empty())
+    {
+      activate_controllers(
+        rt_controller_list, controllers_to_restore,
+        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
     }
   }
   // Stop interface switching, needed for exclusive interfaces

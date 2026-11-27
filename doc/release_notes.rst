@@ -34,6 +34,7 @@ controller_manager
 * The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 * Controllers without chain relationships are now updated in the order they were loaded, instead of an unspecified order. (`#3781 <https://github.com/ros-controls/ros2_control/pull/3781>`__)
 * With ``hardware_synchronization.expect_blocking_read_write``, the control loop now sleeps periodically at ``update_rate`` without warning when a cycle didn't block while no hardware component is ``active``, instead of spinning at ``minimum_cycle_time``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
+* When a ``STRICT`` switch fails, controllers that were active before it and were restarted in it are activated again. A restored chainable controller is in chained mode only if another restored controller uses its reference interfaces, and controllers the switch only deactivated stay inactive. (`#3827 <https://github.com/ros-controls/ros2_control/pull/3827>`__)
 
 hardware_interface
 ******************
