@@ -17,6 +17,7 @@
 #ifndef MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define MOCK_COMPONENTS__GENERIC_SYSTEM_HPP_
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include "hardware_interface/handle.hpp"
@@ -90,6 +91,11 @@ private:
   std::vector<size_t> joint_control_mode_;
 
   bool command_propagation_disabled_;
+
+  /// Period of read() for an async component with the 'self_paced' scheduling policy, else 0
+  std::chrono::nanoseconds self_paced_period_{0};
+  /// Time point of the next read() for an async component with the 'self_paced' policy
+  std::chrono::steady_clock::time_point next_self_paced_read_time_;
 };
 
 typedef GenericSystem GenericRobot;

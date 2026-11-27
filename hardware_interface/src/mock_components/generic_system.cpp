@@ -18,15 +18,18 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <iterator>
 #include <limits>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/logging.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace mock_components
 {
@@ -37,6 +40,16 @@ CallbackReturn GenericSystem::on_init(
   if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
   {
     return CallbackReturn::ERROR;
+  }
+
+  // A real self-paced hardware blocks in read(). Mock hardware waits one period instead.
+  const auto & info = get_hardware_info();
+  if (
+    info.is_async && info.rw_rate > 0 &&
+    realtime_tools::AsyncSchedulingPolicy(info.async_params.scheduling_policy) ==
+      realtime_tools::AsyncSchedulingPolicy::SELF_PACED)
+  {
+    self_paced_period_ = std::chrono::nanoseconds(1'000'000'000 / info.rw_rate);
   }
 
   // check if to create mock command interface for sensor
@@ -338,6 +351,21 @@ hardware_interface::CallbackReturn GenericSystem::on_configure(
 
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
+  if (self_paced_period_.count() > 0)
+  {
+    const auto now = std::chrono::steady_clock::now();
+    if (next_self_paced_read_time_ > now)
+    {
+      std::this_thread::sleep_until(next_self_paced_read_time_);
+    }
+    else
+    {
+      // First read() or overrun
+      next_self_paced_read_time_ = now;
+    }
+    next_self_paced_read_time_ += self_paced_period_;
+  }
+
   if (command_propagation_disabled_)
   {
     RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");

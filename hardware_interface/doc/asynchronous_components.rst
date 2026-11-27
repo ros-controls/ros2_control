@@ -22,6 +22,7 @@ Under the ``ros2_control`` tag, a ``properties`` tag can be added to specify the
 
   * ``synchronized`` (default): The thread will run synchronized with the main controller_manager thread. The controller_manager is responsible for triggering the read and write calls of the hardware component.
   * ``detached``: The thread will run independently of the main controller_manager thread. The hardware component will manage its own timing for triggering the read and write calls.
+  * ``self_paced``: The thread will run independently of the main controller_manager thread. The blocking ``read()`` of the hardware component sets the timing, e.g., a ``read()`` that waits for the next message from the robot.
 
 * ``print_warnings``: (optional) If set to ``true``, a warning will be printed if the thread is not able to meet its timing requirements. Default is ``true``.
 
