@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+#include "controller_interface/controller_interface_parameters.hpp"
 #include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/logging.hpp"
@@ -41,6 +42,7 @@ struct ControllerInterfaceBase::ControllerInterfaceBaseImpl
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   bool is_async_ = false;
+  std::shared_ptr<controller_interface_base::ParamListener> param_listener_;
   controller_interface::ControllerInterfaceParams ctrl_itf_params_;
   std::atomic_bool skip_async_triggers_ = false;
   ControllerUpdateStats trigger_stats_;
@@ -109,10 +111,18 @@ return_type ControllerInterfaceBase::init(
 
   try
   {
-    // no rclcpp::ParameterValue unsigned int specialization
-    auto_declare<int>("update_rate", static_cast<int>(params.controller_manager_update_rate));
-    auto_declare<bool>("is_async", false);
-    auto_declare<int>("thread_priority", -100);
+    // declares update_rate, is_async and thread_priority on the controller node
+    impl_->param_listener_ =
+      std::make_shared<controller_interface_base::ParamListener>(impl_->node_);
+    // GPL defaults are static: report the controller manager's rate unless the user set one
+    if (!impl_->node_->get_node_parameters_interface()->get_parameter_overrides().count(
+          "update_rate"))
+    {
+      impl_->node_->set_parameter(
+        rclcpp::Parameter(
+          "update_rate",
+          static_cast<int64_t>(impl_->ctrl_itf_params_.controller_manager_update_rate)));
+    }
   }
   catch (const std::exception & e)
   {
@@ -201,9 +211,10 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
 {
   impl_->lifecycle_id_.store(this->get_lifecycle_state().id(), std::memory_order_release);
   auto & params = impl_->ctrl_itf_params_;
+  const auto base_params = impl_->param_listener_->get_params();
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
-    const auto update_rate = get_node()->get_parameter("update_rate").as_int();
+    const auto update_rate = base_params.update_rate;
     if (update_rate < 0)
     {
       RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
@@ -245,14 +256,13 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         params.update_rate = achievable_hz;
       }
     }
-    impl_->is_async_ = get_node()->get_parameter("is_async").as_bool();
+    impl_->is_async_ = base_params.is_async;
   }
   if (impl_->is_async_)
   {
     realtime_tools::AsyncFunctionHandlerParams async_params;
     async_params.thread_priority = 50;  // default value
-    const int thread_priority_param =
-      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
+    const int thread_priority_param = static_cast<int>(base_params.thread_priority);
     if (thread_priority_param >= 0 && thread_priority_param <= 99)
     {
       async_params.thread_priority = thread_priority_param;

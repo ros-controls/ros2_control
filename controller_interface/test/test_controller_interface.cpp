@@ -61,6 +61,8 @@ TEST(TestableControllerInterface, init)
 
   // update_rate is set to controller_manager's rate
   ASSERT_EQ(controller.get_update_rate(), 10u);
+  // and so is the parameter reported to `ros2 param get`
+  ASSERT_EQ(controller.get_node()->get_parameter("update_rate").as_int(), 10);
 
   // Even after configure is 10
   controller.configure();

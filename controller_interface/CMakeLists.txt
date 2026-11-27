@@ -7,6 +7,7 @@ export_windows_symbols()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   fmt
+  generate_parameter_library
   hardware_interface
   joint_limits
   lifecycle_msgs
@@ -22,6 +23,10 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+generate_parameter_library(controller_interface_parameters
+  src/controller_interface_parameters.yaml
+)
+
 add_library(controller_interface SHARED
   src/controller_interface_base.cpp
   src/controller_interface.cpp
@@ -33,6 +38,7 @@ target_include_directories(controller_interface PUBLIC
   ${pal_statistics_INCLUDE_DIRS}
 )
 target_link_libraries(controller_interface PUBLIC
+                      controller_interface_parameters
                       hardware_interface::hardware_interface
                       joint_limits::joint_limits
                       ${lifecycle_msgs_TARGETS}
@@ -148,7 +154,7 @@ install(
   DIRECTORY include/
   DESTINATION include/controller_interface
 )
-install(TARGETS controller_interface
+install(TARGETS controller_interface controller_interface_parameters
   EXPORT export_controller_interface
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
