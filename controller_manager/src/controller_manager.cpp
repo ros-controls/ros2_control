@@ -1909,8 +1909,7 @@ void ControllerManager::clear_requests()
   switch_params_.do_switch = false;
   switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
-  switch_params_.deadline.store(
-    SwitchParams::kNoSwitchDeadline, std::memory_order_relaxed);
+  switch_params_.deadline.store(SwitchParams::kNoSwitchDeadline, std::memory_order_relaxed);
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
   switch_params_.to_chained_mode_request.clear();
@@ -2460,8 +2459,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
     std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
     if (!switch_params_.cv.wait_for(
-          switch_params_guard, switch_timeout,
-          [this] { return !switch_params_.do_switch; }))
+          switch_params_guard, switch_timeout, [this] { return !switch_params_.do_switch; }))
     {
       message = fmt::format(
         FMT_COMPILE("Switch controller timed out after {} seconds!"),

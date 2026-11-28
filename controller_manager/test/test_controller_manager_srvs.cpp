@@ -2747,9 +2747,8 @@ TEST_F(TestControllerManagerSrvs, switch_controller_timeout_skips_remaining_cont
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->switch_controller(
-        {slow_name, fast_name}, {},
-        controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
-        rclcpp::Duration::from_seconds(5.0)));
+        {slow_name, fast_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT,
+        false, rclcpp::Duration::from_seconds(5.0)));
   }
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, slow_controller->get_lifecycle_state().id());

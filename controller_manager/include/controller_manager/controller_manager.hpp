@@ -762,9 +762,8 @@ private:
 
     bool deadline_expired() const
     {
-      return do_switch &&
-             std::chrono::steady_clock::now().time_since_epoch().count() >=
-               deadline.load(std::memory_order_relaxed);
+      return do_switch && std::chrono::steady_clock::now().time_since_epoch().count() >=
+                            deadline.load(std::memory_order_relaxed);
     }
 
     std::atomic_bool do_switch{false};
