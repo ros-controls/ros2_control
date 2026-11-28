@@ -20,7 +20,10 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <future>
+#include <iostream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -782,11 +785,15 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
   // Ctrl-C pressed repeatedly must not interrupt the cleanup and leave controllers loaded.
   ControllerManagerRunner cm_runner(this);
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-  // timeout is only a safety net in case the spawner never exits
+  // Safety net only, and it must be larger than the spawner's own worst case for the unload call
+  // (3 attempts x --service-call-timeout, 10 s each): with 30 s, a slow service response is
+  // reported as an indistinguishable SIGKILL instead of the spawner's own error.
+  const std::string spawner_log = "spawner_unload_on_kill_with_repeated_sigint.log";
   const std::string spawner_cmd =
-    "timeout --signal=KILL 30 " + std::string(coveragepy_script) +
+    ": > " + spawner_log + " && timeout --signal=KILL 60 " + std::string(coveragepy_script) +
     " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
-    "ctrl_3 -c test_controller_manager --unload-on-kill";
+    "ctrl_3 -c test_controller_manager --unload-on-kill 2> " +
+    spawner_log;
   auto spawner_future =
     std::async(std::launch::async, [spawner_cmd]() { return std::system(spawner_cmd.c_str()); });
 
@@ -810,66 +817,47 @@ TEST_F(TestLoadController, unload_on_kill_with_repeated_sigint)
       << "Timed out waiting for ctrl_3 to become active";
   }
 
-  // Signal only once the spawner is parked in its "Waiting until interrupt" loop: a SIGINT that
-  // lands while it is still finishing activation escapes the try/except that owns the cleanup.
-  // Parked means state S and no CPU consumed between two samples; a fixed sleep only moves the
-  // race. The probe needs /proc and pgrep, so on Windows the wait is a no-op.
-#ifdef _WIN32
-  const auto sample_state_and_ticks = [](std::string &) { return false; };
-  constexpr bool proc_available = false;
-#else
-  const auto sample_state_and_ticks = [](std::string & out)
+  // Wait for the state the test actually needs: the spawner has reached its wait-for-interrupt
+  // loop. rclpy writes INFO to stderr and this line is logged right after `lock.release()`, so it
+  // is exact. A `/proc` state+CPU probe cannot tell that loop from any other blocking wait, e.g.
+  // an in-flight activation service call (both are state S with no CPU ticks).
+  const auto log_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+  bool reached_wait_loop = false;
+  while (!reached_wait_loop && std::chrono::steady_clock::now() < log_deadline)
   {
-    const char * cmd =
-      "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
-      "awk '{print $3, $14+$15}' /proc/$pid/stat 2>/dev/null";
-    FILE * pipe = popen(cmd, "r");
-    if (!pipe)
-    {
-      return false;
-    }
-    char buffer[64] = {0};
-    const bool read_ok = fgets(buffer, sizeof(buffer), pipe) != nullptr;
-    pclose(pipe);
-    out = buffer;
-    while (!out.empty() && (out.back() == '\n' || out.back() == ' '))
-    {
-      out.pop_back();
-    }
-    return read_ok && !out.empty();
-  };
-  constexpr bool proc_available = true;
-#endif
-
-  bool parked = !proc_available;
-  for (int attempt = 0; attempt < 100 && !parked; ++attempt)
-  {
-    std::string first, second;
-    if (sample_state_and_ticks(first))
-    {
-      std::this_thread::sleep_for(std::chrono::milliseconds(150));
-      parked = sample_state_and_ticks(second) && first == second && second.rfind("S ", 0) == 0;
-    }
-    if (!parked)
+    std::ifstream log(spawner_log);
+    const std::string content(
+      (std::istreambuf_iterator<char>(log)), std::istreambuf_iterator<char>());
+    reached_wait_loop =
+      content.find("Waiting until interrupt to unload controllers") != std::string::npos;
+    if (!reached_wait_loop)
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
-  ASSERT_TRUE(parked) << "The spawner never parked in its wait-for-interrupt loop";
+  ASSERT_TRUE(reached_wait_loop) << "The spawner never reached its wait-for-interrupt loop";
 
   // Anchored so only the python process is signalled, not the wrapping shell or timeout. Only the
   // lookup is asserted: kill on an already reaped pid returns non-zero, so the loop may end early.
   EXPECT_EQ(
     std::system(
-      "pid=$(pgrep -o -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
+      "pid=$(pgrep -n -f '^python3 -m coverage run .*controller_manager/[s]pawner ctrl_3 ') && "
       "test -n \"$pid\" && "
       "{ for i in $(seq 1 200); do kill -INT $pid 2>/dev/null; done; true; }"),
     0)
     << "Failed to find the spawner process to interrupt";
 
-  spawner_future.get();
+  // 0 = the spawner completed deactivate+unload and returned 0 (spawner.py:688). On POSIX the raw
+  // wait status of an exit code 137 is 137 << 8 = 35072, so this also catches the SIGKILL.
+  const int spawner_status = spawner_future.get();
+  if (spawner_status != 0)
+  {
+    std::ifstream log(spawner_log);
+    std::cerr << "spawner log (" << spawner_log << "):" << std::endl << log.rdbuf() << std::endl;
+  }
+  EXPECT_EQ(spawner_status, 0) << "spawner did not exit cleanly (timeout fired, or it failed)";
 
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+  ASSERT_TRUE(controller_manager::test::wait_for_loaded_controller_count(cm_, 0ul));
 }
 
 TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
