@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <limits>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -48,23 +49,39 @@ public:
   LogCapture()
   : previous_handler_(rcutils_logging_get_output_handler()), previous_messages_(messages())
   {
-    messages().clear();
+    {
+      const std::lock_guard<std::mutex> lock(messages_mutex());
+      messages().clear();
+    }
     rcutils_logging_set_output_handler(&LogCapture::handler);
   }
 
   ~LogCapture()
   {
     rcutils_logging_set_output_handler(previous_handler_);
+    const std::lock_guard<std::mutex> lock(messages_mutex());
     messages() = previous_messages_;
   }
 
-  static std::size_t warning_count() { return static_cast<std::size_t>(messages().size()); }
+  static std::size_t warning_count()
+  {
+    const std::lock_guard<std::mutex> lock(messages_mutex());
+    return static_cast<std::size_t>(messages().size());
+  }
 
 private:
   static std::vector<std::string> & messages()
   {
     static std::vector<std::string> captured_messages;
     return captured_messages;
+  }
+
+  // Several threads can be inside the handler at the same time: rcutils does not serialize
+  // custom output handlers.
+  static std::mutex & messages_mutex()
+  {
+    static std::mutex mutex;
+    return mutex;
   }
 
   static void handler(
@@ -80,6 +97,7 @@ private:
     va_copy(args_copy, *args);
     vsnprintf(buffer, sizeof(buffer), format, args_copy);
     va_end(args_copy);
+    const std::lock_guard<std::mutex> lock(messages_mutex());
     messages().emplace_back(buffer);
   }
 
@@ -938,10 +956,12 @@ TEST(TestHandle, handle_getters)
 }
 
 // Regression test for the bool-to-double compatibility reads: they take a shared lock only, so
-// many threads can reach the warning below at the same time. Run with ThreadSanitizer to catch a
-// data race on the flag that guards the warning.
+// many threads can reach the warning below at the same time. Duplicate warnings are the visible
+// symptom of the read-check-write on the flag that guards them; ThreadSanitizer reports the race
+// itself, but none of the CI jobs run it.
 TEST(TestHandle, bool_to_double_warning_is_race_free_across_threads)
 {
+  LogCapture log_capture;
   const std::string collision_interface = "collision";
   const std::string itf_name = "joint1";
   InterfaceInfo info;
@@ -978,7 +998,7 @@ TEST(TestHandle, bool_to_double_warning_is_race_free_across_threads)
     reader.join();
   }
 
-  // The readers only report the value; reaching this point without a sanitizer report is the check.
+  EXPECT_EQ(LogCapture::warning_count(), 1u);
   EXPECT_DOUBLE_EQ(handle.get_optional().value(), 1.0);
 }
 
