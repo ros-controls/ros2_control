@@ -72,7 +72,6 @@ public:
 
     // TODO(destogl): get limits from URDF
 
-    // Initialize and get joint limits from parameter server
     if (has_parameter_interface())
     {
       for (size_t i = 0; i < number_of_joints_; ++i)

@@ -2,6 +2,20 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.14.0 (2026-11-26)
+-------------------
+* [Diagnostics] Judge periodicity and execution time over a recent time window (`#3749 <https://github.com/ros-controls/ros2_control/issues/3749>`_)
+* Fix periodicity statistics of async hardware components hiding overruns (`#3823 <https://github.com/ros-controls/ros2_control/issues/3823>`_)
+* Sleep periodically in blocking read/write mode when no hardware is active (`#3825 <https://github.com/ros-controls/ros2_control/issues/3825>`_)
+* Add int64 and uint64 handle data types (`#3814 <https://github.com/ros-controls/ros2_control/issues/3814>`_)
+* remove comments that narrate the code (`#3800 <https://github.com/ros-controls/ros2_control/issues/3800>`_)
+* Do not call on_error() again on an already finalized hardware component (`#3791 <https://github.com/ros-controls/ros2_control/issues/3791>`_)
+* Remove stale TODO design notes (`#3752 <https://github.com/ros-controls/ros2_control/issues/3752>`_)
+* Remove libstatistics_collector dependency (`#3772 <https://github.com/ros-controls/ros2_control/issues/3772>`_)
+* Enforce joint limits in a single pass over the limiters (`#3753 <https://github.com/ros-controls/ros2_control/issues/3753>`_)
+* Make the list hardware services linear in the number of interfaces (`#3755 <https://github.com/ros-controls/ros2_control/issues/3755>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, lkhun9311
+
 6.13.0 (2026-11-02)
 -------------------
 * Fix data race on is_command_limited\_ between limiter and introspection sampler (`#3720 <https://github.com/ros-controls/ros2_control/issues/3720>`_)

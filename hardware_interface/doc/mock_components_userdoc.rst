@@ -23,6 +23,7 @@ Features:
   - mirroring commands to states with and without offset
   - fake command interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
   - fake gpio interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
+  - async operation (see :ref:`asynchronous components <asynchronous_components>`). With the ``self_paced`` scheduling policy, ``read()`` waits one period of ``rw_rate``, the same as a real hardware with a blocking ``read()``.
 
 
 Parameters

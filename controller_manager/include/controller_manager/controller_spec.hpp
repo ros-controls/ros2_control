@@ -44,6 +44,8 @@ struct ControllerSpec
     last_update_cycle_time = std::make_shared<rclcpp::Time>(0, 0, RCL_CLOCK_UNINITIALIZED);
     execution_time_statistics = std::make_shared<MovingAverageStatistics>();
     periodicity_statistics = std::make_shared<MovingAverageStatistics>();
+    recent_periodicity_statistics = std::make_shared<ros2_control::TimeWindowStatistics>();
+    recent_execution_time_statistics = std::make_shared<ros2_control::TimeWindowStatistics>();
   }
 
   hardware_interface::ControllerInfo info;
@@ -52,6 +54,12 @@ struct ControllerSpec
   std::vector<std::string> controllers_chain_group = {};
   std::shared_ptr<MovingAverageStatistics> execution_time_statistics;
   std::shared_ptr<MovingAverageStatistics> periodicity_statistics;
+  /// Periodicity over the last diagnostics.controllers.window_duration seconds,
+  /// disabled when that duration is not positive
+  std::shared_ptr<ros2_control::TimeWindowStatistics> recent_periodicity_statistics;
+  /// Execution time (in us) over the last diagnostics.controllers.window_duration seconds,
+  /// disabled when that duration is not positive
+  std::shared_ptr<ros2_control::TimeWindowStatistics> recent_execution_time_statistics;
 };
 
 struct ControllerChainSpec

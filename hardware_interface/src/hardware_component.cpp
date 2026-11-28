@@ -44,6 +44,11 @@ HardwareComponent::HardwareComponent(HardwareComponent && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.component_mutex_);
   impl_ = std::move(other.impl_);
+  // Keep the same collectors: the resource manager shares them with the component's info (e.g.
+  // recent_periodicity) when loading, before the component may be moved by a vector reallocation.
+  // They are copied rather than moved so that the moved-from object keeps valid collectors.
+  read_statistics_ = other.read_statistics_;
+  write_statistics_ = other.write_statistics_;
   last_read_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
   last_write_cycle_time_ = rclcpp::Time(0, 0, RCL_CLOCK_UNINITIALIZED);
 }
@@ -225,7 +230,8 @@ const rclcpp_lifecycle::State & HardwareComponent::error()
   impl_->enable_introspection(false);
   if (
     impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
-    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED &&
+    impl_->get_lifecycle_id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
     impl_->pause_async_operations();
     switch (impl_->on_error(impl_->get_lifecycle_state()))
@@ -315,17 +321,23 @@ return_type HardwareComponent::read(const rclcpp::Time & time, const rclcpp::Dur
     {
       error();
     }
+    // periodicity of the cycles really executed; for async components the trigger rate would hide
+    // overruns
+    if (trigger_result.cycle_period.has_value())
+    {
+      const double periodicity =
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count());
+      read_statistics_.periodicity->add_measurement(periodicity);
+      read_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
+    }
     if (trigger_result.successful)
     {
       if (trigger_result.execution_time.has_value())
       {
-        read_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
-      }
-      if (last_read_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
-      {
-        read_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_read_cycle_time_).seconds());
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        read_statistics_.execution_time->add_measurement(execution_time);
+        read_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       last_read_cycle_time_ = time;
     }
@@ -354,17 +366,23 @@ return_type HardwareComponent::write(const rclcpp::Time & time, const rclcpp::Du
     {
       error();
     }
+    // periodicity of the cycles really executed; for async components the trigger rate would hide
+    // overruns
+    if (trigger_result.cycle_period.has_value())
+    {
+      const double periodicity =
+        1.e9 / static_cast<double>(trigger_result.cycle_period.value().count());
+      write_statistics_.periodicity->add_measurement(periodicity);
+      write_statistics_.recent_periodicity->add_measurement(periodicity, time.seconds());
+    }
     if (trigger_result.successful)
     {
       if (trigger_result.execution_time.has_value())
       {
-        write_statistics_.execution_time->add_measurement(
-          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
-      }
-      if (last_write_cycle_time_.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
-      {
-        write_statistics_.periodicity->add_measurement(
-          1.0 / (time - last_write_cycle_time_).seconds());
+        const double execution_time =
+          static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3;
+        write_statistics_.execution_time->add_measurement(execution_time);
+        write_statistics_.recent_execution_time->add_measurement(execution_time, time.seconds());
       }
       last_write_cycle_time_ = time;
     }

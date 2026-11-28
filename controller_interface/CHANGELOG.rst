@@ -2,6 +2,13 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.14.0 (2026-11-26)
+-------------------
+* Avoid duplicated interfaces in REGEX interface configuration (`#3810 <https://github.com/ros-controls/ros2_control/issues/3810>`_)
+* Initialize magnetic field axes to NaN (`#3785 <https://github.com/ros-controls/ros2_control/issues/3785>`_)
+* Remove stale TODO design notes (`#3752 <https://github.com/ros-controls/ros2_control/issues/3752>`_)
+* Contributors: Sai Kishor Kothakota, Yuhx141
+
 6.13.0 (2026-11-02)
 -------------------
 * Fix GPS status values when state-interface reads fail (`#3660 <https://github.com/ros-controls/ros2_control/issues/3660>`_)

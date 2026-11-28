@@ -14,6 +14,20 @@ hardware_components_initial_state: |
           inactive:
             - "base3"
 
+diagnostics.controller_manager.window_duration: |
+  The ``periodicity`` and ``execution_time`` statistics accumulate since startup (or since activation, for controllers and hardware components) and are never reset, so a single slow cycle, for example while the system is still bringing up other processes, can keep the diagnostic in ``WARN`` or ``ERROR`` for the rest of the run, even though the loop has been steady since. A window, set per entity with this parameter, ``diagnostics.controllers.window_duration`` and ``diagnostics.hardware_components.window_duration``, judges the recent cycles instead, while the since-startup values keep showing the worst case.
+  The window advances in steps of a tenth of its duration, so it covers between 90 % and 100 % of ``window_duration``. It ends at the latest cycle, not at the current time: if the cycles stop, the recent statistics keep showing the last window, like the since-startup ones.
+
+  .. code-block:: yaml
+
+      diagnostics:
+        controller_manager:
+          window_duration: 5.0
+        controllers:
+          window_duration: 5.0
+        hardware_components:
+          window_duration: 5.0
+
 diagnostics.threshold.controllers.periodicity: |
   The ``periodicity`` diagnostics will be published for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity. It is also published for the synchronous controllers that have a different update rate than the controller manager update rate.
 

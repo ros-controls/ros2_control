@@ -12,12 +12,14 @@ controller_interface
 * The update rate of the controller will now be approximated to a closer achievable frequency, when its frequency is not achievable with the current controller manager update rate. (`#2828 <https://github.com/ros-controls/ros2_control/pull/2828>`__)
 * The lifecycle ID is cached internally in the controller to avoid calls to get_lifecycle_state() in the real-time control loop. (`#2884 <https://github.com/ros-controls/ros2_control/pull/2884>`__)
 * Added 2 new interface_configuration_types: ``INDIVIDUAL_BEST_EFFORT`` and ``REGEX``. These allow for more flexible controller interface configurations. (`#2902 <https://github.com/ros-controls/ros2_control/pull/2902>`__)
+  ``REGEX`` entries may mix plain interface names with patterns, and an interface matched by several entries is claimed only once. (`#3810 <https://github.com/ros-controls/ros2_control/pull/3810>`__)
 * Added new methods ``on_export_state_interfaces_list`` and ``on_export_reference_interfaces_list`` are added exporting the interface pointers for chainable controller. (`#2988 <https://github.com/ros-controls/ros2_control/pull/2988>`__)
 
 controller_manager
 ******************
 * The ``bcolors`` class now respects the ``RCUTILS_COLORIZED_OUTPUT`` environment
   variable to automatically disable colors in non-TTY and CI environments.
+* New parameters ``diagnostics.controller_manager.window_duration``, ``diagnostics.controllers.window_duration`` and ``diagnostics.hardware_components.window_duration`` make the periodicity diagnostics (and the execution time diagnostics of the controllers and hardware components) judge the last ``window_duration`` seconds instead of all cycles since startup, so a single slow cycle at bring-up no longer holds the diagnostic in ``WARN`` or ``ERROR`` for the rest of the run. The since-startup statistics are still reported, and the recent ones are added as ``periodicity.recent`` and ``execution_time.recent``. The default ``-1.0`` keeps the previous behavior. (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
 * The default strictness for ``switch_controller`` is changed to ``strict``. (`#2742 <https://github.com/ros-controls/ros2_control/pull/2742>`__)
 * A new parameter ``handle_exceptions`` is added to the controller manager to control whether exceptions thrown by controllers during update are caught and handled internally or propagated. (`#2807 <https://github.com/ros-controls/ros2_control/pull/2807>`__)
 * The ``spawner`` now supports per controller arguments, while parsing the arguments for multiple controllers using ``--controller`` option. (`#2895 <https://github.com/ros-controls/ros2_control/pull/2895>`__)
@@ -31,6 +33,7 @@ controller_manager
 * The ``list_hardware_interfaces`` and ``list_hardware_components`` services now scale linearly with the number of interfaces, making them significantly faster on robots with many interfaces. (`#3755 <https://github.com/ros-controls/ros2_control/pull/3755>`__)
 * The real-time fallback path no longer re-queries every controller's command interface configuration once per fallback interface when a controller fails. (`#3756 <https://github.com/ros-controls/ros2_control/pull/3756>`__)
 * Controllers without chain relationships are now updated in the order they were loaded, instead of an unspecified order. (`#3781 <https://github.com/ros-controls/ros2_control/pull/3781>`__)
+* With ``hardware_synchronization.expect_blocking_read_write``, the control loop now sleeps periodically at ``update_rate`` without warning when a cycle didn't block while no hardware component is ``active``, instead of spinning at ``minimum_cycle_time``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
 * The ``SwitchController`` timeout now also stops activating further controllers once its deadline passed. An activation that is already running is not interrupted, so the service answers once the switch it started has finished. (`#3685 <https://github.com/ros-controls/ros2_control/pull/3685>`__)
 
 hardware_interface
@@ -39,6 +42,15 @@ hardware_interface
 * Handles now also support ``float32``, ``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32`` data types in addition to double and bool. (`#2879 <https://github.com/ros-controls/ros2_control/pull/2879>`__)
 * ``CommandInterface::is_limited()`` now returns ``bool`` by value instead of ``const bool &``, as the limited flag is now atomic to avoid a data race with the introspection sampler. (`#3618 <https://github.com/ros-controls/ros2_control/issues/3618>`__)
 * The dependency on ``libstatistics_collector`` is removed, as it is no longer available from ROS 2 Rolling onwards. The ``StatisticData`` struct is now provided as ``ros2_control::StatisticData`` in ``hardware_interface/types/statistic_data.hpp``. (`#3772 <https://github.com/ros-controls/ros2_control/pull/3772>`__)
+* Mock hardware (``mock_components/GenericSystem``) supports the ``self_paced`` scheduling policy of async components. Its ``read()`` waits one period of ``rw_rate``, the same as a real hardware with a blocking ``read()``.
+* ``on_error()`` of a hardware component is no longer called a second time when it returns ``FAILURE`` or ``ERROR`` after a failed ``read()``/``write()``. (`#3791 <https://github.com/ros-controls/ros2_control/pull/3791>`__)
+* Handles now also support ``uint64`` and ``int64`` data types. They are not castable to double and are therefore not included in the introspection. (`#3806 <https://github.com/ros-controls/ros2_control/issues/3806>`__)
+* The new real-time safe ``ResourceManager::has_active_components()`` tells whether any hardware component is ``active``. (`#3825 <https://github.com/ros-controls/ros2_control/pull/3825>`__)
+* A ``TimeWindowStatistics`` type is added next to ``MovingAverageStatistics``: average, minimum, maximum and standard deviation over the samples of the last ``window_duration`` seconds, in constant memory independent of the sample rate. The hardware components collect their read/write periodicity and execution time in it too, exposed as ``HardwareComponentStatisticsData::recent_periodicity`` and ``HardwareComponentStatisticsData::recent_execution_time`` and enabled through ``ResourceManagerParams::hardware_components_statistics_window_duration``. The read and write execution times of asynchronous components are now recorded once per completed read or write, instead of being repeated on every cycle while the async thread is busy or stalled (e.g. with the ``detached`` scheduling policy). (`#3749 <https://github.com/ros-controls/ros2_control/pull/3749>`__)
+
+joint_limits
+************
+* When a position command is beyond a soft limit, the ``JointSoftLimiter`` now moves it back towards the soft limit at no more than ``max_velocity`` instead of jumping straight to the soft limit in one update, so the hard velocity limit is always respected. (`#3798 <https://github.com/ros-controls/ros2_control/pull/3798>`__)
 
 ros2controlcli
 **************

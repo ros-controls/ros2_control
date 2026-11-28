@@ -22,12 +22,20 @@ Under the ``ros2_control`` tag, a ``properties`` tag can be added to specify the
 
   * ``synchronized`` (default): The thread will run synchronized with the main controller_manager thread. The controller_manager is responsible for triggering the read and write calls of the hardware component.
   * ``detached``: The thread will run independently of the main controller_manager thread. The hardware component will manage its own timing for triggering the read and write calls.
+  * ``self_paced``: The thread will run independently of the main controller_manager thread. The blocking ``read()`` of the hardware component sets the timing, e.g., a ``read()`` that waits for the next message from the robot.
 
 * ``print_warnings``: (optional) If set to ``true``, a warning will be printed if the thread is not able to meet its timing requirements. Default is ``true``.
 
 .. note::
   The thread priority is only used when the hardware component is run asynchronously.
   When the hardware component is run asynchronously, it uses the FIFO scheduling policy.
+
+.. note::
+  For asynchronous components, the ``read_cycle/periodicity`` and ``write_cycle/periodicity`` statistics and
+  diagnostics are measured from the cycles actually executed by the async thread, not from how often the
+  ``controller_manager`` triggers the component. If the async ``read`` + ``write`` cycle overruns its period,
+  the reported periodicity drops accordingly (e.g. a component with ``rw_rate="2000"`` that overruns every cycle
+  reports ~1 kHz).
 
 Examples
 ---------
