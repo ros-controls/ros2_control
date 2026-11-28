@@ -2649,86 +2649,50 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
   EXPECT_EQ(old_counter_3 + 1, test_controller_3->internal_counter);
 }
 
-TEST_F(TestControllerManagerSrvs, switch_controller_timeout_bounds_slow_activation)
+TEST_F(TestControllerManagerSrvs, switch_controller_timeout_does_not_undo_a_started_activation)
 {
-  constexpr double kSlowActivationSeconds = 2.0;
-  const auto timeout = rclcpp::Duration::from_seconds(0.5);
+  constexpr double kActivationSeconds = 0.5;
+  const auto timeout = rclcpp::Duration::from_seconds(0.2);
   const auto period = rclcpp::Duration::from_seconds(0.01);
+  const std::string controller_name = "slow_single_controller";
 
-  // Each arm uses its own command interface so that a controller left behind by the previous arm
-  // cannot make the next arm fail on a claim conflict instead of on the timeout.
-  const auto add_slow_controller =
-    [&](const std::string & name, const std::string & command_interface)
-  {
-    auto controller = std::make_shared<TestController>();
-    controller->set_command_interface_configuration(
-      {controller_interface::interface_configuration_type::INDIVIDUAL, {command_interface}});
-    controller->set_state_interface_configuration(
-      {controller_interface::interface_configuration_type::INDIVIDUAL,
-       {"joint1/position", "joint1/velocity"}});
-    controller->activation_processing_time = kSlowActivationSeconds;
-    cm_->add_controller(controller, name, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    cm_->configure_controller(name);
-    cm_->update(time_, period);
-    return controller;
-  };
+  auto controller = std::make_shared<TestController>();
+  controller->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}});
+  controller->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {"joint1/position", "joint1/velocity"}});
+  controller->activation_processing_time = kActivationSeconds;
+  cm_->add_controller(controller, controller_name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->configure_controller(controller_name);
+  cm_->update(time_, period);
 
-  // A controller callback that is already running cannot be interrupted from another thread, so
-  // the response cannot be produced before on_activate() returns. What the timeout does bound is
-  // the switch itself: it stops activating further controllers and, for STRICT, the timed out
-  // switch is rolled back. That keeps the reported result consistent with the controller state,
-  // which is the property asserted here.
-  const auto expect_timed_out_and_rolled_back =
-    [&](
-      const std::string & name, const std::shared_ptr<TestController> & controller,
-      controller_interface::return_type result, double elapsed)
-  {
-    EXPECT_EQ(controller_interface::return_type::ERROR, result);
-    EXPECT_GE(elapsed, kSlowActivationSeconds)
-      << "the response cannot precede the callback that is already running";
-    EXPECT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller->get_lifecycle_state().id())
-      << "a STRICT switch that timed out must not leave a partially activated controller behind";
-
-    // The request must not be left behind for the next call to trip over.
-    std::this_thread::sleep_for(std::chrono::duration<double>(kSlowActivationSeconds + 0.5));
-    cm_->update(time_, period);
-    EXPECT_NO_THROW(cm_->switch_controller(
-      {}, {name}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-      rclcpp::Duration::from_seconds(5.0)));
-  };
-
-  // Arm 1: the realtime loop executes the switch (activate_asap == true).
-  const std::string asap_name = "slow_asap_controller";
-  const auto asap_controller = add_slow_controller(asap_name, "joint1/position");
-  const auto asap_start = std::chrono::steady_clock::now();
-  const auto asap_result = cm_->switch_controller(
-    {asap_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-    timeout);
-  const auto asap_elapsed =
-    std::chrono::duration<double>(std::chrono::steady_clock::now() - asap_start).count();
-  expect_timed_out_and_rolled_back(asap_name, asap_controller, asap_result, asap_elapsed);
-
-  // Arm 2: the caller executes the switch synchronously (activate_asap == false).
-  const std::string sync_name = "slow_sync_controller";
-  const auto sync_controller = add_slow_controller(sync_name, "joint2/velocity");
-  const auto sync_start = std::chrono::steady_clock::now();
-  controller_interface::return_type sync_result = controller_interface::return_type::OK;
+  // The deadline decides whether a controller is started, not what happens to one that is already
+  // running: a callback cannot be interrupted from another thread, so an activation that started
+  // before the deadline runs to completion and the switch reports what actually happened.
+  const auto start = std::chrono::steady_clock::now();
+  controller_interface::return_type result = controller_interface::return_type::ERROR;
   {
     ControllerManagerRunner<controller_manager::ControllerManager> cm_runner(this);
-    sync_result = cm_->switch_controller(
-      {sync_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
+    result = cm_->switch_controller(
+      {controller_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
       timeout);
   }
-  const auto sync_elapsed =
-    std::chrono::duration<double>(std::chrono::steady_clock::now() - sync_start).count();
-  expect_timed_out_and_rolled_back(sync_name, sync_controller, sync_result, sync_elapsed);
+  const auto elapsed =
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+
+  EXPECT_EQ(controller_interface::return_type::OK, result);
+  EXPECT_GE(elapsed, kActivationSeconds)
+    << "the response cannot precede the activation callback that is already running";
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller->get_lifecycle_state().id())
+    << "an activation that started before the deadline must not be torn down afterwards";
 }
 
 TEST_F(TestControllerManagerSrvs, switch_controller_timeout_skips_remaining_controllers)
 {
-  constexpr double kSlowActivationSeconds = 2.0;
-  const auto timeout = rclcpp::Duration::from_seconds(0.5);
+  constexpr double kSlowActivationSeconds = 0.5;
+  const auto timeout = rclcpp::Duration::from_seconds(0.2);
   const auto period = rclcpp::Duration::from_seconds(0.01);
 
   const auto add_controller = [&](
@@ -2776,12 +2740,21 @@ TEST_F(TestControllerManagerSrvs, switch_controller_timeout_skips_remaining_cont
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, fast_controller->get_lifecycle_state().id())
     << "a controller must not be activated after the switch deadline has passed";
 
-  // Nothing may be left behind for the next switch.
-  std::this_thread::sleep_for(std::chrono::duration<double>(kSlowActivationSeconds + 0.5));
-  cm_->update(time_, period);
-  EXPECT_NO_THROW(cm_->switch_controller(
-    {}, {slow_name, fast_name}, controller_manager_msgs::srv::SwitchController::Request::STRICT,
-    true, rclcpp::Duration::from_seconds(5.0)));
+  // The timed out switch must not leave the request or the interfaces behind: a generous timeout
+  // activates both controllers, which would fail if anything from the previous switch stuck.
+  {
+    ControllerManagerRunner<controller_manager::ControllerManager> cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->switch_controller(
+        {slow_name, fast_name}, {},
+        controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
+        rclcpp::Duration::from_seconds(5.0)));
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, slow_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, fast_controller->get_lifecycle_state().id());
 }
 
 TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_same_interface)

@@ -30,7 +30,10 @@
 #      the same joint.
 #  * activate the controllers as soon as their hardware dependencies are ready, will
 #    wait for all interfaces to be ready otherwise
-#  * the timeout before aborting pending controllers. Zero for infinite
+#  * the timeout before aborting pending controllers. Controllers that have not
+#    started to activate when the deadline passes are skipped; an activation
+#    that is already running is not interrupted, and the service returns once
+#    the switch it started has finished. Zero for infinite
 
 # The return value "ok" indicates if the controllers were switched
 # successfully or not. The meaning of success depends on the

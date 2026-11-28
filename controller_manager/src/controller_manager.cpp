@@ -25,9 +25,8 @@
 #include <exception>
 #include <iomanip>
 #include <iterator>
-#include <map>
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <regex>
 #include <set>
@@ -546,56 +545,6 @@ void unregister_controller_manager_statistics(const std::string & name)
 namespace controller_manager
 {
 
-namespace
-{
-const std::chrono::steady_clock::rep kNoSwitchDeadline =
-  std::chrono::steady_clock::time_point::max().time_since_epoch().count();
-
-std::mutex switch_deadlines_mutex;
-std::map<const ControllerManager *, std::unique_ptr<std::atomic<std::chrono::steady_clock::rep>>>
-  switch_deadlines;
-
-void register_switch_deadline(const ControllerManager * manager)
-{
-  std::lock_guard<std::mutex> guard(switch_deadlines_mutex);
-  switch_deadlines.emplace(
-    manager, std::make_unique<std::atomic<std::chrono::steady_clock::rep>>(kNoSwitchDeadline));
-}
-
-void unregister_switch_deadline(const ControllerManager * manager)
-{
-  std::lock_guard<std::mutex> guard(switch_deadlines_mutex);
-  switch_deadlines.erase(manager);
-}
-
-void set_switch_deadline(const ControllerManager * manager, std::chrono::steady_clock::rep ns)
-{
-  std::lock_guard<std::mutex> guard(switch_deadlines_mutex);
-  auto it = switch_deadlines.find(manager);
-  if (it != switch_deadlines.end())
-  {
-    it->second->store(ns, std::memory_order_relaxed);
-  }
-}
-
-bool deadline_expired(const ControllerManager * manager)
-{
-  std::chrono::steady_clock::rep ns;
-  {
-    std::lock_guard<std::mutex> guard(switch_deadlines_mutex);
-    auto it = switch_deadlines.find(manager);
-    if (it == switch_deadlines.end())
-    {
-      return false;
-    }
-    ns = it->second->load(std::memory_order_relaxed);
-  }
-  return ns != kNoSwitchDeadline &&
-         std::chrono::steady_clock::now() >=
-           std::chrono::steady_clock::time_point(std::chrono::steady_clock::duration(ns));
-}
-}  // namespace
-
 rclcpp::NodeOptions get_cm_node_options()
 {
   rclcpp::NodeOptions node_options;
@@ -640,7 +589,6 @@ ControllerManager::ControllerManager(
     set_initial_hardware_components_state();
     init_services();
   }
-  register_switch_deadline(this);
 }
 
 ControllerManager::ControllerManager(
@@ -688,12 +636,10 @@ ControllerManager::ControllerManager(
       init_controller_manager();
     }
   }
-  register_switch_deadline(this);
 }
 
 ControllerManager::~ControllerManager()
 {
-  unregister_switch_deadline(this);
   CLEAR_ALL_ROS2_CONTROL_INTROSPECTION_REGISTRIES();
   if (preshutdown_cb_handle_)
   {
@@ -1917,7 +1863,8 @@ void ControllerManager::clear_requests()
   switch_params_.do_switch = false;
   switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
-  set_switch_deadline(this, kNoSwitchDeadline);
+  switch_params_.deadline.store(
+    SwitchParams::kNoSwitchDeadline, std::memory_order_relaxed);
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
   switch_params_.to_chained_mode_request.clear();
@@ -2448,17 +2395,17 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   // start the atomic controller switching
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
+  std::chrono::nanoseconds switch_timeout{1'000'000'000};
   if (timeout == rclcpp::Duration{0, 0})
   {
     RCLCPP_INFO_ONCE(get_logger(), "Switch controller timeout is set to 0, using default 1s!");
-    switch_params_.timeout = std::chrono::nanoseconds(1'000'000'000);
   }
   else
   {
-    switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
-    set_switch_deadline(
-      this, std::chrono::steady_clock::now().time_since_epoch().count() +
-              switch_params_.timeout.count());
+    switch_timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+    switch_params_.deadline.store(
+      (std::chrono::steady_clock::now() + switch_timeout).time_since_epoch().count(),
+      std::memory_order_relaxed);
   }
   switch_params_.ready_to_switch.store(false, std::memory_order_release);
   switch_params_.do_switch = true;
@@ -2468,12 +2415,12 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
     std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
     if (!switch_params_.cv.wait_for(
-          switch_params_guard, switch_params_.timeout,
+          switch_params_guard, switch_timeout,
           [this] { return !switch_params_.do_switch; }))
     {
       message = fmt::format(
         FMT_COMPILE("Switch controller timed out after {} seconds!"),
-        static_cast<double>(switch_params_.timeout.count()) / 1e9);
+        static_cast<double>(switch_timeout.count()) / 1e9);
       RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       clear_requests();
       return controller_interface::return_type::ERROR;
@@ -2481,14 +2428,14 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   else
   {
-    const auto deadline = std::chrono::steady_clock::now() + switch_params_.timeout;
+    const auto deadline = std::chrono::steady_clock::now() + switch_timeout;
     while (!switch_params_.ready_to_switch.load(std::memory_order_acquire))
     {
       if (std::chrono::steady_clock::now() >= deadline)
       {
         message = fmt::format(
           FMT_COMPILE("Switch controller timed out after {} seconds!"),
-          static_cast<double>(switch_params_.timeout.count()) / 1e9);
+          static_cast<double>(switch_timeout.count()) / 1e9);
         RCLCPP_ERROR(get_logger(), "%s", message.c_str());
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -2510,11 +2457,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     resource_manager_, switch_params_.activate_request, switch_params_.deactivate_request,
     strictness, get_logger(), to, message);
 
-  if (switch_result == controller_interface::return_type::OK)
-  {
-    switch_result = report_late_switch_as_timeout(message);
-  }
-
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
   // clear unused list
@@ -2523,20 +2465,6 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   clear_requests();
 
   return switch_result;
-}
-
-controller_interface::return_type ControllerManager::report_late_switch_as_timeout(
-  std::string & message)
-{
-  if (!deadline_expired(this))
-  {
-    return controller_interface::return_type::OK;
-  }
-  message = fmt::format(
-    FMT_COMPILE("Switch controller timed out after {} seconds!"),
-    static_cast<double>(switch_params_.timeout.count()) / 1e9);
-  RCLCPP_ERROR(get_logger(), "%s", message.c_str());
-  return controller_interface::return_type::ERROR;
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_controller_impl(
@@ -2772,7 +2700,7 @@ void ControllerManager::activate_controllers(
         controller_name.c_str());
       continue;
     }
-    if (switch_params_.do_switch && deadline_expired(this))
+    if (switch_params_.deadline_expired())
     {
       RCLCPP_WARN(
         get_logger(),
@@ -2905,12 +2833,6 @@ void ControllerManager::activate_controllers(
       resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
-  }
-  if (switch_params_.do_switch && deadline_expired(this))
-  {
-    RCLCPP_WARN(
-      get_logger(), "The switch controller timeout expired during the activation of controllers.");
-    is_successful = false;
   }
   if (
     !is_successful && strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
