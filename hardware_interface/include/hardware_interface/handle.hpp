@@ -18,6 +18,7 @@
 #include <fmt/compile.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
@@ -358,7 +359,7 @@ public:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
           // is fixed
-          if (!notified_)
+          if (!notified_.exchange(true))
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()), "%s",
@@ -367,7 +368,6 @@ public:
                   "Casting bool to double for interface '{}'. Better use get_optional<bool>()."),
                 get_name())
                 .c_str());
-            notified_ = true;
           }
           return static_cast<double>(std::get<bool>(value_));
         case HandleDataType::FLOAT32:  // fallthrough
@@ -548,13 +548,12 @@ protected:
           // TODO(christophfroehlich): replace with RCLCPP_WARN_ONCE once
           // https://github.com/ros2/rclcpp/issues/2587
           // is fixed
-          if (!notified_)
+          if (!notified_.exchange(true))
           {
             RCLCPP_WARN(
               rclcpp::get_logger(get_name()),
               "Casting bool to double for interface: %s. Better use get_optional<bool>().",
               get_name().c_str());
-            notified_ = true;
           }
           value = static_cast<double>(std::get<bool>(value_));
           return true;
@@ -603,6 +602,7 @@ private:
     handle_name_ = other.handle_name_;
     value_ = other.value_;
     data_type_ = other.data_type_;
+    notified_.store(other.notified_.load());
   }
 
   void swap(Handle & first, Handle & second) noexcept
@@ -613,6 +613,8 @@ private:
     std::swap(first.handle_name_, second.handle_name_);
     std::swap(first.value_, second.value_);
     std::swap(first.data_type_, second.data_type_);
+    const bool second_notified = second.notified_.exchange(first.notified_.load());
+    first.notified_.store(second_notified);
   }
 
 protected:
@@ -629,7 +631,8 @@ private:
   // TODO(christophfroehlich): remove once
   // https://github.com/ros2/rclcpp/issues/2587
   // is fixed
-  mutable bool notified_ = false;
+  /// Atomic because the bool-to-double reads above hold a shared lock only, so they race here.
+  mutable std::atomic_bool notified_ = false;
 };
 
 class StateInterface : public Handle
