@@ -17,13 +17,16 @@
 #include <fmt/compile.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <exception>
 #include <iomanip>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <regex>
 #include <set>
@@ -574,6 +577,7 @@ StatisticData report_and_select_recent(
 
 namespace controller_manager
 {
+
 rclcpp::NodeOptions get_cm_node_options()
 {
   rclcpp::NodeOptions node_options;
@@ -1905,6 +1909,7 @@ void ControllerManager::clear_requests()
   switch_params_.do_switch = false;
   switch_params_.ready_to_switch = false;
   switch_params_.activate_asap = false;
+  switch_params_.deadline.store(SwitchParams::kNoSwitchDeadline, std::memory_order_relaxed);
   switch_params_.deactivate_request.clear();
   switch_params_.activate_request.clear();
   switch_params_.to_chained_mode_request.clear();
@@ -2434,14 +2439,17 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   // start the atomic controller switching
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
+  std::chrono::nanoseconds switch_timeout{1'000'000'000};
   if (timeout == rclcpp::Duration{0, 0})
   {
     RCLCPP_INFO_ONCE(get_logger(), "Switch controller timeout is set to 0, using default 1s!");
-    switch_params_.timeout = std::chrono::nanoseconds(1'000'000'000);
   }
   else
   {
-    switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+    switch_timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+    switch_params_.deadline.store(
+      (std::chrono::steady_clock::now() + switch_timeout).time_since_epoch().count(),
+      std::memory_order_relaxed);
   }
   switch_params_.ready_to_switch.store(false, std::memory_order_release);
   switch_params_.do_switch = true;
@@ -2451,12 +2459,11 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
     RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
     std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
     if (!switch_params_.cv.wait_for(
-          switch_params_guard, switch_params_.timeout,
-          [this] { return !switch_params_.do_switch; }))
+          switch_params_guard, switch_timeout, [this] { return !switch_params_.do_switch; }))
     {
       message = fmt::format(
         FMT_COMPILE("Switch controller timed out after {} seconds!"),
-        static_cast<double>(switch_params_.timeout.count()) / 1e9);
+        static_cast<double>(switch_timeout.count()) / 1e9);
       RCLCPP_ERROR(get_logger(), "%s", message.c_str());
       clear_requests();
       return controller_interface::return_type::ERROR;
@@ -2464,14 +2471,14 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
   }
   else
   {
-    const auto deadline = std::chrono::steady_clock::now() + switch_params_.timeout;
+    const auto deadline = std::chrono::steady_clock::now() + switch_timeout;
     while (!switch_params_.ready_to_switch.load(std::memory_order_acquire))
     {
       if (std::chrono::steady_clock::now() >= deadline)
       {
         message = fmt::format(
           FMT_COMPILE("Switch controller timed out after {} seconds!"),
-          static_cast<double>(switch_params_.timeout.count()) / 1e9);
+          static_cast<double>(switch_timeout.count()) / 1e9);
         RCLCPP_ERROR(get_logger(), "%s", message.c_str());
         clear_requests();
         return controller_interface::return_type::ERROR;
@@ -2738,6 +2745,15 @@ void ControllerManager::activate_controllers(
         get_logger(),
         "Got request to activate controller '%s' but it is not in the realtime controller list",
         controller_name.c_str());
+      continue;
+    }
+    if (switch_params_.deadline_expired())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Not activating controller '%s' anymore, the switch controller timeout expired.",
+        controller_name.c_str());
+      is_successful = false;
       continue;
     }
     auto controller = found_it->c;

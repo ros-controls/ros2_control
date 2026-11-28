@@ -2649,6 +2649,113 @@ TEST_F(TestControllerManagerSrvs, switch_controller_controllers_taking_long_time
   EXPECT_EQ(old_counter_3 + 1, test_controller_3->internal_counter);
 }
 
+TEST_F(TestControllerManagerSrvs, switch_controller_timeout_does_not_undo_a_started_activation)
+{
+  constexpr double kActivationSeconds = 0.5;
+  const auto timeout = rclcpp::Duration::from_seconds(0.2);
+  const auto period = rclcpp::Duration::from_seconds(0.01);
+  const std::string controller_name = "slow_single_controller";
+
+  auto controller = std::make_shared<TestController>();
+  controller->set_command_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}});
+  controller->set_state_interface_configuration(
+    {controller_interface::interface_configuration_type::INDIVIDUAL,
+     {"joint1/position", "joint1/velocity"}});
+  controller->activation_processing_time = kActivationSeconds;
+  cm_->add_controller(controller, controller_name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->configure_controller(controller_name);
+  cm_->update(time_, period);
+
+  // The deadline decides whether a controller is started, not what happens to one that is already
+  // running: a callback cannot be interrupted from another thread, so an activation that started
+  // before the deadline runs to completion and the switch reports what actually happened.
+  const auto start = std::chrono::steady_clock::now();
+  controller_interface::return_type result = controller_interface::return_type::ERROR;
+  {
+    ControllerManagerRunner<controller_manager::ControllerManager> cm_runner(this);
+    result = cm_->switch_controller(
+      {controller_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
+      timeout);
+  }
+  const auto elapsed =
+    std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+
+  EXPECT_EQ(controller_interface::return_type::OK, result);
+  EXPECT_GE(elapsed, kActivationSeconds)
+    << "the response cannot precede the activation callback that is already running";
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller->get_lifecycle_state().id())
+    << "an activation that started before the deadline must not be torn down afterwards";
+}
+
+TEST_F(TestControllerManagerSrvs, switch_controller_timeout_skips_remaining_controllers)
+{
+  constexpr double kSlowActivationSeconds = 0.5;
+  const auto timeout = rclcpp::Duration::from_seconds(0.2);
+  const auto period = rclcpp::Duration::from_seconds(0.01);
+
+  const auto add_controller = [&](
+                                const std::string & name, const std::string & command_interface,
+                                double activation_processing_time)
+  {
+    auto controller = std::make_shared<TestController>();
+    controller->set_command_interface_configuration(
+      {controller_interface::interface_configuration_type::INDIVIDUAL, {command_interface}});
+    controller->set_state_interface_configuration(
+      {controller_interface::interface_configuration_type::INDIVIDUAL,
+       {"joint1/position", "joint1/velocity"}});
+    controller->activation_processing_time = activation_processing_time;
+    cm_->add_controller(controller, name, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->configure_controller(name);
+    cm_->update(time_, period);
+    return controller;
+  };
+
+  // The first controller eats the whole timeout. The second one is fast, so it would activate
+  // without complaint if the deadline were not honoured between controllers, which is the property
+  // this test pins down: the switch must not keep activating controllers after the deadline, and
+  // the ones it never reached must be reported as not activated.
+  const std::string slow_name = "slow_then_skipped_slow";
+  const std::string fast_name = "slow_then_skipped_fast";
+  const auto slow_controller = add_controller(slow_name, "joint1/position", kSlowActivationSeconds);
+  const auto fast_controller = add_controller(fast_name, "joint2/velocity", 0.0);
+
+  controller_interface::return_type result = controller_interface::return_type::OK;
+  {
+    ControllerManagerRunner<controller_manager::ControllerManager> cm_runner(this);
+    result = cm_->switch_controller(
+      {slow_name, fast_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT,
+      false, timeout);
+  }
+
+  EXPECT_EQ(controller_interface::return_type::ERROR, result);
+  // Both must be back to INACTIVE: the slow one is rolled back, and the fast one was never
+  // activated. The assertion on the fast one is the point of the test, because that is the
+  // controller the previous behaviour would have activated anyway.
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    slow_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, fast_controller->get_lifecycle_state().id())
+    << "a controller must not be activated after the switch deadline has passed";
+
+  // The timed out switch must not leave the request or the interfaces behind: a generous timeout
+  // activates both controllers, which would fail if anything from the previous switch stuck.
+  {
+    ControllerManagerRunner<controller_manager::ControllerManager> cm_runner(this);
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->switch_controller(
+        {slow_name, fast_name}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT,
+        false, rclcpp::Duration::from_seconds(5.0)));
+  }
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, slow_controller->get_lifecycle_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, fast_controller->get_lifecycle_state().id());
+}
+
 TEST_F(TestControllerManagerSrvs, switch_controller_test_two_controllers_using_same_interface)
 {
   // create server client and request

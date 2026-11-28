@@ -757,6 +757,13 @@ private:
       strictness = 0;
       activate_asap = false;
       ready_to_switch = false;
+      deadline.store(kNoSwitchDeadline, std::memory_order_relaxed);
+    }
+
+    bool deadline_expired() const
+    {
+      return do_switch && std::chrono::steady_clock::now().time_since_epoch().count() >=
+                            deadline.load(std::memory_order_relaxed);
     }
 
     std::atomic_bool do_switch{false};
@@ -765,8 +772,13 @@ private:
     // Switch options
     int strictness;
     std::atomic_bool activate_asap{false};
-    std::chrono::nanoseconds timeout;
-
+    // Absolute deadline of the running switch, in steady_clock ticks. It is set before do_switch
+    // is published and cleared with the rest of the request, so a switch never inherits the
+    // deadline of an earlier one. Atomic because a timed out caller clears the request while the
+    // real-time thread may still be inside the switch.
+    static constexpr std::chrono::steady_clock::rep kNoSwitchDeadline =
+      std::chrono::steady_clock::time_point::max().time_since_epoch().count();
+    std::atomic<std::chrono::steady_clock::rep> deadline{kNoSwitchDeadline};
     // conditional variable and mutex to wait for the switch to complete
     std::condition_variable cv;
     std::mutex mutex;
